@@ -1,0 +1,244 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass report
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+NEML: Nuclear Engineering Material Library
+\end_layout
+
+\begin_layout Author
+Mark Messner
+\end_layout
+
+\begin_layout Chapter
+Conventions
+\end_layout
+
+\begin_layout Section
+Mechanics
+\end_layout
+
+\begin_layout Standard
+We use the Mandel notation to convert symmetric second and fourth order
+ tensors to vectors and matrices.
+ The convention transforms the second order tensor
+\begin_inset Formula 
+\begin{equation}
+\left[\begin{array}{ccc}
+\sigma_{11} & \sigma_{12} & \sigma_{13}\\
+\sigma_{12} & \sigma_{22} & \sigma_{23}\\
+\sigma_{13} & \sigma_{23} & \sigma_{33}
+\end{array}\right]\rightarrow\left[\begin{array}{cccccc}
+\sigma_{11} & \sigma_{22} & \sigma_{33} & \sqrt{2}\sigma_{23} & \sqrt{2}\sigma_{13} & \sqrt{2}\sigma_{12}\end{array}\right]
+\end{equation}
+
+\end_inset
+
+and, after transformation, a fourth order tensor 
+\begin_inset Formula $\mathbf{C}$
+\end_inset
+
+ becomes 
+\begin_inset Formula 
+\begin{equation}
+\left[\begin{array}{cccccc}
+C_{1111} & C_{1122} & C_{1133} & \sqrt{2}C_{1123} & \sqrt{2}C_{1113} & \sqrt{2}C_{1112}\\
+C_{1122} & C_{2222} & C_{2233} & \sqrt{2}C_{2223} & \sqrt{2}C_{2213} & \sqrt{2}C_{2212}\\
+C_{1133} & C_{2233} & C_{3333} & \sqrt{2}C_{3323} & \sqrt{2}C_{3313} & \sqrt{2}C_{3312}\\
+\sqrt{2}C_{1123} & \sqrt{2}C_{2223} & \sqrt{2}C_{3323} & 2C_{2323} & 2C_{2313} & 2C_{2312}\\
+\sqrt{2}C_{1113} & \sqrt{2}C_{2213} & \sqrt{2}C_{3313} & 2C_{2313} & 2C_{1313} & 2C_{1312}\\
+\sqrt{2}C_{1112} & \sqrt{2}C_{2212} & \sqrt{2}C_{3312} & 2C_{2312} & 2C_{1312} & 2C_{1212}
+\end{array}\right].
+\end{equation}
+
+\end_inset
+
+For symmetric two second order tensors 
+\begin_inset Formula $\mathbf{a}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mathbf{b}$
+\end_inset
+
+ and their Mandel vectors 
+\begin_inset Formula $\hat{\mathbf{a}}$
+\end_inset
+
+ and 
+\begin_inset Formula $\hat{\mathbf{b}}$
+\end_inset
+
+ the relation 
+\begin_inset Formula 
+\begin{equation}
+\mathbf{a}:\mathbf{b}=\hat{\mathbf{a}}\cdot\hat{\mathbf{b}}
+\end{equation}
+
+\end_inset
+
+expresses the utility of this convention.
+ Similarly, given the symmetric fourth order tensor 
+\begin_inset Formula $\mathbf{C}$
+\end_inset
+
+ and its equivalent Mandel matrix 
+\begin_inset Formula $\hat{\mathbf{C}}$
+\end_inset
+
+ contraction over two adjacent indices 
+\begin_inset Formula 
+\begin{equation}
+\mathbf{a}=\mathbf{C}:\mathbf{b}
+\end{equation}
+
+\end_inset
+
+simply becomes matrix-vector multiplication
+\begin_inset Formula 
+\[
+\hat{\mathbf{a}}=\hat{\mathbf{C}}\cdot\hat{\mathbf{b}}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Interfaces
+\end_layout
+
+\begin_layout Standard
+NEML supports three interfaces into the material library.
+\end_layout
+
+\begin_layout Enumerate
+update_ldF: Large deformations with kinematics expressed directly through
+ the deformation gradient 
+\begin_inset Formula $\mathbf{F}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+update_ldI: Incremental large deformations with kinematics expressed through
+ the spatial velocity gradient 
+\begin_inset Formula $\mathbf{l}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+update_sd: Incremental small deformations with kinematics expressed through
+ the small strain rate 
+\begin_inset Formula $\dot{\bm{\varepsilon}}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+A user defining a new material model selects one of these four interfaces
+ when implementing a new material model.
+ NEML takes the interface the user elected to implement and automatically
+ translates the implemented interfaces to conform to the remaining two.
+ The translation from interfaces 1 or 2 to interface 3 does not fundamentally
+ change the implemented material model -- it simply applies the assumptions
+ of small deformation kinematics.
+ However, the conversion from interface 3 to interface 1 or 2 assumes a
+ hypoelastic formulation using the Jaumann objective stress rate.
+ This can fundamentally and detrimentally alter the material constitutive
+ response [].
+\end_layout
+
+\begin_layout Standard
+The library also provides several non-implementable interfaces:
+\end_layout
+
+\begin_layout Enumerate
+update_warp3d: Interface linking the material library to the warp3d finite
+ element code.
+\end_layout
+
+\begin_layout Enumerate
+update_umat_incremental: Interface for linking the material library to ABAQUS
+ Implicit via the UMAT interface and using the incremental strains.
+\end_layout
+
+\begin_layout Standard
+These interfaces will introduce similar errors as the small deformation
+ to large deformation translation step described above.
+\end_layout
+
+\end_body
+\end_document

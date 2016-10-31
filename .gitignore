@@ -1,0 +1,10 @@
+*.pyc
+*.o
+*.swp
+*.so
+*~
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+Makefile
+lib/
