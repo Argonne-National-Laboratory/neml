@@ -33,9 +33,10 @@ class DeviatoricModel {
 //  defined as a f(deviatoric stress, history) and derivatives. 
 //
 //  This form lets me implement a whole bunch of rate independent models
-//  quite quickly.  The algorithm used here is generalized radial return.
+//  quite quickly.  The algorithm used here is generalized closest point
+//  projection.
 //
-//  See Simo & Hughes (1988) chapter 2.
+//  See Simo & Hughes (1988) chapter 3 p. 146.
 class RIAFModel: public DeviatoricModel {
  public:
   RIAFModel();

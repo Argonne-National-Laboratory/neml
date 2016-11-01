@@ -22,6 +22,9 @@ class ConstantShearModulus: public ShearModulus {
 
   virtual double modulus(double T_np1);
 
+  // Getters
+  double mu() const;
+
  private:
   const double mu_;
 

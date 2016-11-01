@@ -30,5 +30,10 @@ double ConstantShearModulus::modulus(double T_np1)
   return mu_;
 }
 
+double ConstantShearModulus::mu() const
+{
+  return mu_;
+}
+
 
 } // namespace neml
