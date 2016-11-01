@@ -7,7 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 
 # Configure libraries
-
+set(BLA_VENDOR Generic)
+FIND_PACKAGE(BLAS REQUIRED)
+FIND_PACKAGE(LAPACK REQUIRED)
 
 # Option for python
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
