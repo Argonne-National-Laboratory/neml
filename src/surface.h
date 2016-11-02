@@ -14,23 +14,23 @@ class YieldSurface {
   virtual size_t nhist() const = 0;
 
   // Yield function
-  virtual int f(const double* const s, const double* const h, double T,
+  virtual int f(const double* const s, const double* const q, double T,
                 double & fv) const = 0;
 
   // Gradients
-  virtual int df_ds(const double* const s, const double* const h, double T,
+  virtual int df_ds(const double* const s, const double* const q, double T,
                 double * const df) const = 0;
-  virtual int df_dq(const double* const s, const double* const h, double T,
+  virtual int df_dq(const double* const s, const double* const q, double T,
                 double * const df) const = 0;
 
   // Hessian
-  virtual int df_dsds(const double* const s, const double* const h, double T,
+  virtual int df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
-  virtual int df_dqdq(const double* const s, const double* const h, double T,
+  virtual int df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
-  virtual int df_dsdq(const double* const s, const double* const h, double T,
+  virtual int df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
-  virtual int df_dqds(const double* const s, const double* const h, double T,
+  virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
 };
 
@@ -48,21 +48,21 @@ class IsoJ2: public YieldSurface {
   // Defined interface
   virtual size_t nhist() const;
 
-  virtual int f(const double* const s, const double* const h, double T,
+  virtual int f(const double* const s, const double* const q, double T,
                 double & fv) const;
 
-  virtual int df_ds(const double* const s, const double* const h, double T,
+  virtual int df_ds(const double* const s, const double* const q, double T,
                 double * const df) const;
-  virtual int df_dq(const double* const s, const double* const h, double T,
+  virtual int df_dq(const double* const s, const double* const q, double T,
                 double * const df) const;
 
-  virtual int df_dsds(const double* const s, const double* const h, double T,
+  virtual int df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
-  virtual int df_dqdq(const double* const s, const double* const h, double T,
+  virtual int df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
-  virtual int df_dsdq(const double* const s, const double* const h, double T,
+  virtual int df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
-  virtual int df_dqds(const double* const s, const double* const h, double T,
+  virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
  
 };
@@ -82,21 +82,21 @@ class KinIsoJ2: public YieldSurface {
   // Defined interface
   virtual size_t nhist() const;
 
-  virtual int f(const double* const s, const double* const h, double T,
+  virtual int f(const double* const s, const double* const q, double T,
                 double & fv) const;
 
-  virtual int df_ds(const double* const s, const double* const h, double T,
+  virtual int df_ds(const double* const s, const double* const q, double T,
                 double * const df) const;
-  virtual int df_dq(const double* const s, const double* const h, double T,
+  virtual int df_dq(const double* const s, const double* const q, double T,
                 double * const df) const;
 
-  virtual int df_dsds(const double* const s, const double* const h, double T,
+  virtual int df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
-  virtual int df_dqdq(const double* const s, const double* const h, double T,
+  virtual int df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
-  virtual int df_dsdq(const double* const s, const double* const h, double T,
+  virtual int df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
-  virtual int df_dqds(const double* const s, const double* const h, double T,
+  virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
  
 };

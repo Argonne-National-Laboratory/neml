@@ -10,7 +10,7 @@ namespace py = pybind11;
 namespace neml {
 
 PYBIND11_PLUGIN(surface) {
-  py::module m("surface", "Various yield surfaces and associated hardening rules.");
+  py::module m("surface", "Various yield surfaces.");
 
   py::class_<YieldSurface>(m, "YieldSurface")
       .def_property_readonly("nhist", &YieldSurface::nhist, "Number of history variables.")

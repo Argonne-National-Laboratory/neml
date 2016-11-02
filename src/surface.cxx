@@ -34,14 +34,14 @@ size_t IsoJ2::nhist() const
   return 1;
 }
 
-int IsoJ2::f(const double* const s, const double* const h, double T,
+int IsoJ2::f(const double* const s, const double* const q, double T,
               double & fv) const
 {
-  fv = norm2_vec(s, 6) + sqrt(2.0/3.0) * h[0];
+  fv = norm2_vec(s, 6) + sqrt(2.0/3.0) * q[0];
   return 0;
 }
 
-int IsoJ2::df_ds(const double* const s, const double* const h, double T,
+int IsoJ2::df_ds(const double* const s, const double* const q, double T,
               double * const df) const
 {
   std::copy(s, s+6, df);
@@ -50,7 +50,7 @@ int IsoJ2::df_ds(const double* const s, const double* const h, double T,
   return 0;
 }
 
-int IsoJ2::df_dq(const double* const s, const double* const h, double T,
+int IsoJ2::df_dq(const double* const s, const double* const q, double T,
               double * const df) const
 {
   df[0] = sqrt(2.0/3.0);
@@ -58,7 +58,7 @@ int IsoJ2::df_dq(const double* const s, const double* const h, double T,
   return 0;
 }
 
-int IsoJ2::df_dsds(const double* const s, const double* const h, double T,
+int IsoJ2::df_dsds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   double s1[6], s2[6];
@@ -82,7 +82,7 @@ int IsoJ2::df_dsds(const double* const s, const double* const h, double T,
   return 0;
 }
 
-int IsoJ2::df_dqdq(const double* const s, const double* const h, double T,
+int IsoJ2::df_dqdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+nhist()*nhist(), 0.0);
@@ -90,7 +90,7 @@ int IsoJ2::df_dqdq(const double* const s, const double* const h, double T,
   return 0;
 }
 
-int IsoJ2::df_dsdq(const double* const s, const double* const h, double T,
+int IsoJ2::df_dsdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+6*nhist(), 0.0);
@@ -98,7 +98,7 @@ int IsoJ2::df_dsdq(const double* const s, const double* const h, double T,
   return 0;
 }
 
-int IsoJ2::df_dqds(const double* const s, const double* const h, double T,
+int IsoJ2::df_dqds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+nhist()*6, 0.0);
@@ -125,43 +125,43 @@ size_t KinIsoJ2::nhist() const
   return 7;
 }
 
-int KinIsoJ2::f(const double* const s, const double* const h, double T,
+int KinIsoJ2::f(const double* const s, const double* const q, double T,
               double & fv) const
 {
 
 }
 
-int KinIsoJ2::df_ds(const double* const s, const double* const h, double T,
+int KinIsoJ2::df_ds(const double* const s, const double* const q, double T,
               double * const df) const
 {
 
 }
 
-int KinIsoJ2::df_dq(const double* const s, const double* const h, double T,
+int KinIsoJ2::df_dq(const double* const s, const double* const q, double T,
               double * const df) const
 {
 
 }
 
-int KinIsoJ2::df_dsds(const double* const s, const double* const h, double T,
+int KinIsoJ2::df_dsds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
 
 }
 
-int KinIsoJ2::df_dqdq(const double* const s, const double* const h, double T,
+int KinIsoJ2::df_dqdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
 
 }
 
-int KinIsoJ2::df_dsdq(const double* const s, const double* const h, double T,
+int KinIsoJ2::df_dsdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
 
 }
 
-int KinIsoJ2::df_dqds(const double* const s, const double* const h, double T,
+int KinIsoJ2::df_dqds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
 

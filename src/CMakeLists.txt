@@ -44,6 +44,15 @@ if (WRAP_PYTHON)
             set_property(TARGET surface PROPERTY OUTPUT_NAME "surface.so")
             set_property(TARGET surface PROPERTY SUFFIX "")
       endif()
+
+      # hardening
+      add_library(hardening SHARED hardening_wrap.cxx hardening.cxx pyhelp.cxx)
+      target_link_libraries(hardening nemlmath  ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(hardening PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET hardening PROPERTY OUTPUT_NAME "hardening.so")
+            set_property(TARGET hardening PROPERTY SUFFIX "")
+      endif()
 else()
       # Everything in a big shared library
       add_library(neml SHARED 
@@ -51,6 +60,8 @@ else()
             volumetric.cxx 
             deviatoric.cxx
             shear.cxx
-            surface.cxx)
+            surface.cxx
+            hardening.cxx
+            nemlmath.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 endif()
