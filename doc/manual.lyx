@@ -240,5 +240,69 @@ These interfaces will introduce similar errors as the small deformation
  to large deformation translation step described above.
 \end_layout
 
+\begin_layout Chapter
+Material models
+\end_layout
+
+\begin_layout Section
+Deviatoric yield surfaces
+\end_layout
+
+\begin_layout Subsection
+Von Mises, isotropic hardening
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathbf{q}=\left[\begin{array}{c}
+K\end{array}\right]
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+f\left(\mathbf{s},\mathbf{q}\right)=\left\Vert \mathbf{s}\right\Vert +\sqrt{\frac{2}{3}}K
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note the sign on 
+\begin_inset Formula $K$
+\end_inset
+
+.
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial f}{\partial\mathbf{s}} & = & \frac{\mathbf{s}}{\left\Vert \mathbf{s}\right\Vert }\\
+\frac{\partial f}{\partial\mathbf{q}} & = & \left[\begin{array}{c}
+\sqrt{\frac{2}{3}}\end{array}\right]
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial^{2}f}{\partial\mathbf{s}\partial\mathbf{s}} & = & \frac{1}{\left\Vert \mathbf{s}\right\Vert }\left[\mathbf{I}-\left(\frac{\mathbf{s}}{\left\Vert \mathbf{s}\right\Vert }\otimes\frac{\mathbf{s}}{\left\Vert \mathbf{s}\right\Vert }\right)\right]\\
+\frac{\partial^{2}f}{\partial\mathbf{s}\partial\mathbf{q}} & = & \mathbf{0}\\
+\frac{\partial^{2}f}{\partial\mathbf{q}\partial\mathbf{s}} & = & \mathbf{0}\\
+\frac{\partial^{2}f}{\partial\mathbf{q}\partial\mathbf{q}} & = & \mathbf{0}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
 \end_body
 \end_document

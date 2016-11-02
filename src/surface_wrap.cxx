@@ -83,40 +83,15 @@ PYBIND11_PLUGIN(surface) {
 
             return deriv;
            }, "Yield function Hessian: history-history")
-
-      .def("D",
-           [](const YieldSurface & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> h, double T) -> py::array_t<double>
-           {
-            auto Dv = alloc_mat<double>(m.nhist(),m.nhist());
-            
-            int ier = m.D(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(Dv));
-
-            return Dv;
-           }, "Generalized plastic modulii")
-
-      .def("D_inv",
-           [](const YieldSurface & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> h, double T) -> py::array_t<double>
-           {
-            auto Dv = alloc_mat<double>(m.nhist(),m.nhist());
-            
-            int ier = m.D_inv(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(Dv));
-
-            return Dv;
-           }, "Inverse of generalized plastic modulii")
       ;
  
-  py::class_<KinIsoJ2>(m, "KinIsoJ2", py::base<YieldSurface>())
-      .def("K", &KinIsoJ2::K, "Isotropic hardening value")
-      .def("Kp", &KinIsoJ2::Kp, "Isotropic hardening slope")
-      .def("Hp", &KinIsoJ2::Hp, "Kinematic hardening slope")
+  py::class_<IsoJ2>(m, "IsoJ2", py::base<YieldSurface>())
+      .def(py::init<>())
       ;
 
-  py::class_<LinearKinIsoJ2>(m, "LinearKinIsoJ2", py::base<KinIsoJ2>())
-      .def(py::init<double, double, double>())
-      .def_property_readonly("K0", &LinearKinIsoJ2::K0, "Initial yield stress")
-      .def_property_readonly("Kb", &LinearKinIsoJ2::Kb, "Isotropic hardening slope")
-      .def_property_readonly("Hb", &LinearKinIsoJ2::Hb, "Kinematic hardening slope")
+  py::class_<KinIsoJ2>(m, "KinIsoJ2", py::base<YieldSurface>())
       ;
+
 
   return m.ptr();
 }

@@ -32,31 +32,19 @@ class YieldSurface {
                 double * const ddf) const = 0;
   virtual int df_dqds(const double* const s, const double* const h, double T,
                 double * const ddf) const = 0;
-
-  // Generalized plastic moduli
-  virtual int D(const double* const s, const double* const h, double T,
-                double * const Dv) const = 0;
-  // Actually more common thing to need, so give the option to override
-  // By default invert with lapack
-  virtual int D_inv(const double* const s, const double* const h, double T,
-                double * const Dv) const;
-
 };
 
-/// Kinematic and isotropic hardening with the usual von Mises surface
+/// Just isotropic hardening with a von Mises surface
 //
-//  Hardening described by functions K(a) and H'(a)
+//  History variables are:
+//    hist[0]     K (isotropic hardening)
 //
-class KinIsoJ2: public YieldSurface {
+//
+class IsoJ2: public YieldSurface {
  public:
-  KinIsoJ2();
-  virtual ~KinIsoJ2();
+  IsoJ2();
+  virtual ~IsoJ2();
  
-  // New abstract interface
-  virtual double K(double a) const = 0;
-  virtual double Kp(double a) const = 0;
-  virtual double Hp(double a) const = 0;
-
   // Defined interface
   virtual size_t nhist() const;
 
@@ -76,35 +64,42 @@ class KinIsoJ2: public YieldSurface {
                 double * const ddf) const;
   virtual int df_dqds(const double* const s, const double* const h, double T,
                 double * const ddf) const;
-
-  virtual int D(const double* const s, const double* const h, double T,
-                double * const Dv) const;
-  virtual int D_inv(const double* const s, const double* const h, double T,
-                double * const Dv) const;
+ 
 };
 
-// A simple implementation of the isotropic and kinematic hardening:
-// K = K0 + Kb * a, K' = Kb
-// Hp = Hb
-class LinearKinIsoJ2: public KinIsoJ2 {
+/// Kinematic and isotropic hardening with the usual von Mises surface
+//
+//  History variables are:
+//    hist[0]     K (isotropic hardening parameter)
+//    hist[1:7]   X (backstress)
+//
+//
+class KinIsoJ2: public YieldSurface {
  public:
-  LinearKinIsoJ2(double K0, double Kb, double Hb);
-  virtual ~LinearKinIsoJ2();
-  
-  // Implementation
-  virtual double K(double a) const;
-  virtual double Kp(double a) const;
-  virtual double Hp(double a) const;
-  
-  double K0() const;
-  double Kb() const;
-  double Hb() const;
+  KinIsoJ2();
+  virtual ~KinIsoJ2();
+ 
+  // Defined interface
+  virtual size_t nhist() const;
 
- private:
-  const double K0_, Kb_, Hb_;
+  virtual int f(const double* const s, const double* const h, double T,
+                double & fv) const;
 
+  virtual int df_ds(const double* const s, const double* const h, double T,
+                double * const df) const;
+  virtual int df_dq(const double* const s, const double* const h, double T,
+                double * const df) const;
+
+  virtual int df_dsds(const double* const s, const double* const h, double T,
+                double * const ddf) const;
+  virtual int df_dqdq(const double* const s, const double* const h, double T,
+                double * const ddf) const;
+  virtual int df_dsdq(const double* const s, const double* const h, double T,
+                double * const ddf) const;
+  virtual int df_dqds(const double* const s, const double* const h, double T,
+                double * const ddf) const;
+ 
 };
-
 
 } // namespace neml
 
