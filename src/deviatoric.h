@@ -3,6 +3,7 @@
 
 #include "shear.h"
 #include "surface.h"
+#include "hardening.h"
 
 #include <cstddef>
 #include <memory>
@@ -18,19 +19,42 @@ class DeviatoricModel {
   // Up to the user to implement
   virtual size_t nhist() const = 0;
   virtual int update(
-      const double* const e_inc,
-      double T_np1, double T_inc,
-      double t_np1, double t_inc,
-      double * const h_np1, const double * const h_n,
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
       double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
       double * const A_np1) const = 0;
+
+};
+
+/// Linear elastic model
+//
+//  Very straightforward
+class LEModel: public DeviatoricModel {
+ public:
+  LEModel();
+  virtual ~LEModel();
+
+  // Defined interface
+  virtual size_t nhist() const;
+  virtual int update(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1) const;
+
+ private:
+  std::unique_ptr<ShearModulus> modulus_;
 
 };
 
 /// Rate Independent Associative Flow Model
 //  
-//  This implements rate independent plasticity with a yield surface
-//  defined as a f(deviatoric stress, history) and derivatives. 
+//  This implements rate independent plasticity using surface and 
+//  associative hardening objects.
 //
 //  This form lets me implement a whole bunch of rate independent models
 //  quite quickly.  The algorithm used here is generalized closest point
@@ -45,16 +69,17 @@ class RIAFModel: public DeviatoricModel {
   // Defined here
   virtual size_t nhist() const;
   virtual int update(
-      const double* const e_inc,
-      double T_np1, double T_inc,
-      double t_np1, double t_inc,
-      double * const h_np1, const double * const h_n,
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
       double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
       double * const A_np1) const;
 
  private:
-  std::unique_ptr<ShearModulus> shear_modulus_;
-  std::unique_ptr<YieldSurface> yield_surface_;
+  std::unique_ptr<ShearModulus> modulus_;
+  std::unique_ptr<YieldSurface> surface_;
+  std::unique_ptr<AssociativeHardening> hardening_;
 
 };
 

@@ -20,7 +20,7 @@ if (WRAP_PYTHON)
 
       # deviatoric
       add_library(deviatoric SHARED deviatoric_wrap.cxx deviatoric.cxx pyhelp.cxx)
-      target_link_libraries(deviatoric ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} shear surface)
+      target_link_libraries(deviatoric nemlmath shear surface hardening ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} shear surface)
       set_target_properties(deviatoric PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET deviatoric PROPERTY OUTPUT_NAME "deviatoric.so")
