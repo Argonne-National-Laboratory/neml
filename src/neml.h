@@ -45,9 +45,8 @@ class NEMLModel {
        double * const h_np1, const double * const h_n,
        double * const A_np1) const = 0;
 
-  protected:
    virtual size_t nhist()const = 0;  // Actual number of material history variables
-   virtual int init_hist()const = 0;
+   virtual int init_hist(double * const hist)const = 0;
 };
 
 /// Models implemented through the deformation gradient interface
@@ -84,10 +83,9 @@ class NEMLModel_ldF: public NEMLModel {
        double * const h_np1, const double * const h_n,
        double * const A_np1) const;
 
-  protected:
    // More interface
    virtual size_t nhist()const = 0;
-   virtual int init_hist()const = 0;
+   virtual int init_hist(double * const hist)const = 0;
 };
 
 /// Models implemented through the incremental large deformation interface
@@ -124,10 +122,9 @@ class NEMLModel_ldI: public NEMLModel {
        double * const h_np1, const double * const h_n,
        double * const A_np1) const;
 
-  protected:
    // More interface
    virtual size_t nhist()const = 0;
-   virtual int init_hist()const = 0;
+   virtual int init_hist(double * const hist)const = 0;
 };
 
 /// Models implemented through the small deformation interface
@@ -164,10 +161,9 @@ class NEMLModel_sd: public NEMLModel {
        double * const h_np1, const double * const h_n,
        double * const A_np1) const;
 
-  protected:
    // More interface
    virtual size_t nhist()const = 0;
-   virtual int init_hist()const = 0;
+   virtual int init_hist(double * const hist)const = 0;
 
 };
 
@@ -177,7 +173,8 @@ class NEMLModel_sd: public NEMLModel {
 //    2) Volumetric model
 class SplitModel_sd: public NEMLModel_sd {
   public:
-   SplitModel_sd();
+   SplitModel_sd(std::shared_ptr<VolumetricModel> vol_model,
+                 std::shared_ptr<DeviatoricModel> dev_model);
    virtual ~SplitModel_sd();
 
    virtual int update_sd(
@@ -188,13 +185,12 @@ class SplitModel_sd: public NEMLModel_sd {
        double * const h_np1, const double * const h_n,
        double * const A_np1) const;
 
-  protected:
    virtual size_t nhist() const;
-   virtual int init_hist() const;
+   virtual int init_hist(double * const hist) const;
 
   private:
-   std::unique_ptr<VolumetricModel> vol_model_;
-   std::unique_ptr<DeviatoricModel> dev_model_;
+   std::shared_ptr<VolumetricModel> vol_model_;
+   std::shared_ptr<DeviatoricModel> dev_model_;
 
 };
 

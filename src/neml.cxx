@@ -19,7 +19,8 @@ NEMLModel::~NEMLModel()
 
 
 // NEMLModel_ldF implementation
-NEMLModel_ldF::NEMLModel_ldF()
+NEMLModel_ldF::NEMLModel_ldF() :
+    NEMLModel()
 {
 
 }
@@ -62,7 +63,8 @@ int NEMLModel_ldF::update_sd(
 }
 
 // NEMLModel_ldI implementation
-NEMLModel_ldI::NEMLModel_ldI()
+NEMLModel_ldI::NEMLModel_ldI() :
+    NEMLModel()
 {
 
 }
@@ -106,7 +108,8 @@ int NEMLModel_ldI::update_sd(
 
 
 // NEMLModel_sd implementation
-NEMLModel_sd::NEMLModel_sd()
+NEMLModel_sd::NEMLModel_sd() :
+    NEMLModel()
 {
 
 }
@@ -123,7 +126,7 @@ size_t NEMLModel_sd::nstore() const
 
 int NEMLModel_sd::init_store(double * const store) const
 {
-  init_store(store); // Get to this later
+  init_hist(store); // Get to this later
 }
 
 int NEMLModel_sd::update_ldF(
@@ -150,7 +153,9 @@ int NEMLModel_sd::update_ldI(
 
 
 // SplitModel_sd implementation
-SplitModel_sd::SplitModel_sd()
+SplitModel_sd::SplitModel_sd(std::shared_ptr<VolumetricModel> vol_model, 
+                             std::shared_ptr<DeviatoricModel> dev_model) :
+    NEMLModel_sd(), vol_model_(vol_model), dev_model_(dev_model)
 {
 
 }
@@ -162,7 +167,16 @@ SplitModel_sd::~SplitModel_sd()
 
 size_t SplitModel_sd::nhist() const
 {
+  return dev_model_->nhist() + vol_model_->nhist();
+}
 
+int SplitModel_sd::init_hist(double * const hist) const
+{
+  int ier1 = dev_model_->init_hist(hist);
+  int ier2 = vol_model_->init_hist(&hist[dev_model_->nhist()]);
+
+  if (ier1 != 0) return ier1;
+  return ier2;
 }
 
 int SplitModel_sd::update_sd(
@@ -173,7 +187,15 @@ int SplitModel_sd::update_sd(
    double * const h_np1, const double * const h_n,
    double * const A_np1) const
 {
-
+  // In my somewhat confusing convention the volumetric model automatically
+  // adds into the existing, nonzero arrays
+  dev_model_->update(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
+                     s_np1, s_n, h_np1, h_n, A_np1);
+  vol_model_->update(e_np1, e_n, T_np1, T_n, t_np1, t_n,
+                     s_np1, s_n, 
+                     &h_np1[dev_model_->nhist()],
+                     &h_n[dev_model_->nhist()],
+                     A_np1);
 }
 
 } // namespace neml

@@ -32,7 +32,6 @@ class CommonDeviatoric(object):
 
 class LEModel(unittest.TestCase, CommonDeviatoric):
   def setUp(self):
-    self.s_n = np.array([50.0,-20.0,30.0,10.0,5.0,-15.0])
     self.e_n = np.array([0.1,-0.05,-0.025,0.01,0.02,-0.0025])
     self.e_np1 = np.array([0.09,0.04,0.0,0.02,0.0,0.1])
 
