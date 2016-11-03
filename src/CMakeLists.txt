@@ -53,6 +53,15 @@ if (WRAP_PYTHON)
             set_property(TARGET hardening PROPERTY OUTPUT_NAME "hardening.so")
             set_property(TARGET hardening PROPERTY SUFFIX "")
       endif()
+
+      # actual material models
+      add_library(neml SHARED neml_wrap.cxx neml.cxx pyhelp.cxx)
+      target_link_libraries(neml nemlmath deviatoric volumetric ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(neml PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET neml PROPERTY OUTPUT_NAME "neml.so")
+            set_property(TARGET neml PROPERTY SUFFIX "")
+      endif()
 else()
       # Everything in a big shared library
       add_library(neml SHARED 

@@ -17,33 +17,37 @@ class NEMLModel {
    NEMLModel();
    virtual ~NEMLModel();
 
-   virtual size_t nhist() = 0;  // Actual number of material history variables
-   // To accommodate the three interfaces we need to store some 
+   // To accommodate the three interfaces we need to store some
    // "secret" history variables
-   virtual size_t nstore() = 0;
-  
+   virtual size_t nstore()const = 0;
+   virtual int init_store(double * const store)const = 0;
+
    // These three interfaces are how FE programs can enter the model.
    virtual int update_ldF(
        const double * const F_np1, const double * const F_n,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1) = 0;
+       double * const h_np1, const double * const h_n,
+       double * const A_np1)const = 0;
    virtual int update_ldI(
-       const double* const l_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const l_inc,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1) = 0;
+       double * const h_np1, const double * const h_n,
+       double * const A_np1)const = 0;
    virtual int update_sd(
-       const double* const e_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1)  = 0;
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const = 0;
+
+  protected:
+   virtual size_t nhist()const = 0;  // Actual number of material history variables
+   virtual int init_hist()const = 0;
 };
 
 /// Models implemented through the deformation gradient interface
@@ -54,31 +58,36 @@ class NEMLModel_ldF: public NEMLModel {
    virtual ~NEMLModel_ldF();
   
    // Up to the user to implement
-   virtual size_t nhist() = 0;
    virtual int update_ldF(
        const double * const F_np1, const double * const F_n,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1) = 0;
+       double * const h_np1, const double * const h_n,
+       double * const A_np1)const = 0;
 
    // Defined here
-   virtual size_t nstore();
+   virtual size_t nstore() const;
+   virtual int init_store(double * const store) const;
    virtual int update_ldI(
-       const double* const l_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const l_inc,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1);
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const;
    virtual int update_sd(
-       const double* const e_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1);
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const;
+
+  protected:
+   // More interface
+   virtual size_t nhist()const = 0;
+   virtual int init_hist()const = 0;
 };
 
 /// Models implemented through the incremental large deformation interface
@@ -89,31 +98,36 @@ class NEMLModel_ldI: public NEMLModel {
    virtual ~NEMLModel_ldI();
   
    // Up to the user to implement
-   virtual size_t nhist() = 0;
    virtual int update_ldI(
-       const double* const l_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const l_inc,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1) = 0;
+       double * const h_np1, const double * const h_n,
+       double * const A_np1)const = 0;
 
    // Defined here
-   virtual size_t nstore();
+   virtual size_t nstore() const;
+   virtual int init_store(double * const store) const;
    virtual int update_ldF(
        const double * const F_np1, const double * const F_n,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1);
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const;
    virtual int update_sd(
-       const double* const e_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1);
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const;
+
+  protected:
+   // More interface
+   virtual size_t nhist()const = 0;
+   virtual int init_hist()const = 0;
 };
 
 /// Models implemented through the small deformation interface
@@ -124,31 +138,36 @@ class NEMLModel_sd: public NEMLModel {
     virtual ~NEMLModel_sd();
 
     // Up to the user to implement
-   virtual size_t nhist() = 0;
    virtual int update_sd(
-       const double* const e_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1) = 0;
+       double * const h_np1, const double * const h_n,
+       double * const A_np1)const = 0;
 
    // Defined here
-   virtual size_t nstore();
+   virtual size_t nstore() const;
+   virtual int init_store(double * const store) const;
    virtual int update_ldF(
        const double * const F_np1, const double * const F_n,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1);
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const;
    virtual int update_ldI(
-       const double* const l_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const l_inc,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1);
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const;
+
+  protected:
+   // More interface
+   virtual size_t nhist()const = 0;
+   virtual int init_hist()const = 0;
 
 };
 
@@ -161,14 +180,17 @@ class SplitModel_sd: public NEMLModel_sd {
    SplitModel_sd();
    virtual ~SplitModel_sd();
 
-   virtual size_t nhist();
    virtual int update_sd(
-       const double* const e_inc,
-       double T_np1, double T_inc,
-       double t_np1, double t_inc,
-       double * const h_np1, const double * const h_n,
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
-       double * const A_np1);
+       double * const h_np1, const double * const h_n,
+       double * const A_np1) const;
+
+  protected:
+   virtual size_t nhist() const;
+   virtual int init_hist() const;
 
   private:
    std::unique_ptr<VolumetricModel> vol_model_;

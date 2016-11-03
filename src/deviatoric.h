@@ -18,6 +18,7 @@ class DeviatoricModel {
 
   // Up to the user to implement
   virtual size_t nhist() const = 0;
+  virtual int init_hist(double* const h) const = 0;
   virtual int update(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -33,11 +34,12 @@ class DeviatoricModel {
 //  Very straightforward
 class LEModel: public DeviatoricModel {
  public:
-  LEModel();
+  LEModel(std::shared_ptr<ShearModulus> modulus);
   virtual ~LEModel();
 
   // Defined interface
   virtual size_t nhist() const;
+  virtual int init_hist(double* const h) const;
   virtual int update(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -47,7 +49,7 @@ class LEModel: public DeviatoricModel {
       double * const A_np1) const;
 
  private:
-  std::unique_ptr<ShearModulus> modulus_;
+  std::shared_ptr<ShearModulus> modulus_;
 
 };
 
@@ -63,11 +65,13 @@ class LEModel: public DeviatoricModel {
 //  See Simo & Hughes (1988) chapter 3 p. 146.
 class RIAFModel: public DeviatoricModel {
  public:
-  RIAFModel();
+  RIAFModel(ShearModulus & modulus, YieldSurface & surface, 
+            AssociativeHardening & hardening);
   virtual ~RIAFModel();
 
   // Defined here
   virtual size_t nhist() const;
+  virtual int init_hist(double* const h) const;
   virtual int update(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -77,9 +81,9 @@ class RIAFModel: public DeviatoricModel {
       double * const A_np1) const;
 
  private:
-  std::unique_ptr<ShearModulus> modulus_;
-  std::unique_ptr<YieldSurface> surface_;
-  std::unique_ptr<AssociativeHardening> hardening_;
+  ShearModulus & modulus_;
+  YieldSurface & surface_;
+  AssociativeHardening & hardening_;
 
 };
 
