@@ -76,8 +76,9 @@ int LEModel::update(
 }
 
 // Rate independent, associative flow model implementation
-RIAFModel::RIAFModel(ShearModulus & modulus, YieldSurface & surface, 
-          AssociativeHardening & hardening) :
+RIAFModel::RIAFModel(std::shared_ptr<ShearModulus> modulus,
+                     std::shared_ptr<YieldSurface> surface, 
+                     std::shared_ptr<AssociativeHardening> hardening) :
     modulus_(modulus), surface_(surface), hardening_(hardening)
 {
 

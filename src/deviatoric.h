@@ -65,8 +65,9 @@ class LEModel: public DeviatoricModel {
 //  See Simo & Hughes (1988) chapter 3 p. 146.
 class RIAFModel: public DeviatoricModel {
  public:
-  RIAFModel(ShearModulus & modulus, YieldSurface & surface, 
-            AssociativeHardening & hardening);
+  RIAFModel(std::shared_ptr<ShearModulus> modulus, 
+            std::shared_ptr<YieldSurface> surface, 
+            std::shared_ptr<AssociativeHardening> hardening);
   virtual ~RIAFModel();
 
   // Defined here
@@ -81,9 +82,9 @@ class RIAFModel: public DeviatoricModel {
       double * const A_np1) const;
 
  private:
-  ShearModulus & modulus_;
-  YieldSurface & surface_;
-  AssociativeHardening & hardening_;
+  std::shared_ptr<ShearModulus> modulus_;
+  std::shared_ptr<YieldSurface> surface_;
+  std::shared_ptr<AssociativeHardening> hardening_;
 
 };
 

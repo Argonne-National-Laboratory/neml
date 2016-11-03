@@ -7,12 +7,14 @@
 
 namespace py = pybind11;
 
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+
 namespace neml {
 
 PYBIND11_PLUGIN(volumetric) {
   py::module m("volumetric", "Volumetric small strain material models.");
 
-  py::class_<VolumetricModel>(m, "VolumetricModel")
+  py::class_<VolumetricModel, std::shared_ptr<VolumetricModel>>(m, "VolumetricModel")
       .def("update",
            [](const VolumetricModel & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>>
            {
@@ -49,7 +51,7 @@ PYBIND11_PLUGIN(volumetric) {
            }, "Scalar volumetric strain/mean stress update")
       ;
 
-  py::class_<VModelConstantK>(m, "VModelConstantK", py::base<VolumetricModel>())
+  py::class_<VModelConstantK, std::shared_ptr<VModelConstantK>>(m, "VModelConstantK", py::base<VolumetricModel>())
       .def(py::init<double>())
       .def_property_readonly("K", &VModelConstantK::K)
       ;

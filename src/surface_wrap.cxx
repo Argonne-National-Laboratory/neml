@@ -7,12 +7,14 @@
 
 namespace py = pybind11;
 
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+
 namespace neml {
 
 PYBIND11_PLUGIN(surface) {
   py::module m("surface", "Various yield surfaces.");
 
-  py::class_<YieldSurface>(m, "YieldSurface")
+  py::class_<YieldSurface, std::shared_ptr<YieldSurface>>(m, "YieldSurface")
       .def_property_readonly("nhist", &YieldSurface::nhist, "Number of history variables.")
 
       .def("f", 
@@ -85,11 +87,11 @@ PYBIND11_PLUGIN(surface) {
            }, "Yield function Hessian: history-history")
       ;
  
-  py::class_<IsoJ2>(m, "IsoJ2", py::base<YieldSurface>())
+  py::class_<IsoJ2, std::shared_ptr<IsoJ2>>(m, "IsoJ2", py::base<YieldSurface>())
       .def(py::init<>())
       ;
 
-  py::class_<KinIsoJ2>(m, "KinIsoJ2", py::base<YieldSurface>())
+  py::class_<KinIsoJ2, std::shared_ptr<KinIsoJ2>>(m, "KinIsoJ2", py::base<YieldSurface>())
       ;
 
 

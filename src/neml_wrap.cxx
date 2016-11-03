@@ -7,12 +7,14 @@
 
 namespace py = pybind11;
 
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+
 namespace neml {
 
 PYBIND11_PLUGIN(neml) {
   py::module m("neml", "Base class material models.");
   
-  py::class_<NEMLModel>(m, "NEMLModel")
+  py::class_<NEMLModel, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
       .def("init_store",
            [](const NEMLModel & m) -> py::array_t<double>

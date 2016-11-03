@@ -7,12 +7,14 @@
 
 namespace py = pybind11;
 
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+
 namespace neml {
 
 PYBIND11_PLUGIN(hardening) {
   py::module m("hardening", "Various hardening rules.");
 
-  py::class_<AssociativeHardening>(m, "AssociativeHardening")
+  py::class_<AssociativeHardening, std::shared_ptr<AssociativeHardening>>(m, "AssociativeHardening")
       .def_property_readonly("nhist", &AssociativeHardening::nhist, "Number of history variables.")
 
       .def("init_hist",
@@ -48,7 +50,7 @@ PYBIND11_PLUGIN(hardening) {
            }, "Inverse of generalized plastic modulii.")
       ;
   
-  py::class_<IsoJ2LinearAHardening>(m, "IsoJ2LinearAHardening", py::base<AssociativeHardening>())
+  py::class_<IsoJ2LinearAHardening, std::shared_ptr<IsoJ2LinearAHardening>>(m, "IsoJ2LinearAHardening", py::base<AssociativeHardening>())
       .def(py::init<double, double>())
       
       .def_property_readonly("K0", &IsoJ2LinearAHardening::K0)

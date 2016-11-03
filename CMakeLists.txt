@@ -6,6 +6,9 @@ project(NEML LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 
+# This is risky, but I don't use the preprocessor a lot
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Wp,-w")
+
 # Configure libraries
 set(BLA_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)

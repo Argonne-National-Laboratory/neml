@@ -14,7 +14,7 @@ namespace neml {
 PYBIND11_PLUGIN(deviatoric) {
   py::module m("deviatoric", "Models for the deviatoric stress.");
   
-  py::class_<DeviatoricModel>(m, "DeviatoricModel")
+  py::class_<DeviatoricModel, std::shared_ptr<DeviatoricModel>>(m, "DeviatoricModel")
       .def_property_readonly("nhist", &DeviatoricModel::nhist, "Number of history variables.")
 
       .def("init_hist",
@@ -38,7 +38,7 @@ PYBIND11_PLUGIN(deviatoric) {
            }, "Update to next deviatoric stress state.")
       ;
 
-  py::class_<LEModel>(m, "LEModel", py::base<DeviatoricModel>())
+  py::class_<LEModel, std::shared_ptr<LEModel>>(m, "LEModel", py::base<DeviatoricModel>())
       .def(py::init<std::shared_ptr<ShearModulus>>())
       ;
 
