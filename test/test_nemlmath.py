@@ -70,3 +70,39 @@ class TestInvert(unittest.TestCase):
 
   def test_nonmatrix(self):
     self.assertRaises(RuntimeError, invert_mat, self.big)
+
+class TestSolveSym(unittest.TestCase):
+  def setUp(self):
+    self.n = 10
+    self.A = ra.random((self.n,self.n))
+    self.A = 0.5*(self.A + self.A.T)
+    self.A += self.n * np.eye(self.n)
+
+    self.b = ra.random((self.n,))
+    self.c = ra.random((self.n,))
+
+    self.D = np.diag(ra.random((self.n,)))
+
+  def test_solve(self):
+    x = la.solve(self.A, self.b)
+    y = la.solve(self.A, self.c)
+    self.A = factor_sym_mat(self.A)
+    self.b = backsolve_sym_mat(self.A, self.b)
+    self.c = backsolve_sym_mat(self.A, self.c)
+
+    self.assertTrue(np.allclose(self.b, x))
+    self.assertTrue(np.allclose(self.c, y))
+
+class TestSolve(unittest.TestCase):
+  def setUp(self):
+    self.n = 10
+    self.A = ra.random((self.n,self.n))
+    self.b = ra.random((self.n,))
+
+  def test_solve(self):
+    x = la.solve(self.A, self.b)
+    self.b = solve_mat(self.A, self.b)
+    print(x)
+    print(self.b)
+    self.assertTrue(np.allclose(x, self.b))
+

@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, volumetric, deviatoric, shear, drivers
+from neml import neml, volumetric, deviatoric, shear, drivers, surface, hardening
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,7 +32,7 @@ def example_strain(model, strain, T, t, nsteps):
     t += dt
 
     driver.strain_step(e, t, T)
-  
+
   plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
   plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
   plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
@@ -112,13 +112,19 @@ if __name__ == "__main__":
 
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
+  
+  K0 = 200.0
+  Kp = E / 200.0
 
   vol_model = volumetric.VModelConstantK(K)
   shear_model = shear.ConstantShearModulus(mu)
-  dev_model = deviatoric.LEModel(shear_model)
+  ys = surface.IsoJ2()
+  hr = hardening.IsoJ2LinearAHardening(K0, Kp)
+  dev_model = deviatoric.RIAFModel(shear_model, ys, hr, miter = 5)
+  #dev_model = deviatoric.LEModel(shear_model)
   model = neml.SplitModel_sd(vol_model, dev_model)
 
-  example_strain(model, np.array([0.1,0,0,0,0,0]), 300.0, 10, 20)
-  example_stress(model, np.array([1000.0,0,0,0,0,0]), 300.0, 10, 50)
-  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 1.0e-3, 50)
+  example_strain(model, np.array([0.003,0,0,0,0,0]), 300.0, 10, 5)
+  #example_stress(model, np.array([1000.0,0,0,0,0,0]), 300.0, 10, 50)
+  #example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 1.0e-3, 50)
 

@@ -27,6 +27,9 @@ class DeviatoricModel {
       double * const h_np1, const double * const h_n,
       double * const A_np1) const = 0;
 
+ protected:
+  int get_dev(const double * const in, double * const out) const;
+
 };
 
 /// Linear elastic model
@@ -67,7 +70,9 @@ class RIAFModel: public DeviatoricModel {
  public:
   RIAFModel(std::shared_ptr<ShearModulus> modulus, 
             std::shared_ptr<YieldSurface> surface, 
-            std::shared_ptr<AssociativeHardening> hardening);
+            std::shared_ptr<AssociativeHardening> hardening,
+            double tol = 1.0e-6,
+            int miter = 25);
   virtual ~RIAFModel();
 
   // Defined here
@@ -82,9 +87,21 @@ class RIAFModel: public DeviatoricModel {
       double * const A_np1) const;
 
  private:
+  bool take_step(const double * const e_dev, double mu, double T,
+                 double * const ep_np1, double * const alpha_np1,
+                 const double * const ep_n, const double * const alpha_n,
+                 double & dg, double * const s) const;
+  void get_jacobian(const double * const s, const double * const q,
+                    const double * const Di, double T,
+                    double mu, double dg, double * const J) const;
+
   std::shared_ptr<ShearModulus> modulus_;
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<AssociativeHardening> hardening_;
+
+  const double tol_;
+  const int miter_;
+  bool verbose_;
 
 };
 

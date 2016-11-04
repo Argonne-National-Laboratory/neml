@@ -189,13 +189,15 @@ int SplitModel_sd::update_sd(
 {
   // In my somewhat confusing convention the volumetric model automatically
   // adds into the existing, nonzero arrays
-  dev_model_->update(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
+  int ier1 = dev_model_->update(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
                      s_np1, s_n, h_np1, h_n, A_np1);
-  vol_model_->update(e_np1, e_n, T_np1, T_n, t_np1, t_n,
+  int ier2 = vol_model_->update(e_np1, e_n, T_np1, T_n, t_np1, t_n,
                      s_np1, s_n, 
                      &h_np1[dev_model_->nhist()],
                      &h_n[dev_model_->nhist()],
                      A_np1);
+  if (ier1 != 0) return ier1;
+  return ier2;
 }
 
 } // namespace neml

@@ -7,8 +7,11 @@
 
 // BLAS/lapack defs
 extern "C" {
-  void dgetrf_(int* M, int *N, double* A, int* lda, int* ipiv, int* info);
-  void dgetri_(int* N, double* A, int* lda, int* ipiv, double* work, int* lwork, int* info);
+  void dgetrf_(const int & m, const int & n, double* A, const int & lda, int* ipiv, int & info);
+  void dgetri_(const int & n, double* A, const int & lda, int* ipiv, double* work, const int & lwork, int & info);
+  void dpotrf_(const char * uplo, const int & n, double * A, const int & lda, int & info);
+  void dpotrs_(const char * uplo, const int & n, const int & nrhs, double * A, const int & lda, double * B, const int & ldb, int & info);
+  void dgesv_(const int & n, const int & nrhs, double * A, const int & lda, int * ipiv, double * b, const int & ldb, int & info);
 }
 
 namespace neml {
@@ -36,6 +39,15 @@ int outer_vec(const double * const a, int na, const double * const b, int nb, do
 
 /// Invert a matrix in place
 int invert_mat(double* const A, int n);
+
+/// Factor a symmetric matrix in place
+int factor_sym_mat(double * const A, int n);
+
+/// Solve from a symmetric factorization
+int backsolve_sym_mat(double * const A, int n, double * const x);
+
+/// Solve unsymmetric system
+int solve_mat(const double * const A, int n, double * const x);
 
 }
 

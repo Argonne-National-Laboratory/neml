@@ -127,6 +127,64 @@ PYBIND11_PLUGIN(nemlmath) {
           // Should check non-singular
           return A;
         }, "Invert a matrix IN PLACE.");
+
+  m.def("factor_sym_mat",
+        [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("Array is not a matrix!");
+          }
+
+          if (A.request().shape[0] != A.request().shape[1]) {
+            throw LinalgError("Array is not square!");
+          }
+
+          int ier = factor_sym_mat(arr2ptr<double>(A), A.request().shape[0]);
+
+          return A;
+        }, "Factorized a symmetric matrix IN PLACE.");
+
+  m.def("backsolve_sym_mat",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> b) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("A is not a matrix!");
+          }
+          if (A.request().shape[0] != A.request().shape[1]) {
+            throw LinalgError("A is not square!");
+          }
+          if (b.request().ndim != 1) {
+            throw LinalgError("b is not a vector!");
+          }
+          if (A.request().shape[0] != b.request().shape[0]) {
+            throw LinalgError("A and b are not conformable!");
+          }
+
+          backsolve_sym_mat(arr2ptr<double>(A), A.request().shape[0], arr2ptr<double>(b));
+
+          return b;
+        }, "Solve Ax=b from a factorized, symmetric A, dumping the result IN PLACE into b.");
+
+  m.def("solve_mat",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> b) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("A is not a matrix!");
+          }
+          if (A.request().shape[0] != A.request().shape[1]) {
+            throw LinalgError("A is not square!");
+          }
+          if (b.request().ndim != 1) {
+            throw LinalgError("b is not a vector!");
+          }
+          if (A.request().shape[0] != b.request().shape[0]) {
+            throw LinalgError("A and b are not conformable!");
+          }
+
+          solve_mat(arr2ptr<double>(A), A.request().shape[0], arr2ptr<double>(b));
+
+          return b;
+        }, "Solve Ax=b.");
 }
 
 } // namespace neml

@@ -10,7 +10,7 @@ if (WRAP_PYTHON)
       endif()
 
       # volumetric
-      add_library(volumetric SHARED volumetric_wrap.cxx volumetric.cxx pyhelp.cxx)
+      add_library(volumetric SHARED volumetric_wrap.cxx volumetric.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(volumetric ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(volumetric PROPERTIES PREFIX "")
       if (APPLE)
@@ -19,7 +19,7 @@ if (WRAP_PYTHON)
       endif()
 
       # deviatoric
-      add_library(deviatoric SHARED deviatoric_wrap.cxx deviatoric.cxx pyhelp.cxx)
+      add_library(deviatoric SHARED deviatoric_wrap.cxx deviatoric.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(deviatoric nemlmath shear surface hardening ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} shear surface)
       set_target_properties(deviatoric PROPERTIES PREFIX "")
       if (APPLE)
@@ -28,7 +28,7 @@ if (WRAP_PYTHON)
       endif()
 
       # shear
-      add_library(shear SHARED shear_wrap.cxx shear.cxx pyhelp.cxx)
+      add_library(shear SHARED shear_wrap.cxx shear.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(shear ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(shear PROPERTIES PREFIX "")
       if (APPLE)
@@ -37,7 +37,7 @@ if (WRAP_PYTHON)
       endif()
 
       # surface
-      add_library(surface SHARED surface_wrap.cxx surface.cxx pyhelp.cxx)
+      add_library(surface SHARED surface_wrap.cxx surface.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(surface nemlmath  ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(surface PROPERTIES PREFIX "")
       if (APPLE)
@@ -46,7 +46,7 @@ if (WRAP_PYTHON)
       endif()
 
       # hardening
-      add_library(hardening SHARED hardening_wrap.cxx hardening.cxx pyhelp.cxx)
+      add_library(hardening SHARED hardening_wrap.cxx hardening.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(hardening nemlmath  ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(hardening PROPERTIES PREFIX "")
       if (APPLE)
@@ -55,7 +55,7 @@ if (WRAP_PYTHON)
       endif()
 
       # actual material models
-      add_library(neml SHARED neml_wrap.cxx neml.cxx pyhelp.cxx)
+      add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(neml nemlmath deviatoric volumetric ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(neml PROPERTIES PREFIX "")
       if (APPLE)
@@ -71,6 +71,7 @@ else()
             shear.cxx
             surface.cxx
             hardening.cxx
-            nemlmath.cxx)
+            nemlmath.cxx
+            nemlerror.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 endif()

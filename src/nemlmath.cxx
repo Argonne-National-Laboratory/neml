@@ -1,6 +1,7 @@
 #include "nemlmath.h"
 
 #include <cmath>
+#include <iostream>
 
 namespace neml {
 
@@ -69,13 +70,49 @@ int invert_mat(double * const A, int n)
   double * work = new double[lwork];
   int info;
 
-  dgetrf_(&n, &n, A, &n, ipiv, &info);
-  dgetri_(&n, A, &n, ipiv, work, &lwork, &info);
+  dgetrf_(n, n, A, n, ipiv, info);
+  dgetri_(n, A, n, ipiv, work, lwork, info);
 
   delete [] ipiv;
   delete [] work;
 
   return 0;
+}
+
+int factor_sym_mat(double * const A, int n)
+{
+  int info;
+
+  dpotrf_("L", n, A, n, info);
+
+  return 0;
+}
+
+int backsolve_sym_mat(double * const A, int n, double * const x)
+{
+  int info;
+
+  dpotrs_("L", n, 1, A, n, x, n, info);
+
+  return 0;
+}
+
+int solve_mat(const double * const A, int n, double * const x)
+{
+  int info;
+  int * ipiv = new int [n];
+  double * B = new double [n*n];
+  for (int i=0; i<n; i++) {
+    for (int j=0; j<n; j++) {
+      B[CINDEX(i,j,n)] = A[CINDEX(j,i,n)];
+    }
+  }
+  
+  dgesv_(n, 1, B, n, ipiv, x, n, info);
+
+  delete [] ipiv;
+  delete [] B;
+
 }
 
 
