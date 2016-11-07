@@ -4,9 +4,6 @@
 #include <cstddef>
 #include <memory>
 
-#include "deviatoric.h"
-#include "volumetric.h"
-
 namespace neml {
 
 /// NEML material model interface definitions
@@ -167,32 +164,6 @@ class NEMLModel_sd: public NEMLModel {
 
 };
 
-/// A small strain kinematics model with volumetric-deviatoric split
-//  Uses two sub-objects: 
-//    1) Deviatoric model
-//    2) Volumetric model
-class SplitModel_sd: public NEMLModel_sd {
-  public:
-   SplitModel_sd(std::shared_ptr<VolumetricModel> vol_model,
-                 std::shared_ptr<DeviatoricModel> dev_model);
-   virtual ~SplitModel_sd();
-
-   virtual int update_sd(
-       const double * const e_np1, const double * const e_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1) const;
-
-   virtual size_t nhist() const;
-   virtual int init_hist(double * const hist) const;
-
-  private:
-   std::shared_ptr<VolumetricModel> vol_model_;
-   std::shared_ptr<DeviatoricModel> dev_model_;
-
-};
 
 
 } // namespace neml

@@ -88,10 +88,6 @@ PYBIND11_PLUGIN(neml) {
   py::class_<NEMLModel_sd, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd", py::base<NEMLModel>())
       ;
 
-  py::class_<SplitModel_sd, std::shared_ptr<SplitModel_sd>>(m, "SplitModel_sd", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<VolumetricModel>, std::shared_ptr<DeviatoricModel>>())
-      ;
-
   return m.ptr();
 }
 
