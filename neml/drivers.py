@@ -173,6 +173,9 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
     print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
   while (nR > rtol * nR0) and (nR > atol * nR):
+    print(J)
+    print(R)
+    print(la.solve(J,R))
     x -= la.solve(J, R)
     R, J = RJ(x)
     nR = la.norm(R)

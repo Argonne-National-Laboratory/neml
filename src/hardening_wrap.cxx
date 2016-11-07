@@ -57,6 +57,14 @@ PYBIND11_PLUGIN(hardening) {
       .def_property_readonly("Kp", &IsoJ2LinearAHardening::Kp)
       ;
 
+  py::class_<IsoJ2VoceAHardening, std::shared_ptr<IsoJ2VoceAHardening>>(m, "IsoJ2VoceAHardening", py::base<AssociativeHardening>())
+      .def(py::init<double, double, double>())
+      
+      .def_property_readonly("K0", &IsoJ2VoceAHardening::K0)
+      .def_property_readonly("Ksat", &IsoJ2VoceAHardening::Ksat)
+      .def_property_readonly("delta", &IsoJ2VoceAHardening::delta)
+      ;
+
   return m.ptr();
 
 }

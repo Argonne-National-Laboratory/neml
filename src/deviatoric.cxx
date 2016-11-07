@@ -91,11 +91,10 @@ int LEModel::update(
 RIAFModel::RIAFModel(std::shared_ptr<ShearModulus> modulus,
                      std::shared_ptr<YieldSurface> surface, 
                      std::shared_ptr<AssociativeHardening> hardening,
-                     double tol, int miter) :
+                     double tol, int miter, bool verbose) :
     modulus_(modulus), surface_(surface), hardening_(hardening),
-    tol_(tol), miter_(miter)
+    tol_(tol), miter_(miter), verbose_(verbose)
 {
-  verbose_ = false;
 }
 
 RIAFModel::~RIAFModel()
@@ -224,7 +223,6 @@ bool RIAFModel::take_step(const double * const e_dev, double mu, double T,
   
   double Gsolve[nhist()];
   std::copy(G, G+nhist(), Gsolve);
-
   solve_mat(J, n, Gsolve);
 
   // Calculate the increment
@@ -291,6 +289,16 @@ void RIAFModel::get_jacobian(const double * const s, const double * const q,
       J[CINDEX(i+6,j+6,nhist())] = J22[CINDEX(i,j,nh)];
     }
   }
+  
+  /*
+  std::cout << "CHECKING" << std::endl;
+  for (int i=0; i<nhist(); i++) {
+    for (int j=0; j<nhist(); j++) {
+      std::cout << J[CINDEX(i,j,nhist())] << "\t";
+    }
+    std::cout << std::endl;
+  }
+  */
 }
 
 void RIAFModel::get_tangent(double mu, double T, 
@@ -298,44 +306,45 @@ void RIAFModel::get_tangent(double mu, double T,
                             const double * const s_np1, 
                             double * const A_np1) const
 {
-  // Get to stress space
-  int nh = hardening_->nhist();
-  double q_np1[nh];
-  hardening_->q(alpha_np1, T, q_np1);
+  double mod[36];  
+  if (dg > 0.0) {
+    // Get to stress space
+    int nh = hardening_->nhist();
+    double q_np1[nh];
+    hardening_->q(alpha_np1, T, q_np1);
 
-  // Grab required derivatives
-  double grad[6];
-  double mod[36];
-  
-  surface_->df_ds(s_np1, q_np1, T, grad);
-  surface_->df_dsds(s_np1, q_np1, T, mod);
+    // Grab required derivatives
+    double grad[6];
+    
+    surface_->df_ds(s_np1, q_np1, T, grad);
+    surface_->df_dsds(s_np1, q_np1, T, mod);
 
-  for (int i=0; i<36; i++) {
-    mod[i] *= dg;
-  }
-  for (int i=0; i<6; i++) {
-    mod[CINDEX(i,i,6)] += 1.0 / (2.0 * mu);
-  }
+    for (int i=0; i<36; i++) {
+      mod[i] *= dg;
+    }
+    for (int i=0; i<6; i++) {
+      mod[CINDEX(i,i,6)] += 1.0 / (2.0 * mu);
+    }
 
-  // Invert in place
-  invert_mat(mod, 6);
+    // Invert in place
+    invert_mat(mod, 6);
 
-  // Setup outer
-  double N[6];
-  mat_vec(mod, 6, grad, 6, N);
-  double v = sqrt(dot_vec(N, grad, 6));
-  if (fabs(v) > std::numeric_limits<double>::epsilon()) {
+    // Setup outer
+    double N[6];
+    mat_vec(mod, 6, grad, 6, N);
+    double v = std::sqrt(dot_vec(N, grad, 6));
     for (int i=0; i<6; i++) {
       N[i] /= v;
     }
+
+    outer_update_minus(N, 6, N, 6, mod);
   }
   else {
+    std::fill(mod,mod+36,0.0);
     for (int i=0; i<6; i++) {
-      N[i] = 0.0;
+      mod[CINDEX(i,i,6)] = 2.0 * mu;
     }
   }
-
-  outer_update_minus(N, 6, N, 6, mod);
 
   // Now take care of the deviatoric part
   double cr[36] = {

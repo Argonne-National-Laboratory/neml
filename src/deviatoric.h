@@ -72,7 +72,7 @@ class RIAFModel: public DeviatoricModel {
             std::shared_ptr<YieldSurface> surface, 
             std::shared_ptr<AssociativeHardening> hardening,
             double tol = 1.0e-6,
-            int miter = 25);
+            int miter = 25, bool verbose = false);
   virtual ~RIAFModel();
 
   // Defined here

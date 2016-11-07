@@ -53,10 +53,10 @@ PYBIND11_PLUGIN(deviatoric) {
       .def(py::init<std::shared_ptr<ShearModulus>, 
             std::shared_ptr<YieldSurface>, 
             std::shared_ptr<AssociativeHardening>,
-            double, int>(), py::arg("shear_modulus"),
+            double, int, bool>(), py::arg("shear_modulus"),
             py::arg("yield_surface"), py::arg("hardening_rule"),
             py::arg("tol") = 1.0e-6,
-            py::arg("miter") = 25)
+            py::arg("miter") = 25, py::arg("verbose") = false)
       ;
 
   return m.ptr();

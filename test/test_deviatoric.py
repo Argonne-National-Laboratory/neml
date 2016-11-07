@@ -72,13 +72,14 @@ class CommonPlasticity(object):
 
   def test_tangent_steps(self):
     """
-      Use the above parameters to exercise model tangent
+      Tangent test
     """
     h_n = self.model.init_hist()
     s_n = np.zeros((6,))
     e_n = np.zeros((6,))
     t_n = 0.0
     for i,f in enumerate(np.linspace(0,1,self.nsteps)):
+      print(i)
       e_np1 = self.e_max * f
       t_np1 = self.t_max * f
 
@@ -89,17 +90,20 @@ class CommonPlasticity(object):
           self.T, self.T, t_np1, t_n, s_n, h_n)[0]
       num_A = differentiate(dfn, e_np1)
       
-      self.assertTrue(np.allclose(num_A, A_np1, rtol = 5.0e-2))
+      self.assertTrue(np.allclose(A_np1, num_A, rtol = 1.0e-6),
+          msg = str((A_np1)))
 
       e_n = np.copy(e_np1)
       t_n = t_np1
       s_n = np.copy(s_np1)
       h_n = np.copy(h_np1)
 
+    #self.assertTrue(False)
+
 
 class AssociativeLinearKin(unittest.TestCase, CommonPlasticity):
   def setUp(self):
-    self.e_max = np.array([0.05,0.01,-0.025,0.05,0.1,-0.08])
+    self.e_max = np.array([0.05,0,0,0,0,0])/10.0
     self.t_max = 10.0
     self.nsteps = 100
 
@@ -112,12 +116,12 @@ class AssociativeLinearKin(unittest.TestCase, CommonPlasticity):
     self.K = self.E / (3 * (1 - 2 * self.nu))
     
     self.K0 = 200.0
-    self.Kp = self.E / 200.0
+    self.Kp = self.E / 100.0
 
     shear_model = shear.ConstantShearModulus(self.mu)
-    ys = surface.IsoJ2()
+    self.ys = surface.IsoJ2()
     hr = hardening.IsoJ2LinearAHardening(self.K0, self.Kp)
-    self.model = deviatoric.RIAFModel(shear_model, ys, hr, miter = 5)
+    self.model = deviatoric.RIAFModel(shear_model, self.ys, hr, verbose=True)
 
     self.hist0 = np.zeros((7,))
 

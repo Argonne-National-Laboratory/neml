@@ -18,7 +18,7 @@ class CommonAssociative(object):
 
   def test_D(self):
     dfn = lambda a: self.model.q(a, self.T)
-    n_d = differentiate(dfn, self.alpha)
+    n_d = -differentiate(dfn, self.alpha)
 
     self.assertTrue(np.allclose(self.model.D(self.alpha, self.T), n_d))
 
@@ -44,3 +44,25 @@ class TestIsoJ2LinearAHardening(unittest.TestCase, CommonAssociative):
 
   def test_q(self):
     self.assertTrue(np.allclose(self.model.q(self.alpha, self.T), -self.K0 - self.Kp * self.alpha[0]))
+
+class TestIsoJ2VoceAHardening(unittest.TestCase, CommonAssociative):
+  def setUp(self):
+    self.alpha = np.array([0.1])
+    self.alpha0 = np.zeros((1,))
+
+    self.K0 = 100.0
+    self.Ksat = 500.0
+    self.delta = 0.1
+
+    self.T = 300.0
+
+    self.model = IsoJ2VoceAHardening(self.K0, self.Ksat, self.delta)
+
+  def test_properties(self):
+    self.assertTrue(np.isclose(self.model.K0, self.K0))
+    self.assertTrue(np.isclose(self.model.Ksat, self.Ksat))
+    self.assertTrue(np.isclose(self.model.delta, self.delta))
+
+  def test_q(self):
+    self.assertTrue(np.allclose(self.model.q(self.alpha, self.T), 
+      -self.K0 - self.Ksat * (1.0 - np.exp(-self.delta * self.alpha[0]))))

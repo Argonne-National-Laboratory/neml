@@ -1,6 +1,7 @@
 #include "hardening.h"
 
 #include "nemlmath.h"
+#include <cmath>
 
 namespace neml {
 
@@ -50,13 +51,13 @@ int IsoJ2LinearAHardening::q(const double * const alpha, double T, double * cons
 
 int IsoJ2LinearAHardening::D(const double * const alpha, double T, double * const Dv) const
 {
-  Dv[0] = -Kp_;
+  Dv[0] = Kp_;
   return 0;
 }
 
 int IsoJ2LinearAHardening::D_inv(const double * const alpha, double T, double * const Dv) const
 {
-  Dv[0] = -1.0 / Kp_;
+  Dv[0] = 1.0 / Kp_;
 }
 
 double IsoJ2LinearAHardening::K0() const
@@ -68,6 +69,61 @@ double IsoJ2LinearAHardening::K0() const
 double IsoJ2LinearAHardening::Kp() const
 {
   return Kp_;
+}
+
+
+IsoJ2VoceAHardening::IsoJ2VoceAHardening(double K0, double Ksat, double delta) :
+    AssociativeHardening(), K0_(K0), Ksat_(Ksat), delta_(delta)
+{
+
+}
+
+IsoJ2VoceAHardening::~IsoJ2VoceAHardening()
+{
+
+}
+
+size_t IsoJ2VoceAHardening::nhist() const
+{
+  return 1;
+}
+
+int IsoJ2VoceAHardening::init_hist(double * const alpha) const
+{
+  alpha[0] = 0.0;
+  return 0;
+}
+
+int IsoJ2VoceAHardening::q(const double * const alpha, double T, double * const qv) const
+{
+  qv[0] = -K0_ - Ksat_ * (1.0 - std::exp(-delta_ * alpha[0]));
+  return 0;
+}
+
+int IsoJ2VoceAHardening::D(const double * const alpha, double T, double * const Dv) const
+{
+  Dv[0] = delta_ * Ksat_ * std::exp(-delta_ * alpha[0]);
+  return 0;
+}
+
+int IsoJ2VoceAHardening::D_inv(const double * const alpha, double T, double * const Dv) const
+{
+  Dv[0] = 1.0 / (delta_ * Ksat_ * std::exp(-delta_ * alpha[0]));
+}
+
+double IsoJ2VoceAHardening::K0() const
+{
+  return K0_;
+}
+
+double IsoJ2VoceAHardening::Ksat() const
+{
+  return Ksat_;
+}
+
+double IsoJ2VoceAHardening::delta() const
+{
+  return delta_;
 }
 
 } // namespace neml

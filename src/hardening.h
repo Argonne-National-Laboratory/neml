@@ -51,6 +51,28 @@ class IsoJ2LinearAHardening: public AssociativeHardening {
 
 };
 
+/// IsoJ2 voce
+class IsoJ2VoceAHardening: public AssociativeHardening {
+ public:
+  IsoJ2VoceAHardening(double K0, double Ksat, double delta);
+  virtual ~IsoJ2VoceAHardening();
+
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const alpha) const;
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual int D(const double * const alpha, double T, double * const Dv) const;
+  virtual int D_inv(const double * const alpha, double T, double * const Dv) const;
+
+  // Getters
+  double K0() const;
+  double Ksat() const;
+  double delta() const;
+
+ private:
+  const double K0_, Ksat_, delta_;
+
+};
+
 
 
 } // namespace neml
