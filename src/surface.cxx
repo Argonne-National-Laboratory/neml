@@ -1,6 +1,7 @@
 #include "surface.h"
 #include "nemlmath.h"
 
+#include <limits>
 #include <algorithm>
 
 namespace neml {
@@ -65,6 +66,11 @@ int IsoJ2::df_dsds(const double* const s, const double* const q, double T,
   std::copy(s, s+6, s1);
 
   double ns = norm2_vec(s1, 6);
+
+  if (ns < std::numeric_limits<double>::epsilon()) {
+    std::fill(ddf, ddf+36, 0.0);
+    return 0;
+  }
 
   normalize_vec(s1, 6);
   std::copy(s1, s1+6, s2);

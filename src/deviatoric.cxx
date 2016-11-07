@@ -3,6 +3,7 @@
 #include "nemlmath.h"
 #include "nemlerror.h"
 
+#include <limits>
 #include <algorithm>
 #include <iostream>
 
@@ -164,6 +165,7 @@ int RIAFModel::update(
   if (i == miter_) return MAX_ITERATIONS;
   
   // Setup the algorithmic tangent
+  get_tangent(mu, T_np1, alpha, dg, s_np1, A_np1);
 
   return 0;
 }
@@ -202,7 +204,7 @@ bool RIAFModel::take_step(const double * const e_dev, double mu, double T,
   for (int i=0; i<nh; i++) {
     R[i+6] = -alpha_np1[i] + alpha_n[i] + dg * G[i + 6];
   }
-  
+
   // Check convergence
   double Rn = norm2_vec(R, nhist());
   if (verbose_) {
@@ -289,6 +291,63 @@ void RIAFModel::get_jacobian(const double * const s, const double * const q,
       J[CINDEX(i+6,j+6,nhist())] = J22[CINDEX(i,j,nh)];
     }
   }
+}
+
+void RIAFModel::get_tangent(double mu, double T, 
+                            const double * const alpha_np1, double dg,
+                            const double * const s_np1, 
+                            double * const A_np1) const
+{
+  // Get to stress space
+  int nh = hardening_->nhist();
+  double q_np1[nh];
+  hardening_->q(alpha_np1, T, q_np1);
+
+  // Grab required derivatives
+  double grad[6];
+  double mod[36];
+  
+  surface_->df_ds(s_np1, q_np1, T, grad);
+  surface_->df_dsds(s_np1, q_np1, T, mod);
+
+  for (int i=0; i<36; i++) {
+    mod[i] *= dg;
+  }
+  for (int i=0; i<6; i++) {
+    mod[CINDEX(i,i,6)] += 1.0 / (2.0 * mu);
+  }
+
+  // Invert in place
+  invert_mat(mod, 6);
+
+  // Setup outer
+  double N[6];
+  mat_vec(mod, 6, grad, 6, N);
+  double v = sqrt(dot_vec(N, grad, 6));
+  if (fabs(v) > std::numeric_limits<double>::epsilon()) {
+    for (int i=0; i<6; i++) {
+      N[i] /= v;
+    }
+  }
+  else {
+    for (int i=0; i<6; i++) {
+      N[i] = 0.0;
+    }
+  }
+
+  outer_update_minus(N, 6, N, 6, mod);
+
+  // Now take care of the deviatoric part
+  double cr[36] = {
+    2.0/3.0, -1.0/3.0, -1.0/3.0, 0.0, 0.0, 0.0,
+    -1.0/3.0, 2.0/3.0, -1.0/3.0, 0.0, 0.0, 0.0,
+    -1.0/3.0, -1.0/3.0, 2.0/3.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+
+  mat_mat(6, 6, 6, mod, cr, A_np1);
+
 }
 
 

@@ -47,11 +47,45 @@ class TestOuter(unittest.TestCase):
     self.nb = 12
     self.a = ra.random((self.na,))
     self.b = ra.random((self.nb,))
+    self.C = ra.random((self.na,self.nb))
 
   def test_outer(self):
     self.assertTrue(
         np.allclose(outer_vec(self.a, self.b), np.outer(self.a, self.b)),
         msg = str(outer_vec(self.a, self.b)))
+
+  def test_update(self):
+    Cu = self.C + np.outer(self.a, self.b)
+    self.assertTrue(
+        np.allclose(outer_update(self.a, self.b, self.C), Cu))
+
+  def test_update_minus(self):
+    Cu = self.C - np.outer(self.a, self.b)
+    self.assertTrue(
+        np.allclose(outer_update_minus(self.a, self.b, self.C), Cu))
+
+class TestMatVec(unittest.TestCase):
+  def setUp(self):
+    self.m = 10
+    self.n = 8
+    self.A = ra.random((self.m, self.n))
+    self.b = ra.random((self.n,))
+
+  def test_matvec(self):
+    self.assertTrue(np.allclose(np.dot(self.A, self.b), 
+      mat_vec(self.A, self.b)),
+      msg = str(np.dot(self.A, self.b)) + '\n' + str(mat_vec(self.A, self.b)))
+
+class TestMatMat(unittest.TestCase):
+  def setUp(self):
+    self.m = 10
+    self.n = 8
+    self.k = 9
+    self.A = ra.random((self.m, self.k))
+    self.B = ra.random((self.k, self.n))
+
+  def test_matmat(self):
+    self.assertTrue(np.allclose(np.dot(self.A, self.B), mat_mat(self.A, self.B)))
 
 class TestInvert(unittest.TestCase):
   def setUp(self):
@@ -70,28 +104,6 @@ class TestInvert(unittest.TestCase):
 
   def test_nonmatrix(self):
     self.assertRaises(RuntimeError, invert_mat, self.big)
-
-class TestSolveSym(unittest.TestCase):
-  def setUp(self):
-    self.n = 10
-    self.A = ra.random((self.n,self.n))
-    self.A = 0.5*(self.A + self.A.T)
-    self.A += self.n * np.eye(self.n)
-
-    self.b = ra.random((self.n,))
-    self.c = ra.random((self.n,))
-
-    self.D = np.diag(ra.random((self.n,)))
-
-  def test_solve(self):
-    x = la.solve(self.A, self.b)
-    y = la.solve(self.A, self.c)
-    self.A = factor_sym_mat(self.A)
-    self.b = backsolve_sym_mat(self.A, self.b)
-    self.c = backsolve_sym_mat(self.A, self.c)
-
-    self.assertTrue(np.allclose(self.b, x))
-    self.assertTrue(np.allclose(self.c, y))
 
 class TestSolve(unittest.TestCase):
   def setUp(self):

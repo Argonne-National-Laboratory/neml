@@ -94,6 +94,9 @@ class RIAFModel: public DeviatoricModel {
   void get_jacobian(const double * const s, const double * const q,
                     const double * const Di, double T,
                     double mu, double dg, double * const J) const;
+  void get_tangent(double mu, double T, const double * const alpha_np1,
+                   double dg, const double * const s_np1, 
+                   double * const A_np1) const;
 
   std::shared_ptr<ShearModulus> modulus_;
   std::shared_ptr<YieldSurface> surface_;

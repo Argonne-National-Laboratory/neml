@@ -114,6 +114,85 @@ PYBIND11_PLUGIN(nemlmath) {
           return C;
         }, "Outer product of a x b.");
 
+  m.def("outer_update",
+        [](py::array_t<double, py::array::c_style> a, py::array_t<double, py::array::c_style> b, py::array_t<double, py::array::c_style> C) -> py::array_t<double>
+        {
+          if ((a.request().ndim != 1)  || (b.request().ndim != 1)) {
+            throw LinalgError("The arrays must be vectors!");
+          }
+
+          if (C.request().ndim != 2) {
+            throw LinalgError("C must be a matrix!");
+          }
+
+          if ((C.request().shape[0] != a.request().shape[0]) || (C.request().shape[1] != b.request().shape[0])) {
+            throw LinalgError("C is not conformable with axb!");
+          }
+          
+          outer_update(arr2ptr<double>(a), a.request().shape[0], arr2ptr<double>(b), b.request().shape[0], arr2ptr<double>(C));
+
+          return C;
+        }, "Rank 2 update C += a x b.");
+
+  m.def("outer_update_minus",
+        [](py::array_t<double, py::array::c_style> a, py::array_t<double, py::array::c_style> b, py::array_t<double, py::array::c_style> C) -> py::array_t<double>
+        {
+          if ((a.request().ndim != 1)  || (b.request().ndim != 1)) {
+            throw LinalgError("The arrays must be vectors!");
+          }
+
+          if (C.request().ndim != 2) {
+            throw LinalgError("C must be a matrix!");
+          }
+
+          if ((C.request().shape[0] != a.request().shape[0]) || (C.request().shape[1] != b.request().shape[0])) {
+            throw LinalgError("C is not conformable with axb!");
+          }
+          
+          outer_update_minus(arr2ptr<double>(a), a.request().shape[0], arr2ptr<double>(b), b.request().shape[0], arr2ptr<double>(C));
+
+          return C;
+        }, "Rank 2 update C -= a x b.");
+
+  m.def("mat_vec",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> b) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("A must be a matrix!");
+          }
+          if (b.request().ndim != 1) {
+            throw LinalgError("b must be a vector!");
+          }
+          if (A.request().shape[1] != b.request().shape[0]) {
+            throw LinalgError("A and b are not conformable!");
+          }
+
+          auto c = alloc_vec<double>(A.request().shape[0]);
+          
+          mat_vec(arr2ptr<double>(A), A.request().shape[0], arr2ptr<double>(b), b.request().shape[0], arr2ptr<double>(c));
+
+          return c;
+
+        }, "Matrix-vector product c = A.b.");
+
+  m.def("mat_mat",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> B) -> py::array_t<double>
+        {
+          if ((A.request().ndim != 2) || (B.request().ndim != 2)) {
+            throw LinalgError("A and B must be matrices!");
+          }
+          if (A.request().shape[1] != B.request().shape[0]) {
+            throw LinalgError("A and B must be conformal!");
+          }
+
+          auto C = alloc_mat<double>(A.request().shape[0], B.request().shape[1]);
+          
+          mat_mat(A.request().shape[0], B.request().shape[1], A.request().shape[1],
+                  arr2ptr<double>(A), arr2ptr<double>(B), arr2ptr<double>(C));
+
+          return C;
+        }, "Matrix-matrix product C = A.B.");
+
   m.def("invert_mat", 
         [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
         {
@@ -128,44 +207,7 @@ PYBIND11_PLUGIN(nemlmath) {
           return A;
         }, "Invert a matrix IN PLACE.");
 
-  m.def("factor_sym_mat",
-        [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
-        {
-          if (A.request().ndim != 2) {
-            throw LinalgError("Array is not a matrix!");
-          }
-
-          if (A.request().shape[0] != A.request().shape[1]) {
-            throw LinalgError("Array is not square!");
-          }
-
-          int ier = factor_sym_mat(arr2ptr<double>(A), A.request().shape[0]);
-
-          return A;
-        }, "Factorized a symmetric matrix IN PLACE.");
-
-  m.def("backsolve_sym_mat",
-        [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> b) -> py::array_t<double>
-        {
-          if (A.request().ndim != 2) {
-            throw LinalgError("A is not a matrix!");
-          }
-          if (A.request().shape[0] != A.request().shape[1]) {
-            throw LinalgError("A is not square!");
-          }
-          if (b.request().ndim != 1) {
-            throw LinalgError("b is not a vector!");
-          }
-          if (A.request().shape[0] != b.request().shape[0]) {
-            throw LinalgError("A and b are not conformable!");
-          }
-
-          backsolve_sym_mat(arr2ptr<double>(A), A.request().shape[0], arr2ptr<double>(b));
-
-          return b;
-        }, "Solve Ax=b from a factorized, symmetric A, dumping the result IN PLACE into b.");
-
-  m.def("solve_mat",
+   m.def("solve_mat",
         [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> b) -> py::array_t<double>
         {
           if (A.request().ndim != 2) {

@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 namespace neml {
 
@@ -47,9 +48,14 @@ double norm2_vec(const double * const a, int n)
 int normalize_vec(double * const a, int n)
 {
   double nv = norm2_vec(a, n);
+  if (fabs(nv) < std::numeric_limits<double>::epsilon()) {
+    std::fill(a, a+n, 0.0);
+    return 0;
+  }
   for (int i=0; i<n; i++) {
     a[i] /= nv;
   }
+  return 0;
 }
 
 int outer_vec(const double * const a, int na, const double * const b, int nb, double * const C)
@@ -61,6 +67,36 @@ int outer_vec(const double * const a, int na, const double * const b, int nb, do
   }
 
   return 0;
+}
+
+int outer_update(const double * const a, int na, const double * const b, 
+                 int nb, double * const C)
+{
+  for (int i=0; i < na; i++) {
+    for (int j=0; j < nb; j++) {
+      C[CINDEX(i,j,nb)] += a[i] * b[j];
+    }
+  }
+
+  return 0;
+}
+
+int outer_update_minus(const double * const a, int na, const double * const b, 
+                       int nb, double * const C)
+{
+  for (int i=0; i < na; i++) {
+    for (int j=0; j < nb; j++) {
+      C[CINDEX(i,j,nb)] -= a[i] * b[j];
+    }
+  }
+
+  return 0;
+}
+
+int mat_vec(const double * const A, int m, const double * const b, int n, 
+            double * const c)
+{
+  dgemv_("T", n, m, 1.0, A, n, b, 1, 0.0, c, 1);
 }
 
 int invert_mat(double * const A, int n)
@@ -79,22 +115,10 @@ int invert_mat(double * const A, int n)
   return 0;
 }
 
-int factor_sym_mat(double * const A, int n)
+int mat_mat(int m, int n, int k, const double * const A,
+            const double * const B, double * const C)
 {
-  int info;
-
-  dpotrf_("L", n, A, n, info);
-
-  return 0;
-}
-
-int backsolve_sym_mat(double * const A, int n, double * const x)
-{
-  int info;
-
-  dpotrs_("L", n, 1, A, n, x, n, info);
-
-  return 0;
+  dgemm_("N", "N", n, m, k, 1.0, B, n, A, k, 0.0, C, n);
 }
 
 int solve_mat(const double * const A, int n, double * const x)
