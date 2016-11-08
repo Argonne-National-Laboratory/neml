@@ -56,7 +56,7 @@ if (WRAP_PYTHON)
 
       # actual material models
       add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(neml solvers nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      target_link_libraries(neml solvers ri_flow nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(neml PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET neml PROPERTY OUTPUT_NAME "neml.so")
@@ -66,11 +66,12 @@ else()
       # Everything in a big shared library
       add_library(neml SHARED 
             neml.cxx 
-            nemlmath.cxx
-            solvers.cxx
-            surfaces.cxx
-            hardening.cxx
-            nemlerror.cxx
+            nemlmath.cxx 
+            solvers.cxx 
+            surfaces.cxx 
+            hardening.cxx 
+            ri_flow.cxx 
+            nemlerror.cxx 
             elasticity.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 endif()

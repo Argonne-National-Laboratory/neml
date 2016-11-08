@@ -93,6 +93,41 @@ PYBIND11_PLUGIN(neml) {
            py::arg("elastic"))
       ;
 
+  py::class_<SmallStrainRateIndependentPlasticity, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity", py::base<NEMLModel_sd>())
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool>(),
+           py::arg("elastic"), py::arg("flow"), py::arg("rtol") = 1.0e-6, py::arg("atol") = 1.0e-10, py::arg("miter") = 25, py::arg("verbose")=false)
+  
+      .def("set_trial_state",
+           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> h_n, double T_np1) -> void
+           {
+              int ier = m.set_trial_state(arr2ptr<double>(e_np1), arr2ptr<double>(h_n), T_np1);
+              py_error(ier);
+           }, "Setup trial state for solve.")
+
+      // Remove if/when pybind11 supports multiple inheritance
+      .def_property_readonly("nparams", &Solvable::nparams, "Number of variables in nonlinear equations.")
+      .def("init_x",
+           [](SmallStrainRateIndependentPlasticity & m) -> py::array_t<double>
+           {
+            auto x = alloc_vec<double>(m.nparams());
+            int ier = m.init_x(arr2ptr<double>(x));
+            py_error(ier);
+            return x;
+           }, "Initialize guess.")
+      .def("RJ",
+           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> x) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           {
+            auto R = alloc_vec<double>(m.nparams());
+            auto J = alloc_mat<double>(m.nparams(), m.nparams());
+            
+            int ier = m.RJ(arr2ptr<double>(x), arr2ptr<double>(R), arr2ptr<double>(J));
+            py_error(ier);
+
+            return std::make_tuple(R, J);
+           }, "Residual and jacobian.")
+      // End remove block
+      ;
+
   return m.ptr();
 }
 

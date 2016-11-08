@@ -2,9 +2,12 @@
 #define NEML_H
 
 #include "elasticity.h"
+#include "ri_flow.h"
+#include "solvers.h"
 
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace neml {
 
@@ -171,19 +174,67 @@ class SmallStrainElasticity: public NEMLModel_sd {
  public:
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic);
 
-   virtual int update_sd(
-       const double * const e_np1, const double * const e_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1);
-   virtual size_t nhist() const;
-   virtual int init_hist(double * const hist) const;
+  virtual int update_sd(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1);
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const hist) const;
 
  private:
    std::shared_ptr<LinearElasticModel> elastic_;
+};
 
+/// Small strain, rate-independent plasticity
+//    The algorithm used here is generalized closest point projection
+//    for associative flow models.  For non-associative models the algorithm
+//    may theoretically fail the discrete Kuhn-Tucker conditions, even
+//    putting aside convergence issues on the nonlinear solver.
+//
+//    The class does check for Kuhn-Tucker violations when it returns, 
+//    reporting an error if the conditions are violated.
+class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable, public std::enable_shared_from_this<SmallStrainRateIndependentPlasticity> {
+ public:
+  SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
+                                       std::shared_ptr<RateIndependentFlowRule> flow,
+                                       double rtol, double atol, int miter,
+                                       bool verbose);
+  virtual int update_sd(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1);
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const hist) const;
+
+  virtual size_t nparams() const;
+  virtual int init_x(double * const x);
+  virtual int RJ(const double * const x, double * const R, double * const J);
+
+  // Make this public for ease of testing
+  int set_trial_state(const double * const e_np1, const double * const h_n,
+                      double T_np1);
+
+ private:
+  std::shared_ptr<LinearElasticModel> elastic_;
+  std::shared_ptr<RateIndependentFlowRule> flow_;
+
+  // Need to store the trial state in memory so that the solver 
+  // can have access to it.  Not happy about it, but eh.
+  double ep_tr_[6];
+  double s_tr_[6];
+  double e_np1_[6];
+  double C_[36];
+  double T_;
+  std::vector<double> h_tr_;
+  double rtol_, atol_;
+  int miter_;
+  bool verbose_;
 };
 
 
