@@ -192,6 +192,27 @@ PYBIND11_PLUGIN(nemlmath) {
 
         }, "Matrix-vector product c = A.b.");
 
+  m.def("mat_vec_trans",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> b) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("A must be a matrix!");
+          }
+          if (b.request().ndim != 1) {
+            throw LinalgError("b must be a vector!");
+          }
+          if (A.request().shape[0] != b.request().shape[0]) {
+            throw LinalgError("A and b are not conformable!");
+          }
+
+          auto c = alloc_vec<double>(A.request().shape[1]);
+          
+          mat_vec_trans(arr2ptr<double>(A), A.request().shape[1], arr2ptr<double>(b), b.request().shape[0], arr2ptr<double>(c));
+
+          return c;
+
+        }, "Matrix-vector product c = A.T.b.");
+
   m.def("mat_mat",
         [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> B) -> py::array_t<double>
         {

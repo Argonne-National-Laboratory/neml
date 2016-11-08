@@ -89,7 +89,8 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<SmallStrainElasticity, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>>(), py::arg("elastic"))
+      .def(py::init<std::shared_ptr<LinearElasticModel>>(), 
+           py::arg("elastic"))
       ;
 
   return m.ptr();

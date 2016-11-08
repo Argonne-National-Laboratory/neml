@@ -49,6 +49,9 @@ int outer_update_minus(const double * const a, int na, const double * const b, i
 /// Matrix-vector c = A . b
 int mat_vec(const double * const A, int m, const double * const b, int n, double * const c);
 
+/// Matrix-vector c = A.T . b
+int mat_vec_trans(const double * const A, int m, const double * const b, int n, double * const c);
+
 // Matrix-matrix C = A . B
 int mat_mat(int m, int n, int k, const double * const A, const double * const B, double * const C);
 

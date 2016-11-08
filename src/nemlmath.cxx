@@ -109,6 +109,12 @@ int mat_vec(const double * const A, int m, const double * const b, int n,
   dgemv_("T", n, m, 1.0, A, n, b, 1, 0.0, c, 1);
 }
 
+int mat_vec_trans(const double * const A, int m, const double * const b, int n, 
+            double * const c)
+{
+  dgemv_("N", m, n, 1.0, A, m, b, 1, 0.0, c, 1);
+}
+
 int invert_mat(double * const A, int n)
 {
   int * ipiv = new int[n + 1];

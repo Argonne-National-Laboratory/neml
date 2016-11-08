@@ -78,11 +78,16 @@ class TestMatVec(unittest.TestCase):
     self.n = 8
     self.A = ra.random((self.m, self.n))
     self.b = ra.random((self.n,))
+    self.c = ra.random((self.m,))
 
   def test_matvec(self):
     self.assertTrue(np.allclose(np.dot(self.A, self.b), 
       mat_vec(self.A, self.b)),
       msg = str(np.dot(self.A, self.b)) + '\n' + str(mat_vec(self.A, self.b)))
+
+  def test_matvec_trans(self):
+    self.assertTrue(np.allclose(np.dot(self.A.T, self.c),
+      mat_vec_trans(self.A, self.c)))
 
 class TestMatMat(unittest.TestCase):
   def setUp(self):

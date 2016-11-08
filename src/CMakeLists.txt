@@ -45,6 +45,15 @@ if (WRAP_PYTHON)
             set_property(TARGET hardening PROPERTY SUFFIX "")
       endif()
 
+      # rate independent flow rules
+      add_library(ri_flow SHARED ri_flow_wrap.cxx ri_flow.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(ri_flow surfaces hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(ri_flow PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET ri_flow PROPERTY OUTPUT_NAME "ri_flow.so")
+            set_property(TARGET ri_flow PROPERTY SUFFIX "")
+      endif()
+
       # actual material models
       add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(neml solvers nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
