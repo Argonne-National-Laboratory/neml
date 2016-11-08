@@ -48,7 +48,7 @@ int NEMLModel_ldF::update_ldI(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1) const
+    double * const A_np1)
 {
   assert(false); // Pass on implementing for now
 }
@@ -59,7 +59,7 @@ int NEMLModel_ldF::update_sd(
      double t_np1, double t_n,
      double * const s_np1, const double * const s_n,
      double * const h_np1, const double * const h_n,
-     double * const A_np1) const
+     double * const A_np1)
 {
   assert(false); // Pass on implementing for now
 }
@@ -92,7 +92,7 @@ int NEMLModel_ldI::update_ldF(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1) const
+    double * const A_np1)
 {
   assert(false); // Pass for now
 }
@@ -103,7 +103,7 @@ int NEMLModel_ldI::update_sd(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1) const
+    double * const A_np1)
 {
   assert(false); // Pass for now
 }
@@ -137,7 +137,7 @@ int NEMLModel_sd::update_ldF(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1) const
+    double * const A_np1)
 {
   assert(false); // Pass for now
 }
@@ -148,7 +148,7 @@ int NEMLModel_sd::update_ldI(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1) const
+    double * const A_np1)
 {
   assert(false); // Pass for now
 }
@@ -178,7 +178,7 @@ int SmallStrainElasticity::update_sd(
        double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
        double * const h_np1, const double * const h_n,
-       double * const A_np1) const
+       double * const A_np1)
 {
   elastic_->C(T_np1, A_np1);
   mat_vec(A_np1, 6, e_np1, 6, s_np1);

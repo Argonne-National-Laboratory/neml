@@ -9,6 +9,16 @@ if (WRAP_PYTHON)
             set_property(TARGET nemlmath PROPERTY SUFFIX "")
       endif()
 
+      # Nonlinear solvers
+      # elasticity
+      add_library(solvers SHARED solvers_wrap.cxx solvers.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(solvers nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(solvers PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET solvers PROPERTY OUTPUT_NAME "solvers.so")
+            set_property(TARGET solvers PROPERTY SUFFIX "")
+      endif()
+
       # elasticity
       add_library(elasticity SHARED elasticity_wrap.cxx elasticity.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(elasticity nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
@@ -31,6 +41,7 @@ else()
       add_library(neml SHARED 
             neml.cxx 
             nemlmath.cxx
+            solvers.cxx
             nemlerror.cxx
             elasticity.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})

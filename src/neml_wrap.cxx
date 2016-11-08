@@ -18,7 +18,7 @@ PYBIND11_PLUGIN(neml) {
   py::class_<NEMLModel, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
       .def("init_store",
-           [](const NEMLModel & m) -> py::array_t<double>
+           [](NEMLModel & m) -> py::array_t<double>
            {
             auto h = alloc_vec<double>(m.nstore());
             int ier = m.init_store(arr2ptr<double>(h));
@@ -28,7 +28,7 @@ PYBIND11_PLUGIN(neml) {
 
       .def_property_readonly("nhist", &NEMLModel::nhist, "Number of actual history variables.")
       .def("init_store",
-           [](const NEMLModel & m) -> py::array_t<double>
+           [](NEMLModel & m) -> py::array_t<double>
            {
             auto h = alloc_vec<double>(m.nhist());
             int ier = m.init_hist(arr2ptr<double>(h));
@@ -37,7 +37,7 @@ PYBIND11_PLUGIN(neml) {
            }, "Initialize history variables.")
 
       .def("update_ldF",
-           [](const NEMLModel & m, py::array_t<double, py::array::c_style> F_np1, py::array_t<double, py::array::c_style> F_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>>
+           [](NEMLModel & m, py::array_t<double, py::array::c_style> F_np1, py::array_t<double, py::array::c_style> F_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>>
            {
             auto s_np1 = alloc_vec<double>(6);
             auto h_np1 = alloc_vec<double>(m.nstore());
@@ -51,7 +51,7 @@ PYBIND11_PLUGIN(neml) {
            }, "Large deformation update through the deformation gradient.")
 
       .def("update_ldI",
-           [](const NEMLModel & m, py::array_t<double, py::array::c_style> l_inc, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>>
+           [](NEMLModel & m, py::array_t<double, py::array::c_style> l_inc, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>>
            {
             auto s_np1 = alloc_vec<double>(6);
             auto h_np1 = alloc_vec<double>(m.nstore());
@@ -65,7 +65,7 @@ PYBIND11_PLUGIN(neml) {
            }, "Large deformation incremental update through the spatial velocity gradient.")
 
       .def("update_sd",
-           [](const NEMLModel & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>>
+           [](NEMLModel & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>>
            {
             auto s_np1 = alloc_vec<double>(6);
             auto h_np1 = alloc_vec<double>(m.nstore());
