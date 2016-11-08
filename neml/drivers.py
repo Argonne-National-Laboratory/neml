@@ -74,10 +74,10 @@ class Driver_sd(Driver):
     s_np1, h_np1, A_np1 = self.model.update_sd(e_np1, self.strain_int[-1],
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
         self.stored_int[-1])
-    
+
     self.strain_int.append(np.copy(e_np1))
-    self.stress_int.append(s_np1)
-    self.stored_int.append(h_np1)
+    self.stress_int.append(np.copy(s_np1))
+    self.stored_int.append(np.copy(h_np1))
     self.T_int.append(T_np1)
     self.t_int.append(t_np1)
 
@@ -91,16 +91,17 @@ class Driver_sd(Driver):
         T_np1       next temperature
     """
     def RJ(e):
-      s, h, A = self.model.update_sd(e, self.strain_int[-1],
-        T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
+      s, h, A = self.model.update_sd(e, np.copy(self.strain_int[-1]),
+        T_np1, self.T_int[-1], t_np1, self.t_int[-1], 
+        np.copy(self.stress_int[-1]),
         self.stored_int[-1])
       R = s - s_np1
       return R, A
 
-    e_np1 = newton(RJ, self.strain_int[-1], verbose = self.verbose,
+    e_np1 = newton(RJ, np.copy(self.strain_int[-1]), verbose = self.verbose,
         rtol = self.rtol, atol = self.atol, miter = self.miter)
 
-    self.strain_step(e_np1, t_np1, T_np1)
+    self.strain_step(np.copy(e_np1), t_np1, T_np1)
 
   def rate_step(self, sdir, erate, t_np1, T_np1):
     """
@@ -164,7 +165,7 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
   R, J = RJ(x0)
   nR = la.norm(R)
   nR0 = nR
-  x = x0
+  x = np.copy(x0)
   
   i = 0
 
@@ -173,9 +174,6 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
     print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
   while (nR > rtol * nR0) and (nR > atol * nR):
-    print(J)
-    print(R)
-    print(la.solve(J,R))
     x -= la.solve(J, R)
     R, J = RJ(x)
     nR = la.norm(R)

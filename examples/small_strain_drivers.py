@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, volumetric, deviatoric, shear, drivers, surface, hardening
+from neml import neml, elasticity, drivers
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,18 +42,6 @@ def example_strain(model, strain, T, t, nsteps):
   plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
   plt.show()
  
-  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,1], 'k-')
-  plt.plot(driver.strain[:,0], driver.history[:,2], 'r-')
-  plt.plot(driver.strain[:,0], driver.history[:,3], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.history[:,4], 'k--')
-  plt.plot(driver.strain[:,0], driver.history[:,5], 'r--')
-  plt.plot(driver.strain[:,0], driver.history[:,6], 'b--')
-  plt.show()
-
 def example_stress(model, stress, T, t, nsteps):
   """
     Parameters:
@@ -78,7 +66,7 @@ def example_stress(model, stress, T, t, nsteps):
     t += dt
 
     driver.stress_step(s, t, T)
-  
+ 
   plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
   plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
   plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
@@ -124,20 +112,12 @@ if __name__ == "__main__":
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
   
-  K0 = 200.0
-  Kb = E / 100.0
-  #Ksat = 250.0
-  #delta = 100.0
+  shear = elasticity.ConstantShearModulus(mu)
+  bulk = elasticity.ConstantBulkModulus(K)
+  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  model = neml.SmallStrainElasticity(elastic)
 
-  vol_model = volumetric.VModelConstantK(K)
-  shear_model = shear.ConstantShearModulus(mu)
-  ys = surface.IsoJ2()
-  hr = hardening.IsoJ2LinearAHardening(K0, Kb)
-  dev_model = deviatoric.RIAFModel(shear_model, ys, hr, verbose = False)
-  #dev_model = deviatoric.LEModel(shear_model)
-  model = neml.SplitModel_sd(vol_model, dev_model)
-
-  example_strain(model, np.array([0.02,0,0,0,0,0]), 300.0, 10, 100)
+  example_strain(model, np.array([0.05,0,0,0,0,0]), 300.0, 10, 100)
   example_stress(model, np.array([220.0,0,0,0,0,0]), 300.0, 10, 20)
-  #example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 1.0e-1, 50)
+  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 1.0e-1, 50)
 
