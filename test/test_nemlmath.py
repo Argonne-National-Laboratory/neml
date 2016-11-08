@@ -41,6 +41,14 @@ class TestDotNorm(unittest.TestCase):
     nv = self.a / la.norm(self.a)
     self.assertTrue(np.allclose(nv, normalize_vec(self.a)))
 
+class TestDev(unittest.TestCase):
+  def setUp(self):
+    self.s = np.array([10.0,-15.0,5.0,4.0,8.0,-12.0])
+
+  def test_dev(self):
+    sdev = self.s - np.array([1,1,1,0,0,0]) * np.sum(self.s[:3]) / 3.0
+    self.assertTrue(np.allclose(sdev, dev_vec(self.s)))
+
 class TestOuter(unittest.TestCase):
   def setUp(self):
     self.na = 10

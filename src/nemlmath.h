@@ -34,6 +34,9 @@ double norm2_vec(const double * const a, int n);
 /// Normalize a vector in place (2-norm)
 int normalize_vec(double * const a, int n);
 
+/// Return the deviatoric vector
+int dev_vec(double * const a);
+
 /// Outer product of two vectors
 int outer_vec(const double * const a, int na, const double * const b, int nb, double * const C);
 

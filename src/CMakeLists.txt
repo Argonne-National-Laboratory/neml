@@ -10,7 +10,6 @@ if (WRAP_PYTHON)
       endif()
 
       # Nonlinear solvers
-      # elasticity
       add_library(solvers SHARED solvers_wrap.cxx solvers.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(solvers nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(solvers PROPERTIES PREFIX "")
@@ -28,9 +27,27 @@ if (WRAP_PYTHON)
             set_property(TARGET elasticity PROPERTY SUFFIX "")
       endif()
 
+      # yield surfaces
+      add_library(surfaces SHARED surfaces_wrap.cxx surfaces.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(surfaces nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(surfaces PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET surfaces PROPERTY OUTPUT_NAME "surfaces.so")
+            set_property(TARGET surfaces PROPERTY SUFFIX "")
+      endif()
+
+      # hardening rules
+      add_library(hardening SHARED hardening_wrap.cxx hardening.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(hardening PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET hardening PROPERTY OUTPUT_NAME "hardening.so")
+            set_property(TARGET hardening PROPERTY SUFFIX "")
+      endif()
+
       # actual material models
       add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(neml nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      target_link_libraries(neml solvers nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(neml PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET neml PROPERTY OUTPUT_NAME "neml.so")
@@ -42,6 +59,8 @@ else()
             neml.cxx 
             nemlmath.cxx
             solvers.cxx
+            surfaces.cxx
+            hardening.cxx
             nemlerror.cxx
             elasticity.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})

@@ -58,6 +58,16 @@ int normalize_vec(double * const a, int n)
   return 0;
 }
 
+int dev_vec(double * const a)
+{
+  double tr = (a[0] + a[1] + a[2]) / 3.0;
+  for (int i=0; i<3; i++) {
+    a[i] -= tr;
+  }
+
+  return 0;
+}
+
 int outer_vec(const double * const a, int na, const double * const b, int nb, double * const C)
 {
   for (int i=0; i < na; i++) {

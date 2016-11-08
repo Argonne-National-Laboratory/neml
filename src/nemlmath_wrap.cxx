@@ -100,6 +100,23 @@ PYBIND11_PLUGIN(nemlmath) {
           return a;
         }, "Normalize a vector IN PLACE.");
 
+  m.def("dev_vec",
+        [](py::array_t<double, py::array::c_style> a) -> py::array_t<double>
+        {
+          if (a.request().ndim != 1) {
+            throw LinalgError("The array must be a vector!");
+          }
+          if (a.request().shape[0] != 6) {
+            throw LinalgError("a must be a 6-vector!");
+          }
+          
+          int ier = dev_vec(arr2ptr<double>(a));
+          py_error(ier);
+
+          return a;
+
+        }, "Make a vector deviatoric, IN PLACE.");
+
   m.def("outer_vec",
         [](py::array_t<double, py::array::c_style> a, py::array_t<double, py::array::c_style> b) -> py::array_t<double>
         {

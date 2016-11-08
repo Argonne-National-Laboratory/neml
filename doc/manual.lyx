@@ -254,7 +254,7 @@ Von Mises with isotropic hardening
 
 \begin_layout Standard
 Internal variables are 
-\begin_inset Formula $\mathbf{q}=\left[\sigma_{Y}\right]$
+\begin_inset Formula $\mathbf{q}=\left[-\sigma_{F}\right]$
 \end_inset
 
 
@@ -267,7 +267,7 @@ Internal variables are
 \begin_layout Standard
 \begin_inset Formula 
 \[
-f==J_{2}\left(\bm{\sigma}\right)-\sqrt{\frac{2}{3}}\sigma_{Y}\left(\bar{\varepsilon}_{p},T\right)
+f==J_{2}\left(\bm{\sigma}\right)-\sqrt{\frac{2}{3}}\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)
 \]
 
 \end_inset
@@ -279,7 +279,7 @@ for various yield strength functions.
 The derivatives are:
 \begin_inset Formula 
 \begin{eqnarray*}
-\frac{\partial f}{\partial\bm{\sigma}} & =\\
+\frac{\partial f}{\partial\bm{\sigma}} & = & \frac{2}{3}\frac{\mathbf{s}}{\left\Vert \mathbf{s}\right\Vert }\\
 \frac{\partial^{2}f}{\partial\bm{\sigma}\partial\bm{\sigma}} & =\\
 \frac{\partial^{2}f}{\partial\bm{\sigma}\partial\mathbf{q}} & =
 \end{eqnarray*}
@@ -292,9 +292,9 @@ and
 \begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray*}
-\frac{\partial f}{\partial\mathbf{q}} & =\\
-\frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{q}} & =\\
-\frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{\sigma}} & =
+\frac{\partial f}{\partial\mathbf{q}} & = & \sqrt{\frac{2}{3}}\\
+\frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{q}} & = & 0\\
+\frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{\sigma}} & = & 0
 \end{eqnarray*}
 
 \end_inset
@@ -320,6 +320,25 @@ Isotropic
 
 \begin_layout Subsubsection
 Linear
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=\sigma_{0}+K\bar{\varepsilon}_{p}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\sigma_{F}}{\partial\bar{\varepsilon}_{p}}=K\bar{\varepsilon}_{p}
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
