@@ -1,8 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, volumetric, deviatoric, shear
-
+from neml import neml
 from common import *
 
 import unittest

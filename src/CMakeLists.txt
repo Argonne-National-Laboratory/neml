@@ -9,6 +9,15 @@ if (WRAP_PYTHON)
             set_property(TARGET nemlmath PROPERTY SUFFIX "")
       endif()
 
+      # elasticity
+      add_library(elasticity SHARED elasticity_wrap.cxx elasticity.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(elasticity nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(elasticity PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET elasticity PROPERTY OUTPUT_NAME "elasticity.so")
+            set_property(TARGET elasticity PROPERTY SUFFIX "")
+      endif()
+
       # actual material models
       add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(neml nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
@@ -22,6 +31,7 @@ else()
       add_library(neml SHARED 
             neml.cxx 
             nemlmath.cxx
-            nemlerror.cxx)
+            nemlerror.cxx
+            elasticity.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 endif()

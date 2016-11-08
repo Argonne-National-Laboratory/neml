@@ -245,44 +245,56 @@ Material models
 \end_layout
 
 \begin_layout Section
-Deviatoric yield surfaces
+Yield surfaces
 \end_layout
 
 \begin_layout Subsection
-Von Mises, isotropic hardening
+Von Mises with isotropic hardening
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula 
-\[
-\mathbf{q}=\left[\begin{array}{c}
-K\end{array}\right]
-\]
-
+Internal variables are 
+\begin_inset Formula $\mathbf{q}=\left[\sigma_{Y}\right]$
 \end_inset
 
 
-\begin_inset Formula 
-\[
-f\left(\mathbf{s},\mathbf{q}\right)=\left\Vert \mathbf{s}\right\Vert +\sqrt{\frac{2}{3}}K
-\]
-
+\begin_inset Formula $\bm{\alpha}=\left[\bar{\varepsilon}_{p}\right]$
 \end_inset
 
 
 \end_layout
 
 \begin_layout Standard
-Note the sign on 
-\begin_inset Formula $K$
+\begin_inset Formula 
+\[
+f==J_{2}\left(\bm{\sigma}\right)-\sqrt{\frac{2}{3}}\sigma_{Y}\left(\bar{\varepsilon}_{p},T\right)
+\]
+
 \end_inset
 
-.
+for various yield strength functions.
+\end_layout
+
+\begin_layout Standard
+The derivatives are:
 \begin_inset Formula 
 \begin{eqnarray*}
-\frac{\partial f}{\partial\mathbf{s}} & = & \frac{\mathbf{s}}{\left\Vert \mathbf{s}\right\Vert }\\
-\frac{\partial f}{\partial\mathbf{q}} & = & \left[\begin{array}{c}
-\sqrt{\frac{2}{3}}\end{array}\right]
+\frac{\partial f}{\partial\bm{\sigma}} & =\\
+\frac{\partial^{2}f}{\partial\bm{\sigma}\partial\bm{\sigma}} & =\\
+\frac{\partial^{2}f}{\partial\bm{\sigma}\partial\mathbf{q}} & =
+\end{eqnarray*}
+
+\end_inset
+
+and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial f}{\partial\mathbf{q}} & =\\
+\frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{q}} & =\\
+\frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{\sigma}} & =
 \end{eqnarray*}
 
 \end_inset
@@ -290,18 +302,36 @@ Note the sign on
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Formula 
-\begin{eqnarray*}
-\frac{\partial^{2}f}{\partial\mathbf{s}\partial\mathbf{s}} & = & \frac{1}{\left\Vert \mathbf{s}\right\Vert }\left[\mathbf{I}-\left(\frac{\mathbf{s}}{\left\Vert \mathbf{s}\right\Vert }\otimes\frac{\mathbf{s}}{\left\Vert \mathbf{s}\right\Vert }\right)\right]\\
-\frac{\partial^{2}f}{\partial\mathbf{s}\partial\mathbf{q}} & = & \mathbf{0}\\
-\frac{\partial^{2}f}{\partial\mathbf{q}\partial\mathbf{s}} & = & \mathbf{0}\\
-\frac{\partial^{2}f}{\partial\mathbf{q}\partial\mathbf{q}} & = & \mathbf{0}
-\end{eqnarray*}
+\begin_layout Subsection
+Von Mises with kinematic hardening
+\end_layout
 
-\end_inset
+\begin_layout Subsection
+Von Mises with isotropic and kinematic hardening
+\end_layout
 
+\begin_layout Section
+Hardening rules
+\end_layout
 
+\begin_layout Subsection
+Isotropic
+\end_layout
+
+\begin_layout Subsubsection
+Linear
+\end_layout
+
+\begin_layout Subsubsection
+Voce
+\end_layout
+
+\begin_layout Subsection
+Kinematic
+\end_layout
+
+\begin_layout Subsubsection
+Linear
 \end_layout
 
 \begin_layout Chapter
