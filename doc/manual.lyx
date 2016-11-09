@@ -525,6 +525,9 @@ Provided several conditions are met (notably a non-singular Jacobian at
  in terms of the other derivatives.
  As it turns out, these other derivatives are parts of the Jacobian we already
  computed for the Newton scheme.
+\end_layout
+
+\begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray*}
 d\mathbf{R}_{1} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}}d\bm{\varepsilon}_{n+1}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}^{p}}d\bm{\varepsilon}_{n+1}^{p}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{\alpha}_{n+1}}d\bm{\alpha}_{n+1}+\frac{\partial\mathbf{R}_{1}}{\partial\Delta\gamma_{n+1}}d\Delta\gamma_{n+1}=0\\
@@ -535,6 +538,9 @@ dR_{3} & = & \frac{\partial R_{3}}{\partial\bm{\varepsilon}_{n+1}}d\bm{\varepsil
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray*}
 \mathbf{0} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}^{p}}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{\alpha}_{n+1}}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial\Delta\gamma_{n+1}}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}\\
@@ -549,143 +555,68 @@ Make some associations...
 
 \begin_layout Standard
 \begin_inset Formula 
-\begin{eqnarray*}
-\mathbf{0} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}}+\mathbf{J}_{11}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{12}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{13}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}\\
-\mathbf{0} & = & \frac{\partial\mathbf{R}_{2}}{\partial\bm{\varepsilon}_{n+1}}+\mathbf{J}_{21}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{22}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{23}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}\\
-0 & = & \frac{\partial R_{3}}{\partial\bm{\varepsilon}_{n+1}}+\mathbf{J}_{31}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{32}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+J_{33}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}
-\end{eqnarray*}
-
-\end_inset
-
-Another helpful note...
-\begin_inset Formula 
 \[
-\frac{\partial\bm{\sigma}_{n+1}}{\partial\bm{\varepsilon}_{n+1}}=\mathbf{C}_{n+1}
+\mathbf{0}=\left[\begin{array}{c}
+\mathbf{A}\\
+\mathbf{B}
+\end{array}\right]+\left[\begin{array}{cc}
+\mathbf{J}_{KK} & \mathbf{J}_{KE}\\
+\mathbf{J}_{EK} & \mathbf{J}_{EE}
+\end{array}\right]\left[\begin{array}{c}
+\mathbf{K}\\
+\mathbf{E}
+\end{array}\right]
 \]
 
 \end_inset
 
-
-\begin_inset Formula 
-\begin{eqnarray*}
-\mathbf{0} & = & \frac{\partial\mathbf{g}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1}+\mathbf{J}_{11}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{12}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{13}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}\\
-\mathbf{0} & = & \frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1}+\mathbf{J}_{21}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{22}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{23}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}\\
-0 & = & \frac{\partial f_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}+\mathbf{J}_{31}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{32}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+J_{33}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}
-\end{eqnarray*}
-
+where 
+\begin_inset Formula $\mathbf{K}=\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}$
 \end_inset
 
-More substitution:
-\begin_inset Formula 
-\begin{eqnarray*}
-\mathbf{0} & = & -\mathbf{I}-\mathbf{J}_{11}+\mathbf{J}_{11}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{12}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{13}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}\\
-\mathbf{0} & = & -\mathbf{J}_{21}+\mathbf{J}_{21}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{22}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{23}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}\\
-0 & = & -\mathbf{J}_{31}+\mathbf{J}_{31}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}+\mathbf{J}_{32}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}+J_{33}\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}
-\end{eqnarray*}
-
+.
+ Solve for 
+\begin_inset Formula $\mathbf{K}$
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-Work...
+:
 \begin_inset Formula 
 \[
-\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}=\frac{1}{J_{33}}\left(\mathbf{J}_{31}-\mathbf{J}_{31}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}-\mathbf{J}_{32}\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}\right)
+\mathbf{K}=\left(\mathbf{J}_{KK}-\mathbf{J}_{KE}\mathbf{J}_{EE}^{-1}\mathbf{J}_{EK}\right)^{-1}\left(\mathbf{J}_{KE}\mathbf{J}_{EE}^{-1}\mathbf{B}-\mathbf{A}\right)
 \]
 
 \end_inset
 
-
+Here 
 \begin_inset Formula 
 \[
-\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\left(\mathbf{J}_{22}-\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{32}\right)^{-1}\left(\mathbf{J}_{21}-\mathbf{J}_{21}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}-\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{31}+\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{31}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}\right)
+\mathbf{A}=\frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}}=\frac{\partial\mathbf{g}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1}
 \]
 
 \end_inset
 
-
+and 
 \begin_inset Formula 
 \[
-\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\left(\mathbf{J}_{22}-\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{32}\right)^{-1}\left(\mathbf{J}_{21}-\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{31}+\left(\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{31}-\mathbf{J}_{21}\right)\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}\right)
+\mathbf{B}=\left[\begin{array}{c}
+\frac{\partial\mathbf{R}_{2}}{\partial\bm{\varepsilon}_{n+1}}\\
+\frac{\partial R_{3}}{\partial\bm{\varepsilon}_{n+1}}
+\end{array}\right]=\left[\begin{array}{c}
+\frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1}\\
+\frac{\partial f_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}
+\end{array}\right].
 \]
 
 \end_inset
 
-Let:
-\begin_inset Formula 
-\begin{eqnarray*}
-\mathbf{A} & = & \left(\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{31}-\mathbf{J}_{21}\right)\\
-\mathbf{B} & = & \mathbf{J}_{21}-\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{31}\\
-\mathbf{D} & = & \mathbf{J}_{22}-\frac{1}{J_{33}}\mathbf{J}_{23}\mathbf{J}_{32}
-\end{eqnarray*}
-
+With 
+\begin_inset Formula $\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}$
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-\frac{d\bm{\alpha}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\mathbf{D}^{-1}\left(\mathbf{B}+\mathbf{A}\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}\right)
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}=\frac{1}{J_{33}}\mathbf{J}_{31}-\frac{1}{J_{33}}\mathbf{J}_{32}\mathbf{D}^{-1}\mathbf{B}-\left(\frac{1}{J_{33}}\mathbf{J}_{32}\mathbf{D}^{-1}\mathbf{A}+\frac{1}{J_{33}}\mathbf{J}_{31}\right)\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}
-\]
-
-\end_inset
-
-Let
-\begin_inset Formula 
-\begin{eqnarray*}
-\mathbf{E} & = & \frac{1}{J_{33}}\mathbf{J}_{32}\mathbf{D}^{-1}\\
-\mathbf{F} & = & \frac{1}{J_{33}}\mathbf{J}_{31}
-\end{eqnarray*}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-\frac{d\Delta\gamma_{n+1}}{d\bm{\varepsilon}_{n+1}}=\mathbf{F}-\mathbf{E}\mathbf{B}-\left(\mathbf{E}\mathbf{A}+\mathbf{F}\right)\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}=\left(\mathbf{J}_{11}+\mathbf{J}_{12}\mathbf{D}^{-1}\mathbf{A}-\mathbf{J}_{13}\mathbf{E}\mathbf{A}-\mathbf{J}_{13}\mathbf{F}\right)^{-1}\left(\mathbf{I}+\mathbf{J}_{11}-\mathbf{J}_{12}\mathbf{D}^{-1}\mathbf{B}-\mathbf{J}_{13}\mathbf{F}+\mathbf{J}_{13}\mathbf{E}\mathbf{B}\right)
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-And:
+ in hand we have 
 \begin_inset Formula 
 \[
 \frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\mathbf{C}:\left(\mathbf{I}-\frac{d\bm{\varepsilon}_{n+1}^{p}}{d\bm{\varepsilon}_{n+1}}\right)
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\mathbf{C}:\left(\mathbf{I}-\left(\mathbf{J}_{11}+\mathbf{J}_{12}\mathbf{D}^{-1}\mathbf{A}-\mathbf{J}_{13}\mathbf{E}\mathbf{A}-\mathbf{J}_{13}\mathbf{F}\right)^{-1}\left(\mathbf{I}+\mathbf{J}_{11}-\mathbf{J}_{12}\mathbf{D}^{-1}\mathbf{B}-\mathbf{J}_{13}\mathbf{F}+\mathbf{J}_{13}\mathbf{E}\mathbf{B}\right)\right)
 \]
 
 \end_inset

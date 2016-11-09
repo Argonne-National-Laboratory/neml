@@ -221,6 +221,9 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
                       double T_np1);
 
  private:
+  int calc_tangent_(const double * const x, const double * const s_np1,
+                    const double * const h_np1, double dg, double * const A_np1);
+
   std::shared_ptr<LinearElasticModel> elastic_;
   std::shared_ptr<RateIndependentFlowRule> flow_;
 

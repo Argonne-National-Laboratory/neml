@@ -254,6 +254,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     mat_vec(C_, 6, ee, 6, s_np1);
 
     // Complicated tangent calc...
+    calc_tangent_(x, s_np1, h_np1, dg, A_np1);
     
     // Check K-T and return
     return 0;
@@ -404,5 +405,98 @@ int SmallStrainRateIndependentPlasticity::set_trial_state(
   return 0;
 }
 
+
+int SmallStrainRateIndependentPlasticity::calc_tangent_(
+    const double * const x, const double * const s_np1,
+    const double * const h_np1, double dg, double * const A_np1)
+{
+  double R[nparams()];
+  double J[nparams()*nparams()];
+  
+  RJ(x, R, J);
+
+  //std::cout << "START" << std::endl;
+  //for (int i=0; i<nparams(); i++) {
+  //  std::cout << J[i] << " ";
+  //}
+  //std::cout << std::endl;
+  
+  int n = nparams();
+  int nk = 6;
+  int ne = nparams() - nk;
+  
+  double Jkk[nk*nk];
+  for (int i=0; i<nk; i++) {
+    for (int j=0; j<nk; j++) {
+      Jkk[CINDEX(i,j,nk)] = J[CINDEX(i,j,n)];
+    }
+  }
+
+  double Jke[nk*ne];
+  for (int i=0; i<nk; i++) {
+    for (int j=0; j<ne; j++) {
+      Jke[CINDEX(i,j,ne)] = J[CINDEX(i,(j+nk),n)];
+    }
+  }
+
+  double Jek[ne*nk];
+  for (int i=0; i<ne; i++) {
+    for (int j=0; j<nk; j++) {
+      Jek[CINDEX(i,j,nk)] = J[CINDEX((i+nk),(j),n)];
+    }
+  }
+
+  double Jee[ne*ne];
+  for (int i=0; i<ne; i++) {
+    for (int j=0; j<ne; j++) {
+      Jee[CINDEX(i,j,ne)] = J[CINDEX((i+nk),(j+nk),n)];
+    }
+  }
+
+  invert_mat(Jee, ne);
+  
+  double A[nk*6];
+  double B[ne*6];
+  
+  int nh = flow_->nhist();
+
+  double dg_ds[6*6];
+  flow_->dg_ds(s_np1, h_np1, T_, dg_ds);
+  double dh_ds[nh*6];
+  flow_->dh_ds(s_np1, h_np1, T_, dh_ds);
+  double df_ds[6];
+  flow_->df_ds(s_np1, h_np1, T_, df_ds);
+
+  mat_mat(6, 6, 6, dg_ds, C_, A);
+  for (int i=0; i<nk*6; i++) A[i] *= dg;
+  
+  mat_mat(nh, 6, 6, dh_ds, C_, B);
+  for (int i=0; i<nh*6; i++) B[i] *= dg;
+
+  mat_vec_trans(C_, 6, df_ds, 6, &B[nh*6]);
+
+  double T1[ne*nk];
+  mat_mat(ne, nk, ne, Jee, Jek, T1);
+  double T2[nk*nk];
+  mat_mat(nk, nk, ne, Jke, T1, T2);
+  for (int i=0; i<nk*nk; i++) T2[i] = Jkk[i] - T2[i];
+  invert_mat(T2, nk);
+
+  double T3[ne*nk];
+  mat_mat(ne, nk, ne, Jee, B, T3);
+  double T4[nk*nk];
+  mat_mat(nk, nk, ne, Jke, T3, T4);
+  for (int i=0; i<nk*nk; i++) T4[i] -= A[i];
+
+  double dep[36];
+  mat_mat(6, 6, 6, T2, T4, dep);
+
+  for (int i=0; i<36; i++) dep[i] = -dep[i];
+  for (int i=0; i<6; i++) dep[CINDEX(i,i,6)] += 1.0;
+
+  mat_mat(6, 6, 6, C_, dep, A_np1);
+
+  return 0;
+}
 
 } // namespace neml

@@ -58,7 +58,8 @@ int IsoJ2::df_dsds(const double* const s, const double* const q, double T,
   dev_vec(n);
   double nv = norm2_vec(n, 6);
   normalize_vec(n, 6);
-
+  
+  std::fill(ddf, ddf+36, 0.0);
   for (int i=0; i<6; i++) {
     ddf[CINDEX(i,i,6)] += 1.0;
   }

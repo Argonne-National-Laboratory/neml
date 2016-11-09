@@ -79,6 +79,7 @@ int outer_vec(const double * const a, int na, const double * const b, int nb, do
   return 0;
 }
 
+// Problem?
 int outer_update(const double * const a, int na, const double * const b, 
                  int nb, double * const C)
 {

@@ -75,6 +75,8 @@ class Driver_sd(Driver):
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
         self.stored_int[-1])
 
+    print(A_np1)
+
     self.strain_int.append(np.copy(e_np1))
     self.stress_int.append(np.copy(s_np1))
     self.stored_int.append(np.copy(h_np1))

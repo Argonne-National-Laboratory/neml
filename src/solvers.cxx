@@ -69,7 +69,6 @@ int newton(std::shared_ptr<Solvable> system, double * x,
   int ier = 0;
 
   if (verbose) {
-    std::cout << std::endl;
     std::cout << "Iter.\tnR\t\tnR/nR0" << std::endl;
     std::cout << std::setw(6) << std::left << i << "\t" << std::setw(8) << std::left << std::scientific << nR << "\t" << std::setw(8) << std::left << nR/nR0 << std::endl;
   }
@@ -90,6 +89,10 @@ int newton(std::shared_ptr<Solvable> system, double * x,
 
   delete [] R;
   delete [] J;
+
+  if (verbose) {
+    std::cout << std::endl;
+  }
 
   if (ier != SUCCESS) return ier;
 
