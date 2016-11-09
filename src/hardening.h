@@ -38,6 +38,23 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
   const double s0_, K_;
 };
 
+/// Voce isotropic hardening
+class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
+ public:
+  VoceIsotropicHardeningRule(double s0, double R, double d);
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+
+  double s0() const;
+  double R() const;
+  double d() const;
+
+ private:
+  const double s0_, R_, d_;
+
+ 
+};
+
 } // namespace neml
 
 #endif // HARDENING_H

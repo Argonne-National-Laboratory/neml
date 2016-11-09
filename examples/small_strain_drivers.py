@@ -149,18 +149,20 @@ if __name__ == "__main__":
   K = E / (3 * (1 - 2 * nu))
 
   s0 = 150.0
-  Kp = E / 50.0
+  R = 100.0
+  d = 1000.0
   
   shear = elasticity.ConstantShearModulus(mu)
   bulk = elasticity.ConstantBulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
   #model = neml.SmallStrainElasticity(elastic)
   surface = surfaces.IsoJ2()
-  hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
+  #hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
+  hrule = hardening.VoceIsotropicHardeningRule(s0, R, d)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
 
   example_strain(model, np.array([0.01,0,0,0,0,0]), 300.0, 10, 100)
   example_stress(model, np.array([220.0,0,0,0,0,0]), 300.0, 10, 20)
-  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 1.0e-2, 50)
+  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 2.0e-3, 100)
 
