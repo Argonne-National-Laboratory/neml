@@ -47,3 +47,6 @@ def differentiate(fn, x0, eps = 1.5e-6):
     return Df[0][0]
   else:
     return Df
+
+def make_dev(s):
+  return s - np.array([1,1,1,0,0,0]) * np.sum(s[:3]) / 3.0

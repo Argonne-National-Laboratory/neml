@@ -2,6 +2,7 @@
 #define HARDENING_H
 
 #include <cstddef>
+#include <memory>
 
 namespace neml {
 
@@ -72,6 +73,20 @@ class LinearKinematicHardeningRule: public KinematicHardeningRule {
 
  private:
   const double H_;
+};
+
+class CombinedHardeningRule: public HardeningRule {
+ public:
+  CombinedHardeningRule(std::shared_ptr<IsotropicHardeningRule> iso,
+                        std::shared_ptr<KinematicHardeningRule> kin);
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const alpha) const;
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+
+ private:
+  std::shared_ptr<IsotropicHardeningRule> iso_;
+  std::shared_ptr<KinematicHardeningRule> kin_;
 };
 
 

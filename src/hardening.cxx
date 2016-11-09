@@ -137,4 +137,56 @@ double LinearKinematicHardeningRule::H() const
   return H_;
 }
 
+CombinedHardeningRule::CombinedHardeningRule(
+    std::shared_ptr<IsotropicHardeningRule> iso,
+    std::shared_ptr<KinematicHardeningRule> kin) :
+      iso_(iso), kin_(kin)
+{
+
+}
+size_t CombinedHardeningRule::nhist() const
+{
+  return iso_->nhist() + kin_->nhist();
+}
+
+int CombinedHardeningRule::init_hist(double * const alpha) const
+{
+  int ier = iso_->init_hist(alpha);
+  return kin_->init_hist(&alpha[iso_->nhist()]);
+}
+
+int CombinedHardeningRule::q(const double * const alpha, double T, 
+                             double * const qv) const
+{
+  iso_->q(alpha, T, qv);
+  return kin_->q(&alpha[iso_->nhist()], T, &qv[iso_->nhist()]);
+}
+
+int CombinedHardeningRule::dq_da(const double * const alpha, double T, 
+                                 double * const dqv) const
+{
+  // Annoying this doesn't work nicely...
+  double id[iso_->nhist()*iso_->nhist()];
+  int ier = iso_->dq_da(alpha, T, id);
+  double kd[kin_->nhist()*kin_->nhist()];
+  ier = kin_->dq_da(&alpha[iso_->nhist()], T, kd);
+
+  std::fill(dqv, dqv + nhist()*nhist(), 0.0);
+
+  for (int i=0; i<iso_->nhist(); i++) {
+    for (int j=0; j<iso_->nhist(); j++) {
+      dqv[CINDEX(i,j,nhist())] = id[CINDEX(i,j,iso_->nhist())];
+    }
+  }
+  
+  int os = iso_->nhist();
+  for (int i=0; i<kin_->nhist(); i++) {
+    for (int j=0; j<kin_->nhist(); j++) {
+      dqv[CINDEX((i+os),(j+os),nhist())] = kd[CINDEX(i,j,kin_->nhist())];
+    }
+  }
+
+  return 0;
+}
+
 } // namespace neml

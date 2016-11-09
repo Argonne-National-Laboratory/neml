@@ -22,7 +22,8 @@ class CommonHardening(object):
   def test_gradient(self):
     dfn = lambda x: self.model.q(x, self.T)
     ngrad = differentiate(dfn, self.hist_trial)
-    self.assertTrue(np.allclose(ngrad, self.model.dq_da(self.hist_trial, self.T)))
+    grad = self.model.dq_da(self.hist_trial, self.T)
+    self.assertTrue(np.allclose(ngrad, grad))
 
 class TestLinearIsotropicHardening(unittest.TestCase, CommonHardening):
   def setUp(self):
@@ -85,4 +86,26 @@ class TestLinearKinematicHardening(unittest.TestCase, CommonHardening):
     self.assertTrue(np.allclose(self.model.q(self.hist_trial, self.T), 
       -self.hist_trial * self.H))
 
+class TestCombinedHardening(unittest.TestCase, CommonHardening):
+  def setUp(self):
+    self.s0 = 200.0
+    self.K = 1000.0
+    self.H = 1000.0
+
+    self.hist0 = np.zeros((7,))
+    self.hist_trial = ra.random((7,)) * 100
+    self.hist_trial[1:] = make_dev(self.hist_trial[1:])
+    self.T = 300.0
+
+    self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
+    self.kin = hardening.LinearKinematicHardeningRule(self.H)
+
+    self.model = hardening.CombinedHardeningRule(self.iso, self.kin)
+
+  def test_relation(self):
+    sb = np.zeros((7,))
+    sb[0] = self.iso.q(self.hist_trial[0:1], self.T)
+    sb[1:] = self.kin.q(self.hist_trial[1:], self.T)
+
+    self.assertTrue(np.allclose(self.model.q(self.hist_trial, self.T), sb))
 
