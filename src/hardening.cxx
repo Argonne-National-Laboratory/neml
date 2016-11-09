@@ -10,6 +10,8 @@ size_t IsotropicHardeningRule::nhist() const
 int IsotropicHardeningRule::init_hist(double * const alpha) const
 {
   alpha[0] = 0.0;
+
+  return 0;
 }
 
 LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(double s0, double K) :
@@ -30,6 +32,8 @@ int LinearIsotropicHardeningRule::dq_da(const double * const alpha,
                                     double T, double * const dqv) const
 {
   dqv[0] = -K_;
+
+  return 0;
 }
 
 double LinearIsotropicHardeningRule::s0() const
