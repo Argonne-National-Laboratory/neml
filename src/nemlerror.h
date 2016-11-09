@@ -11,7 +11,8 @@ typedef enum Error {
   SUCCESS = 0,
   INCOMPATIBLE_MODELS = -1,
   LINALG_FAILURE = -2,
-  MAX_ITERATIONS = -3
+  MAX_ITERATIONS = -3,
+  KT_VIOLATION = -4
 } Error;
 
 // Translate to exception

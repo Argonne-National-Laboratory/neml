@@ -200,8 +200,11 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
  public:
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
-                                       double rtol, double atol, int miter,
-                                       bool verbose);
+                                       double rtol = 1.0e-10, 
+                                       double atol = 1.0e-12, int miter = 25,
+                                       bool verbose = false, 
+                                       double kttol = 1.0e-2,
+                                       bool check_kt = true);
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -223,6 +226,7 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
  private:
   int calc_tangent_(const double * const x, const double * const s_np1,
                     const double * const h_np1, double dg, double * const A_np1);
+  int check_K_T_(const double * const s_np1, const double * const h_np1, double T_np1, double dg);
 
   std::shared_ptr<LinearElasticModel> elastic_;
   std::shared_ptr<RateIndependentFlowRule> flow_;
@@ -235,9 +239,9 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   double C_[36];
   double T_;
   std::vector<double> h_tr_;
-  double rtol_, atol_;
+  double rtol_, atol_, kttol_;
   int miter_;
-  bool verbose_;
+  bool verbose_, check_kt_;
 };
 
 

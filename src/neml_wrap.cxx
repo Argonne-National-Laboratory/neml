@@ -94,8 +94,11 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool>(),
-           py::arg("elastic"), py::arg("flow"), py::arg("rtol") = 1.0e-6, py::arg("atol") = 1.0e-10, py::arg("miter") = 25, py::arg("verbose")=false)
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool, double, bool>(),
+           py::arg("elastic"), py::arg("flow"), py::arg("rtol") = 1.0e-10, 
+           py::arg("atol") = 1.0e-12, py::arg("miter") = 25, 
+           py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
+           py::arg("check_kt") = true)
   
       .def("set_trial_state",
            [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> h_n, double T_np1) -> void

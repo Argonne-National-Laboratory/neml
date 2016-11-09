@@ -195,9 +195,9 @@ int SmallStrainElasticity::update_sd(
 SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<RateIndependentFlowRule> flow, double rtol, double atol,
-    int miter, bool verbose) :
+    int miter, bool verbose, double kttol, bool check_kt) :
       elastic_(elastic), flow_(flow), rtol_(rtol), atol_(atol), miter_(miter),
-      verbose_(verbose)
+      verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
 {
 
 }
@@ -237,7 +237,9 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     std::copy(&h_tr_[0], &h_tr_[0]+flow_->nhist(), &h_np1[6]);
     std::copy(C_, C_+36, A_np1);
     dg = 0.0;
-    return 0;
+
+    // Check K-T and return
+    return check_K_T_(s_np1, h_np1, T_np1, dg);
   }
   // Else solve and extract updated parameters from the solver vector
   else {
@@ -257,7 +259,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     calc_tangent_(x, s_np1, h_np1, dg, A_np1);
     
     // Check K-T and return
-    return 0;
+    return check_K_T_(s_np1, h_np1, T_np1, dg);
   }
 }
 
@@ -498,5 +500,29 @@ int SmallStrainRateIndependentPlasticity::calc_tangent_(
 
   return 0;
 }
+
+int SmallStrainRateIndependentPlasticity::check_K_T_(
+    const double * const s_np1, const double * const h_np1, double T_np1, double dg)
+{
+  if (not check_kt_) {
+    return 0;
+  }
+
+  double fv;
+  flow_->f(s_np1, h_np1, T_np1, fv);
+
+  if (fv > kttol_) {
+    return KT_VIOLATION;
+  }
+  if (dg < -kttol_) {
+    return KT_VIOLATION;
+  }
+  if ((dg > kttol_) && (fv > kttol_)) {
+    return KT_VIOLATION;
+  }
+
+  return 0;
+}
+
 
 } // namespace neml

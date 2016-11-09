@@ -109,7 +109,7 @@ class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel, CommonJacobia
     hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, check_kt = False)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -149,7 +149,7 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
     hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, check_kt = False)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
