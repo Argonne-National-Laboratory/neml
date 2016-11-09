@@ -64,6 +64,39 @@ class IsoJ2: public YieldSurface {
  
 };
 
+/// Combined isotropic/kinematic hardening with a von Mises surface
+//
+//  History variables are:
+//    hist[0]     q (isotropic hardening)
+//    hist[1:7]   X (backstress)
+//
+class IsoKinJ2: public YieldSurface {
+ public:
+  IsoKinJ2();
+  virtual ~IsoKinJ2();
+ 
+  // Defined interface
+  virtual size_t nhist() const;
+
+  virtual int f(const double* const s, const double* const q, double T,
+                double & fv) const;
+
+  virtual int df_ds(const double* const s, const double* const q, double T,
+                double * const df) const;
+  virtual int df_dq(const double* const s, const double* const q, double T,
+                double * const df) const;
+
+  virtual int df_dsds(const double* const s, const double* const q, double T,
+                double * const ddf) const;
+  virtual int df_dqdq(const double* const s, const double* const q, double T,
+                double * const ddf) const;
+  virtual int df_dsdq(const double* const s, const double* const q, double T,
+                double * const ddf) const;
+  virtual int df_dqds(const double* const s, const double* const q, double T,
+                double * const ddf) const;
+ 
+};
+
 } // namespace neml
 
 #endif // SURFACES_H

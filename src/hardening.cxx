@@ -1,6 +1,9 @@
 #include "hardening.h"
 
+#include "nemlmath.h"
+
 #include <cmath>
+#include <algorithm>
 
 namespace neml {
 
@@ -86,6 +89,52 @@ double VoceIsotropicHardeningRule::R() const
 double VoceIsotropicHardeningRule::d() const
 {
   return d_;
+}
+
+// Implementation of kinematic base class
+size_t KinematicHardeningRule::nhist() const
+{
+  return 6;
+}
+
+int KinematicHardeningRule::init_hist(double * const alpha) const
+{
+  for (int i=0; i<6; i++) alpha[0] = 0.0;
+
+  return 0;
+}
+
+// Implementation of linear kinematic hardening
+LinearKinematicHardeningRule::LinearKinematicHardeningRule(double H) :
+    H_(H)
+{
+
+}
+
+int LinearKinematicHardeningRule::q(const double * const alpha, 
+                                    double T, double * const qv) const
+{
+  for (int i=0; i<6; i++) {
+    qv[i] = -H_ * alpha[i];
+  }
+
+  return 0;
+}
+
+int LinearKinematicHardeningRule::dq_da(const double * const alpha, 
+                                    double T, double * const dqv) const
+{
+  std::fill(dqv, dqv+36, 0.0);
+  for (int i=0; i<6; i++) {
+    dqv[CINDEX(i,i,6)] = -H_;
+  }
+
+  return 0;
+}
+
+double LinearKinematicHardeningRule::H() const
+{
+  return H_;
 }
 
 } // namespace neml

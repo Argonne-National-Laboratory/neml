@@ -52,8 +52,28 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  private:
   const double s0_, R_, d_;
 
- 
 };
+
+class KinematicHardeningRule: public HardeningRule {
+ public:
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const alpha) const;
+  virtual int q(const double * const alpha, double T, double * const qv) const = 0;
+  virtual int dq_da(const double * const alpha, double T, double * const dqv) const = 0;
+};
+
+class LinearKinematicHardeningRule: public KinematicHardeningRule {
+ public:
+  LinearKinematicHardeningRule(double H);
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+
+  double H() const;
+
+ private:
+  const double H_;
+};
+
 
 } // namespace neml
 
