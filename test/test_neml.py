@@ -28,7 +28,7 @@ class CommonMatModel(object):
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
       num_A = differentiate(dfn, strain_np1)
-      
+
       self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-2))
       
       strain_n = strain_np1
@@ -83,6 +83,50 @@ class CommonJacobian(object):
 
     self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
 
+class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
+  """
+    Test combined isotropic/kinematic hardening with linear rules
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((13,))
+
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.mu = self.E/(2*(1+self.nu))
+    self.K = self.E/(3*(1-2*self.nu))
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+
+    self.H = 1000.0
+
+    shear = elasticity.ConstantShearModulus(self.mu)
+    bulk = elasticity.ConstantBulkModulus(self.K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    kin = hardening.LinearKinematicHardeningRule(self.H)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, check_kt = False)
+
+    self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 10
+
+  def gen_hist(self):
+    h = ra.random((13,))
+    h[:6] = make_dev(h[:6])
+    h[7:] = make_dev(h[7:])
+    return h
+
+  def gen_x(self):
+    return np.array(list(self.gen_hist()) + list(ra.random((1,))))
 
 class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
@@ -161,3 +205,4 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
 
   def gen_x(self):
     return ra.random((8,))
+

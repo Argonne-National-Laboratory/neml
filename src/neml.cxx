@@ -417,12 +417,6 @@ int SmallStrainRateIndependentPlasticity::calc_tangent_(
   
   RJ(x, R, J);
 
-  //std::cout << "START" << std::endl;
-  //for (int i=0; i<nparams(); i++) {
-  //  std::cout << J[i] << " ";
-  //}
-  //std::cout << std::endl;
-  
   int n = nparams();
   int nk = 6;
   int ne = nparams() - nk;
@@ -463,20 +457,19 @@ int SmallStrainRateIndependentPlasticity::calc_tangent_(
   int nh = flow_->nhist();
 
   double dg_ds[6*6];
-  flow_->dg_ds(s_np1, h_np1, T_, dg_ds);
+  flow_->dg_ds(s_np1, &h_np1[6], T_, dg_ds);
   double dh_ds[nh*6];
-  flow_->dh_ds(s_np1, h_np1, T_, dh_ds);
+  flow_->dh_ds(s_np1, &h_np1[6], T_, dh_ds);
   double df_ds[6];
-  flow_->df_ds(s_np1, h_np1, T_, df_ds);
+  flow_->df_ds(s_np1, &h_np1[6], T_, df_ds);
 
   mat_mat(6, 6, 6, dg_ds, C_, A);
   for (int i=0; i<nk*6; i++) A[i] *= dg;
   
   mat_mat(nh, 6, 6, dh_ds, C_, B);
   for (int i=0; i<nh*6; i++) B[i] *= dg;
-
   mat_vec_trans(C_, 6, df_ds, 6, &B[nh*6]);
-
+  
   double T1[ne*nk];
   mat_mat(ne, nk, ne, Jee, Jek, T1);
   double T2[nk*nk];
