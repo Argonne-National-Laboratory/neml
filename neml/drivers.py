@@ -75,8 +75,6 @@ class Driver_sd(Driver):
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
         self.stored_int[-1])
 
-    print(A_np1)
-
     self.strain_int.append(np.copy(e_np1))
     self.stress_int.append(np.copy(s_np1))
     self.stored_int.append(np.copy(h_np1))
@@ -139,13 +137,13 @@ class Driver_sd(Driver):
       return R, J
     
     x0 = np.zeros((7,))
-    x0[0] = 1.0
+    x0[0] = 100.0
     x0[1:] = sdir / 1000.0
     x = newton(RJ, x0, verbose = self.verbose,
         rtol = self.rtol, atol = self.atol, miter = self.miter)
-    e_np1 = x[1:]
+    e_np1 = self.strain_int[-1] + x[1:]
 
-    self.strain_step(e_np1, t_np1, T_np1)
+    self.strain_step(np.copy(e_np1), t_np1, T_np1)
 
 
 class MaximumIterations(RuntimeError):

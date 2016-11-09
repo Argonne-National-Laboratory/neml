@@ -88,6 +88,18 @@ def example_stress(model, stress, T, t, nsteps):
   plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
   plt.show()
 
+  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
+  plt.plot(driver.strain[:,0], driver.history[:,1], 'r-')
+  plt.plot(driver.strain[:,0], driver.history[:,2], 'b-')
+
+  plt.plot(driver.strain[:,0], driver.history[:,3], 'k--')
+  plt.plot(driver.strain[:,0], driver.history[:,4], 'r--')
+  plt.plot(driver.strain[:,0], driver.history[:,5], 'b--')
+  plt.show()
+
+  plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
+  plt.show()
+
 def example_rate(model, sdir, rate, T, dt, nsteps):
   """
     Parameters:
@@ -107,7 +119,7 @@ def example_rate(model, sdir, rate, T, dt, nsteps):
     print(i+1)
     t += dt
     driver.rate_step(sdir, rate, t, T)
-
+  
   plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
   plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
   plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
@@ -115,6 +127,18 @@ def example_rate(model, sdir, rate, T, dt, nsteps):
   plt.plot(driver.strain[:,0], driver.stress[:,3], 'k--')
   plt.plot(driver.strain[:,0], driver.stress[:,4], 'r--')
   plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
+  plt.show()
+
+  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
+  plt.plot(driver.strain[:,0], driver.history[:,1], 'r-')
+  plt.plot(driver.strain[:,0], driver.history[:,2], 'b-')
+
+  plt.plot(driver.strain[:,0], driver.history[:,3], 'k--')
+  plt.plot(driver.strain[:,0], driver.history[:,4], 'r--')
+  plt.plot(driver.strain[:,0], driver.history[:,5], 'b--')
+  plt.show()
+
+  plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
   plt.show()
 
 if __name__ == "__main__":
@@ -134,9 +158,9 @@ if __name__ == "__main__":
   surface = surfaces.IsoJ2()
   hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True)
+  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
 
   example_strain(model, np.array([0.01,0,0,0,0,0]), 300.0, 10, 100)
-  #example_stress(model, np.array([220.0,0,0,0,0,0]), 300.0, 10, 20)
-  #example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 1.0e-1, 50)
+  example_stress(model, np.array([220.0,0,0,0,0,0]), 300.0, 10, 20)
+  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 1.0e-2, 50)
 

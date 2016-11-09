@@ -28,8 +28,8 @@ class CommonMatModel(object):
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
       num_A = differentiate(dfn, strain_np1)
-
-      self.assertTrue(np.allclose(num_A, A_np1))
+      
+      self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-2))
       
       strain_n = strain_np1
       stress_n = stress_np1
@@ -57,7 +57,7 @@ class TestLinearElastic(CommonMatModel, unittest.TestCase):
     self.T = 300.0
     self.nsteps = 10
 
-class TestRIAPlasticityJ2Linear(unittest.TestCase):
+class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel):
   """
     Test the rate-independent plasticity algorithm with a linearly
     isotropically hardening yield surface.
