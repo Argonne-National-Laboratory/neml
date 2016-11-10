@@ -143,34 +143,28 @@ def example_rate(model, sdir, rate, T, dt, nsteps):
 
 if __name__ == "__main__":
   E = 200000.0
-  nu = 0.3
+  nu = 0.27
 
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  s0 = 150.0
-  Kp = E / 100
-  R = 100.0
-  d = 1000.0
-  Hp = E / 200
+  s0 = 300.0
+  Kp = 0.0
+  c = np.array([60.0])
+  r = np.array([2.0/3.0*30000.0/60.0])
   
   shear = elasticity.ConstantShearModulus(mu)
   bulk = elasticity.ConstantBulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-  #model = neml.SmallStrainElasticity(elastic)
-  #surface = surfaces.IsoJ2()
   surface = surfaces.IsoKinJ2()
-  #hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
-  #hrule = hardening.VoceIsotropicHardeningRule(s0, R, d)
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
-  kin = hardening.LinearKinematicHardeningRule(Hp)
-  hrule = hardening.CombinedHardeningRule(iso, kin)
+  hrule = hardening.Chaboche(iso, c, r)
 
-  flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+  flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
 
   example_strain(model, np.array([0.01,0,0,0,0,0]), 300.0, 10, 100)
-  example_stress(model, np.array([220.0,0,0,0,0,0]), 300.0, 10, 20)
-  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 2.0e-3, 100)
+  example_stress(model, np.array([500.0,0,0,0,0,0]), 300.0, 10, 20)
+  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 4.0e-3, 100)
 
