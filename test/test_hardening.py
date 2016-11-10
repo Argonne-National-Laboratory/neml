@@ -160,7 +160,7 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     self.s0 = 200.0
     self.K = 1000.0
 
-    self.n = 2
+    self.n = 4
     self.cs = ra.random((self.n,)) * 10.0
     self.rs = ra.random((self.n,)) * 10.0
 
