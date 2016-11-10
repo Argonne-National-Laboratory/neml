@@ -205,6 +205,6 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -self.cs[i] * self.rs[i] * (n - alpha[1+i*6:1+(i+1)*6] / self.rs[i])
+      h_exact[1+i*6:1+(i+1)*6] = -self.cs[i] * self.rs[i] * (n + alpha[1+i*6:1+(i+1)*6] / self.rs[i])
     
     self.assertTrue(np.allclose(h_model, h_exact))

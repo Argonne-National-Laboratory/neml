@@ -257,7 +257,7 @@ int Chaboche::h(const double * const s, const double * const alpha, double T,
 
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      hv[1+i*6+j] = - c_[i] * r_[i] * (nv[j] - alpha[1+i*6+j] / r_[i]);
+      hv[1+i*6+j] = - c_[i] * r_[i] * (nv[j] + alpha[1+i*6+j] / r_[i]);
     }
   }
 
@@ -345,7 +345,7 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
   // Fill in the ci part
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] += c_[i];
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= c_[i];
     }
   }
 
