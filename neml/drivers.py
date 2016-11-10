@@ -103,7 +103,7 @@ class Driver_sd(Driver):
 
     self.strain_step(np.copy(e_np1), t_np1, T_np1)
 
-  def rate_step(self, sdir, erate, t_np1, T_np1):
+  def erate_step(self, sdir, erate, t_np1, T_np1):
     """
       Drive in a given stress direction at a prescribed strain rate, like
       an actual "stress controlled" experiment.
@@ -145,6 +145,417 @@ class Driver_sd(Driver):
 
     self.strain_step(np.copy(e_np1), t_np1, T_np1)
 
+  def erate_einc_step(self, sdir, erate, einc, T_np1):
+    """
+      Similar to erate_step but specify the strain increment instead of the
+      time increment.
+
+      Parameters:
+        sdir        stress direction
+        erate       strain rate, in stress direction
+        einc        strain increment, in stress direction
+        T_np1       temperature at next time step
+    """
+    dt = einc / erate
+    self.erate_step(sdir, erate, self.t_int[-1] + dt, T_np1)
+  
+  def srate_sinc_step(self, sdir, srate, sinc, T_np1):
+    """
+      Similar to rate_step but specify the stress increment instead of the
+      time increment.
+
+      Parameters:
+        sdir        stress direction
+        srate       stress rate
+        sinc        stress increment
+        T_np1       temperature at next time step
+
+    """
+    s_np1 = self.stress_int[-1] + sdir / la.norm(sdir) * sinc
+    dt = np.dot(s_np1 - self.stress_int[-1], sdir) / srate
+
+    self.stress_step(s_np1, self.t_int[-1] + dt, T_np1)
+
+  def strain_hold_step(self, i, t_np1, T_np1):
+    """
+      A special, mixed step which holds the strain in index i constant
+      while holding the stress in the other directions to their previous
+      values
+
+      Parameters:
+        i           index to hold
+        t_np1       next time
+        T_np1       next temperature
+    """
+    oset = sorted(list(set(range(6)) - set([i])))
+    def RJ(e_np1):
+      s, h, A = self.model.update_sd(e_np1,
+          self.strain_int[-1],
+          T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
+          self.stored_int[-1])
+
+      R = np.zeros((6,))
+      R[0] = e_np1[i] - self.strain_int[-1][i]
+      R[1:] = s[oset] - self.stress_int[-1][oset]
+
+      J = np.zeros((6,6))
+      J[0,0] = 1.0
+      J[1:,1:] = A[oset,:][:,oset]
+
+      return R, J
+    
+    x0 = np.copy(self.strain_int[-1])
+    e_np1 = newton(RJ, x0, verbose = self.verbose,
+        rtol = self.rtol, atol = self.atol, miter = self.miter)
+
+    self.strain_step(np.copy(e_np1), t_np1, T_np1)
+
+
+def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
+    sdir = np.array([1,0,0,0,0,0]), verbose = False):
+  """
+    Make a uniaxial stress/strain curve
+
+    Parameters:
+      model     material model
+      erate     strain rate
+    
+    Optional:
+      T         temperature, default 300.0
+      emax      maximum strain, default 5%
+      nsteps    number of steps to use, default 250
+      sdir      stress direction, default tension in x
+      verbose   whether to be verbose
+
+    Results:
+      strain    strain in direction
+      stress    stress in direction
+  """
+  e_inc = emax / nsteps
+  driver = Driver_sd(model, verbose = verbose)
+  strain = [0.0]
+  stress = [0.0]
+  for i in range(nsteps):
+    driver.erate_einc_step(sdir, erate, e_inc, T)
+    strain.append(np.dot(driver.strain[-1], sdir))
+    stress.append(np.dot(driver.stress[-1], sdir))
+
+  strain = np.array(strain)
+  stress = np.array(stress)
+
+  return {'strain': strain, 'stress': stress}
+
+def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
+    sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
+    verbose = False):
+  """
+    HOLD IS BROKEN
+    We need a generalized version of the strain_hold_step above to
+    make it work, but I'm tired right now.
+
+    Strain controlled cyclic test.
+
+    Parameters:
+      emax      maximum strain
+      R         R = emin / emax
+      erate     strain rate to go at
+      ncycles   number of cycles
+
+    Optional:
+      T         temperature, default 300
+      nsteps    number of steps per half cycle
+      sdir      stress direction, defaults to x and tension first
+      hold_time if None don't hold, if scalar then hold symmetrically top/bot
+                if an array specify different hold times for first direction
+                (default tension) and second direction
+      n_hold    number of steps to hold over
+      verbose   whether to be verbose
+
+    Results:
+      strain        strain in direction
+      stress        stress in direction
+      cycles        list of cycle numbers
+      max           maximum stress per cycle
+      min           minimum stress per cycle
+      mean          mean stress per cycle
+      
+  """
+  # Setup
+  driver = Driver_sd(model, verbose = verbose)
+  emin = emax * R
+  if hold_time:
+    raise NotImplementedError("Whoops, this is broken")
+    if np.isscalar(hold_time):
+      hold_time = [hold_time, hold_time]
+
+  # Setup results
+  strain = [0.0]
+  stress = [0.0]
+  cycles = []
+  smax = []
+  smin = []
+  smean = []
+
+  # First half cycle
+  e_inc = emax / nsteps
+  for i in range(nsteps):
+    driver.erate_einc_step(sdir, erate, e_inc, T)
+    strain.append(np.dot(driver.strain[-1], sdir))
+    stress.append(np.dot(driver.stress[-1], sdir))
+
+  # Begin cycling
+  for s in range(ncycles):
+    si = len(driver.strain)
+    # Hold, if requested
+    if hold_time:
+      ht = hold_time[0]
+      dt = ht / n_hold
+      for i in range(n_hold):
+        driver.strain_step(driver.strain[-1], driver.t[-1] + dt, T)
+        strain.append(np.dot(driver.strain[-1], sdir))
+        stress.append(np.dot(driver.stress[-1], sdir))
+
+    e_inc = (emin - emax) / nsteps
+    for i in range(nsteps):
+      driver.erate_einc_step(sdir, erate, e_inc, T)
+      strain.append(np.dot(driver.strain[-1], sdir))
+      stress.append(np.dot(driver.stress[-1], sdir))
+
+    # Hold, if requested
+    if hold_time:
+      ht = hold_time[1]
+      dt = ht / n_hold
+      for i in range(n_hold):
+        driver.strain_step(driver.strain[-1], driver.t[-1] + dt, T)
+        strain.append(np.dot(driver.strain[-1], sdir))
+        stress.append(np.dot(driver.stress[-1], sdir))
+
+    e_inc = (emax - emin) / nsteps
+    for i in range(nsteps):
+      driver.erate_einc_step(sdir, erate, e_inc, T)
+      strain.append(np.dot(driver.strain[-1], sdir))
+      stress.append(np.dot(driver.stress[-1], sdir))
+
+    # Calculate
+    cycles.append(s)
+    smax.append(max(stress[si:]))
+    smin.append(min(stress[si:]))
+    smean.append((smax[-1]+smin[-1])/2)
+
+  # Setup and return
+  return {"strain": np.array(strain), "stress": np.array(stress),
+      "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
+      "min": np.array(smin), "mean": np.array(smean)}
+
+def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
+    sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
+    verbose = False):
+  """
+    Strain controlled cyclic test.
+
+    Parameters:
+      smax      maximum stress
+      R         R = smin / smax
+      srate     stress rate to go at
+      ncycles   number of cycles
+
+    Optional:
+      T         temperature, default 300
+      nsteps    number of steps per half cycle
+      sdir      stress direction, defaults to x and tension first
+      hold_time if None don't hold, if scalar then hold symmetrically top/bot
+                if an array specify different hold times for first direction
+                (default tension) and second direction
+      n_hold    number of steps to hold over
+      verbose   whether to be verbose
+
+    Results:
+      strain        strain in direction
+      stress        stress in direction
+      cycles        list of cycle numbers
+      max           maximum strain per cycle
+      min           minimum strain per cycle
+      mean          mean stress per cycle
+      
+  """
+  # Setup
+  driver = Driver_sd(model, verbose = verbose)
+  smin = smax * R
+  if hold_time:
+    if np.isscalar(hold_time):
+      hold_time = [hold_time, hold_time]
+
+  # Setup results
+  strain = [0.0]
+  stress = [0.0]
+  cycles = []
+  emax = []
+  emin = []
+  emean = []
+
+  # First half cycle
+  s_inc = smax / nsteps
+  for i in range(nsteps):
+    driver.srate_sinc_step(sdir, srate, s_inc, T)
+    strain.append(np.dot(driver.strain[-1], sdir))
+    stress.append(np.dot(driver.stress[-1], sdir))
+
+  # Begin cycling
+  for s in range(ncycles):
+    si = len(driver.strain)
+    # Hold, if requested
+    if hold_time:
+      ht = hold_time[0]
+      dt = ht / n_hold
+      for i in range(n_hold):
+        driver.stress_step(driver.stress[-1], driver.t[-1] + dt, T)
+        strain.append(np.dot(driver.strain[-1], sdir))
+        stress.append(np.dot(driver.stress[-1], sdir))
+
+    s_inc = (smin - smax) / nsteps
+    for i in range(nsteps):
+      driver.srate_sinc_step(sdir, srate, s_inc, T)
+      strain.append(np.dot(driver.strain[-1], sdir))
+      stress.append(np.dot(driver.stress[-1], sdir))
+
+    # Hold, if requested
+    if hold_time:
+      ht = hold_time[1]
+      dt = ht / n_hold
+      for i in range(n_hold):
+        driver.stress_step(driver.stress[-1], driver.t[-1] + dt, T)
+        strain.append(np.dot(driver.strain[-1], sdir))
+        stress.append(np.dot(driver.stress[-1], sdir))
+
+    s_inc = (smax - smin) / nsteps
+    for i in range(nsteps):
+      driver.srate_sinc_step(sdir, srate, s_inc, T)
+      strain.append(np.dot(driver.strain[-1], sdir))
+      stress.append(np.dot(driver.stress[-1], sdir))
+
+    # Calculate
+    cycles.append(s)
+    emax.append(max(strain[si:]))
+    emin.append(min(strain[si:]))
+    emean.append((emax[-1]+emin[-1])/2)
+
+  # Setup and return
+  return {"strain": np.array(strain), "stress": np.array(stress),
+      "cycles": np.array(cycles, dtype = int), "max": np.array(emax),
+      "min": np.array(emin), "mean": np.array(emean)}
+
+def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
+    nsteps_up = 50, index = 0, tc = 1.0,
+    verbose = False):
+  """
+    Simulate a stress relaxation test.
+
+    Parameters:
+      model         material model
+      emax          maximum strain to attain
+      erate         strain rate to take getting there
+      hold          hold time
+
+    Optional:
+      T             temperature
+      nsteps        number of steps to relax over
+      nsteps_up     number of steps to take getting up to stress
+      index         direction to pull in, default x tension
+      tc            1.0 for tension -1.0 for compression
+      verbose       whether to be verbose
+
+    Results:
+      time          time
+      strain        strain
+      stress        stress
+      rtime         relaxation time
+      rrate         stress relaxation rate
+  """
+  # Setup
+  driver = Driver_sd(model, verbose = verbose)
+  time = [0]
+  strain = [0]
+  stress = [0]
+
+  # Ramp up
+  sdir = np.zeros((6,))
+  sdir[index] = tc
+  einc = emax / nsteps_up
+  for i in range(nsteps_up):
+    driver.erate_einc_step(sdir, erate, einc, T)
+    time.append(driver.t[-1])
+    strain.append(np.dot(driver.strain[-1],sdir))
+    stress.append(np.dot(driver.stress[-1],sdir))
+
+  ri = len(driver.strain)
+  
+  dt = hold / nsteps
+  for i in range(nsteps):
+    driver.strain_hold_step(index, driver.t[-1] + dt, T)
+    time.append(driver.t[-1])
+    strain.append(np.dot(driver.strain[-1],sdir))
+    stress.append(np.dot(driver.stress[-1],sdir))
+
+  time = np.array(time)
+  strain = np.array(strain)
+  stress = np.array(stress)
+  rrate = np.diff(stress[ri:]) / np.diff(time[ri:])
+  
+  return {'time': np.copy(time), 'strain': np.copy(strain), 
+      'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
+      'rrate': np.copy(rrate)}
+
+
+def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
+    nsteps_up = 50, sdir = np.array([1,0,0,0,0,0]), verbose = False):
+  """
+    Simulate a creep test
+
+    Parameters:
+      model         material model
+      smax          stress to attain
+      srate         stress rate to take getting there
+      hold          total hold time
+
+    Optional:
+      T             temperature
+      nsteps        number of steps over relaxation period
+      nsteps_up     number of steps to get to stress value
+      sdir          stress direction, defaults to x-tension
+      verbose       whether to be verbose
+
+  """
+  # Setup
+  driver = Driver_sd(model, verbose = verbose)
+  time = [0]
+  strain = [0]
+  stress = [0]
+
+  # Ramp up
+  sinc = smax / nsteps_up
+  for i in range(nsteps_up):
+    driver.srate_sinc_step(sdir, srate, sinc, T)
+    time.append(driver.t[-1])
+    strain.append(np.dot(driver.strain[-1],sdir))
+    stress.append(np.dot(driver.stress[-1],sdir))
+
+  ri = len(driver.strain)
+
+  dt = hold / nsteps
+  for i in range(nsteps):
+    driver.stress_step(driver.stress[-1], driver.t[-1] + dt, T)
+    time.append(driver.t[-1])
+    strain.append(np.dot(driver.strain[-1],sdir))
+    stress.append(np.dot(driver.stress[-1],sdir))
+
+  time = np.array(time)
+  strain = np.array(strain)
+  stress = np.array(stress)
+  rrate = np.diff(strain[ri:]) / np.diff(time[ri:])
+  
+  return {'time': np.copy(time), 'strain': np.copy(strain), 
+      'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
+      'rrate': np.copy(rrate)}
 
 class MaximumIterations(RuntimeError):
   def __init__(self):
@@ -184,7 +595,8 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
     if i > miter:
       print("")
       raise MaximumIterations()
-
-  print("")
+  
+  if verbose:
+    print("")
 
   return x

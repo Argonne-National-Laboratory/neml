@@ -100,25 +100,64 @@ def example_stress(model, stress, T, t, nsteps):
   plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
   plt.show()
 
-def example_rate(model, sdir, rate, T, dt, nsteps):
+def example_econt_erate(model, sdir, rate, T, etotal, nsteps):
   """
     Parameters:
       model     material model
       sdir      stress direction
       rate      strain rate
       T         constant temperature
-      dt        time increment
+      etotal    total strain, in direction
       nsteps    number of steps
   """
-  t = 0
+  e_inc = etotal / nsteps
 
   driver = drivers.Driver_sd(model, verbose = True)
 
   print("Rate controlled...")
   for i in range(nsteps):
     print(i+1)
-    t += dt
-    driver.rate_step(sdir, rate, t, T)
+    driver.erate_einc_step(sdir, rate, e_inc, T)
+  
+  plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
+  plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
+  plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
+
+  plt.plot(driver.strain[:,0], driver.stress[:,3], 'k--')
+  plt.plot(driver.strain[:,0], driver.stress[:,4], 'r--')
+  plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
+  plt.show()
+
+  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
+  plt.plot(driver.strain[:,0], driver.history[:,1], 'r-')
+  plt.plot(driver.strain[:,0], driver.history[:,2], 'b-')
+
+  plt.plot(driver.strain[:,0], driver.history[:,3], 'k--')
+  plt.plot(driver.strain[:,0], driver.history[:,4], 'r--')
+  plt.plot(driver.strain[:,0], driver.history[:,5], 'b--')
+  plt.show()
+
+  plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
+  plt.show()
+
+def example_scont_srate(model, sdir, rate, T, stotal, nsteps):
+  """
+    Parameters:
+      model     material model
+      sdir      stress direction
+      rate      stress rate
+      T         constant temperature
+      etotal    total stress, in direction
+      nsteps    number of steps
+  """
+  s_inc = stotal / nsteps
+
+  driver = drivers.Driver_sd(model, verbose = True)
+
+  print("Rate controlled...")
+  for i in range(nsteps):
+    print(i+1)
+    driver.srate_sinc_step(sdir, rate, s_inc, T)
   
   plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
   plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
@@ -164,7 +203,8 @@ if __name__ == "__main__":
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
 
-  example_strain(model, np.array([0.01,0,0,0,0,0]), 300.0, 10, 100)
-  example_stress(model, np.array([500.0,0,0,0,0,0]), 300.0, 10, 20)
-  example_rate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 4.0e-3, 100)
+  example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 10, 100)
+  example_stress(model, np.array([680.0,0,0,0,0,0]), 300.0, 10, 100)
+  example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 0.04, 100)
+  example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 680.0, 100)
 
