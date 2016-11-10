@@ -29,6 +29,9 @@ class CommonMatModel(object):
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
       num_A = differentiate(dfn, strain_np1)
 
+      print(A_np1)
+      print(num_A)
+
       self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-2))
       
       strain_n = strain_np1
@@ -206,3 +209,50 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
   def gen_x(self):
     return ra.random((8,))
 
+
+class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
+  """
+    Test Cheboche with linear isotropic hardening
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((13,))
+
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.mu = self.E/(2*(1+self.nu))
+    self.K = self.E/(3*(1-2*self.nu))
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+
+    self.n = 2
+    self.cs = np.array([10.0, 2.0])
+    self.rs = np.array([5.0, 1.0])
+
+    shear = elasticity.ConstantShearModulus(self.mu)
+    bulk = elasticity.ConstantBulkModulus(self.K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    hmodel = hardening.Chaboche(iso, self.cs, self.rs)
+
+    flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
+
+    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, check_kt = False)
+
+    self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 30
+
+  def gen_hist(self):
+    h = ra.random((6+1+6*self.n,))
+    h[:6] = make_dev(h[:6])
+    for i in range(self.n):
+      h[7+i*6:7+(i+1)*6] = make_dev(h[7+i*6:7+(i+1)*6])
+    return h
+
+  def gen_x(self):
+    return np.array(list(self.gen_hist()) + list(ra.random((1,))))
