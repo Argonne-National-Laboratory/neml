@@ -189,4 +189,204 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
   return 0;
 }
 
+
+
+// Begin non-associative hardening rules
+//
+// Chaboche
+//
+Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+                   int n, const double * const c, const double * const r)
+  : iso_(iso), n_(n), c_(c, c+n), r_(r, r+n)
+{
+
+
+}
+
+size_t Chaboche::ninter() const
+{
+  return 1 + 6;
+}
+
+size_t Chaboche::nhist() const
+{
+  return 1 + 6 * n_;
+}
+
+int Chaboche::init_hist(double * const alpha) const
+{
+  std::fill(alpha, alpha+nhist(), 0.0);
+  return 0;
+}
+
+int Chaboche::q(const double * const alpha, double T, double * const qv) const
+{
+  iso_->q(alpha, T, qv);
+  std::fill(qv+1, qv+7, 0.0);
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      qv[j+1] += alpha[1+i*6+j];
+    }
+  }
+  return 0;
+}
+
+int Chaboche::dq_da(const double * const alpha, double T, double * const qv) const
+{
+  std::fill(qv, qv+(ninter()*nhist()), 0.0);
+  iso_->dq_da(alpha, T, qv); // fills in (0,0)
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
+    }
+  }
+  return 0;
+}
+
+int Chaboche::h(const double * const s, const double * const alpha, double T,
+              double * const hv) const
+{
+  hv[0] = sqrt(2.0/3.0); // Isotropic part
+
+  double X[6], nv[6];
+  backstress_(alpha, X);
+  std::copy(s, s+6, nv);
+  dev_vec(nv);
+  add_vec(nv, X, 6, nv);
+  normalize_vec(nv, 6);
+
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      hv[1+i*6+j] = - c_[i] * r_[i] * (nv[j] - alpha[1+i*6+j] / r_[i]);
+    }
+  }
+
+  return 0;
+}
+
+int Chaboche::dh_ds(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  std::fill(dhv, dhv + nhist()*6, 0.0);
+
+  double X[6];
+  backstress_(alpha, X);
+
+  double n[6];
+  std::copy(s, s+6, n);
+  dev_vec(n);
+  add_vec(n, X, 6, n);
+  double nv = norm2_vec(n, 6);
+  normalize_vec(n, 6);
+  
+  double nn[36];
+
+  std::fill(nn, nn+36, 0.0);
+  for (int i=0; i<6; i++) {
+    nn[CINDEX(i,i,6)] += 1.0;
+  }
+  
+  double iv[6];
+  double jv[6];
+  for (int i=0; i<3; i++) {
+    iv[i] = 1.0 / 3.0;
+    jv[i] = 1.0;
+  }
+  for (int i=3; i<6; i++) {
+    iv[i] = 0.0;
+    jv[i] = 0.0;
+  }
+
+  outer_update_minus(iv, 6, jv, 6, nn);
+
+  outer_update_minus(n, 6, n, 6, nn);
+  for (int i=0; i<36; i++) {
+    nn[i] /= nv;
+  }
+  
+  // Fill in...
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      for (int k=0; k<6; k++) {
+        dhv[CINDEX((1+i*6+j),(k),6)] = -c_[i] * r_[i] * nn[CINDEX(j,k,6)];
+      }
+    }
+  }
+  
+  return 0;
+}
+
+int Chaboche::dh_da(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  std::fill(dhv, dhv + nhist()*nhist(), 0.0);
+
+  double X[6];
+  backstress_(alpha, X);
+
+  double ss[36];
+  double n[6];
+  std::copy(s, s+6, n);
+  dev_vec(n);
+  add_vec(n, X, 6, n);
+  double nv = norm2_vec(n, 6);
+  normalize_vec(n, 6);
+  
+  std::fill(ss, ss+36, 0.0);
+  for (int i=0; i<6; i++) {
+    ss[CINDEX(i,i,6)] += 1.0;
+  }
+  
+  outer_update_minus(n, 6, n, 6, ss);
+  for (int i=0; i<36; i++) {
+    ss[i] /= nv;
+  }
+  
+  // Fill in the ci part
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] += c_[i];
+    }
+  }
+
+  // Fill in the ss part
+  for (int bi=0; bi<n_; bi++) {
+    for (int i=0; i<6; i++) {
+      for (int bj=0; bj<n_; bj++) {
+        for (int j=0; j<6; j++) {
+          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nhist())] -= c_[bi] * r_[bi] * 
+              ss[CINDEX(i,j,6)];
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+int Chaboche::n() const
+{
+  return n_;
+}
+
+const std::vector<double> & Chaboche::c() const
+{
+  return c_;
+}
+
+const std::vector<double> & Chaboche::r() const
+{
+  return r_;
+}
+
+void Chaboche::backstress_(const double * const alpha, double * const X) const
+{
+  std::fill(X, X+6, 0.0);
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      X[j] += alpha[1+i*6+j];
+    }
+  }
+}
+
 } // namespace neml

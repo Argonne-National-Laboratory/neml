@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 namespace neml {
 
@@ -87,6 +88,60 @@ class CombinedHardeningRule: public HardeningRule {
  private:
   std::shared_ptr<IsotropicHardeningRule> iso_;
   std::shared_ptr<KinematicHardeningRule> kin_;
+};
+
+/// ABC of a non-associative hardening rule
+class NonAssociativeHardening {
+ public:
+  virtual size_t ninter() const = 0; // How many "q" variables it spits out
+  virtual size_t nhist() const = 0; // How many internal variables it stores
+
+  virtual int init_hist(double * const alpha) const = 0;
+
+  virtual int q(const double * const alpha, double T, double * const qv) const = 0;
+  virtual int dq_da(const double * const alpha, double T, double * const qv) const = 0;
+
+  virtual int h(const double * const s, const double * const alpha, double T,
+                double * const hv) const = 0;
+  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+                double * const dhv) const = 0;
+  virtual int dh_da(const double * const s, const double * const alpha, double T,
+                double * const dhv) const = 0;
+};
+
+/// Chaboche model: generalized Frederick-Armstrong
+//    This model degenerates to Frederick-Armstrong for n = 1
+class Chaboche {
+ public:
+  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+                     int n, const double * const c, const double * const r);
+
+  virtual size_t ninter() const; // How many "q" variables it spits out
+  virtual size_t nhist() const; // How many internal variables it stores
+
+  virtual int init_hist(double * const alpha) const;
+
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual int dq_da(const double * const alpha, double T, double * const qv) const;
+
+  virtual int h(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  // Getters
+  int n() const;
+  const std::vector<double> & c() const;
+  const std::vector<double> & r() const;
+
+ private:
+  void backstress_(const double * const alpha, double * const X) const;
+
+  std::shared_ptr<IsotropicHardeningRule> iso_;
+  const int n_;
+  const std::vector<double> c_, r_;
 };
 
 

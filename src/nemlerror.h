@@ -28,7 +28,6 @@ class LinalgError: public std::runtime_error {
 
 };
 
-
 } // namespace neml
 
 #endif // NEMLERROR
