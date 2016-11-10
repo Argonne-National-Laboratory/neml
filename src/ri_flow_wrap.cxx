@@ -107,6 +107,11 @@ PYBIND11_PLUGIN(ri_flow) {
            py::arg("surface"), py::arg("hardening"))
       ;
 
+  py::class_<RateIndependentNonAssociativeHardening, std::shared_ptr<RateIndependentNonAssociativeHardening>>(m, "RateIndependentNonAssociativeHardening", py::base<RateIndependentFlowRule>())
+      .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>>(), 
+           py::arg("surface"), py::arg("hardening"))
+      ;
+
   return m.ptr();
 }
 

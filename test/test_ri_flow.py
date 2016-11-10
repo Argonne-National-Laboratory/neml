@@ -106,3 +106,44 @@ class TestRateIndependentAssociativeFlowJ2Linear(unittest.TestCase, CommonFlowRu
     self.assertTrue(np.allclose(should_be,
       self.model.h(self.gen_stress(), self.gen_hist(), self.T)))
 
+
+class TestRIChabocheLinear(unittest.TestCase, CommonFlowRule):
+  """
+    Test the rate independent Chaboche model with linear isotropic hardening
+  """
+  def setUp(self):
+    self.s0 = 200.0
+    self.K = 15000.0
+
+    self.n = 4
+    self.cs = ra.random((self.n,)) * 10.0
+    self.rs = ra.random((self.n,)) * 10.0
+
+    self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
+    self.hardening = hardening.Chaboche(self.iso, self.cs, self.rs)
+    self.surface = surfaces.IsoKinJ2()
+
+    self.model = ri_flow.RateIndependentNonAssociativeHardening(self.surface, self.hardening)
+
+    self.hist0 = np.zeros((1+6*self.n,))
+
+    self.T = 300.0
+
+  def gen_hist(self):
+    hist = ra.random((1 + self.n*6,))
+    hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
+    for i in range(self.n):
+      hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
+    return hist
+
+  def test_flow_rule(self):
+    stress = self.gen_stress()
+    s = make_dev(stress)
+    hist = self.gen_hist()
+
+    X = sum(hist[1+i*6:1+(i+1)*6] for i in range(self.n))
+
+    n = (s+X) / la.norm(s+X)
+
+    self.assertTrue(np.allclose(n,
+      self.model.g(stress, hist, self.T)))
