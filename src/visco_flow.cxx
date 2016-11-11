@@ -3,6 +3,7 @@
 #include "nemlmath.h"
 
 #include <cmath>
+#include <iostream>
 
 namespace neml {
 
@@ -15,12 +16,22 @@ GPowerLaw::GPowerLaw(double n) :
 
 double GPowerLaw::g(double f) const
 {
-  return fabs(pow(f, n_ - 1.0)) * f;
+  if (f > 0.0) {
+    return pow(f, n_);
+  }
+  else {
+    return 0.0;
+  }
 }
 
 double GPowerLaw::dg(double f) const
 {
-  return n_ * fabs(pow(f, n_ - 1.0));
+  if (f > 0.0) {
+    return n_ * pow(f, n_ - 1.0);
+  }
+  else {
+    return 0.0;
+  }
 }
 
 double GPowerLaw::n() const
@@ -39,14 +50,14 @@ PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
 
 size_t PerzynaFlowRule::nhist() const
 {
-  if (surface_->nhist() != hardening_->nhist()) {
-    return INCOMPATIBLE_MODELS;
-  }
   return hardening_->nhist();
 }
 
 int PerzynaFlowRule::init_hist(double * const h) const
 {
+  if (surface_->nhist() != hardening_->nhist()) {
+    return INCOMPATIBLE_MODELS;
+  }
   return hardening_->init_hist(h);
 }
 
@@ -106,8 +117,7 @@ int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, dou
   surface_->f(s, q, T, fv);
 
   double gv = g_->g(fv);
-
-
+  
   std::fill(dyv, dyv + nhist(), 0.0);
 
   if (gv > 0.0) {
@@ -119,7 +129,7 @@ int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, dou
     double rd[nhist()];
     surface_->df_dq(s, q, T, rd);
 
-    mat_vec_trans(jac, 6, rd, 6, dyv);
+    mat_vec_trans(jac, nhist(), rd, nhist(), dyv);
 
     for (int i=0; i<nhist(); i++) {
       dyv[i] *= dgv / eta_;

@@ -21,9 +21,6 @@ class CommonGFlow(object):
     dfn = lambda x: self.model.g(x)
     num = differentiate(dfn, s)
 
-    print(exact)
-    print(num)
-
     self.assertTrue(np.isclose(exact, num))
 
 class TestGPowerLaw(unittest.TestCase, CommonGFlow):
@@ -39,7 +36,11 @@ class TestGPowerLaw(unittest.TestCase, CommonGFlow):
 
   def test_g(self):
     s = self.gen_f()
-    self.assertTrue(np.isclose(self.model.g(s), np.abs(s**(self.n-1))*s))
+    if (s > 0.0):
+      v = s**self.n
+    else:
+      v = 0.0
+    self.assertTrue(np.isclose(self.model.g(s), v))
 
 
 class CommonFlowRule(object):
@@ -47,8 +48,7 @@ class CommonFlowRule(object):
     Tests common to all flow rules.
   """
   def gen_stress(self):
-    s = ra.random((6,))
-    s = (1.0 - 2.0 * s) * 125.0
+    s = np.array([200,0,0,0,0,0])
     return s
 
   def test_history(self):
@@ -59,10 +59,13 @@ class CommonFlowRule(object):
     stress = self.gen_stress()
     hist = self.gen_hist()
 
+
     dfn = lambda s: self.model.y(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dy_ds(stress, hist, self.T)
-    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-6))
 
   def test_dy_da(self):
     stress = self.gen_stress()
@@ -107,10 +110,6 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.h(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dh_da(stress, hist, self.T)
-    
-    # Check for bad random state
-    if np.any(np.isnan(exact)):
-      return
 
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
@@ -134,6 +133,30 @@ class TestPerzynaIsoJ2Voce(unittest.TestCase, CommonFlowRule):
 
   def gen_hist(self):
     return ra.random((1,))
+
+  def test_properties(self):
+    self.assertTrue(np.isclose(self.eta, self.model.eta))
+
+
+class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
+  def setUp(self):
+    self.s0 = 100.0
+    self.Kp = 1500.0
+
+    self.n = 2.0
+    self.eta = 100.0
+
+    surface = surfaces.IsoJ2()
+    hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    g = visco_flow.GPowerLaw(self.n)
+
+    self.model = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
+
+    self.hist0 = np.zeros((1,))
+    self.T = 300.0
+
+  def gen_hist(self):
+    return ra.random((1,)) / 100.0
 
   def test_properties(self):
     self.assertTrue(np.isclose(self.eta, self.model.eta))
