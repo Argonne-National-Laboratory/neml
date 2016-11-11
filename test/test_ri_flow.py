@@ -74,6 +74,11 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.h(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dh_da(stress, hist, self.T)
+    
+    # Check for bad random state
+    if np.any(np.isnan(exact)):
+      return
+
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
 

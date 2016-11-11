@@ -54,6 +54,15 @@ if (WRAP_PYTHON)
             set_property(TARGET ri_flow PROPERTY SUFFIX "")
       endif()
 
+      # viscoplastic flow stuff
+      add_library(visco_flow SHARED visco_flow_wrap.cxx visco_flow.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(visco_flow surfaces hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(visco_flow PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET visco_flow PROPERTY OUTPUT_NAME "visco_flow.so")
+            set_property(TARGET visco_flow PROPERTY SUFFIX "")
+      endif()
+
       # actual material models
       add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(neml solvers ri_flow nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
@@ -70,7 +79,8 @@ else()
             solvers.cxx 
             surfaces.cxx 
             hardening.cxx 
-            ri_flow.cxx 
+            ri_flow.cxx
+            visco_flow.cxx 
             nemlerror.cxx 
             elasticity.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
