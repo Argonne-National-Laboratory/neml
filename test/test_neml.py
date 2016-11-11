@@ -81,11 +81,10 @@ class CommonJacobian(object):
     x = self.gen_x()
 
     R, J = self.model.RJ(x)
-
-
+    
     dfn = lambda y: self.model.RJ(y)[0]
     nJ = differentiate(dfn, x)
-
+    
     self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-2))
 
 class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, CommonJacobian):

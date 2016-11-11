@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, ri_flow
+from neml import neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,7 +22,7 @@ def example_strain(model, strain, T, t, nsteps):
   
   e = np.zeros((6,))
   t = 0
-
+  
   driver = drivers.Driver_sd(model, verbose = True)
   
   print("Driving strain...")
@@ -30,7 +30,7 @@ def example_strain(model, strain, T, t, nsteps):
     print(i+1)
     e += de
     t += dt
-
+    
     driver.strain_step(np.copy(e), t, T)
 
   plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
@@ -181,6 +181,7 @@ def example_scont_srate(model, sdir, rate, T, stotal, nsteps):
   plt.show()
 
 if __name__ == "__main__":
+  """
   E = 200000.0
   nu = 0.27
 
@@ -199,12 +200,36 @@ if __name__ == "__main__":
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
   hrule = hardening.Chaboche(iso, c, r)
 
+
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
+  """
 
-  example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 10, 100)
-  example_stress(model, np.array([680.0,0,0,0,0,0]), 300.0, 10, 100)
-  example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 0.04, 100)
-  example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 680.0, 100)
+  E = 200000.0
+  nu = 0.27
+
+  mu = E / (2 * (1.0 + nu))
+  K = E / (3 * (1 - 2 * nu))
+
+  s0 = 86.0
+  Kp = E/100.0
+
+  n = 4.0
+  eta = 150.0
+  
+  shear = elasticity.ConstantShearModulus(mu)
+  bulk = elasticity.ConstantBulkModulus(K)
+  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  surface = surfaces.IsoJ2()
+  iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
+  g = visco_flow.GPowerLaw(n)
+
+  flow = visco_flow.PerzynaFlowRule(surface, iso, g, eta)
+  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = True)
+
+  example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0])/10.0, 300.0, 100.0, 100)
+  #example_stress(model, np.array([680.0,0,0,0,0,0]), 300.0, 10, 100)
+  #example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e0, 300.0, 0.04, 100)
+  #example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0e-2, 300.0, 680.0, 100)
 

@@ -25,6 +25,7 @@ class Driver(object):
     self.miter = miter
 
     self.stress_int = [np.zeros((6,))]
+
     self.stored_int = [self.model.init_store()]
     self.T_int = [0.0]
     self.t_int = [0.0]

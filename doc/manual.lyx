@@ -929,7 +929,7 @@ We can use almost the same algorithm as above.
 \frac{\partial R_{3}}{\partial\bm{\varepsilon}_{n+1}}
 \end{array}\right]=\left[\begin{array}{c}
 \frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1}\\
-\frac{\partial y}{\partial\bm{\sigma}_{n+1}}\Delta:\mathbf{C}_{n+1}t_{n+1}
+\frac{\partial y}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}t_{n+1}
 \end{array}\right].
 \]
 

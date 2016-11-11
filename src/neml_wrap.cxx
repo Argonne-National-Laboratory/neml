@@ -108,7 +108,7 @@ PYBIND11_PLUGIN(neml) {
            }, "Setup trial state for solve.")
 
       // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &Solvable::nparams, "Number of variables in nonlinear equations.")
+      .def_property_readonly("nparams", &SmallStrainRateIndependentPlasticity::nparams, "Number of variables in nonlinear equations.")
       .def("init_x",
            [](SmallStrainRateIndependentPlasticity & m) -> py::array_t<double>
            {
@@ -133,8 +133,8 @@ PYBIND11_PLUGIN(neml) {
 
   py::class_<SmallStrainViscoPlasticity, std::shared_ptr<SmallStrainViscoPlasticity>>(m, "SmallStrainViscoPlasticity", py::base<NEMLModel_sd>())
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<ViscoPlasticFlowRule>, double, double, int , bool>(),
-           py::arg("elastic"), py::arg("flow"), py::arg("rtol") = 1.0e-10, 
-           py::arg("atol") = 1.0e-12, py::arg("miter") = 25, 
+           py::arg("elastic"), py::arg("flow"), py::arg("rtol") = 1.0e-6, 
+           py::arg("atol") = 1.0e-10, py::arg("miter") = 1000, 
            py::arg("verbose") = false)
   
       .def("set_trial_state",
@@ -145,7 +145,7 @@ PYBIND11_PLUGIN(neml) {
            }, "Setup trial state for solve.")
 
       // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &Solvable::nparams, "Number of variables in nonlinear equations.")
+      .def_property_readonly("nparams", &SmallStrainViscoPlasticity::nparams, "Number of variables in nonlinear equations.")
       .def("init_x",
            [](SmallStrainViscoPlasticity & m) -> py::array_t<double>
            {

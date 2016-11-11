@@ -628,7 +628,7 @@ int SmallStrainViscoPlasticity::RJ(const double * const x, double * const R, dou
   for (int i=0; i<flow_->nhist(); i++) {
     R[i+6] = -alpha[i] + h_tr_[i] + h[i] * dg;
   }
-
+  
   R[6+flow_->nhist()] = -dg + y * dt_;
 
   // Now the jacobian calculation...

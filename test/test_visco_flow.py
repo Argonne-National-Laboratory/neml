@@ -63,8 +63,7 @@ class CommonFlowRule(object):
     dfn = lambda s: self.model.y(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dy_ds(stress, hist, self.T)
-
-
+    
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-6))
 
   def test_dy_da(self):
@@ -74,6 +73,7 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.y(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dy_da(stress, hist, self.T)
+
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dg_ds(self):
