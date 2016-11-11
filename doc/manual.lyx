@@ -784,5 +784,159 @@ With
 General Newton algorithm for visco-plasticity
 \end_layout
 
+\begin_layout Subsection
+Discrete equations
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\dot{\bm{\varepsilon}}^{p} & = & \gamma\mathbf{g}\left(\bm{\sigma},\bm{\alpha}\right)\\
+\dot{\bm{\alpha}} & = & \gamma\mathbf{h}\left(\bm{\sigma},\bm{\alpha}\right)\\
+\gamma & = & y\left(\bm{\sigma},\bm{\alpha}\right)
+\end{eqnarray*}
+
+\end_inset
+
+Note these are nearly the same equations as above.
+ Of course the final equation can be condensed out, but I leave it in the
+ implementation to re-use as much of 3.1 as possible.
+\end_layout
+
+\begin_layout Subsection
+Newton integration scheme
+\end_layout
+
+\begin_layout Itemize
+Trial state: 
+\begin_inset Formula $\bm{\alpha}_{n+1}=\bm{\alpha}_{n}$
+\end_inset
+
+,
+\begin_inset Formula $\bm{\varepsilon}_{n+1}^{p}=\bm{\varepsilon}_{n}^{p}$
+\end_inset
+
+, 
+\begin_inset Formula $\bm{\sigma}_{n+1}=\mathbf{C}_{n+1}:\left(\bm{\varepsilon}_{n+1}-\bm{\varepsilon}_{n+1}^{p}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Evaluate 
+\begin_inset Formula $y\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1}\right)$
+\end_inset
+
+.
+ If less than zero return, else do Newton iteration on the scheme described
+ here.
+\end_layout
+
+\begin_layout Standard
+Equations:
+\begin_inset Formula 
+\begin{eqnarray*}
+\bm{\varepsilon}_{n+1}^{p} & = & \bm{\varepsilon}_{n}^{p}+\mathbf{g}_{n+1}\Delta\gamma_{n+1}\\
+\bm{\alpha}_{n+1} & = & \bm{\alpha}_{n}+\mathbf{h}_{n+1}\Delta\gamma_{n+1}\\
+\Delta\gamma_{n+1} & = & y\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1}\right)\Delta t_{n+1}
+\end{eqnarray*}
+
+\end_inset
+
+with 
+\begin_inset Formula $\bm{\sigma}_{n+1}=\mathbf{C}_{n+1}:\left(\bm{\varepsilon}_{n+1}-\bm{\varepsilon}_{n+1}^{p}\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Residual:
+\begin_inset Formula 
+\[
+\mathbf{R}=\left[\begin{array}{c}
+-\bm{\varepsilon}_{n+1}^{p}+\bm{\varepsilon}_{n}^{p}+\mathbf{g}_{n+1}\Delta\gamma_{n+1}\\
+-\bm{\alpha}_{n+1}+\bm{\alpha}_{n}+\mathbf{h}_{n+1}\Delta\gamma_{n+1}\\
+-\Delta\gamma_{n+1}+y\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1}\right)\Delta t_{n+1}
+\end{array}\right]=\left[\begin{array}{c}
+\mathbf{R}_{1}\\
+\mathbf{R}_{2}\\
+R_{3}
+\end{array}\right].
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Jacobian.
+ Helpful note is that 
+\begin_inset Formula 
+\[
+\bm{\varepsilon}_{n+1}^{p}=\bm{\varepsilon}_{n+1}-\mathbf{C}_{n+1}^{-1}:\bm{\sigma}_{n+1}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\bm{\sigma}_{n+1}}{\partial\bm{\varepsilon}_{n+1}^{p}}=-\mathbf{C}_{n+1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathbf{J}=\left[\begin{array}{ccc}
+-\mathbf{I}-\frac{\partial\mathbf{g}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1} & \frac{\partial\mathbf{g}_{n+1}}{\partial\bm{\alpha}_{n+1}}\Delta\gamma_{n+1} & \mathbf{g}_{n+1}\\
+-\frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1} & -\mathbf{I}+\frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\alpha}_{n+1}}\Delta\gamma_{n+1} & \mathbf{h}_{n+1}\\
+-\frac{\partial y_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta t_{n+1} & \frac{\partial y_{n+1}}{\partial\bm{\alpha}_{n+1}}\Delta t_{n+1} & -1
+\end{array}\right]=\left[\begin{array}{ccc}
+\mathbf{J}_{11} & \mathbf{J}_{12} & \mathbf{J}_{13}\\
+\mathbf{J}_{21} & \mathbf{J}_{22} & \mathbf{J}_{23}\\
+\mathbf{J}_{31} & \mathbf{J}_{32} & J_{33}
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Algorithmic tangent
+\end_layout
+
+\begin_layout Standard
+We can use almost the same algorithm as above.
+ The only difference is in the 
+\begin_inset Formula $\mathbf{B}$
+\end_inset
+
+ function:
+\begin_inset Formula 
+\[
+\mathbf{B}=\left[\begin{array}{c}
+\frac{\partial\mathbf{R}_{2}}{\partial\bm{\varepsilon}_{n+1}}\\
+\frac{\partial R_{3}}{\partial\bm{\varepsilon}_{n+1}}
+\end{array}\right]=\left[\begin{array}{c}
+\frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\sigma}_{n+1}}:\mathbf{C}_{n+1}\Delta\gamma_{n+1}\\
+\frac{\partial y}{\partial\bm{\sigma}_{n+1}}\Delta:\mathbf{C}_{n+1}t_{n+1}
+\end{array}\right].
+\]
+
+\end_inset
+
+Only the second part changes.
+\end_layout
+
 \end_body
 \end_document

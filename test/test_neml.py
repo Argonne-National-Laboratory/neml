@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, ri_flow, hardening, surfaces
+from neml import neml, elasticity, ri_flow, hardening, surfaces, visco_flow
 from common import *
 
 import unittest
@@ -28,9 +28,6 @@ class CommonMatModel(object):
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
       num_A = differentiate(dfn, strain_np1)
-
-      print(A_np1)
-      print(num_A)
 
       self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-2))
       
@@ -70,12 +67,16 @@ class CommonJacobian(object):
   def gen_T(self):
     return ra.random((1,))[0]*1000.0
 
+  def gen_time(self):
+    return ra.random((1,))[0] * 10.0
+
   def test_jacobian(self):
     e_np1 = self.gen_strain()
     T_np1 = self.gen_T()
     h_n = self.gen_hist()
+    t_np1 = self.gen_time()
 
-    self.model.set_trial_state(e_np1, h_n, T_np1)
+    self.model.set_trial_state(e_np1, h_n, T_np1, t_np1, 0.0)
 
     x = self.gen_x()
 
@@ -256,3 +257,48 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
 
   def gen_x(self):
     return np.array(list(self.gen_hist()) + list(ra.random((1,))))
+
+
+class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
+  """
+    Perzyna associated viscoplasticity w/ voce kinematic hardening
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((7,))
+
+    self.hist0 = np.zeros((7,))
+
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.mu = self.E/(2*(1+self.nu))
+    self.K = self.E/(3*(1-2*self.nu))
+
+    self.s0 = 180.0
+    self.R = 150.0
+    self.d = 10.0
+
+    self.n = 2.0
+    self.eta = 2.0e6
+
+    shear = elasticity.ConstantShearModulus(self.mu)
+    bulk = elasticity.ConstantBulkModulus(self.K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    surface = surfaces.IsoJ2()
+    hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
+    g = visco_flow.GPowerLaw(self.n)
+
+    flow = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
+    self.model = neml.SmallStrainViscoPlasticity(elastic, flow)
+
+    self.efinal = np.array([0.01,-0.005,0.02,-0.03,0.01,-0.015])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 100 
+
+  def gen_hist(self):
+    return ra.random((7,))
+
+  def gen_x(self):
+    return ra.random((8,))
