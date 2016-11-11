@@ -82,10 +82,11 @@ class CommonJacobian(object):
 
     R, J = self.model.RJ(x)
 
+
     dfn = lambda y: self.model.RJ(y)[0]
     nJ = differentiate(dfn, x)
 
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-2))
 
 class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
@@ -279,7 +280,7 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
     self.d = 10.0
 
     self.n = 2.0
-    self.eta = 2.0e6
+    self.eta = 200.0
 
     shear = elasticity.ConstantShearModulus(self.mu)
     bulk = elasticity.ConstantBulkModulus(self.K)
