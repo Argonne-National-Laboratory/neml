@@ -29,12 +29,12 @@ class TestRosenbrock: public Solvable {
 
 /// Call the built-in solver
 int solve(std::shared_ptr<Solvable> system, double * x, 
-          double atol = 1.0e-10, double rtol = 1.0e-6, int miter = 25,
+          double tol = 1.0e-8, int miter = 50,
           bool verbose = false);
 
 /// Default solver: plain NR
 int newton(std::shared_ptr<Solvable> system, double * x, 
-          double atol, double rtol, int miter, bool verbose);
+          double tol, int miter, bool verbose);
 
 } // namespace neml
 

@@ -47,14 +47,14 @@ int TestRosenbrock::RJ(const double * const x, double * const R,
 
 // This function is configured by the build
 int solve(std::shared_ptr<Solvable> system, double * x,
-          double atol, double rtol, int miter, bool verbose)
+          double tol, int miter, bool verbose)
 {
   // For now just plain NR
-  return newton(system, x, atol, rtol, miter, verbose);
+  return newton(system, x, tol, miter, verbose);
 }
 
 int newton(std::shared_ptr<Solvable> system, double * x,
-          double atol, double rtol, int miter, bool verbose)
+          double tol, int miter, bool verbose)
 {
   int n = system->nparams();
   system->init_x(x);
@@ -64,16 +64,15 @@ int newton(std::shared_ptr<Solvable> system, double * x,
   system->RJ(x, R, J);
 
   double nR = norm2_vec(R, n);
-  double nR0 = nR;
   int i = 0;
   int ier = 0;
 
   if (verbose) {
-    std::cout << "Iter.\tnR\t\tnR/nR0" << std::endl;
-    std::cout << std::setw(6) << std::left << i << "\t" << std::setw(8) << std::left << std::scientific << nR << "\t" << std::setw(8) << std::left << nR/nR0 << std::endl;
+    std::cout << "Iter.\tnR" << std::endl;
+    std::cout << std::setw(6) << std::left << i << "\t" << std::setw(8) << std::left << std::scientific << nR << "\t" << std::endl;
   }
 
-  while ((nR > atol) && (nR/nR0 > rtol) && (i < miter))
+  while ((nR > tol) && (i < miter))
   {
     solve_mat(J, n, R);
 
@@ -84,7 +83,7 @@ int newton(std::shared_ptr<Solvable> system, double * x,
     i++;
 
     if (verbose) {
-      std::cout << i << "\t" << nR << "\t" << nR/nR0 << std::endl;
+      std::cout << i << "\t" << nR << std::endl;
     }
   }
 

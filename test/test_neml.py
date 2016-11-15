@@ -288,7 +288,8 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
 
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
-    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, check_kt = False)
+    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow,
+        check_kt = False)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0

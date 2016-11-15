@@ -94,9 +94,9 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool, double, bool>(),
-           py::arg("elastic"), py::arg("flow"), py::arg("rtol") = 1.0e-10, 
-           py::arg("atol") = 1.0e-14, py::arg("miter") = 250, 
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, int , bool, double, bool>(),
+           py::arg("elastic"), py::arg("flow"), 
+           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
            py::arg("check_kt") = true)
   
@@ -132,9 +132,9 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<SmallStrainViscoPlasticity, std::shared_ptr<SmallStrainViscoPlasticity>>(m, "SmallStrainViscoPlasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<ViscoPlasticFlowRule>, double, double, int , bool>(),
-           py::arg("elastic"), py::arg("flow"), py::arg("rtol") = 1.0e-10, 
-           py::arg("atol") = 1.0e-14, py::arg("miter") = 250, 
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<ViscoPlasticFlowRule>, double, int , bool>(),
+           py::arg("elastic"), py::arg("flow"), 
+           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false)
   
       .def("set_trial_state",

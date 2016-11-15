@@ -43,17 +43,17 @@ PYBIND11_PLUGIN(solvers) {
       ;
 
   m.def("solve",
-        [](std::shared_ptr<Solvable> system, double atol, double rtol, int miter, bool verbose) -> py::array_t<double>
+        [](std::shared_ptr<Solvable> system, double tol, int miter, bool verbose) -> py::array_t<double>
         {
           auto x = alloc_vec<double>(system->nparams());
           
-          int ier = solve(system, arr2ptr<double>(x), atol, rtol, miter, verbose);
+          int ier = solve(system, arr2ptr<double>(x), tol, miter, verbose);
           py_error(ier);
 
           return x;
         }, "Solve a nonlinear system", 
-        py::arg("solvable"), py::arg("atol") = 1.0e-10,
-        py::arg("rtol") = 1.0e-6, py::arg("miter") = 25,
+        py::arg("solvable"), py::arg("tol") = 1.0e-8,
+        py::arg("miter") = 50,
         py::arg("verbose") = false);
 
   return m.ptr();

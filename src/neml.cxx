@@ -194,9 +194,9 @@ int SmallStrainElasticity::update_sd(
 
 SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<RateIndependentFlowRule> flow, double rtol, double atol,
+    std::shared_ptr<RateIndependentFlowRule> flow, double tol,
     int miter, bool verbose, double kttol, bool check_kt) :
-      elastic_(elastic), flow_(flow), rtol_(rtol), atol_(atol), miter_(miter),
+      elastic_(elastic), flow_(flow), tol_(tol), miter_(miter),
       verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
 {
 
@@ -231,7 +231,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   double dg;
 
   // If elastic, copy over and return
-  if (fv < atol_) {
+  if (fv < tol_) {
     std::copy(s_tr_, s_tr_+6, s_np1);
     std::copy(ep_tr_, ep_tr_+6, h_np1);
     std::copy(&h_tr_[0], &h_tr_[0]+flow_->nhist(), &h_np1[6]);
@@ -244,7 +244,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   // Else solve and extract updated parameters from the solver vector
   else {
     double x[nparams()];
-    int ier = solve(shared_from_this(), x, atol_, rtol_, miter_, verbose_);
+    int ier = solve(shared_from_this(), x, tol_, miter_, verbose_);
     if (ier != SUCCESS) return ier;
 
     // Extract solved parameters
@@ -525,9 +525,9 @@ int SmallStrainRateIndependentPlasticity::check_K_T_(
 
 SmallStrainViscoPlasticity::SmallStrainViscoPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<ViscoPlasticFlowRule> flow, double rtol, double atol,
+    std::shared_ptr<ViscoPlasticFlowRule> flow, double tol,
     int miter, bool verbose) :
-      elastic_(elastic), flow_(flow), rtol_(rtol), atol_(atol), miter_(miter),
+      elastic_(elastic), flow_(flow), tol_(tol), miter_(miter),
       verbose_(verbose)
 {
 
@@ -561,7 +561,7 @@ int SmallStrainViscoPlasticity::update_sd(
   flow_->y(s_tr_, &h_tr_[0], T_np1, g);
 
   // If elastic, copy over and return
-  if (g < atol_) {
+  if (g < tol_) {
     std::copy(s_tr_, s_tr_+6, s_np1);
     std::copy(ep_tr_, ep_tr_+6, h_np1);
     std::copy(&h_tr_[0], &h_tr_[0]+flow_->nhist(), &h_np1[6]);
@@ -571,7 +571,7 @@ int SmallStrainViscoPlasticity::update_sd(
   // Else solve and extract updated parameters from the solver vector
   else {
     double x[nparams()];
-    int ier = solve(shared_from_this(), x, atol_, rtol_, miter_, verbose_);
+    int ier = solve(shared_from_this(), x, tol_, miter_, verbose_);
     if (ier != SUCCESS) return ier;
 
     // Extract solved parameters
