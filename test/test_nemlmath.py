@@ -131,3 +131,10 @@ class TestSolve(unittest.TestCase):
     print(self.b)
     self.assertTrue(np.allclose(x, self.b))
 
+class TestCond(unittest.TestCase):
+  def setUp(self):
+    self.n = 10
+    self.A = ra.random((self.n,self.n))
+
+  def test_cond(self):
+    fr = condition(self.A)

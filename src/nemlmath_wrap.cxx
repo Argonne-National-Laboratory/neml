@@ -265,6 +265,19 @@ PYBIND11_PLUGIN(nemlmath) {
 
           return b;
         }, "Solve Ax=b.");
+
+   m.def("condition",
+        [](py::array_t<double, py::array::c_style> A) -> double
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("A is not a matrix!");
+          }
+          if (A.request().shape[0] != A.request().shape[1]) {
+            throw LinalgError("A is not square!");
+          }
+
+          return condition(arr2ptr<double>(A), A.request().shape[1]);
+        }, "Calculate the approximate condition number of A.");
 }
 
 } // namespace neml

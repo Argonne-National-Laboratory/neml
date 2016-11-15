@@ -226,10 +226,10 @@ if __name__ == "__main__":
   g = visco_flow.GPowerLaw(n)
 
   flow = visco_flow.PerzynaFlowRule(surface, iso, g, eta)
-  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
+  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = True)
 
   example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 100.0, 100)
-  example_stress(model, np.array([100.0,0,0,0,0,0]), 300.0, 100, 100)
-  example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e0, 300.0, 0.04, 100)
-  example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0, 300.0, 120.0, 100)
+  #example_stress(model, np.array([100.0,0,0,0,0,0]), 300.0, 100, 100)
+  #example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e0, 300.0, 0.04, 100)
+  #example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0, 300.0, 120.0, 100)
 

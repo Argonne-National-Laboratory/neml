@@ -18,7 +18,7 @@ if __name__ == "__main__":
   s0 = 86.0
   Kp = E/100.0
 
-  n = 2.0
+  n = 5.0
   eta = 150.0
   
   shear = elasticity.ConstantShearModulus(mu)
@@ -42,7 +42,8 @@ if __name__ == "__main__":
   plt.show()
   
   # A strain-controlled cyclic test
-  res = drivers.strain_cyclic(model, 0.01, -0.25, 1.0e-4, 50)
+  res = drivers.strain_cyclic(model, 0.01, -0.25, 1.0e-4, 50,
+      nsteps = 150)
   plt.plot(res['strain'], res['stress'], 'k-')
   plt.xlabel("Strain (-/-)")
   plt.ylabel("Stress (MPa)")

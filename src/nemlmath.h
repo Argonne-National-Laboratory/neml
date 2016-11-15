@@ -12,6 +12,7 @@ extern "C" {
   void dgesv_(const int & n, const int & nrhs, double * A, const int & lda, int * ipiv, double * b, const int & ldb, int & info);
   void dgemv_(const char * trans, const int & m, const int & n, const double & alpha, const double * A, const int & lda, const double * x, const int & incx, const double & beta, double * y, const int & incy);
   void dgemm_(const char * transa, const char * transb, const int & m, const int & n, const int & k, const double & alpha, const double * A, const int & lda, const double * B, const int & ldb, const double & beta, double * C, const int & ldc);
+  void dgecon_(const char * norm, const int & n, double * A, const int & lda, const double & anrom, double & rcond, double * work, int * lwork, int & info);
 }
 
 namespace neml {
@@ -60,6 +61,9 @@ int invert_mat(double* const A, int n);
 
 /// Solve unsymmetric system
 int solve_mat(const double * const A, int n, double * const x);
+
+/// Get the condition number of a matrix
+double condition(const double * const A, int n);
 
 }
 

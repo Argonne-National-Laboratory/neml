@@ -36,6 +36,14 @@ int solve(std::shared_ptr<Solvable> system, double * x,
 int newton(std::shared_ptr<Solvable> system, double * x, 
           double tol, int miter, bool verbose);
 
+
+/// Helper to get numerical jacobian
+int diff_jac(std::shared_ptr<Solvable> system, const double * const x,
+             double * const nJ, double eps = 1.0e-8);
+/// Helper to get checksum
+double diff_jac_check(std::shared_ptr<Solvable> system, const double * const x,
+                      const double * const J);
+
 } // namespace neml
 
 #endif // SOLVERS_H

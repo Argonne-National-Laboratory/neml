@@ -156,5 +156,46 @@ int solve_mat(const double * const A, int n, double * const x)
 
 }
 
+double condition(const double * const A, int n)
+{
+  // Setup
+  int info;
+  int * ipiv = new int [n];
+  double * x = new double [n];
+  double * B = new double [n*n];
+  for (int i=0; i<n; i++) {
+    for (int j=0; j<n; j++) {
+      B[CINDEX(i,j,n)] = A[CINDEX(j,i,n)];
+    }
+  }
+  
+  // 1 norm
+  double anorm = 0.0;
+  double csum;
+  for (int i=0; i<n; i++) {
+    csum = 0.0;
+    for (int j=0; j<n; j++) {
+      csum += fabs(A[CINDEX(i,j,n)]);
+    }
+    if (csum > anorm) anorm = csum;
+  }
+
+  // Solve
+  std::fill(x, x+n, 0.0);
+  dgesv_(n, 1, B, n, ipiv, x, n, info);
+  delete [] ipiv;
+
+  double * work = new double [4*n];
+  int * iwork = new int [n];
+  double rcond;
+  dgecon_("1", n, B, n, anorm, rcond, work, iwork, info);
+
+  delete [] B;
+  delete [] work;
+  delete [] iwork;
+
+  return 1.0 / rcond;
+}
+
 
 } // namespace neml
