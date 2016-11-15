@@ -217,4 +217,22 @@ double PerzynaFlowRule::eta() const
   return eta_;
 }
 
+// Begin Chaboche
+ConstantFluidity::ConstantFluidity(double eta) :
+    eta_(eta)
+{
+
+}
+
+double ConstantFluidity::eta(double a) const
+{
+  return eta_;
+}
+
+double ConstantFluidity::deta(double a) const
+{
+  return 0.0;
+}
+
+
 } // namespace neml

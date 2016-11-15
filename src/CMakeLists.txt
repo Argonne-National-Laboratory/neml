@@ -2,7 +2,7 @@ if (WRAP_PYTHON)
       # Each file as a separate module
       # math
       add_library(nemlmath SHARED nemlmath_wrap.cxx nemlmath.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(nemlmath PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET nemlmath PROPERTY OUTPUT_NAME "nemlmath.so")
@@ -20,7 +20,7 @@ if (WRAP_PYTHON)
 
       # elasticity
       add_library(elasticity SHARED elasticity_wrap.cxx elasticity.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(elasticity nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(elasticity nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(elasticity PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET elasticity PROPERTY OUTPUT_NAME "elasticity.so")
@@ -29,7 +29,7 @@ if (WRAP_PYTHON)
 
       # yield surfaces
       add_library(surfaces SHARED surfaces_wrap.cxx surfaces.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(surfaces nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(surfaces nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(surfaces PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET surfaces PROPERTY OUTPUT_NAME "surfaces.so")
@@ -38,7 +38,7 @@ if (WRAP_PYTHON)
 
       # hardening rules
       add_library(hardening SHARED hardening_wrap.cxx hardening.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(hardening PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET hardening PROPERTY OUTPUT_NAME "hardening.so")
@@ -47,7 +47,7 @@ if (WRAP_PYTHON)
 
       # rate independent flow rules
       add_library(ri_flow SHARED ri_flow_wrap.cxx ri_flow.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(ri_flow surfaces hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(ri_flow surfaces hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(ri_flow PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET ri_flow PROPERTY OUTPUT_NAME "ri_flow.so")
@@ -56,7 +56,7 @@ if (WRAP_PYTHON)
 
       # viscoplastic flow stuff
       add_library(visco_flow SHARED visco_flow_wrap.cxx visco_flow.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(visco_flow surfaces hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(visco_flow surfaces hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(visco_flow PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET visco_flow PROPERTY OUTPUT_NAME "visco_flow.so")
@@ -65,7 +65,7 @@ if (WRAP_PYTHON)
 
       # actual material models
       add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(neml solvers ri_flow nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(neml solvers ri_flow nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(neml PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET neml PROPERTY OUTPUT_NAME "neml.so")

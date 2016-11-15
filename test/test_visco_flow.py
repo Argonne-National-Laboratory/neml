@@ -178,3 +178,26 @@ class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
 
   def test_properties(self):
     self.assertTrue(np.isclose(self.eta, self.model.eta))
+
+class CommonFluidity(object):
+  """
+    Common fluidity model tests
+  """
+  def gen_hist(self):
+    return ra.random((1,))[0]
+
+  def test_deta(self):
+    a = self.gen_hist()
+    fm = self.model.deta(a)
+    dfn = lambda a: self.model.eta(a)
+    fn = differentiate(dfn, a)
+    self.assertTrue(np.isclose(fm, fn))
+
+class TestConstantFluidity(unittest.TestCase, CommonFluidity):
+  def setUp(self):
+    self.eta = 200.0
+    self.model = visco_flow.ConstantFluidity(self.eta)
+
+  def test_eta(self):
+    a = self.gen_hist()
+    self.assertTrue(np.isclose(self.eta, self.model.eta(a)))

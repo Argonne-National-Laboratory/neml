@@ -28,7 +28,7 @@ if __name__ == "__main__":
   hrule = hardening.Chaboche(iso, c, r)
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True,
+  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
   
   

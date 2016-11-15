@@ -107,6 +107,41 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
 
 };
 
+/// Various Chaboche type fluidity models.
+//
+//  These depend only on the equivalent plastic strain
+class FluidityModel {
+ public:
+  virtual double eta(double a) const = 0;
+  virtual double deta(double a) const = 0;
+};
+
+class ConstantFluidity: public FluidityModel {
+ public:
+  ConstantFluidity(double eta);
+  virtual double eta(double a) const;
+  virtual double deta(double a) const;
+
+ private:
+  const double eta_;
+
+};
+
+/// Non-associative flow based on Chaboche's viscoplastic formulation
+//
+//  It uses an associative flow rule, a non-associative hardening rule 
+//  (which should be Chaboche's for the full model), and a Perzyna rate
+//  rule with a potentially history-dependent fluidity
+//
+class ChabocheFlowRule: public ViscoPlasticFlowRule {
+ public:
+  ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
+                   std::shared_ptr<NonAssociativeHardening> hardening,
+                   std::shared_ptr<FluidityModel> fluidity);
+
+
+
+};
 
 } // namespace neml
 

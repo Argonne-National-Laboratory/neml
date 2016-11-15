@@ -149,7 +149,7 @@ class SatGamma: public GammaModel {
 
 /// Chaboche model: generalized Frederick-Armstrong
 //    This model degenerates to Frederick-Armstrong for n = 1
-class Chaboche {
+class Chaboche: public NonAssociativeHardening {
  public:
   /// New interface with vectors
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,

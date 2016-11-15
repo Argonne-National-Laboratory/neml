@@ -119,6 +119,15 @@ PYBIND11_PLUGIN(visco_flow) {
         .def_property_readonly("eta", &PerzynaFlowRule::eta)
         ;
 
+    py::class_<FluidityModel, std::shared_ptr<FluidityModel>>(m, "FluidityModel")
+        .def("eta", &FluidityModel::eta)
+        .def("deta", &FluidityModel::deta)
+        ;
+
+    py::class_<ConstantFluidity, std::shared_ptr<ConstantFluidity>>(m, "ConstantFluidity", py::base<FluidityModel>())
+        .def(py::init<double>(), py::arg("eta"))
+        ;
+
   return m.ptr();
 }
 
