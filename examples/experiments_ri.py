@@ -17,8 +17,8 @@ if __name__ == "__main__":
 
   s0 = 300.0
   Kp = 0.0
-  c = np.array([60.0])
-  r = np.array([2.0/3.0*30000.0/60.0])
+  c = np.array([30000.0])
+  r = np.array([60.0])
   
   shear = elasticity.ConstantShearModulus(mu)
   bulk = elasticity.ConstantBulkModulus(K)
@@ -28,7 +28,7 @@ if __name__ == "__main__":
   hrule = hardening.Chaboche(iso, c, r)
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
+  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True,
       check_kt = False)
   
   

@@ -5,6 +5,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
+#include "pybind11/stl.h"
 
 namespace py = pybind11;
 
@@ -133,7 +134,27 @@ PYBIND11_PLUGIN(hardening) {
            }, "Hardening rule derivative with respect to history.")
       ;
 
+  py::class_<GammaModel, std::shared_ptr<GammaModel>>(m, "GammaModel")
+      .def("gamma", &GammaModel::gamma)
+      .def("dgamma", &GammaModel::dgamma)
+      ;
+
+  py::class_<ConstantGamma, std::shared_ptr<ConstantGamma>>(m, "ConstantGamma", py::base<GammaModel>())
+      .def(py::init<double>(), py::arg("g"))
+      .def_property_readonly("g", &ConstantGamma::g)
+      ;
+
+  py::class_<SatGamma, std::shared_ptr<SatGamma>>(m, "SatGamma", py::base<GammaModel>())
+      .def(py::init<double,double,double>(), py::arg("gs"), py::arg("g0"),
+           py::arg("beta"))
+      .def_property_readonly("gs", &SatGamma::gs)
+      .def_property_readonly("g0", &SatGamma::g0)
+      .def_property_readonly("beta", &SatGamma::beta)
+      ;
+
   py::class_<Chaboche, std::shared_ptr<Chaboche>>(m, "Chaboche", py::base<NonAssociativeHardening>())
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"))
       .def("__init__",
            [](Chaboche & instance, std::shared_ptr<IsotropicHardeningRule> iso, py::array_t<double, py::array::c_style> c, py::array_t<double, py::array::c_style> r) 
            {
@@ -159,13 +180,6 @@ PYBIND11_PLUGIN(hardening) {
                               std::copy(m.c().begin(), m.c().end(), arr2ptr<double>(cv));
                               return cv;
                              }, "c material constant.")
-      .def_property_readonly("r",
-                             [](const Chaboche& m) -> py::array_t<double>
-                             {
-                              auto rv = alloc_vec<double>(m.n());
-                              std::copy(m.r().begin(), m.r().end(), arr2ptr<double>(rv));
-                              return rv;
-                             }, "r material constant.")
       ;
 
   return m.ptr();

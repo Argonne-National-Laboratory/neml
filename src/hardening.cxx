@@ -193,13 +193,75 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
 
 // Begin non-associative hardening rules
 //
+// Gamma functions for Chaboche
+//
+// Constant
+//
+ConstantGamma::ConstantGamma(double g) :
+    g_(g)
+{
+
+}
+
+double ConstantGamma::gamma(double ep) const {
+  return g_;
+}
+
+double ConstantGamma::dgamma(double ep) const {
+  return 0;
+}
+
+double ConstantGamma::g() const {
+  return g_;
+}
+
+//
+// Saturating
+//
+SatGamma::SatGamma(double gs, double g0, double beta) :
+    gs_(gs), g0_(g0), beta_(beta)
+{
+
+}
+
+double SatGamma::gamma(double ep) const {
+  return gs_ + (g0_ - gs_) * exp(-beta_ * ep);
+}
+
+double SatGamma::dgamma(double ep) const {
+  return beta_ * (gs_ - g0_) * exp(-beta_ * ep);
+}
+
+double SatGamma::gs() const {
+  return gs_;
+}
+
+double SatGamma::g0() const {
+  return g0_;
+}
+
+double SatGamma::beta() const {
+  return beta_;
+}
+
+//
 // Chaboche
 //
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-                   int n, const double * const c, const double * const r)
-  : iso_(iso), n_(n), c_(c, c+n), r_(r, r+n)
+                   std::vector<double> c,
+                   std::vector<std::shared_ptr<GammaModel>> gmodels) :
+    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size())
 {
 
+}
+
+Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+                   int n, const double * const c, const double * const r)
+  : iso_(iso), n_(n), c_(c, c+n)
+{
+  for (int i=0; i<n; i++) {
+    gmodels_.emplace_back(std::make_shared<ConstantGamma>(r[i]));
+  }
 
 }
 
@@ -257,7 +319,7 @@ int Chaboche::h(const double * const s, const double * const alpha, double T,
 
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      hv[1+i*6+j] = - c_[i] * r_[i] * (nv[j] + alpha[1+i*6+j] / r_[i]);
+      hv[1+i*6+j] = - 2.0 / 3.0 * c_[i] * nv[j] - gmodels_[i]->gamma(alpha[0]) * alpha[1+i*6+j];
     }
   }
 
@@ -308,7 +370,7 @@ int Chaboche::dh_ds(const double * const s, const double * const alpha, double T
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
       for (int k=0; k<6; k++) {
-        dhv[CINDEX((1+i*6+j),(k),6)] = -c_[i] * r_[i] * nn[CINDEX(j,k,6)];
+        dhv[CINDEX((1+i*6+j),(k),6)] = -2.0 / 3.0 * c_[i] * nn[CINDEX(j,k,6)];
       }
     }
   }
@@ -342,10 +404,10 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
     ss[i] /= nv;
   }
   
-  // Fill in the ci part
+  // Fill in the gamma part
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= c_[i];
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= gmodels_[i]->gamma(alpha[0]);
     }
   }
 
@@ -354,10 +416,17 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
     for (int i=0; i<6; i++) {
       for (int bj=0; bj<n_; bj++) {
         for (int j=0; j<6; j++) {
-          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nhist())] -= c_[bi] * r_[bi] * 
+          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nhist())] -= 2.0 / 3.0 * c_[bi]  * 
               ss[CINDEX(i,j,6)];
         }
       }
+    }
+  }
+
+  // Fill in the alpha part
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      dhv[CINDEX((1+i*6+j),0,nhist())] = -gmodels_[i]->dgamma(alpha[0]) * alpha[1+i*6+j];
     }
   }
 
@@ -372,11 +441,6 @@ int Chaboche::n() const
 const std::vector<double> & Chaboche::c() const
 {
   return c_;
-}
-
-const std::vector<double> & Chaboche::r() const
-{
-  return r_;
 }
 
 void Chaboche::backstress_(const double * const alpha, double * const X) const

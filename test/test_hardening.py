@@ -150,11 +150,57 @@ class CommonNonAssociative(object):
     dfn = lambda x: self.model.h(s, x, self.T)
     dh_num = differentiate(dfn, a)
 
+    print(dh_model)
+    print(dh_num)
+
     self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+
+class CommonGamma(object):
+  def gen_alpha(self):
+    return ra.random((1,))[0]
+
+  def test_dgamma(self):
+    a = self.gen_alpha()
+    should = self.model.dgamma(a)
+    dfn = lambda a: self.model.gamma(a)
+    num = differentiate(dfn, a)
+
+    self.assertTrue(np.isclose(should, num))
+
+class TestConstantGamma(unittest.TestCase, CommonGamma):
+  def setUp(self):
+    self.g = 100.0
+    self.model = hardening.ConstantGamma(self.g)
+
+  def test_properties(self):
+    self.assertTrue(np.isclose(self.g, self.model.g))
+
+  def test_gamma(self):
+    a = self.gen_alpha()
+    should = self.g
+    self.assertTrue(np.isclose(should, self.model.gamma(a)))
+
+class TestSatGamma(unittest.TestCase, CommonGamma):
+  def setUp(self):
+    self.g0 = 100.0
+    self.gs = 200.0
+    self.beta = 2.5
+
+    self.model = hardening.SatGamma(self.gs, self.g0, self.beta)
+
+  def test_properties(self):
+    self.assertTrue(np.isclose(self.g0, self.model.g0))
+    self.assertTrue(np.isclose(self.gs, self.model.gs))
+    self.assertTrue(np.isclose(self.beta, self.model.beta))
+
+  def test_gamma(self):
+    a = self.gen_alpha()
+    should = self.gs + (self.g0 - self.gs)*np.exp(-self.beta * a)
+    self.assertTrue(np.isclose(should, self.model.gamma(a)))
 
 class TestChaboche(unittest.TestCase, CommonNonAssociative):
   """
-    Chaboche model with arbitrary kinematic hardening
+    Chaboche model with arbitrary hardening
   """
   def setUp(self):
     self.s0 = 200.0
@@ -163,6 +209,7 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     self.n = 4
     self.cs = ra.random((self.n,)) * 10.0
     self.rs = ra.random((self.n,)) * 10.0
+    self.gammas = [hardening.ConstantGamma(r) for r in self.rs]
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
 
@@ -183,7 +230,6 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
   def test_properties(self):
     self.assertEqual(self.n, self.model.n)
     self.assertTrue(np.allclose(self.model.c, self.cs))
-    self.assertTrue(np.allclose(self.model.r, self.rs))
 
   def test_q(self):
     h = self.gen_hist()
@@ -205,6 +251,122 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -self.cs[i] * self.rs[i] * (n + alpha[1+i*6:1+(i+1)*6] / self.rs[i])
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+    
+    self.assertTrue(np.allclose(h_model, h_exact))
+
+class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
+  """
+    Same as previous but with new-style setup
+  """
+  def setUp(self):
+    self.s0 = 200.0
+    self.K = 1000.0
+
+    self.n = 4
+    self.cs = list(ra.random((self.n,)) * 10.0)
+    self.rs = ra.random((self.n,)) * 10.0
+    self.gammas = [hardening.ConstantGamma(r) for r in self.rs]
+
+    self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
+
+    self.model = hardening.Chaboche(self.iso, self.cs, self.gammas)
+
+    self.hist0 = np.zeros((1 + self.n*6,))
+    self.conform = 7
+
+    self.T = 300.0
+
+  def gen_hist(self):
+    hist = ra.random((1 + self.n*6,))
+    hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
+    for i in range(self.n):
+      hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
+    return hist
+
+  def test_properties(self):
+    self.assertEqual(self.n, self.model.n)
+    self.assertTrue(np.allclose(self.model.c, self.cs))
+
+  def test_q(self):
+    h = self.gen_hist()
+    q_model = self.model.q(h, self.T)
+    q_exact = np.zeros((7,))
+    q_exact[0] = self.iso.q(h[0:1], self.T)
+    q_exact[1:] = sum(h[1+i*6:1+(i+1)*6] for i in range(self.n))
+    self.assertTrue(np.allclose(q_model, q_exact))
+
+  def test_h(self):
+    alpha = self.gen_hist()
+    s = self.gen_stress()
+    sdev = make_dev(s)
+    X = sum(alpha[1+i*6:1+(i+1)*6] for i in range(self.n))
+    n = (sdev+X) / la.norm(sdev+X)
+
+    h_model = self.model.h(s, alpha, self.T)
+
+    h_exact = np.zeros((self.model.nhist,))
+    h_exact[0] = np.sqrt(2.0/3.0)
+    for i in range(self.n):
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+    
+    self.assertTrue(np.allclose(h_model, h_exact))
+
+class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
+  """
+    Nonlinear saturation function
+  """
+  def setUp(self):
+    self.s0 = 200.0
+    self.K = 1000.0
+
+    self.n = 2
+    self.cs = list(ra.random((self.n,)) * 10.0)
+    self.g0s = ra.random((self.n,)) * 10.0
+    self.gss = 2.0 * self.g0s
+    self.betas = ra.random((self.n,))
+    self.gammas = [hardening.SatGamma(a, b, c) for a,b,c in zip(self.g0s, self.gss, self.betas)]
+
+    self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
+
+    self.model = hardening.Chaboche(self.iso, self.cs, self.gammas)
+
+    self.hist0 = np.zeros((1 + self.n*6,))
+    self.conform = 7
+
+    self.T = 300.0
+
+  def gen_hist(self):
+    hist = ra.random((1 + self.n*6,))
+    hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
+    for i in range(self.n):
+      hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
+    return hist
+
+  def test_properties(self):
+    self.assertEqual(self.n, self.model.n)
+    self.assertTrue(np.allclose(self.model.c, self.cs))
+
+  def test_q(self):
+    h = self.gen_hist()
+    q_model = self.model.q(h, self.T)
+    q_exact = np.zeros((7,))
+    q_exact[0] = self.iso.q(h[0:1], self.T)
+    q_exact[1:] = sum(h[1+i*6:1+(i+1)*6] for i in range(self.n))
+    self.assertTrue(np.allclose(q_model, q_exact))
+
+  def test_h(self):
+    alpha = self.gen_hist()
+    s = self.gen_stress()
+    sdev = make_dev(s)
+    X = sum(alpha[1+i*6:1+(i+1)*6] for i in range(self.n))
+    n = (sdev+X) / la.norm(sdev+X)
+
+    h_model = self.model.h(s, alpha, self.T)
+
+    h_exact = np.zeros((self.model.nhist,))
+    h_exact[0] = np.sqrt(2.0/3.0)
+    for i in range(self.n):
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))

@@ -109,10 +109,54 @@ class NonAssociativeHardening {
                 double * const dhv) const = 0;
 };
 
+/// Gamma models for the Chaboche backstress
+class GammaModel {
+ public:
+  virtual double gamma(double ep) const = 0;
+  virtual double dgamma(double ep) const = 0;
+
+};
+
+class ConstantGamma: public GammaModel {
+ public:
+  ConstantGamma(double g);
+
+  virtual double gamma(double ep) const;
+  virtual double dgamma(double ep) const;
+
+  double g() const;
+
+ private:
+  const double g_;
+
+};
+
+class SatGamma: public GammaModel {
+ public:
+  SatGamma(double gs, double g0, double beta);
+
+  virtual double gamma(double ep) const;
+  virtual double dgamma(double ep) const;
+
+  double gs() const;
+  double g0() const;
+  double beta() const;
+
+ private:
+  const double gs_, g0_, beta_;
+
+};
+
 /// Chaboche model: generalized Frederick-Armstrong
 //    This model degenerates to Frederick-Armstrong for n = 1
 class Chaboche {
  public:
+  /// New interface with vectors
+  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+           std::vector<double> c,
+           std::vector<std::shared_ptr<GammaModel>> gmodels);
+
+  /// Older interface assuming constant gammas
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                      int n, const double * const c, const double * const r);
 
@@ -134,14 +178,14 @@ class Chaboche {
   // Getters
   int n() const;
   const std::vector<double> & c() const;
-  const std::vector<double> & r() const;
 
  private:
   void backstress_(const double * const alpha, double * const X) const;
 
   std::shared_ptr<IsotropicHardeningRule> iso_;
   const int n_;
-  const std::vector<double> c_, r_;
+  const std::vector<double> c_;
+  std::vector<std::shared_ptr<GammaModel>> gmodels_;
 };
 
 
