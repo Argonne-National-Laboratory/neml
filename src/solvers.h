@@ -39,7 +39,7 @@ int newton(std::shared_ptr<Solvable> system, double * x,
 
 /// Helper to get numerical jacobian
 int diff_jac(std::shared_ptr<Solvable> system, const double * const x,
-             double * const nJ, double eps = 1.0e-8);
+             double * const nJ, double eps = 1.0e-9);
 /// Helper to get checksum
 double diff_jac_check(std::shared_ptr<Solvable> system, const double * const x,
                       const double * const J);
