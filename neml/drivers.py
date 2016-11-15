@@ -94,17 +94,17 @@ class Driver_sd(Driver):
         T_np1       next temperature
     """
     def RJ(e):
-      s, h, A = self.model.update_sd(e, np.copy(self.strain_int[-1]),
+      s, h, A = self.model.update_sd(e, self.strain_int[-1],
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], 
-        np.copy(self.stress_int[-1]),
+        self.stress_int[-1],
         self.stored_int[-1])
       R = s - s_np1
       return R, A
 
-    e_np1 = newton(RJ, np.copy(self.strain_int[-1]), verbose = self.verbose,
+    e_np1 = newton(RJ, self.strain_int[-1], verbose = self.verbose,
         rtol = self.rtol, atol = self.atol, miter = self.miter)
 
-    self.strain_step(np.copy(e_np1), t_np1, T_np1)
+    self.strain_step(e_np1, t_np1, T_np1)
 
   def erate_step(self, sdir, erate, t_np1, T_np1,
       einc_guess = None, ainc_guess = None):
@@ -160,7 +160,7 @@ class Driver_sd(Driver):
         rtol = self.rtol, atol = self.atol, miter = self.miter)
     e_np1 = self.strain_int[-1] + x[1:]
 
-    self.strain_step(np.copy(e_np1), t_np1, T_np1)
+    self.strain_step(e_np1, t_np1, T_np1)
 
     return x[1:], x[0]
 
@@ -227,7 +227,7 @@ class Driver_sd(Driver):
     e_np1 = newton(RJ, x0, verbose = self.verbose,
         rtol = self.rtol, atol = self.atol, miter = self.miter)
 
-    self.strain_step(np.copy(e_np1), t_np1, T_np1)
+    self.strain_step(e_np1, t_np1, T_np1)
 
 
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
@@ -260,8 +260,8 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
     else:
       einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
           einc_guess = einc, ainc_guess = ainc)
-    strain.append(np.dot(driver.strain[-1], sdir))
-    stress.append(np.dot(driver.stress[-1], sdir))
+    strain.append(np.dot(driver.strain_int[-1], sdir))
+    stress.append(np.dot(driver.stress_int[-1], sdir))
 
   strain = np.array(strain)
   stress = np.array(stress)
@@ -329,8 +329,8 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     else:
       driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
           ainc_guess = ainc)
-    strain.append(np.dot(driver.strain[-1], sdir))
-    stress.append(np.dot(driver.stress[-1], sdir))
+    strain.append(np.dot(driver.strain_int[-1], sdir))
+    stress.append(np.dot(driver.stress_int[-1], sdir))
   
   # Begin cycling
   for s in range(ncycles):
@@ -344,14 +344,11 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
         einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
             einc_guess = -einc, ainc_guess = -ainc)
       else:
-        try:
-          einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
-              einc_guess = einc, ainc_guess = ainc)
-        except:
-          plt.plot(strain, stress)
-          plt.show()
-      strain.append(np.dot(driver.strain[-1], sdir))
-      stress.append(np.dot(driver.stress[-1], sdir))
+        einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
+            einc_guess = einc, ainc_guess = ainc)
+
+      strain.append(np.dot(driver.strain_int[-1], sdir))
+      stress.append(np.dot(driver.stress_int[-1], sdir))
 
     e_inc = np.abs(emax - emin) / nsteps
     for i in range(nsteps):
@@ -361,8 +358,8 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       else:
         einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T,
             einc_guess = einc, ainc_guess = ainc)
-      strain.append(np.dot(driver.strain[-1], sdir))
-      stress.append(np.dot(driver.stress[-1], sdir))
+      strain.append(np.dot(driver.strain_int[-1], sdir))
+      stress.append(np.dot(driver.stress_int[-1], sdir))
 
     # Calculate
     cycles.append(s)
@@ -427,8 +424,8 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     print("First half cycle")
   for i in range(nsteps):
     driver.srate_sinc_step(sdir, srate, s_inc, T)
-    strain.append(np.dot(driver.strain[-1], sdir))
-    stress.append(np.dot(driver.stress[-1], sdir))
+    strain.append(np.dot(driver.strain_int[-1], sdir))
+    stress.append(np.dot(driver.stress_int[-1], sdir))
 
   # Begin cycling
   for s in range(ncycles):
@@ -440,30 +437,30 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       ht = hold_time[0]
       dt = ht / n_hold
       for i in range(n_hold):
-        driver.stress_step(driver.stress[-1], driver.t[-1] + dt, T)
-        strain.append(np.dot(driver.strain[-1], sdir))
-        stress.append(np.dot(driver.stress[-1], sdir))
+        driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
 
     s_inc = (smin - smax) / nsteps
     for i in range(nsteps):
       driver.srate_sinc_step(sdir, srate, s_inc, T)
-      strain.append(np.dot(driver.strain[-1], sdir))
-      stress.append(np.dot(driver.stress[-1], sdir))
+      strain.append(np.dot(driver.strain_int[-1], sdir))
+      stress.append(np.dot(driver.stress_int[-1], sdir))
 
     # Hold, if requested
     if hold_time:
       ht = hold_time[1]
       dt = ht / n_hold
       for i in range(n_hold):
-        driver.stress_step(driver.stress[-1], driver.t[-1] + dt, T)
-        strain.append(np.dot(driver.strain[-1], sdir))
-        stress.append(np.dot(driver.stress[-1], sdir))
+        driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
 
     s_inc = (smax - smin) / nsteps
     for i in range(nsteps):
       driver.srate_sinc_step(sdir, srate, s_inc, T)
-      strain.append(np.dot(driver.strain[-1], sdir))
-      stress.append(np.dot(driver.stress[-1], sdir))
+      strain.append(np.dot(driver.strain_int[-1], sdir))
+      stress.append(np.dot(driver.stress_int[-1], sdir))
 
     # Calculate
     cycles.append(s)
@@ -516,17 +513,17 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
   for i in range(nsteps_up):
     driver.erate_einc_step(sdir, erate, einc, T)
     time.append(driver.t[-1])
-    strain.append(np.dot(driver.strain[-1],sdir))
-    stress.append(np.dot(driver.stress[-1],sdir))
+    strain.append(np.dot(driver.strain_int[-1],sdir))
+    stress.append(np.dot(driver.stress_int[-1],sdir))
 
-  ri = len(driver.strain)
+  ri = len(driver.strain_int)
   
   dt = hold / nsteps
   for i in range(nsteps):
-    driver.strain_hold_step(index, driver.t[-1] + dt, T)
-    time.append(driver.t[-1])
-    strain.append(np.dot(driver.strain[-1],sdir))
-    stress.append(np.dot(driver.stress[-1],sdir))
+    driver.strain_hold_step(index, driver.t_int[-1] + dt, T)
+    time.append(driver.t_int[-1])
+    strain.append(np.dot(driver.strain_int[-1],sdir))
+    stress.append(np.dot(driver.stress_int[-1],sdir))
 
   time = np.array(time)
   strain = np.array(strain)
@@ -568,17 +565,17 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
   for i in range(nsteps_up):
     driver.srate_sinc_step(sdir, srate, sinc, T)
     time.append(driver.t[-1])
-    strain.append(np.dot(driver.strain[-1],sdir))
-    stress.append(np.dot(driver.stress[-1],sdir))
+    strain.append(np.dot(driver.strain_int[-1],sdir))
+    stress.append(np.dot(driver.stress_int[-1],sdir))
 
-  ri = len(driver.strain)
+  ri = len(driver.strain_int)
 
   dt = hold / nsteps
   for i in range(nsteps):
-    driver.stress_step(driver.stress[-1], driver.t[-1] + dt, T)
+    driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
     time.append(driver.t[-1])
-    strain.append(np.dot(driver.strain[-1],sdir))
-    stress.append(np.dot(driver.stress[-1],sdir))
+    strain.append(np.dot(driver.strain_int[-1],sdir))
+    stress.append(np.dot(driver.stress_int[-1],sdir))
 
   time = np.array(time)
   strain = np.array(strain)
