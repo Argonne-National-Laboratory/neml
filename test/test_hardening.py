@@ -119,8 +119,7 @@ class CommonNonAssociative(object):
     self.assertTrue(np.allclose(self.model.init_hist(), self.hist0))
 
   def gen_stress(self):
-    s = ra.random((6,))
-    s = (1.0 - 2.0 * s) * 125.0
+    s = np.array([-150,200,-50,80,-20,30])
     return s
 
   def test_dq(self):
@@ -149,9 +148,6 @@ class CommonNonAssociative(object):
     dh_model = self.model.dh_da(s, a, self.T)
     dfn = lambda x: self.model.h(s, x, self.T)
     dh_num = differentiate(dfn, a)
-
-    print(dh_model)
-    print(dh_num)
 
     self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
 

@@ -128,6 +128,11 @@ PYBIND11_PLUGIN(visco_flow) {
         .def(py::init<double>(), py::arg("eta"))
         ;
 
+    py::class_<ChabocheFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule", py::base<ViscoPlasticFlowRule>())
+        .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, double>(),
+             py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
+        ;
+
   return m.ptr();
 }
 

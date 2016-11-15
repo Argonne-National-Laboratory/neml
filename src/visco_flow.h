@@ -137,9 +137,41 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
  public:
   ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                    std::shared_ptr<NonAssociativeHardening> hardening,
-                   std::shared_ptr<FluidityModel> fluidity);
+                   std::shared_ptr<FluidityModel> fluidity,
+                   double n);
 
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const h) const;
+  
+  // Rate rule
+  virtual int y(const double* const s, const double* const alpha, double T,
+                double & yv) const;
+  virtual int dy_ds(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
+  virtual int dy_da(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
 
+  // Flow rule
+  virtual int g(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  virtual int dg_ds(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  virtual int dg_da(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
+
+  // Hardening rule
+  virtual int h(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+ private:
+  std::shared_ptr<YieldSurface> surface_;
+  std::shared_ptr<NonAssociativeHardening> hardening_;
+  std::shared_ptr<FluidityModel> fluidity_;
+  const double n_;
 
 };
 

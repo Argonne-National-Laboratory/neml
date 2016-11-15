@@ -55,22 +55,6 @@ class CommonFlowRule(object):
     self.assertEqual(self.model.nhist, len(self.hist0))
     self.assertTrue(np.allclose(self.model.init_hist(), self.hist0))
 
-  def test_y(self):
-    stress = self.gen_stress()
-    hist = self.gen_hist()
-    
-    q = self.hrule.q(hist, self.T)
-    fv = self.surface.f(stress, q, self.T)
-    if fv > 0.0:
-      should = self.g.g(fv) / self.eta
-    else:
-      should = 0.0
-    
-    ffm = self.model.y(stress, hist, self.T)
-    
-    self.assertTrue(np.isclose(should, ffm))
-
-
   def test_dy_ds(self):
     stress = self.gen_stress()
     hist = self.gen_hist()
@@ -201,3 +185,35 @@ class TestConstantFluidity(unittest.TestCase, CommonFluidity):
   def test_eta(self):
     a = self.gen_hist()
     self.assertTrue(np.isclose(self.eta, self.model.eta(a)))
+
+class TestChabocheJ2Voce(unittest.TestCase, CommonFlowRule):
+  def setUp(self):
+    self.n = 12.0
+    self.K = 150.0
+    self.k = 6.0
+    self.C = 24800.0
+    self.g0 = 300.0
+    self.Q = 86 - self.k
+    self.gs = 300.0
+    self.b = 10.0
+    self.beta = 0.0
+
+    self.surface = surfaces.IsoKinJ2()
+
+    self.iso = hardening.VoceIsotropicHardeningRule(self.k, self.Q, self.b)
+    cs = [self.C]
+    gs = [hardening.SatGamma(self.gs, self.g0, self.beta)]
+    self.hardening = hardening.Chaboche(self.iso, cs, gs)
+
+    self.fluidity = visco_flow.ConstantFluidity(self.K)
+
+    self.model = visco_flow.ChabocheFlowRule(
+        self.surface, self.hardening, self.fluidity, self.n) 
+
+    self.hist0 = np.zeros((7,))
+    self.T = 300.0
+
+  def gen_hist(self):
+    bs = make_dev([10.0, -50.0, 25.0, 30.0, -10.0, 30.0])
+    return np.array([0.01] + list(bs))
+
