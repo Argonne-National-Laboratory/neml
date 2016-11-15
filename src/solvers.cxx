@@ -73,9 +73,10 @@ int newton(std::shared_ptr<Solvable> system, double * x,
     std::cout << std::setw(6) << std::left << i << "\t" << std::setw(8) << std::left << std::scientific << nR << "\t" << std::setw(8) << std::left << nR/nR0 << std::endl;
   }
 
-  while ((nR > atol) && (i < miter))
+  while ((nR > atol) && (nR/nR0 > rtol) && (i < miter))
   {
     solve_mat(J, n, R);
+
     for (int j=0; j<n; j++) x[j] -= R[j];
 
     system->RJ(x, R, J);

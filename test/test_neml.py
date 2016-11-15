@@ -17,7 +17,7 @@ class CommonMatModel(object):
     t_n = 0.0
     strain_n = np.zeros((6,))
     stress_n = np.zeros((6,))
-    hist_n = np.copy(self.hist0)
+    hist_n = self.model.init_store()
 
     for i,m in enumerate(np.linspace(0,1,self.nsteps)):
       t_np1 = self.tfinal * m
@@ -27,9 +27,9 @@ class CommonMatModel(object):
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
-      num_A = differentiate(dfn, strain_np1)
-
-      self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-2))
+      num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
+      
+      self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e2))
       
       strain_n = strain_np1
       stress_n = stress_np1
@@ -76,7 +76,7 @@ class CommonJacobian(object):
     h_n = self.gen_hist()
     t_np1 = self.gen_time()
 
-    self.model.set_trial_state(e_np1, h_n, T_np1, t_np1, 0.0)
+    self.model.set_trial_state(e_np1, h_n, T_np1, t_np1+1.0, 1.0)
 
     x = self.gen_x()
 
@@ -84,8 +84,55 @@ class CommonJacobian(object):
     
     dfn = lambda y: self.model.RJ(y)[0]
     nJ = differentiate(dfn, x)
+
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+
+    x = self.gen_x()
+
+    R, J = self.model.RJ(x)
     
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-2))
+    dfn = lambda y: self.model.RJ(y)[0]
+    nJ = differentiate(dfn, x)
+
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+
+"""
+  def test_direct_solve(self):
+    e_np1 = self.gen_strain()
+    T_np1 = self.gen_T()
+    h_n = self.gen_hist()
+    t_np1 = self.gen_time()
+
+    self.model.set_trial_state(e_np1, h_n, T_np1, t_np1+1.0, 1.0)
+
+    dfn = lambda y: self.model.RJ(y)[0]    
+
+    x = self.gen_x()
+
+    R, J = self.model.RJ(x)
+    nR = la.norm(R)
+    nR0 = nR
+
+    i = 0
+    nmax = 30
+    rtol = 1.0e-6
+    while nR/nR0 > rtol:
+      dx = la.solve(J, R)
+      x -= dx
+      R, J = self.model.RJ(x)
+      nJ = differentiate(dfn, x)
+
+      self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-2, atol = 1.0e-4))
+
+      print(np.unravel_index(np.argmax((J-nJ)), (self.model.nparams, self.model.nparams)))
+
+      nR = la.norm(R)
+      i += 1
+      
+      if i > nmax:
+        self.assertTrue(False, msg = "Max iterations exceeded")
+"""
+
 
 class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
@@ -292,7 +339,7 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
     flow = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
     self.model = neml.SmallStrainViscoPlasticity(elastic, flow)
 
-    self.efinal = np.array([0.01,-0.005,0.02,-0.03,0.01,-0.015])
+    self.efinal = np.array([0.01,0,0,0,0,0])
     self.tfinal = 10.0
     self.T = 300.0
     self.nsteps = 100 
@@ -301,4 +348,4 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
     return ra.random((7,))
 
   def gen_x(self):
-    return ra.random((8,))
+    return ra.random((7,))

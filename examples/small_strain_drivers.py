@@ -200,10 +200,10 @@ if __name__ == "__main__":
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
   hrule = hardening.Chaboche(iso, c, r)
 
-
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
+  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True,
       check_kt = False)
+  example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0])/10.0, 300.0, 100.0, 100)
   """
 
   E = 200000.0

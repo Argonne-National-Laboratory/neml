@@ -48,23 +48,38 @@ class CommonFlowRule(object):
     Tests common to all flow rules.
   """
   def gen_stress(self):
-    s = np.array([200,0,0,0,0,0])
+    s = np.array([200,0,100,0,-50,0])
     return s
 
   def test_history(self):
     self.assertEqual(self.model.nhist, len(self.hist0))
     self.assertTrue(np.allclose(self.model.init_hist(), self.hist0))
 
+  def test_y(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+    
+    q = self.hrule.q(hist, self.T)
+    fv = self.surface.f(stress, q, self.T)
+    if fv > 0.0:
+      should = self.g.g(fv) / self.eta
+    else:
+      should = 0.0
+    
+    ffm = self.model.y(stress, hist, self.T)
+    
+    self.assertTrue(np.isclose(should, ffm))
+
+
   def test_dy_ds(self):
     stress = self.gen_stress()
     hist = self.gen_hist()
 
-
     dfn = lambda s: self.model.y(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dy_ds(stress, hist, self.T)
-    
-    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-6))
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-3))
 
   def test_dy_da(self):
     stress = self.gen_stress()
@@ -73,7 +88,7 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.y(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dy_da(stress, hist, self.T)
-
+  
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dg_ds(self):
@@ -83,6 +98,7 @@ class CommonFlowRule(object):
     dfn = lambda s: self.model.g(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dg_ds(stress, hist, self.T)
+
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dg_da(self):
@@ -92,6 +108,7 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.g(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dg_da(stress, hist, self.T)
+
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dh_ds(self):
@@ -101,6 +118,7 @@ class CommonFlowRule(object):
     dfn = lambda s: self.model.h(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dh_ds(stress, hist, self.T)
+    
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dh_da(self):
@@ -122,17 +140,17 @@ class TestPerzynaIsoJ2Voce(unittest.TestCase, CommonFlowRule):
     self.n = 5.0
     self.eta = 20.0
 
-    surface = surfaces.IsoJ2()
-    hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
-    g = visco_flow.GPowerLaw(self.n)
+    self.surface = surfaces.IsoJ2()
+    self.hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
+    self.g = visco_flow.GPowerLaw(self.n)
 
-    self.model = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
+    self.model = visco_flow.PerzynaFlowRule(self.surface, self.hrule, self.g, self.eta)
 
     self.hist0 = np.zeros((1,))
     self.T = 300.0
 
   def gen_hist(self):
-    return ra.random((1,))
+    return np.array([0.01])
 
   def test_properties(self):
     self.assertTrue(np.isclose(self.eta, self.model.eta))
@@ -146,17 +164,17 @@ class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
     self.n = 2.0
     self.eta = 100.0
 
-    surface = surfaces.IsoJ2()
-    hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
-    g = visco_flow.GPowerLaw(self.n)
+    self.surface = surfaces.IsoJ2()
+    self.hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    self.g = visco_flow.GPowerLaw(self.n)
 
-    self.model = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
+    self.model = visco_flow.PerzynaFlowRule(self.surface, self.hrule, self.g, self.eta)
 
     self.hist0 = np.zeros((1,))
     self.T = 300.0
 
   def gen_hist(self):
-    return ra.random((1,)) / 100.0
+    return np.array([0.01])
 
   def test_properties(self):
     self.assertTrue(np.isclose(self.eta, self.model.eta))
