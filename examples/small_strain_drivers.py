@@ -212,24 +212,35 @@ if __name__ == "__main__":
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  s0 = 86.0
-  Kp = E/100.0
-
-  n = 4.0
+  n = 12.0
   eta = 150.0
+  k = 6.0
+  C = 24800.0
+  g0 = 300.0
+  Q = 86 - k
+  gs = 300.0
+  b = 10.0
+  beta = 0.0
   
   shear = elasticity.ConstantShearModulus(mu)
   bulk = elasticity.ConstantBulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-  surface = surfaces.IsoJ2()
-  iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
-  g = visco_flow.GPowerLaw(n)
 
-  flow = visco_flow.PerzynaFlowRule(surface, iso, g, eta)
-  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = True)
+  surface = surfaces.IsoKinJ2()
+  iso = hardening.VoceIsotropicHardeningRule(k, Q, b)
+  cs = [C]
+  gs = [hardening.SatGamma(gs, g0, beta)]
+  hmodel = hardening.Chaboche(iso, cs, gs)
+
+  fluidity = visco_flow.ConstantFluidity(eta)
+
+  flow = visco_flow.ChabocheFlowRule(
+      surface, hmodel, fluidity, n)
+
+  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
 
   example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 100.0, 100)
-  #example_stress(model, np.array([100.0,0,0,0,0,0]), 300.0, 100, 100)
-  #example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e0, 300.0, 0.04, 100)
-  #example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0, 300.0, 120.0, 100)
+  example_stress(model, np.array([130.0,0,0,0,0,0]), 300.0, 100, 100)
+  example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e0, 300.0, 0.04, 100)
+  example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0, 300.0, 120.0, 100)
 

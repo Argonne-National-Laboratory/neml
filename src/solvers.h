@@ -41,6 +41,7 @@ int solve(std::shared_ptr<Solvable> system, double * x,
 int newton(std::shared_ptr<Solvable> system, double * x, 
           double tol, int miter, bool verbose);
 
+#ifdef SOLVER_NOX
 /// NOX OO interface
 class NOXSolver: public NOX::LAPACK::Interface {
  public:
@@ -61,6 +62,7 @@ class NOXSolver: public NOX::LAPACK::Interface {
 int nox(std::shared_ptr<Solvable> system, double * x, 
         double tol, int miter, bool verbose);
 
+#endif
 
 /// Helper to get numerical jacobian
 int diff_jac(std::shared_ptr<Solvable> system, const double * const x,

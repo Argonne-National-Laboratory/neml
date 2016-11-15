@@ -165,7 +165,7 @@ double diff_jac_check(std::shared_ptr<Solvable> system, const double * const x,
 }
 
 // START NOX STUFF
-
+#ifdef SOLVER_NOX
 NOXSolver::NOXSolver(std::shared_ptr<Solvable> system) :
     system_(system), nox_guess_(system->nparams())
 {
@@ -304,4 +304,5 @@ int nox(std::shared_ptr<Solvable> system, double * x,
   return 0;
 }
 
+#endif
 } // namespace neml
