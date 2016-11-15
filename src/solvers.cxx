@@ -49,8 +49,15 @@ int TestRosenbrock::RJ(const double * const x, double * const R,
 int solve(std::shared_ptr<Solvable> system, double * x,
           double tol, int miter, bool verbose)
 {
-  // For now just plain NR
+#ifdef SOLVER_NOX
+  return nox(system, x, tol, miter, verbose);
+#elif SOLVER_NEWTON
+  // Actually selected the newton solver
   return newton(system, x, tol, miter, verbose);
+#else
+  // Default solver: plain NR
+  return newton(system, x, tol, miter, verbose);
+#endif
 }
 
 int newton(std::shared_ptr<Solvable> system, double * x,
@@ -157,5 +164,144 @@ double diff_jac_check(std::shared_ptr<Solvable> system, const double * const x,
   return ss/js;
 }
 
+// START NOX STUFF
+
+NOXSolver::NOXSolver(std::shared_ptr<Solvable> system) :
+    system_(system), nox_guess_(system->nparams())
+{
+  double * x = new double[system_->nparams()];
+  system_->init_x(x);
+  for (int i=0; i<system_->nparams(); i++) {
+    nox_guess_(i) = x[i];
+  }
+  delete [] x;
+}
+
+const NOX::LAPACK::Vector& NOXSolver::getInitialGuess()
+{
+  return nox_guess_;
+}
+
+bool NOXSolver::computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x)
+{
+  // This is highly inefficient
+  double * Ri = new double [system_->nparams()];
+  double * Ji = new double [system_->nparams() * system_->nparams()];
+  double * xi = new double [system_->nparams()];
+  for (int i=0; i<system_->nparams(); i++) {
+    xi[i] = x(i);
+  }
+  system_->RJ(xi, Ri, Ji);
+  
+  for (int i=0; i<system_->nparams(); i++) {
+    f(i) = Ri[i];
+  }
+
+  delete [] Ri;
+  delete [] Ji;
+  delete [] xi;
+
+  return true;
+}
+
+bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
+                                const NOX::LAPACK::Vector & x)
+{
+  // This is highly inefficient
+  double * Ri = new double [system_->nparams()];
+  double * Ji = new double [system_->nparams() * system_->nparams()];
+  double * xi = new double [system_->nparams()];
+  for (int i=0; i<system_->nparams(); i++) {
+    xi[i] = x(i);
+  }
+  system_->RJ(xi, Ri, Ji);
+
+  for (int i=0; i<system_->nparams(); i++) {
+    for (int j=0; j<system_->nparams(); j++) {
+      J(i,j) = Ji[CINDEX(i,j,system_->nparams())];
+    }
+  }
+
+  delete [] Ri;
+  delete [] Ji;
+  delete [] xi;
+
+  return true;
+}
+
+
+int nox(std::shared_ptr<Solvable> system, double * x, 
+        double tol, int miter, bool verbose)
+{
+  // Setup solver
+  NOXSolver solver(system);
+
+  // Setup NOX
+  Teuchos::RCP<NOX::LAPACK::Group> grp = 
+      Teuchos::rcp(new NOX::LAPACK::Group(solver));
+
+  // Setup status tests
+  Teuchos::RCP<NOX::StatusTest::NormF> statusTestF = 
+      Teuchos::rcp(new NOX::StatusTest::NormF(tol));
+  Teuchos::RCP<NOX::StatusTest::MaxIters> statusTestI = 
+      Teuchos::rcp(new NOX::StatusTest::MaxIters(miter));
+  Teuchos::RCP<NOX::StatusTest::Combo> status = 
+      Teuchos::rcp(new NOX::StatusTest::Combo(NOX::StatusTest::Combo::OR,
+                                              statusTestF, statusTestI));
+
+  // Setup solver parameters
+  Teuchos::RCP<Teuchos::ParameterList> solverParametersPtr = 
+      Teuchos::rcp(new Teuchos::ParameterList);
+  Teuchos::ParameterList& solverParameters = *solverParametersPtr;
+
+  // Verbosity
+  if (verbose) {
+    solverParameters.sublist("Printing").set("Output Information",
+                                             NOX::Utils::Warning +
+                                             NOX::Utils::OuterIteration);
+  }
+  else {
+    solverParameters.sublist("Printing").set("Output Information",
+                                             0);
+  }
+
+  // Actual solver
+  solverParameters.set("Nonlinear Solver", "Line Search Based");
+  Teuchos::ParameterList& lineSearchParameters = 
+      solverParameters.sublist("Line Search");
+  lineSearchParameters.set("Method", "Backtrack");
+  
+  //solverParameters.set("Nonlinear Solver", "Trust Region Based");
+  //Teuchos::ParameterList& lineSearchParameters = 
+  //    solverParameters.sublist("Trust Region");
+
+
+  Teuchos::ParameterList& directionParameters = 
+      solverParameters.sublist("Direction");
+  directionParameters.set("Method", "Newton");
+
+  // Actual solver
+  Teuchos::RCP<NOX::Solver::Generic> nox_solver = 
+      NOX::Solver::buildSolver(grp, status, solverParametersPtr);
+
+  // Actual solve
+  NOX::StatusTest::StatusType result = nox_solver->solve();
+
+  // Check if we actually succeeded
+  if (result != NOX::StatusTest::Converged) {
+    return MAX_ITERATIONS; 
+  }
+
+  // Get the solution
+  NOX::LAPACK::Group solnGrp = 
+      dynamic_cast<const NOX::LAPACK::Group&>(nox_solver->getSolutionGroup());
+  NOX::LAPACK::Vector soln = dynamic_cast<const NOX::LAPACK::Vector&>(
+      solnGrp.getX());
+  for (int i=0; i<system->nparams(); i++) {
+    x[i] = soln(i);
+  }
+
+  return 0;
+}
 
 } // namespace neml

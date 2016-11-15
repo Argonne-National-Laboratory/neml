@@ -4,6 +4,11 @@
 #include <cstddef>
 #include <memory>
 
+#ifdef SOLVER_NOX
+#include "NOX.H"
+#include "NOX_LAPACK_Group.H"
+#endif
+
 namespace neml {
 
 /// Generic nonlinear solver interface
@@ -35,6 +40,26 @@ int solve(std::shared_ptr<Solvable> system, double * x,
 /// Default solver: plain NR
 int newton(std::shared_ptr<Solvable> system, double * x, 
           double tol, int miter, bool verbose);
+
+/// NOX OO interface
+class NOXSolver: public NOX::LAPACK::Interface {
+ public:
+  NOXSolver(std::shared_ptr<Solvable> system);
+
+  const NOX::LAPACK::Vector& getInitialGuess();
+
+  bool computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x);
+  bool computeJacobian(NOX::LAPACK::Matrix<double>& J, 
+      const NOX::LAPACK::Vector& x);
+
+ private:
+  NOX::LAPACK::Vector nox_guess_;
+  std::shared_ptr<Solvable> system_;
+};
+
+/// Interface to nox
+int nox(std::shared_ptr<Solvable> system, double * x, 
+        double tol, int miter, bool verbose);
 
 
 /// Helper to get numerical jacobian

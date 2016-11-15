@@ -1,6 +1,8 @@
 import numpy as np
 import numpy.linalg as la
 
+import matplotlib.pyplot as plt
+
 class Driver(object):
   """
     Superclass of all drivers, basically just sets up history and reports
@@ -104,7 +106,8 @@ class Driver_sd(Driver):
 
     self.strain_step(np.copy(e_np1), t_np1, T_np1)
 
-  def erate_step(self, sdir, erate, t_np1, T_np1):
+  def erate_step(self, sdir, erate, t_np1, T_np1,
+      load = True, einc_guess = None, ainc_guess = None):
     """
       Drive in a given stress direction at a prescribed strain rate, like
       an actual "stress controlled" experiment.
@@ -114,6 +117,11 @@ class Driver_sd(Driver):
         erate       strain rate (in the direction)
         t_np1       next time
         T_np1       next temperature
+
+      Optional:
+        load = True     guess at load or unload step
+        einc_guess      a guess at the strain increment
+        ainc_guess      a guess at the stress increment
     """
     sdir /= la.norm(sdir)
     dt = t_np1 - self.t_int[-1]
@@ -138,15 +146,29 @@ class Driver_sd(Driver):
       return R, J
     
     x0 = np.zeros((7,))
-    x0[0] = 100.0
-    x0[1:] = sdir / 1000.0
+    
+    if load:
+      x0[0] = 1.0
+      x0[1:] = sdir / 1000.0
+    else:
+      x0[0] = -1.0
+      x0[1:] = -sdir / 1000.0
+
+    if einc_guess is not None:
+      x0[1:] = einc_guess
+
+    if ainc_guess is not None:
+      x0[0] = ainc_guess
+
     x = newton(RJ, x0, verbose = self.verbose,
         rtol = self.rtol, atol = self.atol, miter = self.miter)
     e_np1 = self.strain_int[-1] + x[1:]
 
     self.strain_step(np.copy(e_np1), t_np1, T_np1)
 
-  def erate_einc_step(self, sdir, erate, einc, T_np1):
+    return x[1:], x[0]
+
+  def erate_einc_step(self, sdir, erate, einc, T_np1, **kwargs):
     """
       Similar to erate_step but specify the strain increment instead of the
       time increment.
@@ -158,7 +180,7 @@ class Driver_sd(Driver):
         T_np1       temperature at next time step
     """
     dt = einc / erate
-    self.erate_step(sdir, erate, self.t_int[-1] + dt, T_np1)
+    return self.erate_step(sdir, erate, self.t_int[-1] + dt, T_np1, **kwargs)
   
   def srate_sinc_step(self, sdir, srate, sinc, T_np1):
     """
@@ -237,7 +259,11 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   strain = [0.0]
   stress = [0.0]
   for i in range(nsteps):
-    driver.erate_einc_step(sdir, erate, e_inc, T)
+    if i == 0:
+      einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
+    else:
+      einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+          einc_guess = einc, ainc_guess = ainc)
     strain.append(np.dot(driver.strain[-1], sdir))
     stress.append(np.dot(driver.stress[-1], sdir))
 
@@ -298,42 +324,47 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
   smean = []
 
   # First half cycle
+  if verbose:
+    print("Initial half cycle")
   e_inc = emax / nsteps
   for i in range(nsteps):
-    driver.erate_einc_step(sdir, erate, e_inc, T)
+    if i == 0:
+      einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
+    else:
+      driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
+          ainc_guess = ainc)
     strain.append(np.dot(driver.strain[-1], sdir))
     stress.append(np.dot(driver.stress[-1], sdir))
-
+  
   # Begin cycling
   for s in range(ncycles):
-    si = len(driver.strain)
-    # Hold, if requested
-    if hold_time:
-      ht = hold_time[0]
-      dt = ht / n_hold
-      for i in range(n_hold):
-        driver.strain_step(driver.strain[-1], driver.t[-1] + dt, T)
-        strain.append(np.dot(driver.strain[-1], sdir))
-        stress.append(np.dot(driver.stress[-1], sdir))
+    if verbose:
+      print("Cycle %i" % s)
 
+    si = len(driver.strain)
     e_inc = (emin - emax) / nsteps
     for i in range(nsteps):
-      driver.erate_einc_step(sdir, erate, e_inc, T)
+      if i == 0:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+            einc_guess = -einc, ainc_guess = -ainc)
+      else:
+        try:
+          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+              einc_guess = einc, ainc_guess = ainc)
+        except:
+          plt.plot(strain, stress)
+          plt.show()
       strain.append(np.dot(driver.strain[-1], sdir))
       stress.append(np.dot(driver.stress[-1], sdir))
 
-    # Hold, if requested
-    if hold_time:
-      ht = hold_time[1]
-      dt = ht / n_hold
-      for i in range(n_hold):
-        driver.strain_step(driver.strain[-1], driver.t[-1] + dt, T)
-        strain.append(np.dot(driver.strain[-1], sdir))
-        stress.append(np.dot(driver.stress[-1], sdir))
-
     e_inc = (emax - emin) / nsteps
     for i in range(nsteps):
-      driver.erate_einc_step(sdir, erate, e_inc, T)
+      if i == 0:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+            einc_guess = -einc, ainc_guess = -ainc)
+      else:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T,
+            einc_guess = einc, ainc_guess = ainc)
       strain.append(np.dot(driver.strain[-1], sdir))
       stress.append(np.dot(driver.stress[-1], sdir))
 
@@ -585,7 +616,7 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
     print("Iter.\tnR\t\tnR/nR0")
     print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
-  while (nR > rtol * nR0) and (nR > atol * nR):
+  while (nR > rtol * nR0) and (nR > atol):
     x -= la.solve(J, R)
     R, J = RJ(x)
     nR = la.norm(R)
