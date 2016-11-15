@@ -107,7 +107,7 @@ class Driver_sd(Driver):
     self.strain_step(np.copy(e_np1), t_np1, T_np1)
 
   def erate_step(self, sdir, erate, t_np1, T_np1,
-      load = True, einc_guess = None, ainc_guess = None):
+      einc_guess = None, ainc_guess = None):
     """
       Drive in a given stress direction at a prescribed strain rate, like
       an actual "stress controlled" experiment.
@@ -119,7 +119,6 @@ class Driver_sd(Driver):
         T_np1       next temperature
 
       Optional:
-        load = True     guess at load or unload step
         einc_guess      a guess at the strain increment
         ainc_guess      a guess at the stress increment
     """
@@ -147,18 +146,15 @@ class Driver_sd(Driver):
     
     x0 = np.zeros((7,))
     
-    if load:
-      x0[0] = 1.0
-      x0[1:] = sdir / 1000.0
-    else:
-      x0[0] = -1.0
-      x0[1:] = -sdir / 1000.0
-
     if einc_guess is not None:
       x0[1:] = einc_guess
+    else:
+      x0[1:] = sdir / 100.0
 
     if ainc_guess is not None:
       x0[0] = ainc_guess
+    else:
+      x0[0] = 1.0
 
     x = newton(RJ, x0, verbose = self.verbose,
         rtol = self.rtol, atol = self.atol, miter = self.miter)
@@ -195,7 +191,7 @@ class Driver_sd(Driver):
 
     """
     s_np1 = self.stress_int[-1] + sdir / la.norm(sdir) * sinc
-    dt = np.dot(s_np1 - self.stress_int[-1], sdir) / srate
+    dt = np.abs(np.dot(s_np1 - self.stress_int[-1], sdir) / srate)
 
     self.stress_step(s_np1, self.t_int[-1] + dt, T_np1)
 
@@ -342,14 +338,14 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       print("Cycle %i" % s)
 
     si = len(driver.strain)
-    e_inc = (emin - emax) / nsteps
+    e_inc = np.abs(emin - emax) / nsteps
     for i in range(nsteps):
       if i == 0:
-        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+        einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
             einc_guess = -einc, ainc_guess = -ainc)
       else:
         try:
-          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+          einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
               einc_guess = einc, ainc_guess = ainc)
         except:
           plt.plot(strain, stress)
@@ -357,7 +353,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       strain.append(np.dot(driver.strain[-1], sdir))
       stress.append(np.dot(driver.stress[-1], sdir))
 
-    e_inc = (emax - emin) / nsteps
+    e_inc = np.abs(emax - emin) / nsteps
     for i in range(nsteps):
       if i == 0:
         einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
@@ -427,6 +423,8 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
 
   # First half cycle
   s_inc = smax / nsteps
+  if verbose:
+    print("First half cycle")
   for i in range(nsteps):
     driver.srate_sinc_step(sdir, srate, s_inc, T)
     strain.append(np.dot(driver.strain[-1], sdir))
@@ -434,6 +432,8 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
 
   # Begin cycling
   for s in range(ncycles):
+    if verbose:
+      print("Cycle %i" % s)
     si = len(driver.strain)
     # Hold, if requested
     if hold_time:
@@ -531,7 +531,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
   time = np.array(time)
   strain = np.array(strain)
   stress = np.array(stress)
-  rrate = np.diff(stress[ri:]) / np.diff(time[ri:])
+  rrate = -np.diff(stress[ri:]) / np.diff(time[ri:])
   
   return {'time': np.copy(time), 'strain': np.copy(strain), 
       'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),

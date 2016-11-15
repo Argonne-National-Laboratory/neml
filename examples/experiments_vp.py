@@ -15,23 +15,33 @@ if __name__ == "__main__":
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  s0 = 86.0
-  Kp = E/100.0
-
-  n = 3.0
+  n = 12.0
   eta = 150.0
+  k = 6.0
+  C = 24800.0
+  g0 = 300.0
+  Q = 86 - k
+  gs = 300.0
+  b = 10.0
+  beta = 0.0
   
   shear = elasticity.ConstantShearModulus(mu)
   bulk = elasticity.ConstantBulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-  surface = surfaces.IsoJ2()
-  iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
-  g = visco_flow.GPowerLaw(n)
 
-  flow = visco_flow.PerzynaFlowRule(surface, iso, g, eta)
+  surface = surfaces.IsoKinJ2()
+  iso = hardening.VoceIsotropicHardeningRule(k, Q, b)
+  cs = [C]
+  gs = [hardening.SatGamma(gs, g0, beta)]
+  hmodel = hardening.Chaboche(iso, cs, gs)
+
+  fluidity = visco_flow.ConstantFluidity(eta)
+
+  flow = visco_flow.ChabocheFlowRule(
+      surface, hmodel, fluidity, n)
+
   model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
   
-  """
   # Uniaxial stress/strain curves at decades of strain rates
   erates = np.logspace(-6,2,9)
   for rate in erates:
@@ -41,7 +51,6 @@ if __name__ == "__main__":
   plt.xlabel("Strain (-/-)")
   plt.ylabel("Stress (MPa)")
   plt.show()
-  """
   
   # A strain-controlled cyclic test
   res = drivers.strain_cyclic(model, 0.001, -0.25, 1.0e-4, 50,
@@ -58,10 +67,9 @@ if __name__ == "__main__":
   plt.ylabel("Stress (MPa)")
   plt.show()
   
-  """
   # A stress-controlled cyclic test
-  res = drivers.stress_cyclic(model, 120.0, -1.0, 5.0, 50,
-      hold_time = 100)
+  res = drivers.stress_cyclic(model, 100.0, -1.0, 5.0, 50,
+      hold_time = 10, verbose = True)
   plt.plot(res['strain'], res['stress'], 'k-')
   plt.xlabel("Strain (-/-)")
   plt.ylabel("Stress (MPa)")
@@ -73,7 +81,6 @@ if __name__ == "__main__":
   plt.xlabel("Cycle")
   plt.ylabel("Strain (-/-)")
   plt.show()
-  """
   
   # Stress relaxation test
   res = drivers.stress_relaxation(model, 0.02, 1.0e-4, 2000.0)
@@ -88,7 +95,7 @@ if __name__ == "__main__":
   plt.show()
 
   # Creep test
-  res = drivers.creep(model, 350.0, 10.0, 2000.0)
+  res = drivers.creep(model, 150.0, 10.0, 2000.0)
   plt.plot(res['time'], res['strain'], 'k-')
   plt.xlabel('Time (s)')
   plt.ylabel('Strain (-/-)')
