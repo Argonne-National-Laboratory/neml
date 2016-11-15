@@ -201,8 +201,8 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
  public:
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
-                                       double rtol = 1.0e-6, 
-                                       double atol = 1.0e-10, int miter = 25,
+                                       double rtol = 1.0e-10, 
+                                       double atol = 1.0e-14, int miter = 250,
                                        bool verbose = false, 
                                        double kttol = 1.0e-2,
                                        bool check_kt = false);
@@ -255,8 +255,8 @@ class SmallStrainViscoPlasticity: public NEMLModel_sd, public Solvable, public s
  public:
   SmallStrainViscoPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                              std::shared_ptr<ViscoPlasticFlowRule> flow,
-                             double rtol = 1.0e-6, 
-                             double atol = 1.0e-10, int miter = 250,
+                             double rtol = 1.0e-10, 
+                             double atol = 1.0e-14, int miter = 250,
                              bool verbose = false);
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
