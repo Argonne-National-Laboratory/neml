@@ -45,7 +45,7 @@ if __name__ == "__main__":
   # Uniaxial stress/strain curves at decades of strain rates
   erates = np.logspace(-6,2,9)
   for rate in erates:
-    res = drivers.uniaxial_test(model, rate, verbose = True)
+    res = drivers.uniaxial_test(model, rate, verbose = False)
     plt.plot(res['strain'], res['stress'])
   
   plt.xlabel("Strain (-/-)")
@@ -54,7 +54,7 @@ if __name__ == "__main__":
   
   # A strain-controlled cyclic test
   res = drivers.strain_cyclic(model, 0.001, -0.25, 1.0e-4, 50,
-      verbose = True)
+      verbose = False)
   plt.plot(res['strain'], res['stress'], 'k-')
   plt.xlabel("Strain (-/-)")
   plt.ylabel("Stress (MPa)")
@@ -69,7 +69,7 @@ if __name__ == "__main__":
   
   # A stress-controlled cyclic test
   res = drivers.stress_cyclic(model, 100.0, -1.0, 5.0, 50,
-      hold_time = 10, verbose = True)
+      hold_time = 10, verbose = False)
   plt.plot(res['strain'], res['stress'], 'k-')
   plt.xlabel("Strain (-/-)")
   plt.ylabel("Stress (MPa)")
@@ -82,8 +82,9 @@ if __name__ == "__main__":
   plt.ylabel("Strain (-/-)")
   plt.show()
   
+
   # Stress relaxation test
-  res = drivers.stress_relaxation(model, 0.02, 1.0e-4, 2000.0)
+  res = drivers.stress_relaxation(model, 0.02, 1.0e-4, 2000.0, verbose = False)
   plt.plot(res['time'], res['stress'], 'k-')
   plt.xlabel('Time (s)')
   plt.ylabel('Stress (MPa)')
@@ -95,7 +96,7 @@ if __name__ == "__main__":
   plt.show()
 
   # Creep test
-  res = drivers.creep(model, 150.0, 10.0, 2000.0)
+  res = drivers.creep(model, 150.0, 10.0, 6000.0)
   plt.plot(res['time'], res['strain'], 'k-')
   plt.xlabel('Time (s)')
   plt.ylabel('Strain (-/-)')

@@ -325,7 +325,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     if i == 0:
       einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
     else:
-      driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
+      einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
           ainc_guess = ainc)
     strain.append(np.dot(driver.strain_int[-1], sdir))
     stress.append(np.dot(driver.stress_int[-1], sdir))
@@ -472,7 +472,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       "min": np.array(emin), "mean": np.array(emean)}
 
 def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
-    nsteps_up = 50, index = 0, tc = 1.0,
+    nsteps_up = 150, index = 0, tc = 1.0,
     verbose = False):
   """
     Simulate a stress relaxation test.
@@ -505,17 +505,25 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
   stress = [0]
 
   # Ramp up
+  if verbose:
+    print("Ramp up")
   sdir = np.zeros((6,))
   sdir[index] = tc
   einc = emax / nsteps_up
   for i in range(nsteps_up):
-    driver.erate_einc_step(sdir, erate, einc, T)
+    if i == 0:
+      eincg, ainc = driver.erate_einc_step(sdir, erate, einc, T)
+    else:
+      eincg, ainc = driver.erate_einc_step(sdir, erate, einc, T,
+          einc_guess = eincg, ainc_guess = ainc)
     time.append(driver.t[-1])
     strain.append(np.dot(driver.strain_int[-1],sdir))
     stress.append(np.dot(driver.stress_int[-1],sdir))
 
   ri = len(driver.strain_int)
   
+  if verbose:
+    print("Hold")
   dt = hold / nsteps
   for i in range(nsteps):
     driver.strain_hold_step(index, driver.t_int[-1] + dt, T)
