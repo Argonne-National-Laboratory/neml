@@ -316,10 +316,13 @@ int Chaboche::h(const double * const s, const double * const alpha, double T,
   dev_vec(nv);
   add_vec(nv, X, 6, nv);
   normalize_vec(nv, 6);
+  
+  // Note the extra factor of sqrt(2.0/3.0) -- this is to make it equivalent
+  // to Chaboche's original definition
 
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      hv[1+i*6+j] = - 2.0 / 3.0 * c_[i] * nv[j] - gmodels_[i]->gamma(alpha[0]) * alpha[1+i*6+j];
+      hv[1+i*6+j] = - 2.0 / 3.0 * c_[i] * nv[j] - sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0]) * alpha[1+i*6+j];
     }
   }
 
@@ -407,7 +410,7 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
   // Fill in the gamma part
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= gmodels_[i]->gamma(alpha[0]);
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0]);
     }
   }
 
@@ -426,7 +429,7 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
   // Fill in the alpha part
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),0,nhist())] = -gmodels_[i]->dgamma(alpha[0]) * alpha[1+i*6+j];
+      dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * gmodels_[i]->dgamma(alpha[0]) * alpha[1+i*6+j];
     }
   }
 

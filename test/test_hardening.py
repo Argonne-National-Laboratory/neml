@@ -247,7 +247,7 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))
 
@@ -304,7 +304,7 @@ class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))
 
@@ -363,6 +363,6 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))

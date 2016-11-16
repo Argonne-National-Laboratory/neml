@@ -1,8 +1,6 @@
 import numpy as np
 import numpy.linalg as la
 
-import matplotlib.pyplot as plt
-
 class Driver(object):
   """
     Superclass of all drivers, basically just sets up history and reports
