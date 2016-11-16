@@ -147,7 +147,7 @@ class Driver_sd(Driver):
     if einc_guess is not None:
       x0[1:] = einc_guess
     else:
-      x0[1:] = sdir / 100.0
+      x0[1:] = sdir / 10000.0
 
     if ainc_guess is not None:
       x0[0] = ainc_guess

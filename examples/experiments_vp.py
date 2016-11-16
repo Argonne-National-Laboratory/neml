@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 if __name__ == "__main__":
-  E = 200000.0
-  nu = 0.27
+  E = 151000.0
+  nu = 0.33
 
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
