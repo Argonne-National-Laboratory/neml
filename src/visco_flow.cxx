@@ -267,8 +267,8 @@ int ChabocheFlowRule::y(const double* const s, const double* const alpha, double
   surface_->f(s, q, T, fv);
 
   if (fv > 0.0) {
-    double eta = 2.0/3.0 * fluidity_->eta(alpha[0]);
-    yv = pow(fv/eta, n_);
+    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0]);
+    yv = sqrt(3.0/2.0) * pow(fv/eta, n_);
   }
   else {
     yv = 0.0;
@@ -290,8 +290,8 @@ int ChabocheFlowRule::dy_ds(const double* const s, const double* const alpha, do
 
   if (fv > 0.0) {
     surface_->df_ds(s, q, T, dyv);
-    double eta = 2.0/3.0 * fluidity_->eta(alpha[0]);
-    double mv = pow(fv/eta, n_ - 1.0) * n_ / eta;
+    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0]);
+    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_ - 1.0) * n_ / eta;
     for (int i=0; i<6; i++) dyv[i] *= mv;
   }
 
@@ -318,12 +318,12 @@ int ChabocheFlowRule::dy_da(const double* const s, const double* const alpha, do
 
     mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dyv);
 
-    double eta = 2.0/3.0 * fluidity_->eta(alpha[0]);
-    double mv = pow(fv/eta, n_ - 1.0) * n_ / eta;
+    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0]);
+    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_ - 1.0) * n_ / eta;
     for (int i=0; i<nhist(); i++) dyv[i] *= mv;
 
-    double mv2 = -fv * pow(fv/eta, n_ - 1.0) * n_ / (eta * eta);
-    double deta = 2.0/3.0 * fluidity_->deta(alpha[0]);
+    double mv2 = -sqrt(3.0/2.0) * fv * pow(fv/eta, n_ - 1.0) * n_ / (eta * eta);
+    double deta = sqrt(2.0/3.0) * fluidity_->deta(alpha[0]);
     dyv[0] += deta * mv2;
   }
 
