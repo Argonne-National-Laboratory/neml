@@ -257,7 +257,7 @@ Von Mises with isotropic hardening
 
 \begin_layout Standard
 Internal variables are 
-\begin_inset Formula $\mathbf{q}=\left[-\sigma_{F}\right]$
+\begin_inset Formula $\mathbf{q}=\left[\sigma_{F}\right]$
 \end_inset
 
 
@@ -270,7 +270,7 @@ Internal variables are
 \begin_layout Standard
 \begin_inset Formula 
 \[
-f=J_{2}\left(\bm{\sigma}\right)-\sqrt{\frac{2}{3}}\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=\left\Vert \mathbf{s}\right\Vert -\sqrt{\frac{2}{3}}\sigma_{F}
+f=J_{2}\left(\bm{\sigma}\right)+\sqrt{\frac{2}{3}}\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=\left\Vert \mathbf{s}\right\Vert +\sqrt{\frac{2}{3}}\sigma_{F}
 \]
 
 \end_inset
@@ -316,7 +316,7 @@ Von Mises with isotropic and kinematic hardening
 \begin_layout Standard
 Internal variables are 
 \begin_inset Formula $\mathbf{q}=\left[\begin{array}{cc}
--\sigma_{F} & -\mathbf{X}\end{array}\right]$
+\sigma_{F} & \mathbf{X}\end{array}\right]$
 \end_inset
 
 
@@ -330,7 +330,7 @@ Internal variables are
 \begin_layout Standard
 \begin_inset Formula 
 \[
-f=J_{2}\left(\bm{\sigma}-\mathbf{X}\right)-\sqrt{\frac{2}{3}}\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=\left\Vert \mathbf{s}-\mathbf{X}\right\Vert -\sqrt{\frac{2}{3}}\sigma_{F}.
+f=J_{2}\left(\bm{\sigma}+\mathbf{X}\right)+\sqrt{\frac{2}{3}}\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=\left\Vert \mathbf{s}+\mathbf{X}\right\Vert +\sqrt{\frac{2}{3}}\sigma_{F}.
 \]
 
 \end_inset
@@ -342,10 +342,9 @@ f=J_{2}\left(\bm{\sigma}-\mathbf{X}\right)-\sqrt{\frac{2}{3}}\sigma_{F}\left(\ba
 The derivatives are:
 \begin_inset Formula 
 \begin{eqnarray*}
-\frac{\partial f}{\partial\bm{\sigma}} & = & \frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\\
-\frac{\partial^{2}f}{\partial\bm{\sigma}\partial\bm{\sigma}} & = & \frac{1}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{1}{3}\left(\mathbf{I}\otimes\mathbf{I}\right)-\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\right)\\
-\frac{\partial^{2}f}{\partial\bm{\sigma}\partial\mathbf{q}} & = & \left[\begin{array}{cc}
-0 & \frac{1}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\right)\end{array}\right]
+\frac{\partial f}{\partial\bm{\sigma}} & = & \frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\\
+\frac{\partial^{2}f}{\partial\bm{\sigma}\partial\bm{\sigma}} & = & \frac{1}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{1}{3}\left(\mathbf{I}\otimes\mathbf{I}\right)-\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\right)\\
+\frac{\partial^{2}f}{\partial\bm{\sigma}\partial\mathbf{q}} & = & \left[\frac{1}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\right)\right]
 \end{eqnarray*}
 
 \end_inset
@@ -357,14 +356,14 @@ and
 \begin_inset Formula 
 \begin{eqnarray*}
 \frac{\partial f}{\partial\mathbf{q}} & = & \left[\begin{array}{cc}
-\sqrt{\frac{2}{3}} & \frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\end{array}\right]\\
+\sqrt{\frac{2}{3}} & \frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\end{array}\right]\\
 \frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{q}} & = & \left[\begin{array}{cc}
 0 & \mathbf{0}\\
-\mathbf{0} & \frac{1}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\right)
+\mathbf{0} & \frac{1}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\right)
 \end{array}\right]\\
 \frac{\partial^{2}f}{\partial\mathbf{q}\partial\bm{\sigma}} & = & \left[\begin{array}{c}
 0\\
-\frac{1}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{1}{3}\left(\mathbf{I}\otimes\mathbf{I}\right)-\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }\right)
+\frac{1}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\left(\mathbf{1}-\frac{1}{3}\left(\mathbf{I}\otimes\mathbf{I}\right)-\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\otimes\frac{\mathbf{s}+\mathbf{X}}{\left\Vert \mathbf{s}+\mathbf{X}\right\Vert }\right)
 \end{array}\right]
 \end{eqnarray*}
 
@@ -374,10 +373,14 @@ and
 \end_layout
 
 \begin_layout Section
-Associative Hardening rules
+Hardening Rules
 \end_layout
 
 \begin_layout Subsection
+Associative
+\end_layout
+
+\begin_layout Subsubsection
 Isotropic 
 \begin_inset CommandInset label
 LatexCommand label
@@ -388,14 +391,14 @@ name "sub:Isotropic"
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Paragraph
 Linear
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=\sigma_{0}+K\bar{\varepsilon}_{p}
+\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=-\left(\sigma_{0}+K\bar{\varepsilon}_{p}\right)
 \]
 
 \end_inset
@@ -403,7 +406,7 @@ Linear
 
 \begin_inset Formula 
 \[
-\frac{\partial\sigma_{F}}{\partial\bar{\varepsilon}_{p}}=K\bar{\varepsilon}_{p}
+\frac{\partial\sigma_{F}}{\partial\bar{\varepsilon}_{p}}=-K
 \]
 
 \end_inset
@@ -411,14 +414,14 @@ Linear
 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Paragraph
 Voce
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=\sigma_{0}+R\left(1-\exp\left(-\delta\bar{\varepsilon}_{p}\right)\right)
+\sigma_{F}\left(\bar{\varepsilon}_{p},T\right)=-\left[\sigma_{0}+R\left(1-\exp\left(-\delta\bar{\varepsilon}_{p}\right)\right)\right]
 \]
 
 \end_inset
@@ -434,18 +437,18 @@ Voce
 
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Kinematic
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Paragraph
 Linear
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\mathbf{X}\left(\bm{\varepsilon}_{p},T\right)=H\bm{\varepsilon}_{p}
+\mathbf{X}\left(\bm{\varepsilon}_{p},T\right)=-H\bm{\varepsilon}_{p}
 \]
 
 \end_inset
@@ -456,7 +459,7 @@ Linear
 \begin_layout Standard
 \begin_inset Formula 
 \[
-\frac{\partial\mathbf{X}}{\partial\bm{\varepsilon}_{p}}=H\mathbf{I}
+\frac{d\mathbf{X}}{d\bm{\varepsilon}_{p}}=-H\mathbf{I}
 \]
 
 \end_inset
@@ -464,11 +467,11 @@ Linear
 
 \end_layout
 
-\begin_layout Section
-Nonassociative hardening
+\begin_layout Subsection
+Nonassociative
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Subsubsection
 Frederick-Armstrong & Chaboche
 \end_layout
 
@@ -486,8 +489,8 @@ reference "sub:Isotropic"
  while the backstress follows the formulation:
 \begin_inset Formula 
 \begin{align*}
-\mathbf{X} & = & \sum_{i=1}^{n}\mathbf{x}_{i}\\
-\dot{\mathbf{x}}_{i} & = & c_{i}r_{i}\left(\mathbf{n}+\frac{\mathbf{x}_{i}}{r_{i}}\right)\dot{\gamma}.
+\mathbf{X} & = & \sum_{i=1}^{n}\mathbf{X}_{i}\\
+\dot{\mathbf{X}}_{i} & = & -\left(\frac{2}{3}C_{i}\mathbf{n}+\sqrt{\frac{2}{3}}\gamma_{i}\left(\bar{\varepsilon}_{p}\right)\mathbf{X}_{i}\right)\dot{\gamma}.
 \end{align*}
 
 \end_inset
@@ -496,12 +499,367 @@ A Frederick-Armstrong model has
 \begin_inset Formula $n=1$
 \end_inset
 
-, Chaboche generalized the model to have 
-\begin_inset Formula $n$
+.
+\end_layout
+
+\begin_layout Standard
+So far the library has two forms for 
+\begin_inset Formula $\gamma\left(\bar{\varepsilon}_{p}\right)$
 \end_inset
 
- evolving backstresses.
+: constant and a form proposed by Chaboche in his book:
+\begin_inset Formula 
+\[
+\gamma\left(\bar{\varepsilon}_{p}\right)=\gamma_{s}+\left(\gamma_{0}-\gamma_{s}\right)e^{-\beta\bar{\varepsilon}_{p}}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Viscoplastic models
+\end_layout
+
+\begin_layout Subsection
+Perzyna
+\end_layout
+
+\begin_layout Standard
+This is implemented as associative viscoplasticity.
+ The user provides a yield surface and a hardening rule from the list of
+ associative models above.
+ The formulation then uses the associative flow and hardening rules and
+ the rate function:
+\begin_inset Formula 
+\[
+y\left(\bm{\sigma},\bm{\alpha}\right)=\left\langle \frac{g\left(f\left(\bm{\sigma},\mathbf{q}\left(\bm{\alpha}\right)\right)\right)}{\eta}\right\rangle 
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $g$
+\end_inset
+
+ is some monotonic function.
+ The library currently only provides a power law for 
+\begin_inset Formula $g$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+g\left(f\right)=f^{n}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Chaboche
+\end_layout
+
+\begin_layout Standard
+The Chaboche viscoplastic model, as described in [], uses the flow rule
+ associated to surface 
+\begin_inset Formula $f\left(\bm{\sigma},\bm{q}\right)$
+\end_inset
+
+, a Chaboche backstress, described above, Voce isotropic hardening, and
+ the rate rule:
+\begin_inset Formula 
+\[
+y\left(\bm{\sigma},\mathbf{q}\right)=\sqrt{\frac{3}{2}}\left\langle \frac{f\left(\bm{\sigma},\bm{q}\right)}{\sqrt{2/3}\eta}\right\rangle ^{n}.
+\]
+
+\end_inset
+
+The NEML implementation allows for an arbitrary backstress and hardening
+ rule.
  
+\end_layout
+
+\begin_layout Subsection
+Yaguchi & Takahashi
+\end_layout
+
+\begin_layout Standard
+This is a modified Chaboche with an extra history variable accounting for
+ the evolution of a 
+\begin_inset Formula $C_{i}$
+\end_inset
+
+ and a non-integratable isotropic hardening evolution equation.
+ It also incorporates the stress memory thing, so it needs access to 
+\begin_inset Formula $\dot{\gamma}$
+\end_inset
+
+ (can't be a hardening rule).
+\end_layout
+
+\begin_layout Standard
+Rate:
+\begin_inset Formula 
+\[
+y\left(\bm{\sigma},\mathbf{q}\right)=\sqrt{\frac{3}{2}}\left\langle \frac{f\left(\bm{\sigma},\bm{q}\right)}{\sqrt{2/3}\eta}\right\rangle ^{n}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Flow rule:
+\begin_inset Formula 
+\[
+\mathbf{g}=\frac{\partial f}{\partial\bm{\sigma}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+History:
+\begin_inset Formula 
+\[
+\bm{\alpha}=\left[\sigma_{a}\begin{array}{ccc}
+Q & \mathbf{X}_{1} & \mathbf{X}_{2}\end{array}\right]
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathbf{q}=\left[\begin{array}{cc}
+\sigma_{a} & \mathbf{X}\end{array}\right]
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathbf{X}=\mathbf{X}_{1}+\mathbf{X}_{2}.
+\]
+
+\end_inset
+
+History evolution rules:
+\begin_inset Formula 
+\begin{align*}
+\dot{\sigma}_{a} & = & \left[\sqrt{\frac{2}{3}}b\left(\sigma_{as}-\sigma_{a}\right)\right]\dot{\gamma}\\
+\sigma_{as} & = & \left\langle A+B\left(\log_{10}\left(\sqrt{\frac{2}{3}}y\right)\right)\right\rangle \\
+b & = & \begin{cases}
+b_{h} & \sigma_{as}-\sigma_{a}\ge0\\
+b_{r} & \sigma_{as}-\sigma_{a}<0
+\end{cases}
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{Q}=\left[\sqrt{\frac{2}{3}}d\left(q-Q\right)\right]\dot{\gamma}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{\mathbf{X}}_{1}=-\left[\frac{2}{3}B_{1}\left(a_{10}-Q\right)\mathbf{n}+\sqrt{\frac{2}{3}}B_{1}\mathbf{X}_{1}+r_{1}\left(\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{1}\right\Vert \right)^{m-1}\mathbf{X}_{1}\frac{1}{y}\right]\dot{\gamma}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{\mathbf{X}}_{2}=-\left[\frac{2}{3}B_{2}a_{2}\mathbf{n}+\sqrt{\frac{2}{3}}B_{2}\mathbf{X}_{2}+r_{2}\left(\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{2}\right\Vert \right)^{m-1}\mathbf{X}_{2}\frac{1}{y}\right]\dot{\gamma}
+\]
+
+\end_inset
+
+Note from the original paper 
+\begin_inset Formula $C\rightarrow B$
+\end_inset
+
+ and 
+\begin_inset Formula $\gamma\rightarrow r$
+\end_inset
+
+ for readability.
+\end_layout
+
+\begin_layout Subsection
+Moosbrugger Gr.
+ 91
+\end_layout
+
+\begin_layout Standard
+Really this could be implemented like the Chaboche model, associated with
+ some general yield surface.
+ However to preserve my sanity and because the temperature dependence is
+ complex it's implemented as a separate flow model and all terms are hard-coded.
+\end_layout
+
+\begin_layout Standard
+This implementation omits the temperature derivatives from the rate forms
+ (so it could be inaccurate for fast temperature swings).
+\end_layout
+
+\begin_layout Standard
+The history variables are:
+\begin_inset Formula 
+\[
+\bm{\alpha}=\left[\begin{array}{ccccc}
+\chi_{1} & \chi_{2} & \mathbf{X}_{1} & \mathbf{X}_{2} & \mathbf{X}_{2}\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\chi=\chi_{1}+\chi_{2}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathbf{X}=\mathbf{X}_{1}+\mathbf{X}_{2}+\mathbf{X}_{3}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The flow rule is
+\begin_inset Formula 
+\[
+\mathbf{g}=\sqrt{\frac{3}{2}}\mathbf{n}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathbf{n}=\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+h_{\chi_{i}}=\mu_{i}\left(\bar{\chi}_{i}-\chi_{i}\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathbf{h}_{\bm{X}_{i}}=C_{i}\left[b_{i}\mathbf{n}-\mathbf{X}_{i}\right]-\frac{\mathbf{X}_{i}}{\left\Vert \mathbf{X}_{i}\right\Vert }C_{i}b_{i}\frac{\left(\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{i}\right\Vert \right)^{1/m^{\prime}}}{K_{i}}\frac{1}{\left(A^{\prime}\theta^{\prime}\right)^{1/m^{\prime}}}\frac{1}{\dot{y}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{y}=B\left(\frac{\sqrt{\frac{3}{2}}\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }{D}\right)^{1/m^{\prime}}\frac{1}{\left(A^{\prime}\theta^{\prime}\right)^{1/m^{\prime}}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+D=D_{0}+\frac{\chi}{\left(A^{\prime}\theta^{\prime}\right)\left(\frac{\dot{p}_{1}}{B}\right)^{m^{\prime}}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Furthermore:
+\begin_inset Formula 
+\begin{align*}
+\dot{p}_{1} & = & \unit[6.7\times10^{-5}]{1/s}\\
+D_{0} & = & \unit[1]{MPa}\\
+B & = & \unit[1]{/s}\\
+C_{1} & = & 7000\\
+C_{2} & = & 500\\
+C_{3} & = & 37.5\\
+K_{1} & = & \unit[5000]{?}\\
+K_{2} & = & \unit[75]{?}\\
+K_{3} & = & \unit[1]{?}\\
+\mu_{1} & = & 30\\
+\mu_{2} & = & 0.3\\
+\bar{\chi}_{1} & = & \unit[-65]{MPa}\\
+\bar{\chi}_{2} & = & \unit[-15]{MPa}
+\end{align*}
+
+\end_inset
+
+ for 
+\begin_inset Formula $T<\unit[723]{K}$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{align*}
+m^{\prime} & = & 0.024\\
+\theta^{\prime} & = & \exp\left(\frac{101.4}{T}\right)\\
+A^{\prime} & = & 263.2\\
+b_{1} & = & \unit[\sqrt{\frac{2}{3}}150]{MPa}\\
+b_{2} & = & \unit[\sqrt{\frac{2}{3}}117.5]{MPa}\\
+b_{3} & = & \unit[\sqrt{\frac{2}{3}}\left(-267.5+344.5\exp\left(\frac{101.4}{T}\right)+27.298\left(723-T\right)^{0.1}\right)]{MPa}(128.89)
+\end{align*}
+
+\end_inset
+
+and for 
+\begin_inset Formula $T<\unit[723]{K}$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{align*}
+m^{\prime} & = & -1.052\log\left(\frac{\unit[1]{K}}{T}\right)-6.901\\
+\theta^{\prime} & = & \log\left(\frac{1K}{T}\right)+7\\
+A^{\prime} & = & 3.905\times10^{?7}\times\exp\left(-\frac{7875}{T}\right)\\
+b_{1} & = & \unit[\sqrt{\frac{2}{3}}\left[105+16.5194\left(873-T\right)^{0.2}\right]]{MPa}\\
+b_{2} & = & \unit[\sqrt{\frac{2}{3}}\left[4904.55-12.3895\left(873-T\right)^{0.2}-7.34196\left(883-T\right)^{0.2}+711.9\log\left(\frac{1}{T}\right)\right]]{MPa}\\
+b_{3} & = & \unit[\sqrt{\frac{2}{3}}\left[1634.85+3.21211\left(873-T\right)^{0.2}+237.2\log\left(\frac{1}{T}\right)\right]]{MPa}
+\end{align*}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
