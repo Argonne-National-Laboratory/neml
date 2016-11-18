@@ -7,6 +7,106 @@
 
 namespace neml {
 
+// Default implementation of flow rule wrt time
+int ViscoPlasticFlowRule::g_time(const double * const s, 
+                                 const double * const alpha, double T, 
+                                 double * const gv) const
+{
+  std::fill(gv, gv+6, 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dg_ds_time(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dgv) const
+{
+  std::fill(dgv, dgv+36, 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dg_da_time(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dgv) const
+{
+  std::fill(dgv, dgv+6*nhist(), 0.0);
+  return 0;
+}
+
+// Default implementation of flow rule wrt temperature
+int ViscoPlasticFlowRule::g_temp(const double * const s, 
+                                 const double * const alpha, double T, 
+                                 double * const gv) const
+{
+  std::fill(gv, gv+6, 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dg_ds_temp(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dgv) const
+{
+  std::fill(dgv, dgv+36, 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dg_da_temp(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dgv) const
+{
+  std::fill(dgv, dgv+6*nhist(), 0.0);
+  return 0;
+}
+
+// Default implementation of hardening rule wrt time
+int ViscoPlasticFlowRule::h_time(const double * const s, 
+                                 const double * const alpha, double T, 
+                                 double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dh_ds_time(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dhv) const
+{
+  std::fill(dhv, dhv+6*nhist(), 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dh_da_time(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  return 0;
+}
+
+// Default implementation of hardening rule wrt temperature
+int ViscoPlasticFlowRule::h_temp(const double * const s, 
+                                 const double * const alpha, double T, 
+                                 double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dh_ds_temp(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dhv) const
+{
+  std::fill(dhv, dhv+6*nhist(), 0.0);
+  return 0;
+}
+
+int ViscoPlasticFlowRule::dh_da_temp(const double * const s, 
+                                     const double * const alpha, double T,
+                                     double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  return 0;
+}
+
 // Various g(s) implementations
 GPowerLaw::GPowerLaw(double n) :
     n_(n)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.append('/home/messner/projects/neml')
+sys.path.append('..')
 
 from neml import neml, elasticity, drivers, surfaces, hardening, visco_flow
 

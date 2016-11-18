@@ -44,21 +44,53 @@ class ViscoPlasticFlowRule {
   virtual int dy_da(const double* const s, const double* const alpha, double T,
                 double * const dyv) const = 0;
 
-  // Flow rule
+  // Flow rule wrt to strain rate
   virtual int g(const double * const s, const double * const alpha, double T,
                 double * const gv) const = 0;
   virtual int dg_ds(const double * const s, const double * const alpha, double T,
                 double * const dgv) const = 0;
   virtual int dg_da(const double * const s, const double * const alpha, double T,
                double * const dgv) const = 0;
+  
+  // Flow rule wrt to time
+  virtual int g_time(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  virtual int dg_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  virtual int dg_da_time(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
 
-  // Hardening rule
+  // Flow rule wrt to temperature
+  virtual int g_temp(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  virtual int dg_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  virtual int dg_da_temp(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
+
+  // Hardening rule wrt to strain rate
   virtual int h(const double * const s, const double * const alpha, double T,
                 double * const hv) const = 0;
   virtual int dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const = 0;
   virtual int dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const = 0;
+
+  // Hardening rule wrt to time
+  virtual int h_time(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  // Hardening rule wrt to temperature
+  virtual int h_temp(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
 };
 
 /// Perzyna associative viscoplasticity

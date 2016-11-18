@@ -95,6 +95,46 @@ class CommonFlowRule(object):
 
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
+  def test_dg_ds_time(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda s: self.model.g_time(s, hist, self.T)
+    num = differentiate(dfn, stress)
+    exact = self.model.dg_ds_time(stress, hist, self.T)
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+  def test_dg_da_time(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda a: self.model.g_time(stress, a, self.T)
+    num = differentiate(dfn, hist)
+    exact = self.model.dg_da_time(stress, hist, self.T)
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+  def test_dg_ds_temp(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda s: self.model.g_temp(s, hist, self.T)
+    num = differentiate(dfn, stress)
+    exact = self.model.dg_ds_temp(stress, hist, self.T)
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+  def test_dg_da_temp(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda a: self.model.g_temp(stress, a, self.T)
+    num = differentiate(dfn, hist)
+    exact = self.model.dg_da_temp(stress, hist, self.T)
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
   def test_dh_ds(self):
     stress = self.gen_stress()
     hist = self.gen_hist()
@@ -114,6 +154,47 @@ class CommonFlowRule(object):
     exact = self.model.dh_da(stress, hist, self.T)
 
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+  def test_dh_ds_time(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda s: self.model.h_time(s, hist, self.T)
+    num = differentiate(dfn, stress)
+    exact = self.model.dh_ds_time(stress, hist, self.T)
+    
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+  def test_dh_da_time(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda a: self.model.h_time(stress, a, self.T)
+    num = differentiate(dfn, hist)
+    exact = self.model.dh_da_time(stress, hist, self.T)
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+  def test_dh_ds_temp(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda s: self.model.h_temp(s, hist, self.T)
+    num = differentiate(dfn, stress)
+    exact = self.model.dh_ds_temp(stress, hist, self.T)
+    
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
+  def test_dh_da_temp(self):
+    stress = self.gen_stress()
+    hist = self.gen_hist()
+
+    dfn = lambda a: self.model.h_temp(stress, a, self.T)
+    num = differentiate(dfn, hist)
+    exact = self.model.dh_da_temp(stress, hist, self.T)
+
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
+
 
 class TestPerzynaIsoJ2Voce(unittest.TestCase, CommonFlowRule):
   def setUp(self):

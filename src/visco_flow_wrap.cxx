@@ -69,7 +69,7 @@ PYBIND11_PLUGIN(visco_flow) {
             int ier = m.g(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             py_error(ier);
             return f;
-           }, "Flow rule.")
+           }, "Flow rule, rate part.")
       .def("dg_ds",
            [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
@@ -77,7 +77,7 @@ PYBIND11_PLUGIN(visco_flow) {
             int ier = m.dg_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             py_error(ier);
             return f;
-           }, "Flow rule derivative with respect to stress.")
+           }, "Flow rule (rate) derivative with respect to stress.")
       .def("dg_da",
            [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
@@ -85,7 +85,57 @@ PYBIND11_PLUGIN(visco_flow) {
             int ier = m.dg_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             py_error(ier);
             return f;
-           }, "Flow rule derivative with respect to history.")
+           }, "Flow rule (rate) derivative with respect to history.")
+
+      .def("g_time",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_vec<double>(6);
+            int ier = m.g_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Flow rule, time part.")
+      .def("dg_ds_time",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(6,6);
+            int ier = m.dg_ds_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Flow rule (time) derivative with respect to stress.")
+      .def("dg_da_time",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(6,m.nhist());
+            int ier = m.dg_da_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Flow rule (time) derivative with respect to history.")
+
+      .def("g_temp",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_vec<double>(6);
+            int ier = m.g_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Flow rule, temperature part.")
+      .def("dg_ds_temp",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(6,6);
+            int ier = m.dg_ds_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Flow rule (temperature) derivative with respect to stress.")
+      .def("dg_da_temp",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(6,m.nhist());
+            int ier = m.dg_da_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Flow rule (temperature) derivative with respect to history.")
 
       .def("h",
            [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
@@ -111,6 +161,57 @@ PYBIND11_PLUGIN(visco_flow) {
             py_error(ier);
             return f;
            }, "Hardening rule derivative with respect to history.")
+
+      .def("h_time",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_vec<double>(m.nhist());
+            int ier = m.h_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule, time part.")
+      .def("dh_ds_time",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),6);
+            int ier = m.dh_ds_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (time) derivative with respect to stress.")
+      .def("dh_da_time",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),m.nhist());
+            int ier = m.dh_da_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (time) derivative with respect to history.")
+
+      .def("h_temp",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_vec<double>(m.nhist());
+            int ier = m.h_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule, temperature part.")
+      .def("dh_ds_temp",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),6);
+            int ier = m.dh_ds_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (temperature) derivative with respect to stress.")
+      .def("dh_da_temp",
+           [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),m.nhist());
+            int ier = m.dh_da_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (temperature) derivative with respect to history.")
+
       ;
 
     py::class_<PerzynaFlowRule, std::shared_ptr<PerzynaFlowRule>>(m, "PerzynaFlowRule", py::base<ViscoPlasticFlowRule>())
