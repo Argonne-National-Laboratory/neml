@@ -24,9 +24,7 @@ PYBIND11_PLUGIN(visco_flow) {
       .def_property_readonly("n", &GPowerLaw::n)
       ;
 
-
-
-  py::class_<ViscoPlasticFlowRule, std::shared_ptr<ViscoPlasticFlowRule>>(m, "RateIndenpendentFlowRule")
+  py::class_<ViscoPlasticFlowRule, std::shared_ptr<ViscoPlasticFlowRule>>(m, "ViscoPlasticFlowRule")
       .def_property_readonly("nhist", &ViscoPlasticFlowRule::nhist, "Number of history variables.")
       .def("init_hist",
            [](ViscoPlasticFlowRule & m) -> py::array_t<double>

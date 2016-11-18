@@ -876,7 +876,7 @@ For associative flow this algorithm has the interpretation of a closest
 \end_layout
 
 \begin_layout Subsection
-Discrete equations
+Continuous equations
 \end_layout
 
 \begin_layout Standard
@@ -1143,7 +1143,7 @@ General Newton algorithm for visco-plasticity
 \end_layout
 
 \begin_layout Subsection
-Discrete equations
+Continuous equations
 \end_layout
 
 \begin_layout Standard
@@ -1334,6 +1334,170 @@ Let
 \end_inset
 
 So it's the same as above but with slightly smaller blocks.
+\end_layout
+
+\begin_layout Section
+General integration algorithm for thermo-elasto-viscoplasticity
+\end_layout
+
+\begin_layout Subsection
+Continuous equations
+\end_layout
+
+\begin_layout Standard
+The system is posed as:
+\begin_inset Formula 
+\begin{align*}
+\dot{\bm{\sigma}} & = & \dot{\bm{\sigma}}\left(\bm{\sigma},\mathbf{q},\dot{\bm{\varepsilon}},T,\dot{T},t\right)\\
+\dot{\mathbf{q}} & = & \dot{\mathbf{q}}\left(\bm{\sigma},\mathbf{q},\dot{\bm{\varepsilon}},T,\dot{T},t\right)
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Newton algorithm
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\mathbf{R}_{1} & = & -\bm{\sigma}_{n+1}+\bm{\sigma}_{n}+\dot{\bm{\sigma}}\left(\bm{\sigma}_{n+1},\mathbf{q}_{n+1},\dot{\bm{\varepsilon}}_{n+1},T_{n+1}\dot{T}_{n+1},,t_{n+1}\right)\Delta t_{n+1} & = & \mathbf{0}\\
+\mathbf{R}_{2} & = & -\mathbf{q}_{n+1}+\mathbf{q}_{n}+\dot{\mathbf{q}}\left(\bm{\sigma}_{n+1},\mathbf{q}_{n+1},\dot{\bm{\varepsilon}}_{n+1},T_{n+1},\dot{T}_{n+1},t_{n+1}\right)\Delta t_{n+1} & = & \mathbf{0}
+\end{align*}
+
+\end_inset
+
+The Jacobian is simple:
+\begin_inset Formula 
+\[
+\mathbf{J}=\left[\begin{array}{cc}
+\mathbf{J}_{\sigma\sigma} & \mathbf{J}_{\sigma q}\\
+\mathbf{J}_{q\sigma} & \mathbf{J}_{qq}
+\end{array}\right]=\left[\begin{array}{cc}
+-\mathbf{I}+\frac{\partial\dot{\bm{\sigma}}_{n+1}}{\partial\bm{\sigma}_{n+1}}\Delta t_{n+1} & \frac{\partial\dot{\bm{\sigma}}_{n+1}}{\partial\bm{q}_{n+1}}\Delta t_{n+1}\\
+\frac{\partial\dot{\mathbf{q}}_{n+1}}{\partial\bm{\sigma}_{n+1}}\Delta t_{n+1} & -\mathbf{I}+\frac{\partial\dot{\mathbf{q}}_{n+1}}{\partial\bm{q}_{n+1}}\Delta t_{n+1}
+\end{array}\right].
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Algorithmic tangent
+\end_layout
+
+\begin_layout Standard
+The tangent requires several unusual derivatives.
+ It is formed as:
+\begin_inset Formula 
+\begin{align*}
+d\mathbf{R}_{1} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\sigma}_{n+1}}:d\bm{\sigma}_{n+1}+\frac{\partial\mathbf{R}_{1}}{\partial\mathbf{q}_{n+1}}:d\mathbf{q}_{n+1}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}}:d\dot{\bm{\varepsilon}}_{n+1}+\frac{\partial\mathbf{R}_{1}}{\partial T_{n+1}}:dT_{n+1}+\frac{\partial\mathbf{R}_{1}}{\partial t_{n+1}}:dt_{n+1} & = & \mathbf{0}\\
+d\mathbf{R}_{2} & = & \frac{\partial\mathbf{R}_{2}}{\partial\bm{\sigma}_{n+1}}:d\bm{\sigma}_{n+1}+\frac{\partial\mathbf{R}_{2}}{\partial\mathbf{q}_{n+1}}:d\mathbf{q}_{n+1}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{\varepsilon}_{n+1}}:d\dot{\bm{\varepsilon}}_{n+1}+\frac{\partial\mathbf{R}_{2}}{\partial T_{n+1}}:dT_{n+1}+\frac{\partial\mathbf{R}_{2}}{\partial t_{n+1}}:dt_{n+1} & = & \mathbf{0}
+\end{align*}
+
+\end_inset
+
+Divide through and substitute...
+\begin_inset Formula 
+\begin{align*}
+\mathbf{J}_{\sigma\sigma}:\mathbf{A}_{n+1}+\mathbf{J}_{\sigma q}:\frac{d\mathbf{q}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial T_{n+1}}:\frac{dT_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial\dot{T}_{n+1}}:\frac{d\dot{T}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial t_{n+1}}:\frac{dt_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{0}\\
+\mathbf{J}_{q\sigma}:\mathbf{A}_{n+1}+\mathbf{J}_{qq}:\frac{d\mathbf{q}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{2}}{\partial\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{2}}{\partial T_{n+1}}:\frac{dT_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{2}}{\partial\dot{T}_{n+1}}:\frac{d\dot{T}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{2}}{\partial t_{n+1}}:\frac{dt_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{0}
+\end{align*}
+
+\end_inset
+
+We will need to revisit this, but as an approximation assume:
+\end_layout
+
+\begin_layout Enumerate
+There is no explicit time dependence or the time dependence is small compared
+ to the dependence on the physical variables.
+\end_layout
+
+\begin_layout Enumerate
+The temperature change is gradual (need to consider this...).
+\end_layout
+
+\begin_layout Standard
+With these assumptions:
+\begin_inset Formula 
+\begin{align*}
+\mathbf{J}_{\sigma\sigma}:\mathbf{A}_{n+1}+\mathbf{J}_{\sigma q}:\frac{d\mathbf{q}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{1}}{\partial\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{0}\\
+\mathbf{J}_{q\sigma}:\mathbf{A}_{n+1}+\mathbf{J}_{qq}:\frac{d\mathbf{q}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\frac{\partial\mathbf{R}_{2}}{\partial\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{0}
+\end{align*}
+
+\end_inset
+
+and this is basically our old algorithm:
+\begin_inset Formula 
+\begin{align*}
+\mathbf{X} & = & \frac{\partial\dot{\bm{\sigma}}}{\partial\dot{\bm{\varepsilon}}_{n+1}}\Delta t_{n+1}\\
+\mathbf{Y} & = & \frac{\partial\dot{\mathbf{q}}}{\partial\dot{\bm{\varepsilon}}_{n+1}}\Delta t_{n+1}
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align*}
+\mathbf{J}_{\sigma\sigma}:\mathbf{A}_{n+1}+\mathbf{J}_{\sigma q}:\frac{d\mathbf{q}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\mathbf{X} & = & \mathbf{0}\\
+\mathbf{J}_{q\sigma}:\mathbf{A}_{n+1}+\mathbf{J}_{qq}:\frac{d\mathbf{q}_{n+1}}{d\dot{\bm{\varepsilon}}_{n+1}}+\mathbf{Y} & = & \mathbf{0}
+\end{align*}
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathbf{A}_{n+1}=\left(\mathbf{J}_{\sigma\sigma}-\mathbf{J}_{\sigma q}:\mathbf{J}_{qq}^{-1}\mathbf{J}_{q\sigma}\right)^{-1}:\left(\mathbf{J}_{\sigma q}:\mathbf{J}_{qq}^{-1}\mathbf{Y}-\mathbf{X}\right)
+\]
+
+\end_inset
+
+And the actual tangent is just
+\begin_inset Formula 
+\[
+\mathbf{T}_{n+1}=\mathbf{A}_{n+1}\frac{1}{\Delta t_{n+1}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Application to plasticity
+\end_layout
+
+\begin_layout Standard
+Define the rates as:
+\begin_inset Formula 
+\begin{align*}
+\dot{\bm{\sigma}}\left(\bm{\sigma},\mathbf{q},\bm{\varepsilon},T,t\right) & = & \mathbf{C}:\left(\dot{\bm{\varepsilon}}-\mathbf{g}_{\gamma}\dot{\gamma}-\mathbf{g}_{T}\dot{T}-\mathbf{g}_{t}\right)\\
+\dot{\mathbf{q}}\left(\bm{\sigma},\mathbf{q},\bm{\varepsilon},T,t\right) & = & \mathbf{h}_{\gamma}\dot{\gamma}+\mathbf{h}_{T}\dot{T}+\mathbf{h}_{t}
+\end{align*}
+
+\end_inset
+
+The derivatives are then
+\begin_inset Formula 
+\begin{align*}
+\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{\sigma}} & = & \mathbf{C}:\left(-\frac{\partial\mathbf{g}_{\gamma}}{\partial\bm{\sigma}}\dot{\gamma}-\left(\mathbf{g}_{\gamma}\otimes\frac{\partial\dot{\gamma}}{\partial\bm{\sigma}}\right)-\frac{\partial\mathbf{g}_{T}}{\partial\bm{\sigma}}\dot{T}-\frac{\partial\mathbf{g}_{t}}{\partial\bm{\sigma}}\right)\\
+\frac{\partial\dot{\bm{\sigma}}}{\partial\mathbf{q}} & = & \mathbf{C}:\left(-\frac{\partial\mathbf{g}_{\gamma}}{\partial\mathbf{q}}\dot{\gamma}-\left(\mathbf{g}_{\gamma}\otimes\frac{\partial\dot{\gamma}}{\partial\mathbf{q}}\right)-\frac{\partial\mathbf{g}_{T}}{\partial\mathbf{q}}\dot{T}-\frac{\partial\mathbf{g}_{t}}{\partial\mathbf{q}}\right)\\
+\frac{\partial\dot{\mathbf{q}}}{\partial\bm{\sigma}} & = & \frac{\partial\mathbf{h}_{\gamma}}{\partial\bm{\sigma}}\dot{\gamma}+\left(\mathbf{h}_{\gamma}\otimes\frac{\partial\dot{\gamma}}{\partial\bm{\sigma}}\right)+\frac{\partial\mathbf{h}_{T}}{\partial\bm{\sigma}}\dot{T}+\frac{\partial\mathbf{h}_{t}}{\partial\bm{\sigma}}\\
+\frac{\partial\dot{\mathbf{q}}}{\partial\mathbf{q}} & = & \frac{\partial\mathbf{h}_{\gamma}}{\partial\mathbf{q}}\dot{\gamma}+\left(\mathbf{h}_{\gamma}\otimes\frac{\partial\dot{\gamma}}{\partial\bm{\sigma}}\right)+\frac{\partial\mathbf{h}_{T}}{\partial\mathbf{q}}\dot{T}+\frac{\partial\mathbf{h}_{t}}{\partial\mathbf{q}}\\
+\frac{\partial\dot{\bm{\sigma}}}{\partial\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{C}\\
+\frac{\partial\dot{\mathbf{q}}}{\partial\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{0}
+\end{align*}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
