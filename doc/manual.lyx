@@ -1454,7 +1454,7 @@ and this is basically our old algorithm:
 
 \begin_inset Formula 
 \[
-\mathbf{A}_{n+1}=\left(\mathbf{J}_{\sigma\sigma}-\mathbf{J}_{\sigma q}:\mathbf{J}_{qq}^{-1}\mathbf{J}_{q\sigma}\right)^{-1}:\left(\mathbf{J}_{\sigma q}:\mathbf{J}_{qq}^{-1}\mathbf{Y}-\mathbf{X}\right)
+\mathbf{A}_{n+1}=\left(\mathbf{J}_{\sigma\sigma}-\mathbf{J}_{\sigma q}:\mathbf{J}_{qq}^{-1}:\mathbf{J}_{q\sigma}\right)^{-1}:\left(\mathbf{J}_{\sigma q}:\mathbf{J}_{qq}^{-1}:\mathbf{Y}-\mathbf{X}\right)
 \]
 
 \end_inset

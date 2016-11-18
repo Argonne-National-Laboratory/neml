@@ -816,4 +816,224 @@ int SmallStrainViscoPlasticity::calc_tangent_(
 }
 
 
-} // namespace neml
+
+// Start general integrator implementation
+GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+                                     double tol, int miter,
+                                     bool verbose) :
+    rule_(rule), tol_(tol), miter_(miter), verbose_(verbose)
+{
+
+}
+
+int GeneralIntegrator::update_sd(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1)
+{
+  // Set trial state
+  set_trial_state(e_np1, e_n, s_n, h_n, T_np1, T_n, t_np1, t_n);
+
+  // Solve for x
+  double x[nparams()];
+  int ier = solve(shared_from_this(), x, tol_, miter_, verbose_);
+  if (ier != SUCCESS) return ier;
+
+  // Extract solved parameters
+  std::copy(x, x+6, s_np1);
+  std::copy(x+6, x+6+nhist(), h_np1); // history
+
+  // Complicated tangent calc...
+  calc_tangent_(x, A_np1);
+  
+  return 0;
+}
+
+size_t GeneralIntegrator::nhist() const
+{
+  return rule_->nhist();
+}
+
+int GeneralIntegrator::init_hist(double * const hist) const
+{
+  return rule_->init_hist(hist);
+}
+
+size_t GeneralIntegrator::nparams() const
+{
+  return 6 + nhist();
+}
+
+int GeneralIntegrator::init_x(double * const x)
+{
+  std::copy(s_n_, s_n_+6, x);
+  std::copy(h_n_.begin(), h_n_.end(), &x[6]);
+
+  return 0;
+}
+
+int GeneralIntegrator::RJ(const double * const x, double * const R, 
+                          double * const J)
+{
+  // Setup
+  const double * const s_np1 = &x[0];
+  const double * const h_np1 = &x[6];
+
+  // Residual calculation
+  rule_->s(s_np1, h_np1, e_dot_, T_, Tdot_, R);
+  for (int i=0; i<6; i++) {
+    R[i] = -s_np1[i] + s_n_[i] + R[i] * dt_;
+  }
+  rule_->a(s_np1, h_np1, e_dot_, T_, Tdot_, &R[6]);
+  for (int i=0; i<nhist(); i++) {
+    R[i+6] = -h_np1[i] + h_n_[i] + R[i+6] * dt_;
+  }
+
+  // Jacobian calculation
+  double J11[36];
+  rule_->ds_ds(s_np1, h_np1, e_dot_, T_, Tdot_, J11);
+  for (int i=0; i<36; i++) J11[i] *= dt_;
+  for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] -= 1.0;
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      J[CINDEX(i,j,nparams())] = J11[CINDEX(i,j,6)];
+    }
+  }
+
+  double J12[6*nhist()];
+  rule_->ds_da(s_np1, h_np1, e_dot_, T_, Tdot_, J12);
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<nhist(); j++) {
+      J[CINDEX(i,(j+6),nparams())] = J12[CINDEX(i,j,nhist())] * dt_;
+    }
+  }
+
+  double J21[nhist()*6];
+  rule_->da_ds(s_np1, h_np1, e_dot_, T_, Tdot_, J21);
+  for (int i=0; i<nhist(); i++) {
+    for (int j=0; j<6; j++) {
+      J[CINDEX((i+6),j,nparams())] = J21[CINDEX(i,j,6)] * dt_;
+    }
+  }
+
+  double J22[nhist()*nhist()];
+  rule_->da_da(s_np1, h_np1, e_dot_, T_, Tdot_, J22);
+  for (int i=0; i<nhist()*nhist(); i++) J22[i] *= dt_;
+  for (int i=0; i<nhist(); i++) J22[CINDEX(i,i,nhist())] -= 1.0;
+
+  for (int i=0; i<nhist(); i++) {
+    for (int j=0; j<nhist(); j++) {
+      J[CINDEX((i+6),(j+6),nparams())] = J22[CINDEX(i,j,nhist())];
+    }
+  }
+
+  return 0;
+}
+
+
+int GeneralIntegrator::set_trial_state(
+    const double * const e_np1, const double * const e_n,
+    const double * const s_n, const double * const h_n,
+    double T_np1, double T_n, double t_np1, double t_n)
+{
+  // dt
+  dt_ = t_np1 - t_n;
+
+  // temperature a T dot
+  T_ = T_np1;
+  Tdot_ = (T_np1 - T_n) / dt_;
+
+  // Strain rate
+  for (int i=0; i<6; i++) {
+    e_dot_[i] = (e_np1[i] - e_n[i]) / dt_;
+  }
+  
+  // Trial stress
+  std::copy(s_n, s_n+6, s_n_);
+
+  // Trial history
+  h_n_.resize(nhist());
+  std::copy(h_n, h_n+nhist(), h_n_.begin());
+
+  return 0;
+}
+
+int GeneralIntegrator::calc_tangent_(const double * const x, 
+                                     double * const A_np1)
+{
+  // Quick note: I'm leaving  out a few dts that cancel in the end -- 
+  // no point in tempting fate for small time increments
+  
+  // Setup
+  const double * const s_np1 = &x[0];
+  const double * const h_np1 = &x[6];
+
+  // Call for extra derivatives
+  double A[36];
+  rule_->ds_de(s_np1, h_np1, e_dot_, T_, Tdot_, A);
+  double B[nhist()*6];
+  rule_->da_de(s_np1, h_np1, e_dot_, T_, Tdot_, B);
+
+  // Call for the jacobian
+  double R[nparams()];
+  double J[nparams()*nparams()];
+  RJ(x, R, J);
+
+  // Separate blocks...
+  int n = nparams();
+  
+  double J11[6*6];
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      J11[CINDEX(i,j,6)] = J[CINDEX(i,j,n)];
+    }
+  }
+
+  double J12[6*nhist()];
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<nhist(); j++) {
+      J12[CINDEX(i,j,nhist())] = J[CINDEX(i,(j+6),n)];
+    }
+  }
+
+  double J21[nhist()*6];
+  for (int i=0; i<nhist(); i++) {
+    for (int j=0; j<6; j++) {
+      J21[CINDEX(i,j,6)] = J[CINDEX((i+6),(j),n)];
+    }
+  }
+
+  double J22[nhist()*nhist()];
+  for (int i=0; i<nhist(); i++) {
+    for (int j=0; j<nhist(); j++) {
+      J22[CINDEX(i,j,nhist())] = J[CINDEX((i+6),(j+6),n)];
+    }
+  }
+
+  // Only need the inverse
+  invert_mat(J22, nhist());
+
+  // Start multiplying through
+  double T1[nhist()*6];
+  mat_mat(nhist(), 6, nhist(), J22, J21, T1);
+  double T2[6*6];
+  mat_mat(6, 6, nhist(), J12, T1, T2);
+  for (int i=0; i<6*6; i++) T2[i] = J11[i] - T2[i];
+  invert_mat(T2, 6);
+
+  double T3[nhist()*6];
+  mat_mat(nhist(), 6, nhist(), J22, B, T3);
+  double T4[6*6];
+  mat_mat(6, 6, nhist(), J12, T3, T4);
+  for (int i=0; i<6*6; i++) T4[i] -= A[i];
+
+  mat_mat(6, 6, 6, T2, T4, A_np1);
+
+  return 0;
+}
+
+
+} // namespace nhist()ml

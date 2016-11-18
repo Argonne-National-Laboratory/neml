@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, ri_flow, hardening, surfaces, visco_flow
+from neml import neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow
 from common import *
 
 import unittest
@@ -29,6 +29,7 @@ class CommonMatModel(object):
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
       num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
       
+      print(A_np1)
       self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e2))
       
       strain_n = strain_np1
@@ -95,44 +96,6 @@ class CommonJacobian(object):
     nJ = differentiate(dfn, x)
 
     self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
-
-"""
-  def test_direct_solve(self):
-    e_np1 = self.gen_strain()
-    T_np1 = self.gen_T()
-    h_n = self.gen_hist()
-    t_np1 = self.gen_time()
-
-    self.model.set_trial_state(e_np1, h_n, T_np1, t_np1+1.0, 1.0)
-
-    dfn = lambda y: self.model.RJ(y)[0]    
-
-    x = self.gen_x()
-
-    R, J = self.model.RJ(x)
-    nR = la.norm(R)
-    nR0 = nR
-
-    i = 0
-    nmax = 30
-    rtol = 1.0e-6
-    while nR/nR0 > rtol:
-      dx = la.solve(J, R)
-      x -= dx
-      R, J = self.model.RJ(x)
-      nJ = differentiate(dfn, x)
-
-      self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-2, atol = 1.0e-4))
-
-      print(np.unravel_index(np.argmax((J-nJ)), (self.model.nparams, self.model.nparams)))
-
-      nR = la.norm(R)
-      i += 1
-      
-      if i > nmax:
-        self.assertTrue(False, msg = "Max iterations exceeded")
-"""
-
 
 class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
@@ -350,3 +313,110 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
 
   def gen_x(self):
     return ra.random((7,))
+
+class CommonJacobian2(object):
+  """
+    Common jacobian tests, version with different set history...
+  """
+  def gen_strain(self):
+    return np.array([0.01,-0.01,0.02,0.03,-0.005,0.01])
+
+  def gen_T(self):
+    return 500.0
+
+  def gen_time(self):
+    return 1.25
+
+  def test_jacobian(self):
+    e_np1 = self.gen_strain()
+    e_n = np.zeros((6,))
+    T_np1 = self.gen_T()
+    T_n = 300.0
+    h_n = self.gen_hist()
+    t_np1 = self.gen_time()
+    s_n = np.array([150,0,0,0,0,0])
+
+    self.model.set_trial_state(e_np1, e_n, s_n, h_n, T_np1, T_n, t_np1, 0.0)
+
+    x = self.gen_x()
+
+    R, J = self.model.RJ(x)
+    
+    dfn = lambda y: self.model.RJ(y)[0]
+    nJ = differentiate(dfn, x)
+
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+
+    x = self.gen_x()
+
+    R, J = self.model.RJ(x)
+    
+    dfn = lambda y: self.model.RJ(y)[0]
+    nJ = differentiate(dfn, x)
+    
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+
+class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacobian2):
+  """
+    Test Cheboche's VP model with our new direct integrator
+  """
+  def setUp(self):
+    n = 20.0
+    eta = 108.0
+    sY = 89.0
+
+    Q = 165.0
+    b = 12.0
+    
+    self.m = 3
+
+    C1 = 80.0e3
+    C2 = 14.02e3
+    C3 = 3.333e3
+
+    y1 = 0.9e3
+    y2 = 1.5e3
+    y3 = 1.0
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
+    cs = np.array([C1, C2, C3])
+    gs = np.array([y1, y2, y3])
+    hmodel = hardening.Chaboche(iso, cs, gs)
+
+    fluidity = visco_flow.ConstantFluidity(eta)
+
+    self.hist0 = np.zeros((19,))
+    self.T = 300.0
+
+    vmodel = visco_flow.ChabocheFlowRule(surface, hmodel, fluidity, n)
+
+    E = 92000.0
+    nu = 0.3
+
+    mu = E/(2*(1+nu))
+    K = E/(3*(1-2*nu))
+
+    shear = elasticity.ConstantShearModulus(mu)
+    bulk = elasticity.ConstantBulkModulus(K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+    self.model = neml.GeneralIntegrator(flow, verbose = True)
+
+    self.efinal = np.array([0.01,0,0,0,0,0])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 100
+
+  def gen_hist(self):
+    h = np.array([0.05,20,-30,40.0,5.0,2.0,40.0,-10,-20,10,50,30,10,-50,60,70,15,-15,10])
+    h[1:7] = make_dev(h[1:7])
+    h[7:13] = make_dev(h[7:13])
+    h[13:19] = make_dev(h[13:19])
+    return h
+
+  def gen_x(self):
+    x = [100.0,150.0,-300.0,-10.0,50.0,100.0] + list(self.gen_hist()*1.1)
+    return np.array(x)

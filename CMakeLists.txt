@@ -43,5 +43,10 @@ else()
       # Headers?
 endif()
 
+# Make better debug on Intel
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -traceback -ftrapuv")
+endif()
+
 # Recurse
 add_subdirectory(src)

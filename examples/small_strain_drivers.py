@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow
+from neml import neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -205,7 +205,8 @@ if __name__ == "__main__":
       check_kt = False)
   example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0])/10.0, 300.0, 100.0, 100)
   """
-
+  
+  """
   E = 200000.0
   nu = 0.27
 
@@ -238,9 +239,48 @@ if __name__ == "__main__":
       surface, hmodel, fluidity, n)
 
   model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
+  """
+
+  n = 20.0
+  eta = 108.0
+  sY = 89.0
+
+  Q = 165.0
+  b = 12.0
+  
+  C1 = 80.0e3
+  C2 = 14.02e3
+  C3 = 3.333e3
+
+  y1 = 0.9e3
+  y2 = 1.5e3
+  y3 = 1.0
+
+  surface = surfaces.IsoKinJ2()
+  iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
+  cs = np.array([C1, C2, C3])
+  gs = np.array([y1, y2, y3])
+  hmodel = hardening.Chaboche(iso, cs, gs)
+
+  fluidity = visco_flow.ConstantFluidity(eta)
+
+  vmodel = visco_flow.ChabocheFlowRule(surface, hmodel, fluidity, n)
+
+  E = 92000.0
+  nu = 0.3
+
+  mu = E/(2*(1+nu))
+  K = E/(3*(1-2*nu))
+
+  shear = elasticity.ConstantShearModulus(mu)
+  bulk = elasticity.ConstantBulkModulus(K)
+  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+  flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+  model = neml.GeneralIntegrator(flow, verbose = False) 
 
   example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 100.0, 100)
   example_stress(model, np.array([130.0,0,0,0,0,0]), 300.0, 100, 100)
   example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e0, 300.0, 0.04, 100)
   example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0, 300.0, 120.0, 100)
-

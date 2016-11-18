@@ -168,6 +168,44 @@ PYBIND11_PLUGIN(neml) {
       // End remove block
       ;
 
+
+  py::class_<GeneralIntegrator, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator", py::base<NEMLModel_sd>())
+      .def(py::init<std::shared_ptr<GeneralFlowRule>, double, int , bool>(),
+           py::arg("rule"),
+           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+           py::arg("verbose") = false)
+  
+      .def("set_trial_state",
+           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double T_np1, double T_n, double t_np1, double t_n) -> void
+           {
+              int ier = m.set_trial_state(arr2ptr<double>(e_np1), arr2ptr<double>(e_n), arr2ptr<double>(s_n), arr2ptr<double>(h_n), T_np1, T_n, t_np1, t_n);
+              py_error(ier);
+           }, "Setup trial state for solve.")
+
+      // Remove if/when pybind11 supports multiple inheritance
+      .def_property_readonly("nparams", &GeneralIntegrator::nparams, "Number of variables in nonlinear equations.")
+      .def("init_x",
+           [](GeneralIntegrator & m) -> py::array_t<double>
+           {
+            auto x = alloc_vec<double>(m.nparams());
+            int ier = m.init_x(arr2ptr<double>(x));
+            py_error(ier);
+            return x;
+           }, "Initialize guess.")
+      .def("RJ",
+           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> x) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           {
+            auto R = alloc_vec<double>(m.nparams());
+            auto J = alloc_mat<double>(m.nparams(), m.nparams());
+            
+            int ier = m.RJ(arr2ptr<double>(x), arr2ptr<double>(R), arr2ptr<double>(J));
+            py_error(ier);
+
+            return std::make_tuple(R, J);
+           }, "Residual and jacobian.")
+      // End remove block
+      ;
+
   return m.ptr();
 }
 

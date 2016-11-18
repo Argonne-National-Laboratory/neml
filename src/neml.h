@@ -4,6 +4,7 @@
 #include "elasticity.h"
 #include "ri_flow.h"
 #include "visco_flow.h"
+#include "general_flow.h"
 #include "solvers.h"
 
 #include <cstddef>
@@ -293,6 +294,50 @@ class SmallStrainViscoPlasticity: public NEMLModel_sd, public Solvable, public s
   int miter_;
   bool verbose_;
 };
+
+/// Small strain general integrator
+//    General NR one some stress rate + history evolution rate
+//
+class GeneralIntegrator: public NEMLModel_sd, public Solvable, public std::enable_shared_from_this<GeneralIntegrator> {
+ public:
+  GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+                    double tol = 1.0e-8, int miter = 50,
+                    bool verbose = false);
+  virtual int update_sd(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1);
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const hist) const;
+
+  virtual size_t nparams() const;
+  virtual int init_x(double * const x);
+  virtual int RJ(const double * const x, double * const R, double * const J);
+
+  // Make this public for ease of testing
+  int set_trial_state(const double * const e_np1, const double * const e_n,
+                      const double * const s_n, const double * const h_n,
+                      double T_np1, double T_n, double t_np1, double t_n);
+
+ private:
+  int calc_tangent_(const double * const x, double * const A_np1);
+
+  std::shared_ptr<GeneralFlowRule> rule_;
+
+  // Store some state in memory so we don't have to recompute
+  // Not terribly happy with this solution
+  double e_dot_[6];
+  double s_n_[6];
+  double T_, Tdot_, dt_;
+  std::vector<double> h_n_;
+  double tol_;
+  int miter_;
+  bool verbose_;
+};
+
 
 
 
