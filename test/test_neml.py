@@ -22,15 +22,15 @@ class CommonMatModel(object):
     for i,m in enumerate(np.linspace(0,1,self.nsteps)):
       t_np1 = self.tfinal * m
       strain_np1 = self.efinal * m
-
+      
       stress_np1, hist_np1, A_np1 = self.model.update_sd(strain_np1,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
       num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
       
-      print(A_np1)
-      self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e2))
+      if i != 0:
+        self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e2))
       
       strain_n = strain_np1
       stress_n = stress_np1
@@ -270,50 +270,6 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
     return np.array(list(self.gen_hist()) + list(ra.random((1,))))
 
 
-class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
-  """
-    Perzyna associated viscoplasticity w/ voce kinematic hardening
-  """
-  def setUp(self):
-    self.hist0 = np.zeros((7,))
-
-    self.hist0 = np.zeros((7,))
-
-    self.E = 92000.0
-    self.nu = 0.3
-
-    self.mu = self.E/(2*(1+self.nu))
-    self.K = self.E/(3*(1-2*self.nu))
-
-    self.s0 = 180.0
-    self.R = 150.0
-    self.d = 10.0
-
-    self.n = 2.0
-    self.eta = 200.0
-
-    shear = elasticity.ConstantShearModulus(self.mu)
-    bulk = elasticity.ConstantBulkModulus(self.K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-
-    surface = surfaces.IsoJ2()
-    hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
-    g = visco_flow.GPowerLaw(self.n)
-
-    flow = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
-    self.model = neml.SmallStrainViscoPlasticity(elastic, flow)
-
-    self.efinal = np.array([0.01,0,0,0,0,0])
-    self.tfinal = 10.0
-    self.T = 300.0
-    self.nsteps = 100 
-
-  def gen_hist(self):
-    return ra.random((7,))
-
-  def gen_x(self):
-    return ra.random((7,))
-
 class CommonJacobian2(object):
   """
     Common jacobian tests, version with different set history...
@@ -403,9 +359,9 @@ class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacob
 
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model = neml.GeneralIntegrator(flow, verbose = True)
+    self.model = neml.GeneralIntegrator(flow)
 
-    self.efinal = np.array([0.01,0,0,0,0,0])
+    self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
     self.tfinal = 10.0
     self.T = 300.0
     self.nsteps = 100
@@ -420,3 +376,50 @@ class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacob
   def gen_x(self):
     x = [100.0,150.0,-300.0,-10.0,50.0,100.0] + list(self.gen_hist()*1.1)
     return np.array(x)
+
+class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian2):
+  """
+    Perzyna associated viscoplasticity w/ voce kinematic hardening
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((7,))
+
+    self.hist0 = np.zeros((7,))
+
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.mu = self.E/(2*(1+self.nu))
+    self.K = self.E/(3*(1-2*self.nu))
+
+    self.s0 = 180.0
+    self.R = 150.0
+    self.d = 10.0
+
+    self.n = 2.0
+    self.eta = 200.0
+
+    shear = elasticity.ConstantShearModulus(self.mu)
+    bulk = elasticity.ConstantBulkModulus(self.K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    surface = surfaces.IsoJ2()
+    hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
+    g = visco_flow.GPowerLaw(self.n)
+
+    vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
+
+    flow = general_flow.TVPFlowRule(elastic, vmodel)
+    self.model = neml.GeneralIntegrator(flow)
+
+    self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 100 
+
+  def gen_hist(self):
+    return ra.random((7,))
+
+  def gen_x(self):
+    return ra.random((7,))
+

@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, visco_flow
+from neml import neml, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,10 +37,12 @@ if __name__ == "__main__":
 
   fluidity = visco_flow.ConstantFluidity(eta)
 
-  flow = visco_flow.ChabocheFlowRule(
+  vmodel = visco_flow.ChabocheFlowRule(
       surface, hmodel, fluidity, n)
 
-  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
+  flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+  model = neml.GeneralIntegrator(flow, verbose = False)
   
   # Uniaxial stress/strain curves at decades of strain rates
   erates = np.logspace(-6,2,9)

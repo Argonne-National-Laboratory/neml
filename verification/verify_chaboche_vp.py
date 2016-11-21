@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, visco_flow
+from neml import neml, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,10 +44,12 @@ def koo():
 
   fluidity = visco_flow.ConstantFluidity(eta)
 
-  flow = visco_flow.ChabocheFlowRule(
+  vmodel = visco_flow.ChabocheFlowRule(
       surface, hmodel, fluidity, n)
 
-  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
+  flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+  model = neml.GeneralIntegrator(flow)
 
 
   e500 = np.array([0.0058793164, 0.0052876081, 0.004710156, 0.0042916722, 0.0038731605, 0.0032237573, 0.0027900399, 0.0024864991, 0.0017489338, 0.000635346, -0.0006668255, -0.0017811254, -0.0034891722, -0.0044012326, -0.0059358454, -0.005661599, -0.0051996206, -0.0048027165, -0.0044347716, -0.0039945684, -0.0034388636, -0.0032440594, -0.0026585856, -0.002036857, -0.001161945, -0.0003736313, 0.0008344368, 0.0022454705, 0.0035554683, 0.0052854997])
@@ -112,10 +114,12 @@ def uniaxial():
 
   fluidity = visco_flow.ConstantFluidity(eta)
 
-  flow = visco_flow.ChabocheFlowRule(
+  vmodel = visco_flow.ChabocheFlowRule(
       surface, hmodel, fluidity, n)
 
-  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
+  flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+  model = neml.GeneralIntegrator(flow)
 
   erates = [1.0e-7, 1.0e-2, 1.0e-1]
  

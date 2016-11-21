@@ -61,6 +61,8 @@ int RateIndependentAssociativeFlow::df_da(const double* const s,
   surface_->df_dq(s, q, T, dq);
 
   mat_vec_trans(jac, nhist(), dq, nhist(), dfv);
+
+  return 0;
 }
 
 int RateIndependentAssociativeFlow::RateIndependentAssociativeFlow::g(const double * const s, 
