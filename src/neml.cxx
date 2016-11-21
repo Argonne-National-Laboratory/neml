@@ -4,8 +4,7 @@
 #include "nemlerror.h"
 
 #include <cassert>
-
-#include <iostream>
+#include <limits>
 
 namespace neml {
 
@@ -879,22 +878,27 @@ int GeneralIntegrator::RJ(const double * const x, double * const R,
                           double * const J)
 {
   // Setup
-  const double * const s_np1 = &x[0];
+  double s_mod[36];
+  std::copy(x, x+6, s_mod);
+  if (norm2_vec(x, 6) < std::numeric_limits<double>::epsilon()) {
+    s_mod[0] = 2.0 * std::numeric_limits<double>::epsilon();
+  }
   const double * const h_np1 = &x[6];
 
+
   // Residual calculation
-  rule_->s(s_np1, h_np1, e_dot_, T_, Tdot_, R);
+  rule_->s(s_mod, h_np1, e_dot_, T_, Tdot_, R);
   for (int i=0; i<6; i++) {
-    R[i] = -s_np1[i] + s_n_[i] + R[i] * dt_;
+    R[i] = -s_mod[i] + s_n_[i] + R[i] * dt_;
   }
-  rule_->a(s_np1, h_np1, e_dot_, T_, Tdot_, &R[6]);
+  rule_->a(s_mod, h_np1, e_dot_, T_, Tdot_, &R[6]);
   for (int i=0; i<nhist(); i++) {
     R[i+6] = -h_np1[i] + h_n_[i] + R[i+6] * dt_;
   }
 
   // Jacobian calculation
   double J11[36];
-  rule_->ds_ds(s_np1, h_np1, e_dot_, T_, Tdot_, J11);
+  rule_->ds_ds(s_mod, h_np1, e_dot_, T_, Tdot_, J11);
   for (int i=0; i<36; i++) J11[i] *= dt_;
   for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] -= 1.0;
   for (int i=0; i<6; i++) {
@@ -904,7 +908,7 @@ int GeneralIntegrator::RJ(const double * const x, double * const R,
   }
 
   double J12[6*nhist()];
-  rule_->ds_da(s_np1, h_np1, e_dot_, T_, Tdot_, J12);
+  rule_->ds_da(s_mod, h_np1, e_dot_, T_, Tdot_, J12);
   for (int i=0; i<6; i++) {
     for (int j=0; j<nhist(); j++) {
       J[CINDEX(i,(j+6),nparams())] = J12[CINDEX(i,j,nhist())] * dt_;
@@ -912,7 +916,7 @@ int GeneralIntegrator::RJ(const double * const x, double * const R,
   }
 
   double J21[nhist()*6];
-  rule_->da_ds(s_np1, h_np1, e_dot_, T_, Tdot_, J21);
+  rule_->da_ds(s_mod, h_np1, e_dot_, T_, Tdot_, J21);
   for (int i=0; i<nhist(); i++) {
     for (int j=0; j<6; j++) {
       J[CINDEX((i+6),j,nparams())] = J21[CINDEX(i,j,6)] * dt_;
@@ -920,7 +924,7 @@ int GeneralIntegrator::RJ(const double * const x, double * const R,
   }
 
   double J22[nhist()*nhist()];
-  rule_->da_da(s_np1, h_np1, e_dot_, T_, Tdot_, J22);
+  rule_->da_da(s_mod, h_np1, e_dot_, T_, Tdot_, J22);
   for (int i=0; i<nhist()*nhist(); i++) J22[i] *= dt_;
   for (int i=0; i<nhist(); i++) J22[CINDEX(i,i,nhist())] -= 1.0;
 
@@ -968,14 +972,18 @@ int GeneralIntegrator::calc_tangent_(const double * const x,
   // no point in tempting fate for small time increments
   
   // Setup
-  const double * const s_np1 = &x[0];
+  double s_mod[36];
+  std::copy(x, x+6, s_mod);
+  if (norm2_vec(x, 6) < std::numeric_limits<double>::epsilon()) {
+    s_mod[0] = 2.0 * std::numeric_limits<double>::epsilon();
+  }
   const double * const h_np1 = &x[6];
 
   // Call for extra derivatives
   double A[36];
-  rule_->ds_de(s_np1, h_np1, e_dot_, T_, Tdot_, A);
+  rule_->ds_de(s_mod, h_np1, e_dot_, T_, Tdot_, A);
   double B[nhist()*6];
-  rule_->da_de(s_np1, h_np1, e_dot_, T_, Tdot_, B);
+  rule_->da_de(s_mod, h_np1, e_dot_, T_, Tdot_, B);
 
   // Call for the jacobian
   double R[nparams()];
