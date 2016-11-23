@@ -93,5 +93,5 @@ else()
             general_flow.cxx 
             nemlerror.cxx 
             elasticity.cxx)
-      target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES})
+      target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${LIBXML2_LIBRARIES})
 endif()
