@@ -542,7 +542,8 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
 
 
 def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
-    nsteps_up = 50, sdir = np.array([1,0,0,0,0,0]), verbose = False):
+    nsteps_up = 50, sdir = np.array([1,0,0,0,0,0]), verbose = False,
+    logspace = False):
   """
     Simulate a creep test
 
@@ -558,7 +559,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
       nsteps_up     number of steps to get to stress value
       sdir          stress direction, defaults to x-tension
       verbose       whether to be verbose
-
+      logspace      if true logspace the time steps
   """
   # Setup
   driver = Driver_sd(model, verbose = verbose)
@@ -575,11 +576,16 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
     stress.append(np.dot(driver.stress_int[-1],sdir))
 
   ri = len(driver.strain_int)
-
-  dt = hold / nsteps
-  for i in range(nsteps):
-    driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
-    time.append(driver.t[-1])
+  
+  t0 = time[-1]
+  if logspace:
+    ts = np.logspace(0, np.log10(hold), num = nsteps) + t0
+  else:
+    ts = np.linspace(0,hold, num = nsteps) + t0
+  
+  for t in ts:
+    driver.stress_step(driver.stress_int[-1], t, T)
+    time.append(t)
     strain.append(np.dot(driver.strain_int[-1],sdir))
     stress.append(np.dot(driver.stress_int[-1],sdir))
 
