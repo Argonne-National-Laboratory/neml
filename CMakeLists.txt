@@ -26,11 +26,13 @@ else()
       message("Unknown solver")
 endif()
 
-
 # Configure libraries
 set(BLA_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
+
+FIND_PACKAGE(LibXml2 REQUIRED)
+INCLUDE_DIRECTORIES(${LIBXML2_INCLUDE_DIR})
 
 # Option for python
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
