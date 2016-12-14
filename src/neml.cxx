@@ -520,8 +520,9 @@ int SmallStrainRateIndependentPlasticity::check_K_T_(
 // Start general integrator implementation
 GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
                                      double tol, int miter,
-                                     bool verbose) :
-    rule_(rule), tol_(tol), miter_(miter), verbose_(verbose)
+                                     bool verbose, int max_divide) :
+    rule_(rule), tol_(tol), miter_(miter), verbose_(verbose), 
+    max_divide_(max_divide)
 {
 
 }
@@ -534,21 +535,99 @@ int GeneralIntegrator::update_sd(
     double * const h_np1, const double * const h_n,
     double * const A_np1)
 {
-  // Set trial state
-  set_trial_state(e_np1, e_n, s_n, h_n, T_np1, T_n, t_np1, t_n);
-
-  // Solve for x
-  double x[nparams()];
-  int ier = solve(shared_from_this(), x, tol_, miter_, verbose_);
-  if (ier != SUCCESS) return ier;
-
-  // Extract solved parameters
-  std::copy(x, x+6, s_np1);
-  std::copy(x+6, x+6+nhist(), h_np1); // history
-
-  // Complicated tangent calc...
-  calc_tangent_(x, A_np1);
+  // Setup for substepping
+  int nd = 0;         // Number of times we divided
+  int tf = pow(2,4);  // Total integer step, to avoid floating math
+  int cm = tf;        // Current attempted step
+  int cs = 0;         // Current integer proportion of step completed
   
+  // Total differences over step
+  double e_diff[6];
+  for (int i=0; i<6; i++) e_diff[i] = e_np1[i] - e_n[i];
+  double T_diff = T_np1 - T_n;
+  double t_diff = t_np1 - t_n;
+
+  // Previous values as we go along, (initialize to step n)
+  double e_past[6];
+  std::copy(e_n, e_n+6, e_past);
+  double * const h_past = new double [nhist()];
+  std::copy(h_n, h_n+nhist(), h_past);
+  double s_past[6];
+  std::copy(s_n, s_n+6, s_past);
+  double T_past = T_n;
+  double t_past = t_n;
+  
+  // Current goal as we go along
+  double e_next[6];
+  double * const h_next = new double [nhist()];
+  double s_next[6];
+  double T_next;
+  double t_next;
+  
+  while (cs < tf) {
+    // Figure out our float step multiplier
+    double sm = (double) (cs + cm) / (double) tf;
+
+    // Figure out our goals for this increment
+    for (int i=0; i<6; i++) e_next[i] = e_n[i] + sm * e_diff[i];
+    T_next = T_n + sm * T_diff;
+    t_next = t_n + sm * t_diff;
+
+    // Set trial state
+    set_trial_state(e_next, e_past, s_past, h_past, T_next, T_past, t_next, t_past);
+
+    // Solve for x
+    double x[nparams()];
+    int ier = solve(shared_from_this(), x, tol_, miter_, verbose_);
+
+    // Decide what to do if we fail
+    if (ier != SUCCESS) {
+      // Subdivide the step
+      nd += 1;
+      cm /= 2;
+      if (verbose_) {
+        std::cout << "Substepping: new step fraction " << ((double) cm / (double) tf) << std::endl;
+      }
+      // Check if we exceeded our subdivision limit
+      if (nd == max_divide_) {
+        delete [] h_past;
+        delete [] h_next;
+        return ier;
+      }
+      continue;
+    }
+
+    // Extract solved parameters
+    std::copy(x, x+6, s_next);
+    std::copy(x+6, x+6+nhist(), h_next);
+
+    // Increment next step
+    cs += cm;
+    std::copy(e_next, e_next+6, e_past);
+    std::copy(h_next, h_next+nhist(), h_past);
+    std::copy(s_next, s_next+6, s_past);
+    T_past = T_next;
+    t_past = t_next;
+
+  }
+
+  // Extract final values
+  std::copy(s_next, s_next+6, s_np1);
+  std::copy(h_next, h_next+nhist(), h_np1);
+  
+  // Free memory
+  delete [] h_past;
+  delete [] h_next;
+
+  // Get tangent over full step
+  set_trial_state(e_np1, e_n, s_n, h_n, T_np1, T_n, t_np1, t_n);
+  double y[nparams()];
+  std::copy(s_np1, s_np1+6, y);
+  std::copy(h_np1, h_np1+nhist(), &y[6]);
+  
+  calc_tangent_(y, A_np1);
+
+
   return 0;
 }
 

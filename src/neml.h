@@ -10,6 +10,8 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
+#include <cmath>
+#include <iostream>
 
 namespace neml {
 
@@ -252,7 +254,7 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable, public std::enabl
  public:
   GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
                     double tol = 1.0e-8, int miter = 50,
-                    bool verbose = false);
+                    bool verbose = false, int max_divide = 6);
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -284,7 +286,7 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable, public std::enabl
   double T_, Tdot_, dt_;
   std::vector<double> h_n_;
   double tol_;
-  int miter_;
+  int miter_, max_divide_;
   bool verbose_;
 };
 

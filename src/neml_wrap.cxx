@@ -132,10 +132,11 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<GeneralIntegrator, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<GeneralFlowRule>, double, int , bool>(),
+      .def(py::init<std::shared_ptr<GeneralFlowRule>, double, int , bool, int>(),
            py::arg("rule"),
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false)
+           py::arg("verbose") = false,
+           py::arg("max_divide") = 6)
   
       .def("set_trial_state",
            [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double T_np1, double T_n, double t_np1, double t_n) -> void
