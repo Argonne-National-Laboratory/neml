@@ -536,10 +536,10 @@ int GeneralIntegrator::update_sd(
     double * const A_np1)
 {
   // Setup for substepping
-  int nd = 0;         // Number of times we divided
-  int tf = pow(2,4);  // Total integer step, to avoid floating math
-  int cm = tf;        // Current attempted step
-  int cs = 0;         // Current integer proportion of step completed
+  int nd = 0;                   // Number of times we divided
+  int tf = pow(2,max_divide_);  // Total integer step, to avoid floating math
+  int cm = tf;                  // Current attempted step
+  int cs = 0;                   // Current integer proportion of step completed
   
   // Total differences over step
   double e_diff[6];
@@ -586,10 +586,16 @@ int GeneralIntegrator::update_sd(
       nd += 1;
       cm /= 2;
       if (verbose_) {
-        std::cout << "Substepping: new step fraction " << ((double) cm / (double) tf) << std::endl;
+        std::cout << "Substepping:" << std::endl;
+        std::cout << "New step fraction " << ((double) cm / (double) tf) << std::endl;
+        std::cout << "New integer step " << cm << std::endl;
+        std::cout << "Step integer count " << cs << "/" << tf << std::endl;
       }
       // Check if we exceeded our subdivision limit
       if (nd == max_divide_) {
+        if (verbose_) {
+          std::cout << "Substepping failed..." << std::endl;
+        }
         delete [] h_past;
         delete [] h_next;
         return ier;
