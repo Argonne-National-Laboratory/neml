@@ -527,7 +527,7 @@ int YaguchiGr91FlowRule::y(const double* const s, const double* const alpha, dou
 {
   double nT = n(T);
   double DT = D(T);
-  double sa = hist[14];
+  double sa = alpha[14];
 
   return 0;
 }
@@ -589,22 +589,22 @@ int YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alph
   return 0;
 }
 
-double YaguchiGr91FlowRule::D(double T)
+double YaguchiGr91FlowRule::D(double T) const
 {
   return pow(-1.119e-9 + 5.145e-11*T - 5.450e-14*T*T, -1.0/2.85);
 }
 
-double YaguchiGr91FlowRule::n(double T)
+double YaguchiGr91FlowRule::n(double T) const
 {
   return 2.850;
 }
 
-double YaguchiGr91FlowRule::a10(double T)
+double YaguchiGr91FlowRule::a10(double T) const
 {
  return 2.082e3 - 8.110*T + 1.321e-2 * T*T - 7.278e-6 * T*T*T;
 }
 
-double YaguchiGr91FlowRule::C2(double T)
+double YaguchiGr91FlowRule::C2(double T) const
 {
   if (T < 798.0) {
     return 2.0e2;
@@ -614,7 +614,7 @@ double YaguchiGr91FlowRule::C2(double T)
   }
 }
 
-double YaguchiGr91FlowRule::a2(double T)
+double YaguchiGr91FlowRule::a2(double T) const
 {
   if (T < 773.0) {
     return 1.100e2;
@@ -624,7 +624,7 @@ double YaguchiGr91FlowRule::a2(double T)
   }
 }
 
-double YaguchiGr91FlowRule::g1(double T)
+double YaguchiGr91FlowRule::g1(double T) const
 {
   if (T < 773.0) {
     return 5.064e-137 * exp(3.545e-1 * T);
@@ -634,7 +634,7 @@ double YaguchiGr91FlowRule::g1(double T)
   }
 }
 
-double YaguchiGr91FlowRule::g2(double T)
+double YaguchiGr91FlowRule::g2(double T) const
 {
   if (T < 773.0) {
     return 8.572e-108 * exp(2.771e-1 * T);
@@ -644,7 +644,7 @@ double YaguchiGr91FlowRule::g2(double T)
   }
 }
 
-double YaguchiGr91FlowRule::m(double T)
+double YaguchiGr91FlowRule::m(double T) const
 {
   if (T < 673.0) {
     return 1.200e1;
@@ -657,17 +657,17 @@ double YaguchiGr91FlowRule::m(double T)
   }
 }
 
-double YaguchiGr91FlowRule::br(double T)
+double YaguchiGr91FlowRule::br(double T) const
 {
   return 1.0e3;
 }
 
-double YaguchiGr91FlowRule::bh(double T)
+double YaguchiGr91FlowRule::bh(double T) const
 {
   return 1.065e3 - 1.404 * T + 4.417e-4 * T*T;
 }
 
-double YaguchiGr91FlowRule::A(double T)
+double YaguchiGr91FlowRule::A(double T) const
 {
   if (T < 673.0) {
     return -1.841e2 + 2.075e-1 * T;
@@ -680,7 +680,7 @@ double YaguchiGr91FlowRule::A(double T)
   }
 }
 
-double YaguchiGr91FlowRule::B(double T)
+double YaguchiGr91FlowRule::B(double T) const
 {
   if (T < 773.0) {
     return -6.340e1 + 6.850e-2 * T;
@@ -690,12 +690,12 @@ double YaguchiGr91FlowRule::B(double T)
   }
 }
 
-double YaguchiGr91FlowRule::d(double T)
+double YaguchiGr91FlowRule::d(double T) const
 {
   return 3.208 - 1.010e-2 * T + 1.012e-5 * T*T;
 }
 
-double YaguchiGr91FlowRule::q(double T)
+double YaguchiGr91FlowRule::q(double T) const
 {
   if (T < 673.0) {
     return 9.500e1;
@@ -708,7 +708,7 @@ double YaguchiGr91FlowRule::q(double T)
   }
 }
 
-double YaguchiGr91FlowRule::C1s(double T)
+double YaguchiGr91FlowRule::C1s(double T) const
 {
   if (T < 673.0) {
     return 1.500e3;
@@ -721,28 +721,28 @@ double YaguchiGr91FlowRule::C1s(double T)
   }
 }
 
-double YaguchiGr91FlowRule::hmax(double T)
+double YaguchiGr91FlowRule::hmax(double T) const
 {
   return 2.000e2;
 }
 
-double YaguchiGr91FlowRule::eps1(double T)
+double YaguchiGr91FlowRule::eps1(double T) const
 {
   return 6.000e-3;
 }
 
-double YaguchiGr91FlowRule::eps2(double T)
+double YaguchiGr91FlowRule::eps2(double T) const
 {
   return 1.000e-2;
 }
 
-double YaguchiGr91FlowRule::Qr(double T)
+double YaguchiGr91FlowRule::Qr(double T) const
 {
   return 1.000e1;
 }
 
 // Couple of helpers
-double J2_(const double * const v)
+double YaguchiGr91FlowRule::J2_(const double * const v) const
 {
   double cv[6];
   std::copy(v, v+6, cv);

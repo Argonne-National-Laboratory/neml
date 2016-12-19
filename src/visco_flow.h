@@ -249,29 +249,29 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
                 double * const dhv) const;
   
   // Huge number of temperature-dependent constants
-  double D(double T);
-  double n(double T);
-  double a10(double T);
-  double C2(double T);
-  double a2(double T);
-  double g1(double T);
-  double g2(double T);
-  double m(double T);
-  double br(double T);
-  double bh(double T);
-  double A(double T);
-  double B(double T);
-  double d(double T);
-  double q(double T);
-  double C1s(double T);
-  double hmax(double T);
-  double eps1(double T);
-  double eps2(double T);
-  double Qr(double T);
+  double D(double T) const;
+  double n(double T) const;
+  double a10(double T) const;
+  double C2(double T) const;
+  double a2(double T) const;
+  double g1(double T) const;
+  double g2(double T) const;
+  double m(double T) const;
+  double br(double T) const;
+  double bh(double T) const;
+  double A(double T) const;
+  double B(double T) const;
+  double d(double T) const;
+  double q(double T) const;
+  double C1s(double T) const;
+  double hmax(double T) const;
+  double eps1(double T) const;
+  double eps2(double T) const;
+  double Qr(double T) const;
 
  private:
   // A few helpers
-  double J2_(const double * const v);
+  double J2_(const double * const v) const;
 
 };
 
