@@ -207,6 +207,74 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
 
 };
 
+/// Non-associative flow for Gr. 91 from Yaguchi & Takahashi (2000) + (2005)
+//
+//  A modified Chaboche rule with temperature interpolation even between
+//  473 and 873 K.
+//
+//  Modifications include an evolving Chaboche constant
+//
+//  Interpolations are hard-coded because of their complexity
+//  They are public so I can easily test them
+//
+class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
+ public:
+  YaguchiGr91FlowRule();
+
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const h) const;
+  
+  // Rate rule
+  virtual int y(const double* const s, const double* const alpha, double T,
+                double & yv) const;
+  virtual int dy_ds(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
+  virtual int dy_da(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
+
+  // Flow rule
+  virtual int g(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  virtual int dg_ds(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  virtual int dg_da(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
+
+  // Hardening rule
+  virtual int h(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  
+  // Huge number of temperature-dependent constants
+  double D(double T);
+  double n(double T);
+  double a10(double T);
+  double C2(double T);
+  double a2(double T);
+  double g1(double T);
+  double g2(double T);
+  double m(double T);
+  double br(double T);
+  double bh(double T);
+  double A(double T);
+  double B(double T);
+  double d(double T);
+  double q(double T);
+  double C1s(double T);
+  double hmax(double T);
+  double eps1(double T);
+  double eps2(double T);
+  double Qr(double T);
+
+ private:
+  // A few helpers
+  double J2_(const double * const v);
+
+};
+
 } // namespace neml
 
 #endif // VISCO_FLOW_H

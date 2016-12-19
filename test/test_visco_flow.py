@@ -481,3 +481,106 @@ class TestChabocheJ2Voce(unittest.TestCase, CommonFlowRule):
     bs = make_dev([10.0, -50.0, 25.0, 30.0, -10.0, 30.0])
     return np.array([0.01] + list(bs))
 
+class TestYaguchiGr91Flow(unittest.TestCase):
+  def setUp(self):
+    self.model = visco_flow.YaguchiGr91FlowRule()
+
+    self.pTrange = np.linspace(473.0, 873.0)
+
+  def eval_prop(self, prop):
+    return np.array([prop(T) for T in self.pTrange])
+
+  def test_D(self):
+    Ds_model = self.eval_prop(self.model.D)
+    Ds_direct = (-1.119e-9 + 5.145e-11 * self.pTrange - 5.450e-14 * self.pTrange**2.0)**(-1.0/2.85)
+    self.assertTrue(np.allclose(Ds_model, Ds_direct))
+  
+  def test_n(self):
+    ns_model = self.eval_prop(self.model.n)
+    ns_direct = 2.850 * np.ones(self.pTrange.shape)
+    self.assertTrue(np.allclose(ns_model, ns_direct))
+
+  def test_a10(self):
+    a10s_model = self.eval_prop(self.model.a10)
+    a10s_direct = 2.082e3 - 8.110*self.pTrange + 1.321e-2*self.pTrange**2.0 - 7.278e-6 * self.pTrange**3.0
+    self.assertTrue(np.allclose(a10s_model, a10s_direct))
+
+  def test_C2(self):
+    C2s_model = self.eval_prop(self.model.C2)
+    C2s_direct = np.piecewise(self.pTrange, [self.pTrange < 798.0, self.pTrange >= 798.0], [lambda x: 2.000e2, lambda x: -2.992e3 + 4.0 * x])
+    self.assertTrue(np.allclose(C2s_model, C2s_direct))
+
+  def test_a2(self):
+    a2s_model = self.eval_prop(self.model.a2)
+    a2s_direct = np.piecewise(self.pTrange, [self.pTrange < 773.0, self.pTrange >= 773.0], [lambda x: 1.100e2, lambda x: 3.373e3 - 7.622*x + 4.400e-3*x**2.0])
+    self.assertTrue(np.allclose(a2s_model, a2s_direct))
+
+  def test_g1(self):
+    g1s_model = self.eval_prop(self.model.g1)
+    g1s_direct = np.piecewise(self.pTrange, [self.pTrange < 773.0, self.pTrange >= 773.0], [lambda x: 5.064e-137 * np.exp(3.545e-1 * x), lambda x: 5.336e-33 * np.exp(4.470e-2 * x)])
+    self.assertTrue(np.allclose(g1s_model, g1s_direct))
+
+  def test_g2(self):
+    g2s_model = self.eval_prop(self.model.g2)
+    g2s_direct = np.piecewise(self.pTrange, [self.pTrange < 773.0, self.pTrange >= 773.0], [lambda x: 8.572e-108 * np.exp(2.771e-1*x), lambda x: 2.817e-11 - 7.538e-14 * x + 5.039e-17 * x**2.0])
+    self.assertTrue(np.allclose(g2s_model, g2s_direct))
+  
+  def test_m(self):
+    ms_model = self.eval_prop(self.model.m)
+    ms_direct = np.piecewise(self.pTrange, [self.pTrange < 673.0, np.logical_and(673.0 <= self.pTrange, self.pTrange < 773.0), self.pTrange >= 773.0], [lambda x: 1.200e1, lambda x: 5.766e2*np.exp(-5.754e-3*x), lambda x: 6.750])
+    self.assertTrue(np.allclose(ms_model, ms_direct))
+  
+  def test_br(self):
+    brs_model = self.eval_prop(self.model.br)
+    brs_direct = 1.000e3 * np.ones(self.pTrange.shape)
+    self.assertTrue(np.allclose(brs_model, brs_direct))
+
+  def test_bh(self):
+    bhs_model = self.eval_prop(self.model.bh)
+    bhs_direct = 1.065e3 - 1.404 * self.pTrange + 4.417e-4 * self.pTrange**2.0
+    self.assertTrue(np.allclose(bhs_model, bhs_direct))
+
+  def test_A(self):
+    As_model = self.eval_prop(self.model.A)
+    As_direct = np.piecewise(self.pTrange, [self.pTrange < 673.0, np.logical_and(673.0 <= self.pTrange, self.pTrange < 823.0), self.pTrange >= 823.0], [lambda x: -1.841e2 + 2.075e-1 * x, lambda x: -4.799e2 + 1.262*x - 9.133e-4 * x**2.0, lambda x: -6.0e1])
+    self.assertTrue(np.allclose(As_model, As_direct))
+
+  def test_B(self):
+    Bs_model = self.eval_prop(self.model.B)
+    Bs_direct = np.piecewise(self.pTrange, [self.pTrange < 773.0, self.pTrange >= 773.0], [lambda x: -6.340e1 + 6.850e-2*x, lambda x: -1.730e1])
+    self.assertTrue(np.allclose(Bs_model, Bs_direct))
+
+  def test_d(self):
+    ds_model = self.eval_prop(self.model.d)
+    ds_direct = 3.208 - 1.010e-2 * self.pTrange + 1.012e-5 * self.pTrange**2.0
+    self.assertTrue(np.allclose(ds_model, ds_direct))
+
+  def test_q(self):
+    qs_model = self.eval_prop(self.model.q)
+    qs_direct = np.piecewise(self.pTrange, [self.pTrange < 673.0, np.logical_and(673.0 <= self.pTrange, self.pTrange < 823.0), self.pTrange >= 823.0], [lambda x: 9.50e1, lambda x: -2.467e2 + 7.320e-1*x - 3.333e-4*x**2.0, lambda x: 1.300e2])
+    self.assertTrue(np.allclose(qs_model, qs_direct))
+
+  def test_C1s(self):
+    C1ss_model = self.eval_prop(self.model.C1s)
+    C1ss_direct = np.piecewise(self.pTrange, [self.pTrange < 673.0, np.logical_and(673.0 <= self.pTrange, self.pTrange < 773.0), self.pTrange >= 773.0], [lambda x: 1.50e3, lambda x: -2.879e4 + 45.0*x, lambda x: 6.000e3])
+    self.assertTrue(np.allclose(C1ss_model, C1ss_direct))
+
+  def test_hmaxs(self):
+    hmaxs_model = self.eval_prop(self.model.hmax)
+    hmaxs_direct = 2.000e2 * np.ones(self.pTrange.shape)
+    self.assertTrue(np.allclose(hmaxs_model, hmaxs_direct))
+
+  def test_eps1s(self):
+    eps1s_model = self.eval_prop(self.model.eps1)
+    eps1s_direct = 6.0e-3 * np.ones(self.pTrange.shape)
+    self.assertTrue(np.allclose(eps1s_model, eps1s_direct))
+
+  def test_eps2s(self):
+    eps2s_model = self.eval_prop(self.model.eps2)
+    eps2s_direct = 1.0e-2 * np.ones(self.pTrange.shape)
+    self.assertTrue(np.allclose(eps2s_model, eps2s_direct))
+
+  def test_Qrs(self):
+    Qrs_model = self.eval_prop(self.model.Qr)
+    Qrs_direct = 1.0e1 * np.ones(self.pTrange.shape)
+    self.assertTrue(np.allclose(Qrs_model, Qrs_direct))

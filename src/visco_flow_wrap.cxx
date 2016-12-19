@@ -232,6 +232,30 @@ PYBIND11_PLUGIN(visco_flow) {
              py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
         ;
 
+    py::class_<YaguchiGr91FlowRule, std::shared_ptr<YaguchiGr91FlowRule>>(m, "YaguchiGr91FlowRule", py::base<ViscoPlasticFlowRule>())
+        .def(py::init<>())
+
+        .def("D", &YaguchiGr91FlowRule::D)
+        .def("n", &YaguchiGr91FlowRule::n)
+        .def("a10", &YaguchiGr91FlowRule::a10)
+        .def("C2", &YaguchiGr91FlowRule::C2)
+        .def("a2", &YaguchiGr91FlowRule::a2)
+        .def("g1", &YaguchiGr91FlowRule::g1)
+        .def("g2", &YaguchiGr91FlowRule::g2)
+        .def("m", &YaguchiGr91FlowRule::m)
+        .def("br", &YaguchiGr91FlowRule::br)
+        .def("bh", &YaguchiGr91FlowRule::bh)
+        .def("A", &YaguchiGr91FlowRule::A)
+        .def("B", &YaguchiGr91FlowRule::B)
+        .def("d", &YaguchiGr91FlowRule::d)
+        .def("q", &YaguchiGr91FlowRule::q)
+        .def("C1s", &YaguchiGr91FlowRule::C1s)
+        .def("hmax", &YaguchiGr91FlowRule::hmax)
+        .def("eps1", &YaguchiGr91FlowRule::eps1)
+        .def("eps2", &YaguchiGr91FlowRule::eps2)
+        .def("Qr", &YaguchiGr91FlowRule::Qr)
+        ;
+
   return m.ptr();
 }
 
