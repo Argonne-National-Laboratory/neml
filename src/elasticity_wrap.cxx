@@ -5,6 +5,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
+#include "pybind11/stl.h"
 
 namespace py = pybind11;
 
@@ -24,6 +25,18 @@ PYBIND11_PLUGIN(elasticity) {
       .def_property_readonly("mu", &ConstantShearModulus::mu, "Constant modulus value")
       ;
 
+  py::class_<PolyShearModulus, std::shared_ptr<PolyShearModulus>>(m, "PolyShearModulus", py::base<ShearModulus>())
+      .def(py::init<std::vector<double>>(), py::arg("coefs"))
+      .def_property_readonly("n", &PolyShearModulus::n, "Number of coefs")
+      .def_property_readonly("coefs",
+                             [](const PolyShearModulus& m) -> py::array_t<double>
+                             {
+                              auto cv = alloc_vec<double>(m.n());
+                              std::copy(m.coefs().begin(), m.coefs().end(), arr2ptr<double>(cv));
+                              return cv;
+                             }, "Polynomial coefficients.")
+      ;
+
   py::class_<BulkModulus, std::shared_ptr<BulkModulus>>(m, "BulkModulus")
       .def("modulus", &BulkModulus::modulus, "Modulus as a function of temperature.")
       ;
@@ -31,6 +44,18 @@ PYBIND11_PLUGIN(elasticity) {
   py::class_<ConstantBulkModulus, std::shared_ptr<ConstantBulkModulus>>(m, "ConstantBulkModulus", py::base<BulkModulus>())
       .def(py::init<double>(), py::arg("K"))
       .def_property_readonly("K", &ConstantBulkModulus::K, "Constant modulus value")
+      ;
+
+  py::class_<PolyBulkModulus, std::shared_ptr<PolyBulkModulus>>(m, "PolyBulkModulus", py::base<BulkModulus>())
+      .def(py::init<std::vector<double>>(), py::arg("coefs"))
+      .def_property_readonly("n", &PolyBulkModulus::n, "Number of coefs")
+      .def_property_readonly("coefs",
+                             [](const PolyBulkModulus& m) -> py::array_t<double>
+                             {
+                              auto cv = alloc_vec<double>(m.n());
+                              std::copy(m.coefs().begin(), m.coefs().end(), arr2ptr<double>(cv));
+                              return cv;
+                             }, "Polynomial coefficients.")
       ;
 
   py::class_<LinearElasticModel, std::shared_ptr<LinearElasticModel>>(m, "LinearElasticModel")

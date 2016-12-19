@@ -65,6 +65,9 @@ int solve_mat(const double * const A, int n, double * const x);
 /// Get the condition number of a matrix
 double condition(const double * const A, int n);
 
+/// Evaluate a polynomial with Horner's method, highest order term first
+double polyval(const double * const poly, const int n, double x);
+
 }
 
 #endif // NEMLMATH_H

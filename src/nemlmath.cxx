@@ -197,5 +197,13 @@ double condition(const double * const A, int n)
   return 1.0 / rcond;
 }
 
+double polyval(const double * const poly, const int n, double x)
+{
+  double res = poly[0];
+  for (int i=1; i < n; i++) {
+    res = res * x + poly[i];
+  }
+  return res;
+}
 
 } // namespace neml

@@ -21,6 +21,20 @@ class TestConstantShearModulus(unittest.TestCase):
   def test_modulus(self):
     self.assertTrue(np.isclose(self.model.mu, self.model.modulus(self.T)))
 
+class TestPolyShearModulus(unittest.TestCase):
+  def setUp(self):
+    self.coefs = [3.077e-1, 3.003e2, 1.269e5]
+    self.T = 525.0
+    self.model = elasticity.PolyShearModulus(self.coefs)
+
+  def test_properties(self):
+    self.assertEqual(len(self.coefs), self.model.n)
+    self.assertTrue(np.allclose(self.coefs, self.model.coefs))
+
+  def test_modulus(self):
+    self.assertTrue(np.isclose(self.model.modulus(self.T), 
+      np.polyval(self.coefs, self.T)))
+
 class TestConstantBulkModulus(unittest.TestCase):
   def setUp(self):
     self.K = 64000.0
@@ -32,6 +46,20 @@ class TestConstantBulkModulus(unittest.TestCase):
 
   def test_modulus(self):
     self.assertTrue(np.isclose(self.model.K, self.model.modulus(self.T)))
+
+class TestPolyBulkModulus(unittest.TestCase):
+  def setUp(self):
+    self.coefs = [3.077e-2, 3.003e3, 1.269e2]
+    self.T = 525.0
+    self.model = elasticity.PolyBulkModulus(self.coefs)
+
+  def test_properties(self):
+    self.assertEqual(len(self.coefs), self.model.n)
+    self.assertTrue(np.allclose(self.coefs, self.model.coefs))
+
+  def test_modulus(self):
+    self.assertTrue(np.isclose(self.model.modulus(self.T), 
+      np.polyval(self.coefs, self.T)))
 
 class CommonElasticity(object):
   """

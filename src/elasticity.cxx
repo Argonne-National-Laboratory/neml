@@ -1,5 +1,7 @@
 #include "elasticity.h"
 
+#include "nemlmath.h"
+
 #include <algorithm>
 
 namespace neml {
@@ -20,6 +22,34 @@ double ConstantShearModulus::mu() const
   return mu_;
 }
 
+PolyShearModulus::PolyShearModulus(const std::vector<double> coefs) :
+    coefs_(coefs), n_(coefs.size())
+{
+
+}
+
+PolyShearModulus::PolyShearModulus(int n, const double * const coefs) :
+    n_(n), coefs_(coefs, coefs + n)
+{
+
+}
+
+double PolyShearModulus::modulus(double T) const
+{
+  return polyval(&coefs_[0], coefs_.size(), T);
+}
+
+int PolyShearModulus::n() const
+{
+  return n_;
+}
+
+const std::vector<double> & PolyShearModulus::coefs() const
+{
+  return coefs_;
+}
+
+
 ConstantBulkModulus::ConstantBulkModulus(double K) :
     K_(K)
 {
@@ -34,6 +64,33 @@ double ConstantBulkModulus::modulus(double T) const
 double ConstantBulkModulus::K() const
 {
   return K_;
+}
+
+PolyBulkModulus::PolyBulkModulus(const std::vector<double> coefs) :
+    coefs_(coefs), n_(coefs.size())
+{
+
+}
+
+PolyBulkModulus::PolyBulkModulus(int n, const double * const coefs) :
+    n_(n), coefs_(coefs, coefs + n)
+{
+
+}
+
+double PolyBulkModulus::modulus(double T) const
+{
+  return polyval(&coefs_[0], coefs_.size(), T);
+}
+
+int PolyBulkModulus::n() const
+{
+  return n_;
+}
+
+const std::vector<double> & PolyBulkModulus::coefs() const
+{
+  return coefs_;
 }
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(

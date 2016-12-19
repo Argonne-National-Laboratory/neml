@@ -138,3 +138,14 @@ class TestCond(unittest.TestCase):
 
   def test_cond(self):
     fr = condition(self.A)
+
+class TestPoly(unittest.TestCase):
+  def setUp(self):
+    self.n = 10
+    self.poly = ra.random((self.n,))
+    self.x = ra.random((1,))[0]
+  
+  def test_eval(self):
+    npv = np.polyval(self.poly, self.x)
+    mv  = polyval(self.poly, self.x)
+    self.assertTrue(np.isclose(npv, mv))

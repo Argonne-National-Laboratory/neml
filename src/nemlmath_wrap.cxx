@@ -278,6 +278,17 @@ PYBIND11_PLUGIN(nemlmath) {
 
           return condition(arr2ptr<double>(A), A.request().shape[1]);
         }, "Calculate the approximate condition number of A.");
+
+   m.def("polyval",
+        [](py::array_t<double, py::array::c_style> poly, double x) -> double
+        {
+          if (poly.request().ndim != 1) {
+            throw LinalgError("poly is not a vector!");
+          }
+
+          return polyval(arr2ptr<double>(poly), poly.request().shape[0], x);
+
+        }, "Evaluate a polynomial at x, highest order term first.");
 }
 
 } // namespace neml

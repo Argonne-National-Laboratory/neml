@@ -2,6 +2,7 @@
 #define ELASTICITY_H
 
 #include <memory>
+#include <vector>
 
 namespace neml {
 
@@ -25,6 +26,22 @@ class ConstantShearModulus: public ShearModulus {
 
 };
 
+/// Shear modulus varies as a general polynomial
+class PolyShearModulus: public ShearModulus {
+ public:
+  PolyShearModulus(const std::vector<double> coefs);
+  PolyShearModulus(int n, const double * const coefs);
+  virtual double modulus(double T) const;
+
+  // Getters
+  int n() const;
+  const std::vector<double> & coefs() const;
+
+ private:
+  const int n_;
+  const std::vector<double> coefs_;
+};
+
 /// Bulk modulus model: function of temperature
 class BulkModulus {
  public:
@@ -41,6 +58,22 @@ class ConstantBulkModulus {
 
  private:
   const double K_;
+};
+
+/// Bulk modulus varies as a general polynomial
+class PolyBulkModulus: public BulkModulus {
+ public:
+  PolyBulkModulus(const std::vector<double> coefs);
+  PolyBulkModulus(int n, const double * const coefs);
+  virtual double modulus(double T) const;
+
+  // Getters
+  int n() const;
+  const std::vector<double> & coefs() const;
+
+ private:
+  const int n_;
+  const std::vector<double> coefs_;
 };
 
 
