@@ -493,6 +493,86 @@ class TestYaguchiGr91Flow(unittest.TestCase, CommonFlowRule):
   def gen_stress(self):
     s = np.array([200,0,100,0,-50,0])*0.1
     return s
+  
+  @staticmethod
+  def J2(x):
+    return np.sqrt(3.0/2.0 * np.dot(x,x))
+
+  def test_y(self):
+    s = self.gen_stress()
+    h = self.gen_hist()
+
+    y_model = self.model.y(s, h, self.T)
+
+    X = h[:6] + h[6:12]
+    Xdev = make_dev(X)
+    Sdev = make_dev(s)
+
+    t1 = (self.J2(Xdev - Sdev) - h[13])/self.model.D(self.T)
+    if t1 > 0.0:
+      y_calc = t1**self.model.n(self.T)
+    else:
+      y_calc = 0.0
+
+    self.assertTrue(np.isclose(y_calc, y_model))
+
+  def test_g(self):
+    s = self.gen_stress()
+    h = self.gen_hist()
+
+    g_model = self.model.g(s, h, self.T)
+
+    X = h[:6] + h[6:12]
+    Xdev = make_dev(X)
+    Sdev = make_dev(s)
+
+    g_calc = 3.0/2.0 * (Sdev - Xdev) / self.J2(Sdev - Xdev)
+
+    self.assertTrue(np.allclose(g_calc, g_model))
+
+  def test_h(self):
+    s = self.gen_stress()
+    a = self.gen_hist()
+
+    h_model = self.model.h(s, a, self.T)
+    h_calc = np.zeros(h_model.shape)
+    
+    C1 = self.model.C1(self.T)
+    C2 = self.model.C2(self.T)
+
+    a1 = self.model.a10(self.T) - a[12]
+    a2 = self.model.a2(self.T)
+
+    X = a[:6] + a[6:12]
+    Xdev = make_dev(X)
+    Sdev = make_dev(s)
+
+    n = 3.0/2.0 * (Sdev - Xdev) / self.J2(Sdev - Xdev)
+
+    h_calc[:6] = C1 * (2.0/3.0 * a1 * n - a[:6])
+
+    h_calc[6:12] = C2 * (2.0/3.0 * a2 * n - a[6:12])
+
+    h_calc[12] = self.model.d(self.T) * (self.model.q(self.T) - a[12])
+
+    t1 = (self.J2(Xdev - Sdev) - a[13])/self.model.D(self.T)
+    if t1 > 0.0:
+      y_calc = t1**self.model.n(self.T)
+    else:
+      y_calc = 0.0
+
+    sas = self.model.A(self.T) + self.model.B(self.T) * np.log10(y_calc)
+    if sas < 0.0:
+      sas = 0.0
+
+    if (sas - a[13]) >= 0:
+      b = self.model.bh(self.T)
+    else:
+      b = self.model.br(self.T)
+
+    h_calc[13] = b * (sas - a[13])
+
+    self.assertTrue(np.allclose(h_calc, h_model))
 
   def gen_hist(self):
     X1 = make_dev([15.0,-20.0,-30.0,50.0,-10.0,5])
