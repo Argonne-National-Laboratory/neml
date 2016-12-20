@@ -515,6 +515,8 @@ int YaguchiGr91FlowRule::init_hist(double * const h) const
   // sa
   h[13] = 0.0;
 
+  return 0;
+
 }
 
 // Rate rule
@@ -545,6 +547,30 @@ int YaguchiGr91FlowRule::y(const double* const s, const double* const alpha, dou
 int YaguchiGr91FlowRule::dy_ds(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
+  double yi;
+  y(s, alpha, T, yi);
+  double nT = n(T);
+  double DT = D(T);
+  double sa = alpha[13];
+
+  double X[6];
+  std::fill(X, X+6, 0.0);
+  add_vec(&alpha[0], &alpha[6], 6, X);
+  double dS[6];
+  sub_vec(s, X, 6, dS);
+  
+  if (yi > 0.0) {
+    double j2 = J2_(dS);
+    double sp = (j2 - sa) / DT;
+    sp = pow(fabs(sp), nT - 1.0) * nT * copysign(1.0, sp) / DT;
+    dev_vec_deriv_(dS, dyv);
+    for (int i=0; i<6; i++) {
+      dyv[i] *= 3.0/2.0 / j2 * sp;
+    }
+  }
+  else {
+    std::fill(dyv, dyv+6, 0.0);
+  }
 
   return 0;
 }
@@ -552,6 +578,49 @@ int YaguchiGr91FlowRule::dy_ds(const double* const s, const double* const alpha,
 int YaguchiGr91FlowRule::dy_da(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
+  // General
+  double yi;
+  y(s, alpha, T, yi);
+  double nT = n(T);
+  double DT = D(T);
+  double sa = alpha[13];
+
+  double X[6];
+  std::fill(X, X+6, 0.0);
+  add_vec(&alpha[0], &alpha[6], 6, X);
+  double dS[6];
+  sub_vec(s, X, 6, dS);
+  double j2 = J2_(dS);
+  double q = (j2 - sa) / DT;
+
+  if (yi > 0.0) {
+    // Xs
+    double sp = (j2 - sa) / DT;
+    sp = pow(fabs(sp), nT - 1.0) * nT * copysign(1.0, sp) / DT;
+
+    dev_vec_deriv_(dS, &dyv[0]);
+    for (int i=0; i<6; i++) {
+      dyv[i] *= -3.0/2.0 / j2 * sp;
+    }
+
+    dev_vec_deriv_(dS, &dyv[6]);
+    for (int i=6; i<12; i++) {
+      dyv[i] *= -3.0/2.0 / j2 * sp;
+    }
+
+    double dS2[6];
+    sub_vec(s, &alpha[6], 6, dS2);
+
+    // q (0)
+    dyv[12] = 0.0;
+
+    // sa
+    dyv[13] = -nT * pow(fabs(q), nT - 1.0) * copysign(1.0, q) / DT;
+  }
+  else {
+    std::fill(dyv, dyv+nhist(), 0.0);
+  }
+  
 
   return 0;
 
@@ -569,6 +638,8 @@ int YaguchiGr91FlowRule::g(const double * const s, const double * const alpha, d
 
   double Jn = J2_(dS);
 
+  dev_vec(dS);
+
   for (int i=0; i<6; i++) {
     gv[i] = 3.0/2.0 * dS[i] / Jn;
   }
@@ -579,6 +650,39 @@ int YaguchiGr91FlowRule::g(const double * const s, const double * const alpha, d
 int YaguchiGr91FlowRule::dg_ds(const double * const s, const double * const alpha, double T,
               double * const dgv) const
 {
+  for (int i=0; i<3; i++) {
+    for (int j=0; j<3; j++) {
+      if (i==j) {
+        dgv[CINDEX(i,j,6)] = 2.0/3.0;
+      }
+      else {
+        dgv[CINDEX(i,j,6)] = -1.0/3.0;
+      }
+    }
+  }
+  for (int i=3; i<6; i++) {
+    dgv[CINDEX(i,i,6)] = 1.0;
+  }
+
+  double X[6];
+  std::fill(X, X+6, 0.0);
+  add_vec(&alpha[0], &alpha[6], 6, X);
+  double dS[6];
+  sub_vec(s, X, 6, dS); 
+  double j2 = J2_(dS);
+  double mdS[6];
+  dev_vec_deriv_(dS, mdS);
+  dev_vec(dS);
+  
+  for (int i=0; i<6; i++) {
+    dS[i] *= 3.0 / (2.0 * pow(j2,2.0));
+  }
+
+  outer_update_minus(dS, 6, mdS, 6, dgv);
+
+  for (int i=0; i<36; i++) {
+    dgv[i] *= 3.0/(2.0 * j2);
+  }
 
   return 0;
 }
@@ -586,6 +690,21 @@ int YaguchiGr91FlowRule::dg_ds(const double * const s, const double * const alph
 int YaguchiGr91FlowRule::dg_da(const double * const s, const double * const alpha, double T,
              double * const dgv) const
 {
+  // Only the X terms have derivatives
+  std::fill(dgv, dgv+6*nhist(), 0.0);
+
+  int nc = nhist();
+
+  // Bizarrely this is the easiest way to do this
+  double deriv[36];
+  dg_ds(s, alpha, T, deriv);
+
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      dgv[CINDEX(i,(j+0),nc)] = -deriv[CINDEX(i,j,6)];
+      dgv[CINDEX(i,(j+6),nc)] = -deriv[CINDEX(i,j,6)];
+    }
+  }
 
   return 0;
 }
@@ -603,6 +722,7 @@ int YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, d
   double Jn = J2_(dS);
   
   double n[6];
+  dev_vec(dS);
   for (int i=0; i<6; i++) {
     n[i] = 3.0/2.0 * dS[i] / Jn;
   }
@@ -636,6 +756,7 @@ int YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, d
   double yi;
   y(s, alpha, T, yi);
   double sas = Ai + Bi * log10(yi);
+  
   if (sas > 0.0) {
     sas = fabs(sas);
   }
@@ -657,12 +778,132 @@ int YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, d
 int YaguchiGr91FlowRule::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
+  // Only the X terms have derivatives
+  std::fill(dhv, dhv + nhist()*6, 0.0);
+
+  double C1i = C1(T);
+  double a1i = a10(T) - alpha[12];
+
+  double C2i = C2(T);
+  double a2i = a2(T);
+
+  // Again, this is the easiest way to do this
+  double deriv[36];
+  dg_ds(s, alpha, T, deriv);
+
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      dhv[CINDEX((i+0),j,6)] = deriv[CINDEX(i,j,6)] * 2.0/3.0 * C1i * a1i;
+      dhv[CINDEX((i+6),j,6)] = deriv[CINDEX(i,j,6)] * 2.0/3.0 * C2i * a2i;
+    }
+  }
+
+  // The derivative of the rate wrt to the stress goes into the last row
+  double bri = br(T);
+  double bhi = bh(T);
+  double Ai = A(T);
+  double Bi = B(T);
+  double yi;
+  y(s, alpha, T, yi);
+  double sas = Ai + Bi * log10(yi);
+  if (sas > 0.0) {
+    double bi;
+    if ((sas - alpha[13]) >= 0.0) {
+      bi = bhi;
+    }
+    else {
+      bi = bri;
+    }
+    dy_ds(s, alpha, T, &dhv[CINDEX(13,0,6)]);
+    for (int i=0; i<6; i++) {
+      dhv[CINDEX(13,i,6)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,6)];
+    }
+  }
   return 0;
 }
 
 int YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
+  // Fair number of cross-terms are zero
+  int nh = nhist();
+  std::fill(dhv, dhv+nh*nh, 0.0);
+
+  // Generic X terms
+  double deriv[6*nh];
+  dg_da(s, alpha, T, deriv);
+  double C1i = C1(T);
+  double a1i = a10(T) - alpha[12];
+
+  double C2i = C2(T);
+  double a2i = a2(T);
+
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<nh; j++) {
+      dhv[CINDEX((i+0),j,nh)] = 2.0/3.0 * a1i * deriv[CINDEX(i,j,nh)];
+      dhv[CINDEX((i+6),j,nh)] = 2.0/3.0 * a2i * deriv[CINDEX(i,j,nh)];
+    }
+  }
+
+  for (int i=0; i<6; i++) {
+    dhv[CINDEX((i+0),(i+0),nh)] -= 1.0;
+    dhv[CINDEX((i+6),(i+6),nh)] -= 1.0;
+  }
+
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<nh; j++) {
+      dhv[CINDEX((i+0),j,nh)] *= C1i;
+      dhv[CINDEX((i+6),j,nh)] *= C2i;
+    }
+  }
+  
+  // X1 has an extra term for the time-varying a1
+  double X[6];
+  std::fill(X, X+6, 0.0);
+  add_vec(&alpha[0], &alpha[6], 6, X);
+  double dS[6];
+  sub_vec(s, X, 6, dS);
+
+  double Jn = J2_(dS);
+  
+  double n[6];
+  dev_vec(dS);
+  for (int i=0; i<6; i++) {
+    n[i] = 3.0/2.0 * dS[i] / Jn;
+  }
+
+  for (int i=0; i<6; i++) {
+    dhv[CINDEX(i,12,nh)] -= C1i*2.0/3.0*n[i];
+  }
+
+  // Q is nice and easy
+  double di = d(T);
+  dhv[CINDEX(12,12,nh)] = -di;
+
+  // There are two components to sa: the derivative of the rate wrt the history
+  // and the derivative of the actual history term itself
+  double bri = br(T);
+  double bhi = bh(T);
+  double Ai = A(T);
+  double Bi = B(T);
+  double yi;
+  y(s, alpha, T, yi);
+  double sas = Ai + Bi * log10(yi);
+  double bi;
+  if ((sas - alpha[13]) >= 0.0) {
+    bi = bhi;
+  }
+  else {
+    bi = bri;
+  }
+  if (sas > 0.0) {
+    dy_da(s, alpha, T, &dhv[CINDEX(13,0,nh)]);
+    for (int i=0; i<nh; i++) {
+      dhv[CINDEX(13,i,nh)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,nh)];
+    }
+  }
+  dhv[CINDEX(13,13,nh)] += -bi;
+
   return 0;
 }
 
@@ -671,6 +912,8 @@ int YaguchiGr91FlowRule::h_time(const double * const s,
                                 const double * const alpha, double T,
                                 double * const hv) const
 {
+  std::fill(hv, hv+nhist(), 0.0);
+
   double mi = m(T);
 
   // X1
@@ -694,6 +937,8 @@ int YaguchiGr91FlowRule::dh_ds_time(const double * const s,
                                     const double * const alpha, double T,
                                     double * const dhv) const
 {
+  // This is actually still zero
+  std::fill(dhv, dhv+6, 0.0);
   return 0;
 }
 
@@ -701,6 +946,60 @@ int YaguchiGr91FlowRule::dh_da_time(const double * const s,
                                     const double * const alpha, double T,
                                     double * const dhv) const
 {
+  int nh = nhist();
+  std::fill(dhv, dhv+nh*nh, 0.0);
+
+  // This is non-zero
+  double mi = m(T);
+
+  // X1
+  double g1i = g1(T);
+  double J1 = J2_(&alpha[0]);
+  double X1[6];
+  std::copy(&alpha[0], &alpha[6], X1);
+  double X1d[6];
+  dev_vec_deriv_(X1, X1d);
+  dev_vec(X1);
+  for (int i=0; i<6; i++) {
+    X1[i] *= (mi-1.0) * pow(J1,mi-3.0) * 3.0 / 2.0;
+  }
+
+  double dX1[36];
+  std::fill(dX1, dX1+36, 0.0);
+  for (int i=0; i<6; i++) {
+    dX1[CINDEX(i,i,6)] = pow(J1, mi-1.0);
+  }
+  outer_update(X1, 6, X1d, 6, dX1);
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      dhv[CINDEX((i+0),(j+0),nh)] = -g1i * dX1[CINDEX(i,j,6)];
+    }
+  }
+  
+  // X2
+  double g2i = g2(T);
+  double J2 = J2_(&alpha[6]);
+  double X2[6];
+  std::copy(&alpha[6], &alpha[12], X2);
+  double X2d[6];
+  dev_vec_deriv_(X2, X2d);
+  dev_vec(X2);
+  for (int i=0; i<6; i++) {
+    X2[i] *= (mi-1.0) * pow(J2,mi-3.0) * 3.0 / 2.0;
+  }
+
+  double dX2[36];
+  std::fill(dX2, dX2+36, 0.0);
+  for (int i=0; i<6; i++) {
+    dX2[CINDEX(i,i,6)] = pow(J2, mi-1.0);
+  }
+  outer_update(X2, 6, X2d, 6, dX2);
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      dhv[CINDEX((i+6),(j+6),nh)] = -g2i * dX2[CINDEX(i,j,6)];
+    }
+  }
+
   return 0;
 }
 
@@ -846,6 +1145,22 @@ double YaguchiGr91FlowRule::J2_(const double * const v) const
   std::copy(v, v+6, cv);
   dev_vec(cv);
   return sqrt(3.0/2.0 * dot_vec(cv, cv, 6));
+}
+
+void YaguchiGr91FlowRule::dev_vec_deriv_(const double * const a, 
+                                        double * const b) const
+{
+  for (int i=0; i<3; i++) {
+    b[i] = 2.0/3.0 * a[i];
+    for (int j=0; j<3; j++) {
+      if (i == j) continue;
+      b[i] -= a[j]/3.0;
+    }
+  }
+  for (int i=3; i<6; i++) {
+    b[i] = a[i];
+  }
+
 }
 
 } // namespace neml

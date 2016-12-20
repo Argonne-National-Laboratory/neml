@@ -63,7 +63,7 @@ class CommonFlowRule(object):
     num = differentiate(dfn, stress)
     exact = self.model.dy_ds(stress, hist, self.T)
 
-    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-3))
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-6))
 
   def test_dy_da(self):
     stress = self.gen_stress()
@@ -72,7 +72,7 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.y(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dy_da(stress, hist, self.T)
-  
+ 
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dg_ds(self):
@@ -142,7 +142,7 @@ class CommonFlowRule(object):
     dfn = lambda s: self.model.h(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dh_ds(stress, hist, self.T)
-    
+  
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dh_da(self):
@@ -162,7 +162,7 @@ class CommonFlowRule(object):
     dfn = lambda s: self.model.h_time(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dh_ds_time(stress, hist, self.T)
-    
+   
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dh_da_time(self):
@@ -481,11 +481,23 @@ class TestChabocheJ2Voce(unittest.TestCase, CommonFlowRule):
     bs = make_dev([10.0, -50.0, 25.0, 30.0, -10.0, 30.0])
     return np.array([0.01] + list(bs))
 
-class TestYaguchiGr91Flow(unittest.TestCase):
+class TestYaguchiGr91Flow(unittest.TestCase, CommonFlowRule):
   def setUp(self):
     self.model = visco_flow.YaguchiGr91FlowRule()
 
     self.pTrange = np.linspace(473.0, 873.0)
+
+    self.hist0 = np.zeros((14,))
+    self.T = 500.0
+
+  def gen_stress(self):
+    s = np.array([200,0,100,0,-50,0])*0.1
+    return s
+
+  def gen_hist(self):
+    X1 = make_dev([15.0,-20.0,-30.0,50.0,-10.0,5])
+    X2 = make_dev([-25,100,150,30,-15,20])
+    return np.array(list(X1) + list(X2) + [50.0] + [5.0]) / 10.0
 
   def eval_prop(self, prop):
     return np.array([prop(T) for T in self.pTrange])

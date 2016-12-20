@@ -276,6 +276,7 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
  private:
   // A few helpers
   double J2_(const double * const v) const;
+  void dev_vec_deriv_(const double * const a, double * const b) const;
 
 };
 
