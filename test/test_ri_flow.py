@@ -7,15 +7,13 @@ from common import *
 import unittest
 import numpy as np
 import numpy.linalg as la
-import numpy.random as ra
 
 class CommonFlowRule(object):
   """
     Tests common to all flow rules.
   """
   def gen_stress(self):
-    s = ra.random((6,))
-    s = (1.0 - 2.0 * s) * 125.0
+    s = np.array([50.0,75.0,-50.0,25.0,75.0,-25.0])
     return s
 
   def test_history(self):
@@ -75,10 +73,6 @@ class CommonFlowRule(object):
     num = differentiate(dfn, hist)
     exact = self.model.dh_da(stress, hist, self.T)
     
-    # Check for bad random state
-    if np.any(np.isnan(exact)):
-      return
-
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
 
@@ -96,7 +90,7 @@ class TestRateIndependentAssociativeFlowJ2Linear(unittest.TestCase, CommonFlowRu
     self.T = 300.0
 
   def gen_hist(self):
-    return ra.random((1,))
+    return 0.25
   
   def test_flow_rule(self):
     stress = self.gen_stress()
@@ -121,8 +115,8 @@ class TestRIChabocheLinear(unittest.TestCase, CommonFlowRule):
     self.K = 15000.0
 
     self.n = 4
-    self.cs = ra.random((self.n,)) * 10.0
-    self.rs = ra.random((self.n,)) * 10.0
+    self.cs = np.array(range(1,self.n+1))
+    self.rs = np.array(range(1, self.n+1))
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
     self.hardening = hardening.Chaboche(self.iso, self.cs, self.rs)
@@ -135,7 +129,7 @@ class TestRIChabocheLinear(unittest.TestCase, CommonFlowRule):
     self.T = 300.0
 
   def gen_hist(self):
-    hist = ra.random((1 + self.n*6,))
+    hist = np.array(range(1,2+self.n*6))  / (self.n*7)
     hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
     for i in range(self.n):
       hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])

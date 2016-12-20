@@ -8,8 +8,6 @@ from common import *
 
 import numpy as np
 import numpy.linalg as la
-import numpy.random as ra
-
 
 class CommonHardening(object):
   """
@@ -32,7 +30,7 @@ class TestLinearIsotropicHardening(unittest.TestCase, CommonHardening):
 
     self.hist0 = np.array([0.0])
     
-    self.hist_trial = np.abs(ra.random((1,)))
+    self.hist_trial = np.array([0.1])
     self.T = 300.0
 
     self.model = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
@@ -53,7 +51,7 @@ class TestVoceIsotropicHardening(unittest.TestCase, CommonHardening):
 
     self.hist0 = np.array([0.0])
     
-    self.hist_trial = np.abs(ra.random((1,)))
+    self.hist_trial = np.abs([0.25])
     self.T = 300.0
 
     self.model = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
@@ -73,7 +71,7 @@ class TestLinearKinematicHardening(unittest.TestCase, CommonHardening):
 
     self.hist0 = np.zeros((6,))
     
-    self.hist_trial = ra.random((6,)) * 100
+    self.hist_trial = np.array([50.0,25.0,75.0,10.0,15.0,50.0])
     self.hist_trial = self.hist_trial - np.array([1,1,1,0,0,0]) * sum(self.hist_trial[:3]) / 3.0
     self.T = 300.0
 
@@ -93,7 +91,7 @@ class TestCombinedHardening(unittest.TestCase, CommonHardening):
     self.H = 1000.0
 
     self.hist0 = np.zeros((7,))
-    self.hist_trial = ra.random((7,)) * 100
+    self.hist_trial = np.array([50.0,75.0,100.0,25.0,10.0,15.0,60.0])
     self.hist_trial[1:] = make_dev(self.hist_trial[1:])
     self.T = 300.0
 
@@ -153,7 +151,7 @@ class CommonNonAssociative(object):
 
 class CommonGamma(object):
   def gen_alpha(self):
-    return ra.random((1,))[0]
+    return 0.15
 
   def test_dgamma(self):
     a = self.gen_alpha()
@@ -203,8 +201,8 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     self.K = 1000.0
 
     self.n = 4
-    self.cs = ra.random((self.n,)) * 10.0
-    self.rs = ra.random((self.n,)) * 10.0
+    self.cs = np.array(range(self.n)) * 10.0
+    self.rs = np.array(range(1,self.n+1)) * 10.0
     self.gammas = [hardening.ConstantGamma(r) for r in self.rs]
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
@@ -217,7 +215,7 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     self.T = 300.0
 
   def gen_hist(self):
-    hist = ra.random((1 + self.n*6,))
+    hist =  np.array(range(1,self.n*6+2)) / (self.n*7)
     hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
     for i in range(self.n):
       hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
@@ -260,8 +258,8 @@ class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
     self.K = 1000.0
 
     self.n = 4
-    self.cs = list(ra.random((self.n,)) * 10.0)
-    self.rs = ra.random((self.n,)) * 10.0
+    self.cs = list(np.array(range(self.n)) / (1+self.n))
+    self.rs = np.array(range(self.n)) * 10.0
     self.gammas = [hardening.ConstantGamma(r) for r in self.rs]
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
@@ -274,7 +272,7 @@ class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
     self.T = 300.0
 
   def gen_hist(self):
-    hist = ra.random((1 + self.n*6,))
+    hist = np.array(range(1,2+self.n*6)) / (3*self.n)
     hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
     for i in range(self.n):
       hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
@@ -317,10 +315,10 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
     self.K = 1000.0
 
     self.n = 2
-    self.cs = list(ra.random((self.n,)) * 10.0)
-    self.g0s = ra.random((self.n,)) * 10.0
+    self.cs = list(np.array(range(self.n)) / (2*self.n))
+    self.g0s = np.array(range(1,self.n+1)) * 10.0
     self.gss = 2.0 * self.g0s
-    self.betas = ra.random((self.n,))
+    self.betas = np.array(range(self.n)) / self.n
     self.gammas = [hardening.SatGamma(a, b, c) for a,b,c in zip(self.g0s, self.gss, self.betas)]
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
@@ -333,7 +331,7 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
     self.T = 300.0
 
   def gen_hist(self):
-    hist = ra.random((1 + self.n*6,))
+    hist = np.array(range(1, 2 + self.n*6))
     hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
     for i in range(self.n):
       hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])

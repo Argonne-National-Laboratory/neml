@@ -7,7 +7,6 @@ from common import *
 import unittest
 import numpy as np
 import numpy.linalg as la
-import numpy.random as ra
 
 class CommonGFlow(object):
   """
@@ -29,7 +28,7 @@ class TestGPowerLaw(unittest.TestCase, CommonGFlow):
     self.model = visco_flow.GPowerLaw(self.n)
 
   def gen_f(self):
-    return 100*(1-2.0*ra.random((1,))[0])
+    return 100*0.25
 
   def test_properties(self):
     self.assertTrue(np.isclose(self.n, self.model.n))
@@ -320,11 +319,10 @@ class TestChebocheFlow(unittest.TestCase):
         surface, self.hmodel, self.fluidity, self.n)
 
   def gen_stress(self):
-    s = (2.0 * ra.random((6,)) - 1.0) * 400
-    return s
+    return np.array([300.0,-200.0,100.0,50.0,150.0,300.0])
 
   def gen_hist(self):
-    h = ra.random((self.m*6+1,))
+    h = np.array(range(1,self.m*6+2)) / (self.m*7)
     h[1:self.m*6+1] = (2.0 * h[1:self.m*6+1] - 1.0) * 200
     for i in range(self.m):
       h[1+i*6:1+(i+1)*6] = make_dev(h[1+i*6:1+(i+1)*6])
@@ -434,7 +432,7 @@ class CommonFluidity(object):
     Common fluidity model tests
   """
   def gen_hist(self):
-    return ra.random((1,))[0]
+    return 0.15
 
   def test_deta(self):
     a = self.gen_hist()

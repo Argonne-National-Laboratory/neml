@@ -7,7 +7,6 @@ from common import *
 import unittest
 import numpy as np
 import numpy.linalg as la
-import numpy.random as ra
 
 class CommonSolvable(object):
   """
@@ -18,8 +17,8 @@ class CommonSolvable(object):
     R, J = self.model.RJ(x)
     dfn = lambda x: self.model.RJ(x)[0]
     nJ = differentiate(dfn, x)
-    
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3, atol = 1.0e-4))
 
 class TestRosenbrock(unittest.TestCase, CommonSolvable):
   def setUp(self):
@@ -27,7 +26,7 @@ class TestRosenbrock(unittest.TestCase, CommonSolvable):
     self.model = solvers.TestRosenbrock(self.N)
 
   def gen_x(self):
-    return ra.random((self.N,))
+    return np.array(range(1,self.N+1))/ (self.N+1)
   
 class TestSolver(unittest.TestCase):
   """
