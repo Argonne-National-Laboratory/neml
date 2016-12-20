@@ -142,7 +142,7 @@ class CommonFlowRule(object):
     dfn = lambda s: self.model.h(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dh_ds(stress, hist, self.T)
-  
+
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dh_da(self):
@@ -152,6 +152,8 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.h(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dh_da(stress, hist, self.T)
+
+    #print(np.abs(exact))
 
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
@@ -491,7 +493,7 @@ class TestYaguchiGr91Flow(unittest.TestCase, CommonFlowRule):
     self.T = 500.0
 
   def gen_stress(self):
-    s = np.array([200,0,100,0,-50,0])*0.1
+    s = np.array([200,75,100,50,-50,100])*0.1
     return s
   
   @staticmethod
@@ -576,7 +578,7 @@ class TestYaguchiGr91Flow(unittest.TestCase, CommonFlowRule):
 
   def gen_hist(self):
     X1 = make_dev([15.0,-20.0,-30.0,50.0,-10.0,5])
-    X2 = make_dev([-25,100,150,30,-15,20])
+    X2 = make_dev([-25,10,15,30,-15,20])
     return np.array(list(X1) + list(X2) + [50.0] + [5.0]) / 10.0
 
   def eval_prop(self, prop):

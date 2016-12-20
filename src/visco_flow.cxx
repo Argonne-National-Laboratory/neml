@@ -547,6 +547,8 @@ int YaguchiGr91FlowRule::y(const double* const s, const double* const alpha, dou
 int YaguchiGr91FlowRule::dy_ds(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
+  std::fill(dyv, dyv+6, 0.0);
+
   double yi;
   y(s, alpha, T, yi);
   double nT = n(T);
@@ -578,6 +580,8 @@ int YaguchiGr91FlowRule::dy_ds(const double* const s, const double* const alpha,
 int YaguchiGr91FlowRule::dy_da(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
+  std::fill(dyv, dyv+nhist(), 0.0);
+
   // General
   double yi;
   y(s, alpha, T, yi);
@@ -630,6 +634,8 @@ int YaguchiGr91FlowRule::dy_da(const double* const s, const double* const alpha,
 int YaguchiGr91FlowRule::g(const double * const s, const double * const alpha, double T,
               double * const gv) const
 {
+  std::fill(gv, gv+6, 0.0);
+
   double X[6];
   std::fill(X, X+6, 0.0);
   add_vec(&alpha[0], &alpha[6], 6, X);
@@ -650,6 +656,8 @@ int YaguchiGr91FlowRule::g(const double * const s, const double * const alpha, d
 int YaguchiGr91FlowRule::dg_ds(const double * const s, const double * const alpha, double T,
               double * const dgv) const
 {
+  std::fill(dgv, dgv+36, 0.0);
+
   for (int i=0; i<3; i++) {
     for (int j=0; j<3; j++) {
       if (i==j) {
@@ -691,7 +699,7 @@ int YaguchiGr91FlowRule::dg_da(const double * const s, const double * const alph
              double * const dgv) const
 {
   // Only the X terms have derivatives
-  std::fill(dgv, dgv+6*nhist(), 0.0);
+  std::fill(dgv, dgv+(6*nhist()), 0.0);
 
   int nc = nhist();
 
@@ -713,6 +721,8 @@ int YaguchiGr91FlowRule::dg_da(const double * const s, const double * const alph
 int YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
+  std::fill(hv, hv+nhist(), 0.0);
+
   double X[6];
   std::fill(X, X+6, 0.0);
   add_vec(&alpha[0], &alpha[6], 6, X);
@@ -827,7 +837,7 @@ int YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alph
 {
   // Fair number of cross-terms are zero
   int nh = nhist();
-  std::fill(dhv, dhv+nh*nh, 0.0);
+  std::fill(dhv, dhv+(nh*nh), 0.0);
 
   // Generic X terms
   double deriv[6*nh];
@@ -850,13 +860,14 @@ int YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alph
     dhv[CINDEX((i+6),(i+6),nh)] -= 1.0;
   }
 
+
   for (int i=0; i<6; i++) {
     for (int j=0; j<nh; j++) {
       dhv[CINDEX((i+0),j,nh)] *= C1i;
       dhv[CINDEX((i+6),j,nh)] *= C2i;
     }
   }
-  
+
   // X1 has an extra term for the time-varying a1
   double X[6];
   std::fill(X, X+6, 0.0);
@@ -913,6 +924,8 @@ int YaguchiGr91FlowRule::h_time(const double * const s,
                                 double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
+  
+  return 0;
 
   double mi = m(T);
 
@@ -938,7 +951,7 @@ int YaguchiGr91FlowRule::dh_ds_time(const double * const s,
                                     double * const dhv) const
 {
   // This is actually still zero
-  std::fill(dhv, dhv+6, 0.0);
+  std::fill(dhv, dhv+(nhist()*6), 0.0);
   return 0;
 }
 
@@ -947,7 +960,9 @@ int YaguchiGr91FlowRule::dh_da_time(const double * const s,
                                     double * const dhv) const
 {
   int nh = nhist();
-  std::fill(dhv, dhv+nh*nh, 0.0);
+  std::fill(dhv, dhv+(nh*nh), 0.0);
+
+  return 0;
 
   // This is non-zero
   double mi = m(T);

@@ -423,3 +423,38 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian2):
   def gen_x(self):
     return ra.random((7,))
 
+class TestYaguchi(unittest.TestCase, CommonMatModel, CommonJacobian2):
+  """
+    Test Cheboche's VP model with our new direct integrator
+  """
+  def setUp(self):
+    vmodel = visco_flow.YaguchiGr91FlowRule()
+
+    E_poly = np.array([-3.077e-1, 3.003e2, 1.269e5])
+    nu = 0.3
+
+    mu_poly = list(E_poly/(2*(1+nu)))
+    K_poly = list(E_poly/(3*(1-2*nu)))
+
+    shear = elasticity.PolyShearModulus(mu_poly)
+    bulk = elasticity.PolyBulkModulus(K_poly)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+    self.model = neml.GeneralIntegrator(flow)
+
+    self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
+    self.tfinal = 10.0
+    self.T = 550.0
+    self.nsteps = 100
+
+  def gen_hist(self):
+    h = np.array([20,-30,40.0,5.0,2.0,40.0,-10,-20,10,50,30,10,10.0,5.0])
+    h[:6] = make_dev(h[:6])
+    h[6:12] = make_dev(h[6:12])
+    return h
+
+  def gen_x(self):
+    x = [100.0,150.0,-300.0,-10.0,50.0,100.0] + list(self.gen_hist()*1.1)
+    return np.array(x)

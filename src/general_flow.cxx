@@ -195,7 +195,7 @@ int TVPFlowRule::da_ds(const double * const s, const double * const alpha,
   flow_->dy_ds(s, alpha, T, t2);
 
   outer_update(t1, nhist(), t2, 6, d_adot);
-
+  
   double t3[sz];
   flow_->dh_ds_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
