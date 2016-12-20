@@ -498,9 +498,8 @@ size_t YaguchiGr91FlowRule::nhist() const
   // 0-5  X1
   // 6-11 X2
   // 12   Q
-  // 13   C1
-  // 14   sa
-  return 15;
+  // 13   sa
+  return 14;
 }
 
 int YaguchiGr91FlowRule::init_hist(double * const h) const
@@ -513,11 +512,8 @@ int YaguchiGr91FlowRule::init_hist(double * const h) const
   // Q
   h[12] = 0.0;
 
-  // C1
-  h[13] = 6e3;
-
   // sa
-  h[14] = 0.0;
+  h[13] = 0.0;
 
 }
 
@@ -527,7 +523,21 @@ int YaguchiGr91FlowRule::y(const double* const s, const double* const alpha, dou
 {
   double nT = n(T);
   double DT = D(T);
-  double sa = alpha[14];
+  double sa = alpha[13];
+
+  double X[6];
+  std::fill(X, X+6, 0.0);
+  add_vec(&alpha[0], &alpha[6], 6, X);
+  double dS[6];
+  sub_vec(s, X, 6, dS);
+
+  yv = (J2_(dS) - sa) / DT;
+  if (yv > 0.0) {
+    yv = pow(fabs(yv), nT);
+  }
+  else {
+    yv = 0.0;
+  }
 
   return 0;
 }
@@ -551,7 +561,17 @@ int YaguchiGr91FlowRule::dy_da(const double* const s, const double* const alpha,
 int YaguchiGr91FlowRule::g(const double * const s, const double * const alpha, double T,
               double * const gv) const
 {
+  double X[6];
+  std::fill(X, X+6, 0.0);
+  add_vec(&alpha[0], &alpha[6], 6, X);
+  double dS[6];
+  sub_vec(s, X, 6, dS);
 
+  double Jn = J2_(dS);
+
+  for (int i=0; i<6; i++) {
+    gv[i] = 3.0/2.0 * dS[i] / Jn;
+  }
 
   return 0;
 }
@@ -574,6 +594,63 @@ int YaguchiGr91FlowRule::dg_da(const double * const s, const double * const alph
 int YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
+  double X[6];
+  std::fill(X, X+6, 0.0);
+  add_vec(&alpha[0], &alpha[6], 6, X);
+  double dS[6];
+  sub_vec(s, X, 6, dS);
+
+  double Jn = J2_(dS);
+  
+  double n[6];
+  for (int i=0; i<6; i++) {
+    n[i] = 3.0/2.0 * dS[i] / Jn;
+  }
+
+  double C1i = C1(T);
+  double a1i = a10(T) - alpha[12];
+
+  double C2i = C2(T);
+  double a2i = a2(T);
+
+  // X1
+  for (int i=0; i<6; i++) {
+    hv[i+0] = C1i * (2.0/3.0 * a1i * n[i] - alpha[i+0]);
+  }
+  
+  // X2
+  for (int i=0; i<6; i++) {
+    hv[i+6] = C2i * (2.0/3.0 * a2i * n[i] - alpha[i+6]);
+  }
+
+  // Q
+  double qi = q(T);
+  double di = d(T);
+  hv[12] = di*(qi - alpha[12]);
+
+  // sa
+  double bri = br(T);
+  double bhi = bh(T);
+  double Ai = A(T);
+  double Bi = B(T);
+  double yi;
+  y(s, alpha, T, yi);
+  double sas = Ai + Bi * log10(yi);
+  if (sas > 0.0) {
+    sas = fabs(sas);
+  }
+  else {
+    sas = 0.0;
+  }
+  double bi;
+  if ((sas - alpha[13]) >= 0.0) {
+    bi = bhi;
+  }
+  else {
+    bi = bri;
+  }
+  hv[13] = bi * (sas - alpha[13]);
+
   return 0;
 }
 
@@ -588,6 +665,47 @@ int YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alph
 {
   return 0;
 }
+
+// Hardening rule wrt to time
+int YaguchiGr91FlowRule::h_time(const double * const s, 
+                                const double * const alpha, double T,
+                                double * const hv) const
+{
+  double mi = m(T);
+
+  // X1
+  double g1i = g1(T);
+  double J1 = J2_(&alpha[0]);
+  for (int i=0; i<6; i++) {
+    hv[i+0] = -g1i * pow(J1, mi-1.0) * alpha[i+0];
+  }
+  
+  // X2
+  double g2i = g2(T);
+  double J2 = J2_(&alpha[6]);
+  for (int i=0; i<6; i++) {
+    hv[i+6] = -g2i * pow(J2, mi-1.0) * alpha[i+6];
+  }
+
+  return 0;
+}
+
+int YaguchiGr91FlowRule::dh_ds_time(const double * const s, 
+                                    const double * const alpha, double T,
+                                    double * const dhv) const
+{
+  return 0;
+}
+
+int YaguchiGr91FlowRule::dh_da_time(const double * const s, 
+                                    const double * const alpha, double T,
+                                    double * const dhv) const
+{
+  return 0;
+}
+
+
+// Properties...
 
 double YaguchiGr91FlowRule::D(double T) const
 {
@@ -708,7 +826,7 @@ double YaguchiGr91FlowRule::q(double T) const
   }
 }
 
-double YaguchiGr91FlowRule::C1s(double T) const
+double YaguchiGr91FlowRule::C1(double T) const
 {
   if (T < 673.0) {
     return 1.500e3;
@@ -719,26 +837,6 @@ double YaguchiGr91FlowRule::C1s(double T) const
   else {
     return 6.000e3;
   }
-}
-
-double YaguchiGr91FlowRule::hmax(double T) const
-{
-  return 2.000e2;
-}
-
-double YaguchiGr91FlowRule::eps1(double T) const
-{
-  return 6.000e-3;
-}
-
-double YaguchiGr91FlowRule::eps2(double T) const
-{
-  return 1.000e-2;
-}
-
-double YaguchiGr91FlowRule::Qr(double T) const
-{
-  return 1.000e1;
 }
 
 // Couple of helpers

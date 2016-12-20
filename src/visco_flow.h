@@ -247,6 +247,14 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
                 double * const dhv) const;
   virtual int dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
+
+  // Hardening rule wrt to time
+  virtual int h_time(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
   
   // Huge number of temperature-dependent constants
   double D(double T) const;
@@ -263,11 +271,7 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
   double B(double T) const;
   double d(double T) const;
   double q(double T) const;
-  double C1s(double T) const;
-  double hmax(double T) const;
-  double eps1(double T) const;
-  double eps2(double T) const;
-  double Qr(double T) const;
+  double C1(double T) const;
 
  private:
   // A few helpers

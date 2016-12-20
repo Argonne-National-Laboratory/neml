@@ -249,11 +249,7 @@ PYBIND11_PLUGIN(visco_flow) {
         .def("B", &YaguchiGr91FlowRule::B)
         .def("d", &YaguchiGr91FlowRule::d)
         .def("q", &YaguchiGr91FlowRule::q)
-        .def("C1s", &YaguchiGr91FlowRule::C1s)
-        .def("hmax", &YaguchiGr91FlowRule::hmax)
-        .def("eps1", &YaguchiGr91FlowRule::eps1)
-        .def("eps2", &YaguchiGr91FlowRule::eps2)
-        .def("Qr", &YaguchiGr91FlowRule::Qr)
+        .def("C1", &YaguchiGr91FlowRule::C1)
         ;
 
   return m.ptr();

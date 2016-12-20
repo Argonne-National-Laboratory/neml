@@ -560,27 +560,8 @@ class TestYaguchiGr91Flow(unittest.TestCase):
     qs_direct = np.piecewise(self.pTrange, [self.pTrange < 673.0, np.logical_and(673.0 <= self.pTrange, self.pTrange < 823.0), self.pTrange >= 823.0], [lambda x: 9.50e1, lambda x: -2.467e2 + 7.320e-1*x - 3.333e-4*x**2.0, lambda x: 1.300e2])
     self.assertTrue(np.allclose(qs_model, qs_direct))
 
-  def test_C1s(self):
-    C1ss_model = self.eval_prop(self.model.C1s)
-    C1ss_direct = np.piecewise(self.pTrange, [self.pTrange < 673.0, np.logical_and(673.0 <= self.pTrange, self.pTrange < 773.0), self.pTrange >= 773.0], [lambda x: 1.50e3, lambda x: -2.879e4 + 45.0*x, lambda x: 6.000e3])
-    self.assertTrue(np.allclose(C1ss_model, C1ss_direct))
+  def test_C1(self):
+    C1s_model = self.eval_prop(self.model.C1)
+    C1s_direct = np.piecewise(self.pTrange, [self.pTrange < 673.0, np.logical_and(673.0 <= self.pTrange, self.pTrange < 773.0), self.pTrange >= 773.0], [lambda x: 1.50e3, lambda x: -2.879e4 + 45.0*x, lambda x: 6.000e3])
+    self.assertTrue(np.allclose(C1s_model, C1s_direct))
 
-  def test_hmaxs(self):
-    hmaxs_model = self.eval_prop(self.model.hmax)
-    hmaxs_direct = 2.000e2 * np.ones(self.pTrange.shape)
-    self.assertTrue(np.allclose(hmaxs_model, hmaxs_direct))
-
-  def test_eps1s(self):
-    eps1s_model = self.eval_prop(self.model.eps1)
-    eps1s_direct = 6.0e-3 * np.ones(self.pTrange.shape)
-    self.assertTrue(np.allclose(eps1s_model, eps1s_direct))
-
-  def test_eps2s(self):
-    eps2s_model = self.eval_prop(self.model.eps2)
-    eps2s_direct = 1.0e-2 * np.ones(self.pTrange.shape)
-    self.assertTrue(np.allclose(eps2s_model, eps2s_direct))
-
-  def test_Qrs(self):
-    Qrs_model = self.eval_prop(self.model.Qr)
-    Qrs_direct = 1.0e1 * np.ones(self.pTrange.shape)
-    self.assertTrue(np.allclose(Qrs_model, Qrs_direct))
