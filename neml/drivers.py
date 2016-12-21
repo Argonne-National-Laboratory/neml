@@ -120,7 +120,7 @@ class Driver_sd(Driver):
         einc_guess      a guess at the strain increment
         ainc_guess      a guess at the stress increment
     """
-    sdir /= la.norm(sdir)
+    sdir = sdir / la.norm(sdir)
     dt = t_np1 - self.t_int[-1]
     def RJ(x):
       a = x[0]
@@ -538,7 +538,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
   
   return {'time': np.copy(time), 'strain': np.copy(strain), 
       'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
-      'rrate': np.copy(rrate)}
+      'rrate': np.copy(rrate), 'rstress': np.copy(stress[ri:-1])}
 
 
 def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,

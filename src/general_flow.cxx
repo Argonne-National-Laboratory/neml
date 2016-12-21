@@ -166,10 +166,10 @@ int TVPFlowRule::a(const double * const s, const double * const alpha,
 
   double temp[nhist()];
   flow_->h_temp(s, alpha, T, temp);
-  for (int i=0; i<nhist(); i++) adot[i] -= temp[i] * Tdot;
+  for (int i=0; i<nhist(); i++) adot[i] += temp[i] * Tdot;
 
   flow_->h_time(s, alpha, T, temp);
-  for (int i=0; i<nhist(); i++) adot[i] -= temp[i];
+  for (int i=0; i<nhist(); i++) adot[i] += temp[i];
 
   return 0;
 

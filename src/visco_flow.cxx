@@ -767,10 +767,7 @@ int YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, d
   y(s, alpha, T, yi);
   double sas = Ai + Bi * log10(yi);
   
-  if (sas > 0.0) {
-    sas = fabs(sas);
-  }
-  else {
+  if (sas < 0.0) {
     sas = 0.0;
   }
   double bi;
@@ -925,8 +922,6 @@ int YaguchiGr91FlowRule::h_time(const double * const s,
 {
   std::fill(hv, hv+nhist(), 0.0);
   
-  return 0;
-
   double mi = m(T);
 
   // X1
@@ -961,8 +956,6 @@ int YaguchiGr91FlowRule::dh_da_time(const double * const s,
 {
   int nh = nhist();
   std::fill(dhv, dhv+(nh*nh), 0.0);
-
-  return 0;
 
   // This is non-zero
   double mi = m(T);
