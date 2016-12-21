@@ -278,6 +278,8 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
   double J2_(const double * const v) const;
   void dev_vec_deriv_(const double * const a, double * const b) const;
 
+  double log_tol_ = 1.0e-15;
+
 };
 
 } // namespace neml

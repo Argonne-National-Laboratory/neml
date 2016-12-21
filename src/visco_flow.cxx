@@ -489,7 +489,7 @@ int ChabocheFlowRule::dh_da(const double * const s, const double * const alpha, 
 
 YaguchiGr91FlowRule::YaguchiGr91FlowRule()
 {
-  
+
 }
 
 size_t YaguchiGr91FlowRule::nhist() const
@@ -765,19 +765,25 @@ int YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, d
   double Bi = B(T);
   double yi;
   y(s, alpha, T, yi);
-  double sas = Ai + Bi * log10(yi);
-  
-  if (sas < 0.0) {
-    sas = 0.0;
-  }
-  double bi;
-  if ((sas - alpha[13]) >= 0.0) {
-    bi = bhi;
+
+  if (fabs(yi) > log_tol_) {
+    double sas = Ai + Bi * log10(yi);
+    
+    if (sas < 0.0) {
+      sas = 0.0;
+    }
+    double bi;
+    if ((sas - alpha[13]) >= 0.0) {
+      bi = bhi;
+    }
+    else {
+      bi = bri;
+    }
+    hv[13] = bi * (sas - alpha[13]);
   }
   else {
-    bi = bri;
+    hv[13] = 0.0;
   }
-  hv[13] = bi * (sas - alpha[13]);
 
   return 0;
 }
@@ -812,20 +818,23 @@ int YaguchiGr91FlowRule::dh_ds(const double * const s, const double * const alph
   double Bi = B(T);
   double yi;
   y(s, alpha, T, yi);
-  double sas = Ai + Bi * log10(yi);
-  if (sas > 0.0) {
-    double bi;
-    if ((sas - alpha[13]) >= 0.0) {
-      bi = bhi;
-    }
-    else {
-      bi = bri;
-    }
-    dy_ds(s, alpha, T, &dhv[CINDEX(13,0,6)]);
-    for (int i=0; i<6; i++) {
-      dhv[CINDEX(13,i,6)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,6)];
+  if (fabs(yi) > log_tol_) {
+    double sas = Ai + Bi * log10(yi);
+    if (sas > 0.0) {
+      double bi;
+      if ((sas - alpha[13]) >= 0.0) {
+        bi = bhi;
+      }
+      else {
+        bi = bri;
+      }
+      dy_ds(s, alpha, T, &dhv[CINDEX(13,0,6)]);
+      for (int i=0; i<6; i++) {
+        dhv[CINDEX(13,i,6)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,6)];
+      }
     }
   }
+
   return 0;
 }
 
@@ -896,21 +905,24 @@ int YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alph
   double Bi = B(T);
   double yi;
   y(s, alpha, T, yi);
-  double sas = Ai + Bi * log10(yi);
-  double bi;
-  if ((sas - alpha[13]) >= 0.0) {
-    bi = bhi;
-  }
-  else {
-    bi = bri;
-  }
-  if (sas > 0.0) {
-    dy_da(s, alpha, T, &dhv[CINDEX(13,0,nh)]);
-    for (int i=0; i<nh; i++) {
-      dhv[CINDEX(13,i,nh)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,nh)];
+  
+  if (fabs(yi) > log_tol_) {
+    double sas = Ai + Bi * log10(yi);
+    double bi;
+    if ((sas - alpha[13]) >= 0.0) {
+      bi = bhi;
     }
+    else {
+      bi = bri;
+    }
+    if (sas > 0.0) {
+      dy_da(s, alpha, T, &dhv[CINDEX(13,0,nh)]);
+      for (int i=0; i<nh; i++) {
+        dhv[CINDEX(13,i,nh)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,nh)];
+      }
+    }
+    dhv[CINDEX(13,13,nh)] += -bi;
   }
-  dhv[CINDEX(13,13,nh)] += -bi;
 
   return 0;
 }
