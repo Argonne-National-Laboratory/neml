@@ -588,49 +588,13 @@ Yaguchi & Takahashi
 \end_layout
 
 \begin_layout Standard
-This is a modified Chaboche with an extra history variable accounting for
- the evolution of a 
-\begin_inset Formula $C_{i}$
-\end_inset
-
- and a non-integratable isotropic hardening evolution equation.
- It also incorporates the stress memory thing, so it needs access to 
-\begin_inset Formula $\dot{\gamma}$
-\end_inset
-
- (can't be a hardening rule).
+This model is described by the equations:
 \end_layout
 
 \begin_layout Standard
-Rate:
 \begin_inset Formula 
 \[
-y\left(\bm{\sigma},\mathbf{q}\right)=\sqrt{\frac{3}{2}}\left\langle \frac{f\left(\bm{\sigma},\bm{q}\right)}{\sqrt{2/3}\eta}\right\rangle ^{n}.
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Flow rule:
-\begin_inset Formula 
-\[
-\mathbf{g}=\frac{\partial f}{\partial\bm{\sigma}}
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-History:
-\begin_inset Formula 
-\[
-\bm{\alpha}=\left[\sigma_{a}\begin{array}{ccc}
-Q & \mathbf{X}_{1} & \mathbf{X}_{2}\end{array}\right]
+\dot{\bm{\varepsilon}}_{p}=\mathbf{n}\dot{p}
 \]
 
 \end_inset
@@ -638,8 +602,7 @@ Q & \mathbf{X}_{1} & \mathbf{X}_{2}\end{array}\right]
 
 \begin_inset Formula 
 \[
-\mathbf{q}=\left[\begin{array}{cc}
-\sigma_{a} & \mathbf{X}\end{array}\right]
+\mathbf{n}=\frac{3}{2}\frac{\bm{\sigma}^{\prime}-\mathbf{X}^{\prime}}{J_{2}\left(\bm{\sigma}^{\prime}-\mathbf{X}^{\prime}\right)}
 \]
 
 \end_inset
@@ -647,219 +610,72 @@ Q & \mathbf{X}_{1} & \mathbf{X}_{2}\end{array}\right]
 
 \begin_inset Formula 
 \[
-\mathbf{X}=\mathbf{X}_{1}+\mathbf{X}_{2}.
+J_{2}\left(\mathbf{Y}^{\prime}\right)=\sqrt{\frac{3}{2}\mathbf{Y}^{\prime}:\mathbf{Y}^{\prime}}
 \]
 
 \end_inset
 
-History evolution rules:
+
 \begin_inset Formula 
-\begin{align*}
-\dot{\sigma}_{a} & = & \left[\sqrt{\frac{2}{3}}b\left(\sigma_{as}-\sigma_{a}\right)\right]\dot{\gamma}\\
-\sigma_{as} & = & \left\langle A+B\left(\log_{10}\left(\sqrt{\frac{2}{3}}y\right)\right)\right\rangle \\
+\[
+\dot{p}=\left\langle \frac{J_{2}\left(\bm{\sigma}^{\prime}-\mathbf{X}^{\prime}\right)-\sigma_{a}}{D}\right\rangle ^{n}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\mathbf{X}=\mathbf{X}_{1}+\mathbf{X}_{2}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{\mathbf{X}}_{1}=C_{1}\left(\frac{2}{3}\left(a_{10}-Q\right)\mathbf{n}-\mathbf{X}_{1}\right)\dot{p}-\gamma_{1}J_{2}\left(\mathbf{X}_{1}\right)^{m-1}\mathbf{X}_{1}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{\mathbf{X}}_{2}=C_{2}\left(\frac{2}{3}a_{2}\mathbf{n}-\mathbf{X}_{2}\right)\dot{p}-\gamma_{2}J_{2}\left(\mathbf{X}_{2}\right)^{m-1}\mathbf{X}_{2}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{Q}=d\left(q-Q\right)\dot{p}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{eqnarray*}
+\dot{\sigma}_{a} & = & b\left(\sigma_{as}-\sigma_{a}\right)\dot{p}\\
 b & = & \begin{cases}
 b_{h} & \sigma_{as}-\sigma_{a}\ge0\\
 b_{r} & \sigma_{as}-\sigma_{a}<0
-\end{cases}
-\end{align*}
+\end{cases}\\
+\sigma_{as} & = & \left\langle A+B\log_{10}\dot{p}\right\rangle 
+\end{eqnarray*}
 
 \end_inset
 
-
-\begin_inset Formula 
-\[
-\dot{Q}=\left[\sqrt{\frac{2}{3}}d\left(q-Q\right)\right]\dot{\gamma}
-\]
-
+The authors provided interpolation schemes for the model parameters in the
+ range 
+\begin_inset Formula $\unit[473]{K}<T<\unit[873]{K}$
 \end_inset
 
-
-\begin_inset Formula 
-\[
-\dot{\mathbf{X}}_{1}=-\left[\frac{2}{3}B_{1}\left(a_{10}-Q\right)\mathbf{n}+\sqrt{\frac{2}{3}}B_{1}\mathbf{X}_{1}+r_{1}\left(\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{1}\right\Vert \right)^{m-1}\mathbf{X}_{1}\frac{1}{y}\right]\dot{\gamma}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\dot{\mathbf{X}}_{2}=-\left[\frac{2}{3}B_{2}a_{2}\mathbf{n}+\sqrt{\frac{2}{3}}B_{2}\mathbf{X}_{2}+r_{2}\left(\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{2}\right\Vert \right)^{m-1}\mathbf{X}_{2}\frac{1}{y}\right]\dot{\gamma}
-\]
-
-\end_inset
-
-Note from the original paper 
-\begin_inset Formula $C\rightarrow B$
-\end_inset
-
- and 
-\begin_inset Formula $\gamma\rightarrow r$
-\end_inset
-
- for readability.
-\end_layout
-
-\begin_layout Subsection
-Moosbrugger Gr.
- 91
-\end_layout
-
-\begin_layout Standard
-Really this could be implemented like the Chaboche model, associated with
- some general yield surface.
- However to preserve my sanity and because the temperature dependence is
- complex it's implemented as a separate flow model and all terms are hard-coded.
-\end_layout
-
-\begin_layout Standard
-This implementation omits the temperature derivatives from the rate forms
- (so it could be inaccurate for fast temperature swings).
-\end_layout
-
-\begin_layout Standard
-The history variables are:
-\begin_inset Formula 
-\[
-\bm{\alpha}=\left[\begin{array}{ccccc}
-\chi_{1} & \chi_{2} & \mathbf{X}_{1} & \mathbf{X}_{2} & \mathbf{X}_{2}\end{array}\right]
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-\chi=\chi_{1}+\chi_{2}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\mathbf{X}=\mathbf{X}_{1}+\mathbf{X}_{2}+\mathbf{X}_{3}
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The flow rule is
-\begin_inset Formula 
-\[
-\mathbf{g}=\sqrt{\frac{3}{2}}\mathbf{n}
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-\mathbf{n}=\frac{\mathbf{s}-\mathbf{X}}{\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-h_{\chi_{i}}=\mu_{i}\left(\bar{\chi}_{i}-\chi_{i}\right)
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\mathbf{h}_{\bm{X}_{i}}=C_{i}\left[b_{i}\mathbf{n}-\mathbf{X}_{i}\right]-\frac{\mathbf{X}_{i}}{\left\Vert \mathbf{X}_{i}\right\Vert }C_{i}b_{i}\frac{\left(\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{i}\right\Vert \right)^{1/m^{\prime}}}{K_{i}}\frac{1}{\left(A^{\prime}\theta^{\prime}\right)^{1/m^{\prime}}}\frac{1}{\dot{y}}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\dot{y}=B\left(\frac{\sqrt{\frac{3}{2}}\left\Vert \mathbf{s}-\mathbf{X}\right\Vert }{D}\right)^{1/m^{\prime}}\frac{1}{\left(A^{\prime}\theta^{\prime}\right)^{1/m^{\prime}}}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-D=D_{0}+\frac{\chi}{\left(A^{\prime}\theta^{\prime}\right)\left(\frac{\dot{p}_{1}}{B}\right)^{m^{\prime}}}
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Furthermore:
-\begin_inset Formula 
-\begin{align*}
-\dot{p}_{1} & = & \unit[6.7\times10^{-5}]{1/s}\\
-D_{0} & = & \unit[1]{MPa}\\
-B & = & \unit[1]{/s}\\
-C_{1} & = & 7000\\
-C_{2} & = & 500\\
-C_{3} & = & 37.5\\
-K_{1} & = & \unit[5000]{?}\\
-K_{2} & = & \unit[75]{?}\\
-K_{3} & = & \unit[1]{?}\\
-\mu_{1} & = & 30\\
-\mu_{2} & = & 0.3\\
-\bar{\chi}_{1} & = & \unit[-65]{MPa}\\
-\bar{\chi}_{2} & = & \unit[-15]{MPa}
-\end{align*}
-
-\end_inset
-
- for 
-\begin_inset Formula $T<\unit[723]{K}$
-\end_inset
-
-:
-\begin_inset Formula 
-\begin{align*}
-m^{\prime} & = & 0.024\\
-\theta^{\prime} & = & \exp\left(\frac{101.4}{T}\right)\\
-A^{\prime} & = & 263.2\\
-b_{1} & = & \unit[\sqrt{\frac{2}{3}}150]{MPa}\\
-b_{2} & = & \unit[\sqrt{\frac{2}{3}}117.5]{MPa}\\
-b_{3} & = & \unit[\sqrt{\frac{2}{3}}\left(-267.5+344.5\exp\left(\frac{101.4}{T}\right)+27.298\left(723-T\right)^{0.1}\right)]{MPa}(128.89)
-\end{align*}
-
-\end_inset
-
-and for 
-\begin_inset Formula $T<\unit[723]{K}$
-\end_inset
-
-:
-\begin_inset Formula 
-\begin{align*}
-m^{\prime} & = & -1.052\log\left(\frac{\unit[1]{K}}{T}\right)-6.901\\
-\theta^{\prime} & = & \log\left(\frac{1K}{T}\right)+7\\
-A^{\prime} & = & 3.905\times10^{?7}\times\exp\left(-\frac{7875}{T}\right)\\
-b_{1} & = & \unit[\sqrt{\frac{2}{3}}\left[105+16.5194\left(873-T\right)^{0.2}\right]]{MPa}\\
-b_{2} & = & \unit[\sqrt{\frac{2}{3}}\left[4904.55-12.3895\left(873-T\right)^{0.2}-7.34196\left(883-T\right)^{0.2}+711.9\log\left(\frac{1}{T}\right)\right]]{MPa}\\
-b_{3} & = & \unit[\sqrt{\frac{2}{3}}\left[1634.85+3.21211\left(873-T\right)^{0.2}+237.2\log\left(\frac{1}{T}\right)\right]]{MPa}
-\end{align*}
-
-\end_inset
-
-
+.
+ These parameters are hard-coded in the implementation, so this model takes
+ no parameters.
 \end_layout
 
 \begin_layout Chapter

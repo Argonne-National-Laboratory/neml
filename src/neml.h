@@ -174,7 +174,7 @@ class NEMLModel_sd: public NEMLModel {
 };
 
 /// Small strain linear elasticity as a test case
-class SmallStrainElasticity: public NEMLModel_sd {
+class SmallStrainElasticity: public NEMLModel_sd, public std::enable_shared_from_this<SmallStrainElasticity> {
  public:
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic);
 

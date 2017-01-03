@@ -1,0 +1,22 @@
+<materials>
+  <material name="test_j2iso" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>40000.0</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>84000.0</modulus>
+      </bulk>
+    </elastic>
+    <plastic type="independent">
+      <rule type="associative">
+        <surface type="isoj2">
+        </surface>
+        <hardening type="isotropic">
+          <yield>100.0</yield>
+          <harden>1000.0</harden>
+        </hardening>
+      </rule>
+    </plastic>
+  </material>
+</materials>

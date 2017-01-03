@@ -49,7 +49,7 @@ class BulkModulus {
 };
 
 /// Constant bulk modulus
-class ConstantBulkModulus {
+class ConstantBulkModulus: public BulkModulus {
  public:
   ConstantBulkModulus(double K);
   virtual double modulus(double T) const;

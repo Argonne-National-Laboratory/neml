@@ -12,7 +12,11 @@ typedef enum Error {
   INCOMPATIBLE_MODELS = -1,
   LINALG_FAILURE = -2,
   MAX_ITERATIONS = -3,
-  KT_VIOLATION = -4
+  KT_VIOLATION = -4,
+  NODE_NOT_FOUND = -5,
+  TOO_MANY_NODES = -6,
+  ATTRIBUTE_NOT_FOUND = -7,
+  UNKNOWN_TYPE = -8
 } Error;
 
 // Translate to exception

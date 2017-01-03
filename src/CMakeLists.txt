@@ -80,6 +80,15 @@ if (WRAP_PYTHON)
             set_property(TARGET neml PROPERTY OUTPUT_NAME "neml.so")
             set_property(TARGET neml PROPERTY SUFFIX "")
       endif()
+
+      # parser
+      add_library(parse SHARED parse_wrap.cxx parse.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(parse neml ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${libxml++_LIBRARIES})
+      set_target_properties(parse PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET parse PROPERTY OUTPUT_NAME "parse.so")
+            set_property(TARGET parse PROPERTY SUFFIX "")
+      endif()
 else()
       # Everything in a big shared library
       add_library(neml SHARED 
@@ -92,6 +101,7 @@ else()
             visco_flow.cxx 
             general_flow.cxx 
             nemlerror.cxx 
-            elasticity.cxx)
-      target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${LIBXML2_LIBRARIES})
+            elasticity.cxx
+            parse.cxx)
+      target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 endif()
