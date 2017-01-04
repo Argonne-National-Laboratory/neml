@@ -27,7 +27,7 @@ class CompareMats(object):
       self.assertTrue(np.allclose(stress_np11, stress_np12))
       self.assertTrue(np.allclose(hist_np11, hist_np12))
       self.assertTrue(np.allclose(A_np11, A_np12))
-
+      
       stress_n1 = stress_np11
       hist_n1 = hist_np11
       stress_n2 = stress_np12

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <libxml++/libxml++.h>
 
@@ -66,19 +67,25 @@ std::shared_ptr<YieldSurface> process_isokinj2(const xmlpp::Element * node, int 
 std::shared_ptr<HardeningRule> process_hardening(const xmlpp::Element * node, int & ier);
 
 /// Isotropic hardening
-std::shared_ptr<IsotropicHardeningRule> process_isotropic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<HardeningRule> process_isotropic(const xmlpp::Element * node, int & ier);
+
+/// The actual tag (rather than type)
+std::shared_ptr<HardeningRule> process_isotropictag(const xmlpp::Element * node, int & ier);
 
 /// Linear isotropic hardening
-std::shared_ptr<IsotropicHardeningRule> process_linearisotropic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<HardeningRule> process_linearisotropic(const xmlpp::Element * node, int & ier);
 
 /// Voce isotropic hardening
-std::shared_ptr<IsotropicHardeningRule> process_voceisotropic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<HardeningRule> process_voceisotropic(const xmlpp::Element * node, int & ier);
 
 /// Kinematic hardening
-std::shared_ptr<KinematicHardeningRule> process_kinematic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<HardeningRule> process_kinematic(const xmlpp::Element * node, int & ier);
+
+/// The actual tag (rather than type)
+std::shared_ptr<HardeningRule> process_kinematictag(const xmlpp::Element * node, int & ier);
 
 /// Linear kinematic hardening
-std::shared_ptr<KinematicHardeningRule> process_linearkinematic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<HardeningRule> process_linearkinematic(const xmlpp::Element * node, int & ier);
 
 /// Combined hardening
 std::shared_ptr<HardeningRule> process_combined(const xmlpp::Element * node, int & ier);
@@ -103,12 +110,96 @@ bool one_attribute(const xmlpp::Element * node, std::string name,
                    std::string & value, int & ier);
 
 /// Return the scalar value of a named child node
-bool scalar_param(const xmlpp::Node * node, std::string name,
-                  double & value, int & ier);
+double scalar_param(const xmlpp::Node * node, std::string name,
+                    int & ier);
 
 /// Return the vector value of a named child node
-bool vector_param(const xmlpp::Node * node, std::string name,
-                  std::vector<double> & value, int & ier);
+std::vector<double> vector_param(const xmlpp::Node * node, std::string name,
+                            int & ier);
+
+
+/* Templates */
+
+/// Dispatch to a function based on a node attribute
+template <typename T>
+std::shared_ptr<T> dispatch_attribute(const xmlpp::Node * node,
+                                      std::string aname,
+                                      std::vector<std::string> names,
+                                      std::vector<std::shared_ptr<T> (*)(const xmlpp::Element*, int &)> fns,
+                                      int & ier)
+{
+  const xmlpp::Element * enode = dynamic_cast<const xmlpp::Element*>(node);
+  std::string ft;
+  if (not one_attribute(enode, aname, ft, ier)) {
+    return std::shared_ptr<T>(nullptr);
+  }
+
+  auto it = std::find(names.begin(), names.end(), ft);
+  if (it == names.end()) {
+    ier = UNKNOWN_TYPE;
+    std::cerr << "Invalid type for attribute " << aname << " of node "
+        << node->get_name() << " near line " << node->get_line() << std::endl;
+    std::cerr << "Actual type was " << ft << std::endl;
+    std::cerr << "Valid types are: ";
+    for (auto it = names.begin(); it != names.end(); ++it) {
+      std::cerr << *it << " ";
+    }
+    std::cerr << std::endl;
+    return std::shared_ptr<T>(nullptr);
+  }
+
+  ptrdiff_t pos = it - names.begin();
+
+  return fns[pos](enode, ier);
+}
+
+/// Dispatch a function over a child node with given name
+template <typename T>
+std::shared_ptr<T> dispatch_node(const xmlpp::Node * node,
+                                 std::string nname,
+                                 std::shared_ptr<T> (*fptr)(const xmlpp::Element *, int &),
+                                 int & ier)
+{
+  xmlpp::Element * subnode;
+  if (not one_child(node, nname, subnode, ier)) {
+    return std::shared_ptr<T>(nullptr);
+  }
+  return fptr(subnode, ier);
+}
+
+/// Find node with name of given type with attribute of a type matching string
+template <typename T>
+std::shared_ptr<T> find_and_dispatch(const xmlpp::Node * node,
+                                     std::string node_name,
+                                     std::string attrib_name,
+                                     std::string attrib_value,
+                                     std::shared_ptr<T> (*fptr)(const xmlpp::Element *, int &),
+                                     int & ier)
+{
+  std::stringstream ss;
+  ss << node_name << "[@" << attrib_name << "='" << attrib_value << "']";
+  auto fset = node->find(ss.str());
+
+  // Determine if we found anything
+  if (fset.size() < 1) {
+    ier = NODE_NOT_FOUND;
+    std::cerr << "Node of type " << node_name << " with attribute " << attrib_name
+        << " matching '" << attrib_value << "' not found near line " 
+        << node->get_line() << std::endl;
+    return std::shared_ptr<NEMLModel>(nullptr);
+  }
+  else if (fset.size() > 1) {
+    ier = TOO_MANY_NODES;
+    std::cerr << "Multiple nodes of type " << node_name << " with attribute " << attrib_name
+        << " matching '" << attrib_value << "' found near line " 
+        << node->get_line() << std::endl;
+    return std::shared_ptr<NEMLModel>(nullptr);
+  }
+  else {
+    return make_from_node(dynamic_cast<const xmlpp::Element*>(fset[0]), ier);
+  }
+}
+
 
 } // namespace neml
 
