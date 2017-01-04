@@ -16,7 +16,9 @@ typedef enum Error {
   NODE_NOT_FOUND = -5,
   TOO_MANY_NODES = -6,
   ATTRIBUTE_NOT_FOUND = -7,
-  UNKNOWN_TYPE = -8
+  UNKNOWN_TYPE = -8,
+  BAD_TEXT = -9,
+  INVALID_TYPE = -10
 } Error;
 
 // Translate to exception

@@ -16,6 +16,8 @@ void py_error(int ier)
     case TOO_MANY_NODES: throw std::runtime_error("More than one XML node found");
     case ATTRIBUTE_NOT_FOUND: throw std::runtime_error("XML attribute not found");
     case UNKNOWN_TYPE: throw std::runtime_error("Unknown model type");
+    case BAD_TEXT: throw std::runtime_error("Bad text data in XML node");
+    case INVALID_TYPE: throw std::runtime_error("Type described by XML node is invalid here");
 
     default: throw std::runtime_error("Unknown error!");
   }
@@ -33,6 +35,8 @@ std::string string_error(int ier)
     case TOO_MANY_NODES: return "More than  one XML node found";
     case ATTRIBUTE_NOT_FOUND: return "XML attribute not found";
     case UNKNOWN_TYPE: return "Unknown model type";
+    case BAD_TEXT: return "Bad text data in XML node";
+    case INVALID_TYPE: return "Type described by XML node is invalid here";
 
     default: return "Unknown error";
   }

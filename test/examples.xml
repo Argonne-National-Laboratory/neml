@@ -13,8 +13,10 @@
         <surface type="isoj2">
         </surface>
         <hardening type="isotropic">
-          <yield>100.0</yield>
-          <harden>1000.0</harden>
+          <isotropic type="linear">
+            <yield>100.0</yield>
+            <harden>1000.0</harden>
+          </isotropic>
         </hardening>
       </rule>
     </plastic>
