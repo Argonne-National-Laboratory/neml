@@ -1,4 +1,4 @@
-from neml import neml, elasticity, ri_flow, hardening, surfaces, parse
+from neml import neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow
 
 import unittest
 import numpy as np
@@ -91,7 +91,7 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
     self.nsteps = 100.0
     self.emax = np.array([0.1,0,0,0,0,0])
 
-class TestJ2Combined(CompareMats, unittest.TestCase):
+class TestRIChaboche(CompareMats, unittest.TestCase):
   def setUp(self):
     self.model1 = parse.parse_xml("test/examples.xml", "test_nonassri")
   
@@ -120,6 +120,28 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
     self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.1,0,0,0,0,0])
+
+class TestYaguchi(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_yaguchi")
+  
+    mu_poly = [-0.11834615, 115.5, 48807.69]
+    K_poly = [-0.256417, 250.25, 105750.0]
+
+    shear = elasticity.PolyShearModulus(mu_poly)
+    bulk = elasticity.PolyBulkModulus(K_poly)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    
+    vmodel = visco_flow.YaguchiGr91FlowRule()
+
+    flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+    self.model2 = neml.GeneralIntegrator(flow)
+
+    self.T = 500.0
     self.tmax = 10.0
     self.nsteps = 100.0
     self.emax = np.array([0.1,0,0,0,0,0])

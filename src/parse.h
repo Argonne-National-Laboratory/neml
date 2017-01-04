@@ -114,6 +114,15 @@ std::shared_ptr<ViscoPlasticFlowRule> process_dependent(const xmlpp::Element * n
 /// Specific RD model
 std::shared_ptr<ViscoPlasticFlowRule> process_rdrule(const xmlpp::Element * node, int & ier);
 
+/// Yaguchi Gr 91 (rate dependent) model processing
+std::shared_ptr<ViscoPlasticFlowRule> process_rd_yaguchigr91(const xmlpp::Element * node, int & ier);
+
+/// Chaboche (rate dependent) model processing
+std::shared_ptr<ViscoPlasticFlowRule> process_rd_chaboche(const xmlpp::Element * node, int & ier);
+
+/// Associative viscoplasticity processing
+std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(const xmlpp::Element * node, int & ier);
+
 // Begin helpers
 
 /// Return a single child node with given name, if not return relevant error

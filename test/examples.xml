@@ -83,4 +83,21 @@
       </rule>
     </plastic>
   </material>
+
+  <material name="test_yaguchi" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="polynomial">
+        <coefs>-0.11834615 115.5 48807.69</coefs>
+      </shear>
+      <bulk type="polynomial">
+        <coefs>-0.256417 250.25 105750.0</coefs>
+      </bulk>
+    </elastic>
+
+    <plastic type="dependent">
+      <rule type="yaguchigr91">
+      </rule>
+    </plastic>
+  </material>
+
 </materials>

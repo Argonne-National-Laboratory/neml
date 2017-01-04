@@ -398,9 +398,30 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rdrule(
     const xmlpp::Element * node, int & ier)
 {
   // Types are "associative", "chaboche", or "yaguchigr91"
+  return dispatch_attribute<ViscoPlasticFlowRule>(
+      node, "type", {"associative", "chaboche", "yaguchigr91"},
+      {&process_rd_associative, &process_rd_chaboche, &process_rd_yaguchigr91},
+      ier);
 }
 
+std::shared_ptr<ViscoPlasticFlowRule> process_rd_yaguchigr91(
+    const xmlpp::Element * node, int & ier)
+{
+  // Nothing but the model, hardwired coefficients
+  return std::make_shared<YaguchiGr91FlowRule>();
+}
 
+std::shared_ptr<ViscoPlasticFlowRule> process_rd_chaboche(
+    const xmlpp::Element * node, int & ier)
+{
+
+}
+
+std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(
+    const xmlpp::Element * node, int & ier)
+{
+
+}
 
 // Helpers
 bool one_child(const xmlpp::Node * node, std::string name,
