@@ -61,4 +61,67 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     self.nsteps = 100.0
     self.emax = np.array([0.1,0,0,0,0,0])
 
+class TestJ2Combined(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_j2comb")
+  
+    mu = 40000.0
+    K = 84000.0
+
+    ys = 100.0
+    r = 100.0
+    d = 1000.0
+
+    KH = 1000.0
+
+    shear = elasticity.ConstantShearModulus(mu)
+    bulk = elasticity.ConstantBulkModulus(K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.VoceIsotropicHardeningRule(ys, r, d)
+    kin = hardening.LinearKinematicHardeningRule(KH)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+
+    self.T = 300.0
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.1,0,0,0,0,0])
+
+class TestJ2Combined(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_nonassri")
+  
+    mu = 40000.0
+    K = 84000.0
+
+    ys = 100.0
+    r = 100.0
+    d = 1000.0
+    
+    cs = [5.0,10.0]
+
+    gs = [1000.0,1000.0]
+
+    shear = elasticity.ConstantShearModulus(mu)
+    bulk = elasticity.ConstantBulkModulus(K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.VoceIsotropicHardeningRule(ys, r, d)
+    
+    gammas = [hardening.ConstantGamma(g) for g in gs]
+    hmodel = hardening.Chaboche(iso, cs, gammas)
+    flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
+
+    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+
+    self.T = 300.0
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.1,0,0,0,0,0])
+
 

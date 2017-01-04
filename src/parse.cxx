@@ -166,10 +166,10 @@ std::shared_ptr<RateIndependentFlowRule> process_independent(
 std::shared_ptr<RateIndependentFlowRule> process_rirule(
     const xmlpp::Element * node, int & ier)
 {
-  // Types are "associative" or "nonassociative"
+  // Types are "associative" or "nonassociative_hardening"
   return dispatch_attribute<RateIndependentFlowRule>(node, "type",
-                                          {"associative", "nonassociative"},
-                                          {&process_riassociative, &process_rinonassociative},
+                                          {"associative", "nonassociative_hardening"},
+                                          {&process_riassociative, &process_rinonassociative_hardening},
                                           ier);
 }
 
@@ -310,10 +310,81 @@ std::shared_ptr<HardeningRule> process_combined(const xmlpp::Element * node,
   return std::make_shared<CombinedHardeningRule>(cir, ckr);
 }
 
-std::shared_ptr<RateIndependentFlowRule> process_rinonassociative(
+std::shared_ptr<RateIndependentFlowRule> process_rinonassociative_hardening(
     const xmlpp::Element * node, int & ier)
 {
+  // Need a surface and a (nonassociative) hardening rule
+  // Surface
+  std::shared_ptr<YieldSurface> ys = dispatch_node(node, "surface",
+                                                   &process_surface, ier);
 
+  // Hardening
+  std::shared_ptr<NonAssociativeHardening> nsr = dispatch_node(
+      node, "hardening", &process_nonass_hardening, ier);
+
+  return std::make_shared<RateIndependentNonAssociativeHardening>(
+      ys, nsr);
+}
+
+std::shared_ptr<NonAssociativeHardening> process_nonass_hardening(
+    const xmlpp::Element * node, int & ier)
+{
+  // Only Chaboche as an option for now
+  return dispatch_attribute<NonAssociativeHardening>(
+      node, "type", {"chaboche"}, {&process_nonass_chaboche}, ier);
+}
+
+std::shared_ptr<NonAssociativeHardening> process_nonass_chaboche(
+    const xmlpp::Element * node, int & ier)
+{
+  // Need three things: isotropic rule, c vector, and a vector of gamma models
+  //
+  // isotropic rule
+  std::shared_ptr<HardeningRule> ir = dispatch_node(node, "isotropic",
+                                                    &process_isotropictag, ier);
+  std::shared_ptr<IsotropicHardeningRule> cir = 
+      std::dynamic_pointer_cast<IsotropicHardeningRule>(ir);
+
+  // c vector
+  std::vector<double> c = vector_param(node, "c", ier);
+  
+  // vector of gamma models
+  std::vector< std::shared_ptr<GammaModel> > gvec = 
+      dispatch_vector_models<GammaModel>(
+          node, "gammamodels", "gammamodel", &process_gammamodel, ier);
+  
+  // Create our object
+  return std::make_shared<Chaboche>(cir, c, gvec);
+}
+
+std::shared_ptr<GammaModel> process_gammamodel(
+    const xmlpp::Element * node, int & ier)
+{
+  // Two types: constant and saturating
+  return dispatch_attribute<GammaModel>(
+      node, "type", {"constant", "saturating"},
+      {&process_constant_gamma, &process_saturating_gamma},
+      ier);
+}
+
+std::shared_ptr<GammaModel> process_constant_gamma(
+    const xmlpp::Element * node, int & ier)
+{
+  // Single scalar parameter g
+  double g = scalar_param(node, "g", ier);
+
+  return std::make_shared<ConstantGamma>(g);
+}
+
+std::shared_ptr<GammaModel> process_saturating_gamma(
+    const xmlpp::Element * node, int & ier)
+{
+  // Three scalar parameters: gs, g0, beta
+  double gs = scalar_param(node, "gs", ier);
+  double g0 = scalar_param(node, "g0", ier);
+  double beta = scalar_param(node, "beta", ier);
+
+  return std::make_shared<SatGamma>(gs, g0, beta);
 }
 
 std::shared_ptr<ViscoPlasticFlowRule> process_dependent(

@@ -98,7 +98,7 @@ PYBIND11_PLUGIN(neml) {
            py::arg("elastic"), py::arg("flow"), 
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
-           py::arg("check_kt") = true)
+           py::arg("check_kt") = false)
   
       .def("set_trial_state",
            [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> h_n, double T_np1, double t_np1, double t_n) -> void

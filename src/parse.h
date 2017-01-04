@@ -91,7 +91,22 @@ std::shared_ptr<HardeningRule> process_linearkinematic(const xmlpp::Element * no
 std::shared_ptr<HardeningRule> process_combined(const xmlpp::Element * node, int & ier);
 
 /// Nonassociative RI
-std::shared_ptr<RateIndependentFlowRule> process_rinonassociative(const xmlpp::Element * node, int & ier);
+std::shared_ptr<RateIndependentFlowRule> process_rinonassociative_hardening(const xmlpp::Element * node, int & ier);
+
+/// Nonassociative hardening rule
+std::shared_ptr<NonAssociativeHardening> process_nonass_hardening(const xmlpp::Element * node, int & ier);
+
+/// Chaboche model
+std::shared_ptr<NonAssociativeHardening> process_nonass_chaboche(const xmlpp::Element * node, int & ier);
+
+/// Gamma models for Chaboche
+std::shared_ptr<GammaModel> process_gammamodel(const xmlpp::Element * node, int & ier);
+
+/// Constant gamma model
+std::shared_ptr<GammaModel> process_constant_gamma(const xmlpp::Element * node, int & ier);
+
+/// Saturating gamma model
+std::shared_ptr<GammaModel> process_saturating_gamma(const xmlpp::Element * node, int & ier);
 
 /// Rate dependent plasticity processing
 std::shared_ptr<ViscoPlasticFlowRule> process_dependent(const xmlpp::Element * node, int & ier);
@@ -200,6 +215,39 @@ std::shared_ptr<T> find_and_dispatch(const xmlpp::Node * node,
   }
 }
 
+/// Collect a series of models into a single vector
+template <typename T>
+std::vector<std::shared_ptr<T>> dispatch_vector_models(
+    const xmlpp::Node * node, std::string collection_name,
+    std::string entry_name, std::shared_ptr<T> (*fptr)(const xmlpp::Element *, int &),
+    int & ier)
+{
+  // Get the collection node
+  xmlpp::Element * mnode;
+  if (not one_child(node, collection_name, mnode, ier)) {
+    return {};
+  }
+
+  // For each subnode
+  auto nodelist = mnode->get_children(entry_name);
+
+  if (nodelist.size() < 1) {
+    ier = NODE_NOT_FOUND;
+    std::cerr << "No subnodes of type " << entry_name
+        << " found near line " 
+        << node->get_line() << std::endl;
+    return {};
+  }
+  
+  // Create the vector
+  std::vector<std::shared_ptr<T>> res;
+  
+  for (auto it = nodelist.begin(); it != nodelist.end(); ++it) {
+    res.push_back(fptr(dynamic_cast<const xmlpp::Element *>(*it), ier));
+  }
+
+  return res;
+}
 
 } // namespace neml
 
