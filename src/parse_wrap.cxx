@@ -19,7 +19,7 @@ PYBIND11_PLUGIN(parse) {
         [](std::string fname, std::string mname) -> std::shared_ptr<NEMLModel>
         {
           int ier;
-          std::shared_ptr<NEMLModel> m = parse_xml(fname, mname, ier);
+          std::unique_ptr<NEMLModel> m = parse_xml(fname, mname, ier);
           py_error(ier);
 
           return m;

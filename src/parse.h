@@ -12,14 +12,14 @@
 namespace neml {
 
 /// Main entry to parse model from xml file
-std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname, 
+std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname, 
                                      int & ier);
 
 /// Setup a model from a root node
-std::shared_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier);
+std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier);
 
 /// Setup a small strain model
-std::shared_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier);
+std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier);
 
 /// Setup a linear elasticity model
 std::shared_ptr<LinearElasticModel> process_linearelastic(const xmlpp::Element * node, int & ier);
@@ -156,6 +156,39 @@ std::vector<double> vector_param(const xmlpp::Node * node, std::string name,
 
 /* Templates */
 
+/// Dispatch to a function based on a node attribute (unique)
+template <typename T>
+std::unique_ptr<T> dispatch_attribute_unique(const xmlpp::Node * node,
+                                      std::string aname,
+                                      std::vector<std::string> names,
+                                      std::vector<std::unique_ptr<T> (*)(const xmlpp::Element*, int &)> fns,
+                                      int & ier)
+{
+  const xmlpp::Element * enode = dynamic_cast<const xmlpp::Element*>(node);
+  std::string ft;
+  if (not one_attribute(enode, aname, ft, ier)) {
+    return std::unique_ptr<T>(nullptr);
+  }
+
+  auto it = std::find(names.begin(), names.end(), ft);
+  if (it == names.end()) {
+    ier = UNKNOWN_TYPE;
+    std::cerr << "Invalid type for attribute " << aname << " of node "
+        << node->get_name() << " near line " << node->get_line() << std::endl;
+    std::cerr << "Actual type was " << ft << std::endl;
+    std::cerr << "Valid types are: ";
+    for (auto it = names.begin(); it != names.end(); ++it) {
+      std::cerr << *it << " ";
+    }
+    std::cerr << std::endl;
+    return std::unique_ptr<T>(nullptr);
+  }
+
+  ptrdiff_t pos = it - names.begin();
+
+  return fns[pos](enode, ier);
+}
+
 /// Dispatch to a function based on a node attribute
 template <typename T>
 std::shared_ptr<T> dispatch_attribute(const xmlpp::Node * node,
@@ -205,11 +238,11 @@ std::shared_ptr<T> dispatch_node(const xmlpp::Node * node,
 
 /// Find node with name of given type with attribute of a type matching string
 template <typename T>
-std::shared_ptr<T> find_and_dispatch(const xmlpp::Node * node,
+std::unique_ptr<T> find_and_dispatch(const xmlpp::Node * node,
                                      std::string node_name,
                                      std::string attrib_name,
                                      std::string attrib_value,
-                                     std::shared_ptr<T> (*fptr)(const xmlpp::Element *, int &),
+                                     std::unique_ptr<T> (*fptr)(const xmlpp::Element *, int &),
                                      int & ier)
 {
   std::stringstream ss;
@@ -222,14 +255,14 @@ std::shared_ptr<T> find_and_dispatch(const xmlpp::Node * node,
     std::cerr << "Node of type " << node_name << " with attribute " << attrib_name
         << " matching '" << attrib_value << "' not found near line " 
         << node->get_line() << std::endl;
-    return std::shared_ptr<NEMLModel>(nullptr);
+    return std::unique_ptr<NEMLModel>(nullptr);
   }
   else if (fset.size() > 1) {
     ier = TOO_MANY_NODES;
     std::cerr << "Multiple nodes of type " << node_name << " with attribute " << attrib_name
         << " matching '" << attrib_value << "' found near line " 
         << node->get_line() << std::endl;
-    return std::shared_ptr<NEMLModel>(nullptr);
+    return std::unique_ptr<NEMLModel>(nullptr);
   }
   else {
     return make_from_node(dynamic_cast<const xmlpp::Element*>(fset[0]), ier);

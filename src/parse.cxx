@@ -7,7 +7,7 @@
 
 namespace neml {
 
-std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
+std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
                                      int & ier)
 {
   // Parse the XML file
@@ -25,51 +25,52 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
                            &make_from_node, ier);
 }
 
-std::shared_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier)
+std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier)
 {
-  return dispatch_attribute<NEMLModel>(node, "type",
+  return dispatch_attribute_unique<NEMLModel>(node, "type",
                                           {"smallstrain"},
                                           {&process_smallstrain},
                                           ier);
 }
 
-std::shared_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier)
+std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier)
 {
   // Need a elastic node and a plastic node
   // Elastic
   std::shared_ptr<LinearElasticModel> emodel;
   xmlpp::Element * elastic_node;
   if (not one_child(node, "elastic", elastic_node, ier)) {
-    return std::shared_ptr<NEMLModel>(nullptr);
+    return std::unique_ptr<NEMLModel>(nullptr);
   }
   emodel = process_linearelastic(elastic_node, ier);
-  if (ier != SUCCESS) return std::shared_ptr<NEMLModel>(nullptr);
+  if (ier != SUCCESS) return std::unique_ptr<NEMLModel>(nullptr);
   
   // Logic here because we treat viscoplasticity differently
   xmlpp::Element * plastic_node;
   if (not one_child(node, "plastic", plastic_node, ier)) {
-    return std::shared_ptr<NEMLModel>(nullptr);
+    return std::unique_ptr<NEMLModel>(nullptr);
   }
   
   // Select then on independent/dependent
   std::string ft;
   if (not one_attribute(plastic_node, "type", ft, ier)) {
-    return std::shared_ptr<NEMLModel>(nullptr);
+    return std::unique_ptr<NEMLModel>(nullptr);
   }
   if (ft == "independent") {
     std::shared_ptr<RateIndependentFlowRule> fr =  process_independent(
         plastic_node, ier);
     
-    return std::make_shared<SmallStrainRateIndependentPlasticity>(emodel, fr);
+    return std::unique_ptr<SmallStrainRateIndependentPlasticity> {
+      new SmallStrainRateIndependentPlasticity(emodel, fr)};
   }
   else if (ft == "dependent") {
     std::shared_ptr<ViscoPlasticFlowRule> fr = process_dependent(plastic_node, ier);
     std::shared_ptr<TVPFlowRule> gfr = std::make_shared<TVPFlowRule>(emodel, fr);
-    return std::make_shared<GeneralIntegrator>(gfr);
+    return std::unique_ptr<GeneralIntegrator>{new GeneralIntegrator(gfr)};
   }
   else {
     ier = UNKNOWN_TYPE;
-    return std::shared_ptr<NEMLModel>(nullptr);
+    return std::unique_ptr<NEMLModel>(nullptr);
   }
 }
 
