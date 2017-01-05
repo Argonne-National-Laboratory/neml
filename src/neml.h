@@ -174,7 +174,7 @@ class NEMLModel_sd: public NEMLModel {
 };
 
 /// Small strain linear elasticity as a test case
-class SmallStrainElasticity: public NEMLModel_sd, public std::enable_shared_from_this<SmallStrainElasticity> {
+class SmallStrainElasticity: public NEMLModel_sd {
  public:
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic);
 
@@ -200,7 +200,7 @@ class SmallStrainElasticity: public NEMLModel_sd, public std::enable_shared_from
 //
 //    The class does check for Kuhn-Tucker violations when it returns, 
 //    reporting an error if the conditions are violated.
-class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable, public std::enable_shared_from_this<SmallStrainRateIndependentPlasticity> {
+class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable {
  public:
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
@@ -250,7 +250,7 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
 /// Small strain general integrator
 //    General NR one some stress rate + history evolution rate
 //
-class GeneralIntegrator: public NEMLModel_sd, public Solvable, public std::enable_shared_from_this<GeneralIntegrator> {
+class GeneralIntegrator: public NEMLModel_sd, public Solvable {
  public:
   GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
                     double tol = 1.0e-8, int miter = 50,

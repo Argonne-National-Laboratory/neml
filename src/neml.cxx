@@ -243,7 +243,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   // Else solve and extract updated parameters from the solver vector
   else {
     double x[nparams()];
-    int ier = solve(shared_from_this(), x, tol_, miter_, verbose_);
+    int ier = solve(this, x, tol_, miter_, verbose_);
     if (ier != SUCCESS) return ier;
 
     // Extract solved parameters
@@ -578,7 +578,7 @@ int GeneralIntegrator::update_sd(
 
     // Solve for x
     double x[nparams()];
-    int ier = solve(shared_from_this(), x, tol_, miter_, verbose_);
+    int ier = solve(this, x, tol_, miter_, verbose_);
 
     // Decide what to do if we fail
     if (ier != SUCCESS) {

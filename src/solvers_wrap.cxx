@@ -47,7 +47,7 @@ PYBIND11_PLUGIN(solvers) {
         {
           auto x = alloc_vec<double>(system->nparams());
           
-          int ier = solve(system, arr2ptr<double>(x), tol, miter, verbose);
+          int ier = solve(system.get(), arr2ptr<double>(x), tol, miter, verbose);
           py_error(ier);
 
           return x;

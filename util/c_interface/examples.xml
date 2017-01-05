@@ -1,0 +1,177 @@
+<materials>
+
+  <material name="test_j2iso" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>40000.0</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>84000.0</modulus>
+      </bulk>
+    </elastic>
+    <plastic type="independent">
+      <rule type="associative">
+        <surface type="isoj2">
+        </surface>
+        <hardening type="isotropic">
+          <isotropic type="linear">
+            <yield>100.0</yield>
+            <harden>1000.0</harden>
+          </isotropic>
+        </hardening>
+      </rule>
+    </plastic>
+  </material>
+
+  <material name="test_j2comb" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>40000.0</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>84000.0</modulus>
+      </bulk>
+    </elastic>
+    <plastic type="independent">
+      <rule type="associative">
+        <surface type="isokinj2">
+        </surface>
+        <hardening type="combined">
+          <isotropic type="voce">
+            <yield>100.0</yield>
+            <r>100.0</r>
+            <d>1000.0</d>
+          </isotropic>
+          <kinematic type="linear">
+            <harden>1000.0</harden>
+          </kinematic>
+        </hardening>
+      </rule>
+    </plastic>
+  </material>
+
+  <material name="test_nonassri" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>40000.0</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>84000.0</modulus>
+      </bulk>
+    </elastic>
+
+    <plastic type="independent">
+      <rule type="nonassociative_hardening">
+        <surface type="isokinj2">
+        </surface>
+        <hardening type="chaboche">
+          <isotropic type="voce">
+            <yield>100.0</yield>
+            <r>100.0</r>
+            <d>1000.0</d>
+          </isotropic>
+          <c>5.0 10.0</c>
+          <gammamodels>
+            <gammamodel type="constant">
+              <g>1000.0</g>
+            </gammamodel>
+            <gammamodel type="constant">
+              <g>1000.0</g>
+            </gammamodel>
+          </gammamodels>
+        </hardening>
+      </rule>
+    </plastic>
+  </material>
+
+  <material name="test_yaguchi" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="polynomial">
+        <coefs>-0.11834615 115.5 48807.69</coefs>
+      </shear>
+      <bulk type="polynomial">
+        <coefs>-0.256417 250.25 105750.0</coefs>
+      </bulk>
+    </elastic>
+
+    <plastic type="dependent">
+      <rule type="yaguchigr91">
+      </rule>
+    </plastic>
+  </material>
+
+  <material name="test_rd_chaboche" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>60384.61</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>130833.3</modulus>
+      </bulk>
+    </elastic>
+
+    <plastic type="dependent">
+      <rule type="chaboche">
+        <surface type="isokinj2">
+        </surface>
+        <hardening type="chaboche">
+          <isotropic type="voce">
+            <yield>0.0</yield>
+            <r>-80.0</r>
+            <d>3.0</d>
+          </isotropic>
+          <c>135.0e3 61.0e3 11.0e3</c>
+          <gammamodels>
+            <gammamodel type="constant">
+              <g>5.0e4</g>
+            </gammamodel>
+            <gammamodel type="constant">
+              <g>1100.0</g>
+            </gammamodel>
+            <gammamodel type="constant">
+              <g>1.0</g>
+            </gammamodel>
+          </gammamodels>
+        </hardening>
+        <fluidity type="constant">
+          <eta>701.0</eta>
+        </fluidity>
+        <n>10.5</n>
+      </rule>
+    </plastic>
+
+  </material>
+
+  <material name="test_perzyna" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>40000.0</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>84000.0</modulus>
+      </bulk>
+    </elastic>
+
+    <plastic type="dependent">
+      <rule type="associative">
+        <surface type="isokinj2">
+        </surface>
+        <hardening type="combined">
+          <isotropic type="voce">
+            <yield>100.0</yield>
+            <r>100.0</r>
+            <d>1000.0</d>
+          </isotropic>
+          <kinematic type="linear">
+            <harden>1000.0</harden>
+          </kinematic>
+        </hardening>
+        <gmodel type="power_law">
+          <n>5.0</n>
+        </gmodel>
+        <eta>500.0</eta>
+      </rule>
+    </plastic>
+  </material>
+
+</materials>

@@ -33,19 +33,19 @@ class TestRosenbrock: public Solvable {
 };
 
 /// Call the built-in solver
-int solve(std::shared_ptr<Solvable> system, double * x, 
+int solve(Solvable * system, double * x, 
           double tol = 1.0e-8, int miter = 50,
           bool verbose = false);
 
 /// Default solver: plain NR
-int newton(std::shared_ptr<Solvable> system, double * x, 
+int newton(Solvable * system, double * x, 
           double tol, int miter, bool verbose);
 
 #ifdef SOLVER_NOX
 /// NOX OO interface
 class NOXSolver: public NOX::LAPACK::Interface {
  public:
-  NOXSolver(std::shared_ptr<Solvable> system);
+  NOXSolver(Solvable * system);
 
   const NOX::LAPACK::Vector& getInitialGuess();
 
@@ -65,10 +65,10 @@ int nox(std::shared_ptr<Solvable> system, double * x,
 #endif
 
 /// Helper to get numerical jacobian
-int diff_jac(std::shared_ptr<Solvable> system, const double * const x,
+int diff_jac(Solvable * system, const double * const x,
              double * const nJ, double eps = 1.0e-9);
 /// Helper to get checksum
-double diff_jac_check(std::shared_ptr<Solvable> system, const double * const x,
+double diff_jac_check(Solvable * system, const double * const x,
                       const double * const J);
 
 } // namespace neml

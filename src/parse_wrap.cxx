@@ -22,7 +22,7 @@ PYBIND11_PLUGIN(parse) {
           std::unique_ptr<NEMLModel> m = parse_xml(fname, mname, ier);
           py_error(ier);
 
-          return m;
+          return std::move(m);
         }, "Return a model from an XML description");
 
   return m.ptr();

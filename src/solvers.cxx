@@ -46,7 +46,7 @@ int TestRosenbrock::RJ(const double * const x, double * const R,
 
 
 // This function is configured by the build
-int solve(std::shared_ptr<Solvable> system, double * x,
+int solve(Solvable * system, double * x,
           double tol, int miter, bool verbose)
 {
 #ifdef SOLVER_NOX
@@ -60,7 +60,7 @@ int solve(std::shared_ptr<Solvable> system, double * x,
 #endif
 }
 
-int newton(std::shared_ptr<Solvable> system, double * x,
+int newton(Solvable * system, double * x,
           double tol, int miter, bool verbose)
 {
   int n = system->nparams();
@@ -117,7 +117,7 @@ int newton(std::shared_ptr<Solvable> system, double * x,
 }
 
 /// Helper to get numerical jacobian
-int diff_jac(std::shared_ptr<Solvable> system, const double * const x,
+int diff_jac(Solvable * system, const double * const x,
              double * const nJ, double eps)
 {
   double * R0 = new double[system->nparams()];
@@ -146,7 +146,7 @@ int diff_jac(std::shared_ptr<Solvable> system, const double * const x,
 }
 
 /// Helper to get checksum
-double diff_jac_check(std::shared_ptr<Solvable> system, const double * const x,
+double diff_jac_check(Solvable * system, const double * const x,
                       const double * const J)
 {
   double * nJ = new double[system->nparams() * system->nparams()];
@@ -166,7 +166,7 @@ double diff_jac_check(std::shared_ptr<Solvable> system, const double * const x,
 
 // START NOX STUFF
 #ifdef SOLVER_NOX
-NOXSolver::NOXSolver(std::shared_ptr<Solvable> system) :
+NOXSolver::NOXSolver(Solvable * system) :
     system_(system), nox_guess_(system->nparams())
 {
   double * x = new double[system_->nparams()];
@@ -230,7 +230,7 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
 }
 
 
-int nox(std::shared_ptr<Solvable> system, double * x, 
+int nox(Solvable * system, double * x, 
         double tol, int miter, bool verbose)
 {
   // Setup solver
