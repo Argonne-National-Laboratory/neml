@@ -100,4 +100,46 @@
     </plastic>
   </material>
 
+  <material name="test_rd_chaboche" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>60384.61</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>130833.3</modulus>
+      </bulk>
+    </elastic>
+
+    <plastic type="dependent">
+      <rule type="chaboche">
+        <surface type="isokinj2">
+        </surface>
+        <hardening type="chaboche">
+          <isotropic type="voce">
+            <yield>0.0</yield>
+            <r>-80.0</r>
+            <d>3.0</d>
+          </isotropic>
+          <c>135.0e3 61.0e3 11.0e3</c>
+          <gammamodels>
+            <gammamodel type="constant">
+              <g>5.0e4</g>
+            </gammamodel>
+            <gammamodel type="constant">
+              <g>1100.0</g>
+            </gammamodel>
+            <gammamodel type="constant">
+              <g>1.0</g>
+            </gammamodel>
+          </gammamodels>
+        </hardening>
+        <fluidity type="constant">
+          <eta>701.0</eta>
+        </fluidity>
+        <n>10.5</n>
+      </rule>
+    </plastic>
+
+  </material>
+
 </materials>

@@ -146,4 +146,42 @@ class TestYaguchi(CompareMats, unittest.TestCase):
     self.nsteps = 100.0
     self.emax = np.array([0.1,0,0,0,0,0])
 
+class TestRDChaboche(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_rd_chaboche")
+  
+    mu = 60384.61
+    K = 130833.3
+
+    shear = elasticity.ConstantShearModulus(mu)
+    bulk = elasticity.ConstantBulkModulus(K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    r = -80.0
+    d = 3.0
+
+    Cs = [135.0e3, 61.0e3, 11.0e3]
+    gs = [5.0e4, 1100.0, 1.0]
+
+    eta = 701.0
+
+    n = 10.5
+    
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.VoceIsotropicHardeningRule(0.0, r, d)
+
+    hmodel = hardening.Chaboche(iso, np.array(Cs), np.array(gs))
+
+    fluidity = visco_flow.ConstantFluidity(eta)
+    
+    vmodel = visco_flow.ChabocheFlowRule(surface, hmodel, fluidity, n)
+    flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+    self.model2 = neml.GeneralIntegrator(flow)
+
+    self.T = 550.0 + 273.15
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.1,0,0,0,0,0])
+
 

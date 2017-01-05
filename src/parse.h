@@ -120,6 +120,12 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rd_yaguchigr91(const xmlpp::Elemen
 /// Chaboche (rate dependent) model processing
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_chaboche(const xmlpp::Element * node, int & ier);
 
+/// Chaboche (rd) fluidity models
+std::shared_ptr<FluidityModel> process_fluidity(const xmlpp::Element * node, int & ier);
+
+/// Constant fluidity
+std::shared_ptr<FluidityModel> process_constant_fluidity(const xmlpp::Element * node, int & ier);
+
 /// Associative viscoplasticity processing
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(const xmlpp::Element * node, int & ier);
 

@@ -414,7 +414,42 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rd_yaguchigr91(
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_chaboche(
     const xmlpp::Element * node, int & ier)
 {
+  // This is nearly the same as the rate-independent version except we
+  // also need a model for the fluidity and the rate n
+  // Surface
+  std::shared_ptr<YieldSurface> ys = dispatch_node(node, "surface",
+                                                   &process_surface, ier);
 
+  // Hardening
+  std::shared_ptr<NonAssociativeHardening> nsr = dispatch_node(
+      node, "hardening", &process_nonass_hardening, ier);
+
+  // Fluidity
+  std::shared_ptr<FluidityModel> fm = dispatch_node(node, "fluidity", 
+                                                    &process_fluidity, ier);
+
+  // Rate n
+  double n = scalar_param(node, "n", ier);
+
+  return std::make_shared<ChabocheFlowRule>(ys, nsr, fm, n);
+
+}
+
+std::shared_ptr<FluidityModel> process_fluidity(
+    const xmlpp::Element * node, int & ier)
+{
+  // Right now only a constant fluidity option
+  return dispatch_attribute<FluidityModel>(
+      node, "type", {"constant"}, {&process_constant_fluidity}, ier);
+}
+
+std::shared_ptr<FluidityModel> process_constant_fluidity(
+    const xmlpp::Element * node, int & ier)
+{
+  // One property, eta
+  double eta = scalar_param(node, "eta", ier);
+
+  return std::make_shared<ConstantFluidity>(eta);
 }
 
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(
