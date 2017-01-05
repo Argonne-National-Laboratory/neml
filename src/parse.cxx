@@ -10,19 +10,34 @@ namespace neml {
 std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
                                      int & ier)
 {
-  // Parse the XML file
-  xmlpp::DomParser parser;
-  parser.parse_file(fname);
-
-  // Grab the root node
-  const auto root = parser.get_document()->get_root_node();
-
   // Default
   ier = SUCCESS;
 
-  // Dispatch to the right node
-  return find_and_dispatch(root, "material", "name", mname, 
-                           &make_from_node, ier);
+  // Parse the XML file
+  xmlpp::DomParser parser;
+
+  // Parse, catching file errors
+  try {
+    parser.parse_file(fname);
+  }
+  catch(xmlpp::internal_error) {
+    ier = FILE_NOT_FOUND;
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  
+  try {
+    // Grab the root node
+    const auto root = parser.get_document()->get_root_node();
+
+    // Dispatch to the right node
+    return  find_and_dispatch(root, "material", "name", mname, 
+                             &make_from_node, ier);
+  }
+  catch(...) {
+    ier = UNKNOWN_ERROR;
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+
 }
 
 std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier)

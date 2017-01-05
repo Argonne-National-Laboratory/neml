@@ -18,7 +18,9 @@ typedef enum Error {
   ATTRIBUTE_NOT_FOUND = -7,
   UNKNOWN_TYPE = -8,
   BAD_TEXT = -9,
-  INVALID_TYPE = -10
+  INVALID_TYPE = -10,
+  FILE_NOT_FOUND = -11,
+  UNKNOWN_ERROR = -12
 } Error;
 
 // Translate to exception
