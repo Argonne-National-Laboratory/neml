@@ -20,7 +20,7 @@ NEMLMODEL * create_nemlmodel(const char * fname, const char * mname, int * ier);
 void destroy_nemlmodel(NEMLMODEL * model, int * ier);
 
 int nstore_nemlmodel(NEMLMODEL * model);
-void init_store_nemlmodel(NEMLMODEL * model, double * store);
+void init_store_nemlmodel(NEMLMODEL * model, double * store, int * ier);
 
 void update_sd_nemlmodel(NEMLMODEL * model, double * e_np1, double * e_n,
                          double T_np1, double T_n,
