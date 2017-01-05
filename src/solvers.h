@@ -55,11 +55,11 @@ class NOXSolver: public NOX::LAPACK::Interface {
 
  private:
   NOX::LAPACK::Vector nox_guess_;
-  std::shared_ptr<Solvable> system_;
+  Solvable * system_;
 };
 
 /// Interface to nox
-int nox(std::shared_ptr<Solvable> system, double * x, 
+int nox(Solvable * system, double * x, 
         double tol, int miter, bool verbose);
 
 #endif
