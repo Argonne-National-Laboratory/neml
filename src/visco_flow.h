@@ -16,7 +16,7 @@ class GFlow {
   virtual double dg(double f) const = 0;
 };
 
-class GPowerLaw {
+class GPowerLaw: public GFlow {
  public:
   GPowerLaw(double n);
   virtual double g(double f) const;

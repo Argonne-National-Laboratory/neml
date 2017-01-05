@@ -185,3 +185,41 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     self.emax = np.array([0.1,0,0,0,0,0])
 
 
+class TestPerzyna(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_perzyna")
+  
+    mu = 40000.0
+    K = 84000.0
+
+    shear = elasticity.ConstantShearModulus(mu)
+    bulk = elasticity.ConstantBulkModulus(K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    
+    sy = 100.0
+    r = 100.0
+    d = 1000.0
+    KK = 1000.0
+
+    n = 5.0
+    eta = 500.0
+    
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.VoceIsotropicHardeningRule(sy, r, d)
+    kin = hardening.LinearKinematicHardeningRule(KK)
+
+    hmodel = hardening.CombinedHardeningRule(iso, kin)
+
+    gmodel = visco_flow.GPowerLaw(n)
+    
+    vmodel = visco_flow.PerzynaFlowRule(surface, hmodel, gmodel, eta)
+    flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+    self.model2 = neml.GeneralIntegrator(flow)
+
+    self.T = 550.0 + 273.15
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.1,0,0,0,0,0])
+
+

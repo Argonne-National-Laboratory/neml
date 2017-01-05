@@ -142,4 +142,36 @@
 
   </material>
 
+  <material name="test_perzyna" type="smallstrain">
+    <elastic type="isotropic">
+      <shear type="constant">
+        <modulus>40000.0</modulus>
+      </shear>
+      <bulk type="constant">
+        <modulus>84000.0</modulus>
+      </bulk>
+    </elastic>
+
+    <plastic type="dependent">
+      <rule type="associative">
+        <surface type="isokinj2">
+        </surface>
+        <hardening type="combined">
+          <isotropic type="voce">
+            <yield>100.0</yield>
+            <r>100.0</r>
+            <d>1000.0</d>
+          </isotropic>
+          <kinematic type="linear">
+            <harden>1000.0</harden>
+          </kinematic>
+        </hardening>
+        <gmodel type="power_law">
+          <n>5.0</n>
+        </gmodel>
+        <eta>500.0</eta>
+      </rule>
+    </plastic>
+  </material>
+
 </materials>

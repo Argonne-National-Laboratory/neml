@@ -455,8 +455,42 @@ std::shared_ptr<FluidityModel> process_constant_fluidity(
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(
     const xmlpp::Element * node, int & ier)
 {
+  // Almost the same as associative rate independent, but we also need the
+  // plastic multiplier function and the fluidity
+  // Surface
+  std::shared_ptr<YieldSurface> ys = dispatch_node(node, "surface",
+                                                   &process_surface, ier);
+  // Hardening model
+  std::shared_ptr<HardeningRule> hr = dispatch_node(node, "hardening", 
+                                                    &process_hardening, ier);
 
+  // gmodel
+  std::shared_ptr<GFlow> gm = dispatch_node(node, "gmodel", &process_gmodel,
+                                             ier);
+
+  // eta
+  double eta = scalar_param(node, "eta", ier);
+
+  return std::make_shared<PerzynaFlowRule>(ys, hr, gm, eta);
 }
+
+std::shared_ptr<GFlow> process_gmodel(const xmlpp::Element * node, int & ier)
+{
+  // Just option for power law
+  return dispatch_attribute<GFlow>(
+      node, "type", {"power_law"}, {&process_gmodel_power_law}, ier);
+}
+
+std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node,
+                                               int & ier)
+{
+  // Just the parameter n
+  double n = scalar_param(node, "n", ier);
+
+  return std::make_shared<GPowerLaw>(n);
+}
+
+
 
 // Helpers
 bool one_child(const xmlpp::Node * node, std::string name,

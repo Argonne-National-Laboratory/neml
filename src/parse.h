@@ -129,6 +129,12 @@ std::shared_ptr<FluidityModel> process_constant_fluidity(const xmlpp::Element * 
 /// Associative viscoplasticity processing
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(const xmlpp::Element * node, int & ier);
 
+/// G model dispatcher
+std::shared_ptr<GFlow> process_gmodel(const xmlpp::Element * node, int & ier);
+
+/// Power law G model
+std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node, int & ier);
+
 // Begin helpers
 
 /// Return a single child node with given name, if not return relevant error
