@@ -102,6 +102,7 @@ else()
             general_flow.cxx 
             nemlerror.cxx 
             elasticity.cxx
-            parse.cxx)
+            parse.cxx
+            cinterface.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 endif()
