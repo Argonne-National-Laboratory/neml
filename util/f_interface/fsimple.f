@@ -51,6 +51,14 @@
             allocate(h_np1(nstore))
             allocate(h_n(nstore))
 
+            call init_store_nemlmodel(model, h_n, ier)
+            if (ier .ne. 0) then
+                  write(*,*) "Problem setting up history"
+                  deallocate(h_np1)
+                  deallocate(h_n)
+                  stop
+            end if
+
             e_n = 0.0
             s_n = 0.0
 
@@ -75,7 +83,7 @@
                         stop
                   end if
 
-                  write(*,*) s_np1(1)
+                  ! write(*,*) s_np1(1)
 
                   s_n = s_np1
                   e_n = e_np1

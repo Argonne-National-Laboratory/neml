@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
                   return -1;
             }
 
-            printf("Stress: %lf\n", s_np1[0]);
+            // printf("Stress: %lf\n", s_np1[0]);
 
             for (j=0; j<6; j++) {
                   s_n[j] = s_np1[j];
