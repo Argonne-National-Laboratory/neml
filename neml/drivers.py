@@ -1,6 +1,8 @@
 import numpy as np
 import numpy.linalg as la
 
+import scipy.interpolate as inter
+
 class Driver(object):
   """
     Superclass of all drivers, basically just sets up history and reports
@@ -541,8 +543,8 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
       'rrate': np.copy(rrate), 'rstress': np.copy(stress[ri:-1])}
 
 
-def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
-    nsteps_up = 50, sdir = np.array([1,0,0,0,0,0]), verbose = False,
+def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
+    nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
     logspace = False):
   """
     Simulate a creep test
@@ -593,14 +595,89 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
   strain = np.array(strain)
   stress = np.array(stress)
   rrate = np.diff(strain[ri:]) / np.diff(time[ri:])
+  rstrain = strain[ri:]
   
   return {'time': np.copy(time), 'strain': np.copy(strain), 
       'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
-      'rrate': np.copy(rrate)}
+      'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain)}
+
+def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
+    ds = 10.0, max_cut = 10):
+  """
+    Generates an isochronous stress-strain curve at the given time and
+    temperature.
+
+    Parameters:
+      model     material model
+      time      relevant time
+
+    Optional:
+      T         temperature
+      emax      maximum strain to attain on the curves
+      srate     stress rate to use in the ramp part
+      ds        stress increment along the curve
+      max_cut   adaptive refinement
+  """
+  def strain(stress):
+    res = creep(model, stress, srate, time, T = T)
+    return res['rstrain'][-1]
+
+  strains = [0.0]
+  stresses = [0.0]
+  ncut = 0
+  try:
+    while strains[-1] < emax:
+      print(strains[-1])
+      target = stresses[-1] + ds
+      try:
+        enext = strain(target)
+        stresses.append(target)
+        strains.append(enext)
+      except Exception:
+        ncut += 1
+        if ncut > max_cut:
+          raise MaximumSubdivisions()
+        ds /= 2
+  except MaximumSubdivisions:
+    # We were quite aggressive, so assume the curve goes flat
+    stresses.append(stresses[-1])
+    strains.append(emax)
+
+  # Now interpolate back the last strain point
+  iff = inter.interp1d(strains, stresses)
+  ls = iff(emax)
+  strains[-1] = emax
+  stresses[-1] = ls
+
+  return {'strain': np.copy(strains), 'stress': np.copy(stresses)}
+
+def offset_stress(e, s, eo = 0.2/100.0):
+  """
+    Helper function to generate yield stress from offset stress/strain data
+    
+    Parameters:
+      e     strain data
+      s     stress data
+
+    Optional:
+      eo    strain offset
+  """
+  iff = inter.interp1d(e, s)
+  E = s[3] / e[3]
+  
+  eoff = opt.brentq(lambda e: iff(e) - E * (e - eo), 0.0,np.max(e))
+  soff = iff(eoff)
+
+  return soff
 
 class MaximumIterations(RuntimeError):
   def __init__(self):
     super(MaximumIterations, self).__init__("Exceeded the maximum allowed iterations!")
+
+class MaximumSubdivisions(RuntimeError):
+  def __init__(self):
+    super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
+
 
 def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
   """
@@ -634,7 +711,8 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
       print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
     if i > miter:
-      print("")
+      if verbose:
+        print("")
       raise MaximumIterations()
   
   if verbose:
