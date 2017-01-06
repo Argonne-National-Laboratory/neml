@@ -83,11 +83,7 @@ int outer_vec(const double * const a, int na, const double * const b, int nb, do
 int outer_update(const double * const a, int na, const double * const b, 
                  int nb, double * const C)
 {
-  for (int i=0; i < na; i++) {
-    for (int j=0; j < nb; j++) {
-      C[CINDEX(i,j,nb)] += a[i] * b[j];
-    }
-  }
+  dger_(nb, na, 1.0, b, 1, a, 1, C, nb);
 
   return 0;
 }
@@ -95,11 +91,7 @@ int outer_update(const double * const a, int na, const double * const b,
 int outer_update_minus(const double * const a, int na, const double * const b, 
                        int nb, double * const C)
 {
-  for (int i=0; i < na; i++) {
-    for (int j=0; j < nb; j++) {
-      C[CINDEX(i,j,nb)] -= a[i] * b[j];
-    }
-  }
+  dger_(nb, na, -1.0, b, 1, a, 1, C, nb);
 
   return 0;
 }

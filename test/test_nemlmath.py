@@ -63,9 +63,10 @@ class TestOuter(unittest.TestCase):
         msg = str(outer_vec(self.a, self.b)))
 
   def test_update(self):
+    
     Cu = self.C + np.outer(self.a, self.b)
-    self.assertTrue(
-        np.allclose(outer_update(self.a, self.b, self.C), Cu))
+    Cn = outer_update(self.a, self.b, self.C)
+    self.assertTrue(np.allclose(Cn, Cu))
 
   def test_update_minus(self):
     Cu = self.C - np.outer(self.a, self.b)
