@@ -93,6 +93,12 @@ PYBIND11_PLUGIN(neml) {
            py::arg("elastic"))
       ;
 
+  py::class_<SSRIPTrialState>(m, "SSRIPTrialState", py::base<TrialState>())
+      ;
+
+  py::class_<GITrialState>(m, "GITrialState", py::base<TrialState>())
+      ;
+
   py::class_<SmallStrainRateIndependentPlasticity, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity", py::base<NEMLModel_sd>())
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, int , bool, double, bool>(),
            py::arg("elastic"), py::arg("flow"), 
@@ -100,34 +106,40 @@ PYBIND11_PLUGIN(neml) {
            py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
            py::arg("check_kt") = false)
   
-      .def("set_trial_state",
-           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> h_n, double T_np1, double t_np1, double t_n) -> void
+      .def("make_trial_state",
+           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> h_n, double T_np1, double t_np1, double t_n) -> std::unique_ptr<SSRIPTrialState>
            {
-              int ier = m.set_trial_state(arr2ptr<double>(e_np1), arr2ptr<double>(h_n), T_np1, t_np1, t_n);
+              std::unique_ptr<SSRIPTrialState> ts(new SSRIPTrialState);
+              int ier = m.make_trial_state(
+                  arr2ptr<double>(e_np1), arr2ptr<double>(h_n), T_np1, t_np1,
+                  t_n, *ts);
               py_error(ier);
+
+              return ts;
            }, "Setup trial state for solve.")
 
       // Remove if/when pybind11 supports multiple inheritance
       .def_property_readonly("nparams", &SmallStrainRateIndependentPlasticity::nparams, "Number of variables in nonlinear equations.")
       .def("init_x",
-           [](SmallStrainRateIndependentPlasticity & m) -> py::array_t<double>
+           [](SmallStrainRateIndependentPlasticity & m, SSRIPTrialState & ts) -> py::array_t<double>
            {
             auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x));
+            int ier = m.init_x(arr2ptr<double>(x), &ts);
             py_error(ier);
             return x;
            }, "Initialize guess.")
       .def("RJ",
-           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> x) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> x, SSRIPTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
            {
             auto R = alloc_vec<double>(m.nparams());
             auto J = alloc_mat<double>(m.nparams(), m.nparams());
             
-            int ier = m.RJ(arr2ptr<double>(x), arr2ptr<double>(R), arr2ptr<double>(J));
+            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
             py_error(ier);
 
             return std::make_tuple(R, J);
            }, "Residual and jacobian.")
+      ;
       // End remove block
       ;
 
@@ -138,34 +150,41 @@ PYBIND11_PLUGIN(neml) {
            py::arg("verbose") = false,
            py::arg("max_divide") = 6)
   
-      .def("set_trial_state",
-           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double T_np1, double T_n, double t_np1, double t_n) -> void
+      .def("make_trial_state",
+           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double T_np1, double T_n, double t_np1, double t_n) -> std::unique_ptr<GITrialState>
            {
-              int ier = m.set_trial_state(arr2ptr<double>(e_np1), arr2ptr<double>(e_n), arr2ptr<double>(s_n), arr2ptr<double>(h_n), T_np1, T_n, t_np1, t_n);
+              std::unique_ptr<GITrialState> ts(new GITrialState);
+              int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+                                          arr2ptr<double>(e_n),
+                                          arr2ptr<double>(s_n),
+                                          arr2ptr<double>(h_n),
+                                          T_np1, T_n, t_np1, t_n, *ts);
               py_error(ier);
+              return ts;
            }, "Setup trial state for solve.")
 
       // Remove if/when pybind11 supports multiple inheritance
       .def_property_readonly("nparams", &GeneralIntegrator::nparams, "Number of variables in nonlinear equations.")
       .def("init_x",
-           [](GeneralIntegrator & m) -> py::array_t<double>
+           [](GeneralIntegrator & m, GITrialState & ts) -> py::array_t<double>
            {
             auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x));
+            int ier = m.init_x(arr2ptr<double>(x), &ts);
             py_error(ier);
             return x;
            }, "Initialize guess.")
       .def("RJ",
-           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> x) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> x, GITrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
            {
             auto R = alloc_vec<double>(m.nparams());
             auto J = alloc_mat<double>(m.nparams(), m.nparams());
             
-            int ier = m.RJ(arr2ptr<double>(x), arr2ptr<double>(R), arr2ptr<double>(J));
+            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
             py_error(ier);
 
             return std::make_tuple(R, J);
            }, "Residual and jacobian.")
+      ;
       // End remove block
       ;
 

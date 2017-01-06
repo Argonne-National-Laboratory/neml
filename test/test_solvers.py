@@ -14,8 +14,9 @@ class CommonSolvable(object):
   """
   def test_jacobian(self):
     x = self.gen_x()
-    R, J = self.model.RJ(x)
-    dfn = lambda x: self.model.RJ(x)[0]
+    dummy = solvers.TrialState()
+    R, J = self.model.RJ(x, dummy)
+    dfn = lambda x: self.model.RJ(x, dummy)[0]
     nJ = differentiate(dfn, x)
 
     self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3, atol = 1.0e-4))
@@ -39,5 +40,6 @@ class TestSolver(unittest.TestCase):
     self.soln = np.ones((self.N,))
 
   def test_solve(self):
-    x = solvers.solve(self.model)
+    dummy = solvers.TrialState()
+    x = solvers.solve(self.model, dummy)
     self.assertTrue(np.allclose(self.soln, x))

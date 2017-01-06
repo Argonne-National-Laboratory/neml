@@ -192,6 +192,28 @@ class SmallStrainElasticity: public NEMLModel_sd {
    std::shared_ptr<LinearElasticModel> elastic_;
 };
 
+/// Trial state classes
+//  Store data the solver needs and can be passed into solution interface
+class SSRIPTrialState : public TrialState {
+ public:
+  double ep_tr[6];
+  double s_tr[6];
+  double e_np1[6];
+  double C[36];
+  double T;
+  std::vector<double> h_tr;
+};
+
+class GITrialState : public TrialState {
+ public:
+  double e_dot[6];
+  double s_n[6];
+  double T, Tdot, dt;
+  std::vector<double> h_n;
+
+};
+
+
 /// Small strain, rate-independent plasticity
 //    The algorithm used here is generalized closest point projection
 //    for associative flow models.  For non-associative models the algorithm
@@ -219,29 +241,23 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   virtual int init_hist(double * const hist) const;
 
   virtual size_t nparams() const;
-  virtual int init_x(double * const x);
-  virtual int RJ(const double * const x, double * const R, double * const J);
+  virtual int init_x(double * const x, TrialState * ts);
+  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J);
 
   // Make this public for ease of testing
-  int set_trial_state(const double * const e_np1, const double * const h_n,
-                      double T_np1, double t_np1, double t_n);
+  int make_trial_state(const double * const e_np1, const double * const h_n,
+                      double T_np1, double t_np1, double t_n,
+                      SSRIPTrialState & ts);
 
  private:
-  int calc_tangent_(const double * const x, const double * const s_np1,
+  int calc_tangent_(const double * const x, TrialState * ts, const double * const s_np1,
                     const double * const h_np1, double dg, double * const A_np1);
   int check_K_T_(const double * const s_np1, const double * const h_np1, double T_np1, double dg);
 
   std::shared_ptr<LinearElasticModel> elastic_;
   std::shared_ptr<RateIndependentFlowRule> flow_;
 
-  // Need to store the trial state in memory so that the solver 
-  // can have access to it.  Not happy about it, but eh.
-  double ep_tr_[6];
-  double s_tr_[6];
-  double e_np1_[6];
-  double C_[36];
-  double T_;
-  std::vector<double> h_tr_;
   double tol_, kttol_;
   int miter_;
   bool verbose_, check_kt_;
@@ -266,31 +282,25 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
   virtual int init_hist(double * const hist) const;
 
   virtual size_t nparams() const;
-  virtual int init_x(double * const x);
-  virtual int RJ(const double * const x, double * const R, double * const J);
+  virtual int init_x(double * const x, TrialState * ts);
+  virtual int RJ(const double * const x, TrialState * ts,
+                 double * const R, double * const J);
 
   // Make this public for ease of testing
-  int set_trial_state(const double * const e_np1, const double * const e_n,
+  int make_trial_state(const double * const e_np1, const double * const e_n,
                       const double * const s_n, const double * const h_n,
-                      double T_np1, double T_n, double t_np1, double t_n);
+                      double T_np1, double T_n, double t_np1, double t_n,
+                      GITrialState & ts);
 
  private:
-  int calc_tangent_(const double * const x, double * const A_np1);
+  int calc_tangent_(const double * const x, TrialState * ts, double * const A_np1);
 
   std::shared_ptr<GeneralFlowRule> rule_;
 
-  // Store some state in memory so we don't have to recompute
-  // Not terribly happy with this solution
-  double e_dot_[6];
-  double s_n_[6];
-  double T_, Tdot_, dt_;
-  std::vector<double> h_n_;
   double tol_;
   int miter_, max_divide_;
   bool verbose_;
 };
-
-
 
 
 } // namespace neml

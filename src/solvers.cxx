@@ -20,14 +20,14 @@ size_t TestRosenbrock::nparams() const
   return N_;
 }
 
-int TestRosenbrock::init_x(double * const x)
+int TestRosenbrock::init_x(double * const x, TrialState * ts)
 {
   std::fill(x, x+N_, 0.25);
   return 0;
 }
 
-int TestRosenbrock::RJ(const double * const x, double * const R, 
-                  double * const J)
+int TestRosenbrock::RJ(const double * const x, TrialState * ts, 
+                       double * const R, double * const J)
 {
   R[0] = 1.0 - x[0];
   for (int i=1; i<N_; i++) {
@@ -46,29 +46,29 @@ int TestRosenbrock::RJ(const double * const x, double * const R,
 
 
 // This function is configured by the build
-int solve(Solvable * system, double * x,
+int solve(Solvable * system, double * x, TrialState * ts,
           double tol, int miter, bool verbose)
 {
 #ifdef SOLVER_NOX
-  return nox(system, x, tol, miter, verbose);
+  return nox(system, x, ts, tol, miter, verbose);
 #elif SOLVER_NEWTON
   // Actually selected the newton solver
-  return newton(system, x, tol, miter, verbose);
+  return newton(system, x, ts, tol, miter, verbose);
 #else
   // Default solver: plain NR
-  return newton(system, x, tol, miter, verbose);
+  return newton(system, x, ts, tol, miter, verbose);
 #endif
 }
 
-int newton(Solvable * system, double * x,
+int newton(Solvable * system, double * x, TrialState * ts,
           double tol, int miter, bool verbose)
 {
   int n = system->nparams();
-  system->init_x(x);
+  system->init_x(x, ts);
   double * R = new double[n];
   double * J = new double[n*n];
   
-  system->RJ(x, R, J);
+  system->RJ(x, ts, R, J);
 
   double nR = norm2_vec(R, n);
   int i = 0;
@@ -76,7 +76,7 @@ int newton(Solvable * system, double * x,
 
   if (verbose) {
     std::cout << "Iter.\tnR\t\tJe\t\tcn" << std::endl;
-    double Jf = diff_jac_check(system, x, J);
+    double Jf = diff_jac_check(system, x, ts, J);
     double cn = condition(J, system->nparams());
     std::cout << std::setw(6) << std::left << i 
         << "\t" << std::setw(8) << std::left << std::scientific << nR 
@@ -91,12 +91,12 @@ int newton(Solvable * system, double * x,
 
     for (int j=0; j<n; j++) x[j] -= R[j];
 
-    system->RJ(x, R, J);
+    system->RJ(x, ts, R, J);
     nR = norm2_vec(R, n);
     i++;
 
     if (verbose) {
-      double Jf = diff_jac_check(system, x, J);
+      double Jf = diff_jac_check(system, x, ts, J);
       double cn = condition(J, system->nparams());
       std::cout << i << "\t" << nR << "\t" << Jf << "\t" << cn << std::endl;
     }
@@ -117,7 +117,7 @@ int newton(Solvable * system, double * x,
 }
 
 /// Helper to get numerical jacobian
-int diff_jac(Solvable * system, const double * const x,
+int diff_jac(Solvable * system, const double * const x, TrialState * ts,
              double * const nJ, double eps)
 {
   double * R0 = new double[system->nparams()];
@@ -125,14 +125,14 @@ int diff_jac(Solvable * system, const double * const x,
   double * nX = new double[system->nparams()];
   double * dJ = new double[system->nparams()*system->nparams()];
 
-  system->RJ(x, R0, dJ);
+  system->RJ(x, ts, R0, dJ);
   
   for (int i=0; i<system->nparams(); i++) {
     std::copy(x, x+system->nparams(), nX);
     double dx = eps * fabs(nX[i]);
     if (dx < eps) dx = eps;
     nX[i] += dx;
-    system->RJ(nX, nR, dJ);
+    system->RJ(nX, ts, nR, dJ);
     for (int j=0; j<system->nparams(); j++) {
       nJ[CINDEX(j,i,system->nparams())] = (nR[j] - R0[j]) / dx;
     }
@@ -147,11 +147,11 @@ int diff_jac(Solvable * system, const double * const x,
 
 /// Helper to get checksum
 double diff_jac_check(Solvable * system, const double * const x,
-                      const double * const J)
+                      TrialState * ts, const double * const J)
 {
   double * nJ = new double[system->nparams() * system->nparams()];
   
-  diff_jac(system, x, nJ);
+  diff_jac(system, x, ts, nJ);
   double ss = 0.0;
   double js = 0.0;
   for (int i=0; i< system->nparams() * system->nparams(); i++) {
@@ -167,10 +167,10 @@ double diff_jac_check(Solvable * system, const double * const x,
 // START NOX STUFF
 #ifdef SOLVER_NOX
 NOXSolver::NOXSolver(Solvable * system) :
-    system_(system), nox_guess_(system->nparams())
+    system_(system), nox_guess_(system->nparams()), ts_(ts)
 {
   double * x = new double[system_->nparams()];
-  system_->init_x(x);
+  system_->init_x(x, ts_);
   for (int i=0; i<system_->nparams(); i++) {
     nox_guess_(i) = x[i];
   }
@@ -191,7 +191,7 @@ bool NOXSolver::computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x)
   for (int i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
-  system_->RJ(xi, Ri, Ji);
+  system_->RJ(xi, ts_, Ri, Ji);
   
   for (int i=0; i<system_->nparams(); i++) {
     f(i) = Ri[i];
@@ -214,7 +214,7 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
   for (int i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
-  system_->RJ(xi, Ri, Ji);
+  system_->RJ(xi, ts_, Ri, Ji);
 
   for (int i=0; i<system_->nparams(); i++) {
     for (int j=0; j<system_->nparams(); j++) {
@@ -230,11 +230,11 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
 }
 
 
-int nox(Solvable * system, double * x, 
+int nox(Solvable * system, double * x, TrialState * ts,
         double tol, int miter, bool verbose)
 {
   // Setup solver
-  NOXSolver solver(system);
+  NOXSolver solver(system, ts);
 
   // Setup NOX
   Teuchos::RCP<NOX::LAPACK::Group> grp = 

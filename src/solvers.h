@@ -11,12 +11,20 @@
 
 namespace neml {
 
+/// Trial state classes
+//  Store data the solver needs and can be passed into solution interface
+
+class TrialState {
+
+};
+
 /// Generic nonlinear solver interface
 class Solvable {
  public:
   virtual size_t nparams() const = 0;
-  virtual int init_x(double * const x) = 0;
-  virtual int RJ(const double * const x, double * const R, double * const J) = 0;
+  virtual int init_x(double * const x, TrialState * ts) = 0;
+  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J) = 0;
 };
 
 // This is entirely for testing
@@ -25,27 +33,28 @@ class TestRosenbrock: public Solvable {
   TestRosenbrock(size_t N);
 
   virtual size_t nparams() const;
-  virtual int init_x(double * const x);
-  virtual int RJ(const double * const x, double * const R, double * const J);
+  virtual int init_x(double * const x, TrialState * ts);
+  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J);
 
  private:
   const size_t N_;
 };
 
 /// Call the built-in solver
-int solve(Solvable * system, double * x, 
+int solve(Solvable * system, double * x, TrialState * ts, 
           double tol = 1.0e-8, int miter = 50,
           bool verbose = false);
 
 /// Default solver: plain NR
-int newton(Solvable * system, double * x, 
+int newton(Solvable * system, double * x, TrialState * ts,
           double tol, int miter, bool verbose);
 
 #ifdef SOLVER_NOX
 /// NOX OO interface
 class NOXSolver: public NOX::LAPACK::Interface {
  public:
-  NOXSolver(Solvable * system);
+  NOXSolver(Solvable * system, TrialState * ts);
 
   const NOX::LAPACK::Vector& getInitialGuess();
 
@@ -56,19 +65,20 @@ class NOXSolver: public NOX::LAPACK::Interface {
  private:
   NOX::LAPACK::Vector nox_guess_;
   Solvable * system_;
+  TrialState * ts_;
 };
 
 /// Interface to nox
-int nox(Solvable * system, double * x, 
+int nox(Solvable * system, double * x, TrialState * ts, 
         double tol, int miter, bool verbose);
 
 #endif
 
 /// Helper to get numerical jacobian
-int diff_jac(Solvable * system, const double * const x,
+int diff_jac(Solvable * system, const double * const x, TrialState * ts,
              double * const nJ, double eps = 1.0e-9);
 /// Helper to get checksum
-double diff_jac_check(Solvable * system, const double * const x,
+double diff_jac_check(Solvable * system, const double * const x, TrialState * ts,
                       const double * const J);
 
 } // namespace neml

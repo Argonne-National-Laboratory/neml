@@ -18,6 +18,7 @@ void destroy_nemlmodel(NEMLMODEL * model, int * ier)
 {
   try {
     delete model;
+    *ier = 0;
   }
   catch (...) {
     *ier = neml::UNKNOWN_ERROR;
