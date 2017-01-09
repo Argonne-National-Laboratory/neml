@@ -47,6 +47,12 @@ class GeneralFlowRule {
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot) = 0;
+  
+  // Needed to get plastic work
+  virtual int work_rate(const double * const s, const double * const alpha,
+                const double * const edot, double T,
+                double Tdot,
+                double & p_rate);
 };
 
 // First stab at thermo-visco-plasticity
@@ -91,6 +97,11 @@ class TVPFlowRule : public GeneralFlowRule {
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
+
+  virtual int work_rate(const double * const s, const double * const alpha,
+                const double * const edot, double T,
+                double Tdot,
+                double & p_dot);
   
  private:
   std::shared_ptr<LinearElasticModel> elastic_;

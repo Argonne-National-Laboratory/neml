@@ -109,6 +109,17 @@ PYBIND11_PLUGIN(general_flow) {
             py_error(ier);
             return f;
            }, "History rate derivative with respect to strain.")
+      
+      .def("work_rate",
+           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> double
+           {
+            double pi;
+            int ier = m.work_rate(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+                          arr2ptr<double>(edot), T,
+                          Tdot,  pi);
+            py_error(ier);
+            return pi;
+           }, "Plastic work rate.")
   ;
 
   py::class_<TVPFlowRule, std::shared_ptr<TVPFlowRule>>(m, "TVPFlowRule", py::base<GeneralFlowRule>())

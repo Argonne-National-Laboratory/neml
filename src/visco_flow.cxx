@@ -679,8 +679,10 @@ int YaguchiGr91FlowRule::g(const double * const s, const double * const alpha, d
 
   dev_vec(dS);
 
-  for (int i=0; i<6; i++) {
-    gv[i] = 3.0/2.0 * dS[i] / Jn;
+  if (Jn > 0.0) {
+    for (int i=0; i<6; i++) {
+      gv[i] = 3.0/2.0 * dS[i] / Jn;
+    }
   }
 
   return 0;

@@ -8,6 +8,16 @@
 
 namespace neml {
 
+int GeneralFlowRule::work_rate(const double * const s,
+                                            const double * const alpha,
+                                            const double * const edot, double T,
+                                            double Tdot, double & p_dot)
+{
+  // By default don't calculate plastic work
+  p_dot = 0.0;
+  return 0;
+}
+
 TVPFlowRule::TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
             std::shared_ptr<ViscoPlasticFlowRule> flow) :
     elastic_(elastic), flow_(flow)
@@ -247,6 +257,39 @@ int TVPFlowRule::da_de(const double * const s, const double * const alpha,
 
   return 0;
 }
+
+int TVPFlowRule::work_rate(const double * const s,
+                                    const double * const alpha,
+                                    const double * const edot, double T,
+                                    double Tdot, double & p_dot)
+{
+  double erate[6];
+  std::fill(erate, erate+6, 0.0);
+
+  double temp[6];
+  double yv;
+  flow_->g(s, alpha, T, temp);
+  flow_->y(s, alpha, T, yv);
+
+  for (int i=0; i<6; i++) {
+    erate[i] += yv * temp[i];
+  }
+
+  flow_->g_temp(s, alpha, T, temp);
+  for (int i=0; i<6; i++) {
+    erate[i] += Tdot * temp[i];
+  }
+
+  flow_->g_time(s, alpha, T, temp);
+  for (int i=0; i<6; i++) {
+    erate[i] += temp[i];
+  }
+
+  p_dot = dot_vec(s, erate, 6);
+  
+  return 0;
+}
+
 
 
 } // namespace neml

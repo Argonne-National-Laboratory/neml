@@ -1,4 +1,4 @@
-from neml import interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow
+from neml import solvers, interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow
 
 import unittest
 import numpy as np

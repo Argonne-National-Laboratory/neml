@@ -681,8 +681,10 @@ int GeneralIntegrator::update_sd(
   sub_vec(e_np1, e_n, 6, de);
   u_np1 = u_n + dot_vec(s_np1, de, 6);
 
-  // FIXME
-  p_np1 = p_n;
+  // Need a special call
+  double p_dot;
+  rule_->work_rate(s_np1, h_np1, ts.e_dot, T_np1, ts.Tdot, p_dot);
+  p_np1 = p_n + p_dot * ts.dt;
 
   return 0;
 }
