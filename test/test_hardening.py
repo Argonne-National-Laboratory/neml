@@ -36,8 +36,8 @@ class TestLinearIsotropicHardening(unittest.TestCase, CommonHardening):
     self.model = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
 
   def test_properties(self):
-    self.assertTrue(np.isclose(self.model.s0, self.s0))
-    self.assertTrue(np.isclose(self.model.K, self.K))
+    self.assertTrue(np.isclose(self.model.s0(self.T), self.s0))
+    self.assertTrue(np.isclose(self.model.K(self.T), self.K))
 
   def test_relation(self):
     self.assertTrue(np.allclose(self.model.q(self.hist_trial, self.T), 
@@ -57,9 +57,9 @@ class TestVoceIsotropicHardening(unittest.TestCase, CommonHardening):
     self.model = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
 
   def test_properties(self):
-    self.assertTrue(np.isclose(self.model.s0, self.s0))
-    self.assertTrue(np.isclose(self.model.R, self.R))
-    self.assertTrue(np.isclose(self.model.d, self.d))
+    self.assertTrue(np.isclose(self.model.s0(self.T), self.s0))
+    self.assertTrue(np.isclose(self.model.R(self.T), self.R))
+    self.assertTrue(np.isclose(self.model.d(self.T), self.d))
 
   def test_relation(self):
     self.assertTrue(np.allclose(self.model.q(self.hist_trial, self.T), 
@@ -78,7 +78,7 @@ class TestLinearKinematicHardening(unittest.TestCase, CommonHardening):
     self.model = hardening.LinearKinematicHardeningRule(self.H)
 
   def test_properties(self):
-    self.assertTrue(np.isclose(self.model.H, self.H))
+    self.assertTrue(np.isclose(self.model.H(self.T), self.H))
 
   def test_relation(self):
     self.assertTrue(np.allclose(self.model.q(self.hist_trial, self.T), 
@@ -155,8 +155,8 @@ class CommonGamma(object):
 
   def test_dgamma(self):
     a = self.gen_alpha()
-    should = self.model.dgamma(a)
-    dfn = lambda a: self.model.gamma(a)
+    should = self.model.dgamma(a, self.T)
+    dfn = lambda a: self.model.gamma(a, self.T)
     num = differentiate(dfn, a)
 
     self.assertTrue(np.isclose(should, num))
@@ -166,13 +166,14 @@ class TestConstantGamma(unittest.TestCase, CommonGamma):
     self.g = 100.0
     self.model = hardening.ConstantGamma(self.g)
 
+    self.T = 300.0
+
   def test_properties(self):
-    self.assertTrue(np.isclose(self.g, self.model.g))
+    self.assertTrue(np.isclose(self.g, self.model.g(self.T)))
 
   def test_gamma(self):
     a = self.gen_alpha()
-    should = self.g
-    self.assertTrue(np.isclose(should, self.model.gamma(a)))
+    self.assertTrue(np.isclose(self.g, self.model.gamma(a, self.T)))
 
 class TestSatGamma(unittest.TestCase, CommonGamma):
   def setUp(self):
@@ -180,17 +181,19 @@ class TestSatGamma(unittest.TestCase, CommonGamma):
     self.gs = 200.0
     self.beta = 2.5
 
+    self.T = 300.0
+
     self.model = hardening.SatGamma(self.gs, self.g0, self.beta)
 
   def test_properties(self):
-    self.assertTrue(np.isclose(self.g0, self.model.g0))
-    self.assertTrue(np.isclose(self.gs, self.model.gs))
-    self.assertTrue(np.isclose(self.beta, self.model.beta))
+    self.assertTrue(np.isclose(self.g0, self.model.g0(self.T)))
+    self.assertTrue(np.isclose(self.gs, self.model.gs(self.T)))
+    self.assertTrue(np.isclose(self.beta, self.model.beta(self.T)))
 
   def test_gamma(self):
     a = self.gen_alpha()
     should = self.gs + (self.g0 - self.gs)*np.exp(-self.beta * a)
-    self.assertTrue(np.isclose(should, self.model.gamma(a)))
+    self.assertTrue(np.isclose(should, self.model.gamma(a, self.T)))
 
 class TestChaboche(unittest.TestCase, CommonNonAssociative):
   """
@@ -223,7 +226,7 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
 
   def test_properties(self):
     self.assertEqual(self.n, self.model.n)
-    self.assertTrue(np.allclose(self.model.c, self.cs))
+    self.assertTrue(np.allclose(self.model.c(self.T), self.cs))
 
   def test_q(self):
     h = self.gen_hist()
@@ -245,7 +248,7 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0], self.T)*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))
 
@@ -280,7 +283,7 @@ class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
 
   def test_properties(self):
     self.assertEqual(self.n, self.model.n)
-    self.assertTrue(np.allclose(self.model.c, self.cs))
+    self.assertTrue(np.allclose(self.model.c(self.T), self.cs))
 
   def test_q(self):
     h = self.gen_hist()
@@ -302,7 +305,7 @@ class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0], self.T)*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))
 
@@ -339,7 +342,7 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
 
   def test_properties(self):
     self.assertEqual(self.n, self.model.n)
-    self.assertTrue(np.allclose(self.model.c, self.cs))
+    self.assertTrue(np.allclose(self.model.c(self.T), self.cs))
 
   def test_q(self):
     h = self.gen_hist()
@@ -361,6 +364,6 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
     h_exact = np.zeros((self.model.nhist,))
     h_exact[0] = np.sqrt(2.0/3.0)
     for i in range(self.n):
-      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0])*alpha[1+i*6:1+(i+1)*6]
+      h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0], self.T)*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))

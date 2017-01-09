@@ -50,16 +50,16 @@ PYBIND11_PLUGIN(hardening) {
   py::class_<LinearIsotropicHardeningRule, std::shared_ptr<LinearIsotropicHardeningRule>>(m, "LinearIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
       .def(py::init<double, double>(), py::arg("s0"), py::arg("K"))
       
-      .def_property_readonly("s0", &LinearIsotropicHardeningRule::s0)
-      .def_property_readonly("K", &LinearIsotropicHardeningRule::K)
+      .def("s0", &LinearIsotropicHardeningRule::s0)
+      .def("K", &LinearIsotropicHardeningRule::K)
       ;
 
   py::class_<VoceIsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
       .def(py::init<double, double, double>(), py::arg("s0"), py::arg("R"), py::arg("d"))
       
-      .def_property_readonly("s0", &VoceIsotropicHardeningRule::s0)
-      .def_property_readonly("R", &VoceIsotropicHardeningRule::R)
-      .def_property_readonly("d", &VoceIsotropicHardeningRule::d)
+      .def("s0", &VoceIsotropicHardeningRule::s0)
+      .def("R", &VoceIsotropicHardeningRule::R)
+      .def("d", &VoceIsotropicHardeningRule::d)
       ;
 
   py::class_<KinematicHardeningRule, std::shared_ptr<KinematicHardeningRule>>(m, "KinematicHardeningRule", py::base<HardeningRule>())
@@ -68,7 +68,7 @@ PYBIND11_PLUGIN(hardening) {
   py::class_<LinearKinematicHardeningRule, std::shared_ptr<LinearKinematicHardeningRule>>(m, "LinearKinematicHardeningRule", py::base<KinematicHardeningRule>())
       .def(py::init<double>(), py::arg("H"))
       
-      .def_property_readonly("H", &LinearKinematicHardeningRule::H)
+      .def("H", &LinearKinematicHardeningRule::H)
       ;
 
   py::class_<CombinedHardeningRule, std::shared_ptr<CombinedHardeningRule>>(m, "CombinedHardeningRule", py::base<HardeningRule>())
@@ -141,15 +141,15 @@ PYBIND11_PLUGIN(hardening) {
 
   py::class_<ConstantGamma, std::shared_ptr<ConstantGamma>>(m, "ConstantGamma", py::base<GammaModel>())
       .def(py::init<double>(), py::arg("g"))
-      .def_property_readonly("g", &ConstantGamma::g)
+      .def("g", &ConstantGamma::g)
       ;
 
   py::class_<SatGamma, std::shared_ptr<SatGamma>>(m, "SatGamma", py::base<GammaModel>())
       .def(py::init<double,double,double>(), py::arg("gs"), py::arg("g0"),
            py::arg("beta"))
-      .def_property_readonly("gs", &SatGamma::gs)
-      .def_property_readonly("g0", &SatGamma::g0)
-      .def_property_readonly("beta", &SatGamma::beta)
+      .def("gs", &SatGamma::gs)
+      .def("g0", &SatGamma::g0)
+      .def("beta", &SatGamma::beta)
       ;
 
   py::class_<Chaboche, std::shared_ptr<Chaboche>>(m, "Chaboche", py::base<NonAssociativeHardening>())
@@ -173,13 +173,14 @@ PYBIND11_PLUGIN(hardening) {
             new (&instance) Chaboche(iso, n, arr2ptr<double>(c), arr2ptr<double>(r));
            })
       .def_property_readonly("n", &Chaboche::n, "Number of backstresses")
-      .def_property_readonly("c",
-                             [](const Chaboche& m) -> py::array_t<double>
-                             {
-                              auto cv = alloc_vec<double>(m.n());
-                              std::copy(m.c().begin(), m.c().end(), arr2ptr<double>(cv));
-                              return cv;
-                             }, "c material constant.")
+      .def("c",
+         [](const Chaboche& m, double T) -> py::array_t<double>
+         {
+          auto cv = alloc_vec<double>(m.n());
+          std::vector<double> vv = m.c(T);
+          std::copy(vv.begin(), vv.end(), arr2ptr<double>(cv));
+          return cv;
+         }, "c material constant.")
       ;
 
   return m.ptr();

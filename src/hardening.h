@@ -1,6 +1,8 @@
 #ifndef HARDENING_H
 #define HARDENING_H
 
+#include "interpolate.h"
+
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -34,10 +36,10 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
-  double s0() const;
-  double K() const;
+  double s0(double T) const;
+  double K(double T) const;
  private:
-  const double s0_, K_;
+  const std::shared_ptr<const Interpolate> s0_, K_;
 };
 
 /// Voce isotropic hardening
@@ -47,12 +49,12 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
-  double s0() const;
-  double R() const;
-  double d() const;
+  double s0(double T) const;
+  double R(double T) const;
+  double d(double T) const;
 
  private:
-  const double s0_, R_, d_;
+  const std::shared_ptr<const Interpolate> s0_, R_, d_;
 
 };
 
@@ -70,10 +72,10 @@ class LinearKinematicHardeningRule: public KinematicHardeningRule {
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
-  double H() const;
+  double H(double T) const;
 
  private:
-  const double H_;
+  const std::shared_ptr<const Interpolate> H_;
 };
 
 class CombinedHardeningRule: public HardeningRule {
@@ -112,8 +114,8 @@ class NonAssociativeHardening {
 /// Gamma models for the Chaboche backstress
 class GammaModel {
  public:
-  virtual double gamma(double ep) const = 0;
-  virtual double dgamma(double ep) const = 0;
+  virtual double gamma(double ep, double T) const = 0;
+  virtual double dgamma(double ep, double T) const = 0;
 
 };
 
@@ -121,13 +123,13 @@ class ConstantGamma: public GammaModel {
  public:
   ConstantGamma(double g);
 
-  virtual double gamma(double ep) const;
-  virtual double dgamma(double ep) const;
+  virtual double gamma(double ep, double T) const;
+  virtual double dgamma(double ep, double T) const;
 
-  double g() const;
+  double g(double T) const;
 
  private:
-  const double g_;
+  const std::shared_ptr<const Interpolate> g_;
 
 };
 
@@ -135,15 +137,15 @@ class SatGamma: public GammaModel {
  public:
   SatGamma(double gs, double g0, double beta);
 
-  virtual double gamma(double ep) const;
-  virtual double dgamma(double ep) const;
+  virtual double gamma(double ep, double T) const;
+  virtual double dgamma(double ep, double T) const;
 
-  double gs() const;
-  double g0() const;
-  double beta() const;
+  double gs(double T) const;
+  double g0(double T) const;
+  double beta(double T) const;
 
  private:
-  const double gs_, g0_, beta_;
+  const std::shared_ptr<const Interpolate> gs_, g0_, beta_;
 
 };
 
@@ -177,14 +179,14 @@ class Chaboche: public NonAssociativeHardening {
 
   // Getters
   int n() const;
-  const std::vector<double> & c() const;
+  std::vector<double> c(double T) const;
 
  private:
   void backstress_(const double * const alpha, double * const X) const;
 
   std::shared_ptr<IsotropicHardeningRule> iso_;
   const int n_;
-  const std::vector<double> c_;
+  const std::vector<std::shared_ptr<const Interpolate>> c_;
   std::vector<std::shared_ptr<GammaModel>> gmodels_;
 };
 

@@ -37,7 +37,7 @@ if (WRAP_PYTHON)
       endif()
 
       # hardening rules
-      add_library(hardening SHARED hardening_wrap.cxx hardening.cxx nemlerror.cxx pyhelp.cxx)
+      add_library(hardening SHARED interpolate.cxx interpolate_wrap.cxx hardening_wrap.cxx hardening.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(hardening PROPERTIES PREFIX "")
       if (APPLE)

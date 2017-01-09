@@ -21,7 +21,7 @@ int IsotropicHardeningRule::init_hist(double * const alpha) const
 
 // Implementation of linear hardening
 LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(double s0, double K) :
-    s0_(s0), K_(K)
+    s0_(new ConstantInterpolate(s0)), K_(new ConstantInterpolate(K))
 {
 
 }
@@ -29,7 +29,7 @@ LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(double s0, double K) 
 int LinearIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
-  qv[0] = -s0_ - K_ * alpha[0];
+  qv[0] = -s0_->value(T) - K_->value(T) * alpha[0];
 
   return 0;
 }
@@ -37,25 +37,26 @@ int LinearIsotropicHardeningRule::q(const double * const alpha,
 int LinearIsotropicHardeningRule::dq_da(const double * const alpha, 
                                     double T, double * const dqv) const
 {
-  dqv[0] = -K_;
+  dqv[0] = -K_->value(T);
 
   return 0;
 }
 
-double LinearIsotropicHardeningRule::s0() const
+double LinearIsotropicHardeningRule::s0(double T) const
 {
-  return s0_;
+  return s0_->value(T);
 }
 
-double LinearIsotropicHardeningRule::K() const
+double LinearIsotropicHardeningRule::K(double T) const
 {
-  return K_;
+  return K_->value(T);
 }
 
 // Implementation of voce hardening
 VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(double s0, double R,
                                                        double d) :
-    s0_(s0), R_(R), d_(d)
+    s0_(new ConstantInterpolate(s0)), R_(new ConstantInterpolate(R)),
+    d_(new ConstantInterpolate(d))
 {
 
 }
@@ -63,7 +64,7 @@ VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(double s0, double R,
 int VoceIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
-  qv[0] = -s0_ - R_ * (1.0 - exp(-d_ * alpha[0]));
+  qv[0] = -s0_->value(T) - R_->value(T) * (1.0 - exp(-d_->value(T) * alpha[0]));
 
   return 0;
 }
@@ -71,24 +72,24 @@ int VoceIsotropicHardeningRule::q(const double * const alpha,
 int VoceIsotropicHardeningRule::dq_da(const double * const alpha, 
                                     double T, double * const dqv) const
 {
-  dqv[0] = -d_ * R_ * exp(-d_ * alpha[0]);
+  dqv[0] = -d_->value(T) * R_->value(T) * exp(-d_->value(T) * alpha[0]);
 
   return 0;
 }
 
-double VoceIsotropicHardeningRule::s0() const
+double VoceIsotropicHardeningRule::s0(double T) const
 {
-  return s0_;
+  return s0_->value(T);
 }
 
-double VoceIsotropicHardeningRule::R() const
+double VoceIsotropicHardeningRule::R(double T) const
 {
-  return R_;
+  return R_->value(T);
 }
 
-double VoceIsotropicHardeningRule::d() const
+double VoceIsotropicHardeningRule::d(double T) const
 {
-  return d_;
+  return d_->value(T);
 }
 
 // Implementation of kinematic base class
@@ -106,7 +107,7 @@ int KinematicHardeningRule::init_hist(double * const alpha) const
 
 // Implementation of linear kinematic hardening
 LinearKinematicHardeningRule::LinearKinematicHardeningRule(double H) :
-    H_(H)
+    H_(new ConstantInterpolate(H))
 {
 
 }
@@ -115,7 +116,7 @@ int LinearKinematicHardeningRule::q(const double * const alpha,
                                     double T, double * const qv) const
 {
   for (int i=0; i<6; i++) {
-    qv[i] = -H_ * alpha[i];
+    qv[i] = -H_->value(T) * alpha[i];
   }
 
   return 0;
@@ -126,15 +127,15 @@ int LinearKinematicHardeningRule::dq_da(const double * const alpha,
 {
   std::fill(dqv, dqv+36, 0.0);
   for (int i=0; i<6; i++) {
-    dqv[CINDEX(i,i,6)] = -H_;
+    dqv[CINDEX(i,i,6)] = -H_->value(T);
   }
 
   return 0;
 }
 
-double LinearKinematicHardeningRule::H() const
+double LinearKinematicHardeningRule::H(double T) const
 {
-  return H_;
+  return H_->value(T);
 }
 
 CombinedHardeningRule::CombinedHardeningRule(
@@ -198,50 +199,51 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
 // Constant
 //
 ConstantGamma::ConstantGamma(double g) :
-    g_(g)
+    g_(new ConstantInterpolate(g))
 {
 
 }
 
-double ConstantGamma::gamma(double ep) const {
-  return g_;
+double ConstantGamma::gamma(double ep, double T) const {
+  return g_->value(T);
 }
 
-double ConstantGamma::dgamma(double ep) const {
+double ConstantGamma::dgamma(double ep, double T) const {
   return 0;
 }
 
-double ConstantGamma::g() const {
-  return g_;
+double ConstantGamma::g(double T) const {
+  return g_->value(T);
 }
 
 //
 // Saturating
 //
 SatGamma::SatGamma(double gs, double g0, double beta) :
-    gs_(gs), g0_(g0), beta_(beta)
+    gs_(new ConstantInterpolate(gs)), g0_(new ConstantInterpolate(g0)),
+    beta_(new ConstantInterpolate(beta))
 {
 
 }
 
-double SatGamma::gamma(double ep) const {
-  return gs_ + (g0_ - gs_) * exp(-beta_ * ep);
+double SatGamma::gamma(double ep, double T) const {
+  return gs_->value(T) + (g0_->value(T) - gs_->value(T)) * exp(-beta_->value(T) * ep);
 }
 
-double SatGamma::dgamma(double ep) const {
-  return beta_ * (gs_ - g0_) * exp(-beta_ * ep);
+double SatGamma::dgamma(double ep, double T) const {
+  return beta_->value(T) * (gs_->value(T) - g0_->value(T)) * exp(-beta_->value(T) * ep);
 }
 
-double SatGamma::gs() const {
-  return gs_;
+double SatGamma::gs(double T) const {
+  return gs_->value(T);
 }
 
-double SatGamma::g0() const {
-  return g0_;
+double SatGamma::g0(double T) const {
+  return g0_->value(T);
 }
 
-double SatGamma::beta() const {
-  return beta_;
+double SatGamma::beta(double T) const {
+  return beta_->value(T);
 }
 
 //
@@ -250,14 +252,14 @@ double SatGamma::beta() const {
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<double> c,
                    std::vector<std::shared_ptr<GammaModel>> gmodels) :
-    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size())
+    iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size())
 {
 
 }
 
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    int n, const double * const c, const double * const r)
-  : iso_(iso), n_(n), c_(c, c+n)
+  : iso_(iso), n_(n), c_(make_constant_vector(std::vector<double>(c, c+n)))
 {
   for (int i=0; i<n; i++) {
     gmodels_.emplace_back(std::make_shared<ConstantGamma>(r[i]));
@@ -319,10 +321,12 @@ int Chaboche::h(const double * const s, const double * const alpha, double T,
   
   // Note the extra factor of sqrt(2.0/3.0) -- this is to make it equivalent
   // to Chaboche's original definition
+  
+  std::vector<double> c = eval_vector(c_, T);
 
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      hv[1+i*6+j] = - 2.0 / 3.0 * c_[i] * nv[j] - sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0]) * alpha[1+i*6+j];
+      hv[1+i*6+j] = - 2.0 / 3.0 * c[i] * nv[j] - sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T) * alpha[1+i*6+j];
     }
   }
 
@@ -333,6 +337,8 @@ int Chaboche::dh_ds(const double * const s, const double * const alpha, double T
               double * const dhv) const
 {
   std::fill(dhv, dhv + nhist()*6, 0.0);
+
+  std::vector<double> c = eval_vector(c_, T);
 
   double X[6];
   backstress_(alpha, X);
@@ -373,7 +379,7 @@ int Chaboche::dh_ds(const double * const s, const double * const alpha, double T
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
       for (int k=0; k<6; k++) {
-        dhv[CINDEX((1+i*6+j),(k),6)] = -2.0 / 3.0 * c_[i] * nn[CINDEX(j,k,6)];
+        dhv[CINDEX((1+i*6+j),(k),6)] = -2.0 / 3.0 * c[i] * nn[CINDEX(j,k,6)];
       }
     }
   }
@@ -385,6 +391,8 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
               double * const dhv) const
 {
   std::fill(dhv, dhv + nhist()*nhist(), 0.0);
+
+  std::vector<double> c = eval_vector(c_, T);
 
   double X[6];
   backstress_(alpha, X);
@@ -410,7 +418,7 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
   // Fill in the gamma part
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0]);
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
     }
   }
 
@@ -419,7 +427,7 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
     for (int i=0; i<6; i++) {
       for (int bj=0; bj<n_; bj++) {
         for (int j=0; j<6; j++) {
-          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nhist())] -= 2.0 / 3.0 * c_[bi]  * 
+          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nhist())] -= 2.0 / 3.0 * c[bi]  * 
               ss[CINDEX(i,j,6)];
         }
       }
@@ -429,7 +437,8 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
   // Fill in the alpha part
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * gmodels_[i]->dgamma(alpha[0]) * alpha[1+i*6+j];
+      dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * 
+          gmodels_[i]->dgamma(alpha[0], T) * alpha[1+i*6+j];
     }
   }
 
@@ -441,9 +450,9 @@ int Chaboche::n() const
   return n_;
 }
 
-const std::vector<double> & Chaboche::c() const
+std::vector<double> Chaboche::c(double T) const
 {
-  return c_;
+  return eval_vector(c_, T);
 }
 
 void Chaboche::backstress_(const double * const alpha, double * const X) const
