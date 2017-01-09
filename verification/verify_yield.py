@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, ri_flow
+from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,8 +18,8 @@ if __name__ == "__main__":
   s0 = 300.0
   Kp = E / 100.0
 
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
+  shear = elasticity.ShearModulus(mu)
+  bulk = elasticity.BulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
   surface = surfaces.IsoJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)

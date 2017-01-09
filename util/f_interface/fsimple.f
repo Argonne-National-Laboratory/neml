@@ -8,7 +8,8 @@
             double precision, allocatable, dimension(:) :: h_n, h_np1
             double precision :: s_n(6), s_np1(6), e_n(6), e_np1(6)
             double precision :: A_np1(6,6)
-            double precision :: temp_np1, temp_n, time_np1, time_n
+            double precision :: temp_np1, temp_n, time_np1, time_n,
+     &            u_np1, u_n, p_np1, p_n
 
             character(len=64) :: fname_arg, mname_arg, e_arg, time_arg
             character(len=64) :: nsteps_arg, temp_arg
@@ -65,7 +66,9 @@
             time_n = 0.0
             temp_np1 = temp
             temp_n = temp
-            
+
+            u_n = 0.0
+            p_n = 0.0
 
             ! Loop and update
             do i=1,nsteps
@@ -75,7 +78,7 @@
 
                   call update_sd_nemlmodel(model, e_np1, e_n, temp_np1,
      &                  temp_n, time_np1, time_n, s_np1, s_n, h_np1, 
-     &                  h_n, A_np1, ier)
+     &                  h_n, A_np1, u_np1, u_n, p_np1, p_n, ier)
                   if (ier .ne. 0) then
                         write(*,*) "Error in model update"
                         deallocate(h_np1)
@@ -89,6 +92,8 @@
                   e_n = e_np1
                   h_n = h_np1
                   time_n = time_np1
+                  u_n = u_np1
+                  p_n = p_np1
             end do
 
             ! Deallocate

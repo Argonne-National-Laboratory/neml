@@ -27,7 +27,10 @@ void update_sd_nemlmodel(NEMLMODEL * model, double * e_np1, double * e_n,
                          double t_np1, double t_n,
                          double * s_np1, double * s_n,
                          double * h_np1, double * h_n,
-                         double * A_np1, int * ier);
+                         double * A_np1,
+                         double * u_np1, double u_n,
+                         double * p_np1, double p_n,
+                         int * ier);
 
 #ifdef __cplusplus
 }

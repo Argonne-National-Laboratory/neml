@@ -18,14 +18,18 @@ class CommonMatModel(object):
     stress_n = np.zeros((6,))
     hist_n = self.model.init_store()
 
+    u_n = 0.0
+    p_n = 0.0
+
     for i,m in enumerate(np.linspace(0,1,self.nsteps)):
       t_np1 = self.tfinal * m
       strain_np1 = self.efinal * m
       
-      stress_np1, hist_np1, A_np1 = self.model.update_sd(strain_np1,
-          strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)
+      stress_np1, hist_np1, A_np1, u_np1, p_np1 = self.model.update_sd(
+          strain_np1, strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n,
+          u_n, p_n)
       dfn = lambda e: self.model.update_sd(e,
-          strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n)[0]
+          strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n, u_n, p_n)[0]
       num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
       
       if i != 0:
@@ -34,6 +38,8 @@ class CommonMatModel(object):
       strain_n = strain_np1
       stress_n = stress_np1
       hist_n = hist_np1
+      u_n = u_np1
+      p_n = p_np1
 
 class TestLinearElastic(CommonMatModel, unittest.TestCase):
   """

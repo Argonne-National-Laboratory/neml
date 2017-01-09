@@ -14,24 +14,38 @@ class CompareMats(object):
 
     strain_n = np.zeros((6,))
 
+    u_n1 = 0.0
+    u_n2 = 0.0
+    p_n1 = 0.0
+    p_n2 = 0.0
+
     for i,m in enumerate(np.linspace(0,1,self.nsteps)):
       t_np1 = self.tmax * m
       strain_np1 = self.emax * m
       
-      stress_np11, hist_np11, A_np11 = self.model1.update_sd(strain_np1,
-          strain_n, self.T, self.T, t_np1, t_n, stress_n1, hist_n1)
+      stress_np11, hist_np11, A_np11, u_np11, p_np11 = self.model1.update_sd(
+          strain_np1, strain_n, self.T, self.T, t_np1, t_n, stress_n1, hist_n1,
+          u_n1, p_n1)
 
-      stress_np12, hist_np12, A_np12 = self.model2.update_sd(strain_np1,
-          strain_n, self.T, self.T, t_np1, t_n, stress_n2, hist_n2)
+      stress_np12, hist_np12, A_np12, u_np12, p_np12 = self.model2.update_sd(
+          strain_np1, strain_n, self.T, self.T, t_np1, t_n, stress_n2, hist_n2,
+          u_n2, p_n2)
 
       self.assertTrue(np.allclose(stress_np11, stress_np12))
       self.assertTrue(np.allclose(hist_np11, hist_np12))
       self.assertTrue(np.allclose(A_np11, A_np12))
+      self.assertTrue(np.isclose(u_np11, u_np12))
+      self.assertTrue(np.isclose(p_np11, p_np12))
       
       stress_n1 = stress_np11
       hist_n1 = hist_np11
       stress_n2 = stress_np12
       hist_n2 = hist_np12
+
+      u_n1 = u_np11
+      u_n2 = u_np12
+      p_n1 = p_np11
+      p_n2 = p_np12
 
       strain_n = strain_np1
 

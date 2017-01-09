@@ -50,11 +50,14 @@ void update_sd_nemlmodel(NEMLMODEL * model, double * e_np1, double * e_n,
                          double t_np1, double t_n,
                          double * s_np1, double * s_n,
                          double * h_np1, double * h_n,
-                         double * A_np1, int * ier)
+                         double * A_np1,
+                         double * u_np1, double u_n,
+                         double * p_np1, double p_n,
+                         int * ier)
 {
   try {
     *ier = model->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
-                            h_np1, h_n, A_np1);
+                            h_np1, h_n, A_np1, *u_np1, u_n, *p_np1, p_n);
   }
   catch (...) {
     *ier = neml::UNKNOWN_ERROR;

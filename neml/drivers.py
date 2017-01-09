@@ -32,6 +32,9 @@ class Driver(object):
     self.T_int = [0.0]
     self.t_int = [0.0]
 
+    self.u_int = [0.0]
+    self.p_int = [0.0]
+
   @property
   def stress(self):
     return np.array(self.stress_int)
@@ -51,6 +54,14 @@ class Driver(object):
   @property
   def t(self):
     return np.array(self.t_int)
+
+  @property
+  def u(self):
+    return np.array(u_int)
+
+  @property
+  def p(self):
+    return np.array(p_int)
 
 
 class Driver_sd(Driver):
@@ -74,15 +85,18 @@ class Driver_sd(Driver):
         t_np1       next time
         T_np1       next temperature
     """
-    s_np1, h_np1, A_np1 = self.model.update_sd(e_np1, self.strain_int[-1],
+    s_np1, h_np1, A_np1, u_np1, p_np1 = self.model.update_sd(e_np1, 
+        self.strain_int[-1],
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
-        self.stored_int[-1])
+        self.stored_int[-1], self.u_int[-1], self.p_int[-1])
 
     self.strain_int.append(np.copy(e_np1))
     self.stress_int.append(np.copy(s_np1))
     self.stored_int.append(np.copy(h_np1))
     self.T_int.append(T_np1)
     self.t_int.append(t_np1)
+    self.u_int.append(u_np1)
+    self.p_int.append(p_np1)
 
   def stress_step(self, s_np1, t_np1, T_np1):
     """
@@ -94,10 +108,10 @@ class Driver_sd(Driver):
         T_np1       next temperature
     """
     def RJ(e):
-      s, h, A = self.model.update_sd(e, self.strain_int[-1],
+      s, h, A, u, p = self.model.update_sd(e, self.strain_int[-1],
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], 
         self.stress_int[-1],
-        self.stored_int[-1])
+        self.stored_int[-1], self.u_int[-1], self.p_int[-1])
       R = s - s_np1
       return R, A
 
@@ -127,10 +141,11 @@ class Driver_sd(Driver):
     def RJ(x):
       a = x[0]
       e_inc = x[1:]
-      s, h, A = self.model.update_sd(self.strain_int[-1] + e_inc,
+      s, h, A, u, p = self.model.update_sd(self.strain_int[-1] + e_inc,
           self.strain_int[-1],
           T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
-          self.stored_int[-1])
+          self.stored_int[-1],
+          self.u_int[-1], self.p_int[-1])
 
       R = np.zeros((7,))
       J = np.zeros((7,7))
@@ -208,10 +223,10 @@ class Driver_sd(Driver):
     """
     oset = sorted(list(set(range(6)) - set([i])))
     def RJ(e_np1):
-      s, h, A = self.model.update_sd(e_np1,
+      s, h, A, u, p = self.model.update_sd(e_np1,
           self.strain_int[-1],
           T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
-          self.stored_int[-1])
+          self.stored_int[-1], self.u_int[-1], self.p_int[-1])
 
       R = np.zeros((6,))
       R[0] = e_np1[i] - self.strain_int[-1][i]

@@ -49,6 +49,12 @@ int main(int argc, char* argv[])
       double t_n = 0.0;
       double t_np1;
 
+      double u_n = 0.0;
+      double u_np1;
+
+      double p_n = 0.0;
+      double p_np1;
+
       double ec;
       int j;
 
@@ -58,7 +64,8 @@ int main(int argc, char* argv[])
             e_np1[0] = (i+1) * e / ((double) n);
 
             update_sd_nemlmodel(model, e_np1, e_n, T_np1, T_n, t_np1, t_n,
-                        s_np1, s_n, h_np1, h_n, A_np1, &ier);
+                        s_np1, s_n, h_np1, h_n, A_np1, &u_np1, u_n,
+                        &p_np1, p_n, &ier);
             if (ier != 0) {
                   printf("Problem in stress update\n");
                   free(h_n);
@@ -75,6 +82,9 @@ int main(int argc, char* argv[])
                   h_n[j] = h_np1[j];
             }
             t_n = t_np1;
+
+            u_n = u_np1;
+            p_n = p_np1;
       }
 
 

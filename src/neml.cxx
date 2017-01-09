@@ -50,18 +50,22 @@ int NEMLModel_ldF::update_ldI(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1)
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   assert(false); // Pass on implementing for now
 }
 
 int NEMLModel_ldF::update_sd(
-     const double * const e_np1, const double * const e_n,
-     double T_np1, double T_n,
-     double t_np1, double t_n,
-     double * const s_np1, const double * const s_n,
-     double * const h_np1, const double * const h_n,
-     double * const A_np1)
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   assert(false); // Pass on implementing for now
 }
@@ -94,7 +98,9 @@ int NEMLModel_ldI::update_ldF(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1)
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   assert(false); // Pass for now
 }
@@ -105,7 +111,9 @@ int NEMLModel_ldI::update_sd(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1)
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   assert(false); // Pass for now
 }
@@ -139,7 +147,9 @@ int NEMLModel_sd::update_ldF(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1)
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   assert(false); // Pass for now
 }
@@ -150,7 +160,9 @@ int NEMLModel_sd::update_ldI(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1)
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   assert(false); // Pass for now
 }
@@ -180,10 +192,19 @@ int SmallStrainElasticity::update_sd(
        double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
        double * const h_np1, const double * const h_n,
-       double * const A_np1)
+       double * const A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n)
 {
   elastic_->C(T_np1, A_np1);
   mat_vec(A_np1, 6, e_np1, 6, s_np1);
+
+  // Energy calculation
+  double de[6];
+  sub_vec(e_np1, e_n, 6, de);
+  u_np1 = u_n + dot_vec(s_np1, de, 6);
+  p_np1 = p_n;
+
   return 0;
 }
 
@@ -219,7 +240,9 @@ int SmallStrainRateIndependentPlasticity::update_sd(
        double t_np1, double t_n,
        double * const s_np1, const double * const s_n,
        double * const h_np1, const double * const h_n,
-       double * const A_np1)
+       double * const A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n)
 {
   // Setup and store the trial state for the solver
   SSRIPTrialState ts;
@@ -237,9 +260,6 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     std::copy(&ts.h_tr[0], &ts.h_tr[0]+flow_->nhist(), &h_np1[6]);
     std::copy(ts.C, ts.C+36, A_np1);
     dg = 0.0;
-
-    // Check K-T and return
-    return check_K_T_(s_np1, h_np1, T_np1, dg);
   }
   // Else solve and extract updated parameters from the solver vector
   else {
@@ -257,10 +277,20 @@ int SmallStrainRateIndependentPlasticity::update_sd(
 
     // Complicated tangent calc...
     calc_tangent_(x, &ts, s_np1, h_np1, dg, A_np1);
-    
-    // Check K-T and return
-    return check_K_T_(s_np1, h_np1, T_np1, dg);
   }
+
+  // Energy calculation
+  double de[6];
+  sub_vec(e_np1, e_n, 6, de);
+  u_np1 = u_n + dot_vec(s_np1, de, 6);
+
+  double dep[6];
+  sub_vec(h_np1, h_n, 6, dep);
+  p_np1 = p_n + dot_vec(s_np1, dep, 6);
+
+  // Check K-T and return
+  return check_K_T_(s_np1, h_np1, T_np1, dg);
+
 }
 
 size_t SmallStrainRateIndependentPlasticity::nparams() const
@@ -541,7 +571,9 @@ int GeneralIntegrator::update_sd(
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1)
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   // Setup for substepping
   int nd = 0;                   // Number of times we divided
@@ -643,7 +675,14 @@ int GeneralIntegrator::update_sd(
   std::copy(h_np1, h_np1+nhist(), &y[6]);
   
   calc_tangent_(y, &ts, A_np1);
+  
+  // Energy calculation
+  double de[6];
+  sub_vec(e_np1, e_n, 6, de);
+  u_np1 = u_n + dot_vec(s_np1, de, 6);
 
+  // FIXME
+  p_np1 = p_n;
 
   return 0;
 }
