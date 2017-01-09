@@ -131,7 +131,7 @@ std::shared_ptr<ShearModulus> process_constantshearmodulus(
   // One scalar parameter in "modulus"
   double mod = scalar_param(node, "modulus", ier);
 
-  return std::make_shared<ConstantShearModulus>(mod);
+  return std::make_shared<ShearModulus>(mod);
 }
 
 std::shared_ptr<ShearModulus> process_polynomialshearmodulus(
@@ -140,7 +140,7 @@ std::shared_ptr<ShearModulus> process_polynomialshearmodulus(
   // One vector parameter in "coefs"
   std::vector<double> coefs = vector_param(node, "coefs", ier);
 
-  return std::make_shared<PolyShearModulus>(coefs);
+  return std::make_shared<ShearModulus>(std::make_shared<PolynomialInterpolate>(coefs));
 }
 
 std::shared_ptr<BulkModulus> process_bulkmodulus(
@@ -159,7 +159,7 @@ std::shared_ptr<BulkModulus> process_constantbulkmodulus(
   // One scalar parameter in "modulus"
   double mod = scalar_param(node, "modulus", ier);
 
-  return std::make_shared<ConstantBulkModulus>(mod);
+  return std::make_shared<BulkModulus>(mod);
 }
 
 std::shared_ptr<BulkModulus> process_polynomialbulkmodulus(
@@ -168,7 +168,7 @@ std::shared_ptr<BulkModulus> process_polynomialbulkmodulus(
   // One vector parameter in "coefs"
   std::vector<double> coefs = vector_param(node, "coefs", ier);
 
-  return std::make_shared<PolyBulkModulus>(coefs);
+  return std::make_shared<BulkModulus>(std::make_shared<PolynomialInterpolate>(coefs));
 }
 
 

@@ -1,4 +1,4 @@
-from neml import neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow
+from neml import interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow
 
 import unittest
 import numpy as np
@@ -46,8 +46,8 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     ys = 100.0
     H = 1000.0
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoJ2()
@@ -74,8 +74,8 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
 
     KH = 1000.0
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoKinJ2()
@@ -106,8 +106,8 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
 
     gs = [1000.0,1000.0]
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoKinJ2()
@@ -131,8 +131,8 @@ class TestYaguchi(CompareMats, unittest.TestCase):
     mu_poly = [-0.11834615, 115.5, 48807.69]
     K_poly = [-0.256417, 250.25, 105750.0]
 
-    shear = elasticity.PolyShearModulus(mu_poly)
-    bulk = elasticity.PolyBulkModulus(K_poly)
+    shear = elasticity.ShearModulus(interpolate.PolynomialInterpolate(mu_poly))
+    bulk = elasticity.BulkModulus(interpolate.PolynomialInterpolate(K_poly))
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
     
     vmodel = visco_flow.YaguchiGr91FlowRule()
@@ -153,8 +153,8 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     mu = 60384.61
     K = 130833.3
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     r = -80.0
@@ -192,8 +192,8 @@ class TestPerzyna(CompareMats, unittest.TestCase):
     mu = 40000.0
     K = 84000.0
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
     
     sy = 100.0

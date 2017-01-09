@@ -19,7 +19,7 @@ if (WRAP_PYTHON)
       endif()
 
       # elasticity
-      add_library(elasticity SHARED elasticity_wrap.cxx elasticity.cxx nemlerror.cxx pyhelp.cxx)
+      add_library(elasticity SHARED interpolate.cxx interpolate_wrap.cxx elasticity_wrap.cxx elasticity.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(elasticity nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(elasticity PROPERTIES PREFIX "")
       if (APPLE)

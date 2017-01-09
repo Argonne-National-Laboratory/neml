@@ -6,91 +6,40 @@
 
 namespace neml {
 
-ConstantShearModulus::ConstantShearModulus(double mu) :
+ShearModulus::ShearModulus(double mu) :
+    mu_(new ConstantInterpolate(mu))
+{
+
+}
+
+ShearModulus::ShearModulus(std::shared_ptr<Interpolate> mu) :
     mu_(mu)
 {
 
 }
 
-double ConstantShearModulus::modulus(double T) const
+double ShearModulus::modulus(double T) const
 {
-  return mu_;
-}
-
-double ConstantShearModulus::mu() const
-{
-  return mu_;
-}
-
-PolyShearModulus::PolyShearModulus(const std::vector<double> coefs) :
-    coefs_(coefs), n_(coefs.size())
-{
-
-}
-
-PolyShearModulus::PolyShearModulus(int n, const double * const coefs) :
-    n_(n), coefs_(coefs, coefs + n)
-{
-
-}
-
-double PolyShearModulus::modulus(double T) const
-{
-  return polyval(&coefs_[0], coefs_.size(), T);
-}
-
-int PolyShearModulus::n() const
-{
-  return n_;
-}
-
-const std::vector<double> & PolyShearModulus::coefs() const
-{
-  return coefs_;
+  return mu_->value(T);
 }
 
 
-ConstantBulkModulus::ConstantBulkModulus(double K) :
+
+BulkModulus::BulkModulus(std::shared_ptr<Interpolate> K) :
     K_(K)
 {
   
 }
 
-double ConstantBulkModulus::modulus(double T) const
+BulkModulus::BulkModulus(double K) :
+    K_(new ConstantInterpolate(K))
 {
-  return K_;
+  
 }
 
-double ConstantBulkModulus::K() const
+double BulkModulus::modulus(double T) const
 {
-  return K_;
-}
-
-PolyBulkModulus::PolyBulkModulus(const std::vector<double> coefs) :
-    coefs_(coefs), n_(coefs.size())
-{
-
-}
-
-PolyBulkModulus::PolyBulkModulus(int n, const double * const coefs) :
-    n_(n), coefs_(coefs, coefs + n)
-{
-
-}
-
-double PolyBulkModulus::modulus(double T) const
-{
-  return polyval(&coefs_[0], coefs_.size(), T);
-}
-
-int PolyBulkModulus::n() const
-{
-  return n_;
-}
-
-const std::vector<double> & PolyBulkModulus::coefs() const
-{
-  return coefs_;
+  return K_->value(T);
 }
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(

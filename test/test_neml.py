@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers,neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow
+from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow
 from common import *
 
 import unittest
@@ -47,8 +47,8 @@ class TestLinearElastic(CommonMatModel, unittest.TestCase):
     self.mu = self.E/(2*(1+self.nu))
     self.K = self.E/(3*(1-2*self.nu))
 
-    shear = elasticity.ConstantShearModulus(self.mu)
-    bulk = elasticity.ConstantBulkModulus(self.K)
+    shear = elasticity.ShearModulus(self.mu)
+    bulk = elasticity.BulkModulus(self.K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
     self.model = neml.SmallStrainElasticity(elastic)
 
@@ -158,8 +158,8 @@ class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, C
 
     self.H = 1000.0
 
-    shear = elasticity.ConstantShearModulus(self.mu)
-    bulk = elasticity.ConstantBulkModulus(self.K)
+    shear = elasticity.ShearModulus(self.mu)
+    bulk = elasticity.BulkModulus(self.K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoKinJ2()
@@ -202,8 +202,8 @@ class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel, CommonJacobia
     self.s0 = 180.0
     self.Kp = self.E / 100
 
-    shear = elasticity.ConstantShearModulus(self.mu)
-    bulk = elasticity.ConstantBulkModulus(self.K)
+    shear = elasticity.ShearModulus(self.mu)
+    bulk = elasticity.BulkModulus(self.K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoJ2()
@@ -242,8 +242,8 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
     self.R = 150.0
     self.d = 10.0
 
-    shear = elasticity.ConstantShearModulus(self.mu)
-    bulk = elasticity.ConstantBulkModulus(self.K)
+    shear = elasticity.ShearModulus(self.mu)
+    bulk = elasticity.BulkModulus(self.K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoJ2()
@@ -284,8 +284,8 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
     self.cs = np.array([10.0, 2.0])
     self.rs = np.array([5.0, 1.0])
 
-    shear = elasticity.ConstantShearModulus(self.mu)
-    bulk = elasticity.ConstantBulkModulus(self.K)
+    shear = elasticity.ShearModulus(self.mu)
+    bulk = elasticity.BulkModulus(self.K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoKinJ2()
@@ -353,8 +353,8 @@ class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacob
     mu = E/(2*(1+nu))
     K = E/(3*(1-2*nu))
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     flow = general_flow.TVPFlowRule(elastic, vmodel)
@@ -399,8 +399,8 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian2):
     self.n = 2.0
     self.eta = 200.0
 
-    shear = elasticity.ConstantShearModulus(self.mu)
-    bulk = elasticity.ConstantBulkModulus(self.K)
+    shear = elasticity.ShearModulus(self.mu)
+    bulk = elasticity.BulkModulus(self.K)
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     surface = surfaces.IsoJ2()
@@ -436,8 +436,8 @@ class TestYaguchi(unittest.TestCase, CommonMatModel, CommonJacobian2):
     mu_poly = list(E_poly/(2*(1+nu)))
     K_poly = list(E_poly/(3*(1-2*nu)))
 
-    shear = elasticity.PolyShearModulus(mu_poly)
-    bulk = elasticity.PolyBulkModulus(K_poly)
+    shear = elasticity.ShearModulus(interpolate.PolynomialInterpolate(mu_poly))
+    bulk = elasticity.BulkModulus(interpolate.PolynomialInterpolate(K_poly))
     elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     flow = general_flow.TVPFlowRule(elastic, vmodel)

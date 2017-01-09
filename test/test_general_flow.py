@@ -179,8 +179,8 @@ class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     mu = E/(2*(1+nu))
     K = E/(3*(1-2*nu))
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     self.emodel = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     self.model = general_flow.TVPFlowRule(self.emodel, self.vmodel)
@@ -230,8 +230,8 @@ class TestTVPYaguchi(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     mu = E/(2*(1+nu))
     K = E/(3*(1-2*nu))
 
-    shear = elasticity.ConstantShearModulus(mu)
-    bulk = elasticity.ConstantBulkModulus(K)
+    shear = elasticity.ShearModulus(mu)
+    bulk = elasticity.BulkModulus(K)
     self.emodel = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
     self.model = general_flow.TVPFlowRule(self.emodel, self.vmodel)

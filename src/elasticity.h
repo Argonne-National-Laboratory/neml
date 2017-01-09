@@ -1,6 +1,8 @@
 #ifndef ELASTICITY_H
 #define ELASTICITY_H
 
+#include "interpolate.h"
+
 #include <memory>
 #include <vector>
 
@@ -9,73 +11,25 @@ namespace neml {
 /// Shear modulus model: function of temperature
 class ShearModulus {
  public:
-  virtual double modulus(double T) const = 0;
-
-};
-
-/// Constant shear modulus
-class ConstantShearModulus: public ShearModulus {
- public:
-  ConstantShearModulus(double mu);
+  ShearModulus::ShearModulus(double mu);
+  ShearModulus::ShearModulus(std::shared_ptr<Interpolate> mu);
   virtual double modulus(double T) const;
 
-  double mu() const;
-
  private:
-  const double mu_;
+  std::shared_ptr<Interpolate> mu_;
 
-};
-
-/// Shear modulus varies as a general polynomial
-class PolyShearModulus: public ShearModulus {
- public:
-  PolyShearModulus(const std::vector<double> coefs);
-  PolyShearModulus(int n, const double * const coefs);
-  virtual double modulus(double T) const;
-
-  // Getters
-  int n() const;
-  const std::vector<double> & coefs() const;
-
- private:
-  const int n_;
-  const std::vector<double> coefs_;
 };
 
 /// Bulk modulus model: function of temperature
 class BulkModulus {
  public:
-  virtual double modulus(double T) const = 0;
-};
-
-/// Constant bulk modulus
-class ConstantBulkModulus: public BulkModulus {
- public:
-  ConstantBulkModulus(double K);
+  BulkModulus::BulkModulus(double K);
+  BulkModulus::BulkModulus(std::shared_ptr<Interpolate> K);
   virtual double modulus(double T) const;
 
-  double K() const;
-
  private:
-  const double K_;
+  std::shared_ptr<Interpolate> K_;
 };
-
-/// Bulk modulus varies as a general polynomial
-class PolyBulkModulus: public BulkModulus {
- public:
-  PolyBulkModulus(const std::vector<double> coefs);
-  PolyBulkModulus(int n, const double * const coefs);
-  virtual double modulus(double T) const;
-
-  // Getters
-  int n() const;
-  const std::vector<double> & coefs() const;
-
- private:
-  const int n_;
-  const std::vector<double> coefs_;
-};
-
 
 /// Interface of all linear elastic models
 //    Return properties as a function of temperature

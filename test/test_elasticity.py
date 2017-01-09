@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import elasticity
+from neml import elasticity, interpolate
 import unittest
 
 from common import *
@@ -13,23 +13,16 @@ class TestConstantShearModulus(unittest.TestCase):
   def setUp(self):
     self.mu = 29000.0
     self.T = 325.0
-    self.model = elasticity.ConstantShearModulus(self.mu)
-
-  def test_properties(self):
-    self.assertTrue(np.isclose(self.model.mu, self.mu))
+    self.model = elasticity.ShearModulus(self.mu)
 
   def test_modulus(self):
-    self.assertTrue(np.isclose(self.model.mu, self.model.modulus(self.T)))
+    self.assertTrue(np.isclose(self.mu, self.model.modulus(self.T)))
 
 class TestPolyShearModulus(unittest.TestCase):
   def setUp(self):
     self.coefs = [3.077e-1, 3.003e2, 1.269e5]
     self.T = 525.0
-    self.model = elasticity.PolyShearModulus(self.coefs)
-
-  def test_properties(self):
-    self.assertEqual(len(self.coefs), self.model.n)
-    self.assertTrue(np.allclose(self.coefs, self.model.coefs))
+    self.model = elasticity.ShearModulus(interpolate.PolynomialInterpolate(self.coefs))
 
   def test_modulus(self):
     self.assertTrue(np.isclose(self.model.modulus(self.T), 
@@ -39,23 +32,16 @@ class TestConstantBulkModulus(unittest.TestCase):
   def setUp(self):
     self.K = 64000.0
     self.T = 325.0
-    self.model = elasticity.ConstantBulkModulus(self.K)
-
-  def test_properties(self):
-    self.assertTrue(np.isclose(self.model.K, self.K))
+    self.model = elasticity.BulkModulus(self.K)
 
   def test_modulus(self):
-    self.assertTrue(np.isclose(self.model.K, self.model.modulus(self.T)))
+    self.assertTrue(np.isclose(self.K, self.model.modulus(self.T)))
 
 class TestPolyBulkModulus(unittest.TestCase):
   def setUp(self):
     self.coefs = [3.077e-2, 3.003e3, 1.269e2]
     self.T = 525.0
-    self.model = elasticity.PolyBulkModulus(self.coefs)
-
-  def test_properties(self):
-    self.assertEqual(len(self.coefs), self.model.n)
-    self.assertTrue(np.allclose(self.coefs, self.model.coefs))
+    self.model = elasticity.BulkModulus(interpolate.PolynomialInterpolate(self.coefs))
 
   def test_modulus(self):
     self.assertTrue(np.isclose(self.model.modulus(self.T), 
@@ -79,8 +65,8 @@ class TestIsotropicConstantModel(CommonElasticity, unittest.TestCase):
     self.K = 64000.0
     self.T = 325.0
 
-    self.shear = elasticity.ConstantShearModulus(self.mu)
-    self.bulk = elasticity.ConstantBulkModulus(self.K)
+    self.shear = elasticity.ShearModulus(self.mu)
+    self.bulk = elasticity.BulkModulus(self.K)
 
     self.model = elasticity.IsotropicLinearElasticModel(self.shear, self.bulk)
 
