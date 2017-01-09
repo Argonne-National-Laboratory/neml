@@ -33,6 +33,7 @@ class IsotropicHardeningRule: public HardeningRule {
 class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   LinearIsotropicHardeningRule(double s0, double K);
+  LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K);
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -46,6 +47,7 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
 class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   VoceIsotropicHardeningRule(double s0, double R, double d);
+  VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> R, std::shared_ptr<Interpolate> d);
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -69,6 +71,8 @@ class KinematicHardeningRule: public HardeningRule {
 class LinearKinematicHardeningRule: public KinematicHardeningRule {
  public:
   LinearKinematicHardeningRule(double H);
+  LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H);
+
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -122,6 +126,7 @@ class GammaModel {
 class ConstantGamma: public GammaModel {
  public:
   ConstantGamma(double g);
+  ConstantGamma(std::shared_ptr<Interpolate> g);
 
   virtual double gamma(double ep, double T) const;
   virtual double dgamma(double ep, double T) const;
@@ -136,6 +141,7 @@ class ConstantGamma: public GammaModel {
 class SatGamma: public GammaModel {
  public:
   SatGamma(double gs, double g0, double beta);
+  SatGamma(std::shared_ptr<Interpolate> gs, std::shared_ptr<Interpolate> g0, std::shared_ptr<Interpolate> beta);
 
   virtual double gamma(double ep, double T) const;
   virtual double dgamma(double ep, double T) const;
@@ -156,6 +162,9 @@ class Chaboche: public NonAssociativeHardening {
   /// New interface with vectors
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<double> c,
+           std::vector<std::shared_ptr<GammaModel>> gmodels);
+  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+           std::vector<std::shared_ptr<const Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels);
 
   /// Older interface assuming constant gammas

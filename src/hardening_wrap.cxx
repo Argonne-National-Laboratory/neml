@@ -49,6 +49,7 @@ PYBIND11_PLUGIN(hardening) {
 
   py::class_<LinearIsotropicHardeningRule, std::shared_ptr<LinearIsotropicHardeningRule>>(m, "LinearIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
       .def(py::init<double, double>(), py::arg("s0"), py::arg("K"))
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("s0"), py::arg("K"))
       
       .def("s0", &LinearIsotropicHardeningRule::s0)
       .def("K", &LinearIsotropicHardeningRule::K)
@@ -56,6 +57,7 @@ PYBIND11_PLUGIN(hardening) {
 
   py::class_<VoceIsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
       .def(py::init<double, double, double>(), py::arg("s0"), py::arg("R"), py::arg("d"))
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("s0"), py::arg("R"), py::arg("d"))
       
       .def("s0", &VoceIsotropicHardeningRule::s0)
       .def("R", &VoceIsotropicHardeningRule::R)
@@ -67,6 +69,7 @@ PYBIND11_PLUGIN(hardening) {
 
   py::class_<LinearKinematicHardeningRule, std::shared_ptr<LinearKinematicHardeningRule>>(m, "LinearKinematicHardeningRule", py::base<KinematicHardeningRule>())
       .def(py::init<double>(), py::arg("H"))
+      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("H"))
       
       .def("H", &LinearKinematicHardeningRule::H)
       ;
@@ -141,11 +144,15 @@ PYBIND11_PLUGIN(hardening) {
 
   py::class_<ConstantGamma, std::shared_ptr<ConstantGamma>>(m, "ConstantGamma", py::base<GammaModel>())
       .def(py::init<double>(), py::arg("g"))
+      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("g"))
+
       .def("g", &ConstantGamma::g)
       ;
 
   py::class_<SatGamma, std::shared_ptr<SatGamma>>(m, "SatGamma", py::base<GammaModel>())
       .def(py::init<double,double,double>(), py::arg("gs"), py::arg("g0"),
+           py::arg("beta"))
+      .def(py::init<std::shared_ptr<Interpolate>,std::shared_ptr<Interpolate>,std::shared_ptr<Interpolate>>(), py::arg("gs"), py::arg("g0"),
            py::arg("beta"))
       .def("gs", &SatGamma::gs)
       .def("g0", &SatGamma::g0)
@@ -154,6 +161,8 @@ PYBIND11_PLUGIN(hardening) {
 
   py::class_<Chaboche, std::shared_ptr<Chaboche>>(m, "Chaboche", py::base<NonAssociativeHardening>())
       .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"))
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<const Interpolate>>, std::vector<std::shared_ptr<GammaModel>>>(),
            py::arg("iso"), py::arg("c"), py::arg("gmodels"))
       .def("__init__",
            [](Chaboche & instance, std::shared_ptr<IsotropicHardeningRule> iso, py::array_t<double, py::array::c_style> c, py::array_t<double, py::array::c_style> r) 

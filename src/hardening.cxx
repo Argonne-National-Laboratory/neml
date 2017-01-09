@@ -26,6 +26,12 @@ LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(double s0, double K) 
 
 }
 
+LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K) :
+    s0_(s0), K_(K)
+{
+
+}
+
 int LinearIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
@@ -60,6 +66,13 @@ VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(double s0, double R,
 {
 
 }
+
+VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> R, std::shared_ptr<Interpolate> d) :
+    s0_(s0), R_(R), d_(d)
+{
+
+}
+
 
 int VoceIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
@@ -108,6 +121,12 @@ int KinematicHardeningRule::init_hist(double * const alpha) const
 // Implementation of linear kinematic hardening
 LinearKinematicHardeningRule::LinearKinematicHardeningRule(double H) :
     H_(new ConstantInterpolate(H))
+{
+
+}
+
+LinearKinematicHardeningRule::LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H) :
+    H_(H)
 {
 
 }
@@ -204,6 +223,12 @@ ConstantGamma::ConstantGamma(double g) :
 
 }
 
+ConstantGamma::ConstantGamma(std::shared_ptr<Interpolate> g) :
+    g_(g)
+{
+
+}
+
 double ConstantGamma::gamma(double ep, double T) const {
   return g_->value(T);
 }
@@ -222,6 +247,12 @@ double ConstantGamma::g(double T) const {
 SatGamma::SatGamma(double gs, double g0, double beta) :
     gs_(new ConstantInterpolate(gs)), g0_(new ConstantInterpolate(g0)),
     beta_(new ConstantInterpolate(beta))
+{
+
+}
+
+SatGamma::SatGamma(std::shared_ptr<Interpolate> gs, std::shared_ptr<Interpolate> g0, std::shared_ptr<Interpolate> beta) :
+    gs_(gs), g0_(g0), beta_(beta)
 {
 
 }
@@ -253,6 +284,14 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<double> c,
                    std::vector<std::shared_ptr<GammaModel>> gmodels) :
     iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size())
+{
+
+}
+
+Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+           std::vector<std::shared_ptr<const Interpolate>> c,
+           std::vector<std::shared_ptr<GammaModel>> gmodels) :
+    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size())
 {
 
 }
