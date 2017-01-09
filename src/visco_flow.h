@@ -4,6 +4,7 @@
 #include "nemlerror.h"
 #include "surfaces.h"
 #include "hardening.h"
+#include "interpolate.h"
 
 #include <memory>
 
@@ -12,20 +13,21 @@ namespace neml {
 /// The "g" function in the Perzyna model -- often a power law
 class GFlow {
  public:
-  virtual double g(double f) const = 0;
-  virtual double dg(double f) const = 0;
+  virtual double g(double f, double T) const = 0;
+  virtual double dg(double f, double T) const = 0;
 };
 
 class GPowerLaw: public GFlow {
  public:
   GPowerLaw(double n);
-  virtual double g(double f) const;
-  virtual double dg(double f) const;
+  GPowerLaw(std::shared_ptr<Interpolate> n);
+  virtual double g(double f, double T) const;
+  virtual double dg(double f, double T) const;
 
-  double n() const;
+  double n(double T) const;
 
  private:
-  const double n_;
+  const std::shared_ptr<const Interpolate> n_;
 
 };
 
@@ -100,6 +102,10 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
                   std::shared_ptr<HardeningRule> hardening,
                   std::shared_ptr<GFlow> g,
                   double eta);
+  PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
+                  std::shared_ptr<HardeningRule> hardening,
+                  std::shared_ptr<GFlow> g,
+                  std::shared_ptr<Interpolate> eta);
 
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
@@ -129,13 +135,13 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
                 double * const dhv) const;
 
   // Getter
-  double eta() const;
+  double eta(double T) const;
 
  private:
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<HardeningRule> hardening_;
   std::shared_ptr<GFlow> g_;
-  const double eta_;
+  const std::shared_ptr<const Interpolate> eta_;
 
 };
 
@@ -144,18 +150,19 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
 //  These depend only on the equivalent plastic strain
 class FluidityModel {
  public:
-  virtual double eta(double a) const = 0;
-  virtual double deta(double a) const = 0;
+  virtual double eta(double a, double T) const = 0;
+  virtual double deta(double a, double T) const = 0;
 };
 
 class ConstantFluidity: public FluidityModel {
  public:
   ConstantFluidity(double eta);
-  virtual double eta(double a) const;
-  virtual double deta(double a) const;
+  ConstantFluidity(std::shared_ptr<Interpolate> eta);
+  virtual double eta(double a, double T) const;
+  virtual double deta(double a, double T) const;
 
  private:
-  const double eta_;
+  const std::shared_ptr<const Interpolate> eta_;
 
 };
 
@@ -171,6 +178,10 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
                    std::shared_ptr<NonAssociativeHardening> hardening,
                    std::shared_ptr<FluidityModel> fluidity,
                    double n);
+  ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
+                   std::shared_ptr<NonAssociativeHardening> hardening,
+                   std::shared_ptr<FluidityModel> fluidity,
+                   std::shared_ptr<Interpolate> n);
 
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
@@ -203,7 +214,7 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<NonAssociativeHardening> hardening_;
   std::shared_ptr<FluidityModel> fluidity_;
-  const double n_;
+  const std::shared_ptr<const Interpolate> n_;
 
 };
 

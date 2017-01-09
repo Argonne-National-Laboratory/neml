@@ -55,7 +55,7 @@ if (WRAP_PYTHON)
       endif()
 
       # viscoplastic flow stuff
-      add_library(visco_flow SHARED visco_flow_wrap.cxx visco_flow.cxx nemlerror.cxx pyhelp.cxx)
+      add_library(visco_flow SHARED interpolate.cxx interpolate_wrap.cxx visco_flow_wrap.cxx visco_flow.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(visco_flow surfaces hardening nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(visco_flow PROPERTIES PREFIX "")
       if (APPLE)
@@ -89,7 +89,6 @@ if (WRAP_PYTHON)
             set_property(TARGET parse PROPERTY OUTPUT_NAME "parse.so")
             set_property(TARGET parse PROPERTY SUFFIX "")
       endif()
-
 
       # various interpolation schemes
       add_library(interpolate SHARED interpolate_wrap.cxx interpolate.cxx nemlerror.cxx pyhelp.cxx)

@@ -21,7 +21,8 @@ PYBIND11_PLUGIN(visco_flow) {
 
   py::class_<GPowerLaw, std::shared_ptr<GPowerLaw>>(m, "GPowerLaw", py::base<GFlow>())
       .def(py::init<double>(), py::arg("n"))
-      .def_property_readonly("n", &GPowerLaw::n)
+      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("n"))
+      .def("n", &GPowerLaw::n)
       ;
 
   py::class_<ViscoPlasticFlowRule, std::shared_ptr<ViscoPlasticFlowRule>>(m, "ViscoPlasticFlowRule")
@@ -215,7 +216,9 @@ PYBIND11_PLUGIN(visco_flow) {
     py::class_<PerzynaFlowRule, std::shared_ptr<PerzynaFlowRule>>(m, "PerzynaFlowRule", py::base<ViscoPlasticFlowRule>())
         .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>, std::shared_ptr<GFlow>, double>(),
              py::arg("surface"), py::arg("hardening"), py::arg("g"), py::arg("eta"))
-        .def_property_readonly("eta", &PerzynaFlowRule::eta)
+        .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>, std::shared_ptr<GFlow>, std::shared_ptr<Interpolate>>(),
+             py::arg("surface"), py::arg("hardening"), py::arg("g"), py::arg("eta"))
+        .def("eta", &PerzynaFlowRule::eta)
         ;
 
     py::class_<FluidityModel, std::shared_ptr<FluidityModel>>(m, "FluidityModel")
@@ -225,10 +228,13 @@ PYBIND11_PLUGIN(visco_flow) {
 
     py::class_<ConstantFluidity, std::shared_ptr<ConstantFluidity>>(m, "ConstantFluidity", py::base<FluidityModel>())
         .def(py::init<double>(), py::arg("eta"))
+        .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("eta"))
         ;
 
     py::class_<ChabocheFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule", py::base<ViscoPlasticFlowRule>())
         .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, double>(),
+             py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
+        .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, std::shared_ptr<Interpolate>>(),
              py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
         ;
 

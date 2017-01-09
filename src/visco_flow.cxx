@@ -109,40 +109,57 @@ int ViscoPlasticFlowRule::dh_da_temp(const double * const s,
 
 // Various g(s) implementations
 GPowerLaw::GPowerLaw(double n) :
+    n_(new ConstantInterpolate(n))
+{
+
+}
+
+GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n) :
     n_(n)
 {
 
 }
 
-double GPowerLaw::g(double f) const
+
+double GPowerLaw::g(double f, double T) const
 {
   if (f > 0.0) {
-    return pow(f, n_);
+    return pow(f, n_->value(T));
   }
   else {
     return 0.0;
   }
 }
 
-double GPowerLaw::dg(double f) const
+double GPowerLaw::dg(double f, double T) const
 {
   if (f > 0.0) {
-    return n_ * pow(f, n_ - 1.0);
+    return n_->value(T) * pow(f, n_->value(T) - 1.0);
   }
   else {
     return 0.0;
   }
 }
 
-double GPowerLaw::n() const
+double GPowerLaw::n(double T) const
 {
-  return n_;
+  return n_->value(T);
 }
 
 PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
                 std::shared_ptr<HardeningRule> hardening,
                 std::shared_ptr<GFlow> g,
                 double eta) :
+    surface_(surface), hardening_(hardening), g_(g), 
+    eta_(new ConstantInterpolate(eta))
+{
+  
+}
+
+PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
+                std::shared_ptr<HardeningRule> hardening,
+                std::shared_ptr<GFlow> g,
+                std::shared_ptr<Interpolate> eta) :
     surface_(surface), hardening_(hardening), g_(g), eta_(eta)
 {
   
@@ -171,10 +188,10 @@ int PerzynaFlowRule::y(const double* const s, const double* const alpha, double 
   double fv;
   surface_->f(s, q, T, fv);
 
-  double gv = g_->g(fv);
+  double gv = g_->g(fv, T);
   
   if (gv > 0.0) {
-    yv = gv / eta_;
+    yv = gv / eta_->value(T);
   }
   else {
     yv = 0.0;
@@ -192,15 +209,15 @@ int PerzynaFlowRule::dy_ds(const double* const s, const double* const alpha, dou
   double fv;
   surface_->f(s, q, T, fv);
 
-  double gv = g_->g(fv);
+  double gv = g_->g(fv, T);
 
   std::fill(dyv, dyv + 6, 0.0);
 
   if (gv > 0.0) {
-    double dgv = g_->dg(fv);
+    double dgv = g_->dg(fv, T);
     surface_->df_ds(s, q, T, dyv);
     for (int i=0; i<6; i++) {
-      dyv[i] *= dgv / eta_;
+      dyv[i] *= dgv / eta_->value(T);
     }
   }
   
@@ -216,12 +233,12 @@ int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, dou
   double fv;
   surface_->f(s, q, T, fv);
 
-  double gv = g_->g(fv);
+  double gv = g_->g(fv, T);
   
   std::fill(dyv, dyv + nhist(), 0.0);
 
   if (gv > 0.0) {
-    double dgv = g_->dg(fv);
+    double dgv = g_->dg(fv, T);
 
     double jac[nhist()*nhist()];
     hardening_->dq_da(alpha, T, jac);
@@ -232,7 +249,7 @@ int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, dou
     mat_vec_trans(jac, nhist(), rd, nhist(), dyv);
 
     for (int i=0; i<nhist(); i++) {
-      dyv[i] *= dgv / eta_;
+      dyv[i] *= dgv / eta_->value(T);
     }
   }
 
@@ -312,24 +329,30 @@ int PerzynaFlowRule::dh_da(const double * const s, const double * const alpha, d
   return 0;
 }
 
-double PerzynaFlowRule::eta() const
+double PerzynaFlowRule::eta(double T) const
 {
-  return eta_;
+  return eta_->value(T);
 }
 
 // Begin Chaboche
 ConstantFluidity::ConstantFluidity(double eta) :
+    eta_(new ConstantInterpolate(eta))
+{
+
+}
+
+ConstantFluidity::ConstantFluidity(std::shared_ptr<Interpolate> eta) :
     eta_(eta)
 {
 
 }
 
-double ConstantFluidity::eta(double a) const
+double ConstantFluidity::eta(double a, double T) const
 {
-  return eta_;
+  return eta_->value(T);
 }
 
-double ConstantFluidity::deta(double a) const
+double ConstantFluidity::deta(double a, double T) const
 {
   return 0.0;
 }
@@ -338,6 +361,16 @@ ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                                    std::shared_ptr<NonAssociativeHardening> hardening,
                                    std::shared_ptr<FluidityModel> fluidity,
                                    double n) :
+    surface_(surface), hardening_(hardening), fluidity_(fluidity), 
+    n_(new ConstantInterpolate(n))
+{
+  
+}
+
+ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
+                                   std::shared_ptr<NonAssociativeHardening> hardening,
+                                   std::shared_ptr<FluidityModel> fluidity,
+                                   std::shared_ptr<Interpolate> n) :
     surface_(surface), hardening_(hardening), fluidity_(fluidity), n_(n)
 {
   
@@ -367,8 +400,8 @@ int ChabocheFlowRule::y(const double* const s, const double* const alpha, double
   surface_->f(s, q, T, fv);
 
   if (fv > 0.0) {
-    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0]);
-    yv = sqrt(3.0/2.0) * pow(fv/eta, n_);
+    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
+    yv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T));
   }
   else {
     yv = 0.0;
@@ -390,8 +423,8 @@ int ChabocheFlowRule::dy_ds(const double* const s, const double* const alpha, do
 
   if (fv > 0.0) {
     surface_->df_ds(s, q, T, dyv);
-    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0]);
-    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_ - 1.0) * n_ / eta;
+    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
+    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / eta;
     for (int i=0; i<6; i++) dyv[i] *= mv;
   }
 
@@ -418,12 +451,12 @@ int ChabocheFlowRule::dy_da(const double* const s, const double* const alpha, do
 
     mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dyv);
 
-    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0]);
-    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_ - 1.0) * n_ / eta;
+    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
+    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / eta;
     for (int i=0; i<nhist(); i++) dyv[i] *= mv;
 
-    double mv2 = -sqrt(3.0/2.0) * fv * pow(fv/eta, n_ - 1.0) * n_ / (eta * eta);
-    double deta = sqrt(2.0/3.0) * fluidity_->deta(alpha[0]);
+    double mv2 = -sqrt(3.0/2.0) * fv * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / (eta * eta);
+    double deta = sqrt(2.0/3.0) * fluidity_->deta(alpha[0], T);
     dyv[0] += deta * mv2;
   }
 

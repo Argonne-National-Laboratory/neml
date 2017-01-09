@@ -15,9 +15,9 @@ class CommonGFlow(object):
   def test_dg(self):
     s = self.gen_f()
 
-    exact = self.model.dg(s)
+    exact = self.model.dg(s, self.T)
 
-    dfn = lambda x: self.model.g(x)
+    dfn = lambda x: self.model.g(x, self.T)
     num = differentiate(dfn, s)
 
     self.assertTrue(np.isclose(exact, num))
@@ -26,12 +26,13 @@ class TestGPowerLaw(unittest.TestCase, CommonGFlow):
   def setUp(self):
     self.n = 11.0
     self.model = visco_flow.GPowerLaw(self.n)
+    self.T = 300.0
 
   def gen_f(self):
     return 100*0.25
 
   def test_properties(self):
-    self.assertTrue(np.isclose(self.n, self.model.n))
+    self.assertTrue(np.isclose(self.n, self.model.n(self.T)))
 
   def test_g(self):
     s = self.gen_f()
@@ -39,7 +40,7 @@ class TestGPowerLaw(unittest.TestCase, CommonGFlow):
       v = s**self.n
     else:
       v = 0.0
-    self.assertTrue(np.isclose(self.model.g(s), v))
+    self.assertTrue(np.isclose(self.model.g(s, self.T), v))
 
 
 class CommonFlowRule(object):
@@ -219,7 +220,7 @@ class TestPerzynaIsoJ2Voce(unittest.TestCase, CommonFlowRule):
     return np.array([0.01])
 
   def test_properties(self):
-    self.assertTrue(np.isclose(self.eta, self.model.eta))
+    self.assertTrue(np.isclose(self.eta, self.model.eta(self.T)))
 
 
 class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
@@ -243,7 +244,7 @@ class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
     return np.array([0.01])
 
   def test_properties(self):
-    self.assertTrue(np.isclose(self.eta, self.model.eta))
+    self.assertTrue(np.isclose(self.eta, self.model.eta(self.T)))
 
 class TestChebocheModel(unittest.TestCase, CommonFlowRule):
   def setUp(self):
@@ -436,8 +437,8 @@ class CommonFluidity(object):
 
   def test_deta(self):
     a = self.gen_hist()
-    fm = self.model.deta(a)
-    dfn = lambda a: self.model.eta(a)
+    fm = self.model.deta(a, self.T)
+    dfn = lambda a: self.model.eta(a, self.T)
     fn = differentiate(dfn, a)
     self.assertTrue(np.isclose(fm, fn))
 
@@ -445,10 +446,11 @@ class TestConstantFluidity(unittest.TestCase, CommonFluidity):
   def setUp(self):
     self.eta = 200.0
     self.model = visco_flow.ConstantFluidity(self.eta)
+    self.T = 300.0
 
   def test_eta(self):
     a = self.gen_hist()
-    self.assertTrue(np.isclose(self.eta, self.model.eta(a)))
+    self.assertTrue(np.isclose(self.eta, self.model.eta(a, self.T)))
 
 class TestChabocheJ2Voce(unittest.TestCase, CommonFlowRule):
   def setUp(self):
