@@ -73,7 +73,7 @@ if (WRAP_PYTHON)
       endif()
 
       # actual material models
-      add_library(neml SHARED neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
+      add_library(neml SHARED solvers.cxx solvers_wrap.cxx neml_wrap.cxx neml.cxx nemlerror.cxx pyhelp.cxx)
       target_link_libraries(neml solvers ri_flow visco_flow general_flow nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(neml PROPERTIES PREFIX "")
       if (APPLE)
@@ -87,6 +87,16 @@ if (WRAP_PYTHON)
       set_target_properties(parse PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET parse PROPERTY OUTPUT_NAME "parse.so")
+            set_property(TARGET parse PROPERTY SUFFIX "")
+      endif()
+
+
+      # various interpolation schemes
+      add_library(interpolate SHARED interpolate_wrap.cxx interpolate.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(interpolate neml ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${libxml++_LIBRARIES})
+      set_target_properties(interpolate PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET parse PROPERTY OUTPUT_NAME "interpolate.so")
             set_property(TARGET parse PROPERTY SUFFIX "")
       endif()
 else()
@@ -103,6 +113,7 @@ else()
             nemlerror.cxx 
             elasticity.cxx
             parse.cxx
-            cinterface.cxx)
+            cinterface.cxx
+            interpolate.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 endif()
