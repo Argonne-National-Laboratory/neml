@@ -103,6 +103,42 @@ class CommonJacobian(object):
 
     self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
 
+class TestPerfectPlasticity(unittest.TestCase, CommonMatModel, CommonJacobian):
+  """
+    Test J2 perfect plasticity
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((0,))
+
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.mu = self.E/(2*(1+self.nu))
+    self.K = self.E/(3*(1-2*self.nu))
+
+    self.s0 = 180.0
+
+    shear = elasticity.ShearModulus(self.mu)
+    bulk = elasticity.BulkModulus(self.K)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+
+    surface = surfaces.IsoJ2()
+    self.model = neml.SmallStrainPerfectPlasticity(elastic, surface, self.s0)
+
+    self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 10
+
+  def test_properties(self):
+    self.assertTrue(np.isclose(self.model.ys(self.T), self.s0))
+
+  def gen_hist(self):
+    return np.zeros((0,))
+
+  def gen_x(self):
+    return np.array([50.0,100.0,-25.0,150.0,200.0,-50.0] + list([0.25]))
+
 class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
     Test combined isotropic/kinematic hardening with linear rules

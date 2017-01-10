@@ -211,6 +211,222 @@ int SmallStrainElasticity::update_sd(
   return 0;
 }
 
+// Implementation of perfect plasticity
+SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
+    std::shared_ptr<LinearElasticModel> elastic,
+    std::shared_ptr<YieldSurface> surface,
+    double ys,
+    double tol, int miter,
+    bool verbose) :
+      elastic_(elastic), surface_(surface), ys_(new ConstantInterpolate(ys)),
+      tol_(tol), miter_(miter), verbose_(verbose)
+{
+
+}
+
+SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
+    std::shared_ptr<LinearElasticModel> elastic,
+    std::shared_ptr<YieldSurface> surface,
+    std::shared_ptr<Interpolate> ys,
+    double tol, int miter,
+    bool verbose) :
+      elastic_(elastic), surface_(surface), ys_(ys),
+      tol_(tol), miter_(miter), verbose_(verbose)
+{
+
+}
+
+int SmallStrainPerfectPlasticity::update_sd(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
+{
+  // Setup trial state
+  SSPPTrialState ts;
+  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
+
+  // Check if this is an elastic state
+  double fv;
+  surface_->f(ts.s_tr, &ts.ys, T_np1, fv);
+  if (fv < tol_) {
+    std::copy(ts.s_tr, ts.s_tr+6, s_np1);
+    std::copy(ts.C, ts.C+36, A_np1);
+  }
+  else {
+    // Newton
+    double x[nparams()];
+    int ier = solve(this, x, &ts, tol_, miter_, verbose_);
+    if (ier != SUCCESS) return ier;
+    
+    // Extract
+    std::copy(x, x+6, s_np1);
+
+    // Calculate tangent
+    ier = calc_tangent_(ts, s_np1, x[6], A_np1);
+    if (ier != SUCCESS) return ier;
+  }
+
+  // Energy calculation (trapezoid rule)
+  double de[6];
+  double ds[6];
+  sub_vec(e_np1, e_n, 6, de);
+  add_vec(s_np1, s_n, 6, ds);
+  for (int i=0; i<6; i++) ds[i] /= 2.0;
+  u_np1 = u_n + dot_vec(ds, de, 6);
+
+  // Plastic work calculation
+  double ee_np1[6];
+  mat_vec(ts.S, 6, s_np1, 6, ee_np1);
+  sub_vec(de, ee_np1, 6, de);
+  add_vec(de, ts.ee_n, 6, de);
+  p_np1 = p_n + dot_vec(ds, de, 6);
+  
+  return 0;
+}
+
+size_t SmallStrainPerfectPlasticity::nhist() const
+{
+  return 0;
+}
+
+int SmallStrainPerfectPlasticity::init_hist(double * const hist) const
+{
+  return 0;
+}
+
+size_t SmallStrainPerfectPlasticity::nparams() const
+{
+  return 7;
+}
+
+int SmallStrainPerfectPlasticity::init_x(double * const x, TrialState * ts)
+{
+  SSPPTrialState * tss = static_cast<SSPPTrialState *>(ts);
+  std::copy(tss->s_tr, tss->s_tr+6, x);
+  x[6] = 0.0;
+
+  return 0;
+}
+
+int SmallStrainPerfectPlasticity::RJ(
+    const double * const x, TrialState * ts, double * const R,
+    double * const J)
+{
+  SSPPTrialState * tss = static_cast<SSPPTrialState *>(ts);
+  const double * const s_np1 = x;
+  double dg = x[6];
+
+  // Common things
+  double fv;
+  surface_->f(s_np1, &tss->ys, tss->T, fv);
+
+  double df[6];
+  surface_->df_ds(s_np1, &tss->ys, tss->T, df);
+
+  double ddf[36];
+  surface_->df_dsds(s_np1, &tss->ys, tss->T, ddf);
+
+  // R1
+  mat_vec(tss->S, 6, s_np1, 6, R);
+  sub_vec(R, tss->e_np1, 6, R);
+  add_vec(R, tss->e_n, 6, R);
+  sub_vec(R, tss->ee_n, 6, R);
+  for (int i=0; i<6; i++) R[i] += df[i] * dg;
+  
+  // R2
+  R[6] = fv;
+
+  // J11
+  for (int i=0; i<36; i++) ddf[i] = ddf[i] * dg + tss->S[i];
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      J[CINDEX(i,j,7)] = ddf[CINDEX(i,j,6)];
+    }
+  }
+
+  // J12
+  for (int i=0; i<6; i++) J[CINDEX(i,6,7)] = df[i];
+
+  // J21
+  for (int i=0; i<6; i++) J[CINDEX(6,i,7)] = df[i];
+
+  // J22
+  J[CINDEX(6,6,7)] = 0.0;
+
+  return 0;
+}
+
+// Getter
+double SmallStrainPerfectPlasticity::ys(double T) const {
+  return ys_->value(T);
+}
+
+// Make this public for ease of testing
+int SmallStrainPerfectPlasticity::make_trial_state(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    const double * const s_n, const double * const h_n,
+    SSPPTrialState & ts)
+{
+  ts.ys = -ys_->value(T_np1);
+
+  elastic_->S(T_np1, ts.S);
+
+  std::copy(s_n, s_n+6, ts.s_n);
+
+  double S_n[36];
+  elastic_->S(T_n, S_n);
+  mat_vec(S_n, 6, s_n, 6, ts.ee_n);
+
+  double temp[6];
+  elastic_->C(T_np1, ts.C);
+  sub_vec(e_np1, e_n, 6, temp);
+
+  add_vec(temp, ts.ee_n, 6, temp);
+  mat_vec(ts.C, 6, temp, 6, ts.s_tr);
+
+  ts.T = T_np1;
+
+  std::copy(e_np1, e_np1+6, ts.e_np1);
+  std::copy(e_n, e_n+6, ts.e_n);
+
+  return 0;
+}
+
+int SmallStrainPerfectPlasticity::calc_tangent_(SSPPTrialState ts, 
+                                                const double * const s_np1, 
+                                                double dg, 
+                                                double * const A_np1)
+{
+  // Useful
+  double df[6];
+  surface_->df_ds(s_np1, &ts.ys, ts.T, df);
+  surface_->df_dsds(s_np1, &ts.ys, ts.T, A_np1);
+
+  // Tangent calc
+  for (int i=0; i<36; i++) A_np1[i] = ts.S[i] + dg * A_np1[i];
+  invert_mat(A_np1, 6);
+
+  double Bv[6];
+  mat_vec(A_np1, 6, df, 6, Bv);
+
+  double fact = dot_vec(Bv, df, 6);
+
+  double Bvdiv[6];
+  std::copy(Bv, Bv+6, Bvdiv);
+  for (int i=0; i<6; i++) Bvdiv[i] /= fact;
+
+  outer_update_minus(Bv, 6, Bvdiv, 6, A_np1);
+
+  return 0;
+}
+
+
 
 // Implementation of small strain rate independent plasticity
 //

@@ -6,6 +6,7 @@
 #include "visco_flow.h"
 #include "general_flow.h"
 #include "solvers.h"
+#include "interpolate.h"
 
 #include <cstddef>
 #include <memory>
@@ -220,6 +221,19 @@ class SmallStrainElasticity: public NEMLModel_sd {
 
 /// Trial state classes
 //  Store data the solver needs and can be passed into solution interface
+
+class SSPPTrialState : public TrialState {
+ public:
+  double ys, T;
+  double ee_n[6];
+  double s_n[6];
+  double s_tr[6];
+  double e_np1[6];
+  double e_n[6];
+  double S[36];
+  double C[36];
+};
+
 class SSRIPTrialState : public TrialState {
  public:
   double ep_tr[6];
@@ -236,6 +250,64 @@ class GITrialState : public TrialState {
   double s_n[6];
   double T, Tdot, dt;
   std::vector<double> h_n;
+
+};
+
+/// Small strain, associative, perfect plasticity
+//    Algorithm is generalized closest point projection.
+//    This degenerates to radial return for models where the gradient of
+//    the yield surface is constant along lines from the origin to a point
+//    in stress space outside the surface (i.e. J2).
+
+class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
+ public:
+  SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
+                               std::shared_ptr<YieldSurface> surface,
+                               double ys,
+                               double tol = 1.0e-8, int miter = 50,
+                               bool verbose = false);
+  SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
+                               std::shared_ptr<YieldSurface> surface,
+                               std::shared_ptr<Interpolate> ys,
+                               double tol = 1.0e-8, int miter = 50,
+                               bool verbose = false);
+
+  virtual int update_sd(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const hist) const;
+
+  virtual size_t nparams() const;
+  virtual int init_x(double * const x, TrialState * ts);
+  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J);
+
+  // Property getter
+  double ys(double T) const;
+
+  // Make this public for ease of testing
+  int make_trial_state(const double * const e_np1, const double * const e_n,
+                       double T_np1, double T_n, double t_np1, double t_n,
+                       const double * const s_n, const double * const h_n,
+                       SSPPTrialState & ts);
+
+ private:
+  int calc_tangent_(SSPPTrialState ts, const double * const s_np1, double dg, 
+                double * const A_np1);
+
+  std::shared_ptr<LinearElasticModel> elastic_;
+  std::shared_ptr<YieldSurface> surface_;
+  std::shared_ptr<Interpolate> ys_;
+  const double tol_;
+  const int miter_;
+  const bool verbose_;
 
 };
 

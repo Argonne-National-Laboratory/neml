@@ -96,10 +96,73 @@ PYBIND11_PLUGIN(neml) {
            py::arg("elastic"))
       ;
 
+  py::class_<SSPPTrialState>(m, "SSPPTrialState", py::base<TrialState>())
+      ;
+
   py::class_<SSRIPTrialState>(m, "SSRIPTrialState", py::base<TrialState>())
       ;
 
   py::class_<GITrialState>(m, "GITrialState", py::base<TrialState>())
+      ;
+
+  py::class_<SmallStrainPerfectPlasticity, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity", py::base<NEMLModel_sd>())
+      .def(py::init<std::shared_ptr<LinearElasticModel>, 
+           std::shared_ptr<YieldSurface>, 
+           double,
+           double, int , bool>(),
+           py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
+           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+           py::arg("verbose") = false)
+ 
+      .def(py::init<std::shared_ptr<LinearElasticModel>, 
+           std::shared_ptr<YieldSurface>, 
+           std::shared_ptr<Interpolate>,
+           double, int , bool>(),
+           py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
+           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+           py::arg("verbose") = false)
+
+      .def("ys", &SmallStrainPerfectPlasticity::ys)
+
+      .def("make_trial_state",
+           [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSPPTrialState>
+           {
+              std::unique_ptr<SSPPTrialState> ts(new SSPPTrialState);
+              int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+                                          arr2ptr<double>(e_n),
+                                          T_np1, T_n,
+                                          t_np1, t_n,
+                                          arr2ptr<double>(s_n),
+                                          arr2ptr<double>(h_n),
+                                          *ts);
+              py_error(ier);
+
+              return ts;
+           }, "Setup trial state for solve.")
+
+      // Remove if/when pybind11 supports multiple inheritance
+      .def_property_readonly("nparams", &SmallStrainPerfectPlasticity::nparams, "Number of variables in nonlinear equations.")
+      .def("init_x",
+           [](SmallStrainPerfectPlasticity & m, SSPPTrialState & ts) -> py::array_t<double>
+           {
+            auto x = alloc_vec<double>(m.nparams());
+            int ier = m.init_x(arr2ptr<double>(x), &ts);
+            py_error(ier);
+            return x;
+           }, "Initialize guess.")
+      .def("RJ",
+           [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> x, SSPPTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           {
+            auto R = alloc_vec<double>(m.nparams());
+            auto J = alloc_mat<double>(m.nparams(), m.nparams());
+            
+            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
+            py_error(ier);
+
+            return std::make_tuple(R, J);
+           }, "Residual and jacobian.")
+      ;
+      // End remove block
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity", py::base<NEMLModel_sd>())
