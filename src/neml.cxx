@@ -249,7 +249,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
 {
   // Setup and store the trial state for the solver
   SSRIPTrialState ts;
-  make_trial_state(e_np1, h_n, T_np1, t_np1, t_n, ts);
+  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
 
   // Check to see if this is an elastic state
   double fv;
@@ -429,8 +429,10 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
 }
 
 int SmallStrainRateIndependentPlasticity::make_trial_state(
-    const double * const e_np1, const double * const h_n, double T_np1,
-    double t_np1, double t_n, SSRIPTrialState & ts)
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    const double * const s_n, const double * const h_n,
+    SSRIPTrialState & ts)
 {
   // Save e_np1
   std::copy(e_np1, e_np1+6, ts.e_np1);
@@ -621,8 +623,8 @@ int GeneralIntegrator::update_sd(
 
     // Set trial state
     GITrialState ts;
-    make_trial_state(e_next, e_past, s_past, h_past, T_next, T_past, t_next, 
-                     t_past, ts);
+    make_trial_state(e_next, e_past, T_next, T_past, t_next, t_past, 
+                     s_past, h_past, ts);
 
     // Solve for x
     double x[nparams()];
@@ -675,7 +677,7 @@ int GeneralIntegrator::update_sd(
 
   // Get tangent over full step
   GITrialState ts;
-  make_trial_state(e_np1, e_n, s_n, h_n, T_np1, T_n, t_np1, t_n, ts);
+  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
   double y[nparams()];
   std::copy(s_np1, s_np1+6, y);
   std::copy(h_np1, h_np1+nhist(), &y[6]);
@@ -792,8 +794,8 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
 
 int GeneralIntegrator::make_trial_state(
     const double * const e_np1, const double * const e_n,
-    const double * const s_n, const double * const h_n,
     double T_np1, double T_n, double t_np1, double t_n,
+    const double * const s_n, const double * const h_n,
     GITrialState & ts)
 {
   // Basic

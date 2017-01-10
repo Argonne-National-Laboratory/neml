@@ -274,9 +274,10 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
                  double * const J);
 
   // Make this public for ease of testing
-  int make_trial_state(const double * const e_np1, const double * const h_n,
-                      double T_np1, double t_np1, double t_n,
-                      SSRIPTrialState & ts);
+  int make_trial_state(const double * const e_np1, const double * const e_n,
+                       double T_np1, double T_n, double t_np1, double t_n,
+                       const double * const s_n, const double * const h_n,
+                       SSRIPTrialState & ts);
 
  private:
   int calc_tangent_(const double * const x, TrialState * ts, const double * const s_np1,
@@ -318,9 +319,9 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
 
   // Make this public for ease of testing
   int make_trial_state(const double * const e_np1, const double * const e_n,
-                      const double * const s_n, const double * const h_n,
-                      double T_np1, double T_n, double t_np1, double t_n,
-                      GITrialState & ts);
+                       double T_np1, double T_n, double t_np1, double t_n,
+                       const double * const s_n, const double * const h_n,
+                       GITrialState & ts);
 
  private:
   int calc_tangent_(const double * const x, TrialState * ts, double * const A_np1);

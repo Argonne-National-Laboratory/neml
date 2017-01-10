@@ -82,7 +82,8 @@ class CommonJacobian(object):
     h_n = self.gen_hist()
     t_np1 = self.gen_time()
 
-    ts = self.model.make_trial_state(e_np1, h_n, T_np1, t_np1+1.0, 1.0)
+    ts = self.model.make_trial_state(e_np1, np.zeros((6,)), T_np1, T_np1,
+        t_np1, 0.0, np.zeros((6,)), h_n)
 
     x = self.gen_x()
 
@@ -101,50 +102,6 @@ class CommonJacobian(object):
     nJ = differentiate(dfn, x)
 
     self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
-
-class CommonJacobian2(object):
-  """
-    Common jacobian tests, version with different set history...
-  """
-  def gen_strain(self):
-    return np.array([0.01,-0.01,0.02,0.03,-0.005,0.01])
-
-  def gen_T(self):
-    return 500.0
-
-  def gen_time(self):
-    return 1.25
-
-  def test_jacobian(self):
-    print("HERE")
-    e_np1 = self.gen_strain()
-    e_n = np.zeros((6,))
-    T_np1 = self.gen_T()
-    T_n = 300.0
-    h_n = self.gen_hist()
-    t_np1 = self.gen_time()
-    s_n = np.array([150,0,0,0,0,0])
-
-    ts = self.model.make_trial_state(e_np1, e_n, s_n, h_n, T_np1, T_n, t_np1, 0.0)
-
-    x = self.gen_x()
-
-    R, J = self.model.RJ(x, ts)
-    
-    dfn = lambda y: self.model.RJ(y, ts)[0]
-    nJ = differentiate(dfn, x)
-
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
-
-    x = self.gen_x()
-
-    R, J = self.model.RJ(x, ts)
-    
-    dfn = lambda y: self.model.RJ(y, ts)[0]
-    nJ = differentiate(dfn, x)
-    
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
-
 
 class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
@@ -318,7 +275,7 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
   def gen_x(self):
     return np.array(list(self.gen_hist()) + [0.1])
 
-class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacobian2):
+class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
     Test Cheboche's VP model with our new direct integrator
   """
@@ -383,7 +340,7 @@ class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacob
     x = [100.0,150.0,-300.0,-10.0,50.0,100.0] + list(self.gen_hist()*1.1)
     return np.array(x)
 
-class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian2):
+class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
     Perzyna associated viscoplasticity w/ voce kinematic hardening
   """
@@ -429,7 +386,7 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian2):
   def gen_x(self):
     return np.array(range(1,8)) / 8.0
 
-class TestYaguchi(unittest.TestCase, CommonMatModel, CommonJacobian2):
+class TestYaguchi(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
     Test Cheboche's VP model with our new direct integrator
   """

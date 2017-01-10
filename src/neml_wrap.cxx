@@ -110,12 +110,16 @@ PYBIND11_PLUGIN(neml) {
            py::arg("check_kt") = false)
   
       .def("make_trial_state",
-           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> h_n, double T_np1, double t_np1, double t_n) -> std::unique_ptr<SSRIPTrialState>
+           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSRIPTrialState>
            {
               std::unique_ptr<SSRIPTrialState> ts(new SSRIPTrialState);
-              int ier = m.make_trial_state(
-                  arr2ptr<double>(e_np1), arr2ptr<double>(h_n), T_np1, t_np1,
-                  t_n, *ts);
+              int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+                                          arr2ptr<double>(e_n),
+                                          T_np1, T_n,
+                                          t_np1, t_n,
+                                          arr2ptr<double>(s_n),
+                                          arr2ptr<double>(h_n),
+                                          *ts);
               py_error(ier);
 
               return ts;
@@ -154,14 +158,16 @@ PYBIND11_PLUGIN(neml) {
            py::arg("max_divide") = 6)
   
       .def("make_trial_state",
-           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double T_np1, double T_n, double t_np1, double t_n) -> std::unique_ptr<GITrialState>
+           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<GITrialState>
            {
               std::unique_ptr<GITrialState> ts(new GITrialState);
               int ier = m.make_trial_state(arr2ptr<double>(e_np1),
                                           arr2ptr<double>(e_n),
+                                          T_np1, T_n,
+                                          t_np1, t_n,
                                           arr2ptr<double>(s_n),
                                           arr2ptr<double>(h_n),
-                                          T_np1, T_n, t_np1, t_n, *ts);
+                                          *ts);
               py_error(ier);
               return ts;
            }, "Setup trial state for solve.")
