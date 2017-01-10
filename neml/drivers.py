@@ -57,11 +57,11 @@ class Driver(object):
 
   @property
   def u(self):
-    return np.array(u_int)
+    return np.array(self.u_int)
 
   @property
   def p(self):
-    return np.array(p_int)
+    return np.array(self.p_int)
 
 
 class Driver_sd(Driver):
@@ -281,7 +281,9 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   strain = np.array(strain)
   stress = np.array(stress)
 
-  return {'strain': strain, 'stress': stress}
+  return {'strain': strain, 'stress': stress, 
+      'energy_density': np.copy(driver.u),
+      'plastic_work': np.copy(driver.p)}
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
@@ -334,6 +336,9 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
   smin = []
   smean = []
 
+  ecycle = []
+  pcycle = []
+
   # First half cycle
   if verbose:
     print("Initial half cycle")
@@ -382,10 +387,14 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     smin.append(min(stress[si:]))
     smean.append((smax[-1]+smin[-1])/2)
 
+    ecycle.append(driver.u_int[-1])
+    pcycle.append(driver.p_int[-1])
+
   # Setup and return
   return {"strain": np.array(strain), "stress": np.array(stress),
       "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
-      "min": np.array(smin), "mean": np.array(smean)}
+      "min": np.array(smin), "mean": np.array(smean),
+      "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle)}
 
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
@@ -432,6 +441,9 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
   emax = []
   emin = []
   emean = []
+
+  ecycle = []
+  pcycle = []
 
   # First half cycle
   s_inc = smax / nsteps
@@ -482,11 +494,14 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     emax.append(max(strain[si:]))
     emin.append(min(strain[si:]))
     emean.append((emax[-1]+emin[-1])/2)
+    ecycle.append(driver.u_int[-1])
+    pcycle.append(driver.p_int[-1])
 
   # Setup and return
   return {"strain": np.array(strain), "stress": np.array(stress),
       "cycles": np.array(cycles, dtype = int), "max": np.array(emax),
-      "min": np.array(emin), "mean": np.array(emean)}
+      "min": np.array(emin), "mean": np.array(emean),
+      "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle)}
 
 def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
     nsteps_up = 150, index = 0, tc = 1.0,

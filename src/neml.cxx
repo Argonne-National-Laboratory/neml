@@ -199,10 +199,13 @@ int SmallStrainElasticity::update_sd(
   elastic_->C(T_np1, A_np1);
   mat_vec(A_np1, 6, e_np1, 6, s_np1);
 
-  // Energy calculation
+  // Energy calculation (trapezoid rule)
   double de[6];
+  double ds[6];
   sub_vec(e_np1, e_n, 6, de);
-  u_np1 = u_n + dot_vec(s_np1, de, 6);
+  add_vec(s_np1, s_n, 6, ds);
+  for (int i=0; i<6; i++) ds[i] /= 2.0;
+  u_np1 = u_n + dot_vec(ds, de, 6);
   p_np1 = p_n;
 
   return 0;
@@ -279,14 +282,17 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     calc_tangent_(x, &ts, s_np1, h_np1, dg, A_np1);
   }
 
-  // Energy calculation
+  // Energy calculation (trapezoid rule)
   double de[6];
+  double ds[6];
   sub_vec(e_np1, e_n, 6, de);
-  u_np1 = u_n + dot_vec(s_np1, de, 6);
+  add_vec(s_np1, s_n, 6, ds);
+  for (int i=0; i<6; i++) ds[i] /= 2.0;
+  u_np1 = u_n + dot_vec(ds, de, 6);
 
   double dep[6];
   sub_vec(h_np1, h_n, 6, dep);
-  p_np1 = p_n + dot_vec(s_np1, dep, 6);
+  p_np1 = p_n + dot_vec(ds, dep, 6);
 
   // Check K-T and return
   return check_K_T_(s_np1, h_np1, T_np1, dg);
@@ -676,15 +682,20 @@ int GeneralIntegrator::update_sd(
   
   calc_tangent_(y, &ts, A_np1);
   
-  // Energy calculation
+  // Energy calculation (trapezoid rule)
   double de[6];
+  double ds[6];
   sub_vec(e_np1, e_n, 6, de);
-  u_np1 = u_n + dot_vec(s_np1, de, 6);
+  add_vec(s_np1, s_n, 6, ds);
+  for (int i=0; i<6; i++) ds[i] /= 2.0;
+  u_np1 = u_n + dot_vec(ds, de, 6);
 
   // Need a special call
-  double p_dot;
-  rule_->work_rate(s_np1, h_np1, ts.e_dot, T_np1, ts.Tdot, p_dot);
-  p_np1 = p_n + p_dot * ts.dt;
+  double p_dot_np1;
+  rule_->work_rate(s_np1, h_np1, ts.e_dot, T_np1, ts.Tdot, p_dot_np1);
+  double p_dot_n;
+  rule_->work_rate(s_n, h_n, ts.e_dot, T_n, ts.Tdot, p_dot_n);
+  p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * ts.dt;
 
   return 0;
 }
