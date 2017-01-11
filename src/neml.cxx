@@ -256,6 +256,8 @@ int SmallStrainPerfectPlasticity::update_sd(
   if (fv < tol_) {
     std::copy(ts.s_tr, ts.s_tr+6, s_np1);
     std::copy(ts.C, ts.C+36, A_np1);
+
+    p_np1 = p_n;
   }
   else {
     // Newton
@@ -269,6 +271,18 @@ int SmallStrainPerfectPlasticity::update_sd(
     // Calculate tangent
     ier = calc_tangent_(ts, s_np1, x[6], A_np1);
     if (ier != SUCCESS) return ier;
+
+    // Plastic work calculation
+    double de[6];
+    double ds[6];
+    sub_vec(e_np1, e_n, 6, de);
+    add_vec(s_np1, s_n, 6, ds);
+    double ee_np1[6];
+    mat_vec(ts.S, 6, s_np1, 6, ee_np1);
+    sub_vec(de, ee_np1, 6, de);
+    add_vec(de, ts.ee_n, 6, de);
+    p_np1 = p_n + dot_vec(ds, de, 6);
+
   }
 
   // Energy calculation (trapezoid rule)
@@ -279,13 +293,6 @@ int SmallStrainPerfectPlasticity::update_sd(
   for (int i=0; i<6; i++) ds[i] /= 2.0;
   u_np1 = u_n + dot_vec(ds, de, 6);
 
-  // Plastic work calculation
-  double ee_np1[6];
-  mat_vec(ts.S, 6, s_np1, 6, ee_np1);
-  sub_vec(de, ee_np1, 6, de);
-  add_vec(de, ts.ee_n, 6, de);
-  p_np1 = p_n + dot_vec(ds, de, 6);
-  
   return 0;
 }
 
@@ -479,6 +486,8 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     std::copy(&ts.h_tr[0], &ts.h_tr[0]+flow_->nhist(), &h_np1[6]);
     std::copy(ts.C, ts.C+36, A_np1);
     dg = 0.0;
+
+    p_np1 = p_n;
   }
   // Else solve and extract updated parameters from the solver vector
   else {
@@ -496,6 +505,14 @@ int SmallStrainRateIndependentPlasticity::update_sd(
 
     // Complicated tangent calc...
     calc_tangent_(x, &ts, s_np1, h_np1, dg, A_np1);
+
+    // Plastic work calculation
+    double dep[6];
+    double ds[6];
+    add_vec(s_np1, s_n, 6, ds);
+    sub_vec(h_np1, h_n, 6, dep);
+    p_np1 = p_n + dot_vec(ds, dep, 6);
+
   }
 
   // Energy calculation (trapezoid rule)
@@ -505,11 +522,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   add_vec(s_np1, s_n, 6, ds);
   for (int i=0; i<6; i++) ds[i] /= 2.0;
   u_np1 = u_n + dot_vec(ds, de, 6);
-
-  double dep[6];
-  sub_vec(h_np1, h_n, 6, dep);
-  p_np1 = p_n + dot_vec(ds, dep, 6);
-
+  
   // Check K-T and return
   return check_K_T_(s_np1, h_np1, T_np1, dg);
 
