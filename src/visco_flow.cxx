@@ -362,7 +362,7 @@ ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                                    std::shared_ptr<FluidityModel> fluidity,
                                    double n) :
     surface_(surface), hardening_(hardening), fluidity_(fluidity), 
-    n_(new ConstantInterpolate(n))
+    n_(new ConstantInterpolate(n)), recovery_(false)
 {
   
 }
@@ -371,7 +371,8 @@ ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                                    std::shared_ptr<NonAssociativeHardening> hardening,
                                    std::shared_ptr<FluidityModel> fluidity,
                                    std::shared_ptr<Interpolate> n) :
-    surface_(surface), hardening_(hardening), fluidity_(fluidity), n_(n)
+    surface_(surface), hardening_(hardening), fluidity_(fluidity), n_(n),
+    recovery_(false)
 {
   
 }
@@ -519,6 +520,24 @@ int ChabocheFlowRule::dh_da(const double * const s, const double * const alpha, 
   return hardening_->dh_da(s, alpha, T, dhv);
 }
 
+// Hardening rule
+int ChabocheFlowRule::h_time(const double * const s, const double * const alpha, double T,
+              double * const hv) const
+{
+  return hardening_->h_time(s, alpha, T, hv);
+}
+
+int ChabocheFlowRule::dh_ds_time(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  return hardening_->dh_ds_time(s, alpha, T, dhv);
+}
+
+int ChabocheFlowRule::dh_da_time(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  return hardening_->dh_da_time(s, alpha, T, dhv);
+}
 
 YaguchiGr91FlowRule::YaguchiGr91FlowRule()
 {

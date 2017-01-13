@@ -164,9 +164,10 @@ class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
-    cs = np.array([C1, C2, C3])
-    gs = np.array([y1, y2, y3])
-    hmodel = hardening.Chaboche(iso, cs, gs)
+    cs = [C1, C2, C3]
+    gs = [y1, y2, y3]
+    gmodels = [hardening.ConstantGamma(g) for g in gs]
+    hmodel = hardening.Chaboche(iso, cs, gmodels)
 
     fluidity = visco_flow.ConstantFluidity(eta)
 

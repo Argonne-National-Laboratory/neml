@@ -149,6 +149,26 @@ class CommonNonAssociative(object):
 
     self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
 
+  def test_dh_ds_time(self):
+    s = self.gen_stress()
+    a = self.gen_hist()
+
+    dh_model = self.model.dh_ds_time(s, a, self.T)
+    dfn = lambda x: self.model.h_time(x, a, self.T)
+    dh_num = differentiate(dfn, s)
+
+    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+
+  def test_dh_da_time(self):
+    s = self.gen_stress()
+    a = self.gen_hist()
+
+    dh_model = self.model.dh_da_time(s, a, self.T)
+    dfn = lambda x: self.model.h_time(s, x, self.T)
+    dh_num = differentiate(dfn, a)
+
+    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+
 class CommonGamma(object):
   def gen_alpha(self):
     return 0.15
@@ -210,7 +230,7 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
 
-    self.model = hardening.Chaboche(self.iso, self.cs, self.rs)
+    self.model = hardening.Chaboche(self.iso, list(self.cs), self.gammas)
 
     self.hist0 = np.zeros((1 + self.n*6,))
     self.conform = 7

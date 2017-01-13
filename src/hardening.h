@@ -113,6 +113,22 @@ class NonAssociativeHardening {
                 double * const dhv) const = 0;
   virtual int dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const = 0;
+
+  // Hardening rule wrt to time
+  virtual int h_time(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  // Hardening rule wrt to temperature
+  virtual int h_temp(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
 };
 
 /// Gamma models for the Chaboche backstress
@@ -159,7 +175,7 @@ class SatGamma: public GammaModel {
 //    This model degenerates to Frederick-Armstrong for n = 1
 class Chaboche: public NonAssociativeHardening {
  public:
-  /// New interface with vectors
+  /// NO time relaxation
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<double> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels);
@@ -167,9 +183,17 @@ class Chaboche: public NonAssociativeHardening {
            std::vector<std::shared_ptr<const Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels);
 
-  /// Older interface assuming constant gammas
+  // WITH time relaxation
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-                     int n, const double * const c, const double * const r);
+           std::vector<double> c,
+           std::vector<std::shared_ptr<GammaModel>> gmodels,
+           std::vector<double> A,
+           std::vector<double> a);
+  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+           std::vector<std::shared_ptr<const Interpolate>> c,
+           std::vector<std::shared_ptr<GammaModel>> gmodels,
+           std::vector<std::shared_ptr<const Interpolate>> A,
+           std::vector<std::shared_ptr<const Interpolate>> a);
 
   virtual size_t ninter() const; // How many "q" variables it spits out
   virtual size_t nhist() const; // How many internal variables it stores
@@ -197,6 +221,9 @@ class Chaboche: public NonAssociativeHardening {
   const int n_;
   const std::vector<std::shared_ptr<const Interpolate>> c_;
   std::vector<std::shared_ptr<GammaModel>> gmodels_;
+
+  const std::vector<std::shared_ptr<const Interpolate>> A_;
+  const std::vector<std::shared_ptr<const Interpolate>> a_;
 };
 
 

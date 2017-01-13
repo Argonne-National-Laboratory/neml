@@ -174,6 +174,7 @@ class ConstantFluidity: public FluidityModel {
 //
 class ChabocheFlowRule: public ViscoPlasticFlowRule {
  public:
+  // No recovery
   ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                    std::shared_ptr<NonAssociativeHardening> hardening,
                    std::shared_ptr<FluidityModel> fluidity,
@@ -182,6 +183,8 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
                    std::shared_ptr<NonAssociativeHardening> hardening,
                    std::shared_ptr<FluidityModel> fluidity,
                    std::shared_ptr<Interpolate> n);
+
+  // Recovery
 
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
@@ -210,11 +213,20 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
   virtual int dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
+  // Hardening rule wrt to time
+  virtual int h_time(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
  private:
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<NonAssociativeHardening> hardening_;
   std::shared_ptr<FluidityModel> fluidity_;
   const std::shared_ptr<const Interpolate> n_;
+  const bool recovery_;
 
 };
 

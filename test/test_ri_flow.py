@@ -115,11 +115,12 @@ class TestRIChabocheLinear(unittest.TestCase, CommonFlowRule):
     self.K = 15000.0
 
     self.n = 4
-    self.cs = np.array(range(1,self.n+1))
-    self.rs = np.array(range(1, self.n+1))
+    self.cs = range(1,self.n+1)
+    self.rs = range(1, self.n+1)
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
-    self.hardening = hardening.Chaboche(self.iso, self.cs, self.rs)
+    self.gmodels = [hardening.ConstantGamma(g) for g in self.rs]
+    self.hardening = hardening.Chaboche(self.iso, self.cs, self.gmodels)
     self.surface = surfaces.IsoKinJ2()
 
     self.model = ri_flow.RateIndependentNonAssociativeHardening(self.surface, self.hardening)

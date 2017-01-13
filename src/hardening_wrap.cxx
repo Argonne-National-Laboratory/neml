@@ -135,6 +135,60 @@ PYBIND11_PLUGIN(hardening) {
             py_error(ier);
             return f;
            }, "Hardening rule derivative with respect to history.")
+
+
+      .def("h_time",
+           [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_vec<double>(m.nhist());
+            int ier = m.h_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule, time part.")
+      .def("dh_ds_time",
+           [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),6);
+            int ier = m.dh_ds_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (time) derivative with respect to stress.")
+      .def("dh_da_time",
+           [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),m.nhist());
+            int ier = m.dh_da_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (time) derivative with respect to history.")
+
+      .def("h_temp",
+           [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_vec<double>(m.nhist());
+            int ier = m.h_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule, temperature part.")
+      .def("dh_ds_temp",
+           [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),6);
+            int ier = m.dh_ds_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (temperature) derivative with respect to stress.")
+      .def("dh_da_temp",
+           [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
+           {
+            auto f = alloc_mat<double>(m.nhist(),m.nhist());
+            int ier = m.dh_da_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
+            py_error(ier);
+            return f;
+           }, "Hardening rule (temperature) derivative with respect to history.")
+
+      ;
+
       ;
 
   py::class_<GammaModel, std::shared_ptr<GammaModel>>(m, "GammaModel")
@@ -164,23 +218,12 @@ PYBIND11_PLUGIN(hardening) {
            py::arg("iso"), py::arg("c"), py::arg("gmodels"))
       .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<const Interpolate>>, std::vector<std::shared_ptr<GammaModel>>>(),
            py::arg("iso"), py::arg("c"), py::arg("gmodels"))
-      .def("__init__",
-           [](Chaboche & instance, std::shared_ptr<IsotropicHardeningRule> iso, py::array_t<double, py::array::c_style> c, py::array_t<double, py::array::c_style> r) 
-           {
-            if (c.request().ndim != 1) {
-              throw std::runtime_error("c must be a vector!");
-            }
-            if (r.request().ndim != 1) {
-              throw std::runtime_error("r must be a vector!");
-            }
-            if (c.request().shape[0] != r.request().shape[0]) {
-              throw std::runtime_error("len(c) != len(r)!");
-            }
 
-            int n = c.request().shape[0];  
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>, std::vector<double>, std::vector<double>>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"))
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<const Interpolate>>, std::vector<std::shared_ptr<GammaModel>>, std::vector<std::shared_ptr<const Interpolate>>, std::vector<std::shared_ptr<const Interpolate>>>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"))
 
-            new (&instance) Chaboche(iso, n, arr2ptr<double>(c), arr2ptr<double>(r));
-           })
       .def_property_readonly("n", &Chaboche::n, "Number of backstresses")
       .def("c",
          [](const Chaboche& m, double T) -> py::array_t<double>

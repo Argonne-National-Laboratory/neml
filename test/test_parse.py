@@ -176,6 +176,7 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
 
     Cs = [135.0e3, 61.0e3, 11.0e3]
     gs = [5.0e4, 1100.0, 1.0]
+    gmodels = [hardening.ConstantGamma(g) for g in gs]
 
     eta = 701.0
 
@@ -184,7 +185,7 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(0.0, r, d)
 
-    hmodel = hardening.Chaboche(iso, np.array(Cs), np.array(gs))
+    hmodel = hardening.Chaboche(iso, Cs, gmodels)
 
     fluidity = visco_flow.ConstantFluidity(eta)
     

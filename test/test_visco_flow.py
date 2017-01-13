@@ -246,7 +246,7 @@ class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
   def test_properties(self):
     self.assertTrue(np.isclose(self.eta, self.model.eta(self.T)))
 
-class TestChebocheModel(unittest.TestCase, CommonFlowRule):
+class TestChabocheModel(unittest.TestCase, CommonFlowRule):
   def setUp(self):
     n = 20.0
     eta = 108.0
@@ -267,9 +267,11 @@ class TestChebocheModel(unittest.TestCase, CommonFlowRule):
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
-    cs = np.array([C1, C2, C3])
-    gs = np.array([y1, y2, y3])
-    hmodel = hardening.Chaboche(iso, cs, gs)
+    cs = [C1, C2, C3]
+    gs = [y1, y2, y3]
+    gmodels = [hardening.ConstantGamma(g) for g in gs]
+
+    hmodel = hardening.Chaboche(iso, cs, gmodels)
 
     fluidity = visco_flow.ConstantFluidity(eta)
 
@@ -307,9 +309,10 @@ class TestChebocheFlow(unittest.TestCase):
 
     surface = surfaces.IsoKinJ2()
     self.iso = hardening.VoceIsotropicHardeningRule(self.sY, self.Q, self.b)
-    self.cs = np.array([C1, C2, C3])
-    self.gs = np.array([y1, y2, y3])
-    self.hmodel = hardening.Chaboche(self.iso, self.cs, self.gs)
+    self.cs = [C1, C2, C3]
+    self.gs = [y1, y2, y3]
+    self.gmodels = [hardening.ConstantGamma(g) for g in self.gs]
+    self.hmodel = hardening.Chaboche(self.iso, self.cs, self.gmodels)
 
     self.fluidity = visco_flow.ConstantFluidity(self.eta)
 

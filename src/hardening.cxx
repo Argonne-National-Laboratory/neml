@@ -7,6 +7,8 @@
 
 namespace neml {
 
+
+
 size_t IsotropicHardeningRule::nhist() const
 {
   return 1;
@@ -210,6 +212,55 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
 }
 
 
+// Provide zeros for these
+int NonAssociativeHardening::h_time(const double * const s, 
+                                    const double * const alpha, double T,
+                                    double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+  return 0;
+}
+
+int NonAssociativeHardening::dh_ds_time(const double * const s,
+                                        const double * const alpha, double T,
+                                        double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*6, 0.0);
+  return 0;
+}
+
+int NonAssociativeHardening::dh_da_time(const double * const s,
+                                        const double * const alpha, double T,
+                                        double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  return 0;
+}
+
+// Provide zeros for these
+int NonAssociativeHardening::h_temp(const double * const s,
+                                    const double * const alpha, double T,
+                                    double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+  return 0;
+}
+
+int NonAssociativeHardening::dh_ds_temp(const double * const s,
+                                        const double * const alpha, double T,
+                                        double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*6, 0.0);
+  return 0;
+}
+
+int NonAssociativeHardening::dh_da_temp(const double * const s,
+                                        const double * const alpha, double T,
+                                        double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  return 0;
+}
 
 // Begin non-associative hardening rules
 //
@@ -297,12 +348,23 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
 }
 
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-                   int n, const double * const c, const double * const r)
-  : iso_(iso), n_(n), c_(make_constant_vector(std::vector<double>(c, c+n)))
+                   std::vector<double> c,
+                   std::vector<std::shared_ptr<GammaModel>> gmodels,
+                   std::vector<double> A,
+                   std::vector<double> a) :
+    iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size()),
+    A_(make_constant_vector(A)), a_(make_constant_vector(a))
 {
-  for (int i=0; i<n; i++) {
-    gmodels_.emplace_back(std::make_shared<ConstantGamma>(r[i]));
-  }
+
+}
+
+Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
+           std::vector<std::shared_ptr<const Interpolate>> c,
+           std::vector<std::shared_ptr<GammaModel>> gmodels,
+           std::vector<std::shared_ptr<const Interpolate>> A,
+           std::vector<std::shared_ptr<const Interpolate>> a) :
+    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), A_(A), a_(a)
+{
 
 }
 
