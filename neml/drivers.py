@@ -632,7 +632,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain)}
 
 def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
-    ds = 10.0, max_cut = 10):
+    ds = 10.0, max_cut = 10, nsteps = 250):
   """
     Generates an isochronous stress-strain curve at the given time and
     temperature.
@@ -649,7 +649,7 @@ def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
       max_cut   adaptive refinement
   """
   def strain(stress):
-    res = creep(model, stress, srate, time, T = T)
+    res = creep(model, stress, srate, time, T = T, nsteps = nsteps)
     return res['rstrain'][-1]
 
   strains = [0.0]
