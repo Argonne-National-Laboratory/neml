@@ -210,6 +210,14 @@ class Chaboche: public NonAssociativeHardening {
   virtual int dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
+  // Hardening rule wrt to time
+  virtual int h_time(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
   // Getters
   int n() const;
   std::vector<double> c(double T) const;
@@ -224,6 +232,7 @@ class Chaboche: public NonAssociativeHardening {
 
   const std::vector<std::shared_ptr<const Interpolate>> A_;
   const std::vector<std::shared_ptr<const Interpolate>> a_;
+  const bool relax_;
 };
 
 

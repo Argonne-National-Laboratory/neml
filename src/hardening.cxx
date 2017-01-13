@@ -334,7 +334,8 @@ double SatGamma::beta(double T) const {
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<double> c,
                    std::vector<std::shared_ptr<GammaModel>> gmodels) :
-    iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size())
+    iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size()),
+    relax_(false)
 {
 
 }
@@ -342,7 +343,7 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<const Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels) :
-    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size())
+    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), relax_(false)
 {
 
 }
@@ -353,7 +354,7 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<double> A,
                    std::vector<double> a) :
     iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size()),
-    A_(make_constant_vector(A)), a_(make_constant_vector(a))
+    A_(make_constant_vector(A)), a_(make_constant_vector(a)), relax_(true)
 {
 
 }
@@ -363,7 +364,8 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<GammaModel>> gmodels,
            std::vector<std::shared_ptr<const Interpolate>> A,
            std::vector<std::shared_ptr<const Interpolate>> a) :
-    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), A_(A), a_(a)
+    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), A_(A), a_(a), 
+    relax_(true)
 {
 
 }
@@ -540,6 +542,79 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
     for (int j=0; j<6; j++) {
       dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * 
           gmodels_[i]->dgamma(alpha[0], T) * alpha[1+i*6+j];
+    }
+  }
+
+  return 0;
+}
+
+int Chaboche::h_time(const double * const s, const double * const alpha, 
+                     double T, double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+  if (not relax_) return 0;
+ 
+  std::vector<double> A = eval_vector(A_, T);
+  std::vector<double> a = eval_vector(a_, T);
+
+  double Xi[6];
+  double nXi;
+  for (int i=0; i<n_; i++) {
+    std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
+    nXi = norm2_vec(Xi, 6);
+    for (int j=0; j<6; j++) {
+      hv[1+i*6+j] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i] - 1.0) *
+          alpha[1+i*6+j];
+    }
+  }
+
+  return 0;
+}
+
+int Chaboche::dh_ds_time(const double * const s, const double * const alpha, 
+                         double T, double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*6, 0.0);
+  if (not relax_) return 0;
+
+  // Also return if relax
+
+  return 0;
+}
+
+int Chaboche::dh_da_time(const double * const s, const double * const alpha,
+                         double T, double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  if (not relax_) return 0;
+
+  std::vector<double> A = eval_vector(A_, T);
+  std::vector<double> a = eval_vector(a_, T);
+
+  int nh = nhist();
+  
+  double XX[36];
+  double Xi[6];
+  double nXi;
+  int ia,ib;
+  double d;
+  for (int i=0; i<n_; i++) {
+    std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
+    nXi = norm2_vec(Xi, 6);
+    outer_vec(Xi, 6, Xi, 6, XX);
+    for (int j=0; j<6; j++) {
+      ia = 1 + i*6 + j;
+      for (int k=0; k<6; k++) {
+        ib = 1 + i*6 + k;
+        if (j == k) {
+          d = 1.0;
+        }
+        else {
+          d = 0.0;
+        }
+        dhv[CINDEX(ia,ib,nh)] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i]-3.0) * (
+            pow(nXi, 2.0) * d + (a[i] - 1.0) * XX[CINDEX(j,k,6)]);
+      }
     }
   }
 

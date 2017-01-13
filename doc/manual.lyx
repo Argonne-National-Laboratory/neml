@@ -490,7 +490,7 @@ reference "sub:Isotropic"
 \begin_inset Formula 
 \begin{align*}
 \mathbf{X} & = & \sum_{i=1}^{n}\mathbf{X}_{i}\\
-\dot{\mathbf{X}}_{i} & = & -\left(\frac{2}{3}C_{i}\mathbf{n}+\sqrt{\frac{2}{3}}\gamma_{i}\left(\bar{\varepsilon}_{p}\right)\mathbf{X}_{i}\right)\dot{\gamma}-\omega_{i}\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{i}\right\Vert ^{m-1}\mathbf{X}_{i}
+\dot{\mathbf{X}}_{i} & = & -\left(\frac{2}{3}C_{i}\mathbf{n}+\sqrt{\frac{2}{3}}\gamma_{i}\left(\bar{\varepsilon}_{p}\right)\mathbf{X}_{i}\right)\dot{\gamma}-A_{i}\sqrt{\frac{3}{2}}\left\Vert \mathbf{X}_{i}\right\Vert ^{a_{i}-1}\mathbf{X}_{i}
 \end{align*}
 
 \end_inset

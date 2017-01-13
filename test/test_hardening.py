@@ -228,9 +228,13 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     self.rs = np.array(range(1,self.n+1)) * 10.0
     self.gammas = [hardening.ConstantGamma(r) for r in self.rs]
 
+    self.As = (np.array(range(self.n)) + 1.0)  * 10.0
+    self.a_s = np.array([2.0]*self.n)
+
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
 
-    self.model = hardening.Chaboche(self.iso, list(self.cs), self.gammas)
+    self.model = hardening.Chaboche(self.iso, list(self.cs), self.gammas,
+        list(self.As), list(self.a_s))
 
     self.hist0 = np.zeros((1 + self.n*6,))
     self.conform = 7
@@ -270,6 +274,24 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
     for i in range(self.n):
       h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0], self.T)*alpha[1+i*6:1+(i+1)*6]
     
+    self.assertTrue(np.allclose(h_model, h_exact))
+
+  def test_h_time(self):
+    alpha = self.gen_hist()
+    s = self.gen_stress()
+    sdev = make_dev(s)
+    X = sum(alpha[1+i*6:1+(i+1)*6] for i in range(self.n))
+    n = (sdev+X) / la.norm(sdev+X)
+
+    h_model = self.model.h_time(s, alpha, self.T)
+
+    h_exact = np.zeros((self.model.nhist,))
+    for i in range(self.n):
+      Xi = alpha[1+i*6:1+(i+1)*6] 
+      h_exact[1+i*6:1+(i+1)*6] = -self.As[i] * np.sqrt(3.0/2.0) * la.norm(Xi)**(self.a_s[i]-1.0) * Xi
+    
+    print(h_model)
+    print(h_exact)
     self.assertTrue(np.allclose(h_model, h_exact))
 
 class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
