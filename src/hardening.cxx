@@ -601,6 +601,7 @@ int Chaboche::dh_da_time(const double * const s, const double * const alpha,
   for (int i=0; i<n_; i++) {
     std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
     nXi = norm2_vec(Xi, 6);
+    normalize_vec(Xi, 6);
     outer_vec(Xi, 6, Xi, 6, XX);
     for (int j=0; j<6; j++) {
       ia = 1 + i*6 + j;
@@ -612,8 +613,8 @@ int Chaboche::dh_da_time(const double * const s, const double * const alpha,
         else {
           d = 0.0;
         }
-        dhv[CINDEX(ia,ib,nh)] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i]-3.0) * (
-            pow(nXi, 2.0) * d + (a[i] - 1.0) * XX[CINDEX(j,k,6)]);
+        dhv[CINDEX(ia,ib,nh)] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i]-1.0) * (
+            d + (a[i] - 1.0) * XX[CINDEX(j,k,6)]);
       }
     }
   }

@@ -290,8 +290,6 @@ class TestChaboche(unittest.TestCase, CommonNonAssociative):
       Xi = alpha[1+i*6:1+(i+1)*6] 
       h_exact[1+i*6:1+(i+1)*6] = -self.As[i] * np.sqrt(3.0/2.0) * la.norm(Xi)**(self.a_s[i]-1.0) * Xi
     
-    print(h_model)
-    print(h_exact)
     self.assertTrue(np.allclose(h_model, h_exact))
 
 class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
