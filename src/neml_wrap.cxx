@@ -109,18 +109,18 @@ PYBIND11_PLUGIN(neml) {
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
            std::shared_ptr<YieldSurface>, 
            double,
-           double, int , bool>(),
+           double, int , bool, int>(),
            py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false)
+           py::arg("verbose") = false, py::arg("max_divide") = 8)
  
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
            std::shared_ptr<YieldSurface>, 
            std::shared_ptr<Interpolate>,
-           double, int , bool>(),
+           double, int , bool, int>(),
            py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false)
+           py::arg("verbose") = false, py::arg("max_divide") = 8)
 
       .def("ys", &SmallStrainPerfectPlasticity::ys)
 
