@@ -217,9 +217,9 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<YieldSurface> surface,
     double ys,
     double tol, int miter,
-    bool verbose) :
+    bool verbose, int max_divide) :
       elastic_(elastic), surface_(surface), ys_(new ConstantInterpolate(ys)),
-      tol_(tol), miter_(miter), verbose_(verbose)
+      tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
 {
 
 }
@@ -229,14 +229,92 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<YieldSurface> surface,
     std::shared_ptr<Interpolate> ys,
     double tol, int miter,
-    bool verbose) :
+    bool verbose, int max_divide) :
       elastic_(elastic), surface_(surface), ys_(ys),
-      tol_(tol), miter_(miter), verbose_(verbose)
+      tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
 {
 
 }
 
 int SmallStrainPerfectPlasticity::update_sd(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
+{
+  // Setup for substepping
+  int nd = 0;                     // How many times we subdivided
+  int tf = pow(2, max_divide_);   // Total integer step count
+  int cm = tf;                    // Attempted step
+  int cs = 0;                     // Integer step fraction
+
+  double e_diff[6];
+  for (int i=0; i<6; i++) e_diff[i] = e_np1[i] - e_n[i];
+  double T_diff = T_np1 - T_n;
+  double t_diff = t_np1 - t_n;
+
+  double e_past[6];
+  std::copy(e_n, e_n+6, e_past);
+  // Ignore history, knowing it's blank
+  double s_past[6];
+  std::copy(s_n, s_n+6, s_past);
+  double T_past = T_n;
+  double t_past = t_n;
+  double u_past = u_n;
+  double p_past = p_n;
+
+  double e_next[6];
+  double s_next[6];
+  double T_next;
+  double t_next;
+  double u_next;
+  double p_next;
+
+
+  while (cs < tf) {
+    // Goal
+    double sm = (double) (cs + cm) / (double) tf;
+    for (int i=0; i<6; i++) e_next[i] = e_n[i] + sm * e_diff[i];
+    T_next = T_n + sm * T_diff;
+    t_next = t_n + sm * t_diff;
+
+    int ier = update_substep_(e_next, e_past, T_next, T_past, t_next,
+                              t_past, s_next, s_past, h_np1, h_n,
+                              A_np1, u_next, u_past, p_next, p_past);
+
+    // Subdivide
+    if (ier != SUCCESS) {
+      nd += 1;
+      cm /= 2;
+      if (nd >= max_divide_) {
+        return ier;
+      }
+      continue;
+    }
+
+    // Next substep
+    cs += cm;
+    std::copy(e_next, e_next+6, e_past);
+    std::copy(s_next, s_next+6, s_past);
+    T_past = T_next;
+    t_past = t_next;
+    u_past = u_next;
+    p_past = p_next;
+  }
+
+  // Final values
+  std::copy(s_next, s_next+6, s_np1);
+  u_np1 = u_next;
+  p_np1 = p_next;
+
+  return 0; 
+}
+
+int SmallStrainPerfectPlasticity::update_substep_(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
