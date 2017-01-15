@@ -11,8 +11,8 @@ namespace neml {
 /// Shear modulus model: function of temperature
 class ShearModulus {
  public:
-  ShearModulus::ShearModulus(double mu);
-  ShearModulus::ShearModulus(std::shared_ptr<Interpolate> mu);
+  ShearModulus(double mu);
+  ShearModulus(std::shared_ptr<Interpolate> mu);
   virtual double modulus(double T) const;
 
  private:
@@ -23,8 +23,8 @@ class ShearModulus {
 /// Bulk modulus model: function of temperature
 class BulkModulus {
  public:
-  BulkModulus::BulkModulus(double K);
-  BulkModulus::BulkModulus(std::shared_ptr<Interpolate> K);
+  BulkModulus(double K);
+  BulkModulus(std::shared_ptr<Interpolate> K);
   virtual double modulus(double T) const;
 
  private:
