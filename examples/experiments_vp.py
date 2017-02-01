@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
+from neml import solvers, neml, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,8 +25,8 @@ if __name__ == "__main__":
   b = 10.0
   beta = 0.0
   
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
+  shear = elasticity.ShearModulus(mu)
+  bulk = elasticity.BulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
   surface = surfaces.IsoKinJ2()

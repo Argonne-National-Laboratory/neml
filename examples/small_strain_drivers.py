@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
+from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -258,9 +258,10 @@ if __name__ == "__main__":
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
-  cs = np.array([C1, C2, C3])
+  cs = [C1, C2, C3]
   gs = np.array([y1, y2, y3])
-  hmodel = hardening.Chaboche(iso, cs, gs)
+  gmodels = [hardening.ConstantGamma(g) for g in gs]
+  hmodel = hardening.Chaboche(iso, cs, gmodels)
 
   fluidity = visco_flow.ConstantFluidity(eta)
 
@@ -272,8 +273,8 @@ if __name__ == "__main__":
   mu = E/(2*(1+nu))
   K = E/(3*(1-2*nu))
 
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
+  shear = elasticity.ShearModulus(mu)
+  bulk = elasticity.BulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)

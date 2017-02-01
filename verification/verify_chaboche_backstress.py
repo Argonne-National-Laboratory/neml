@@ -27,7 +27,8 @@ def verify_Q():
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sy, Q, b)
-  hrule = hardening.Chaboche(iso, np.array([C]), np.array([g]))
+  gmodels = [hardening.ConstantGamma(g)]
+  hrule = hardening.Chaboche(iso, [C], gmodels)
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
@@ -58,7 +59,7 @@ def verify_Cg():
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sy, Q, b)
-  hrule = hardening.Chaboche(iso, np.array([C]), np.array([g]))
+  hrule = hardening.Chaboche(iso, [C], [hardening.ConstantGamma(g)])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
@@ -92,7 +93,7 @@ def verify_warp3d():
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sy, Q, b)
-  hrule = hardening.Chaboche(iso, np.array([C]), np.array([g]))
+  hrule = hardening.Chaboche(iso, [C], [hardening.ConstantGamma(g)])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,

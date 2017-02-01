@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, surfaces, hardening, ri_flow
+from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,15 +17,16 @@ if __name__ == "__main__":
 
   s0 = 300.0
   Kp = 0.0
-  c = np.array([30000.0])
-  r = np.array([60.0])
+  c = [30000.0]
+  r = [60.0]
   
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
+  shear = elasticity.ShearModulus(mu)
+  bulk = elasticity.BulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
-  hrule = hardening.Chaboche(iso, c, r)
+  gmodels = [hardening.ConstantGamma(g) for g in r]
+  hrule = hardening.Chaboche(iso, c, gmodels)
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
   model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
