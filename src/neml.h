@@ -14,6 +14,7 @@
 #include <cmath>
 #include <iostream>
 
+
 namespace neml {
 
 /// NEML material model interface definitions
