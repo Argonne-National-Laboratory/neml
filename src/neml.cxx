@@ -289,10 +289,10 @@ int SmallStrainPerfectPlasticity::update_sd(
     // Subdivide
     if (ier != SUCCESS) {
       nd += 1;
-      cm /= 2;
       if (nd >= max_divide_) {
         return ier;
       }
+      cm /= 2;
       continue;
     }
 
