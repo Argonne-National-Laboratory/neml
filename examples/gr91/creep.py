@@ -8,7 +8,7 @@ import os.path
 import matplotlib.pyplot as plt
 
 import sys
-sys.path.append('/home/messner/projects/neml')
+sys.path.append('../..')
 
 from neml import solvers, neml, interpolate, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
 
