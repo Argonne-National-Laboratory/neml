@@ -573,7 +573,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
       'rrate': np.copy(rrate), 'rstress': np.copy(stress[ri:-1])}
 
 
-def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
+def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
     nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
     logspace = False):
   """
