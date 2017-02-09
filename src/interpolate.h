@@ -32,6 +32,15 @@ class ConstantInterpolate : public Interpolate {
 
 };
 
+class MTSShearInterpolate : public Interpolate {
+ public:
+  MTSShearInterpolate(double V0, double D, double T0);
+  virtual double value(double x) const;
+
+ private:
+  const double V0_, D_, T0_;
+};
+
 std::vector<std::shared_ptr<const Interpolate>> 
   make_constant_vector(const std::vector<double> & iv);
 

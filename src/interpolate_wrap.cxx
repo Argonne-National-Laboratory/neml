@@ -33,6 +33,11 @@ PYBIND11_PLUGIN(interpolate) {
       .def(py::init<double>(), py::arg("value"))
       ;
 
+  py::class_<MTSShearInterpolate, std::shared_ptr<MTSShearInterpolate>>(m, "MTSShearInterpolate", py::base<Interpolate>())
+      .def(py::init<double, double, double>(), py::arg("y0"), py::arg("D"), 
+           py::arg("x0"))
+      ;
+
   return m.ptr();
 }
 

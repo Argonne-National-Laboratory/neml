@@ -2,6 +2,8 @@
 
 #include "nemlmath.h"
 
+#include <math.h>
+
 namespace neml {
 
 double Interpolate::operator()(double x) const
@@ -29,6 +31,17 @@ ConstantInterpolate::ConstantInterpolate(double v) :
 double ConstantInterpolate::value(double x) const
 {
   return v_;
+}
+
+MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :
+    V0_(V0), D_(D), T0_(T0)
+{
+  
+}
+
+double MTSShearInterpolate::value(double x) const
+{
+  return V0_ - D_ / (exp(T0_ / x) - 1.0);
 }
 
 std::vector<std::shared_ptr<const Interpolate>> 
