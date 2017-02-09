@@ -211,6 +211,11 @@ int SmallStrainElasticity::update_sd(
   return 0;
 }
 
+const std::shared_ptr<const LinearElasticModel> SmallStrainElasticity::elastic() const
+{
+  return elastic_;
+}
+
 // Implementation of perfect plasticity
 SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
@@ -450,6 +455,12 @@ int SmallStrainPerfectPlasticity::RJ(
 double SmallStrainPerfectPlasticity::ys(double T) const {
   return ys_->value(T);
 }
+
+const std::shared_ptr<const LinearElasticModel> SmallStrainPerfectPlasticity::elastic() const
+{
+  return elastic_;
+}
+
 
 // Make this public for ease of testing
 int SmallStrainPerfectPlasticity::make_trial_state(
@@ -733,6 +744,11 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   J[CINDEX((6+nh), (6+nh), n)] = 0.0;
   
   return 0;
+}
+
+const std::shared_ptr<const LinearElasticModel> SmallStrainRateIndependentPlasticity::elastic() const
+{
+  return elastic_;
 }
 
 int SmallStrainRateIndependentPlasticity::make_trial_state(

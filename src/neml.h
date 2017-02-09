@@ -216,6 +216,9 @@ class SmallStrainElasticity: public NEMLModel_sd {
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
 
+  // Getters
+  const std::shared_ptr<const LinearElasticModel> elastic() const;
+
  private:
    std::shared_ptr<LinearElasticModel> elastic_;
 };
@@ -294,6 +297,7 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
 
   // Property getter
   double ys(double T) const;
+  const std::shared_ptr<const LinearElasticModel> elastic() const;
 
   // Make this public for ease of testing
   int make_trial_state(const double * const e_np1, const double * const e_n,
@@ -350,6 +354,7 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
       double * const A_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n);
+
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
 
@@ -357,6 +362,9 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   virtual int init_x(double * const x, TrialState * ts);
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
+  
+  // Getters
+  const std::shared_ptr<const LinearElasticModel> elastic() const;
 
   // Make this public for ease of testing
   int make_trial_state(const double * const e_np1, const double * const e_n,

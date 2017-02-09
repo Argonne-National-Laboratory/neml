@@ -104,3 +104,13 @@ class TestEquivalentDefinitions(unittest.TestCase):
     S1 = self.model_Ev.S(self.T)
     S2 = self.model_GK.S(self.T)
     self.assertTrue(np.allclose(S1,S2))
+  
+  def test_equivalent_modulii(self):
+    self.assertTrue(np.isclose(self.E, self.model_Ev.E(self.T)))
+    self.assertTrue(np.isclose(self.E, self.model_GK.E(self.T)))
+    self.assertTrue(np.isclose(self.nu, self.model_Ev.nu(self.T)))
+    self.assertTrue(np.isclose(self.nu, self.model_GK.nu(self.T)))
+    self.assertTrue(np.isclose(self.mu, self.model_Ev.G(self.T)))
+    self.assertTrue(np.isclose(self.mu, self.model_GK.G(self.T)))
+    self.assertTrue(np.isclose(self.K, self.model_Ev.K(self.T)))
+    self.assertTrue(np.isclose(self.K, self.model_GK.K(self.T)))

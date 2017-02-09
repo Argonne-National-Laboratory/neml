@@ -107,6 +107,38 @@ int IsotropicLinearElasticModel::S(double T, double * const Sv) const
   return S_calc_(G, K, Sv);
 }
 
+double IsotropicLinearElasticModel::E(double T) const
+{
+  double G, K;
+  get_GK_(T, G, K);
+
+  return 9.0 * K * G / (3.0 * K + G);
+}
+
+double IsotropicLinearElasticModel::nu(double T) const
+{
+  double G, K;
+  get_GK_(T, G, K);
+
+  return (3.0 * K - 2.0 * G) / (2.0 * (3.0 * K + G));
+}
+
+double IsotropicLinearElasticModel::G(double T) const
+{
+  double G, K;
+  get_GK_(T, G, K);
+
+  return G;
+}
+
+double IsotropicLinearElasticModel::K(double T) const
+{
+  double G, K;
+  get_GK_(T, G, K);
+
+  return K;
+}
+
 int IsotropicLinearElasticModel::C_calc_(double G, double K, double * const Cv) const
 {
   double l = K - 2.0/3.0 * G;

@@ -19,7 +19,7 @@ PYBIND11_PLUGIN(elasticity) {
   py::class_<Modulus, std::shared_ptr<Modulus>>(m, "Modulus")
       .def(py::init<double>(), py::arg("x"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("x"))
-      .def("modulus", &ShearModulus::modulus, "Modulus as a function of temperature.")
+      .def("modulus", &Modulus::modulus, "Modulus as a function of temperature.")
       ;
 
   py::class_<ShearModulus, std::shared_ptr<ShearModulus>>(m, "ShearModulus", py::base<Modulus>())
@@ -58,6 +58,10 @@ PYBIND11_PLUGIN(elasticity) {
             m.S(T, arr2ptr<double>(S));
             return S;
            }, "Return compliance elasticity matrix.")
+      .def("E", &LinearElasticModel::E, "Young's modulus as a function of temperature.")
+      .def("nu", &LinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
+      .def("G", &LinearElasticModel::G, "Shear modulus as a function of temperature.")
+      .def("K", &LinearElasticModel::K, "Bulk modulus as a function of temperature.")
       ;
 
   py::class_<IsotropicLinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel", py::base<LinearElasticModel>())

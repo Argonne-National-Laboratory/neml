@@ -94,6 +94,7 @@ PYBIND11_PLUGIN(neml) {
   py::class_<SmallStrainElasticity, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity", py::base<NEMLModel_sd>())
       .def(py::init<std::shared_ptr<LinearElasticModel>>(), 
            py::arg("elastic"))
+      .def_property_readonly("elastic", &SmallStrainElasticity::elastic)
       ;
 
   py::class_<SSPPTrialState>(m, "SSPPTrialState", py::base<TrialState>())
@@ -123,6 +124,7 @@ PYBIND11_PLUGIN(neml) {
            py::arg("verbose") = false, py::arg("max_divide") = 8)
 
       .def("ys", &SmallStrainPerfectPlasticity::ys)
+      .def_property_readonly("elastic", &SmallStrainPerfectPlasticity::elastic)
 
       .def("make_trial_state",
            [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSPPTrialState>
@@ -171,7 +173,9 @@ PYBIND11_PLUGIN(neml) {
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
            py::arg("check_kt") = false)
-  
+ 
+      .def_property_readonly("elastic", &SmallStrainRateIndependentPlasticity::elastic)
+
       .def("make_trial_state",
            [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSRIPTrialState>
            {
