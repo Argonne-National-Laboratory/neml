@@ -6,54 +6,109 @@
 
 namespace neml {
 
+Modulus::Modulus(double x) :
+    x_(new ConstantInterpolate(x))
+{
+
+}
+
+Modulus::Modulus(std::shared_ptr<Interpolate> x) :
+    x_(x)
+{
+
+}
+
+double Modulus::modulus(double T) const
+{
+  return x_->value(T);
+}
+
+
 ShearModulus::ShearModulus(double mu) :
-    mu_(new ConstantInterpolate(mu))
+    Modulus(mu)
 {
 
 }
 
 ShearModulus::ShearModulus(std::shared_ptr<Interpolate> mu) :
-    mu_(mu)
+    Modulus(mu)
 {
 
 }
-
-double ShearModulus::modulus(double T) const
-{
-  return mu_->value(T);
-}
-
 
 
 BulkModulus::BulkModulus(std::shared_ptr<Interpolate> K) :
-    K_(K)
+    Modulus(K)
 {
   
 }
 
 BulkModulus::BulkModulus(double K) :
-    K_(new ConstantInterpolate(K))
+    Modulus(K)
 {
   
 }
 
-double BulkModulus::modulus(double T) const
+YoungsModulus::YoungsModulus(double E) :
+    Modulus(E)
 {
-  return K_->value(T);
+
 }
+
+YoungsModulus::YoungsModulus(std::shared_ptr<Interpolate> E) :
+    Modulus(E)
+{
+
+}
+
+
+PoissonsRatio::PoissonsRatio(std::shared_ptr<Interpolate> nu) :
+    Modulus(nu)
+{
+  
+}
+
+PoissonsRatio::PoissonsRatio(double nu) :
+    Modulus(nu)
+{
+  
+}
+
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
       std::shared_ptr<ShearModulus> shear,
       std::shared_ptr<BulkModulus> bulk) :
-    shear_(shear), bulk_(bulk)
+    a_(shear), b_(bulk), have_modulii_(GK)
+{
+
+}
+
+IsotropicLinearElasticModel::IsotropicLinearElasticModel(
+      std::shared_ptr<YoungsModulus> youngs,
+      std::shared_ptr<PoissonsRatio> poisson) :
+    a_(youngs), b_(poisson), have_modulii_(Ev)
 {
 
 }
 
 int IsotropicLinearElasticModel::C(double T, double * const Cv) const
 {
-  double G = shear_->modulus(T);
-  double K = bulk_->modulus(T);
+  double G, K;
+  get_GK_(T, G, K);
+
+  return C_calc_(G, K, Cv);
+}
+
+int IsotropicLinearElasticModel::S(double T, double * const Sv) const
+{
+  double G, K;
+  get_GK_(T, G, K);
+
+  return S_calc_(G, K, Sv);
+}
+
+int IsotropicLinearElasticModel::C_calc_(double G, double K, double * const Cv) const
+{
   double l = K - 2.0/3.0 * G;
 
   std::fill(Cv, Cv+36, 0.0);
@@ -77,10 +132,8 @@ int IsotropicLinearElasticModel::C(double T, double * const Cv) const
   return 0;
 }
 
-int IsotropicLinearElasticModel::S(double T, double * const Sv) const
+int IsotropicLinearElasticModel::S_calc_(double G, double K, double * const Sv) const
 {
-  double G = shear_->modulus(T);
-  double K = bulk_->modulus(T);
   double l = K - 2.0/3.0 * G;
   
   double a = (G + l)/(2.0 * G * G + 3 * G * l);
@@ -106,7 +159,21 @@ int IsotropicLinearElasticModel::S(double T, double * const Sv) const
   Sv[35] = c;
 
   return 0;
-  
+}
+
+void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) const
+{
+  double a = a_->modulus(T);
+  double b = b_->modulus(T);
+
+  if (have_modulii_ == GK) {
+    G = a;
+    K = b;
+  }
+  else if (have_modulii_ == Ev) {
+    G = a / (2.0 * (1.0 + b));
+    K = a / (3.0 * (1.0 - 2.0 * b));
+  }
 }
 
 } // namespace neml

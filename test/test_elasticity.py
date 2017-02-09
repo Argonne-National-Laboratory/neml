@@ -78,3 +78,29 @@ class TestIsotropicConstantModel(CommonElasticity, unittest.TestCase):
     self.assertTrue(np.isclose(S[0,0], 1/E))
     self.assertTrue(np.isclose(S[0,1], -nu/E))
     self.assertTrue(np.isclose(S[3,3], (1+nu)/E))
+
+
+class TestEquivalentDefinitions(unittest.TestCase):
+  def setUp(self):
+    self.E = 100000.0
+    self.nu = 0.3
+
+    self.mu = self.E / (2 * (1 + self.nu))
+    self.K = self.E / (3 * (1 - 2.0 * self.nu))
+    
+    self.model_Ev = elasticity.IsotropicLinearElasticModel(
+        elasticity.YoungsModulus(self.E), elasticity.PoissonsRatio(self.nu))
+    self.model_GK = elasticity.IsotropicLinearElasticModel(
+        elasticity.ShearModulus(self.mu), elasticity.BulkModulus(self.K))
+
+    self.T = 300.0
+
+  def test_equivalent_C(self):
+    C1 = self.model_Ev.C(self.T)
+    C2 = self.model_GK.C(self.T)
+    self.assertTrue(np.allclose(C1,C2))
+
+  def test_equivalent_S(self):
+    S1 = self.model_Ev.S(self.T)
+    S2 = self.model_GK.S(self.T)
+    self.assertTrue(np.allclose(S1,S2))
