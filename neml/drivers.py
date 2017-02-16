@@ -2,6 +2,7 @@ import numpy as np
 import numpy.linalg as la
 
 import scipy.interpolate as inter
+import scipy.optimize as opt
 
 class Driver(object):
   """
@@ -246,7 +247,8 @@ class Driver_sd(Driver):
 
 
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
-    sdir = np.array([1,0,0,0,0,0]), verbose = False):
+    sdir = np.array([1,0,0,0,0,0]), verbose = False,
+    offset = 0.2/100.0):
   """
     Make a uniaxial stress/strain curve
 
@@ -260,6 +262,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       nsteps    number of steps to use, default 250
       sdir      stress direction, default tension in x
       verbose   whether to be verbose
+      offset    used to calculate yield stress
 
     Results:
       strain    strain in direction
@@ -281,9 +284,17 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   strain = np.array(strain)
   stress = np.array(stress)
 
+  # Calculate the yield stress and Young's modulus
+  E = np.abs(stress[1]) / np.abs(strain[1])
+  sfn = inter.interp1d(np.abs(strain), np.abs(stress))
+  tfn = lambda e: E * (e - offset)
+  sYe = opt.brentq(lambda e: sfn(e) - tfn(e), 0.0, np.max(strain))
+  sY = tfn(sYe)
+
   return {'strain': strain, 'stress': stress, 
       'energy_density': np.copy(driver.u),
-      'plastic_work': np.copy(driver.p)}
+      'plastic_work': np.copy(driver.p),
+      'youngs': E, 'yield': sY}
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
