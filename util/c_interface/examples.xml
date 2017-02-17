@@ -21,6 +21,11 @@
         </hardening>
       </rule>
     </plastic>
+    
+    <alpha>
+      <value>1.0e-6</value>
+    </alpha>
+
   </material>
 
   <material name="test_j2comb" type="smallstrain">

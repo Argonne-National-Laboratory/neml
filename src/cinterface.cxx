@@ -25,6 +25,16 @@ void destroy_nemlmodel(NEMLMODEL * model, int * ier)
   }
 }
 
+double alpha_nemlmodel(NEMLMODEL * model, double T)
+{
+  try {
+    return model->alpha(T);
+  }
+  catch (...) {
+    return -1;
+  }
+}
+
 int nstore_nemlmodel(NEMLMODEL * model)
 {
   try {

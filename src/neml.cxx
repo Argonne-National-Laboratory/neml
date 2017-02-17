@@ -178,7 +178,7 @@ int NEMLModel_sd::update_ldI(
   assert(false); // Pass for now
 }
 
-double NEMLModel_sd::alpha(double T)
+double NEMLModel_sd::alpha(double T) const
 {
   return alpha_->value(T);
 }

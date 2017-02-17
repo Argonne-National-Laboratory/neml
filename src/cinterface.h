@@ -19,6 +19,7 @@ typedef struct NEMLMODEL NEMLMODEL;
 NEMLMODEL * create_nemlmodel(const char * fname, const char * mname, int * ier);
 void destroy_nemlmodel(NEMLMODEL * model, int * ier);
 
+double alpha_nemlmodel(NEMLMODEL * model, double T);
 int nstore_nemlmodel(NEMLMODEL * model);
 void init_store_nemlmodel(NEMLMODEL * model, double * store, int * ier);
 

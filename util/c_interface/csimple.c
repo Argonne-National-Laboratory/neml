@@ -22,6 +22,8 @@ int main(int argc, char* argv[])
             printf("Error in creating model.\n");
             return -1;
       }
+
+      double alpha = alpha_nemlmodel(model, 100.0);
       
       // Allocate
       int nstore = nstore_nemlmodel(model);

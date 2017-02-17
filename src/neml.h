@@ -61,6 +61,9 @@ class NEMLModel {
 
    virtual size_t nhist() const = 0;  // Actual number of material history variables
    virtual int init_hist(double * const hist) const = 0;
+
+   // Well models will need this...
+   virtual double alpha(double T) const = 0;
 };
 
 /// Models implemented through the deformation gradient interface
@@ -199,7 +202,7 @@ class NEMLModel_sd: public NEMLModel {
    virtual int init_hist(double * const hist) const = 0;
 
    // I suppose this must be defined
-   virtual double alpha(double T);
+   virtual double alpha(double T) const;
 
   private:
    std::shared_ptr<Interpolate> alpha_;
