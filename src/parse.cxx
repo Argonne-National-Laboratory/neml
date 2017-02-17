@@ -25,18 +25,18 @@ std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
     return std::unique_ptr<NEMLModel>(nullptr);
   }
   
-  //try {
+  try {
     // Grab the root node
     const auto root = parser.get_document()->get_root_node();
 
     // Dispatch to the right node
     return  find_and_dispatch(root, "material", "name", mname, 
                              &make_from_node, ier);
-  //}
-  //catch(...) {
-  //  ier = UNKNOWN_ERROR;
-  //  return std::unique_ptr<NEMLModel>(nullptr);
-  //}
+  }
+  catch(...) {
+    ier = UNKNOWN_ERROR;
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
 
 }
 
@@ -82,6 +82,15 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     std::shared_ptr<ViscoPlasticFlowRule> fr = process_dependent(plastic_node, ier);
     std::shared_ptr<TVPFlowRule> gfr = std::make_shared<TVPFlowRule>(emodel, fr);
     return std::unique_ptr<GeneralIntegrator>{new GeneralIntegrator(gfr)};
+  }
+  else if (ft == "perfect") {
+    // Surface
+    std::shared_ptr<YieldSurface> ys = dispatch_node(plastic_node, "surface",
+                                                     &process_surface, ier);
+    // Yield stress
+    std::shared_ptr<Interpolate> yss = scalar_param(plastic_node, "yield", ier);
+    return std::unique_ptr<SmallStrainPerfectPlasticity>(
+        new SmallStrainPerfectPlasticity(emodel, ys, yss));
   }
   else {
     ier = UNKNOWN_TYPE;
@@ -665,13 +674,13 @@ std::shared_ptr<Interpolate> process_piecewise(const xmlpp::Element * child,
   }
 
   std::vector<double> splits = split_string(sval);
-
+  
   std::vector<double> points;
   std::vector<double> values;
 
   for (int i = 0; i < splits.size()/2; i++) {
-    points.push_back(points[i*2]);
-    values.push_back(points[i*2+1]);
+    points.push_back(splits[i*2]);
+    values.push_back(splits[i*2+1]);
   }
 
   return std::shared_ptr<Interpolate>(new PiecewiseLinearInterpolate(points, values));

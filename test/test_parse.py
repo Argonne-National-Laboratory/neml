@@ -238,3 +238,27 @@ class TestPerzyna(CompareMats, unittest.TestCase):
     self.emax = np.array([0.1,0,0,0,0,0])
 
 
+class TestPerfect(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_perfect")
+
+    E = [-100, 100000]
+    nu = 0.3
+
+    youngs = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E))
+    poissons = elasticity.PoissonsRatio(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+
+    surface = surfaces.IsoJ2()
+
+    Ts = [100.0, 300.0, 500.0, 700.0]
+    Sys = [1000.0, 120.0, 60.0, 30.0]
+
+    yields = interpolate.PiecewiseLinearInterpolate(Ts, Sys)
+
+    self.model2 = neml.SmallStrainPerfectPlasticity(elastic, surface, yields)
+
+    self.T = 550.0
+    self.tmax = 10.0
+    self.nsteps = 50.0
+    self.emax = np.array([0.1,0.05,0,-0.025,0,0])

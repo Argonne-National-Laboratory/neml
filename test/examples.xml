@@ -182,4 +182,29 @@
     </plastic>
   </material>
 
+  <material name="test_perfect" type="smallstrain">
+    <elastic type="isotropic">
+      <youngs>
+        <modulus>
+          <interpolate type="polynomial">-100.0 100000.0</interpolate>
+        </modulus>
+      </youngs>
+      <poissons>
+        <modulus>0.3</modulus>
+      </poissons>
+    </elastic>
+
+    <plastic type="perfect">
+      <surface type="isoj2"></surface>
+      <yield>
+        <interpolate type="piecewise">
+          100.0 1000.0
+          300.0 120.0
+          500.0 60.0
+          700.0 30.0
+        </interpolate>
+      </yield>
+    </plastic>
+  </material>
+
 </materials>
