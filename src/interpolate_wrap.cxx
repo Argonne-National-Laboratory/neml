@@ -26,6 +26,10 @@ PYBIND11_PLUGIN(interpolate) {
       .def_property_readonly("valid", &Interpolate::valid)
       ;
 
+  py::class_<InvalidInterpolate, std::shared_ptr<InvalidInterpolate>>(m, "InvalidInterpolate", py::base<Interpolate>())
+      .def(py::init<>())
+      ;
+
   py::class_<PolynomialInterpolate, std::shared_ptr<PolynomialInterpolate>>(m, "PolynomialInterpolate", py::base<Interpolate>())
       .def(py::init<std::vector<double>>(), py::arg("coefs"))
       ;

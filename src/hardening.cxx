@@ -334,14 +334,14 @@ double SatGamma::beta(double T) const {
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<double> c,
                    std::vector<std::shared_ptr<GammaModel>> gmodels) :
-    iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size()),
+    iso_(iso), c_(make_vector(c)), gmodels_(gmodels), n_(c.size()),
     relax_(false)
 {
 
 }
 
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<const Interpolate>> c,
+           std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels) :
     iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), relax_(false)
 {
@@ -353,17 +353,17 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<std::shared_ptr<GammaModel>> gmodels,
                    std::vector<double> A,
                    std::vector<double> a) :
-    iso_(iso), c_(make_constant_vector(c)), gmodels_(gmodels), n_(c.size()),
-    A_(make_constant_vector(A)), a_(make_constant_vector(a)), relax_(true)
+    iso_(iso), c_(make_vector(c)), gmodels_(gmodels), n_(c.size()),
+    A_(make_vector(A)), a_(make_vector(a)), relax_(true)
 {
 
 }
 
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<const Interpolate>> c,
+           std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels,
-           std::vector<std::shared_ptr<const Interpolate>> A,
-           std::vector<std::shared_ptr<const Interpolate>> a) :
+           std::vector<std::shared_ptr<Interpolate>> A,
+           std::vector<std::shared_ptr<Interpolate>> a) :
     iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), A_(A), a_(a), 
     relax_(true)
 {

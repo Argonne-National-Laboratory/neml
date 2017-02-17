@@ -4,7 +4,7 @@
 
 #include <math.h>
 #include <algorithm>
-#include <iostream>
+#include <limits>
 
 namespace neml {
 
@@ -22,6 +22,17 @@ double Interpolate::operator()(double x) const
 bool Interpolate::valid() const
 {
   return valid_;
+}
+
+InvalidInterpolate::InvalidInterpolate() :
+    Interpolate()
+{
+  valid_ = false;
+}
+
+double InvalidInterpolate::value(double x) const
+{
+  return std::numeric_limits<double>::quiet_NaN();
 }
 
 PolynomialInterpolate::PolynomialInterpolate(const std::vector<double> coefs) :
@@ -96,18 +107,18 @@ double MTSShearInterpolate::value(double x) const
   return V0_ - D_ / (exp(T0_ / x) - 1.0);
 }
 
-std::vector<std::shared_ptr<const Interpolate>> 
-    make_constant_vector(const std::vector<double> & iv)
+std::vector<std::shared_ptr<Interpolate>> 
+    make_vector(const std::vector<double> & iv)
 {
-  std::vector<std::shared_ptr<const Interpolate>> vt;
+  std::vector<std::shared_ptr<Interpolate>> vt;
   for (auto it = iv.begin(); it != iv.end(); ++it) {
-    vt.emplace_back(std::make_shared<const ConstantInterpolate>(*it));
+    vt.emplace_back(std::make_shared<ConstantInterpolate>(*it));
   }
   return vt;
 }
 
 std::vector<double> eval_vector(
-    const std::vector<std::shared_ptr<const Interpolate>> & iv, double x)
+    const std::vector<std::shared_ptr<Interpolate>> & iv, double x)
 {
   std::vector<double> vt;
   for (auto it = iv.begin(); it != iv.end(); ++it) {

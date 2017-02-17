@@ -25,18 +25,18 @@ std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
     return std::unique_ptr<NEMLModel>(nullptr);
   }
   
-  try {
+  //try {
     // Grab the root node
     const auto root = parser.get_document()->get_root_node();
 
     // Dispatch to the right node
     return  find_and_dispatch(root, "material", "name", mname, 
                              &make_from_node, ier);
-  }
-  catch(...) {
-    ier = UNKNOWN_ERROR;
-    return std::unique_ptr<NEMLModel>(nullptr);
-  }
+  //}
+  //catch(...) {
+  //  ier = UNKNOWN_ERROR;
+  //  return std::unique_ptr<NEMLModel>(nullptr);
+  //}
 
 }
 
@@ -118,59 +118,15 @@ std::shared_ptr<LinearElasticModel> process_isotropiclinearelastic(
 std::shared_ptr<ShearModulus> process_shearmodulus(
     const xmlpp::Element * node, int & ier)
 {
-  // Switch on the type of model
-  return dispatch_attribute<ShearModulus>(node, "type",
-                                          {"constant", "polynomial"},
-                                          {&process_constantshearmodulus, &process_polynomialshearmodulus},
-                                          ier);
-}
-
-std::shared_ptr<ShearModulus> process_constantshearmodulus(
-    const xmlpp::Element * node, int & ier)
-{
-  // One scalar parameter in "modulus"
-  double mod = scalar_param(node, "modulus", ier);
-
-  return std::make_shared<ShearModulus>(mod);
-}
-
-std::shared_ptr<ShearModulus> process_polynomialshearmodulus(
-    const xmlpp::Element * node, int & ier)
-{
-  // One vector parameter in "coefs"
-  std::vector<double> coefs = vector_param(node, "coefs", ier);
-
-  return std::make_shared<ShearModulus>(std::make_shared<PolynomialInterpolate>(coefs));
+  // Just the scalar parameter
+  return std::shared_ptr<ShearModulus>(new ShearModulus(scalar_param(node, "modulus", ier)));
 }
 
 std::shared_ptr<BulkModulus> process_bulkmodulus(
     const xmlpp::Element * node, int & ier)
 {
-  // Switch on the type of model
-  return dispatch_attribute<BulkModulus>(node, "type",
-                                          {"constant", "polynomial"},
-                                          {&process_constantbulkmodulus, &process_polynomialbulkmodulus},
-                                          ier);
+  return std::shared_ptr<BulkModulus>(new BulkModulus(scalar_param(node, "modulus", ier)));
 }
-
-std::shared_ptr<BulkModulus> process_constantbulkmodulus(
-    const xmlpp::Element * node, int & ier)
-{
-  // One scalar parameter in "modulus"
-  double mod = scalar_param(node, "modulus", ier);
-
-  return std::make_shared<BulkModulus>(mod);
-}
-
-std::shared_ptr<BulkModulus> process_polynomialbulkmodulus(
-    const xmlpp::Element * node, int & ier)
-{
-  // One vector parameter in "coefs"
-  std::vector<double> coefs = vector_param(node, "coefs", ier);
-
-  return std::make_shared<BulkModulus>(std::make_shared<PolynomialInterpolate>(coefs));
-}
-
 
 std::shared_ptr<RateIndependentFlowRule> process_independent(
     const xmlpp::Element * node, int & ier)
@@ -258,9 +214,9 @@ std::shared_ptr<HardeningRule> process_linearisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Two parameters: "yield" and "harden"
-  double yield = scalar_param(node, "yield", ier);
+  std::shared_ptr<Interpolate> yield = scalar_param(node, "yield", ier);
 
-  double harden = scalar_param(node, "harden", ier);
+  std::shared_ptr<Interpolate> harden = scalar_param(node, "harden", ier);
 
   return std::make_shared<LinearIsotropicHardeningRule>(yield, harden);
 }
@@ -269,11 +225,11 @@ std::shared_ptr<HardeningRule> process_voceisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Three parameters: "yield", "r", and "d"
-  double yield = scalar_param(node, "yield", ier);
+  std::shared_ptr<Interpolate> yield = scalar_param(node, "yield", ier);
 
-  double r = scalar_param(node, "r", ier);
+  std::shared_ptr<Interpolate> r = scalar_param(node, "r", ier);
 
-  double d = scalar_param(node, "d", ier);
+  std::shared_ptr<Interpolate> d = scalar_param(node, "d", ier);
 
   return std::make_shared<VoceIsotropicHardeningRule>(yield, r, d);
 }
@@ -298,7 +254,7 @@ std::shared_ptr<HardeningRule> process_linearkinematic(
     const xmlpp::Element * node, int & ier)
 {
   // One parameter: "harden"
-  double harden = scalar_param(node, "harden", ier);
+  std::shared_ptr<Interpolate> harden = scalar_param(node, "harden", ier);
 
   return std::make_shared<LinearKinematicHardeningRule>(harden);
 }
@@ -362,7 +318,7 @@ std::shared_ptr<NonAssociativeHardening> process_nonass_chaboche(
       std::dynamic_pointer_cast<IsotropicHardeningRule>(ir);
 
   // c vector
-  std::vector<double> c = vector_param(node, "c", ier);
+  std::vector<std::shared_ptr<Interpolate>> c = vector_param(node, "c", ier);
   
   // vector of gamma models
   std::vector< std::shared_ptr<GammaModel> > gvec = 
@@ -387,7 +343,7 @@ std::shared_ptr<GammaModel> process_constant_gamma(
     const xmlpp::Element * node, int & ier)
 {
   // Single scalar parameter g
-  double g = scalar_param(node, "g", ier);
+  std::shared_ptr<Interpolate> g = scalar_param(node, "g", ier);
 
   return std::make_shared<ConstantGamma>(g);
 }
@@ -396,9 +352,9 @@ std::shared_ptr<GammaModel> process_saturating_gamma(
     const xmlpp::Element * node, int & ier)
 {
   // Three scalar parameters: gs, g0, beta
-  double gs = scalar_param(node, "gs", ier);
-  double g0 = scalar_param(node, "g0", ier);
-  double beta = scalar_param(node, "beta", ier);
+  std::shared_ptr<Interpolate> gs = scalar_param(node, "gs", ier);
+  std::shared_ptr<Interpolate> g0 = scalar_param(node, "g0", ier);
+  std::shared_ptr<Interpolate> beta = scalar_param(node, "beta", ier);
 
   return std::make_shared<SatGamma>(gs, g0, beta);
 }
@@ -445,7 +401,7 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rd_chaboche(
                                                     &process_fluidity, ier);
 
   // Rate n
-  double n = scalar_param(node, "n", ier);
+  std::shared_ptr<Interpolate> n = scalar_param(node, "n", ier);
 
   return std::make_shared<ChabocheFlowRule>(ys, nsr, fm, n);
 
@@ -463,7 +419,7 @@ std::shared_ptr<FluidityModel> process_constant_fluidity(
     const xmlpp::Element * node, int & ier)
 {
   // One property, eta
-  double eta = scalar_param(node, "eta", ier);
+  std::shared_ptr<Interpolate> eta = scalar_param(node, "eta", ier);
 
   return std::make_shared<ConstantFluidity>(eta);
 }
@@ -485,7 +441,7 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(
                                              ier);
 
   // eta
-  double eta = scalar_param(node, "eta", ier);
+  std::shared_ptr<Interpolate> eta = scalar_param(node, "eta", ier);
 
   return std::make_shared<PerzynaFlowRule>(ys, hr, gm, eta);
 }
@@ -501,7 +457,7 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node,
                                                int & ier)
 {
   // Just the parameter n
-  double n = scalar_param(node, "n", ier);
+  std::shared_ptr<Interpolate> n = scalar_param(node, "n", ier);
 
   return std::make_shared<GPowerLaw>(n);
 }
@@ -549,73 +505,175 @@ bool one_attribute(const xmlpp::Element * node, std::string name,
   }
 }
 
-double scalar_param(const xmlpp::Node * node, std::string name, int & ier)
+std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node, 
+                                          std::string name, int & ier)
 {
   auto matches = node->get_children(name);
   if (matches.size() > 1) {
     ier = TOO_MANY_NODES;
     std::cerr << "Multiple nodes of type " << name << " found near line " 
         << node->get_line() << std::endl;
-    return 0.0;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
   else if (matches.size() < 1) {
     ier = NODE_NOT_FOUND;
     std::cerr << "Required node type " << name << " not found near line " 
         << node->get_line() << std::endl;
-    return 0.0;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
   auto child = dynamic_cast<xmlpp::Element*>(matches.front());
+  
+  // Two cases: raw text implies constant, interpolate node means use an
+  // interpolate
 
-  if (not child->has_child_text()) {
+  auto matches_inter = child->get_children("interpolate");
+
+  if (matches_inter.size() != 0) {
+    return interpolate_node(matches_inter.front(), ier);
+  }
+  else if (child->has_child_text()) {
+    std::string sval = child->get_child_text()->get_content();
+    if (sval == "") {
+      ier = BAD_TEXT;
+      std::cerr << "Node " << name << " near line " 
+          << node->get_line() << " does not appear to store data" << std::endl;
+      return std::shared_ptr<Interpolate>(new InvalidInterpolate());
+    }
+    return std::shared_ptr<Interpolate>(new ConstantInterpolate(std::stod(sval)));
+  }
+  else {
     ier = BAD_TEXT;
-    std::cerr << "Node " << name << " near line " 
-        << node->get_line() << " does not appear to store data" << std::endl;
-    return 0.0;
+    std::cerr << "Unable to process scalar parameter input near line " <<
+        node->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
 
-  std::string sval = child->get_child_text()->get_content();
-  if (sval == "") {
-    ier = BAD_TEXT;
-    std::cerr << "Node " << name << " near line " 
-        << node->get_line() << " does not appear to store data" << std::endl;
-    return 0.0;
-  }
-  return std::stod(sval);
 }
 
-std::vector<double> vector_param(const xmlpp::Node * node, std::string name,
-                            int & ier)
+std::shared_ptr<Interpolate> interpolate_node(const xmlpp::Node * node,
+                                              int & ier)
 {
-  auto matches = node->get_children(name);
-  if (matches.size() > 1) {
-    ier = TOO_MANY_NODES;
-    std::cerr << "Multiple nodes of type " << name << " found near line " 
-        << node->get_line() << std::endl;
-    return {0.0};
-  }
-  else if (matches.size() < 1) {
+  if (node->get_name() != "interpolate") {
     ier = NODE_NOT_FOUND;
-    std::cerr << "Required node type " << name << " not found near line " 
-        << node->get_line() << std::endl;
-    return {0.0};
+    std::cerr << "Interpolation node not found near line" << node->get_line()
+        << std::endl;
   }
-  auto child = dynamic_cast<xmlpp::Element*>(matches.front());
 
+  auto child = dynamic_cast<const xmlpp::Element*>(node);
+
+  return dispatch_attribute<Interpolate>(child, "type", 
+                                         {"constant", "polynomial", "piecewise", "mts"},
+                                         {&process_constant, &process_polynomial, &process_piecewise, &process_mts},
+                                         ier);
+}
+
+std::shared_ptr<Interpolate> process_constant(const xmlpp::Element * child,
+                                              int & ier)
+{
+  // The text is the value
   if (not child->has_child_text()) {
     ier = BAD_TEXT;
-    std::cerr << "Node " << name << " near line " 
-        << node->get_line() << " does not appear to store data" << std::endl;
-    return {0.0};
+    std::cerr << "Constant interpolate node has no text near line " 
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-
   std::string sval = child->get_child_text()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
-    std::cerr << "Node " << name << " near line " 
-        << node->get_line() << " does not appear to store data" << std::endl;
-    return {0.0};
+    std::cerr << "Constant interpolate node has invalid text near line "
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate()); 
+  }
+  return std::shared_ptr<Interpolate>(new ConstantInterpolate(std::stod(sval)));
+}
+
+std::shared_ptr<Interpolate> process_polynomial(const xmlpp::Element * child,
+                                              int & ier)
+{
+  // The text is a list of coefficients
+  if (not child->has_child_text()) {
+    ier = BAD_TEXT;
+    std::cerr << "Polynomial interpolate node has no text near line " 
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
+  }
+  std::string sval = child->get_child_text()->get_content();
+  if (sval == "") {
+    ier = BAD_TEXT;
+    std::cerr << "Polynomial interpolate node has invalid text near line "
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate()); 
   }
 
+  std::vector<double> splits = split_string(sval);
+  
+  return std::shared_ptr<Interpolate>(new PolynomialInterpolate(splits));
+}
+
+std::shared_ptr<Interpolate> process_piecewise(const xmlpp::Element * child,
+                                              int & ier)
+{
+  // The text is a intermoven list of (point, value) tuples
+  if (not child->has_child_text()) {
+    ier = BAD_TEXT;
+    std::cerr << "Polynomial interpolate node has no text near line " 
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
+  }
+  std::string sval = child->get_child_text()->get_content();
+  if (sval == "") {
+    ier = BAD_TEXT;
+    std::cerr << "Polynomial interpolate node has invalid text near line "
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate()); 
+  }
+
+  std::vector<double> splits = split_string(sval);
+
+  std::vector<double> points;
+  std::vector<double> values;
+
+  for (int i = 0; i < splits.size()/2; i++) {
+    points.push_back(points[i*2]);
+    values.push_back(points[i*2+1]);
+  }
+
+  return std::shared_ptr<Interpolate>(new PiecewiseLinearInterpolate(points, values));
+}
+
+std::shared_ptr<Interpolate> process_mts(const xmlpp::Element * child,
+                                              int & ier)
+{
+  // The text is (V0, D, T0) -- probably fix later...
+  if (not child->has_child_text()) {
+    ier = BAD_TEXT;
+    std::cerr << "Polynomial interpolate node has no text near line " 
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
+  }
+  std::string sval = child->get_child_text()->get_content();
+  if (sval == "") {
+    ier = BAD_TEXT;
+    std::cerr << "Polynomial interpolate node has invalid text near line "
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate()); 
+  }
+
+  std::vector<double> splits = split_string(sval);
+
+  if (splits.size() != 3) {
+    ier = BAD_TEXT;
+    std::cerr << "MTS interpolate node does not contain 3 parameters near line "
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate()); 
+  }
+
+  return std::shared_ptr<Interpolate>(new MTSShearInterpolate(
+          splits[0], splits[1], splits[2]));
+}
+
+std::vector<double> split_string(std::string sval)
+{
   std::vector<std::string> splits;
   std::stringstream ss(sval);
   std::string temp;
@@ -627,6 +685,57 @@ std::vector<double> vector_param(const xmlpp::Node * node, std::string name,
     value.push_back(std::stod(*it));
   }
   return value;
+}
+
+std::vector<std::shared_ptr<Interpolate>> 
+vector_param(const xmlpp::Node * node, std::string name, int & ier)
+{
+  auto matches = node->get_children(name);
+  if (matches.size() > 1) {
+    ier = TOO_MANY_NODES;
+    std::cerr << "Multiple nodes of type " << name << " found near line " 
+        << node->get_line() << std::endl;
+    return {std::shared_ptr<Interpolate>(new InvalidInterpolate())};
+  }
+  else if (matches.size() < 1) {
+    ier = NODE_NOT_FOUND;
+    std::cerr << "Required node type " << name << " not found near line " 
+        << node->get_line() << std::endl;
+    return {std::shared_ptr<Interpolate>(new InvalidInterpolate())};
+  }
+  auto child = dynamic_cast<xmlpp::Element*>(matches.front());
+  
+  // Two cases: text data -> vector of constants or multiple instances of
+  // interpolate nodes
+  auto inters = child->get_children("interpolate");
+  if (inters.size() != 0) {
+    std::vector<std::shared_ptr<Interpolate>> results;
+    for (auto it = inters.begin(); it != inters.end(); ++it) {
+      results.emplace_back(interpolate_node(*it, ier));
+    }
+    return results;
+  }
+  else if (child->has_child_text()) {
+    std::string sval = child->get_child_text()->get_content();
+    if (sval == "") {
+      ier = BAD_TEXT;
+      std::cerr << "Vector parameter node near line " << child->get_line() << 
+          " does not store text!" << std::endl;
+      return {std::shared_ptr<Interpolate>(new InvalidInterpolate())};
+    }
+    std::vector<double> data = split_string(sval);
+    std::vector<std::shared_ptr<Interpolate>> results;
+    for (auto it = data.begin(); it != data.end(); ++it) {
+      results.emplace_back(std::make_shared<ConstantInterpolate>(*it));
+    }
+    return results;
+  }
+  else {
+    ier = BAD_TEXT;
+    std::cerr << "Unable to process vector parameter near line " << 
+        child->get_line() << std::endl;
+    return {std::shared_ptr<Interpolate>(new InvalidInterpolate())};
+  }
 }
 
 } // namespace neml

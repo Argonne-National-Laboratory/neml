@@ -17,6 +17,12 @@ class Interpolate {
   bool valid_;
 };
 
+class InvalidInterpolate : public Interpolate {
+ public:
+  InvalidInterpolate();
+  virtual double value(double x) const;
+};
+
 class PolynomialInterpolate : public Interpolate {
  public:
   PolynomialInterpolate(const std::vector<double> coefs);
@@ -57,11 +63,11 @@ class MTSShearInterpolate : public Interpolate {
   const double V0_, D_, T0_;
 };
 
-std::vector<std::shared_ptr<const Interpolate>> 
-  make_constant_vector(const std::vector<double> & iv);
+std::vector<std::shared_ptr<Interpolate>> 
+  make_vector(const std::vector<double> & iv);
 
 std::vector<double> eval_vector(
-    const std::vector<std::shared_ptr<const Interpolate>> & iv, double x);
+    const std::vector<std::shared_ptr<Interpolate>> & iv, double x);
 
 } // namespace neml
 

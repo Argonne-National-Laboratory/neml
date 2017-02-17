@@ -86,11 +86,15 @@
 
   <material name="test_yaguchi" type="smallstrain">
     <elastic type="isotropic">
-      <shear type="polynomial">
-        <coefs>-0.11834615 115.5 48807.69</coefs>
+      <shear>
+        <modulus>
+          <interpolate type="polynomial">-0.11834615 115.5 48807.69</interpolate>
+        </modulus>
       </shear>
-      <bulk type="polynomial">
-        <coefs>-0.256417 250.25 105750.0</coefs>
+      <bulk>
+        <modulus>
+          <interpolate type="polynomial">-0.256417 250.25 105750.0</interpolate>
+        </modulus>
       </bulk>
     </elastic>
 
@@ -120,7 +124,11 @@
             <r>-80.0</r>
             <d>3.0</d>
           </isotropic>
-          <c>135.0e3 61.0e3 11.0e3</c>
+          <c>
+            <interpolate type="constant">135.0e3</interpolate>
+            <interpolate type="constant">61.0e3</interpolate>
+            <interpolate type="constant">11.0e3</interpolate>
+          </c>
           <gammamodels>
             <gammamodel type="constant">
               <g>5.0e4</g>

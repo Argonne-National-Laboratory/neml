@@ -180,7 +180,7 @@ class Chaboche: public NonAssociativeHardening {
            std::vector<double> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels);
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<const Interpolate>> c,
+           std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels);
 
   // WITH time relaxation
@@ -190,10 +190,10 @@ class Chaboche: public NonAssociativeHardening {
            std::vector<double> A,
            std::vector<double> a);
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<const Interpolate>> c,
+           std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels,
-           std::vector<std::shared_ptr<const Interpolate>> A,
-           std::vector<std::shared_ptr<const Interpolate>> a);
+           std::vector<std::shared_ptr<Interpolate>> A,
+           std::vector<std::shared_ptr<Interpolate>> a);
 
   virtual size_t ninter() const; // How many "q" variables it spits out
   virtual size_t nhist() const; // How many internal variables it stores
@@ -227,11 +227,11 @@ class Chaboche: public NonAssociativeHardening {
 
   std::shared_ptr<IsotropicHardeningRule> iso_;
   const int n_;
-  const std::vector<std::shared_ptr<const Interpolate>> c_;
+  const std::vector<std::shared_ptr<Interpolate>> c_;
   std::vector<std::shared_ptr<GammaModel>> gmodels_;
 
-  const std::vector<std::shared_ptr<const Interpolate>> A_;
-  const std::vector<std::shared_ptr<const Interpolate>> a_;
+  const std::vector<std::shared_ptr<Interpolate>> A_;
+  const std::vector<std::shared_ptr<Interpolate>> a_;
   const bool relax_;
 };
 

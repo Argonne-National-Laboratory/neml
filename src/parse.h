@@ -30,20 +30,8 @@ std::shared_ptr<LinearElasticModel> process_isotropiclinearelastic(const xmlpp::
 /// Setup shear modulus
 std::shared_ptr<ShearModulus> process_shearmodulus(const xmlpp::Element * node, int & ier);
 
-/// Constant shear
-std::shared_ptr<ShearModulus> process_constantshearmodulus(const xmlpp::Element * node, int & ier);
-
-/// Polynomial shear
-std::shared_ptr<ShearModulus> process_polynomialshearmodulus(const xmlpp::Element * node, int & ier);
-
 /// Setup bulk modulus
 std::shared_ptr<BulkModulus> process_bulkmodulus(const xmlpp::Element * node, int & ier);
-
-/// Constant bulk
-std::shared_ptr<BulkModulus> process_constantbulkmodulus(const xmlpp::Element * node, int & ier);
-
-/// Polynomial bulk
-std::shared_ptr<BulkModulus> process_polynomialbulkmodulus(const xmlpp::Element * node, int & ier);
 
 /// Rate independent plasticity processing
 std::shared_ptr<RateIndependentFlowRule> process_independent(const xmlpp::Element * node, int & ier);
@@ -146,12 +134,28 @@ bool one_attribute(const xmlpp::Element * node, std::string name,
                    std::string & value, int & ier);
 
 /// Return the scalar value of a named child node
-double scalar_param(const xmlpp::Node * node, std::string name,
-                    int & ier);
+std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node, 
+                                          std::string name,
+                                          int & ier);
+
+/// Return an interpolate object from a node
+std::shared_ptr<Interpolate> interpolate_node(const xmlpp::Node * node,
+                                              int & ier);
+std::shared_ptr<Interpolate> process_constant(const xmlpp::Element * child,
+                                              int & ier);
+std::shared_ptr<Interpolate> process_polynomial(const xmlpp::Element * child,
+                                              int & ier);
+std::shared_ptr<Interpolate> process_piecewise(const xmlpp::Element * child,
+                                              int & ier);
+std::shared_ptr<Interpolate> process_mts(const xmlpp::Element * child,
+                                              int & ier);
+
+/// Helper to split strings
+std::vector<double> split_string(std::string sval);
 
 /// Return the vector value of a named child node
-std::vector<double> vector_param(const xmlpp::Node * node, std::string name,
-                            int & ier);
+std::vector<std::shared_ptr<Interpolate>> 
+    vector_param(const xmlpp::Node * node, std::string name, int & ier);
 
 
 /* Templates */
