@@ -59,6 +59,16 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   }
   emodel = process_linearelastic(elastic_node, ier);
   if (ier != SUCCESS) return std::unique_ptr<NEMLModel>(nullptr);
+
+  // Optional alpha
+  std::shared_ptr<Interpolate> alpha;
+  auto a_nodes = node->get_children("alpha");
+  if (a_nodes.size() > 0) {
+    alpha = process_alpha(dynamic_cast<xmlpp::Element*>(a_nodes.front()), ier);
+  }
+  else {
+    alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
+  }
   
   // Logic here because we treat viscoplasticity differently
   xmlpp::Element * plastic_node;
@@ -75,13 +85,13 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     std::shared_ptr<RateIndependentFlowRule> fr =  process_independent(
         plastic_node, ier);
     
-    return std::unique_ptr<SmallStrainRateIndependentPlasticity> {
-      new SmallStrainRateIndependentPlasticity(emodel, fr)};
+    return std::unique_ptr<SmallStrainRateIndependentPlasticity> (
+      new SmallStrainRateIndependentPlasticity(emodel, fr, alpha));
   }
   else if (ft == "dependent") {
     std::shared_ptr<ViscoPlasticFlowRule> fr = process_dependent(plastic_node, ier);
     std::shared_ptr<TVPFlowRule> gfr = std::make_shared<TVPFlowRule>(emodel, fr);
-    return std::unique_ptr<GeneralIntegrator>{new GeneralIntegrator(gfr)};
+    return std::unique_ptr<GeneralIntegrator>(new GeneralIntegrator(gfr, alpha));
   }
   else if (ft == "perfect") {
     // Surface
@@ -90,12 +100,19 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     // Yield stress
     std::shared_ptr<Interpolate> yss = scalar_param(plastic_node, "yield", ier);
     return std::unique_ptr<SmallStrainPerfectPlasticity>(
-        new SmallStrainPerfectPlasticity(emodel, ys, yss));
+        new SmallStrainPerfectPlasticity(emodel, ys, yss, alpha));
   }
   else {
     ier = UNKNOWN_TYPE;
     return std::unique_ptr<NEMLModel>(nullptr);
   }
+}
+
+std::shared_ptr<Interpolate> process_alpha(
+    const xmlpp::Element * node, int & ier)
+{
+  // The parameter has name value
+  return scalar_param(node, "value", ier);
 }
 
 std::shared_ptr<LinearElasticModel> process_linearelastic(

@@ -157,7 +157,8 @@ class NEMLModel_ldI: public NEMLModel {
 //
 class NEMLModel_sd: public NEMLModel {
   public:
-    NEMLModel_sd();
+    NEMLModel_sd(std::shared_ptr<Interpolate> alpha = nullptr);
+    NEMLModel_sd(double alpha);
     virtual ~NEMLModel_sd();
 
     // Up to the user to implement
@@ -197,12 +198,21 @@ class NEMLModel_sd: public NEMLModel {
    virtual size_t nhist() const = 0;
    virtual int init_hist(double * const hist) const = 0;
 
+   // I suppose this must be defined
+   virtual double alpha(double T);
+
+  private:
+   std::shared_ptr<Interpolate> alpha_;
+
 };
 
 /// Small strain linear elasticity as a test case
 class SmallStrainElasticity: public NEMLModel_sd {
  public:
-  SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic);
+  SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
+                        std::shared_ptr<Interpolate> alpha = nullptr);
+  SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
+                        double alpha = 0.0);
 
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
@@ -211,8 +221,8 @@ class SmallStrainElasticity: public NEMLModel_sd {
       double * const s_np1, const double * const s_n,
       double * const h_np1, const double * const h_n,
       double * const A_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n);
+      double & u_np1, double u_n,
+      double & p_np1, double p_n);
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
 
@@ -268,12 +278,14 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
   SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                std::shared_ptr<YieldSurface> surface,
                                double ys,
+                               double alpha = 0.0,
                                double tol = 1.0e-8, int miter = 50,
                                bool verbose = false,
                                int max_divide = 8);
   SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                std::shared_ptr<YieldSurface> surface,
                                std::shared_ptr<Interpolate> ys,
+                               std::shared_ptr<Interpolate> alpha = nullptr,
                                double tol = 1.0e-8, int miter = 50,
                                bool verbose = false,
                                int max_divide = 8);
@@ -341,6 +353,14 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
  public:
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
+                                       double alpha = 0.0,
+                                       double tol = 1.0e-8, int miter = 50,
+                                       bool verbose = false, 
+                                       double kttol = 1.0e-2,
+                                       bool check_kt = false);
+  SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
+                                       std::shared_ptr<RateIndependentFlowRule> flow,
+                                       std::shared_ptr<Interpolate> alpha = nullptr,
                                        double tol = 1.0e-8, int miter = 50,
                                        bool verbose = false, 
                                        double kttol = 1.0e-2,
@@ -391,6 +411,11 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
 class GeneralIntegrator: public NEMLModel_sd, public Solvable {
  public:
   GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+                    double alpha = 0.0,
+                    double tol = 1.0e-8, int miter = 50,
+                    bool verbose = false, int max_divide = 6);
+  GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+                    std::shared_ptr<Interpolate> alpha = nullptr,
                     double tol = 1.0e-8, int miter = 50,
                     bool verbose = false, int max_divide = 6);
   virtual int update_sd(

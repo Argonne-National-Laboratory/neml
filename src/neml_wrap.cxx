@@ -89,11 +89,15 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<NEMLModel_sd, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd", py::base<NEMLModel>())
+      .def("alpha", &NEMLModel_sd::alpha)
       ;
 
   py::class_<SmallStrainElasticity, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>>(), 
-           py::arg("elastic"))
+      .def(py::init<std::shared_ptr<LinearElasticModel>, double>(), 
+           py::arg("elastic"), py::arg("alpha") = 0.0)
+      .def(py::init<std::shared_ptr<LinearElasticModel>, 
+           std::shared_ptr<Interpolate>>(),
+           py::arg("elastic"), py::arg("alpha") = nullptr)
       .def_property_readonly("elastic", &SmallStrainElasticity::elastic)
       ;
 
@@ -109,17 +113,20 @@ PYBIND11_PLUGIN(neml) {
   py::class_<SmallStrainPerfectPlasticity, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity", py::base<NEMLModel_sd>())
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
            std::shared_ptr<YieldSurface>, 
-           double,
+           double, double,
            double, int , bool, int>(),
            py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
+           py::arg("alpha") = 0.0,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("max_divide") = 8)
  
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
            std::shared_ptr<YieldSurface>, 
            std::shared_ptr<Interpolate>,
+           std::shared_ptr<Interpolate>,
            double, int , bool, int>(),
            py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
+           py::arg("alpha") = nullptr,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("max_divide") = 8)
 
@@ -168,12 +175,20 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, int , bool, double, bool>(),
-           py::arg("elastic"), py::arg("flow"), 
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool, double, bool>(),
+           py::arg("elastic"), py::arg("flow"),
+           py::arg("alpha") = 0.0,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
            py::arg("check_kt") = false)
- 
+
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, std::shared_ptr<Interpolate>, double, int , bool, double, bool>(),
+           py::arg("elastic"), py::arg("flow"),
+           py::arg("alpha") = nullptr,
+           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+           py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
+           py::arg("check_kt") = false)
+
       .def_property_readonly("elastic", &SmallStrainRateIndependentPlasticity::elastic)
 
       .def("make_trial_state",
@@ -218,8 +233,16 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<GeneralIntegrator, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<GeneralFlowRule>, double, int , bool, int>(),
+      .def(py::init<std::shared_ptr<GeneralFlowRule>, double, double, int , bool, int>(),
            py::arg("rule"),
+           py::arg("alpha") = 0.0,
+           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+           py::arg("verbose") = false,
+           py::arg("max_divide") = 6)
+
+      .def(py::init<std::shared_ptr<GeneralFlowRule>, std::shared_ptr<Interpolate>, double, int , bool, int>(),
+           py::arg("rule"),
+           py::arg("alpha") = nullptr,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false,
            py::arg("max_divide") = 6)

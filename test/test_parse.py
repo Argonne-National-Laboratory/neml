@@ -262,3 +262,6 @@ class TestPerfect(CompareMats, unittest.TestCase):
     self.tmax = 10.0
     self.nsteps = 50.0
     self.emax = np.array([0.1,0.05,0,-0.025,0,0])
+
+  def test_alpha(self):
+    self.assertTrue(np.isclose(self.model1.alpha(self.T), 0.1))

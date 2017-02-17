@@ -21,6 +21,9 @@ std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier
 /// Setup a small strain model
 std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier);
 
+/// Setup the thermal expansion coefficient
+std::shared_ptr<Interpolate> process_alpha(const xmlpp::Element * node, int & ier);
+
 /// Setup a linear elasticity model
 std::shared_ptr<LinearElasticModel> process_linearelastic(const xmlpp::Element * node, int & ier);
 

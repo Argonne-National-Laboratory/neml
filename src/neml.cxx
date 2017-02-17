@@ -120,8 +120,19 @@ int NEMLModel_ldI::update_sd(
 
 
 // NEMLModel_sd implementation
-NEMLModel_sd::NEMLModel_sd() :
+NEMLModel_sd::NEMLModel_sd(std::shared_ptr<Interpolate> alpha) :
     NEMLModel()
+{
+  if (alpha) {
+    alpha_ = alpha;
+  }
+  else {
+    alpha_ = std::shared_ptr<ConstantInterpolate>(new ConstantInterpolate(0.0));
+  }
+}
+
+NEMLModel_sd::NEMLModel_sd(double alpha) :
+    alpha_(new ConstantInterpolate(alpha)), NEMLModel()
 {
 
 }
@@ -167,10 +178,27 @@ int NEMLModel_sd::update_ldI(
   assert(false); // Pass for now
 }
 
+double NEMLModel_sd::alpha(double T)
+{
+  return alpha_->value(T);
+}
+
 
 // Implementation of small strain elasticity
-SmallStrainElasticity::SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic) :
-    elastic_(elastic)
+SmallStrainElasticity::SmallStrainElasticity(
+    std::shared_ptr<LinearElasticModel> elastic,
+    std::shared_ptr<Interpolate> alpha) :
+    elastic_(elastic), NEMLModel_sd(alpha)
+{
+
+
+}
+
+SmallStrainElasticity::SmallStrainElasticity(
+    std::shared_ptr<LinearElasticModel> elastic,
+    double alpha) :
+    elastic_(elastic), 
+    NEMLModel_sd(alpha)
 {
 
 
@@ -221,8 +249,10 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<YieldSurface> surface,
     double ys,
+    double alpha,
     double tol, int miter,
     bool verbose, int max_divide) :
+      NEMLModel_sd(alpha),
       elastic_(elastic), surface_(surface), ys_(new ConstantInterpolate(ys)),
       tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
 {
@@ -233,8 +263,10 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<YieldSurface> surface,
     std::shared_ptr<Interpolate> ys,
+    std::shared_ptr<Interpolate> alpha,
     double tol, int miter,
     bool verbose, int max_divide) :
+      NEMLModel_sd(alpha),
       elastic_(elastic), surface_(surface), ys_(ys),
       tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
 {
@@ -529,8 +561,21 @@ int SmallStrainPerfectPlasticity::calc_tangent_(SSPPTrialState ts,
 
 SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<RateIndependentFlowRule> flow, double tol,
+    std::shared_ptr<RateIndependentFlowRule> flow, double alpha, double tol,
     int miter, bool verbose, double kttol, bool check_kt) :
+      NEMLModel_sd(alpha),
+      elastic_(elastic), flow_(flow), tol_(tol), miter_(miter),
+      verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
+{
+
+}
+
+SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
+    std::shared_ptr<LinearElasticModel> elastic,
+    std::shared_ptr<RateIndependentFlowRule> flow, 
+    std::shared_ptr<Interpolate> alpha, double tol,
+    int miter, bool verbose, double kttol, bool check_kt) :
+      NEMLModel_sd(alpha),
       elastic_(elastic), flow_(flow), tol_(tol), miter_(miter),
       verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
 {
@@ -888,8 +933,21 @@ int SmallStrainRateIndependentPlasticity::check_K_T_(
 
 // Start general integrator implementation
 GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+                                     double alpha,
                                      double tol, int miter,
                                      bool verbose, int max_divide) :
+    NEMLModel_sd(alpha),
+    rule_(rule), tol_(tol), miter_(miter), verbose_(verbose), 
+    max_divide_(max_divide)
+{
+
+}
+
+GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+                                     std::shared_ptr<Interpolate> alpha,
+                                     double tol, int miter,
+                                     bool verbose, int max_divide) :
+    NEMLModel_sd(alpha),
     rule_(rule), tol_(tol), miter_(miter), verbose_(verbose), 
     max_divide_(max_divide)
 {
