@@ -2,12 +2,12 @@
 
   <material name="test_j2iso" type="smallstrain">
     <elastic type="isotropic">
-      <shear type="constant">
-        <modulus>40000.0</modulus>
-      </shear>
-      <bulk type="constant">
-        <modulus>84000.0</modulus>
-      </bulk>
+      <youngs>
+        <modulus>103561.64383561644</modulus>
+      </youngs>
+      <poissons>
+        <modulus>0.2945205479452055</modulus>
+      </poissons>
     </elastic>
     <plastic type="independent">
       <rule type="associative">
@@ -25,12 +25,12 @@
 
   <material name="test_j2comb" type="smallstrain">
     <elastic type="isotropic">
-      <shear type="constant">
-        <modulus>40000.0</modulus>
-      </shear>
-      <bulk type="constant">
+      <bulk>
         <modulus>84000.0</modulus>
       </bulk>
+      <shear>
+        <modulus>40000.0</modulus>
+      </shear>
     </elastic>
     <plastic type="independent">
       <rule type="associative">
@@ -52,10 +52,10 @@
 
   <material name="test_nonassri" type="smallstrain">
     <elastic type="isotropic">
-      <shear type="constant">
+      <shear>
         <modulus>40000.0</modulus>
       </shear>
-      <bulk type="constant">
+      <bulk>
         <modulus>84000.0</modulus>
       </bulk>
     </elastic>
@@ -106,10 +106,10 @@
 
   <material name="test_rd_chaboche" type="smallstrain">
     <elastic type="isotropic">
-      <shear type="constant">
+      <shear>
         <modulus>60384.61</modulus>
       </shear>
-      <bulk type="constant">
+      <bulk>
         <modulus>130833.3</modulus>
       </bulk>
     </elastic>
@@ -152,10 +152,10 @@
 
   <material name="test_perzyna" type="smallstrain">
     <elastic type="isotropic">
-      <shear type="constant">
+      <shear>
         <modulus>40000.0</modulus>
       </shear>
-      <bulk type="constant">
+      <bulk>
         <modulus>84000.0</modulus>
       </bulk>
     </elastic>

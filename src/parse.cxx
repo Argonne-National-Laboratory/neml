@@ -102,17 +102,40 @@ std::shared_ptr<LinearElasticModel> process_linearelastic(
 std::shared_ptr<LinearElasticModel> process_isotropiclinearelastic(
     const xmlpp::Element * node, int & ier)
 {
-  // Need a shear and a bulk modulus
-  // Shear
-  std::shared_ptr<ShearModulus> sm = dispatch_node(node, "shear", 
-                                                   &process_shearmodulus, ier);
+  // Need a shear and a bulk modulus OR a Young's and poisson's
+  if((node->get_children("shear").size() > 0) and 
+     (node->get_children("bulk").size() > 0)) {
+    // Shear
+    std::shared_ptr<ShearModulus> sm = dispatch_node(node, "shear", 
+                                                     &process_shearmodulus, ier);
 
-  // Bulk
-  std::shared_ptr<BulkModulus> bm = dispatch_node(node, "bulk", 
-                                                   &process_bulkmodulus, ier);
-  
-  return std::shared_ptr<LinearElasticModel>(
-      new IsotropicLinearElasticModel(sm,bm));
+    // Bulk
+    std::shared_ptr<BulkModulus> bm = dispatch_node(node, "bulk", 
+                                                     &process_bulkmodulus, ier);
+    
+    return std::shared_ptr<LinearElasticModel>(
+        new IsotropicLinearElasticModel(sm,bm));
+  }
+  else if((node->get_children("youngs").size() > 0) and 
+     (node->get_children("poissons").size() > 0)) {
+    // Young's modulus
+    std::shared_ptr<YoungsModulus> em = dispatch_node(node, "youngs", 
+                                                     &process_youngsmodulus, ier);
+
+    // Poisson's ratio
+    std::shared_ptr<PoissonsRatio> vm = dispatch_node(node, "poissons", 
+                                                     &process_poissonsratio, ier);
+    
+    return std::shared_ptr<LinearElasticModel>(
+        new IsotropicLinearElasticModel(em,vm));
+  }
+  else {
+    ier = NODE_NOT_FOUND;
+    std::cerr << "Expected to find either {bulk, shear} or {youngs,poissons} " <<
+        "for isotropic linear elastic model near line " << node->get_line() <<
+        std::endl;
+    return std::shared_ptr<LinearElasticModel>(nullptr);
+  }
 }
 
 std::shared_ptr<ShearModulus> process_shearmodulus(
@@ -126,6 +149,19 @@ std::shared_ptr<BulkModulus> process_bulkmodulus(
     const xmlpp::Element * node, int & ier)
 {
   return std::shared_ptr<BulkModulus>(new BulkModulus(scalar_param(node, "modulus", ier)));
+}
+
+std::shared_ptr<YoungsModulus> process_youngsmodulus(
+    const xmlpp::Element * node, int & ier)
+{
+  // Just the scalar parameter
+  return std::shared_ptr<YoungsModulus>(new YoungsModulus(scalar_param(node, "modulus", ier)));
+}
+
+std::shared_ptr<PoissonsRatio> process_poissonsratio(
+    const xmlpp::Element * node, int & ier)
+{
+  return std::shared_ptr<PoissonsRatio>(new PoissonsRatio(scalar_param(node, "modulus", ier)));
 }
 
 std::shared_ptr<RateIndependentFlowRule> process_independent(
