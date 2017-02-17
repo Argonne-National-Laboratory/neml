@@ -6,6 +6,7 @@ import unittest
 
 import numpy as np
 import numpy.random as ra
+import scipy.interpolate as inter
 
 class TestPolynomialInterpolate(unittest.TestCase):
   def setUp(self):
@@ -17,6 +18,34 @@ class TestPolynomialInterpolate(unittest.TestCase):
   def test_interpolate(self):
     self.assertTrue(np.isclose(np.polyval(self.coefs, self.x),
       self.interpolate(self.x)))
+
+class TestPiecewiseLinearInterpolate(unittest.TestCase):
+  def setUp(self):
+    self.validx = [-10.0, -2.0, 1.0, 2.0, 5.0, 15.0]
+    self.invalidx_1 = [-2.0, -10.0, 1.0, 2.0, 5.0, 15.0]
+    self.invalidx_2 = [-10.0, -2.0, 1.0, 2.0, 5.0]
+    self.points = [50.0, -25.0, 1.0, 0.0, 0.0, 10.0]
+
+    self.valid = interpolate.PiecewiseLinearInterpolate(self.validx, 
+        self.points)
+    self.invalid1 = interpolate.PiecewiseLinearInterpolate(self.invalidx_1, 
+        self.points)
+    self.invalid2 = interpolate.PiecewiseLinearInterpolate(self.invalidx_2, 
+        self.points)
+
+  def test_valid(self):
+    self.assertTrue(self.valid.valid)
+    self.assertFalse(self.invalid1.valid)
+    self.assertFalse(self.invalid2.valid)
+
+  def test_interpolate(self):
+    testinter = inter.interp1d(self.validx, self.points,
+        fill_value = (self.points[0], self.points[-1]),
+        bounds_error = False)
+    xs = np.linspace(-15.0,20.0)
+    ys1 = [self.valid(x) for x in xs]
+    ys2 = testinter(xs)
+    self.assertTrue(np.allclose(ys1, ys2))
 
 class TestConstantInterpolate(unittest.TestCase):
   def setUp(self):

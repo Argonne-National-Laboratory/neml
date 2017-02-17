@@ -8,8 +8,13 @@ namespace neml {
 
 class Interpolate {
  public:
+  Interpolate();
   virtual double value(double x) const = 0;
   double operator()(double x) const;
+  bool valid() const;
+
+ protected:
+  bool valid_;
 };
 
 class PolynomialInterpolate : public Interpolate {
@@ -19,6 +24,17 @@ class PolynomialInterpolate : public Interpolate {
 
  private:
   const std::vector<double> coefs_;
+
+};
+
+class PiecewiseLinearInterpolate: public Interpolate {
+ public:
+  PiecewiseLinearInterpolate(const std::vector<double> points,
+                             const std::vector<double> values);
+  virtual double value(double x) const;
+
+ private:
+  const std::vector<double> points_, values_;
 
 };
 

@@ -23,10 +23,16 @@ PYBIND11_PLUGIN(interpolate) {
            {
             return m(x);
            }, "Operator overload ()")
+      .def_property_readonly("valid", &Interpolate::valid)
       ;
 
   py::class_<PolynomialInterpolate, std::shared_ptr<PolynomialInterpolate>>(m, "PolynomialInterpolate", py::base<Interpolate>())
       .def(py::init<std::vector<double>>(), py::arg("coefs"))
+      ;
+
+  py::class_<PiecewiseLinearInterpolate, std::shared_ptr<PiecewiseLinearInterpolate>>(m, "PiecewiseLinearInterpolate", py::base<Interpolate>())
+      .def(py::init<std::vector<double>, std::vector<double>>(),
+           py::arg("points"), py::arg("values"))
       ;
 
   py::class_<ConstantInterpolate, std::shared_ptr<ConstantInterpolate>>(m, "ConstantInterpolate", py::base<Interpolate>())
