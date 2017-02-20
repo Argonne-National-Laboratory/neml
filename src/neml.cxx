@@ -239,6 +239,17 @@ int SmallStrainElasticity::update_sd(
   return 0;
 }
 
+int SmallStrainElasticity::elastic_strains(const double * const s_np1,
+                                           double T_np1,
+                                           double * const e_np1) const
+{
+  double S[36];
+  elastic_->S(T_np1, S);
+  mat_vec(S, 6, s_np1, 6, e_np1);
+
+  return 0;
+}
+
 const std::shared_ptr<const LinearElasticModel> SmallStrainElasticity::elastic() const
 {
   return elastic_;
@@ -407,6 +418,17 @@ int SmallStrainPerfectPlasticity::update_substep_(
   add_vec(s_np1, s_n, 6, ds);
   for (int i=0; i<6; i++) ds[i] /= 2.0;
   u_np1 = u_n + dot_vec(ds, de, 6);
+
+  return 0;
+}
+
+int SmallStrainPerfectPlasticity::elastic_strains(const double * const s_np1,
+                                           double T_np1,
+                                           double * const e_np1) const
+{
+  double S[36];
+  elastic_->S(T_np1, S);
+  mat_vec(S, 6, s_np1, 6, e_np1);
 
   return 0;
 }
@@ -660,6 +682,18 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   // Check K-T and return
   return check_K_T_(s_np1, h_np1, T_np1, dg);
 
+}
+
+int SmallStrainRateIndependentPlasticity::elastic_strains(
+                                           const double * const s_np1,
+                                           double T_np1,
+                                           double * const e_np1) const
+{
+  double S[36];
+  elastic_->S(T_np1, S);
+  mat_vec(S, 6, s_np1, 6, e_np1);
+
+  return 0;
 }
 
 size_t SmallStrainRateIndependentPlasticity::nparams() const
@@ -1081,6 +1115,13 @@ int GeneralIntegrator::update_sd(
   p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * ts.dt;
 
   return 0;
+}
+
+int GeneralIntegrator::elastic_strains(const double * const s_np1,
+                                           double T_np1,
+                                           double * const e_np1) const
+{
+  return rule_->elastic_strains(s_np1, T_np1, e_np1);
 }
 
 size_t GeneralIntegrator::nhist() const

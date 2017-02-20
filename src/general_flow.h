@@ -53,6 +53,10 @@ class GeneralFlowRule {
                 const double * const edot, double T,
                 double Tdot,
                 double & p_rate);
+
+  // And the elastic strains
+  virtual int elastic_strains(const double * const s_np1, double T_np1,
+                              double * const e_np1) const = 0; 
 };
 
 // First stab at thermo-visco-plasticity
@@ -102,6 +106,8 @@ class TVPFlowRule : public GeneralFlowRule {
                 const double * const edot, double T,
                 double Tdot,
                 double & p_dot);
+  virtual int elastic_strains(const double * const s_np1, double T_np1,
+                              double * const e_np1) const; 
   
  private:
   std::shared_ptr<LinearElasticModel> elastic_;

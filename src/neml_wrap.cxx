@@ -80,6 +80,19 @@ PYBIND11_PLUGIN(neml) {
             return std::make_tuple(s_np1, h_np1, A_np1, u_np1, p_np1);
 
            }, "Small deformation update.")
+
+      .def("alpha", &NEMLModel_sd::alpha)
+      .def("elastic_strains",
+           [](NEMLModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1) -> py::array_t<double>
+           {
+            auto e_np1 = alloc_vec<double>(6);
+
+            int ier = m.elastic_strains(arr2ptr<double>(s_np1), T_np1, arr2ptr<double>(e_np1));
+            py_error(ier);
+
+            return e_np1;
+
+           }, "Calculate the elastic strains.")
       ;
 
   py::class_<NEMLModel_ldF, std::shared_ptr<NEMLModel_ldF>>(m, "NEMLModel_ldF", py::base<NEMLModel>())
@@ -89,7 +102,6 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<NEMLModel_sd, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd", py::base<NEMLModel>())
-      .def("alpha", &NEMLModel_sd::alpha)
       ;
 
   py::class_<SmallStrainElasticity, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity", py::base<NEMLModel_sd>())

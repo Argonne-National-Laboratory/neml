@@ -64,6 +64,11 @@ class NEMLModel {
 
    // Well models will need this...
    virtual double alpha(double T) const = 0;
+   // Helper for FEA output
+   virtual int elastic_strains(const double * const s_np1,
+                               double T_np1,
+                               double * const e_np1) const = 0;
+
 };
 
 /// Models implemented through the deformation gradient interface
@@ -204,6 +209,11 @@ class NEMLModel_sd: public NEMLModel {
    // I suppose this must be defined
    virtual double alpha(double T) const;
 
+   // Helper for FEA output
+   virtual int elastic_strains(const double * const s_np1,
+                               double T_np1,
+                               double * const e_np1) const = 0;
+
   private:
    std::shared_ptr<Interpolate> alpha_;
 
@@ -228,6 +238,11 @@ class SmallStrainElasticity: public NEMLModel_sd {
       double & p_np1, double p_n);
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
+
+  // Helper for FEA output
+  virtual int elastic_strains(const double * const s_np1,
+                             double T_np1,
+                             double * const e_np1) const;
 
   // Getters
   const std::shared_ptr<const LinearElasticModel> elastic() const;
@@ -310,6 +325,11 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
+  // Helper for FEA output
+  virtual int elastic_strains(const double * const s_np1,
+                             double T_np1,
+                             double * const e_np1) const;
+
   // Property getter
   double ys(double T) const;
   const std::shared_ptr<const LinearElasticModel> elastic() const;
@@ -386,6 +406,11 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
   
+  // Helper for FEA output
+  virtual int elastic_strains(const double * const s_np1,
+                             double T_np1,
+                             double * const e_np1) const;
+
   // Getters
   const std::shared_ptr<const LinearElasticModel> elastic() const;
 
@@ -437,6 +462,11 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
   virtual int init_x(double * const x, TrialState * ts);
   virtual int RJ(const double * const x, TrialState * ts,
                  double * const R, double * const J);
+
+  // Helper for FEA output
+  virtual int elastic_strains(const double * const s_np1,
+                             double T_np1,
+                             double * const e_np1) const;
 
   // Make this public for ease of testing
   int make_trial_state(const double * const e_np1, const double * const e_n,

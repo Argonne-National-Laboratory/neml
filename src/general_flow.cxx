@@ -290,6 +290,14 @@ int TVPFlowRule::work_rate(const double * const s,
   return 0;
 }
 
+int TVPFlowRule::elastic_strains(const double * const s_np1, double T_np1,
+                                 double * const e_np1) const
+{
+  double S[36];
+  elastic_->S(T_np1, S);
+  mat_vec(S, 6, s_np1, 6, e_np1);
 
+  return 0;
+}
 
 } // namespace neml
