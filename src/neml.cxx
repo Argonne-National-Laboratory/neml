@@ -1153,7 +1153,7 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   GITrialState * tss = static_cast<GITrialState*>(ts);
 
   // Setup
-  double s_mod[36];
+  double s_mod[6];
   std::copy(x, x+6, s_mod);
   if (norm2_vec(x, 6) < std::numeric_limits<double>::epsilon()) {
     s_mod[0] = 2.0 * std::numeric_limits<double>::epsilon();
