@@ -390,7 +390,11 @@ int Chaboche::q(const double * const alpha, double T, double * const qv) const
 {
   iso_->q(alpha, T, qv);
   std::fill(qv+1, qv+7, 0.0);
-  for (int i=0; i<n_; i++) {
+  
+  // Helps with unrolling
+  int n = n_;
+
+  for (int i=0; i<n; i++) {
     for (int j=0; j<6; j++) {
       qv[j+1] += alpha[1+i*6+j];
     }
@@ -402,7 +406,11 @@ int Chaboche::dq_da(const double * const alpha, double T, double * const qv) con
 {
   std::fill(qv, qv+(ninter()*nhist()), 0.0);
   iso_->dq_da(alpha, T, qv); // fills in (0,0)
-  for (int i=0; i<n_; i++) {
+  
+  // Help unroll
+  int n = n_;
+
+  for (int i=0; i<n; i++) {
     for (int j=0; j<6; j++) {
       qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
     }
@@ -592,13 +600,14 @@ int Chaboche::dh_da_time(const double * const s, const double * const alpha,
   std::vector<double> a = eval_vector(a_, T);
 
   int nh = nhist();
+  int n = n_;
   
   double XX[36];
   double Xi[6];
   double nXi;
   int ia,ib;
   double d;
-  for (int i=0; i<n_; i++) {
+  for (int i=0; i<n; i++) {
     std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
     nXi = norm2_vec(Xi, 6);
     normalize_vec(Xi, 6);

@@ -1159,7 +1159,12 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
     s_mod[0] = 2.0 * std::numeric_limits<double>::epsilon();
   }
   const double * const h_np1 = &x[6];
-
+  
+  // Helps with vectorization
+  // Really as I declared both const this shouldn't be necessary but hey
+  // I don't design optimizing compilers for a living
+  int nhist = this->nhist();
+  int nparams = this->nparams();
 
   // Residual calculation
   rule_->s(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, R);
@@ -1167,7 +1172,7 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
     R[i] = -s_mod[i] + tss->s_n[i] + R[i] * tss->dt;
   }
   rule_->a(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, &R[6]);
-  for (int i=0; i<nhist(); i++) {
+  for (int i=0; i<nhist; i++) {
     R[i+6] = -h_np1[i] + tss->h_n[i] + R[i+6] * tss->dt;
   }
 
@@ -1178,34 +1183,37 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] -= 1.0;
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX(i,j,nparams())] = J11[CINDEX(i,j,6)];
+      J[CINDEX(i,j,nparams)] = J11[CINDEX(i,j,6)];
     }
   }
 
-  double J12[6*nhist()];
+  double J12[6*nhist];
   rule_->ds_da(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J12);
   for (int i=0; i<6; i++) {
-    for (int j=0; j<nhist(); j++) {
-      J[CINDEX(i,(j+6),nparams())] = J12[CINDEX(i,j,nhist())] * tss->dt;
+    for (int j=0; j<nhist; j++) {
+      J[CINDEX(i,(j+6),nparams)] = J12[CINDEX(i,j,nhist)] * tss->dt;
     }
   }
 
-  double J21[nhist()*6];
+  double J21[nhist*6];
   rule_->da_ds(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J21);
-  for (int i=0; i<nhist(); i++) {
+  for (int i=0; i<nhist; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX((i+6),j,nparams())] = J21[CINDEX(i,j,6)] * tss->dt;
+      J[CINDEX((i+6),j,nparams)] = J21[CINDEX(i,j,6)] * tss->dt;
     }
   }
 
-  double J22[nhist()*nhist()];
+  double J22[nhist*nhist];
   rule_->da_da(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J22);
-  for (int i=0; i<nhist()*nhist(); i++) J22[i] *= tss->dt;
-  for (int i=0; i<nhist(); i++) J22[CINDEX(i,i,nhist())] -= 1.0;
 
-  for (int i=0; i<nhist(); i++) {
-    for (int j=0; j<nhist(); j++) {
-      J[CINDEX((i+6),(j+6),nparams())] = J22[CINDEX(i,j,nhist())];
+  // More vectorization
+  double dt = tss->dt;
+  for (int i=0; i<nhist*nhist; i++) J22[i] *= dt;
+  for (int i=0; i<nhist; i++) J22[CINDEX(i,i,nhist)] -= 1.0;
+
+  for (int i=0; i<nhist; i++) {
+    for (int j=0; j<nhist; j++) {
+      J[CINDEX((i+6),(j+6),nparams)] = J22[CINDEX(i,j,nhist)];
     }
   }
 
@@ -1261,10 +1269,13 @@ int GeneralIntegrator::calc_tangent_(const double * const x, TrialState * ts,
   }
   const double * const h_np1 = &x[6];
 
+  // Vectorization
+  int nhist = this->nhist();
+
   // Call for extra derivatives
   double A[36];
   rule_->ds_de(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, A);
-  double B[nhist()*6];
+  double B[nhist*6];
   rule_->da_de(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, B);
 
   // Call for the jacobian
@@ -1282,42 +1293,42 @@ int GeneralIntegrator::calc_tangent_(const double * const x, TrialState * ts,
     }
   }
 
-  double J12[6*nhist()];
+  double J12[6*nhist];
   for (int i=0; i<6; i++) {
-    for (int j=0; j<nhist(); j++) {
-      J12[CINDEX(i,j,nhist())] = J[CINDEX(i,(j+6),n)];
+    for (int j=0; j<nhist; j++) {
+      J12[CINDEX(i,j,nhist)] = J[CINDEX(i,(j+6),n)];
     }
   }
 
-  double J21[nhist()*6];
-  for (int i=0; i<nhist(); i++) {
+  double J21[nhist*6];
+  for (int i=0; i<nhist; i++) {
     for (int j=0; j<6; j++) {
       J21[CINDEX(i,j,6)] = J[CINDEX((i+6),(j),n)];
     }
   }
 
-  double J22[nhist()*nhist()];
-  for (int i=0; i<nhist(); i++) {
-    for (int j=0; j<nhist(); j++) {
-      J22[CINDEX(i,j,nhist())] = J[CINDEX((i+6),(j+6),n)];
+  double J22[nhist*nhist];
+  for (int i=0; i<nhist; i++) {
+    for (int j=0; j<nhist; j++) {
+      J22[CINDEX(i,j,nhist)] = J[CINDEX((i+6),(j+6),n)];
     }
   }
 
   // Only need the inverse
-  invert_mat(J22, nhist());
+  invert_mat(J22, nhist);
 
   // Start multiplying through
-  double T1[nhist()*6];
-  mat_mat(nhist(), 6, nhist(), J22, J21, T1);
+  double T1[nhist*6];
+  mat_mat(nhist, 6, nhist, J22, J21, T1);
   double T2[6*6];
-  mat_mat(6, 6, nhist(), J12, T1, T2);
+  mat_mat(6, 6, nhist, J12, T1, T2);
   for (int i=0; i<6*6; i++) T2[i] = J11[i] - T2[i];
   invert_mat(T2, 6);
 
-  double T3[nhist()*6];
-  mat_mat(nhist(), 6, nhist(), J22, B, T3);
+  double T3[nhist*6];
+  mat_mat(nhist, 6, nhist, J22, B, T3);
   double T4[6*6];
-  mat_mat(6, 6, nhist(), J12, T3, T4);
+  mat_mat(6, 6, nhist, J12, T3, T4);
   for (int i=0; i<6*6; i++) T4[i] -= A[i];
 
   mat_mat(6, 6, 6, T2, T4, A_np1);
