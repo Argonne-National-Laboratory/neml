@@ -640,7 +640,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
   
   return {'time': np.copy(time), 'strain': np.copy(strain), 
       'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
-      'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain)}
+      'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1])}
 
 def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
     ds = 10.0, max_cut = 10, nsteps = 250):

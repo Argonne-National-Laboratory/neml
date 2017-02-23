@@ -322,7 +322,6 @@ int SmallStrainPerfectPlasticity::update_sd(
   double u_next;
   double p_next;
 
-
   while (cs < tf) {
     // Goal
     double sm = (double) (cs + cm) / (double) tf;
