@@ -51,6 +51,7 @@ endif()
 # Make better debug on Intel
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -traceback -ftrapuv")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
 endif()
 
 # Recurse

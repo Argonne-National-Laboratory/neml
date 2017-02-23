@@ -368,7 +368,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     if verbose:
       print("Cycle %i" % s)
 
-    si = len(driver.strain)
+    si = len(driver.strain_int)
     e_inc = np.abs(emin - emax) / nsteps
     for i in range(nsteps):
       if i == 0:
@@ -469,7 +469,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
   for s in range(ncycles):
     if verbose:
       print("Cycle %i" % s)
-    si = len(driver.strain)
+    si = len(driver.strain_int)
     # Hold, if requested
     if hold_time and (hold_time[0] > 0.0):
       ht = hold_time[0]
