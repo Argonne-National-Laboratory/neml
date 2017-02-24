@@ -60,6 +60,21 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
 
 };
 
+// Combined hardening rule superimposing a bunch of separate ones
+class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
+ public:
+  CombinedIsotropicHardeningRule(
+      std::vector<std::shared_ptr<IsotropicHardeningRule>> rules);
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+
+  size_t nrules() const;
+
+ private:
+  const std::vector<std::shared_ptr<IsotropicHardeningRule>> rules_;
+
+};
+
 class KinematicHardeningRule: public HardeningRule {
  public:
   virtual size_t nhist() const;

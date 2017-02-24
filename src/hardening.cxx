@@ -107,6 +107,49 @@ double VoceIsotropicHardeningRule::d(double T) const
   return d_->value(T);
 }
 
+// Implementation of combined isotropic class
+CombinedIsotropicHardeningRule::CombinedIsotropicHardeningRule(
+      std::vector<std::shared_ptr<IsotropicHardeningRule>> rules)
+  : rules_(rules)
+{
+
+}
+
+int CombinedIsotropicHardeningRule::q(const double * const alpha, 
+                                    double T, double * const qv) const
+{
+  double qi;
+  int err = 0;
+  qv[0] = 0.0;
+  for (auto it = rules_.begin(); it != rules_.end(); ++it) {
+    err = (*it)->q(alpha, T, &qi);
+    qv[0] += qi;
+    if (err != 0) return err;
+  }
+
+  return err;
+}
+
+int CombinedIsotropicHardeningRule::dq_da(const double * const alpha, 
+                                    double T, double * const dqv) const
+{
+  double dqi;
+  int err = 0;
+  dqv[0] = 0.0;
+  for (auto it = rules_.begin(); it != rules_.end(); ++it) {
+    err = (*it)->dq_da(alpha, T, &dqi);
+    dqv[0] += dqi;
+    if (err != 0) return err;
+  }
+
+  return err;
+}
+
+size_t CombinedIsotropicHardeningRule::nrules() const 
+{
+  return rules_.size();
+}
+
 // Implementation of kinematic base class
 size_t KinematicHardeningRule::nhist() const
 {

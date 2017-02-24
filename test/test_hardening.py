@@ -65,6 +65,34 @@ class TestVoceIsotropicHardening(unittest.TestCase, CommonHardening):
     self.assertTrue(np.allclose(self.model.q(self.hist_trial, self.T), 
       np.array([-self.s0 - self.R * (1 - np.exp(-self.d*self.hist_trial[0]))])))
 
+class TestCombinedIsotropicHardening(unittest.TestCase, CommonHardening):
+  def setUp(self):
+    self.s0 = 200.0
+    self.K = 1000.0
+
+    self.hist0 = np.array([0.0])
+    
+    self.hist_trial = np.array([0.1])
+    self.T = 300.0
+
+    self.model1 = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
+
+    self.s0 = 200.0
+    self.R = 100.0
+    self.d = 10.0
+
+    self.model2 = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
+
+    self.model = hardening.CombinedIsotropicHardeningRule([self.model1, self.model2])
+
+  def test_combined(self):
+    h1 = self.model1.q(self.hist_trial, self.T)
+    h2 = self.model2.q(self.hist_trial, self.T)
+
+    h = self.model.q(self.hist_trial, self.T)
+
+    self.assertTrue(np.isclose(h, h1+h2))
+
 class TestLinearKinematicHardening(unittest.TestCase, CommonHardening):
   def setUp(self):
     self.H = 1000.0

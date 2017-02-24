@@ -64,6 +64,11 @@ PYBIND11_PLUGIN(hardening) {
       .def("d", &VoceIsotropicHardeningRule::d)
       ;
 
+  py::class_<CombinedIsotropicHardeningRule, std::shared_ptr<CombinedIsotropicHardeningRule>>(m, "CombinedIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
+      .def(py::init<std::vector<std::shared_ptr<IsotropicHardeningRule>>>(), py::arg("rules"))
+      .def_property_readonly("nrules", &CombinedIsotropicHardeningRule::nrules)
+      ;
+
   py::class_<KinematicHardeningRule, std::shared_ptr<KinematicHardeningRule>>(m, "KinematicHardeningRule", py::base<HardeningRule>())
       ;
 
