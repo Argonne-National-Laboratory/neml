@@ -467,38 +467,67 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
 
   # Begin cycling
   for s in range(ncycles):
+    quit = False
     if verbose:
       print("Cycle %i" % s)
     si = len(driver.strain_int)
     # Hold, if requested
-    if hold_time and (hold_time[0] > 0.0):
+    if hold_time and (hold_time[0] > 0.0) and (s != 0):
       ht = hold_time[0]
       dt = ht / n_hold
       for i in range(n_hold):
-        driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
+        try:
+          driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
+        except:
+          quit = True
+          break
         strain.append(np.dot(driver.strain_int[-1], sdir))
         stress.append(np.dot(driver.stress_int[-1], sdir))
-
+    
+    if quit:
+      break
+    
     s_inc = (smin - smax) / nsteps
     for i in range(nsteps):
-      driver.srate_sinc_step(sdir, srate, s_inc, T)
+      try:
+        driver.srate_sinc_step(sdir, srate, s_inc, T)
+      except:
+        quit = True
+        break
       strain.append(np.dot(driver.strain_int[-1], sdir))
       stress.append(np.dot(driver.stress_int[-1], sdir))
+
+    if quit:
+      break
 
     # Hold, if requested
     if hold_time and (hold_time[1] > 0.0):
       ht = hold_time[1]
       dt = ht / n_hold
       for i in range(n_hold):
-        driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
+        try:
+          driver.stress_step(driver.stress_int[-1], driver.t_int[-1] + dt, T)
+        except:
+          quit = True
+          break
         strain.append(np.dot(driver.strain_int[-1], sdir))
         stress.append(np.dot(driver.stress_int[-1], sdir))
 
+    if quit:
+      break
+
     s_inc = (smax - smin) / nsteps
     for i in range(nsteps):
-      driver.srate_sinc_step(sdir, srate, s_inc, T)
+      try:
+        driver.srate_sinc_step(sdir, srate, s_inc, T)
+      except:
+        quit = True
+        break
       strain.append(np.dot(driver.strain_int[-1], sdir))
       stress.append(np.dot(driver.stress_int[-1], sdir))
+
+    if quit:
+      break
 
     # Calculate
     cycles.append(s)
@@ -514,7 +543,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       "min": np.array(emin), "mean": np.array(emean),
       "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle)}
 
-def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
+def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
     nsteps_up = 150, index = 0, tc = 1.0,
     verbose = False):
   """
@@ -584,7 +613,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 500,
       'rrate': np.copy(rrate), 'rstress': np.copy(stress[ri:-1])}
 
 
-def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
+def creep(model, smax, srate, hold, T = 300.0, nsteps = 750,
     nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
     logspace = False):
   """
@@ -625,9 +654,14 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 500,
     ts = np.logspace(0, np.log10(hold), num = nsteps) + t0
   else:
     ts = np.linspace(0,hold, num = nsteps) + t0
-  
+   
   for t in ts:
-    driver.stress_step(driver.stress_int[-1], t, T)
+    # You can exceed the creep life of the sample doing this...
+    # Need to allow a non-convergent result to break
+    try:
+      driver.stress_step(driver.stress_int[-1], t, T)
+    except:
+      break
     time.append(t)
     strain.append(np.dot(driver.strain_int[-1],sdir))
     stress.append(np.dot(driver.stress_int[-1],sdir))

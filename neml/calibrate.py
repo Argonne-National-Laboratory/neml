@@ -39,12 +39,12 @@ class Evaluator(object):
     case = ET.fromstring(scase)
     try:
       v = evaluate_case(case, model, weights = self.weights)
-      if np.isnan(v) or np.isinf(v):
-        return self.penalty
-      else:
-        return v
-    except Exception:
+    except Exception as e:
       return self.penalty
+    if np.isnan(v) or np.isinf(v):
+      return self.penalty
+    else:
+      return v
 
 def evaluate_cases(cases, model_maker, params, weights = {"uniaxial": 1.0,
   "relax_strain": 1.0, "relax_stress": 1.0, "cyclic_stress": 1.0,
@@ -64,6 +64,9 @@ def evaluate_cases(cases, model_maker, params, weights = {"uniaxial": 1.0,
   string_cases = [ET.tostring(c) for c in cases]
 
   evaler = Evaluator(model_maker, params, weights, penalty)
+
+  #return sum(map(evaler, string_cases))
+
   pool = multiprocessing.Pool(nthreads)
 
   res = list(pool.imap(evaler, string_cases))
@@ -120,10 +123,12 @@ def evaluate_uniaxial(case, model):
   exp_fn = inter.interp1d(exp_strain, exp_stress)
   mod_fn = inter.interp1d(res['strain'], res['stress'])
   
-  v1, err1, msg = qud.quad(exp_fn, 0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2,
+  vs = qud.quad(exp_fn, 0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2,
       full_output = 1)
-  v2, err2, msg = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
+  v1 = vs[0]
+  vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
       0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2, full_output = 1)
+  v2 = vs[0]
 
   return v2 / v1
 
@@ -147,11 +152,13 @@ def evaluate_stressrelax(case, model):
   exp_fn = inter.interp1d(exp_time, exp_relax)
   mod_fn = inter.interp1d(res['rtime'], res['rstress'])
 
-  v1, err1, msg = qud.quad(exp_fn, min_time, max_time*0.99, epsabs = 1.0e-4, 
+  vs = qud.quad(exp_fn, min_time, max_time*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
-  v2, err2, msg = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
-      min_time, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
+  v1 = vs[0]
+  vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
+      min_time*1.01, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
+  v2 = vs[0]
 
   return v2 / v1
 
@@ -171,14 +178,22 @@ def evaluate_creep(case, model):
 
   res = drivers.creep(model, stress, srate, max_time, T = T)
 
+  if len(res['rtime']) < 2:
+    raise Exception('No good')
+
+  max_time = min([max_time, np.max(res['rtime'])])
+  min_time = max([min_time, np.min(res['rtime'])])
+
   exp_fn = inter.interp1d(exp_time, exp_strain)
   mod_fn = inter.interp1d(res['rtime'], res['rstrain'])
-
-  v1, err1, msg = qud.quad(exp_fn, min_time, max_time*0.99, epsabs = 1.0e-4, 
+  
+  vs = qud.quad(exp_fn, min_time*1.01, max_time*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
-  v2, err2, msg = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
-      min_time, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
+  v1 = vs[0]
+  vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
+      min_time*1.01, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
+  v2 = vs[0]
 
   return v2/v1
 
@@ -211,14 +226,19 @@ def evaluate_cyclic_strain(case, model):
   res = drivers.strain_cyclic(model, strain, ratio, rate,
       int(max_cycles)+1, T = T)
 
+  max_cycles = min([max_cycles, np.max(res['cycles'])])
+  min_cycles = max([min_cycles, np.min(res['cycles'])])
+
   exp_fn = inter.interp1d(exp_cycle, exp_max)
   mod_fn = inter.interp1d(res['cycles'], res['max'])
 
-  v1, err1, msg = qud.quad(exp_fn, min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, 
+  vs = qud.quad(exp_fn, min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
-  v2, err2, msg = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
+  v1 = vs[0]
+  vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
       min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
+  v2 = vs[0]
 
   return v2/v1
 
@@ -260,10 +280,12 @@ def evaluate_cyclic_stress(case, model):
   exp_fn = inter.interp1d(exp_cycle, exp_max)
   mod_fn = inter.interp1d(res['cycles'], res['max'])
   
-  v1, err1, msg = qud.quad(exp_fn, min_cycles, max_cycles*0.99, epsabs = 1.0e-4, 
+  vs = qud.quad(exp_fn, min_cycles, max_cycles*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
-  v2, err2, msg = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
+  v1 = vs[0]
+  vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
       min_cycles, max_cycles*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
+  v2 = vs[0]
 
   return v2/v1
