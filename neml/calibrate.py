@@ -65,8 +65,6 @@ def evaluate_cases(cases, model_maker, params, weights = {"uniaxial": 1.0,
 
   evaler = Evaluator(model_maker, params, weights, penalty)
 
-  #return sum(map(evaler, string_cases))
-
   pool = multiprocessing.Pool(nthreads)
 
   res = list(pool.imap(evaler, string_cases))
@@ -132,6 +130,9 @@ def evaluate_uniaxial(case, model):
 
   return v2 / v1
 
+def cost_uniaxial(case):
+  return 250
+
 def evaluate_stressrelax(case, model):
   """
     Evaluate a stress relaxation test
@@ -161,6 +162,9 @@ def evaluate_stressrelax(case, model):
   v2 = vs[0]
 
   return v2 / v1
+
+def cost_stressrelax(model):
+  return 900
 
 def evaluate_creep(case, model):
   """
@@ -197,6 +201,9 @@ def evaluate_creep(case, model):
 
   return v2/v1
 
+def cost_creep(case):
+  return 900
+
 def evaluate_cyclic_strain(case, model):
   """
     Evaluate a strain controlled cyclic test
@@ -220,8 +227,8 @@ def evaluate_cyclic_strain(case, model):
   min_cycles = np.min(exp_cycle)
 
   # This is a hack, please fix for the love of god
-  if max_cycles > 500:
-    max_cycles = 500
+  if max_cycles > 2000:
+    max_cycles = 2000
 
   res = drivers.strain_cyclic(model, strain, ratio, rate,
       int(max_cycles)+1, T = T)
@@ -241,6 +248,10 @@ def evaluate_cyclic_strain(case, model):
   v2 = vs[0]
 
   return v2/v1
+
+def cost_cycle_strain(case):
+  nsteps = np.max(expand(case.find('cycle').text))
+  return 50 * nsteps
 
 def evaluate_cyclic_stress(case, model):
   """
@@ -271,8 +282,8 @@ def evaluate_cyclic_stress(case, model):
   min_cycles = np.min(exp_cycle)
 
   # This is a hack, please fix for the love of god
-  if max_cycles > 500:
-    max_cycles = 500
+  if max_cycles > 2000:
+    max_cycles = 2000
 
   res = drivers.stress_cyclic(model, stress, ratio, rate, int(max_cycles)+1,
       T = T, hold_time = hold)
@@ -289,3 +300,7 @@ def evaluate_cyclic_stress(case, model):
   v2 = vs[0]
 
   return v2/v1
+
+def cost_cycle_stress(case):
+  nsteps = np.max(expand(case.find('cycle').text))
+  return 50 * nsteps
