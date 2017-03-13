@@ -395,8 +395,8 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
       double * const s_np1, const double * const s_n,
       double * const h_np1, const double * const h_n,
       double * const A_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n);
+      double & u_np1, double u_n,
+      double & p_np1, double p_n);
 
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
@@ -484,6 +484,58 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
   bool verbose_;
 };
 
+/// Combines multiple small strain integrators based on regimes of
+/// rate-dependent behavior.
+//
+//  This model uses the idea from Kocks & Mecking of a normalized activation
+//  energy to call different integrators depending on the combination of
+//  temperature and strain rate.
+//
+//  A typical use case would be switching from rate-independent to rate
+//  dependent behavior based on a critical activation energy cutoff point
+//
+//  A user provides a vector of models (length n) and a corresponding vector
+//  of normalized activation energies (length n-1) dividing the response into
+//  segments.  All the models must have compatible hardening -- the history
+//  is just going to be blindly passed between the models.
+//
+class KMRegimeModel: public NEMLModel_sd {
+ public:
+  KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+                std::vector<double> gs, 
+                std::shared_ptr<LinearElasticModel> emodel,
+                double kboltz, double b, double eps0,
+                double alpha = 0.0);
+  KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+                std::vector<double> gs, 
+                std::shared_ptr<LinearElasticModel> emodel,
+                double kboltz, double b, double eps0,
+                std::shared_ptr<Interpolate> alpha = nullptr);
+
+  virtual int update_sd(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1,
+      double & u_np1, double u_n,
+      double & p_np1, double p_n);
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const hist) const;
+  
+ private:
+  double activation_energy_(const double * const e_np1, 
+                            const double * const e_n,
+                            double T_np1,
+                            double t_np1, double t_n);
+
+ private:
+  std::vector<std::shared_ptr<NEMLModel_sd>> models_;
+  std::vector<double> gs_;
+  std::shared_ptr<LinearElasticModel> emodel_;
+  double kboltz_, b_, eps0_;
+};
 
 } // namespace neml
 #endif // NEML_H

@@ -1336,5 +1336,81 @@ int GeneralIntegrator::calc_tangent_(const double * const x, TrialState * ts,
   return 0;
 }
 
+// Start KMRegimeModel
+KMRegimeModel::KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+                             std::vector<double> gs,
+                             std::shared_ptr<LinearElasticModel> emodel,
+                             double kboltz, double b, double eps0, 
+                             double alpha) :
+    NEMLModel_sd(alpha), models_(models), gs_(gs), emodel_(emodel), 
+    kboltz_(kboltz), b_(b), eps0_(eps0)
+{
 
-} // namespace nhist()ml
+}
+
+KMRegimeModel::KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+                             std::vector<double> gs,
+                             std::shared_ptr<LinearElasticModel> emodel,
+                             double kboltz, double b, double eps0,
+                             std::shared_ptr<Interpolate> alpha) :
+    NEMLModel_sd(alpha), models_(models), gs_(gs), emodel_(emodel),
+    kboltz_(kboltz), b_(b), eps0_(eps0)
+{
+
+}
+
+int KMRegimeModel::update_sd(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
+{
+  // Calculate activation energy
+  double g = activation_energy_(e_np1, e_n, T_np1, t_np1, t_n);
+
+  // Note this relies on everything being sorted.  You probably want to
+  // error check at some point
+  for (int i=0; i<gs_.size(); i++) {
+    if (g < gs_[i]) {
+      return models_[i]->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
+                                   s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
+                                   p_np1, p_n);
+    }
+  }
+  return models_.back()->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n,
+                                   s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
+                                   p_np1, p_n);
+}
+
+size_t KMRegimeModel::nhist() const
+{
+  return models_[0]->nhist();
+}
+
+int KMRegimeModel::init_hist(double * const hist) const
+{
+  return models_[0]->init_hist(hist);
+}
+
+double KMRegimeModel::activation_energy_(const double * const e_np1, 
+                                         const double * const e_n,
+                                         double T_np1,
+                                         double t_np1, double t_n)
+{
+  double dt = t_np1 - t_n;
+
+  double de[6];
+  int err;
+  err = sub_vec(e_np1, e_n, 6, de);
+  for (int i=0; i<6; i++) de[i] /= dt;
+  double rate = sqrt(2.0/3.0) * norm2_vec(de, 6);
+  double mu = emodel_->G(T_np1);
+  
+  return kboltz_ * T_np1 / (mu* pow(b_, 3.0)) * log(eps0_ / rate);
+}
+
+} // namespace neml
