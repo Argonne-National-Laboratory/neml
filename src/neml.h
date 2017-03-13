@@ -523,7 +523,12 @@ class KMRegimeModel: public NEMLModel_sd {
       double & p_np1, double p_n);
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
-  
+ 
+  // Helper for FEA output
+  virtual int elastic_strains(const double * const s_np1,
+                             double T_np1,
+                             double * const e_np1) const;
+
  private:
   double activation_energy_(const double * const e_np1, 
                             const double * const e_n,

@@ -5,6 +5,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
+#include "pybind11/stl.h"
 
 namespace py = pybind11;
 
@@ -297,6 +298,21 @@ PYBIND11_PLUGIN(neml) {
            }, "Residual and jacobian.")
       ;
       // End remove block
+      ;
+
+  py::class_<KMRegimeModel, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel", py::base<NEMLModel_sd>())
+      .def(py::init<std::vector<std::shared_ptr<NEMLModel_sd>>,
+           std::vector<double>, std::shared_ptr<LinearElasticModel>,
+           double, double, double, double>(),
+           py::arg("models"), py::arg("gs"), py::arg("emodel"),
+           py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
+           py::arg("alpha") = 0.0)
+      .def(py::init<std::vector<std::shared_ptr<NEMLModel_sd>>,
+           std::vector<double>, std::shared_ptr<LinearElasticModel>,
+           double, double, double, double>(),
+           py::arg("models"), py::arg("gs"), py::arg("emodel"),
+           py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
+           py::arg("alpha") = nullptr)
       ;
 
   return m.ptr();

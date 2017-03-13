@@ -1396,6 +1396,17 @@ int KMRegimeModel::init_hist(double * const hist) const
   return models_[0]->init_hist(hist);
 }
 
+int KMRegimeModel::elastic_strains(const double * const s_np1,
+                                   double T_np1,
+                                   double * const e_np1) const
+{
+  double S[36];
+  emodel_->S(T_np1, S);
+  mat_vec(S, 6, s_np1, 6, e_np1);
+
+  return 0;
+}
+
 double KMRegimeModel::activation_energy_(const double * const e_np1, 
                                          const double * const e_n,
                                          double T_np1,
