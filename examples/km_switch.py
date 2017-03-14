@@ -119,13 +119,10 @@ if __name__ == "__main__":
 
   # Strain rate jump
   Ts = np.linspace(Tmin, Tmax, 5)
-  Ts = [950.0]
-  erates = [1.0e-6, 1.0e-5, 1.0e-4, 1.0e-3, 1.0e-2, 1.0e-1]
+  erates = [1.0e-6, 1.0e-5, 1.0e-4, 1.0e-3, 1.0e-2, 1.0e-1, 1.0e-2, 1.0e-3, 1.0e-4, 1.0e-5, 1.0e-6]
   es = [0.01] * len(erates)
   for T in Ts:
     strain, stress = rate_jump_test(combined, erates, es, T)
-    plt.plot(strain, stress)
-    strain, stress = rate_jump_test(rate_independent, erates, es, T)
     plt.plot(strain, stress)
   
   legend_string = map(lambda x: "%3.0f K" % x, Ts)
@@ -134,8 +131,6 @@ if __name__ == "__main__":
   plt.ylabel("Stress (MPa)")
   plt.title("Strain rate jump test")
   plt.show()
-
-  sys.exit()
 
   # Temperature jump test (no thermal strains)
   Ts = list(np.linspace(Tmin, Tmax, 3))
