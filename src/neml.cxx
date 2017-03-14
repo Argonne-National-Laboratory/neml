@@ -605,14 +605,12 @@ SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
 
 size_t SmallStrainRateIndependentPlasticity::nhist() const
 {
-  // My convention: plastic strain then actual history
-  return 6 + flow_->nhist();
+  return flow_->nhist();
 }
 
 int SmallStrainRateIndependentPlasticity::init_hist(double * const hist) const
 {
-  std::fill(hist, hist+6, 0.0);
-  return flow_->init_hist(&hist[6]);
+  return flow_->init_hist(hist);
 }
 
 int SmallStrainRateIndependentPlasticity::update_sd(
@@ -637,8 +635,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   // If elastic, copy over and return
   if (fv < tol_) {
     std::copy(ts.s_tr, ts.s_tr+6, s_np1);
-    std::copy(ts.ep_tr, ts.ep_tr+6, h_np1);
-    std::copy(&ts.h_tr[0], &ts.h_tr[0]+flow_->nhist(), &h_np1[6]);
+    std::copy(&ts.h_tr[0], &ts.h_tr[0]+flow_->nhist(), h_np1);
     std::copy(ts.C, ts.C+36, A_np1);
     dg = 0.0;
 
@@ -651,11 +648,10 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     if (ier != SUCCESS) return ier;
 
     // Extract solved parameters
-    std::copy(x, x+6, h_np1); // plastic strain
-    std::copy(x+6, x+6+flow_->nhist(), &h_np1[6]); // history
+    std::copy(x+6, x+6+flow_->nhist(), h_np1); // history
     dg = x[6+flow_->nhist()];
     double ee[6];
-    sub_vec(e_np1, h_np1, 6, ee);
+    sub_vec(e_np1, x, 6, ee);
     mat_vec(ts.C, 6, ee, 6, s_np1);
 
     // Complicated tangent calc...
@@ -665,7 +661,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     double dep[6];
     double ds[6];
     add_vec(s_np1, s_n, 6, ds);
-    sub_vec(h_np1, h_n, 6, dep);
+    sub_vec(x, ts.ep_tr, 6, dep);
     p_np1 = p_n + dot_vec(ds, dep, 6);
 
   }
@@ -838,10 +834,14 @@ int SmallStrainRateIndependentPlasticity::make_trial_state(
   // Save e_np1
   std::copy(e_np1, e_np1+6, ts.e_np1);
   // ep_tr = ep_n
-  std::copy(h_n, h_n+6, ts.ep_tr);
+  double S_n[36];
+  double ee_n[6];
+  elastic_->S(T_n, S_n);
+  mat_vec(S_n, 6, s_n, 6, ee_n);
+  sub_vec(e_n, ee_n, 6, ts.ep_tr);
   // h_tr = h_n
   ts.h_tr.resize(flow_->nhist());
-  std::copy(h_n+6, h_n+nhist(), ts.h_tr.begin());
+  std::copy(h_n, h_n+nhist(), ts.h_tr.begin());
   // Calculate the trial stress
   double ee[6];
   sub_vec(e_np1, ts.ep_tr, 6, ee);
@@ -904,11 +904,11 @@ int SmallStrainRateIndependentPlasticity::calc_tangent_(
   int nh = flow_->nhist();
 
   double dg_ds[6*6];
-  flow_->dg_ds(s_np1, &h_np1[6], tss->T, dg_ds);
+  flow_->dg_ds(s_np1, h_np1, tss->T, dg_ds);
   double dh_ds[nh*6];
-  flow_->dh_ds(s_np1, &h_np1[6], tss->T, dh_ds);
+  flow_->dh_ds(s_np1, h_np1, tss->T, dh_ds);
   double df_ds[6];
-  flow_->df_ds(s_np1, &h_np1[6], tss->T, df_ds);
+  flow_->df_ds(s_np1, h_np1, tss->T, df_ds);
 
   mat_mat(6, 6, 6, dg_ds, tss->C, A);
   for (int i=0; i<nk*6; i++) A[i] *= dg;

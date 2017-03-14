@@ -125,8 +125,8 @@ if __name__ == "__main__":
   for T in Ts:
     strain, stress = rate_jump_test(combined, erates, es, T)
     plt.plot(strain, stress)
-    #strain, stress = rate_jump_test(rate_independent, erates, es, T)
-    #plt.plot(strain, stress)
+    strain, stress = rate_jump_test(rate_independent, erates, es, T)
+    plt.plot(strain, stress)
   
   legend_string = map(lambda x: "%3.0f K" % x, Ts)
   plt.legend(legend_string, loc = 'best')
