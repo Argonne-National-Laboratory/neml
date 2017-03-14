@@ -487,3 +487,89 @@ class TestYaguchi(unittest.TestCase, CommonMatModel, CommonJacobian):
   def gen_x(self):
     x = [100.0,150.0,-300.0,-10.0,50.0,100.0] + list(self.gen_hist()*1.1)
     return np.array(x)
+
+class TestKMSwitch(unittest.TestCase, CommonMatModel):
+  """
+    Test the model with a switch
+  """
+  def setUp(self):
+    # Fully-defined perfectly plastic model
+    Epoly = [-78.2759, 236951.0]
+    nu = 0.3
+    A = -9.6187
+    B = -1.4819
+    C = -5.0486
+    g0 = 0.3708
+
+    b = 0.248 * 1.0e-6
+    kboltz = 1.38064e-23 * 1000.0
+    eps0 = 1.0e10
+
+    # Temperature range over which to consider (K)
+    Tmin = 550.0
+    Tmax = 950.0
+    Trange = np.linspace(Tmin, Tmax)
+
+    # Elastic
+    E_m = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(Epoly))
+    nu_m = elasticity.PoissonsRatio(nu)
+    elastic_m = elasticity.IsotropicLinearElasticModel(E_m, nu_m)
+    self.elastic = elastic_m
+
+    # Rate sensitivity interpolates values
+    mu_values = np.array([elastic_m.G(T) for T in Trange])
+    n_values = -mu_values*b**3.0 / (kboltz * Trange * A)
+    eta_values = np.exp(B) * eps0 ** (kboltz * Trange * A / (mu_values * b**3.0)) * mu_values
+
+    # Rate independent interpolate values
+    flow_stress = mu_values * np.exp(C)
+    
+    # Common objects
+    surface = surfaces.IsoKinJ2()
+    hmodulus = interpolate.PolynomialInterpolate([-10.0, 12000.0])
+
+    # Setup visco model
+    n_interp = interpolate.PiecewiseLinearInterpolate(list(Trange), list(n_values))
+    eta_interp = interpolate.PiecewiseLinearInterpolate(list(Trange), list(eta_values))
+    eta_m = visco_flow.ConstantFluidity(eta_interp)
+
+    iso_rd = hardening.LinearIsotropicHardeningRule(
+        interpolate.ConstantInterpolate(0.0),
+        hmodulus)
+    hard_rd = hardening.Chaboche(iso_rd,
+        [interpolate.ConstantInterpolate(0.0)], 
+        [hardening.ConstantGamma(interpolate.ConstantInterpolate(0.0))],
+        [interpolate.ConstantInterpolate(0.0)],
+        [interpolate.ConstantInterpolate(1.0)])
+
+    visco_rd = visco_flow.ChabocheFlowRule(surface, hard_rd, eta_m, n_interp) 
+    general_rd = general_flow.TVPFlowRule(elastic_m, visco_rd)
+
+    rate_dependent = neml.GeneralIntegrator(general_rd)
+
+    # Setup rate independent
+    sy_interp = interpolate.PiecewiseLinearInterpolate(list(Trange), list(flow_stress))
+    iso_ri = hardening.LinearIsotropicHardeningRule(sy_interp, hmodulus)
+    hard_ri = hardening.Chaboche(iso_ri,
+        [interpolate.ConstantInterpolate(0.0)], 
+        [hardening.ConstantGamma(interpolate.ConstantInterpolate(0.0))],
+        [interpolate.ConstantInterpolate(0.0)],
+        [interpolate.ConstantInterpolate(1.0)])
+    flow_ri = ri_flow.RateIndependentNonAssociativeHardening(surface, hard_ri)
+    
+    rate_independent = neml.SmallStrainRateIndependentPlasticity(elastic_m,
+        flow_ri)
+
+    # Combined model
+    self.model = neml.KMRegimeModel([rate_independent, rate_dependent],
+        [g0], elastic_m, kboltz, b, eps0)
+
+    self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
+    self.tfinal = 10.0
+    self.T = 700.0
+    self.nsteps = 100
+
+  def gen_hist(self):
+    h = np.array([40.0,20,-30,40.0,5.0,2.0,40.0])
+    h[:6] = make_dev(h[:6])
+    return h
