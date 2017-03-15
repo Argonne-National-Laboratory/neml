@@ -136,7 +136,7 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node, int
 
 /// Return a single child node with given name, if not return relevant error
 bool one_child(const xmlpp::Node * node, std::string name,
-               const xmlpp::Element * child, int & ier);
+               xmlpp::Element * & child, int & ier);
 
 /// Return the string value of an attribute with a given name, if not error
 bool one_attribute(const xmlpp::Element * node, std::string name,
