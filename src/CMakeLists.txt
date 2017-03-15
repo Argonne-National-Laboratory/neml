@@ -92,11 +92,11 @@ if (WRAP_PYTHON)
 
       # various interpolation schemes
       add_library(interpolate SHARED interpolate_wrap.cxx interpolate.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(interpolate neml ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${libxml++_LIBRARIES})
+      target_link_libraries(interpolate nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(interpolate PROPERTIES PREFIX "")
       if (APPLE)
-            set_property(TARGET parse PROPERTY OUTPUT_NAME "interpolate.so")
-            set_property(TARGET parse PROPERTY SUFFIX "")
+            set_property(TARGET interpolate PROPERTY OUTPUT_NAME "interpolate.so")
+            set_property(TARGET interpolate PROPERTY SUFFIX "")
       endif()
 else()
       # Everything in a big shared library

@@ -30,7 +30,7 @@ else()
 endif()
 
 # Configure libraries
-set(BLA_VENDOR Generic)
+set(BLAS_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 

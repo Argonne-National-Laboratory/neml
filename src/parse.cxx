@@ -64,7 +64,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   std::shared_ptr<Interpolate> alpha;
   auto a_nodes = node->get_children("alpha");
   if (a_nodes.size() > 0) {
-    alpha = process_alpha(dynamic_cast<xmlpp::Element*>(a_nodes.front()), ier);
+    alpha = process_alpha(dynamic_cast<const xmlpp::Element*>(a_nodes.front()), ier);
   }
   else {
     alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
@@ -528,7 +528,7 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node,
 
 // Helpers
 bool one_child(const xmlpp::Node * node, std::string name,
-               xmlpp::Element * & child, int & ier)
+               const xmlpp::Element * child, int & ier)
 {
   auto matches = node->get_children(name);
 
@@ -545,7 +545,7 @@ bool one_child(const xmlpp::Node * node, std::string name,
     return false;
   }
   else {
-    child = dynamic_cast<xmlpp::Element*>(matches.front());
+    child = dynamic_cast<const xmlpp::Element*>(matches.front());
     return true;
   }
 
@@ -583,7 +583,7 @@ std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node,
         << node->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  auto child = dynamic_cast<xmlpp::Element*>(matches.front());
+  auto child = dynamic_cast<const xmlpp::Element*>(matches.front());
   
   // Two cases: raw text implies constant, interpolate node means use an
   // interpolate
@@ -765,7 +765,7 @@ vector_param(const xmlpp::Node * node, std::string name, int & ier)
         << node->get_line() << std::endl;
     return {std::shared_ptr<Interpolate>(new InvalidInterpolate())};
   }
-  auto child = dynamic_cast<xmlpp::Element*>(matches.front());
+  auto child = dynamic_cast<const xmlpp::Element*>(matches.front());
   
   // Two cases: text data -> vector of constants or multiple instances of
   // interpolate nodes
