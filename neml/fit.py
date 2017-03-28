@@ -50,7 +50,8 @@ def write_pop(fname, pop):
 def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50, 
     comm = MPI.COMM_WORLD, penalty = 10000.0, ngen = 500, cp = 0.5, 
     mp = 0.2, eta = 2.0, indpb = 0.05, ts = 3, elite = 5, 
-    logfile = 'progress.log', popfile = 'population%i.npy'):
+    logfile = 'progress.log', popfile = 'population%i.npy',
+    include_zero = False, population = None):
   """
     Use DEAP to fit a model to a database
 
@@ -71,6 +72,17 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
       popsize       population size
       comm          communicator to use
       penalty       how to penalize non-convergent results
+      ngen          number of generations to run
+      cp            crossover probability
+      mp            mutation probability
+      eta           mutation parameter
+      indpb         independent probability of each gene being mutated
+      ts            tournament size
+      elite         elitism
+      logfile       text file for loading information
+      popfile       string formatter for generation files
+      include_zero  include a special zero entry in the initial population
+      population    specify the whole population (for restart)
   """
   rank = comm.Get_rank()
   
@@ -82,7 +94,14 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
 
   # Setup initial population
   if rank == 0:
-    pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(popsize)])
+    if population is not None:
+      pop_array = population
+    else:
+      if include_zero:
+        pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(popsize-1)])
+        pop_array = np.vstack((pop_array, np.zeros((len(bounds),))))
+      else:
+        pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(popsize)])
     pop = array2member(pop_array)
     toolbox = base.Toolbox()
     toolbox.register("mate", tools.cxTwoPoint)
