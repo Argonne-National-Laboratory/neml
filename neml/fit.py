@@ -51,7 +51,7 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
     comm = MPI.COMM_WORLD, penalty = 10000.0, ngen = 500, cp = 0.5, 
     mp = 0.2, eta = 2.0, indpb = 0.05, ts = 3, elite = 5, 
     logfile = 'progress.log', popfile = 'population%i.npy',
-    include_zero = False, population = None):
+    include_zero = False, population = None, offset = 0):
   """
     Use DEAP to fit a model to a database
 
@@ -121,15 +121,15 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
     # Assign
     pop = assign_fitness(res, pop)
     # Log
-    log(open(logfile, 'w'), 0, pop)
-    write_pop(popfile % 0, pop)
+    log(open(logfile, 'a'), 0 + offset, pop)
+    write_pop(popfile % (0+offset), pop)
 
 
   # Loop over generations
   for ii in range(ngen):
     if rank == 0:
       # Start
-      print("Generation %i" % (ii+1))
+      print("Generation %i" % (ii+1+offset))
 
       # Select
       offspring = toolbox.select(pop, len(pop) - elite)
@@ -168,8 +168,8 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
       print("Best residual: %e" % np.min(residuals))
       print("")
 
-      log(open(logfile, 'a'), ii+1, pop)
-      write_pop(popfile % (ii+1), pop)
+      log(open(logfile, 'a'), ii+1+offset, pop)
+      write_pop(popfile % (ii+1+offset), pop)
 
 
     else:
