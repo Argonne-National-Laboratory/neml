@@ -676,6 +676,49 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 750,
       'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1])}
 
+def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100, 
+    sdir = np.array([1,0,0,0,0,0]), verbose = False):
+  """
+    Model a uniaxial strain rate jump test
+
+    Parameters:
+      model         material model
+      erate         list of strain rates
+    
+    Optional:
+      T             temperature, default 300.0
+      e_per         how much straining to do for each rate
+      nsteps_per    number of steps per strain rate
+      sdir          stress direction, default tension in x
+      verbose       whether to be verbose
+
+    Results:
+      strain    strain in direction
+      stress    stress in direction
+  """
+  e_inc = e_per / nsteps_per
+  driver = Driver_sd(model, verbose = verbose)
+  strain = [0.0]
+  stress = [0.0]
+  
+  for erate in erates:
+    for i in range(nsteps_per):
+      if i == 0:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
+      else:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+            einc_guess = einc, ainc_guess = ainc)
+      strain.append(np.dot(driver.strain_int[-1], sdir))
+      stress.append(np.dot(driver.stress_int[-1], sdir))
+
+  strain = np.array(strain)
+  stress = np.array(stress)
+
+  return {'strain': strain, 'stress': stress, 
+      'energy_density': np.copy(driver.u),
+      'plastic_work': np.copy(driver.p)}
+
+
 def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
     ds = 10.0, max_cut = 10, nsteps = 250):
   """
