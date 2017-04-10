@@ -245,6 +245,330 @@ class Driver_sd(Driver):
 
     self.strain_step(e_np1, t_np1, T_np1)
 
+class Driver_sd_twobar(Driver_sd):
+  def __init__(self, A1, A2, T1, T2, period, P, load_time, *args, **kwargs):
+    """
+      Generic twobar driver.
+
+      Parameters:
+        A1          area of bar 1
+        A2          area of bar 2
+        T1          function giving temperature versus time for 1 cycle (bar 1)
+        T2          function giving temperature versus time for 1 cycle (bar 2)
+        period      actual period of a cycle
+        P           load applied
+        load_time   how much time to use to load
+
+        model       material model to use
+
+      Optional:
+        nsteps_load     number of steps to load up in
+        nsteps_cycle    number of steps per cycle
+    """
+    nsteps_load = kwargs.pop('nsteps_load', 50)
+    nsteps_cycle = kwargs.pop('nsteps_cycle', 201)
+    super(Driver_sd_twobar, self).__init__(*args, **kwargs)
+
+    self.A1 = A1
+    self.A2 = A2
+    self.T1_fn = T1
+    self.T2_fn = T2
+    self.period = period
+    self.P = P
+
+    self.load_time = load_time
+
+    self.nsteps_load = nsteps_load
+    self.nsteps_cycle = nsteps_cycle
+
+    self.strain_int = [0.0]
+
+    self.strain1_int = [np.zeros((6,))]
+    self.strain2_int = [np.zeros((6,))]
+    self.strain1_mech_int = [np.zeros((6,))]
+    self.strain2_mech_int = [np.zeros((6,))]
+    
+    self.strain1_plastic_int = [np.zeros((6,))]
+    self.strain2_plastic_int = [np.zeros((6,))]
+
+    self.stress1_int = [np.zeros((6,))]
+    self.stress2_int = [np.zeros((6,))]
+
+    self.store1_int = [self.model.init_store()]
+    self.store2_int = [self.model.init_store()]
+
+    self.u1_int = [0.0]
+    self.u2_int = [0.0]
+
+    self.p1_int = [0.0]
+    self.p2_int = [0.0]
+
+    self.T1_int = [T1(0.0)]
+    self.T2_int = [T2(0.0)]
+
+    self.T1_0 = T1(0.0)
+    self.T2_0 = T2(0.0)
+
+  @property
+  def T1(self):
+    return np.array(self.T1_int)
+
+  @property
+  def T2(self):
+    return np.array(self.T2_int)
+
+  @property
+  def strain1_mech(self):
+    return np.array(self.strain1_mech_int)
+
+  @property
+  def strain2_mech(self):
+    return np.array(self.strain2_mech_int)
+
+  @property
+  def strain1_plastic(self):
+    return np.array(self.strain1_plastic_int)
+
+  @property
+  def strain2_plastic(self):
+    return np.array(self.strain2_plastic_int)
+
+  @property
+  def stress1(self):
+    return np.array(self.stress1_int)
+
+  @property
+  def stress2(self):
+    return np.array(self.stress2_int)
+
+  def take_step(self, P, T1, T2, dt):
+    """
+      Take a single load step to get to P, T1, and T2 from the previous state.
+    """
+    def RJ(x):
+      e1 = x[:6]
+      e2 = x[6:]
+
+      a1 = self.model.alpha(T1)
+      a2 = self.model.alpha(T2)
+
+      em1 = e1 - np.array([1,1,1,0,0,0]) * a1 * (T1 - self.T1_0)
+      em2 = e2 - np.array([1,1,1,0,0,0]) * a2 * (T2 - self.T2_0)
+      
+      s1_np1, h1_np1, A1_np1, u1_np1, p1_np1 = self.model.update_sd(
+          em1, self.strain1_mech_int[-1],
+          T1, self.T1_int[-1], dt + self.t_int[-1], self.t_int[-1],
+          self.stress1_int[-1], self.store1_int[-1], self.u1_int[-1], 
+          self.p1_int[-1])
+      s2_np1, h2_np1, A2_np1, u2_np1, p2_np1 = self.model.update_sd(
+          em2, self.strain2_mech_int[-1],
+          T2, self.T2_int[-1], dt + self.t_int[-1], self.t_int[-1],
+          self.stress2_int[-1], self.store2_int[-1], self.u2_int[-1], 
+          self.p2_int[-1])
+
+      R = np.zeros((12,))
+      R[0] = s1_np1[0] * self.A1 + s2_np1[0] * self.A2 - P
+      R[1] = e1[0] - e2[0]
+      R[2:7] = s1_np1[1:]
+      R[7:] = s2_np1[1:]
+
+      J = np.zeros((12,12))
+
+      J[0,:6] = A1_np1[0,:] * self.A1 
+      J[0,6:] = A2_np1[0,:] * self.A2
+
+      J[1,:6] = np.array([1,0,0,0,0,0])
+      J[1,6:] = np.array([-1,0,0,0,0,0])
+
+      J[2:7,:6] = A1_np1[1:,:]
+      J[2:7,6:] = 0.0
+
+      J[7:,:6] = 0.0
+      J[7:,6:] = A2_np1[1:,:]
+      
+      return R, J
+
+    x0 = np.hstack((self.strain1_int[-1], self.strain2_int[-1]))
+    x = newton(RJ, x0, verbose = self.verbose,
+        rtol = self.rtol, atol = self.atol, miter = self.miter)
+
+    e1 = x[:6]
+    e2 = x[6:]
+
+    self.strain1_int.append(e1)
+    self.strain2_int.append(e2)
+
+    a1 = self.model.alpha(T1)
+    a2 = self.model.alpha(T2)
+
+    em1 = e1 - np.array([1,1,1,0,0,0]) * a1 * (T1 - self.T1_0)
+    em2 = e2 - np.array([1,1,1,0,0,0]) * a2 * (T2 - self.T2_0)
+
+    s1_np1, h1_np1, A1_np1, u1_np1, p1_np1 = self.model.update_sd(
+        em1, self.strain1_mech_int[-1],
+        T1, self.T1_int[-1], dt + self.t_int[-1], self.t_int[-1],
+        self.stress1_int[-1], self.store1_int[-1], self.u1_int[-1], 
+        self.p1_int[-1])
+    s2_np1, h2_np1, A2_np1, u2_np1, p2_np1 = self.model.update_sd(
+        em2, self.strain2_mech_int[-1],
+        T2, self.T2_int[-1], dt + self.t_int[-1], self.t_int[-1],
+        self.stress2_int[-1], self.store2_int[-1], self.u2_int[-1], 
+        self.p2_int[-1])
+
+    self.strain1_mech_int.append(em1)
+    self.strain2_mech_int.append(em2)
+
+    self.t_int.append(self.t_int[-1] + dt)
+    self.T1_int.append(T1)
+    self.T2_int.append(T2)
+
+    self.u1_int.append(u1_np1)
+    self.u2_int.append(u2_np1)
+    self.u_int.append(u1_np1*self.A1 + u2_np1*self.A2)
+
+    self.p1_int.append(p1_np1)
+    self.p2_int.append(p2_np1)
+    self.p_int.append(p1_np1*self.A1 + p2_np1*self.A2)
+
+    self.store1_int.append(h1_np1)
+    self.store2_int.append(h2_np1)
+
+    self.stress1_int.append(s1_np1)
+    self.stress2_int.append(s2_np1)
+
+    estrain1 = self.model.elastic_strains(s1_np1, T1)
+    estrain2 = self.model.elastic_strains(s2_np1, T2)
+
+    self.strain1_plastic_int.append(em1 - estrain1)
+    self.strain2_plastic_int.append(em2 - estrain2)
+
+    self.strain_int.append(x[0])
+
+  def load_up(self):
+    """
+      Load up to stress
+    """
+    dt = self.load_time / self.nsteps_load
+    for P in np.linspace(0, self.P, self.nsteps_load+1)[1:]:
+      self.take_step(P, self.T1_0, self.T2_0, dt)
+
+  def one_cycle(self):
+    """
+      Do one cycle at fixed load
+    """
+    dt = self.period / self.nsteps_load
+    for toffset in np.linspace(0, self.period, self.nsteps_cycle+1)[1:]:
+      self.take_step(self.P, self.T1_fn(toffset), self.T2_fn(toffset), dt)
+
+def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
+    max_strain = None, nsteps_load = 50, nsteps_cycle = 201, verbose = False,
+    rtol_classify = 1.0e-4, atol_classify = 1.0e-10):
+  """
+    Run a two bar test and classify
+
+    Parameters:
+      model         material model
+      A1            area of bar 1
+      A2            area of bar 2
+      T1            one cycle temperature history, bar 1
+      T2            one cycle temperature history, bar 2
+      period        one cycle's time
+      P             applied load
+      load_time     physical time of loading
+      ncycles       number of cycles to run
+
+    Optional:
+      max_strain    an absolute inelastic strain value to stop cycling at
+      nsteps_load   number of steps to take to get to load
+      nsteps_cycle  number of steps to take to take in a cycle
+      verbose       print extra messages
+      rtol_classify relative tolerance for cycle classification
+      atol_classify absolute tolerance for cycle classification
+  """
+  driver = Driver_sd_twobar(A1, A2, T1, T2, period, P, load_time, model,
+      nsteps_load = nsteps_load, nsteps_cycle = nsteps_cycle, verbose = verbose)
+  
+  try:
+    driver.load_up()
+  except Exception:
+    return {
+        'strain': [], 
+        'T1': [],
+        'T2': [],
+        'time': [],
+        'energy_density': [], 
+        'plastic_work': [],
+        'strain_mech_1': [],
+        'strain_mech_2': [],
+        'strain_inelastic_1': [],
+        'strain_inelastic_2': [],
+        'stress1': [],
+        'stress2': [],
+        'classification': "collapse"
+        }
+  
+  cycle_count = 0
+  for i in range(ncycles):
+    driver.one_cycle()
+    ep1 = driver.strain1_plastic_int[0]
+    ep2 = driver.strain2_plastic_int[0]
+    ms = np.max([np.abs(ep1), np.abs(ep2)])
+    cycle_count += 1
+    if (max_strain is not None) and (ms > max_strain):
+      break
+
+  # Use the final cycles
+  a = cycle_count * nsteps_cycle - 1
+  b = (cycle_count - 1) * nsteps_cycle - 1
+
+  classification = classify(
+      driver.u_int[a], driver.u_int[b],
+      driver.p_int[a], driver.p_int[b],
+      driver.strain[a], driver.strain[b],
+      rtol = rtol_classify,
+      atol = atol_classify)
+  
+  return {
+      'strain': driver.strain[nsteps_load:], 
+      'T1': driver.T1[nsteps_load:],
+      'T2': driver.T2[nsteps_load:],
+      'time': driver.t[nsteps_load:],
+      'energy_density': driver.u[nsteps_load:], 
+      'plastic_work': driver.p[nsteps_load:],
+      'strain_mech_1': driver.strain1_mech[nsteps_load:,0],
+      'strain_mech_2': driver.strain2_mech[nsteps_load:,0],
+      'strain_inelastic_1': driver.strain1_plastic[nsteps_load:,0],
+      'strain_inelastic_2': driver.strain2_plastic[nsteps_load:,0],
+      'stress1': driver.stress1[nsteps_load:,0],
+      'stress2': driver.stress2[nsteps_load:,0],
+      'classification': classification
+      }
+
+def classify(ua, ub, pa, pb, ea, eb, rtol = 1.0e-4, atol = 1.0e-10):
+  """
+    Classify a model as elastic, elastic shakedown, plastic shakedown,
+    or ratcheting.
+
+    Parameters:
+      ua    cycle a internal energy
+      ub    cycle b internal energy
+      pa    cycle a plastic dissipation
+      pb    cycle b plastic dissipation
+      ea    cycle a strain
+      eb    cycle b strain
+
+    Optional:
+      rtol  relative tolerance
+      atol  absolute tolerance
+  """
+  if np.abs(pb) < atol:
+    return 'elastic'
+  elif np.abs(ub-ua) < rtol * np.abs(ub):
+    return 'elastic shakedown'
+  elif np.abs(eb-ea) < rtol * np.abs(eb):
+    return 'plastic shakedown'
+  else:
+    return 'ratcheting'
 
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
     sdir = np.array([1,0,0,0,0,0]), verbose = False,
