@@ -461,7 +461,8 @@ class Driver_sd_twobar(Driver_sd):
       self.take_step(self.P, self.T1_fn(toffset), self.T2_fn(toffset), dt)
 
 def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
-    max_strain = None, nsteps_load = 50, nsteps_cycle = 201, verbose = False,
+    max_strain = None, min_strain = None, 
+    nsteps_load = 50, nsteps_cycle = 201, verbose = False,
     rtol_classify = 1.0e-4, atol_classify = 1.0e-10):
   """
     Run a two bar test and classify
@@ -510,11 +511,14 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
   cycle_count = 0
   for i in range(ncycles):
     driver.one_cycle()
-    ep1 = driver.strain1_plastic_int[0]
-    ep2 = driver.strain2_plastic_int[0]
-    ms = np.max([np.abs(ep1), np.abs(ep2)])
+    ep1 = driver.strain1_plastic_int[-1][0]
+    ep2 = driver.strain2_plastic_int[-1][0]
+    max_s = np.max([np.abs(ep1), np.abs(ep2)])
+    min_s = np.min([np.abs(ep1), np.abs(ep2)])
     cycle_count += 1
-    if (max_strain is not None) and (ms > max_strain):
+    if (max_strain is not None) and (max_s > max_strain):
+      break
+    if (min_strain is not None) and (min_s > min_strain):
       break
 
   # Use the final cycles
