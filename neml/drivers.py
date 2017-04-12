@@ -733,7 +733,8 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
   return {"strain": np.array(strain), "stress": np.array(stress),
       "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
       "min": np.array(smin), "mean": np.array(smean),
-      "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle)}
+      "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
+      "history": driver.stored_int[-1]}
 
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
@@ -943,7 +944,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
 
 def creep(model, smax, srate, hold, T = 300.0, nsteps = 750,
     nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
-    logspace = False):
+    logspace = False, history = None):
   """
     Simulate a creep test
 
@@ -960,9 +961,12 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 750,
       sdir          stress direction, defaults to x-tension
       verbose       whether to be verbose
       logspace      if true logspace the time steps
+      history       use damaged material
   """
   # Setup
   driver = Driver_sd(model, verbose = verbose)
+  if history is not None:
+    driver.stored_int[0] = history
   time = [0]
   strain = [0]
   stress = [0]
@@ -1048,7 +1052,7 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
 
 
 def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
-    ds = 10.0, max_cut = 10, nsteps = 250):
+    ds = 10.0, max_cut = 10, nsteps = 250, history = None):
   """
     Generates an isochronous stress-strain curve at the given time and
     temperature.
@@ -1065,7 +1069,8 @@ def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
       max_cut   adaptive refinement
   """
   def strain(stress):
-    res = creep(model, stress, srate, time, T = T, nsteps = nsteps)
+    res = creep(model, stress, srate, time, T = T, nsteps = nsteps,
+        history = history)
     return res['rstrain'][-1]
 
   strains = [0.0]
@@ -1073,7 +1078,7 @@ def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
   ncut = 0
   try:
     while strains[-1] < emax:
-      print(strains[-1])
+      #print(strains[-1])
       target = stresses[-1] + ds
       try:
         enext = strain(target)
