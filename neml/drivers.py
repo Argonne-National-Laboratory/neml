@@ -493,7 +493,8 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     driver.load_up()
   except Exception:
     return {
-        'strain': [], 
+        'strain': [],
+        'ncycles': 0,
         'T1': [],
         'T2': [],
         'time': [],
@@ -534,6 +535,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
   
   return {
       'strain': driver.strain[nsteps_load:], 
+      'ncycles': i+1,
       'T1': driver.T1[nsteps_load:],
       'T2': driver.T2[nsteps_load:],
       'time': driver.t[nsteps_load:],
