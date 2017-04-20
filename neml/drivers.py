@@ -456,7 +456,7 @@ class Driver_sd_twobar(Driver_sd):
     """
       Do one cycle at fixed load
     """
-    dt = self.period / self.nsteps_load
+    dt = self.period / self.nsteps_cycle
     for toffset in np.linspace(0, self.period, self.nsteps_cycle+1)[1:]:
       self.take_step(self.P, self.T1_fn(toffset), self.T2_fn(toffset), dt)
 
@@ -538,7 +538,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       'ncycles': i+1,
       'T1': driver.T1[nsteps_load:],
       'T2': driver.T2[nsteps_load:],
-      'time': driver.t[nsteps_load:],
+      'time': driver.t[nsteps_load:] - driver.t[nsteps_load],
       'energy_density': driver.u[nsteps_load:], 
       'plastic_work': driver.p[nsteps_load:],
       'strain_mech_1': driver.strain1_mech[nsteps_load:,0],
