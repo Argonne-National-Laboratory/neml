@@ -149,7 +149,61 @@ int CreepModel::df_dT(const double * const s, const double * const e, double t,
 }
 
 // Implementation of creep model update
+int CreepModel::update(const double * const s_np1, 
+                       double * const e_np1, const double * const e_n,
+                       double T_np1, double T_n,
+                       double t_np1, double t_n,
+                       double * const A_np1) const
+{
+  // Setup the trial state
+  CreepModelTrialState ts;
+  make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n, ts);
 
+  return 0;
+}
+
+int CreepModel::make_trial_state(const double * const s_np1, 
+                                 const double * const e_n,
+                                 double T_np1, double T_n,
+                                 double t_np1, double t_n,
+                                 CreepModelTrialState & ts) const
+{
+  ts.T = T_np1;
+  ts.dt = t_np1 - t_n;
+  ts.t = t_np1;
+  std::copy(e_n, e_n+6, ts.e_n);
+  std::copy(s_np1, s_np1+6, ts.s_np1);
+  return 0;
+}
+
+// Implement the solve
+size_t CreepModel::nparams() const
+{
+  return 6; // the creep strain
+}
+
+int CreepModel::init_x(double * const x, TrialState * ts)
+{
+  CreepModelTrialState * tss = static_cast<CreepModelTrialState *>(ts);
+
+  // Just make it the previous value
+  std::copy(x, x+6, tss->e_n);
+  return 0;
+}
+
+int CreepModel::RJ(const double * const x, TrialState * ts, 
+                     double * const R, double * const J)
+{
+  CreepModelTrialState * tss = static_cast<CreepModelTrialState *>(ts);
+  
+  // Residual
+  f(tss->s_np1, x, tss->t, tss->T, R);
+  for (int i=0; i<6; i++) R[i] = x[i] - tss->e_n[i] - R[i] * tss->dt;
+
+  // Jacobian
+
+  return 0;
+}
 
 // Implementation of J2 creep
 J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule) :

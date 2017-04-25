@@ -2,6 +2,7 @@
 #define CREEP_H
 
 #include "interpolate.h"
+#include "solvers.h"
 
 namespace neml {
 
@@ -52,9 +53,23 @@ class NortonBaileyCreep: public ScalarCreepRule {
 
 };
 
-/// Master class of all creep models defining the interface
-class CreepModel {
+/// Creep trial state
+class CreepModelTrialState : public TrialState {
  public:
+  double T, dt, t;
+  double s_np1[6];
+  double e_n[6];
+};
+
+/// Master class of all creep models defining the interface
+class CreepModel: public Solvable {
+ public:
+  int update(const double * const s_np1, 
+             double * const e_np1, const double * const e_n,
+             double T_np1, double T_n,
+             double t_np1, double t_n,
+             double * const A_np1) const;
+
   virtual int f(const double * const s, const double * const e, double t, double T, 
                 double * const f) const = 0;
   virtual int df_ds(const double * const s, const double * const e, double t, double T, 
@@ -65,6 +80,17 @@ class CreepModel {
                 double * const df) const ;
   virtual int df_dT(const double * const s, const double * const e, double t, double T, 
                 double * const df) const;
+  
+  // Solvable implementation
+  int make_trial_state(const double * const s_np1, 
+                       const double * const e_n,
+                       double T_np1, double T_n,
+                       double t_np1, double t_n,
+                       CreepModelTrialState & ts) const;
+  virtual size_t nparams() const;
+  virtual int init_x(double * const x, TrialState * ts);
+  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J);
 
 };
 

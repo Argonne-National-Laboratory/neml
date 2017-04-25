@@ -101,7 +101,7 @@ if (WRAP_PYTHON)
 
       # creep models
       add_library(creep SHARED creep_wrap.cxx creep.cxx nemlerror.cxx pyhelp.cxx)
-      target_link_libraries(creep nemlmath interpolate ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      target_link_libraries(creep nemlmath interpolate solvers ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(creep PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET interpolate PROPERTY OUTPUT_NAME "creep.so")

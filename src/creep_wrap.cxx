@@ -17,6 +17,19 @@ PYBIND11_PLUGIN(creep) {
   py::module m("creep", "Creep models.");
  
   py::class_<CreepModel, std::shared_ptr<CreepModel>>(m, "CreepModel")
+      .def("update",
+           [](const CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           {
+            auto e_np1 = alloc_vec<double>(6);
+            auto A_np1 = alloc_mat<double>(6,6);
+
+            int ier = m.update(arr2ptr<double>(s_np1), arr2ptr<double>(e_np1), arr2ptr<double>(e_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(A_np1));
+            py_error(ier);
+
+            return std::make_tuple(e_np1, A_np1);
+
+           }, "Update to the next creep strain & tangent derivative.")
+
       .def("f",
            [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
            {
@@ -61,6 +74,46 @@ PYBIND11_PLUGIN(creep) {
             py_error(ier);
             return dfv;
            }, "Evaluate creep rate derivative wrt temperature.")
+
+      
+      .def("make_trial_state",
+           [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::unique_ptr<CreepModelTrialState>
+           {
+            std::unique_ptr<CreepModelTrialState> ts(new CreepModelTrialState);
+            int ier = m.make_trial_state(arr2ptr<double>(s_np1),
+                                         arr2ptr<double>(e_n),
+                                         T_np1, T_n, t_np1, t_n, *ts);
+            py_error(ier);
+
+            return ts;
+
+           }, "Setup trial state for solve")
+
+      // Remove if/when pybind11 supports multiple inheritance
+      .def_property_readonly("nparams", &CreepModel::nparams, "Number of variables in nonlinear equations.")
+      .def("init_x",
+           [](CreepModel & m, CreepModelTrialState & ts) -> py::array_t<double>
+           {
+            auto x = alloc_vec<double>(m.nparams());
+            int ier = m.init_x(arr2ptr<double>(x), &ts);
+            py_error(ier);
+            return x;
+           }, "Initialize guess.")
+      .def("RJ",
+           [](CreepModel & m, py::array_t<double, py::array::c_style> x, CreepModelTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           {
+            auto R = alloc_vec<double>(m.nparams());
+            auto J = alloc_mat<double>(m.nparams(), m.nparams());
+            
+            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
+            py_error(ier);
+
+            return std::make_tuple(R, J);
+           }, "Residual and jacobian.")
+      ;
+      // End remove block
+
+
     ;
 
   py::class_<J2CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel", py::base<CreepModel>())
