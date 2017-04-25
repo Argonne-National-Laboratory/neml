@@ -52,6 +52,50 @@ class NortonBaileyCreep: public ScalarCreepRule {
 
 };
 
+/// Master class of all creep models defining the interface
+class CreepModel {
+ public:
+  virtual int f(const double * const s, const double * const e, double t, double T, 
+                double * const f) const = 0;
+  virtual int df_ds(const double * const s, const double * const e, double t, double T, 
+                double * const df) const = 0;
+  virtual int df_de(const double * const s, const double * const e, double t, double T, 
+                double * const df) const = 0;
+  virtual int df_dt(const double * const s, const double * const e, double t, double T, 
+                double * const df) const ;
+  virtual int df_dT(const double * const s, const double * const e, double t, double T, 
+                double * const df) const;
+
+};
+
+/// J2 creep based on a scalar creep rule
+class J2CreepModel: public CreepModel {
+ public:
+  J2CreepModel(std::shared_ptr<ScalarCreepRule> rule);
+
+  virtual int f(const double * const s, const double * const e, double t, double T, 
+                double * const f) const;
+  virtual int df_ds(const double * const s, const double * const e, double t, double T, 
+                double * const df) const;
+  virtual int df_de(const double * const s, const double * const e, double t, double T, 
+                double * const df) const;
+  virtual int df_dt(const double * const s, const double * const e, double t, double T, 
+                double * const df) const ;
+  virtual int df_dT(const double * const s, const double * const e, double t, double T, 
+                double * const df) const;
+
+ private:
+  // Helpers for computing the above
+  double seq(const double * const s) const;
+  double eeq(const double * const e) const;
+  int sdir(double * const s) const;
+  int edir(double * const e) const;
+
+ private:
+  std::shared_ptr<ScalarCreepRule> rule_;
+
+};
+
 } // namespace neml
 
 #endif // CREEP_H

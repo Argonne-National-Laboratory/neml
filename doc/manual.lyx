@@ -870,7 +870,7 @@ Then we can define the whole thing in terms of the nice scalar function
 
 \begin_inset Formula 
 \[
-\frac{\partial\boldsymbol{f}}{\partial\bm{\sigma}}=\left(\frac{3}{2}\frac{\partial g}{\partial\sigma_{eq}}\left(\frac{\boldsymbol{s}}{\sigma_{eq}}\otimes\frac{\boldsymbol{s}}{\sigma_{eq}}\right)+\frac{g}{\sigma_{eq}}\right)\frac{3}{2}\left(\boldsymbol{I}-\frac{1}{3}\boldsymbol{1}\otimes\boldsymbol{1}\right)
+\frac{\partial\boldsymbol{f}}{\partial\bm{\sigma}}=\left[\frac{3}{2}\left(\frac{\partial g}{\partial\sigma_{eq}}-\frac{g}{\sigma_{eq}}\right)\left(\frac{\boldsymbol{s}}{\sigma_{eq}}\otimes\frac{\boldsymbol{s}}{\sigma_{eq}}\right)+\frac{g}{\sigma_{eq}}\boldsymbol{I}\right]\frac{3}{2}\left(\boldsymbol{I}-\frac{1}{3}\boldsymbol{1}\otimes\boldsymbol{1}\right)
 \]
 
 \end_inset
