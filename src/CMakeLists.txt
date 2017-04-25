@@ -98,6 +98,16 @@ if (WRAP_PYTHON)
             set_property(TARGET interpolate PROPERTY OUTPUT_NAME "interpolate.so")
             set_property(TARGET interpolate PROPERTY SUFFIX "")
       endif()
+
+      # creep models
+      add_library(creep SHARED creep_wrap.cxx creep.cxx nemlerror.cxx pyhelp.cxx)
+      target_link_libraries(creep nemlmath interpolate ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(creep PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET interpolate PROPERTY OUTPUT_NAME "creep.so")
+            set_property(TARGET interpolate PROPERTY SUFFIX "")
+      endif()
+
 else()
       # Everything in a big shared library
       add_library(neml SHARED 
@@ -113,6 +123,7 @@ else()
             elasticity.cxx
             parse.cxx
             cinterface.cxx
-            interpolate.cxx)
+            interpolate.cxx
+            creep.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 endif()
