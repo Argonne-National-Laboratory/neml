@@ -1,7 +1,9 @@
-#LyX 2.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 474
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
+\save_transient_properties true
+\origin unavailable
 \textclass report
 \begin_preamble
 \DeclareMathOperator{\tr}{tr}
@@ -12,16 +14,16 @@
 \language_package default
 \inputencoding auto
 \fontencoding global
-\font_roman default
-\font_sans default
-\font_typewriter default
-\font_math auto
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
 \font_default_family default
 \use_non_tex_fonts false
 \font_sc false
 \font_osf false
-\font_sf_scale 100
-\font_tt_scale 100
+\font_sf_scale 100 100
+\font_tt_scale 100 100
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -216,7 +218,7 @@ A user defining a new material model selects one of these four interfaces
  NEML takes the interface the user elected to implement and automatically
  translates the implemented interfaces to conform to the remaining two.
  The translation from interfaces 1 or 2 to interface 3 does not fundamentally
- change the implemented material model -- it simply applies the assumptions
+ change the implemented material model – it simply applies the assumptions
  of small deformation kinematics.
  However, the conversion from interface 3 to interface 1 or 2 assumes a
  hypoelastic formulation using the Jaumann objective stress rate.
@@ -384,7 +386,7 @@ Associative
 Isotropic 
 \begin_inset CommandInset label
 LatexCommand label
-name "sub:Isotropic"
+name "subsec:Isotropic"
 
 \end_inset
 
@@ -482,7 +484,7 @@ A traditional model of this type uses an associative flow rule for the plastic
  The isotropic hardening rule can be selected from Section 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "sub:Isotropic"
+reference "subsec:Isotropic"
 
 \end_inset
 
@@ -676,6 +678,268 @@ The authors provided interpolation schemes for the model parameters in the
 .
  These parameters are hard-coded in the implementation, so this model takes
  no parameters.
+\end_layout
+
+\begin_layout Section
+Creep models
+\end_layout
+
+\begin_layout Standard
+In general these models have the form 
+\begin_inset Formula 
+\[
+\dot{\bm{\varepsilon}}^{cr}=\boldsymbol{f}\left(\bm{\sigma},\bm{\varepsilon}^{cr},t,T\right)
+\]
+
+\end_inset
+
+so we need to keep in mind the explicit time dependence.
+ The idea is to add the integrated creep strain to a rate-independent plasticity
+ model for a classical 
+\begin_inset Quotes eld
+\end_inset
+
+non-unified
+\begin_inset Quotes erd
+\end_inset
+
+ approach.
+ We solve the creep rate equation implicitly as
+\begin_inset Formula 
+\[
+\bm{\varepsilon}_{n+1}^{cr}=\bm{\varepsilon}_{n}^{cr}+\boldsymbol{f}_{n+1}\Delta t_{n+1}
+\]
+
+\end_inset
+
+with the residual
+\begin_inset Formula 
+\[
+\boldsymbol{R}=\bm{\varepsilon}_{n+1}^{cr}-\bm{\varepsilon}_{n}^{cr}-\boldsymbol{f}_{n+1}\Delta t_{n+1}
+\]
+
+\end_inset
+
+and the Jacobian
+\begin_inset Formula 
+\[
+\boldsymbol{J}=I-\frac{\partial\boldsymbol{f}}{\partial\bm{\varepsilon}_{n+1}^{cr}}\Delta t_{n+1}
+\]
+
+\end_inset
+
+which the user must provide the derivative for.
+\end_layout
+
+\begin_layout Standard
+To solve the outer equation we also need the derivative
+\begin_inset Formula 
+\[
+\frac{\partial\bm{\varepsilon}_{n+1}^{cr}}{\partial\bm{\sigma}_{n+1}}
+\]
+
+\end_inset
+
+and to calculate the overall tangent we need the total derivative
+\begin_inset Formula 
+\[
+\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}.
+\]
+
+\end_inset
+
+The user must provide the former.
+ For the latter play our usual game of
+\begin_inset Formula 
+\[
+\boldsymbol{R}=\boldsymbol{0}\implies0=d\boldsymbol{R}=\frac{\partial\boldsymbol{R}}{\partial\bm{\sigma}_{n+1}}:d\bm{\sigma}_{n+1}+\frac{\partial\boldsymbol{R}}{\partial\bm{\varepsilon}_{n+1}^{cr}}:d\bm{\varepsilon}_{n+1}^{cr}+\frac{\partial\boldsymbol{R}}{\partial t_{n+1}}:dt_{n+1}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\boldsymbol{R}=\boldsymbol{0}\implies0=d\boldsymbol{R}=\frac{\partial\boldsymbol{R}}{\partial\bm{\sigma}_{n+1}}:d\bm{\sigma}_{n+1}+\frac{\partial\boldsymbol{R}}{\partial\bm{\varepsilon}_{n+1}^{cr}}:d\bm{\varepsilon}_{n+1}^{cr}+\frac{\partial\boldsymbol{R}}{\partial t_{n+1}}:dt_{n+1}+\frac{\partial\boldsymbol{R}}{\partial t_{n+1}}:dT_{n+1}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\boldsymbol{0}=\frac{\partial\boldsymbol{R}}{\partial\bm{\sigma}_{n+1}}+\frac{\partial\boldsymbol{R}}{\partial\bm{\varepsilon}_{n+1}^{cr}}:\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}+\frac{\partial\boldsymbol{R}}{\partial t_{n+1}}:\frac{dt_{n+1}}{d\bm{\sigma}_{n+1}}+\frac{\partial\boldsymbol{R}}{\partial t_{n+1}}:\frac{dT_{n+1}}{d\bm{\sigma}_{n+1}}
+\]
+
+\end_inset
+
+and pretending the time and temperature variation is small.
+ Then 
+\begin_inset Formula 
+\[
+\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}=-\left(\frac{\partial\boldsymbol{R}}{\partial\bm{\varepsilon}_{n+1}^{cr}}\right)^{-1}\frac{\partial\boldsymbol{R}}{\partial\bm{\sigma}_{n+1}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}=-\boldsymbol{J}^{-1}\frac{\partial\boldsymbol{f}}{\partial\bm{\sigma}_{n+1}}\Delta t_{n+1}.
+\]
+
+\end_inset
+
+Therefore the whole model is defined by the function 
+\begin_inset Formula $\boldsymbol{f}$
+\end_inset
+
+ and derivatives 
+\begin_inset Formula $\frac{\partial\boldsymbol{f}}{\partial\bm{\varepsilon}^{cr}}$
+\end_inset
+
+, 
+\begin_inset Formula $\frac{\partial\boldsymbol{f}}{\partial\bm{\sigma}}$
+\end_inset
+
+, 
+\begin_inset Formula $\frac{\partial\boldsymbol{f}}{\partial t}$
+\end_inset
+
+, and 
+\begin_inset Formula $\frac{\partial\boldsymbol{f}}{\partial T}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+\begin_inset Formula $J_{2}$
+\end_inset
+
+ creep
+\end_layout
+
+\begin_layout Standard
+The above gives the specific framework, but we'll go further are assume
+ that 
+\begin_inset Formula 
+\[
+\dot{\bm{\varepsilon}}^{cr}=g\left(\sigma_{eq},\varepsilon_{eq},t,T\right)\frac{3}{2}\frac{\boldsymbol{s}}{\sigma_{eq}}
+\]
+
+\end_inset
+
+with 
+\begin_inset Formula 
+\[
+\boldsymbol{s}=\bm{\sigma}-\frac{1}{3}\tr\left(\bm{\sigma}\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\sigma_{eq}=\sqrt{\frac{3}{2}\boldsymbol{s}:\boldsymbol{s}}
+\]
+
+\end_inset
+
+and 
+\begin_inset Formula 
+\[
+\varepsilon_{eq}=\sqrt{\frac{2}{3}\bm{\varepsilon}^{cr}:\bm{\varepsilon}^{cr}}.
+\]
+
+\end_inset
+
+Then we can define the whole thing in terms of the nice scalar function
+ 
+\begin_inset Formula $g$
+\end_inset
+
+:
+\begin_inset Formula 
+\[
+\boldsymbol{f}=g\frac{3}{2}\frac{\boldsymbol{s}}{\sigma_{eq}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\boldsymbol{f}}{\partial\bm{\sigma}}=\left(\frac{3}{2}\frac{\partial g}{\partial\sigma_{eq}}\left(\frac{\boldsymbol{s}}{\sigma_{eq}}\otimes\frac{\boldsymbol{s}}{\sigma_{eq}}\right)+\frac{g}{\sigma_{eq}}\right)\frac{3}{2}\left(\boldsymbol{I}-\frac{1}{3}\boldsymbol{1}\otimes\boldsymbol{1}\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\boldsymbol{f}}{\partial\bm{\varepsilon}^{cr}}=\left(\frac{\boldsymbol{s}}{\sigma_{eq}}\right)\otimes\left(\frac{\partial g}{\partial\varepsilon_{eq}}\frac{\bm{\varepsilon}^{cr}}{\varepsilon_{eq}}\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\boldsymbol{f}}{\partial t}=\frac{\partial g}{\partial t}\frac{3}{2}\frac{\boldsymbol{s}}{\sigma_{eq}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\boldsymbol{f}}{\partial T}=\frac{\partial g}{\partial T}\frac{3}{2}\frac{\boldsymbol{s}}{\sigma_{eq}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Specific creep laws
+\end_layout
+
+\begin_layout Subsubsection
+Power law
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+g & = & A\sigma_{eq}^{n}\\
+\frac{\partial g}{\partial\sigma_{eq}} & = & An\sigma_{eq}^{n-1}\\
+\frac{\partial g}{\partial\varepsilon_{eq}} & = & 0\\
+\frac{\partial g}{\partial t} & = & 0
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Norton-Bailey
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+g & = & mA^{1/m}\sigma_{eq}^{n/m}\left(\varepsilon_{eq}\right)^{\left(m-1\right)/m}\\
+\frac{\partial g}{\partial\sigma_{eq}} & = & nA^{1/m}\sigma_{eq}^{n/m-1}\left(\varepsilon_{eq}\right)^{\left(m-1\right)/m}\\
+\frac{\partial g}{\partial\varepsilon_{eq}} & = & \left(m-1\right)A^{1/m}\sigma_{eq}^{n/m}\left(\varepsilon_{eq}\right)^{-1/m}\\
+\frac{\partial g}{\partial t} & = & 0
+\end{align*}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Chapter
@@ -952,6 +1216,78 @@ With
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Combined rate-independent plasticity and creep
+\end_layout
+
+\begin_layout Standard
+Start with two functions: 
+\begin_inset Formula 
+\[
+\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right)
+\]
+
+\end_inset
+
+as defined in the previous section and 
+\begin_inset Formula 
+\[
+\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}^{cr},\bm{\sigma}_{n+1},\Delta t_{n+1},T_{n+1}\right)
+\]
+
+\end_inset
+
+defined above.
+ We want to make a combined update so that
+\begin_inset Formula 
+\begin{align*}
+\bm{\varepsilon}_{n+1} & = & \bm{\varepsilon}_{n+1}^{ep}+\bm{\varepsilon}_{n+1}^{cr}\\
+\bm{\sigma}_{n+1}^{cr} & = & \bm{\sigma}_{n+1}^{ep}.
+\end{align*}
+
+\end_inset
+
+Implement as
+\begin_inset Formula 
+\[
+\boldsymbol{R}=\bm{\varepsilon}_{n+1}^{ep}+\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}-\bm{\varepsilon}_{n}^{ep},\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right),\Delta t_{n+1},T_{n+1}\right)-\bm{\varepsilon}_{n+1}
+\]
+
+\end_inset
+
+which means we need to supplement the history variables with 
+\begin_inset Formula $\bm{\varepsilon}^{ep}$
+\end_inset
+
+.
+ The Jacobian of this residual is
+\begin_inset Formula 
+\[
+\frac{d\boldsymbol{R}}{d\bm{\varepsilon}_{n+1}^{ep}}=\boldsymbol{I}+\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}$
+\end_inset
+
+ is the algorithmic tangent of the rate independent model and 
+\begin_inset Formula $\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}$
+\end_inset
+
+ is an output of the creep model.
+ Finally, the overall algorithmic tangent is 
+\begin_inset Formula 
+\[
+\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\left(\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}+\left(\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}\right)^{-1}\right)^{-1}
+\]
+
+\end_inset
+
+which is annoying but doable.
 \end_layout
 
 \begin_layout Section
