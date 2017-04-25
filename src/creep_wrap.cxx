@@ -71,6 +71,15 @@ PYBIND11_PLUGIN(creep) {
       .def("n", &PowerLawCreep::n)
     ;
 
+  py::class_<NortonBaileyCreep, std::shared_ptr<NortonBaileyCreep>>(m, "NortonBaileyCreep", py::base<ScalarCreepRule>())
+      .def(py::init<double, double, double>(), py::arg("A"), py::arg("m"), py::arg("n"))
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("m"), py::arg("n"))
+
+      .def("A", &NortonBaileyCreep::A)
+      .def("m", &NortonBaileyCreep::m)
+      .def("n", &NortonBaileyCreep::n)
+    ;
+
   return m.ptr();
 } // PLUGIN(creep)
 
