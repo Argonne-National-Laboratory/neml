@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 namespace neml {
 
@@ -90,6 +91,14 @@ int NortonBaileyCreep::g(double seq, double eeq, double t, double T, double & g)
   double m = m_->value(T);
   double n = n_->value(T);
 
+  // Hack, really should figure out limits
+  if (seq < std::numeric_limits<double>::epsilon()) {
+    seq = std::numeric_limits<double>::epsilon(); 
+  }
+  if (eeq < std::numeric_limits<double>::epsilon()) {
+    eeq = std::numeric_limits<double>::epsilon(); 
+  }
+
   g = m * pow(A, 1.0 / m) * pow(seq, n / m) * pow(eeq, (m - 1.0) / m); 
 
   return 0;
@@ -101,6 +110,14 @@ int NortonBaileyCreep::dg_ds(double seq, double eeq, double t, double T, double 
   double m = m_->value(T);
   double n = n_->value(T);
 
+  // Hack, really should figure out limits
+  if (seq < std::numeric_limits<double>::epsilon()) {
+    seq = std::numeric_limits<double>::epsilon(); 
+  }
+  if (eeq < std::numeric_limits<double>::epsilon()) {
+    eeq = std::numeric_limits<double>::epsilon(); 
+  }
+
   dg = n * pow(A, 1.0 / m) * pow(seq, n / m - 1.0) * pow(eeq, (m - 1.0) / m);
 
   return 0;
@@ -111,6 +128,14 @@ int NortonBaileyCreep::dg_de(double seq, double eeq, double t, double T, double 
   double A = A_->value(T);
   double m = m_->value(T);
   double n = n_->value(T);
+
+  // Hack, really should figure out limits
+  if (seq < std::numeric_limits<double>::epsilon()) {
+    seq = std::numeric_limits<double>::epsilon(); 
+  }
+  if (eeq < std::numeric_limits<double>::epsilon()) {
+    eeq = std::numeric_limits<double>::epsilon(); 
+  }
 
   dg = (m - 1) * pow(A, 1.0 / m) * pow(seq, n / m) * pow(eeq, -1.0 / m);
 
@@ -318,6 +343,11 @@ int J2CreepModel::df_ds(const double * const s, const double * const e,
   for (int i=0; i<36; i++) ID[i] *= 3.0 / 2.0;
 
   // Begin forming outer products
+  // Hack, really should figure out limit se -> 0.0
+  if (se < std::numeric_limits<double>::epsilon()) {
+    se = std::numeric_limits<double>::epsilon(); 
+  }
+
   double A[36];
   ier = outer_vec(dir, 6, dir, 6, A);
   for (int i=0; i<36; i++) A[i] *= 3.0/2.0 * (drate - rate / se);
@@ -424,16 +454,27 @@ double J2CreepModel::eeq(const double * const e) const
 
 int J2CreepModel::sdir(double * const s) const
 {
+  int ier = 0;
   double se = seq(s);
-  int ier = dev_vec(s);
-  for (int i=0; i<6; i++) s[i] /= se;
+  if (se < std::numeric_limits<double>::epsilon()) {
+    std::fill(s, s+6, 0.0);
+  }
+  else {  
+    int ier = dev_vec(s);
+    for (int i=0; i<6; i++) s[i] /= se;
+  }
   return ier;
 }
 
 int J2CreepModel::edir(double * const e) const
 {
   double ee = eeq(e);
-  for (int i=0; i<6; i++) e[i] /= ee;
+  if (ee < std::numeric_limits<double>::epsilon()) {
+    std::fill(e, e+6, 0.0);
+  }
+  else {
+    for (int i=0; i<6; i++) e[i] /= ee;
+  }
   return 0;
 }
 
