@@ -3,6 +3,7 @@
 #include "nemlmath.h"
 
 #include <cmath>
+#include <iostream>
 
 namespace neml {
 
@@ -131,6 +132,13 @@ double NortonBaileyCreep::n(double T) const
   return n_->value(T);
 }
 
+// Setup for solve
+CreepModel::CreepModel(double tol, int miter, bool verbose) :
+    tol_(tol), miter_(miter), verbose_(verbose)
+{
+
+}
+
 // Creep model default derivatives for time and temperature
 int CreepModel::df_dt(const double * const s, const double * const e, double t,
                       double T, double * const df) const
@@ -153,13 +161,20 @@ int CreepModel::update(const double * const s_np1,
                        double * const e_np1, const double * const e_n,
                        double T_np1, double T_n,
                        double t_np1, double t_n,
-                       double * const A_np1) const
+                       double * const A_np1)
 {
   // Setup the trial state
   CreepModelTrialState ts;
   make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n, ts);
 
-  return 0;
+  // Solve for the new creep strain
+  double x[nparams()];
+  int ier = solve(this, x, &ts, tol_, miter_, verbose_);
+  
+  // Extract
+  std::copy(x, x+6, e_np1);
+
+  return ier;
 }
 
 int CreepModel::make_trial_state(const double * const s_np1, 
@@ -173,6 +188,7 @@ int CreepModel::make_trial_state(const double * const s_np1,
   ts.t = t_np1;
   std::copy(e_n, e_n+6, ts.e_n);
   std::copy(s_np1, s_np1+6, ts.s_np1);
+  
   return 0;
 }
 
@@ -187,7 +203,7 @@ int CreepModel::init_x(double * const x, TrialState * ts)
   CreepModelTrialState * tss = static_cast<CreepModelTrialState *>(ts);
 
   // Just make it the previous value
-  std::copy(x, x+6, tss->e_n);
+  std::copy(tss->e_n, tss->e_n+6, x);
   return 0;
 }
 
@@ -201,13 +217,17 @@ int CreepModel::RJ(const double * const x, TrialState * ts,
   for (int i=0; i<6; i++) R[i] = x[i] - tss->e_n[i] - R[i] * tss->dt;
 
   // Jacobian
+  df_de(tss->s_np1, x, tss->t, tss->T, J);
+  for (int i=0; i<36; i++) J[i] = -J[i] * tss->dt;
+  for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
 
   return 0;
 }
 
 // Implementation of J2 creep
-J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule) :
-    rule_(rule)
+J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
+                           double tol, int miter, bool verbose) :
+    CreepModel(tol, miter, verbose), rule_(rule)
 {
 
 }
@@ -220,7 +240,7 @@ int J2CreepModel::f(const double * const s, const double * const e, double t,
   // Gather the effective stresses
   double se = seq(s);
   double ee = eeq(e);
-  
+
   // Get the direction
   std::copy(s, s+6, f);
   ier = sdir(f);

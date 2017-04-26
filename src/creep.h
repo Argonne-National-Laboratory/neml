@@ -64,11 +64,13 @@ class CreepModelTrialState : public TrialState {
 /// Master class of all creep models defining the interface
 class CreepModel: public Solvable {
  public:
+  CreepModel(double tol, int miter, bool verbose);
+
   int update(const double * const s_np1, 
              double * const e_np1, const double * const e_n,
              double T_np1, double T_n,
              double t_np1, double t_n,
-             double * const A_np1) const;
+             double * const A_np1);
 
   virtual int f(const double * const s, const double * const e, double t, double T, 
                 double * const f) const = 0;
@@ -92,12 +94,18 @@ class CreepModel: public Solvable {
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
+ protected:
+  const double tol_;
+  const int miter_;
+  const bool verbose_;
+
 };
 
 /// J2 creep based on a scalar creep rule
 class J2CreepModel: public CreepModel {
  public:
-  J2CreepModel(std::shared_ptr<ScalarCreepRule> rule);
+  J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
+               double tol = 1.0e-10, int miter = 25, bool verbose = false);
 
   virtual int f(const double * const s, const double * const e, double t, double T, 
                 double * const f) const;

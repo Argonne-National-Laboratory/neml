@@ -18,7 +18,7 @@ PYBIND11_PLUGIN(creep) {
  
   py::class_<CreepModel, std::shared_ptr<CreepModel>>(m, "CreepModel")
       .def("update",
-           [](const CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::tuple<py::array_t<double>, py::array_t<double>>
            {
             auto e_np1 = alloc_vec<double>(6);
             auto A_np1 = alloc_mat<double>(6,6);
@@ -117,7 +117,9 @@ PYBIND11_PLUGIN(creep) {
     ;
 
   py::class_<J2CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel", py::base<CreepModel>())
-      .def(py::init<std::shared_ptr<ScalarCreepRule>>(), py::arg("rule"))
+      .def(py::init<std::shared_ptr<ScalarCreepRule>, double, int , bool>(),
+           py::arg("rule"), py::arg("tol") = 1.0e-10, py::arg("miter") = 25,
+           py::arg("verbose") = false)
     ;
 
   py::class_<ScalarCreepRule, std::shared_ptr<ScalarCreepRule>>(m, "ScalarCreepRule")

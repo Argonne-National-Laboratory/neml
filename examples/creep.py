@@ -27,7 +27,7 @@ if __name__ == "__main__":
   def scalar_rate(e, t):
     return smodel.g(stress, e[0], t, temp)
   
-  estart = 1.0e-14
+  estart = 1.0e-2
   strains = quad.odeint(scalar_rate, estart, times)
   plt.plot(times, strains, 'k-')
 
@@ -40,7 +40,11 @@ if __name__ == "__main__":
   for i in range(1, len(times)):
     strain_next, A_next = model.update(stress, vstrains[-1], temp, temp, 
         times[i], times[i-1])
-    vstresses.append(stress[-1])
+    vstresses.append(vstresses[-1])
     vstrains.append(strain_next)
+
+  vstresses = np.array(vstresses)
+  vstrains = np.array(vstrains)
+  plt.plot(times, vstrains[:,0], 'r-')
 
   plt.show()
