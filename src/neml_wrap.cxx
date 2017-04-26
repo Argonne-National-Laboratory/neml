@@ -249,17 +249,17 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<SmallStrainCreepPlasticity, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<SmallStrainRateIndependentPlasticity>, std::shared_ptr<CreepModel>, double, double, int , bool>(),
+      .def(py::init<std::shared_ptr<SmallStrainRateIndependentPlasticity>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
            py::arg("plastic"), py::arg("creep"),
            py::arg("alpha") = 0.0,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false)
+           py::arg("verbose") = false, py::arg("sf") = 1.0e6)
 
-      .def(py::init<std::shared_ptr<SmallStrainRateIndependentPlasticity>, std::shared_ptr<CreepModel>, std::shared_ptr<Interpolate>, double, int , bool>(),
+      .def(py::init<std::shared_ptr<SmallStrainRateIndependentPlasticity>, std::shared_ptr<CreepModel>, std::shared_ptr<Interpolate>, double, int , bool, double>(),
            py::arg("plastic"), py::arg("creep"),
            py::arg("alpha") = nullptr,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false)
+           py::arg("verbose") = false, py::arg("sf") = 1.0e6)
 
       .def("make_trial_state",
            [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSCPTrialState>

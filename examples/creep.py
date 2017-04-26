@@ -51,7 +51,7 @@ def example1():
 
 def example2():
   # T is in hours, strain in percent, stress in MPa
-  A = 1.85e-11
+  A = 1.85e-10
   n = 2.5
 
   smodel = creep.PowerLawCreep(A, n)
@@ -73,14 +73,54 @@ def example2():
   
   smax = 250.0
   R = -0.5
-  srate = 1.0
+  srate = 1.0 * 3600.0
   ncycles = 25
-  hold = 50
+  hold = 25
 
   res1 = drivers.stress_cyclic(pmodel, smax, R, srate, ncycles, 
       hold_time = [0,hold])
 
-  model = neml.SmallStrainCreepPlasticity(pmodel, cmodel, verbose = True)
+  model = neml.SmallStrainCreepPlasticity(pmodel, cmodel, verbose = False)
+
+  res2 = drivers.stress_cyclic(model, smax, R, srate, ncycles, 
+      hold_time = [0,hold], verbose = False)
+
+  plt.plot(res1['strain'], res1['stress'], 'k-')
+  plt.plot(res2['strain'], res2['stress'], 'r-')
+  plt.show()
+
+def example3():
+  # T is in hours, strain in percent, stress in MPa
+  A = 1.85e-10
+  n = 2.5
+
+  smodel = creep.PowerLawCreep(A, n)
+  cmodel = creep.J2CreepModel(smodel)
+
+  E = 150000.0
+  nu = 0.3
+  sY = 200.0
+  H = E / 50.0
+
+  youngs = elasticity.YoungsModulus(E)
+  poisson = elasticity.PoissonsRatio(nu)
+  elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  surface = surfaces.IsoJ2()
+  iso = hardening.LinearIsotropicHardeningRule(sY, H)
+  flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
+
+  pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  
+  smax = 250.0
+  R = -0.5
+  srate = 1.0 * 3600.0
+  ncycles = 25
+  hold = 25
+
+  res1 = drivers.stress_cyclic(pmodel, smax, R, srate, ncycles, 
+      hold_time = [0,hold])
+
+  model = neml.SmallStrainCreepPlasticity(pmodel, cmodel, verbose = False)
 
   res2 = drivers.stress_cyclic(model, smax, R, srate, ncycles, 
       hold_time = [0,hold], verbose = False)
@@ -91,4 +131,5 @@ def example2():
 
 if __name__ == "__main__":
   #example1()
-  example2()
+  #example2()
+  example3()

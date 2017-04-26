@@ -872,7 +872,8 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
   return {"strain": np.array(strain), "stress": np.array(stress),
       "cycles": np.array(cycles, dtype = int), "max": np.array(emax),
       "min": np.array(emin), "mean": np.array(emean),
-      "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle)}
+      "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
+      "time": np.array(driver.t_int)}
 
 def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
     nsteps_up = 150, index = 0, tc = 1.0,

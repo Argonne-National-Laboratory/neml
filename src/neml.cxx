@@ -406,7 +406,7 @@ int SmallStrainPerfectPlasticity::update_substep_(
     mat_vec(ts.S, 6, s_np1, 6, ee_np1);
     sub_vec(de, ee_np1, 6, de);
     add_vec(de, ts.ee_n, 6, de);
-    p_np1 = p_n + dot_vec(ds, de, 6);
+    p_np1 = p_n + dot_vec(ds, de, 6) / 2.0;
 
   }
 
@@ -415,8 +415,7 @@ int SmallStrainPerfectPlasticity::update_substep_(
   double ds[6];
   sub_vec(e_np1, e_n, 6, de);
   add_vec(s_np1, s_n, 6, ds);
-  for (int i=0; i<6; i++) ds[i] /= 2.0;
-  u_np1 = u_n + dot_vec(ds, de, 6);
+  u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
 
   return 0;
 }
@@ -662,7 +661,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     double ds[6];
     add_vec(s_np1, s_n, 6, ds);
     sub_vec(x, ts.ep_tr, 6, dep);
-    p_np1 = p_n + dot_vec(ds, dep, 6);
+    p_np1 = p_n + dot_vec(ds, dep, 6) / 2.0;
 
   }
 
@@ -671,8 +670,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   double ds[6];
   sub_vec(e_np1, e_n, 6, de);
   add_vec(s_np1, s_n, 6, ds);
-  for (int i=0; i<6; i++) ds[i] /= 2.0;
-  u_np1 = u_n + dot_vec(ds, de, 6);
+  u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
   
   // Check K-T and return
   return check_K_T_(s_np1, h_np1, T_np1, dg);
@@ -971,10 +969,10 @@ SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
     std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
     std::shared_ptr<CreepModel> creep,
     double alpha, double tol,
-    int miter, bool verbose) :
+    int miter, bool verbose, double sf) :
       NEMLModel_sd(alpha),
       creep_(creep), plastic_(plastic), tol_(tol), miter_(miter),
-      verbose_(verbose)
+      verbose_(verbose), sf_(sf)
 {
 
 }
@@ -983,10 +981,10 @@ SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
     std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
     std::shared_ptr<CreepModel> creep,
     std::shared_ptr<Interpolate> alpha, double tol,
-    int miter, bool verbose) :
+    int miter, bool verbose, double sf) :
       NEMLModel_sd(alpha),
       creep_(creep), plastic_(plastic), tol_(tol), miter_(miter),
-      verbose_(verbose)
+      verbose_(verbose), sf_(sf)
 {
 
 }
@@ -1048,7 +1046,17 @@ int SmallStrainCreepPlasticity::update_sd(
   for (int i=0; i<36; i++) A_np1[i] = A[i] + B[i];
   invert_mat(A_np1, 6);
 
-  // Do something about the work and energy measures!!!
+  // Energy calculation (trapezoid rule)
+  double de[6];
+  double ds[6];
+  sub_vec(e_np1, e_n, 6, de);
+  add_vec(s_np1, s_n, 6, ds);
+  u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
+  
+  // Extra dissipation from the creep material
+  double dec[6];
+  sub_vec(creep_new, creep_old, 6, dec);
+  p_np1 += dot_vec(ds, dec, 6) / 2.0;
   
   return 0;
 }
@@ -1111,14 +1119,18 @@ int SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
                  tss->t_np1, tss->t_n, B);
   if (ier != 0) return ier;
 
+  //creep_->df_ds(s_np1, creep_new, tss->t_np1, tss->T_np1, B);
+  //for (int i=0; i<36; i++) B[i] *= (tss->t_np1 - tss->t_n);
+
   // Form the residual
   for (int i=0; i<6; i++) {
-    R[i] = x[i] + creep_new[i] - tss->e_np1[i];
+    R[i] = (x[i] + creep_new[i] - tss->e_np1[i]) * sf_;
   }
   
   // The Jacobian is a straightforward combination of the two derivatives
   ier = mat_mat(6, 6, 6, B, A_np1, J);
   for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
+  for (int i=0; i<36; i++) J[i] *= sf_;
 
   return ier;
 }
