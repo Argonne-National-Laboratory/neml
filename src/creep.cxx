@@ -170,9 +170,13 @@ int CreepModel::update(const double * const s_np1,
   // Solve for the new creep strain
   double x[nparams()];
   int ier = solve(this, x, &ts, tol_, miter_, verbose_);
+  if (ier != 0) return ier;
   
   // Extract
   std::copy(x, x+6, e_np1);
+
+  // Get the tangent
+  calc_tangent_(e_np1, ts, A_np1);
 
   return ier;
 }
@@ -222,6 +226,28 @@ int CreepModel::RJ(const double * const x, TrialState * ts,
   for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
 
   return 0;
+}
+
+// Helper for tangent
+int CreepModel::calc_tangent_(const double * const e_np1, 
+                              CreepModelTrialState & ts, double * const A_np1)
+{
+  int ier;
+  double R[6];
+  double J[36];
+
+  ier = RJ(e_np1, &ts, R, J);
+
+  for (int i=0; i<36; i++) J[i] = -J[i] * ts.dt;
+
+  ier = invert_mat(J, 6);
+
+  double B[36];
+  ier = df_ds(ts.s_np1, e_np1, ts.t, ts.T, B);
+
+  ier = mat_mat(6, 6, 6, J, B, A_np1);
+
+  return ier;
 }
 
 // Implementation of J2 creep

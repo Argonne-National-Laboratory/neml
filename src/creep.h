@@ -94,6 +94,10 @@ class CreepModel: public Solvable {
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
+ private:
+  int calc_tangent_(const double * const e_np1, CreepModelTrialState & ts, 
+                    double * const A_np1);
+
  protected:
   const double tol_;
   const int miter_;

@@ -15,7 +15,10 @@ namespace neml {
 
 PYBIND11_PLUGIN(creep) {
   py::module m("creep", "Creep models.");
- 
+
+  py::class_<CreepModelTrialState>(m, "CreepModelTrialState", py::base<TrialState>())
+      ;
+
   py::class_<CreepModel, std::shared_ptr<CreepModel>>(m, "CreepModel")
       .def("update",
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::tuple<py::array_t<double>, py::array_t<double>>

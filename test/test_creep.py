@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import creep
+from neml import solvers, creep
 import unittest
 
 from common import *
@@ -85,6 +85,28 @@ class CommonCreepModel(object):
   """
     Tests common to all creep models
   """
+  def test_tangent(self):
+    strain = np.copy(self.e)
+    stress = np.copy(self.s)
+
+    ts = np.linspace(0,self.t)
+
+    for i in range(1, len(ts)):
+      t_np1 = ts[i]
+      t_n = ts[i-1]
+      s_np1 = stress * t_np1 / self.t
+      e_next, A_next = self.model.update(stress, strain, self.T, self.T,
+          t_np1, t_n)
+
+      strain = np.copy(e_next)
+
+  def test_jacobian(self):
+    ts = self.model.make_trial_state(self.s, self.e, self.T, self.T,
+      self.dt + self.t, self.t)
+    R, J = self.model.RJ(self.x, ts)
+    nJ = differentiate(lambda x: self.model.RJ(x, ts)[0], self.x)
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-4))
+
   def test_df_ds(self):
     dfn = lambda x: self.model.f(x, self.e, self.t, self.T)
     nderiv = differentiate(dfn, self.s)
@@ -121,8 +143,10 @@ class TestJ2Creep(unittest.TestCase, CommonCreepModel):
 
     self.s = np.array([100.0,-25.0,-5.0, 20.0,15.0,3.0])
     self.e = np.array([0.05, -0.01, -0.01, 0.025, 0.03, -0.01])
+    self.x = np.array([0.06, 0.01, 0.02, 0.01, 0.02, -0.05])
     self.T = 300.0
     self.t = 10.0
+    self.dt = 2.0
 
     tr = np.sum(self.s[:3])
     self.sdev = self.s - np.array([1,1,1,0,0,0]) * tr / 3.0
