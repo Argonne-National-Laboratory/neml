@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow
+from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep
 from common import *
 
 import unittest
@@ -104,14 +104,23 @@ class CommonJacobian(object):
   def gen_time(self):
     return 1.25
 
+  def gen_start_strain(self):
+    return np.zeros((6,))
+
+  def gen_start_time(self):
+    return 0.0
+
+  def gen_start_stress(self):
+    return np.zeros((6,))
+
   def test_jacobian(self):
     e_np1 = self.gen_strain()
     T_np1 = self.gen_T()
     h_n = self.gen_hist()
     t_np1 = self.gen_time()
 
-    ts = self.model.make_trial_state(e_np1, np.zeros((6,)), T_np1, T_np1,
-        t_np1, 0.0, np.zeros((6,)), h_n)
+    ts = self.model.make_trial_state(e_np1, self.gen_start_strain(), T_np1, T_np1,
+        t_np1, self.gen_start_time(), self.gen_start_stress(), h_n)
 
     x = self.gen_x()
 
@@ -339,6 +348,49 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
 
   def gen_x(self):
     return np.array(list(self.gen_hist()) + [0.1])
+
+class TestCreepPlasticityJ2LinearPowerLaw(unittest.TestCase, CommonMatModel, CommonJacobian):
+  """
+    Test the combined creep/plasticity algorithm with J2 plasticity with
+    isotropic hardening and power law creep 
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((13,))
+
+    self.A = 1.85e-10
+    self.n = 2.5
+
+    self.smodel = creep.PowerLawCreep(self.A, self.n)
+    self.cmodel = creep.J2CreepModel(self.smodel)
+
+    self.E = 150000.0
+    self.nu = 0.3
+    self.sY = 200.0
+    self.H = self.E / 50.0
+
+    self.youngs = elasticity.YoungsModulus(self.E)
+    self.poisson = elasticity.PoissonsRatio(self.nu)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.youngs, 
+        self.poisson)
+    self.surface = surfaces.IsoJ2()
+    self.iso = hardening.LinearIsotropicHardeningRule(self.sY, self.H)
+    self.flow = ri_flow.RateIndependentAssociativeFlow(self.surface, self.iso)
+
+    self.pmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+        self.flow)
+
+    self.model = neml.SmallStrainCreepPlasticity(self.pmodel, self.cmodel)
+
+    self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 10
+
+  def gen_hist(self):
+    return np.array(range(1,7) + [1.0] + range(1,7)) / 7.0
+
+  def gen_x(self):
+    return np.array(range(1,7)) / 7.0
 
 class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacobian):
   """

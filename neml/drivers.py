@@ -742,7 +742,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
     verbose = False):
   """
-    Strain controlled cyclic test.
+    Stress controlled cyclic test.
 
     Parameters:
       smax      maximum stress

@@ -964,6 +964,189 @@ int SmallStrainRateIndependentPlasticity::check_K_T_(
   return 0;
 }
 
+// Implement creep + plasticity
+// Implementation of small strain rate independent plasticity
+//
+SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
+    std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+    std::shared_ptr<CreepModel> creep,
+    double alpha, double tol,
+    int miter, bool verbose) :
+      NEMLModel_sd(alpha),
+      creep_(creep), plastic_(plastic), tol_(tol), miter_(miter),
+      verbose_(verbose)
+{
+
+}
+
+SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
+    std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+    std::shared_ptr<CreepModel> creep,
+    std::shared_ptr<Interpolate> alpha, double tol,
+    int miter, bool verbose) :
+      NEMLModel_sd(alpha),
+      creep_(creep), plastic_(plastic), tol_(tol), miter_(miter),
+      verbose_(verbose)
+{
+
+}
+
+size_t SmallStrainCreepPlasticity::nhist() const
+{
+  // The elastic-plastic strain + the plastic model history
+  return plastic_->nhist() + 6;
+}
+
+int SmallStrainCreepPlasticity::init_hist(double * const hist) const
+{
+  std::fill(hist, hist+6, 0.0);
+  return plastic_->init_hist(&hist[6]);
+}
+
+int SmallStrainCreepPlasticity::update_sd(
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       double * const s_np1, const double * const s_n,
+       double * const h_np1, const double * const h_n,
+       double * const A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n)
+{
+
+  // Solve the system to get the update
+  SSCPTrialState ts;
+  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
+  double x[nparams()];
+  int ier = solve(this, x, &ts, tol_, miter_, verbose_);
+  if (ier != 0) return ier;
+
+  // Store the ep strain
+  std::copy(x, x+6, h_np1);
+
+  // Do the plastic update to get the new history and stress
+  double A[36];
+  ier =  plastic_->update_sd(x, ts.ep_strain, T_np1, T_n,
+                             t_np1, t_n, s_np1, s_n,
+                             &h_np1[6], &h_n[6],
+                             A, u_np1, u_n, p_np1, p_n);
+  if (ier != 0) return ier;
+
+  // Do the creep update to get a tangent component
+  double creep_old[6];
+  double creep_new[6];
+  double B[36];
+  for (int i=0; i<6; i++) {
+    creep_old[i] = e_n[i] - ts.ep_strain[i];
+  }
+  ier = creep_->update(s_np1, creep_new, creep_old, T_np1, T_n,
+                 t_np1, t_n, B);
+  if (ier != 0) return ier;
+
+  // Form the relatively simple tangent
+  invert_mat(A, 6);
+  for (int i=0; i<36; i++) A_np1[i] = A[i] + B[i];
+  invert_mat(A_np1, 6);
+
+  // Do something about the work and energy measures!!!
+  
+  return 0;
+}
+
+int SmallStrainCreepPlasticity::elastic_strains(
+                                           const double * const s_np1,
+                                           double T_np1,
+                                           double * const e_np1) const
+{
+  return plastic_->elastic_strains(s_np1, T_np1, e_np1);
+}
+
+size_t SmallStrainCreepPlasticity::nparams() const
+{
+  // Just the elastic-plastic strain
+  return 6;
+}
+
+int SmallStrainCreepPlasticity::init_x(double * const x, TrialState * ts)
+{
+  SSCPTrialState * tss = static_cast<SSCPTrialState*>(ts);
+
+  // Start out at last step's value
+  std::copy(tss->ep_strain, tss->ep_strain + 6, x);
+  
+  return 0;
+}
+
+int SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts, 
+                                   double * const R, double * const J)
+{
+  SSCPTrialState * tss = static_cast<SSCPTrialState*>(ts);
+
+  int ier;
+
+  // First update the elastic-plastic model
+  double s_np1[6];
+  double A_np1[36];
+  std::vector<double> h_np1;
+  h_np1.resize(plastic_->nhist());
+  double u_np1, u_n;
+  double p_np1, p_n;
+  u_n = 0.0;
+  p_n = 0.0;
+
+  ier = plastic_->update_sd(x, tss->ep_strain, tss->T_np1, tss->T_n,
+                      tss->t_np1, tss->t_n, s_np1, tss->s_n,
+                      &h_np1[0], &(tss->h_n[0]), A_np1,
+                      u_np1, u_n, p_np1, p_n);
+  if (ier != 0) return ier;
+
+  // Then update the creep strain
+  double creep_old[6];
+  double creep_new[6];
+  double B[36];
+  for (int i=0; i<6; i++) {
+    creep_old[i] = tss->e_n[i] - tss->ep_strain[i];
+  }
+  ier = creep_->update(s_np1, creep_new, creep_old, tss->T_np1, tss->T_n,
+                 tss->t_np1, tss->t_n, B);
+  if (ier != 0) return ier;
+
+  // Form the residual
+  for (int i=0; i<6; i++) {
+    R[i] = x[i] + creep_new[i] - tss->e_np1[i];
+  }
+  
+  // The Jacobian is a straightforward combination of the two derivatives
+  ier = mat_mat(6, 6, 6, B, A_np1, J);
+  for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
+
+  return ier;
+}
+
+int SmallStrainCreepPlasticity::make_trial_state(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    const double * const s_n, const double * const h_n,
+    SSCPTrialState & ts)
+{
+  int nh = plastic_->nhist();
+  ts.h_n.resize(nh);
+
+  std::copy(e_np1, e_np1+6, ts.e_np1);
+  std::copy(e_n, e_n+6, ts.e_n);
+  std::copy(s_n, s_n+6, ts.s_n);
+  ts.T_n = T_n;
+  ts.T_np1 = T_np1;
+  ts.t_n = t_n;
+  ts.t_np1 = t_np1;
+  std::copy(h_n + 6, h_n + 6 + nh, ts.h_n.begin());
+
+  std::copy(h_n, h_n+6, ts.ep_strain);
+
+  return 0;
+}
+
+
 // Start general integrator implementation
 GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
                                      double alpha,

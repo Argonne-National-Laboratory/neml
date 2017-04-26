@@ -8,6 +8,7 @@
 #include "general_flow.h"
 #include "solvers.h"
 #include "interpolate.h"
+#include "creep.h"
 
 #include <cstddef>
 #include <memory>
@@ -276,6 +277,16 @@ class SSRIPTrialState : public TrialState {
   std::vector<double> h_tr;
 };
 
+class SSCPTrialState : public TrialState {
+ public:
+  double ep_strain[6];
+
+  double e_n[6], e_np1[6];
+  double s_n[6];
+  double T_n, T_np1, t_n, t_np1;
+  std::vector<double> h_n;
+};
+
 class GITrialState : public TrialState {
  public:
   double e_dot[6];
@@ -432,6 +443,60 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   int miter_;
   bool verbose_, check_kt_;
 };
+
+/// Small strain, rate-independent plasticity + creep
+//  Uses a combined iteration of a rate independent plastic + creep model
+//  to solver overall update
+class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
+ public:
+  SmallStrainCreepPlasticity(std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+                             std::shared_ptr<CreepModel> creep,
+                             double alpha = 0.0,
+                             double tol = 1.0e-8, int miter = 50,
+                             bool verbose = false);
+  SmallStrainCreepPlasticity(std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+                             std::shared_ptr<CreepModel> creep,
+                             std::shared_ptr<Interpolate> alpha = nullptr,
+                             double tol = 1.0e-8, int miter = 50,
+                             bool verbose = false);
+  virtual int update_sd(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1,
+      double & u_np1, double u_n,
+      double & p_np1, double p_n);
+
+  virtual size_t nhist() const;
+  virtual int init_hist(double * const hist) const;
+
+  virtual size_t nparams() const;
+  virtual int init_x(double * const x, TrialState * ts);
+  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J);
+  
+  // Helper for FEA output
+  virtual int elastic_strains(const double * const s_np1,
+                             double T_np1,
+                             double * const e_np1) const;
+
+  // Make this public for ease of testing
+  int make_trial_state(const double * const e_np1, const double * const e_n,
+                       double T_np1, double T_n, double t_np1, double t_n,
+                       const double * const s_n, const double * const h_n,
+                       SSCPTrialState & ts);
+
+ private:
+  std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic_;
+  std::shared_ptr<CreepModel> creep_;
+
+  double tol_;
+  int miter_;
+  bool verbose_;
+};
+
 
 /// Small strain general integrator
 //    General NR one some stress rate + history evolution rate
