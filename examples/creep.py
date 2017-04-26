@@ -129,7 +129,37 @@ def example3():
   plt.plot(res2['strain'], res2['stress'], 'r-')
   plt.show()
 
+def example4():
+  # T is in hours, strain in percent, stress in MPa
+  A = 1.85e-10
+  n = 2.5
+  m = 0.3
+
+  smodel = creep.PowerLawCreep(A, n)
+  cmodel = creep.J2CreepModel(smodel)
+
+  E = 150000.0
+  nu = 0.3
+  sY = 200.0
+  H = E / 25.0
+
+  youngs = elasticity.YoungsModulus(E)
+  poisson = elasticity.PoissonsRatio(nu)
+  elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  surface = surfaces.IsoJ2()
+  iso = hardening.LinearIsotropicHardeningRule(sY, H)
+  flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
+
+  pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  model = neml.SmallStrainCreepPlasticity(pmodel, cmodel)
+
+  res = drivers.creep(model, 205.0, 3600.0, 100.0, verbose = False, 
+      nsteps_up = 500)
+  plt.plot(res['strain'], res['stress'])
+  plt.show()
+
 if __name__ == "__main__":
-  #example1()
-  #example2()
+  example1()
+  example2()
   example3()
+  example4()
