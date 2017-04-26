@@ -94,9 +94,14 @@ class CommonCreepModel(object):
     for i in range(1, len(ts)):
       t_np1 = ts[i]
       t_n = ts[i-1]
-      s_np1 = stress * t_np1 / self.t
+      s_np1 = stress
       e_next, A_next = self.model.update(stress, strain, self.T, self.T,
           t_np1, t_n)
+
+      dfn = lambda x: self.model.update(x, strain, self.T, self.T, t_np1,
+          t_n)[0]
+      nA = differentiate(dfn, s_np1)
+      self.assertTrue(np.allclose(nA, A_next, rtol = 1.0e-4))
 
       strain = np.copy(e_next)
 

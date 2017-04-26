@@ -785,7 +785,7 @@ and pretending the time and temperature variation is small.
 
 \begin_inset Formula 
 \[
-\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}=-\boldsymbol{J}^{-1}\frac{\partial\boldsymbol{f}}{\partial\bm{\sigma}_{n+1}}\Delta t_{n+1}.
+\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}=\boldsymbol{J}^{-1}\frac{\partial\boldsymbol{f}}{\partial\bm{\sigma}_{n+1}}\Delta t_{n+1}.
 \]
 
 \end_inset

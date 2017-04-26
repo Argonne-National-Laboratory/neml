@@ -238,9 +238,9 @@ int CreepModel::calc_tangent_(const double * const e_np1,
 
   ier = RJ(e_np1, &ts, R, J);
 
-  for (int i=0; i<36; i++) J[i] = -J[i] * ts.dt;
-
   ier = invert_mat(J, 6);
+
+  for (int i=0; i<36; i++) J[i] = J[i] * ts.dt;
 
   double B[36];
   ier = df_ds(ts.s_np1, e_np1, ts.t, ts.T, B);
