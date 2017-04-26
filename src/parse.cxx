@@ -50,7 +50,8 @@ std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier
 
 std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier)
 {
-  // Need a elastic node and a plastic node
+  // Need a elastic node, a plastic node, and optionally creep and thermal
+  // expansion nodes
   // Elastic
   std::shared_ptr<LinearElasticModel> emodel;
   xmlpp::Element * elastic_node;
@@ -69,6 +70,16 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   else {
     alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
   }
+
+  // Optional creep node
+  bool found_creep = false;
+  auto c_nodes = node->get_children("creep");
+  std::shared_ptr<CreepModel> cmodel = nullptr;
+  if (c_nodes.size() > 0) {
+    cmodel = process_creep(
+        dynamic_cast<xmlpp::Element*>(c_nodes.front()), ier);
+    found_creep = true;
+  }
   
   // Logic here because we treat viscoplasticity differently
   xmlpp::Element * plastic_node;
@@ -85,15 +96,34 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     std::shared_ptr<RateIndependentFlowRule> fr =  process_independent(
         plastic_node, ier);
     
-    return std::unique_ptr<SmallStrainRateIndependentPlasticity> (
-      new SmallStrainRateIndependentPlasticity(emodel, fr, alpha));
+    if (found_creep) {
+      auto pmodel =  
+          std::make_shared<SmallStrainRateIndependentPlasticity>(emodel, fr, alpha);
+
+      return std::unique_ptr<SmallStrainCreepPlasticity> (
+          new SmallStrainCreepPlasticity(pmodel, cmodel, alpha));
+    }
+    else {
+      return std::unique_ptr<SmallStrainRateIndependentPlasticity> (
+        new SmallStrainRateIndependentPlasticity(emodel, fr, alpha));
+    }
   }
   else if (ft == "dependent") {
+    if (found_creep) {
+      ier = CREEP_PLASTICITY;
+      return std::unique_ptr<NEMLModel>(nullptr);
+    }
+
     std::shared_ptr<ViscoPlasticFlowRule> fr = process_dependent(plastic_node, ier);
     std::shared_ptr<TVPFlowRule> gfr = std::make_shared<TVPFlowRule>(emodel, fr);
     return std::unique_ptr<GeneralIntegrator>(new GeneralIntegrator(gfr, alpha));
   }
   else if (ft == "perfect") {
+    if (found_creep) {
+      ier = CREEP_PLASTICITY;
+      return std::unique_ptr<NEMLModel>(nullptr);
+    }
+
     // Surface
     std::shared_ptr<YieldSurface> ys = dispatch_node(plastic_node, "surface",
                                                      &process_surface, ier);
@@ -106,6 +136,49 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     ier = UNKNOWN_TYPE;
     return std::unique_ptr<NEMLModel>(nullptr);
   }
+}
+
+std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier)
+{
+  return dispatch_attribute<CreepModel>(node, "type", {"j2"},
+                                        {&process_j2creep},
+                                        ier);
+}
+
+std::shared_ptr<CreepModel> process_j2creep(const xmlpp::Element * node, int & ier)
+{
+  // Need a scalarmodel node
+  std::shared_ptr<ScalarCreepRule> scr = dispatch_node(node, "scalarmodel", 
+                                                       &process_scalarmodel, ier);
+
+  return std::shared_ptr<J2CreepModel>(new J2CreepModel(scr));
+}
+
+std::shared_ptr<ScalarCreepRule> process_scalarmodel(const xmlpp::Element * node, int & ier)
+{
+  // dispatch on type
+  return dispatch_attribute<ScalarCreepRule>(node, "type", {"powerlaw", "nortonbailey"},
+                                             {&process_powerlaw_creep, &process_nb_creep},
+                                             ier);
+}
+
+std::shared_ptr<ScalarCreepRule> process_powerlaw_creep(const xmlpp::Element * node, int & ier)
+{
+  // Properties are A and n
+  return std::shared_ptr<ScalarCreepRule>(new PowerLawCreep(
+          scalar_param(node, "A", ier),
+          scalar_param(node, "n", ier)
+          ));
+}
+
+std::shared_ptr<ScalarCreepRule> process_nb_creep(const xmlpp::Element * node, int & ier)
+{
+  // Properties are A, m, and n
+  return std::shared_ptr<ScalarCreepRule>(new NortonBaileyCreep(
+          scalar_param(node, "A", ier),
+          scalar_param(node, "m", ier),
+          scalar_param(node, "n", ier)
+          ));
 }
 
 std::shared_ptr<Interpolate> process_alpha(

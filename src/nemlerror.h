@@ -20,7 +20,8 @@ typedef enum Error {
   BAD_TEXT = -9,
   INVALID_TYPE = -10,
   FILE_NOT_FOUND = -11,
-  UNKNOWN_ERROR = -12
+  CREEP_PLASTICITY = -12,
+  UNKNOWN_ERROR = -13
 } Error;
 
 // Translate to exception

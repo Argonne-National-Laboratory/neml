@@ -1,4 +1,4 @@
-from neml import solvers, interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow
+from neml import solvers, interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow, creep
 
 import unittest
 import numpy as np
@@ -69,6 +69,37 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
     self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+
+    self.T = 300.0
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.1,0,0,0,0,0])
+
+class TestCreepPlasticity(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_creep_plasticity")
+  
+    A = 1.85e-10
+    n = 2.5
+
+    smodel = creep.PowerLawCreep(A, n)
+    cmodel = creep.J2CreepModel(smodel)
+
+    E = 150000.0
+    nu = 0.3
+    sY = 200.0
+    H = E / 50.0
+
+    youngs = elasticity.YoungsModulus(E)
+    poisson = elasticity.PoissonsRatio(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+    surface = surfaces.IsoJ2()
+    iso = hardening.LinearIsotropicHardeningRule(sY, H)
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
+
+    pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    
+    self.model2 = neml.SmallStrainCreepPlasticity(pmodel, cmodel)
 
     self.T = 300.0
     self.tmax = 10.0

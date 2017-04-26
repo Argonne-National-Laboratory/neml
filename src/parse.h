@@ -21,6 +21,21 @@ std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier
 /// Setup a small strain model
 std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier);
 
+/// Setup a creep model
+std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier);
+
+/// J2 creep models
+std::shared_ptr<CreepModel> process_j2creep(const xmlpp::Element * node, int & ier);
+
+/// Scalar creep models
+std::shared_ptr<ScalarCreepRule> process_scalarmodel(const xmlpp::Element * node, int & ier);
+
+/// Power law scalar creep
+std::shared_ptr<ScalarCreepRule> process_powerlaw_creep(const xmlpp::Element * node, int & ier);
+
+/// Norton-Bailey creep
+std::shared_ptr<ScalarCreepRule> process_nb_creep(const xmlpp::Element * node, int & ier);
+
 /// Setup the thermal expansion coefficient
 std::shared_ptr<Interpolate> process_alpha(const xmlpp::Element * node, int & ier);
 
