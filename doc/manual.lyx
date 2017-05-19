@@ -732,15 +732,8 @@ which the user must provide the derivative for.
 \end_layout
 
 \begin_layout Standard
-To solve the outer equation we also need the derivative
-\begin_inset Formula 
-\[
-\frac{\partial\bm{\varepsilon}_{n+1}^{cr}}{\partial\bm{\sigma}_{n+1}}
-\]
-
-\end_inset
-
-and to calculate the overall tangent we need the total derivative
+To solve the eventual outer nonlinear equation and to calculate the tangent
+ we need the additional derivative
 \begin_inset Formula 
 \[
 \frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}.
@@ -748,8 +741,7 @@ and to calculate the overall tangent we need the total derivative
 
 \end_inset
 
-The user must provide the former.
- For the latter play our usual game of
+Play our usual game of
 \begin_inset Formula 
 \[
 \boldsymbol{R}=\boldsymbol{0}\implies0=d\boldsymbol{R}=\frac{\partial\boldsymbol{R}}{\partial\bm{\sigma}_{n+1}}:d\bm{\sigma}_{n+1}+\frac{\partial\boldsymbol{R}}{\partial\bm{\varepsilon}_{n+1}^{cr}}:d\bm{\varepsilon}_{n+1}^{cr}+\frac{\partial\boldsymbol{R}}{\partial t_{n+1}}:dt_{n+1}
@@ -1226,7 +1218,7 @@ Combined rate-independent plasticity and creep
 Start with two functions: 
 \begin_inset Formula 
 \[
-\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right)
+\bm{\sigma}_{n+1}^{ep}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right)
 \]
 
 \end_inset
@@ -1234,7 +1226,7 @@ Start with two functions:
 as defined in the previous section and 
 \begin_inset Formula 
 \[
-\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}^{cr},\bm{\sigma}_{n+1},\Delta t_{n+1},T_{n+1}\right)
+\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}^{cr},\bm{\sigma}_{n+1}^{cr},\Delta t_{n+1},T_{n+1}\right)
 \]
 
 \end_inset
@@ -1249,7 +1241,7 @@ defined above.
 
 \end_inset
 
-Implement as
+Combine these two equations into the residual
 \begin_inset Formula 
 \[
 \boldsymbol{R}=\bm{\varepsilon}_{n+1}^{ep}+\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}-\bm{\varepsilon}_{n}^{ep},\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right),\Delta t_{n+1},T_{n+1}\right)-\bm{\varepsilon}_{n+1}
@@ -1257,11 +1249,17 @@ Implement as
 
 \end_inset
 
-which means we need to supplement the history variables with 
+which means we need to supplement the history variables of the elastic-plastic
+ model with 
 \begin_inset Formula $\bm{\varepsilon}^{ep}$
 \end_inset
 
 .
+ We want to solve this residual equation for 
+\begin_inset Formula $\bm{\varepsilon}_{n+1}^{ep}$
+\end_inset
+
+ using Newton's method.
  The Jacobian of this residual is
 \begin_inset Formula 
 \[
