@@ -267,6 +267,7 @@ class Driver_sd_twobar(Driver_sd):
     """
     nsteps_load = kwargs.pop('nsteps_load', 50)
     nsteps_cycle = kwargs.pop('nsteps_cycle', 201)
+    dstrain = kwargs.pop('dstrain', lambda t: 0.0)
     super(Driver_sd_twobar, self).__init__(*args, **kwargs)
 
     self.A1 = A1
@@ -280,8 +281,7 @@ class Driver_sd_twobar(Driver_sd):
 
     self.nsteps_load = nsteps_load
     self.nsteps_cycle = nsteps_cycle
-
-    self.strain_int = [0.0]
+    self.dstrain = dstrain
 
     self.strain1_int = [np.zeros((6,))]
     self.strain2_int = [np.zeros((6,))]
@@ -318,6 +318,14 @@ class Driver_sd_twobar(Driver_sd):
     return np.array(self.T2_int)
 
   @property
+  def strain1(self):
+    return np.array(self.strain1_int)
+
+  @property
+  def strain2(self):
+    return np.array(self.strain2_int)
+
+  @property
   def strain1_mech(self):
     return np.array(self.strain1_mech_int)
 
@@ -341,7 +349,7 @@ class Driver_sd_twobar(Driver_sd):
   def stress2(self):
     return np.array(self.stress2_int)
 
-  def take_step(self, P, T1, T2, dt):
+  def take_step(self, P, T1, T2, dt, dstrain):
     """
       Take a single load step to get to P, T1, and T2 from the previous state.
     """
@@ -368,7 +376,7 @@ class Driver_sd_twobar(Driver_sd):
 
       R = np.zeros((12,))
       R[0] = s1_np1[0] * self.A1 + s2_np1[0] * self.A2 - P
-      R[1] = e1[0] - e2[0]
+      R[1] = e1[0] - e2[0] - dstrain
       R[2:7] = s1_np1[1:]
       R[7:] = s2_np1[1:]
 
@@ -442,15 +450,13 @@ class Driver_sd_twobar(Driver_sd):
     self.strain1_plastic_int.append(em1 - estrain1)
     self.strain2_plastic_int.append(em2 - estrain2)
 
-    self.strain_int.append(x[0])
-
   def load_up(self):
     """
       Load up to stress
     """
     dt = self.load_time / self.nsteps_load
     for P in np.linspace(0, self.P, self.nsteps_load+1)[1:]:
-      self.take_step(P, self.T1_0, self.T2_0, dt)
+      self.take_step(P, self.T1_0, self.T2_0, dt, 0)
 
   def one_cycle(self):
     """
@@ -458,12 +464,14 @@ class Driver_sd_twobar(Driver_sd):
     """
     dt = self.period / self.nsteps_cycle
     for toffset in np.linspace(0, self.period, self.nsteps_cycle+1)[1:]:
-      self.take_step(self.P, self.T1_fn(toffset), self.T2_fn(toffset), dt)
+      self.take_step(self.P, self.T1_fn(toffset), self.T2_fn(toffset), dt,
+          self.dstrain(toffset))
 
 def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     max_strain = None, min_strain = None, 
     nsteps_load = 50, nsteps_cycle = 201, verbose = False,
-    rtol_classify = 1.0e-4, atol_classify = 1.0e-10):
+    rtol_classify = 1.0e-4, atol_classify = 1.0e-10,
+    dstrain = lambda t: 0.0):
   """
     Run a two bar test and classify
 
@@ -485,9 +493,11 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       verbose       print extra messages
       rtol_classify relative tolerance for cycle classification
       atol_classify absolute tolerance for cycle classification
+      dstrain       direct strain difference between bars
   """
   driver = Driver_sd_twobar(A1, A2, T1, T2, period, P, load_time, model,
-      nsteps_load = nsteps_load, nsteps_cycle = nsteps_cycle, verbose = verbose)
+      nsteps_load = nsteps_load, nsteps_cycle = nsteps_cycle, verbose = verbose,
+      dstrain = dstrain)
   
   try:
     driver.load_up()
@@ -511,7 +521,25 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
   
   cycle_count = 0
   for i in range(ncycles):
-    driver.one_cycle()
+    try:
+      driver.one_cycle()
+    except Exception:
+      return {
+          'strain': [],
+          'ncycles': 0,
+          'T1': [],
+          'T2': [],
+          'time': [],
+          'energy_density': [], 
+          'plastic_work': [],
+          'strain_mech_1': [],
+          'strain_mech_2': [],
+          'strain_inelastic_1': [],
+          'strain_inelastic_2': [],
+          'stress1': [],
+          'stress2': [],
+          'classification': "unstable"
+          }
     ep1 = driver.strain1_plastic_int[-1][0]
     ep2 = driver.strain2_plastic_int[-1][0]
     max_s = np.max([np.abs(ep1), np.abs(ep2)])
@@ -529,7 +557,8 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
   classification = classify(
       driver.u_int[a], driver.u_int[b],
       driver.p_int[a], driver.p_int[b],
-      driver.strain[a], driver.strain[b],
+      driver.strain1_int[a][0], driver.strain1_int[b][0],
+      driver.strain2_int[a][0], driver.strain2_int[b][0],
       rtol = rtol_classify,
       atol = atol_classify)
   
@@ -547,10 +576,12 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       'strain_inelastic_2': driver.strain2_plastic[nsteps_load:,0],
       'stress1': driver.stress1[nsteps_load:,0],
       'stress2': driver.stress2[nsteps_load:,0],
-      'classification': classification
+      'classification': classification,
+      'strain1': driver.strain1[nsteps_load:,0],
+      'strain2': driver.strain2[nsteps_load:,0]
       }
 
-def classify(ua, ub, pa, pb, ea, eb, rtol = 1.0e-4, atol = 1.0e-10):
+def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
   """
     Classify a model as elastic, elastic shakedown, plastic shakedown,
     or ratcheting.
@@ -571,7 +602,7 @@ def classify(ua, ub, pa, pb, ea, eb, rtol = 1.0e-4, atol = 1.0e-10):
     return 'elastic'
   elif np.abs(ub-ua) < rtol * np.abs(ub):
     return 'elastic shakedown'
-  elif np.abs(eb-ea) < rtol * np.abs(eb):
+  elif (np.abs(e1b-e1a) < rtol * np.abs(e1b)) and (np.abs(e2b-e2a) < rtol * np.abs(e2b)):
     return 'plastic shakedown'
   else:
     return 'ratcheting'
