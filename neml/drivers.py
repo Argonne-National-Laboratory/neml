@@ -10,7 +10,7 @@ class Driver(object):
     results.
   """
   def __init__(self, model, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
-      miter = 20):
+      miter = 1000):
     """
       Parameters:
         model       material model to play with
@@ -397,8 +397,19 @@ class Driver_sd_twobar(Driver_sd):
       return R, J
 
     x0 = np.hstack((self.strain1_int[-1], self.strain2_int[-1]))
-    x = newton(RJ, x0, verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    try:
+      x = newton(RJ, x0, verbose = self.verbose,
+          rtol = self.rtol, atol = self.atol, miter = self.miter)
+    except Exception:
+      try:
+        x = newton(RJ, x0, verbose = self.verbose,
+            rtol = self.rtol, atol = self.atol, miter = self.miter,
+            quasi = 0.2)  
+      except Exception:
+        x = newton(RJ, x0, verbose = False,
+            rtol = self.rtol, atol = self.atol, miter = 10000,
+            quasi = 1.0e-2)  
+
 
     e1 = x[:6]
     e2 = x[6:]
@@ -1164,7 +1175,8 @@ class MaximumSubdivisions(RuntimeError):
     super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
 
 
-def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
+def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
+    quasi = None):
   """
     Manually-code newton-raphson so that I can output convergence info, if
     requested.
@@ -1188,7 +1200,11 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
     print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
   while (nR > rtol * nR0) and (nR > atol):
-    x -= la.solve(J, R)
+    if quasi is not None:
+      dx = -la.solve(J, R)
+      x += quasi * dx
+    else:
+      x -= la.solve(J, R)
     R, J = RJ(x)
     nR = la.norm(R)
     i += 1
