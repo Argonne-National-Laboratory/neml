@@ -47,21 +47,21 @@ int TestRosenbrock::RJ(const double * const x, TrialState * ts,
 
 // This function is configured by the build
 int solve(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose)
+          double tol, int miter, bool verbose, bool relative)
 {
 #ifdef SOLVER_NOX
   return nox(system, x, ts, tol, miter, verbose);
 #elif SOLVER_NEWTON
   // Actually selected the newton solver
-  return newton(system, x, ts, tol, miter, verbose);
+  return newton(system, x, ts, tol, miter, verbose, relative);
 #else
   // Default solver: plain NR
-  return newton(system, x, ts, tol, miter, verbose);
+  return newton(system, x, ts, tol, miter, verbose, relative);
 #endif
 }
 
 int newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose)
+          double tol, int miter, bool verbose, bool relative)
 {
   int n = system->nparams();
   system->init_x(x, ts);
@@ -71,6 +71,7 @@ int newton(Solvable * system, double * x, TrialState * ts,
   system->RJ(x, ts, R, J);
 
   double nR = norm2_vec(R, n);
+  double nR0 = nR;
   int i = 0;
   int ier = 0;
 
@@ -87,6 +88,9 @@ int newton(Solvable * system, double * x, TrialState * ts,
 
   while ((nR > tol) && (i < miter))
   {
+    if (relative) {
+      if ((nR / nR0) < tol) break;
+    }
     solve_mat(J, n, R);
 
     for (int j=0; j<n; j++) x[j] -= R[j];
