@@ -95,6 +95,10 @@ PYBIND11_PLUGIN(surfaces) {
       .def(py::init<>())
       ;
 
+  py::class_<IsoKinJ2I1, std::shared_ptr<IsoKinJ2I1>>(m, "IsoKinJ2I1", py::base<YieldSurface>())
+      .def(py::init<double, double>(), py::arg("h"), py::arg("l"))
+      ;
+
   return m.ptr();
 }
 
