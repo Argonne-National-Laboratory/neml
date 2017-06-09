@@ -1166,6 +1166,124 @@ def offset_stress(e, s, eo = 0.2/100.0):
 
   return soff
 
+def bree(models, lengths, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
+    nsteps_cycle = 15, dt_load = 1.0, dt_cycle = 1.0):
+  """
+    Solve a Bree problem using an approximate solution to Bree's integral
+    equation.
+
+    Parameters:
+      models        vector of material models, one at each dl
+      lengths       each dl
+      P             primary stress
+      dT            temperature difference
+
+    Optional:
+      T0            initial temperature
+      ncycles       number of loading cycles to run
+      nsteps_up     number of steps to load up in
+      nsteps_cycle  number of steps per half cycle
+      dt_load       time increment for loading
+      dt_cycle      time increment for cycling
+  """
+  # Do some housekeeping
+  lengths = np.array(lengths)
+  n = len(models)
+  hist = [m.init_store() for m in models]
+  mech_strain = np.zeros((n,))
+  stresses = np.zeros((n,))
+  temps = np.ones((n,)) * T0
+  tn = 0.0
+
+  # Centers for each segment
+  ends = np.cumsum(lengths)
+  xs = ends - np.array(lengths) / 2.0
+  L = np.sum(lengths)
+
+  # Update to the next increment
+  def update(e, dTi, dt, t_n, hists_n, emechs_n, stresses_n, T_n):
+    tempss = xs / L * dTi + T0
+    t_np1 = t_n + dt
+
+    stressess = np.zeros((n,))
+    tangents = np.zeros((n,))
+    strains = np.zeros((n,))
+    work = np.zeros((n,))
+    energy = np.zeros((n,))
+    hists = []
+
+    for i in range(n):
+      m_i = models[i]
+      emech_i = e - (tempss[i] - T0) * m_i.alpha(temps[i])
+      strains[i] = emech_i
+      s_i, h_i, A_i, u_i, p_i = m_i.update(
+          emech_i, emechs_n[i], tempss[i], T_n[i], t_np1, t_n, stresses_n[i],
+          hists_n[i], 0.0, 0.0)
+
+      stressess[i] = s_i
+      tangents[i] = A_i
+      work[i] = p_i
+      energy[i] = u_i
+      hists.append(h_i)
+
+    return stressess, tangents, hists, strains, temps, energy, work
+  
+  # Function to solve at each step
+  def RJ(e, dTi, Pi, dt, t_n, hists_n, emechs_n, stresses_n, T_n):
+    stresses, tangents, hists, strains, temps, energy, work = update(e, dTi, dt, t_n,
+        hists_n, emechs_n, stresses_n, T_n)
+    R = np.sum(stresses * lengths) - Pi * L
+    A = np.sum(tangents * lengths)
+
+    return R, A
+
+  over_strain = [0.0]
+  over_time = [0.0]
+  over_energy = [0.0]
+  over_work = [0.0]
+
+  # Load up the model
+  for Pi in np.linspace(0, P, nsteps_up+1)[1:]:
+    sfn = lambda x: RJ(x, 0.0, Pi, dt_load, over_time[-1], hist, mech_strain,
+        stresses, temps)
+    e = scalar_newton(sfn, over_strain[-1])
+    stresses, tangents, hist, mech_strain, temps, energy, work = update(
+        e, 0.0, dt_load, over_time[-1], hist, mech_strain,
+        stresses, temps) 
+    over_strain.append(e)
+    over_time.append(over_time[-1] + dt_load)
+    over_energy.append(over_energy[-1] + np.sum(energy * lengths))
+    over_work.append(over_work[-1] + np.sum(work * lengths))
+
+  # Cycle the model
+  for ci in range(ncycles):
+    for dTi in np.linspace(0, dT, nsteps_cycle+1)[1:]:
+      sfn = lambda x: RJ(x, dTi, P, dt_load, over_time[-1], hist, mech_strain,
+          stresses, temps)
+      e = scalar_newton(sfn, over_strain[-1])
+      stresses, tangents, hist, mech_strain, temps, energy, work = update(
+          e, dTi, dt_cycle, over_time[-1], hist, mech_strain,
+          stresses, temps) 
+      over_strain.append(e)
+      over_time.append(over_time[-1] + dt_cycle)
+      over_energy.append(over_energy[-1] + np.sum(energy * lengths))
+      over_work.append(over_work[-1] + np.sum(work * lengths))
+
+    for dTi in np.linspace(dT, 0, nsteps_cycle+1)[1:]:
+      sfn = lambda x: RJ(x, dTi, P, dt_load, over_time[-1], hist, mech_strain,
+          stresses, temps)
+      e = scalar_newton(sfn, over_strain[-1])
+      stresses, tangents, hist, mech_strain, temps, energy, work = update(
+          e, dTi, dt_cycle, over_time[-1], hist, mech_strain,
+          stresses, temps) 
+      over_strain.append(e)
+      over_time.append(over_time[-1] + dt_cycle)
+      over_energy.append(over_energy[-1] + np.sum(energy * lengths))
+      over_work.append(over_work[-1] + np.sum(work * lengths))
+
+  return over_time, over_strain, over_energy, over_work
+
+
 class MaximumIterations(RuntimeError):
   def __init__(self):
     super(MaximumIterations, self).__init__("Exceeded the maximum allowed iterations!")
@@ -1207,6 +1325,52 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
       x -= la.solve(J, R)
     R, J = RJ(x)
     nR = la.norm(R)
+    i += 1
+    if verbose:
+      print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
+
+    if i > miter:
+      if verbose:
+        print("")
+      raise MaximumIterations()
+  
+  if verbose:
+    print("")
+
+  return x
+
+def scalar_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
+    quasi = None):
+  """
+    Manually-code newton-raphson so that I can output convergence info, if
+    requested.
+
+    Parameters:
+      RJ        function return the residual + jacobian
+      x0        initial guess
+
+    Optional:
+      verbose   verbose output
+  """
+  R, J = RJ(x0)
+  nR = np.abs(R)
+  nR0 = nR
+  x = x0
+  
+  i = 0
+
+  if verbose:
+    print("Iter.\tnR\t\tnR/nR0")
+    print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
+
+  while (nR > rtol * nR0) and (nR > atol):
+    if quasi is not None:
+      dx = -R/J
+      x += quasi * dx
+    else:
+      x -= R/J
+    R, J = RJ(x)
+    nR = np.abs(R)
     i += 1
     if verbose:
       print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
