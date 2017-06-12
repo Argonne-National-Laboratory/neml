@@ -95,7 +95,7 @@ def grid_classical(models, lengths, E, nu, sY, alpha,
     for y in np.linspace(osy/2, max_y-osy/2, ny):
       print("(%f,%f)" % (x,y))
       P = sY * x
-      dT = sY * y * 2 * (1-nu) / (E * alpha)
+      dT = sY * y * 2 / (E * alpha)
       points.append([x,y])
       conditions.append(run_case(P, dT, lengths, models))
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
   lengths, models = single_material_generator(E, nu, sY, alpha, l, n)
 
   points, conditions, dx, dy, nx, ny = grid_classical(models, lengths,
-      E, nu, sY, alpha)
+      E, nu, sY, alpha, max_x = 1.2, max_y = 5.0, nx = 15, ny = 33)
 
   plot_diagram(dx, dy, nx, ny, conditions)
 
