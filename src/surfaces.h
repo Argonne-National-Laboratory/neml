@@ -228,6 +228,16 @@ class IsoKinJ2I1: public YieldSurface {
  
 };
 
+/// Isotropic only version of J2I1 surface
+class IsoJ2I1: public IsoFunction<IsoKinJ2I1, double, double> {
+ public:
+  IsoJ2I1(const double h, const double l) :
+      IsoFunction<IsoKinJ2I1, double, double>(h, l)
+  {
+  }
+
+};
+
 } // namespace neml
 
 #endif // SURFACES_H

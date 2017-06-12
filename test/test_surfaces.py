@@ -108,3 +108,24 @@ class TestIsoKinJ2I1(unittest.TestCase, CommonYieldSurface):
     exact = la.norm(sdev) + np.sqrt(2.0/3.0) * self.hist[0] + self.h * np.abs(I1) ** self.l * np.sign(I1)
     self.assertTrue(np.isclose(self.model.f(self.s, self.hist, self.T),
       exact))
+
+class TestIsoJ2I1(unittest.TestCase, CommonYieldSurface):
+  def setUp(self):
+    self.s = np.array([100.0,-500.0,250.0,25.0,33.0,-40.0])
+    self.hist = np.array([-150.0])
+    self.T = 300.0
+
+    self.h = 5.0e-3
+    self.l = 2.0
+
+    self.model = IsoJ2I1(self.h, self.l)
+
+  def test_hist(self):
+    self.assertEqual(self.model.nhist, 1)
+  
+  def test_f(self):
+    sdev = self.s - np.array([1,1,1,0,0,0]) * np.sum(self.s[:3])/3
+    I1 = np.sum(self.s[:3])
+    exact = la.norm(sdev) + np.sqrt(2.0/3.0) * self.hist[0] + self.h * np.abs(I1) ** self.l * np.sign(I1)
+    self.assertTrue(np.isclose(self.model.f(self.s, self.hist, self.T),
+      exact))
