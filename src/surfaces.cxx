@@ -233,8 +233,6 @@ int IsoKinJ2I1::df_dq(const double* const s, const double* const q, double T,
   add_vec(&df[1], &q[1], 6, &df[1]);
   normalize_vec(&df[1], 6);
 
-  //df_ds(s, q, T, &df[1]);
-
   return 0;
 }
 
@@ -387,7 +385,6 @@ int IsoKinJ2I1::df_dqds(const double* const s, const double* const q, double T,
   for (int i=0; i<36; i++) {
     ss[i] /= nv;
   }
-  //df_dsds(s, q, T, ss);
 
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
