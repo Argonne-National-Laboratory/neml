@@ -93,7 +93,7 @@ class TestIsoKinJ2I1(unittest.TestCase, CommonYieldSurface):
     self.hist[1:] -= np.array([1,1,1,0,0,0]) * np.sum(self.hist[1:4]) / 3.0
     self.T = 300.0
 
-    self.h = 0.5
+    self.h = 5.0e-3
     self.l = 2.0
 
     self.model = IsoKinJ2I1(self.h, self.l)
