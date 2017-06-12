@@ -2,6 +2,9 @@
 #define SURFACES_H
 
 #include <cstddef>
+#include <stdarg.h>
+#include <memory>
+#include "nemlmath.h"
 
 namespace neml {
 
@@ -31,37 +34,111 @@ class YieldSurface {
                 double * const ddf) const = 0;
 };
 
-/// Just isotropic hardening with a von Mises surface
-//
-//  History variables are:
-//    hist[0]     K (isotropic hardening)
-//
-//
-class IsoJ2: public YieldSurface {
+/// Helper to reduce a isotropic + kinematic function to isotropic only
+template<class BT, typename... Args>
+class IsoFunction: public YieldSurface {
  public:
-  IsoJ2();
-  virtual ~IsoJ2();
- 
-  // Defined interface
-  virtual size_t nhist() const;
+  IsoFunction(Args... args) :
+      base_(new BT(args...))
+  {
+
+  }
+
+  virtual size_t nhist() const
+  {
+    return 1;
+  }
 
   virtual int f(const double* const s, const double* const q, double T,
-                double & fv) const;
+                double & fv) const
+  {
+    double * qn = expand_hist_(q);
+    int ier = base_->f(s, qn, T, fv);
+    delete [] qn;
+    return ier;
+  }
 
   virtual int df_ds(const double* const s, const double* const q, double T,
-                double * const df) const;
+                double * const df) const
+  {
+    double * qn = expand_hist_(q);
+    int ier = base_->df_ds(s, qn, T, df);
+    delete [] qn;
+    return ier;
+  }
+
   virtual int df_dq(const double* const s, const double* const q, double T,
-                double * const df) const;
+                double * const df) const
+  {
+    double * qn = expand_hist_(q);
+    double * dfn = new double[base_->nhist()];
+    int ier = base_->df_dq(s, qn, T, dfn);
+    df[0] = dfn[0];
+    delete [] qn;
+    delete [] dfn;
+    return ier;
+  }
 
   virtual int df_dsds(const double* const s, const double* const q, double T,
-                double * const ddf) const;
+                double * const ddf) const
+  {
+    double * qn = expand_hist_(q);
+    int ier = base_->df_dsds(s, qn, T, ddf);
+    delete [] qn;
+    return ier;
+  }
+
   virtual int df_dqdq(const double* const s, const double* const q, double T,
-                double * const ddf) const;
+                double * const ddf) const
+  {
+    double * qn = expand_hist_(q);
+    double * ddfn = new double[(base_->nhist())*(base_->nhist())];
+    int ier = base_->df_dqdq(s, qn, T, ddfn);
+    ddf[0] = ddfn[0];
+    delete [] qn;
+    delete [] ddfn;
+    return ier;
+  }
+
   virtual int df_dsdq(const double* const s, const double* const q, double T,
-                double * const ddf) const;
+                double * const ddf) const
+  {
+    // This one is annoying
+    double * qn = expand_hist_(q);
+    double * ddfn = new double[6*(base_->nhist())];
+    int ier = base_->df_dsdq(s, qn, T, ddfn);
+    for (int i=0; i<6; i++) {
+      ddf[i] = ddfn[CINDEX(i,0,base_->nhist())];
+    }
+    delete [] qn;
+    delete [] ddfn;
+    return ier;
+  }
+
   virtual int df_dqds(const double* const s, const double* const q, double T,
-                double * const ddf) const;
- 
+                double * const ddf) const
+  {
+    double * qn = expand_hist_(q);
+    double * ddfn = new double[(base_->nhist())*6];
+    int ier = base_->df_dqds(s, qn, T, ddfn);
+    std::copy(ddfn,ddfn+6,ddf);
+    delete [] qn;
+    delete [] ddfn;
+    return ier;
+  }
+
+ private:
+  double * expand_hist_(const double* const q) const 
+  {
+    double * qn = new double[7];
+    qn[0] = q[0];
+    std::fill(qn+1,qn+7,0.0);
+    return qn;
+  }
+
+ private:
+  std::unique_ptr<BT> base_;
+
 };
 
 /// Combined isotropic/kinematic hardening with a von Mises surface
@@ -95,6 +172,24 @@ class IsoKinJ2: public YieldSurface {
   virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
  
+};
+
+
+/// Just isotropic hardening with a von Mises surface
+//
+//  History variables are:
+//    hist[0]     K (isotropic hardening)
+//
+//  Originally I coded a custom version of this that didn't re-use the
+//  IsoKinJ2 code.  I switched to this for convenience and reliability but
+//  note it is slightly memory inefficient.
+//
+class IsoJ2: public IsoFunction<IsoKinJ2> {
+ public:
+  IsoJ2() :
+      IsoFunction<IsoKinJ2>()
+  {
+  }
 };
 
 /// Combined isotropic/kinematic hardening with some mean stress contribution
@@ -131,6 +226,16 @@ class IsoKinJ2I1: public YieldSurface {
  private:
   const double h_, l_;
  
+};
+
+/// Isotropic only version of J2I1 surface
+class IsoJ2I1: public IsoFunction<IsoKinJ2I1, double, double> {
+ public:
+  IsoJ2I1(const double h, const double l) :
+      IsoFunction<IsoKinJ2I1, double, double>(h, l)
+  {
+  }
+
 };
 
 } // namespace neml
