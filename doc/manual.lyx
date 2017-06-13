@@ -1650,5 +1650,47 @@ The derivatives are then
 
 \end_layout
 
+\begin_layout Chapter
+Implemented class hierarchy
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways true
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename structure.pdf
+	scale 35
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Structure of NEML.
+ The diagram shows the available model combinations and guides the XML based
+ input format.
+ Essentially each box in the flow chart corresponds to a node in the XML
+ input file.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
 \end_body
 \end_document
