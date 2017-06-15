@@ -1054,7 +1054,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 750,
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1])}
 
 def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100, 
-    sdir = np.array([1,0,0,0,0,0]), verbose = False):
+    sdir = np.array([1,0,0,0,0,0]), verbose = False, history = None):
   """
     Model a uniaxial strain rate jump test
 
@@ -1068,6 +1068,7 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
       nsteps_per    number of steps per strain rate
       sdir          stress direction, default tension in x
       verbose       whether to be verbose
+      history       prior model history
 
     Results:
       strain    strain in direction
@@ -1075,6 +1076,8 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
   """
   e_inc = e_per / nsteps_per
   driver = Driver_sd(model, verbose = verbose)
+  if history is not None:
+    driver.stored_int[0] = history
   strain = [0.0]
   stress = [0.0]
   
