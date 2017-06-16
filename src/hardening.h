@@ -43,6 +43,21 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
   const std::shared_ptr<const Interpolate> s0_, K_;
 };
 
+/// Isotropic hardening with flow stress from some interpolation function
+//    The convention will be to provide a flow curve as
+//    (plastic strain, flow stress) tuples, with the value of the curve at
+//    0 being the initial yield stress
+class InterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
+ public:
+  InterpolatedIsotropicHardeningRule(std::shared_ptr<Interpolate> flow);
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+
+ private:
+  const std::shared_ptr<const Interpolate> flow_;
+
+};
+
 /// Voce isotropic hardening
 class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:

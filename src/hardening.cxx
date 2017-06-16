@@ -60,6 +60,29 @@ double LinearIsotropicHardeningRule::K(double T) const
   return K_->value(T);
 }
 
+
+InterpolatedIsotropicHardeningRule::InterpolatedIsotropicHardeningRule(
+    std::shared_ptr<Interpolate> flow) :
+    flow_(flow)
+{
+
+}
+
+int InterpolatedIsotropicHardeningRule::q(const double * const alpha,
+                                          double T, double * const qv) const
+{
+  qv[0] = -flow_->value(alpha[0]);
+  return 0;
+}
+
+int InterpolatedIsotropicHardeningRule::dq_da(const double * const alpha,
+                                              double T,
+                                              double * const dqv) const
+{
+  dqv[0] = -flow_->derivative(alpha[0]);
+  return 0;
+}
+
 // Implementation of voce hardening
 VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(double s0, double R,
                                                        double d) :

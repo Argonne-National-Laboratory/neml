@@ -55,6 +55,10 @@ PYBIND11_PLUGIN(hardening) {
       .def("K", &LinearIsotropicHardeningRule::K)
       ;
 
+  py::class_<InterpolatedIsotropicHardeningRule, std::shared_ptr<InterpolatedIsotropicHardeningRule>>(m, "InterpolatedIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
+      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("flow_stress"))
+      ;
+
   py::class_<VoceIsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
       .def(py::init<double, double, double>(), py::arg("s0"), py::arg("R"), py::arg("d"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("s0"), py::arg("R"), py::arg("d"))

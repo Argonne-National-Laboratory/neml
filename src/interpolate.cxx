@@ -78,10 +78,10 @@ PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(
 
 double PiecewiseLinearInterpolate::value(double x) const
 {
-  if (x < points_.front()) {
+  if (x <= points_.front()) {
     return values_.front();
   }
-  else if (x > points_.back()) {
+  else if (x >= points_.back()) {
     return values_.back();
   }
   else {
@@ -101,10 +101,10 @@ double PiecewiseLinearInterpolate::value(double x) const
 
 double PiecewiseLinearInterpolate::derivative(double x) const
 {
-  if (x < points_.front()) {
+  if (x <= points_.front()) {
     return 0.0;
   }
-  else if (x > points_.back()) {
+  else if (x >= points_.back()) {
     return 0.0;
   }
   else {
