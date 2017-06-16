@@ -18,6 +18,7 @@ PYBIND11_PLUGIN(interpolate) {
   
   py::class_<Interpolate, std::shared_ptr<Interpolate>>(m, "Interpolate")
       .def("value", &Interpolate::value, "Interpolate to x")
+      .def("derivative", &Interpolate::derivative, "Derivative at x")
       .def("__call__", 
            [](Interpolate & m, double x) -> double
            {
