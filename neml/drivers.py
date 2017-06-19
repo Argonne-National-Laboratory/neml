@@ -10,7 +10,7 @@ class Driver(object):
     results.
   """
   def __init__(self, model, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
-      miter = 1000):
+      miter = 100):
     """
       Parameters:
         model       material model to play with
@@ -268,6 +268,7 @@ class Driver_sd_twobar(Driver_sd):
     nsteps_load = kwargs.pop('nsteps_load', 50)
     nsteps_cycle = kwargs.pop('nsteps_cycle', 201)
     dstrain = kwargs.pop('dstrain', lambda t: 0.0)
+    dts = kwargs.pop('dts', None)
     super(Driver_sd_twobar, self).__init__(*args, **kwargs)
 
     self.A1 = A1
@@ -308,6 +309,8 @@ class Driver_sd_twobar(Driver_sd):
 
     self.T1_0 = T1(0.0)
     self.T2_0 = T2(0.0)
+
+    self.dts = dts
 
   @property
   def T1(self):
@@ -397,19 +400,8 @@ class Driver_sd_twobar(Driver_sd):
       return R, J
 
     x0 = np.hstack((self.strain1_int[-1], self.strain2_int[-1]))
-    try:
-      x = newton(RJ, x0, verbose = self.verbose,
-          rtol = self.rtol, atol = self.atol, miter = self.miter)
-    except Exception:
-      try:
-        x = newton(RJ, x0, verbose = self.verbose,
-            rtol = self.rtol, atol = self.atol, miter = self.miter,
-            quasi = 0.2)  
-      except Exception:
-        x = newton(RJ, x0, verbose = False,
-            rtol = self.rtol, atol = self.atol, miter = 10000,
-            quasi = 1.0e-2)  
-
+    x = newton(RJ, x0, verbose = self.verbose,
+        rtol = self.rtol, atol = self.atol, miter = self.miter)
 
     e1 = x[:6]
     e2 = x[6:]
@@ -473,16 +465,23 @@ class Driver_sd_twobar(Driver_sd):
     """
       Do one cycle at fixed load
     """
-    dt = self.period / self.nsteps_cycle
-    for toffset in np.linspace(0, self.period, self.nsteps_cycle+1)[1:]:
-      self.take_step(self.P, self.T1_fn(toffset), self.T2_fn(toffset), dt,
-          self.dstrain(toffset))
+    if self.dts is None:
+      dt = self.period / self.nsteps_cycle
+      dts = [dts] * self.nsteps_cycle
+    else:
+      dts = self.dts
+    
+    t = 0.0
+    for dt in dts:
+      t += dt
+      self.take_step(self.P, self.T1_fn(t), self.T2_fn(t), dt,
+          self.dstrain(t))
 
 def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     max_strain = None, min_strain = None, 
     nsteps_load = 50, nsteps_cycle = 201, verbose = False,
     rtol_classify = 1.0e-4, atol_classify = 1.0e-10,
-    dstrain = lambda t: 0.0):
+    dstrain = lambda t: 0.0, dts = None):
   """
     Run a two bar test and classify
 
@@ -505,10 +504,14 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       rtol_classify relative tolerance for cycle classification
       atol_classify absolute tolerance for cycle classification
       dstrain       direct strain difference between bars
+      dts           manually specified cycle time steps
   """
+  if dts is not None:
+    nsteps_cycle = len(dts)
+
   driver = Driver_sd_twobar(A1, A2, T1, T2, period, P, load_time, model,
       nsteps_load = nsteps_load, nsteps_cycle = nsteps_cycle, verbose = verbose,
-      dstrain = dstrain)
+      dstrain = dstrain, dts = dts)
   
   try:
     driver.load_up()
