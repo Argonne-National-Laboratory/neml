@@ -340,8 +340,8 @@ std::shared_ptr<HardeningRule> process_isotropictag(
     const xmlpp::Element * node, int & ier)
 {
   return dispatch_attribute<HardeningRule>(node, "type",
-                                          {"linear", "voce"},
-                                          {&process_linearisotropic, &process_voceisotropic},
+                                          {"linear", "interpolated", "voce"},
+                                          {&process_linearisotropic, &process_interpolatedisotropic, &process_voceisotropic},
                                           ier);
 }
 
@@ -354,6 +354,15 @@ std::shared_ptr<HardeningRule> process_linearisotropic(
   std::shared_ptr<Interpolate> harden = scalar_param(node, "harden", ier);
 
   return std::make_shared<LinearIsotropicHardeningRule>(yield, harden);
+}
+
+std::shared_ptr<HardeningRule> process_interpolatedisotropic(
+    const xmlpp::Element * node, int & ier)
+{
+  // Just the flow curve
+  std::shared_ptr<Interpolate> flow = scalar_param(node, "flow", ier);
+
+  return std::make_shared<InterpolatedIsotropicHardeningRule>(flow);
 }
 
 std::shared_ptr<HardeningRule> process_voceisotropic(

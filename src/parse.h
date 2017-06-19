@@ -87,6 +87,9 @@ std::shared_ptr<HardeningRule> process_isotropictag(const xmlpp::Element * node,
 /// Linear isotropic hardening
 std::shared_ptr<HardeningRule> process_linearisotropic(const xmlpp::Element * node, int & ier);
 
+/// Interpolated isotropic hardening
+std::shared_ptr<HardeningRule> process_interpolatedisotropic(const xmlpp::Element * node, int & ier);
+
 /// Voce isotropic hardening
 std::shared_ptr<HardeningRule> process_voceisotropic(const xmlpp::Element * node, int & ier);
 
