@@ -1172,8 +1172,9 @@ def offset_stress(e, s, eo = 0.2/100.0):
 
   return soff
 
-def bree(models, lengths, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
-    nsteps_cycle = 15, dt_load = 1.0, dt_cycle = 1.0):
+def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
+    nsteps_cycle = 15, dt_load = 1.0, dt_cycle = 1.0, quadrature = 'midpoint',
+    xi = None, Ai = None):
   """
     Solve a Bree problem using an approximate solution to Bree's integral
     equation.
@@ -1192,23 +1193,31 @@ def bree(models, lengths, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
       dt_load       time increment for loading
       dt_cycle      time increment for cycling
   """
-  # Do some housekeeping
-  lengths = np.array(lengths)
   n = len(models)
+
+  if xi is not None:
+    if Ai is None:
+      raise ValueError("If directly specifying quadrature must provide "
+          "both xi and Ai")
+    if (np.max(xi) > 1) or (np.min(xi) < 0):
+      raise ValueError("xi should go from zero to one!")
+  else:
+    if quadrature == 'midpoint':
+      xi = (2.0 * (np.array(range(n)) + 1) - 1.0) / (2.0 * n)
+      Ai = 1.0 / n
+    else:
+      raise ValueError("Unknown quadrature rule %s" % quadrature)
+
+  # Do some housekeeping
   hist = [m.init_store() for m in models]
   mech_strain = np.zeros((n,))
   stresses = np.zeros((n,))
   temps = np.ones((n,)) * T0
   tn = 0.0
 
-  # Centers for each segment
-  ends = np.cumsum(lengths)
-  xs = ends - np.array(lengths) / 2.0
-  L = np.sum(lengths)
-
   # Update to the next increment
   def update(e, dTi, dt, t_n, hists_n, emechs_n, stresses_n, T_n):
-    tempss = xs / L * dTi + T0
+    tempss = xi * dTi + T0
     t_np1 = t_n + dt
 
     stressess = np.zeros((n,))
@@ -1238,8 +1247,8 @@ def bree(models, lengths, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
   def RJ(e, dTi, Pi, dt, t_n, hists_n, emechs_n, stresses_n, T_n):
     stresses, tangents, hists, strains, temps, energy, work = update(e, dTi, dt, t_n,
         hists_n, emechs_n, stresses_n, T_n)
-    R = np.sum(stresses * lengths) - Pi * L
-    A = np.sum(tangents * lengths)
+    R = np.sum(stresses * Ai) - Pi
+    A = np.sum(tangents * Ai)
 
     return R, A
 
@@ -1258,8 +1267,8 @@ def bree(models, lengths, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
         stresses, temps) 
     over_strain.append(e)
     over_time.append(over_time[-1] + dt_load)
-    over_energy.append(over_energy[-1] + np.sum(energy * lengths))
-    over_work.append(over_work[-1] + np.sum(work * lengths))
+    over_energy.append(over_energy[-1] + np.sum(energy * Ai))
+    over_work.append(over_work[-1] + np.sum(work * Ai))
 
   # Cycle the model
   for ci in range(ncycles):
@@ -1272,8 +1281,8 @@ def bree(models, lengths, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
           stresses, temps) 
       over_strain.append(e)
       over_time.append(over_time[-1] + dt_cycle)
-      over_energy.append(over_energy[-1] + np.sum(energy * lengths))
-      over_work.append(over_work[-1] + np.sum(work * lengths))
+      over_energy.append(over_energy[-1] + np.sum(energy * Ai))
+      over_work.append(over_work[-1] + np.sum(work * Ai))
 
     for dTi in np.linspace(dT, 0, nsteps_cycle+1)[1:]:
       sfn = lambda x: RJ(x, dTi, P, dt_load, over_time[-1], hist, mech_strain,
@@ -1284,8 +1293,8 @@ def bree(models, lengths, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
           stresses, temps) 
       over_strain.append(e)
       over_time.append(over_time[-1] + dt_cycle)
-      over_energy.append(over_energy[-1] + np.sum(energy * lengths))
-      over_work.append(over_work[-1] + np.sum(work * lengths))
+      over_energy.append(over_energy[-1] + np.sum(energy * Ai))
+      over_work.append(over_work[-1] + np.sum(work * Ai))
 
   return over_time, over_strain, over_energy, over_work
 
