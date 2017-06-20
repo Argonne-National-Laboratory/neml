@@ -3,6 +3,7 @@ import numpy.linalg as la
 
 import scipy.interpolate as inter
 import scipy.optimize as opt
+from numpy.polynomial.legendre import leggauss
 
 class Driver(object):
   """
@@ -1172,6 +1173,13 @@ def offset_stress(e, s, eo = 0.2/100.0):
 
   return soff
 
+def gauss_points(n):
+  """
+    Helper for the below
+  """
+  xi, wi = leggauss(n)
+  return 0.5*xi + 0.5, 0.5*wi
+
 def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
     nsteps_cycle = 15, dt_load = 1.0, dt_cycle = 1.0, quadrature = 'midpoint',
     xi = None, Ai = None):
@@ -1205,6 +1213,8 @@ def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
     if quadrature == 'midpoint':
       xi = (2.0 * (np.array(range(n)) + 1) - 1.0) / (2.0 * n)
       Ai = 1.0 / n
+    elif quadrature == 'gauss':
+      xi, Ai = gauss_points(n)
     else:
       raise ValueError("Unknown quadrature rule %s" % quadrature)
 
