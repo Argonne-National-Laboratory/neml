@@ -154,7 +154,7 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node, int
 
 /// Return a single child node with given name, if not return relevant error
 bool one_child(const xmlpp::Node * node, std::string name,
-               xmlpp::Element * & child, int & ier);
+               const xmlpp::Element * & child, int & ier);
 
 /// Return the string value of an attribute with a given name, if not error
 bool one_attribute(const xmlpp::Element * node, std::string name,
@@ -260,7 +260,7 @@ std::shared_ptr<T> dispatch_node(const xmlpp::Node * node,
                                  std::shared_ptr<T> (*fptr)(const xmlpp::Element *, int &),
                                  int & ier)
 {
-  xmlpp::Element * subnode;
+  const xmlpp::Element * subnode;
   if (not one_child(node, nname, subnode, ier)) {
     return std::shared_ptr<T>(nullptr);
   }
@@ -308,7 +308,7 @@ std::vector<std::shared_ptr<T>> dispatch_vector_models(
     int & ier)
 {
   // Get the collection node
-  xmlpp::Element * mnode;
+  const xmlpp::Element * mnode;
   if (not one_child(node, collection_name, mnode, ier)) {
     return {};
   }

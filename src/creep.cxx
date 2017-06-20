@@ -352,7 +352,7 @@ int J2CreepModel::df_ds(const double * const s, const double * const e,
   ier = outer_vec(dir, 6, dir, 6, A);
   for (int i=0; i<36; i++) A[i] *= 3.0/2.0 * (drate - rate / se);
   for (int i=0; i<6; i++) A[CINDEX(i,i,6)] += rate / se;
-
+  
   // Do the final multiplication
   ier = mat_mat(6, 6, 6, A, ID, df);
 
