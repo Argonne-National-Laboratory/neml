@@ -556,7 +556,8 @@ std::shared_ptr<FluidityModel> process_fluidity(
 {
   // Right now only a constant fluidity option
   return dispatch_attribute<FluidityModel>(
-      node, "type", {"constant"}, {&process_constant_fluidity}, ier);
+      node, "type", {"constant", "saturating"}, 
+      {&process_constant_fluidity, &process_saturating_fluidity}, ier);
 }
 
 std::shared_ptr<FluidityModel> process_constant_fluidity(
@@ -566,6 +567,16 @@ std::shared_ptr<FluidityModel> process_constant_fluidity(
   std::shared_ptr<Interpolate> eta = scalar_param(node, "eta", ier);
 
   return std::make_shared<ConstantFluidity>(eta);
+}
+
+std::shared_ptr<FluidityModel> process_saturating_fluidity(
+    const xmlpp::Element * node, int & ier)
+{
+  std::shared_ptr<Interpolate> K0 = scalar_param(node, "K0", ier);
+  std::shared_ptr<Interpolate> A = scalar_param(node, "A", ier);
+  std::shared_ptr<Interpolate> b = scalar_param(node, "b", ier);
+
+  return std::make_shared<SaturatingFluidity>(K0, A, b);
 }
 
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(

@@ -231,6 +231,11 @@ PYBIND11_PLUGIN(visco_flow) {
         .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("eta"))
         ;
 
+    py::class_<SaturatingFluidity, std::shared_ptr<SaturatingFluidity>>(m, "SaturatingFluidity", py::base<FluidityModel>())
+        .def(py::init<double, double, double>(), py::arg("K0"), py::arg("A"), py::arg("b"))
+        .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("K0"), py::arg("A"), py::arg("b"))
+        ;
+
     py::class_<ChabocheFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule", py::base<ViscoPlasticFlowRule>())
         .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, double>(),
              py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))

@@ -141,6 +141,9 @@ std::shared_ptr<FluidityModel> process_fluidity(const xmlpp::Element * node, int
 /// Constant fluidity
 std::shared_ptr<FluidityModel> process_constant_fluidity(const xmlpp::Element * node, int & ier);
 
+/// Saturating fluidity
+std::shared_ptr<FluidityModel> process_saturating_fluidity(const xmlpp::Element * node, int & ier);
+
 /// Associative viscoplasticity processing
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(const xmlpp::Element * node, int & ier);
 
