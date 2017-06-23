@@ -13,3 +13,4 @@ debug
 util/c_interface/csimple
 util/f_interface/fsimple
 *-lyxformat-*
+examples/profiling/profile
