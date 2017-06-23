@@ -624,7 +624,7 @@ def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
 
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
     sdir = np.array([1,0,0,0,0,0]), verbose = False,
-    offset = 0.2/100.0):
+    offset = 0.2/100.0, history = None):
   """
     Make a uniaxial stress/strain curve
 
@@ -639,6 +639,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       sdir      stress direction, default tension in x
       verbose   whether to be verbose
       offset    used to calculate yield stress
+      history   initial model history
 
     Results:
       strain    strain in direction
@@ -646,6 +647,9 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   """
   e_inc = emax / nsteps
   driver = Driver_sd(model, verbose = verbose)
+  if history is not None:
+    driver.stored_int[0] = history
+
   strain = [0.0]
   stress = [0.0]
   for i in range(nsteps):
