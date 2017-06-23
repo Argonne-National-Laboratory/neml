@@ -60,30 +60,34 @@ int IsoKinJ2::df_dsds(const double* const s, const double* const q, double T,
   std::copy(s, s+6, n);
   dev_vec(n);
   add_vec(n, &q[1], 6, n);
+
   double nv = norm2_vec(n, 6);
   normalize_vec(n, 6);
   
   std::fill(ddf, ddf+36, 0.0);
-  for (int i=0; i<6; i++) {
-    ddf[CINDEX(i,i,6)] += 1.0;
-  }
-  
-  double iv[6];
-  double jv[6];
-  for (int i=0; i<3; i++) {
-    iv[i] = 1.0 / 3.0;
-    jv[i] = 1.0;
-  }
-  for (int i=3; i<6; i++) {
-    iv[i] = 0.0;
-    jv[i] = 0.0;
-  }
 
-  outer_update_minus(iv, 6, jv, 6, ddf);
+  if (nv > 0.0) {
+    for (int i=0; i<6; i++) {
+      ddf[CINDEX(i,i,6)] += 1.0;
+    }
+    
+    double iv[6];
+    double jv[6];
+    for (int i=0; i<3; i++) {
+      iv[i] = 1.0 / 3.0;
+      jv[i] = 1.0;
+    }
+    for (int i=3; i<6; i++) {
+      iv[i] = 0.0;
+      jv[i] = 0.0;
+    }
 
-  outer_update_minus(n, 6, n, 6, ddf);
-  for (int i=0; i<36; i++) {
-    ddf[i] /= nv;
+    outer_update_minus(iv, 6, jv, 6, ddf);
+    
+    outer_update_minus(n, 6, n, 6, ddf);
+    for (int i=0; i<36; i++) {
+      ddf[i] /= nv;
+    }
   }
 
   return 0;
@@ -103,18 +107,21 @@ int IsoKinJ2::df_dqdq(const double* const s, const double* const q, double T,
   normalize_vec(n, 6);
   
   std::fill(ss, ss+36, 0.0);
-  for (int i=0; i<6; i++) {
-    ss[CINDEX(i,i,6)] += 1.0;
-  }
-  
-  outer_update_minus(n, 6, n, 6, ss);
-  for (int i=0; i<36; i++) {
-    ss[i] /= nv;
-  }
 
-  for (int i=0; i<6; i++) {
-    for (int j=0; j<6; j++) {
-      ddf[CINDEX((i+1),(j+1),nhist())] = ss[CINDEX(i,j,6)];
+  if (nv > 0.0) {
+    for (int i=0; i<6; i++) {
+      ss[CINDEX(i,i,6)] += 1.0;
+    }
+    
+    outer_update_minus(n, 6, n, 6, ss);
+    for (int i=0; i<36; i++) {
+      ss[i] /= nv;
+    }
+
+    for (int i=0; i<6; i++) {
+      for (int j=0; j<6; j++) {
+        ddf[CINDEX((i+1),(j+1),nhist())] = ss[CINDEX(i,j,6)];
+      }
     }
   }
 
@@ -134,19 +141,21 @@ int IsoKinJ2::df_dsdq(const double* const s, const double* const q, double T,
   double nv = norm2_vec(n, 6);
   normalize_vec(n, 6);
   
-  std::fill(ss, ss+36, 0.0);
-  for (int i=0; i<6; i++) {
-    ss[CINDEX(i,i,6)] += 1.0;
-  }
-  
-  outer_update_minus(n, 6, n, 6, ss);
-  for (int i=0; i<36; i++) {
-    ss[i] /= nv;
-  }
+  if (nv > 0.0) {
+    std::fill(ss, ss+36, 0.0);
+    for (int i=0; i<6; i++) {
+      ss[CINDEX(i,i,6)] += 1.0;
+    }
+    
+    outer_update_minus(n, 6, n, 6, ss);
+    for (int i=0; i<36; i++) {
+      ss[i] /= nv;
+    }
 
-  for (int i=0; i<6; i++) {
-    for (int j=0; j<6; j++) {
-      ddf[CINDEX(i,(j+1),nhist())] = ss[CINDEX(i,j,6)];
+    for (int i=0; i<6; i++) {
+      for (int j=0; j<6; j++) {
+        ddf[CINDEX(i,(j+1),nhist())] = ss[CINDEX(i,j,6)];
+      }
     }
   }
 
