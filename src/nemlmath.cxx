@@ -128,6 +128,8 @@ int mat_mat(int m, int n, int k, const double * const A,
             const double * const B, double * const C)
 {
   dgemm_("N", "N", n, m, k, 1.0, B, n, A, k, 0.0, C, n);
+
+  return 0;
 }
 
 int solve_mat(const double * const A, int n, double * const x)

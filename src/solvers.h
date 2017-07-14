@@ -44,11 +44,11 @@ class TestRosenbrock: public Solvable {
 /// Call the built-in solver
 int solve(Solvable * system, double * x, TrialState * ts, 
           double tol = 1.0e-8, int miter = 50,
-          bool verbose = false);
+          bool verbose = false, bool relative = false);
 
 /// Default solver: plain NR
 int newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose);
+          double tol, int miter, bool verbose, bool relative);
 
 #ifdef SOLVER_NOX
 /// NOX OO interface

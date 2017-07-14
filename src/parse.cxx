@@ -54,7 +54,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   // expansion nodes
   // Elastic
   std::shared_ptr<LinearElasticModel> emodel;
-  xmlpp::Element * elastic_node;
+  const xmlpp::Element * elastic_node;
   if (not one_child(node, "elastic", elastic_node, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
@@ -65,7 +65,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   std::shared_ptr<Interpolate> alpha;
   auto a_nodes = node->get_children("alpha");
   if (a_nodes.size() > 0) {
-    alpha = process_alpha(dynamic_cast<xmlpp::Element*>(a_nodes.front()), ier);
+    alpha = process_alpha(dynamic_cast<const xmlpp::Element*>(a_nodes.front()), ier);
   }
   else {
     alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
@@ -77,12 +77,12 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   std::shared_ptr<CreepModel> cmodel = nullptr;
   if (c_nodes.size() > 0) {
     cmodel = process_creep(
-        dynamic_cast<xmlpp::Element*>(c_nodes.front()), ier);
+        dynamic_cast<const xmlpp::Element*>(c_nodes.front()), ier);
     found_creep = true;
   }
   
   // Logic here because we treat viscoplasticity differently
-  xmlpp::Element * plastic_node;
+  const xmlpp::Element * plastic_node;
   if (not one_child(node, "plastic", plastic_node, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
@@ -340,8 +340,8 @@ std::shared_ptr<HardeningRule> process_isotropictag(
     const xmlpp::Element * node, int & ier)
 {
   return dispatch_attribute<HardeningRule>(node, "type",
-                                          {"linear", "voce"},
-                                          {&process_linearisotropic, &process_voceisotropic},
+                                          {"linear", "interpolated", "voce"},
+                                          {&process_linearisotropic, &process_interpolatedisotropic, &process_voceisotropic},
                                           ier);
 }
 
@@ -354,6 +354,15 @@ std::shared_ptr<HardeningRule> process_linearisotropic(
   std::shared_ptr<Interpolate> harden = scalar_param(node, "harden", ier);
 
   return std::make_shared<LinearIsotropicHardeningRule>(yield, harden);
+}
+
+std::shared_ptr<HardeningRule> process_interpolatedisotropic(
+    const xmlpp::Element * node, int & ier)
+{
+  // Just the flow curve
+  std::shared_ptr<Interpolate> flow = scalar_param(node, "flow", ier);
+
+  return std::make_shared<InterpolatedIsotropicHardeningRule>(flow);
 }
 
 std::shared_ptr<HardeningRule> process_voceisotropic(
@@ -547,7 +556,8 @@ std::shared_ptr<FluidityModel> process_fluidity(
 {
   // Right now only a constant fluidity option
   return dispatch_attribute<FluidityModel>(
-      node, "type", {"constant"}, {&process_constant_fluidity}, ier);
+      node, "type", {"constant", "saturating"}, 
+      {&process_constant_fluidity, &process_saturating_fluidity}, ier);
 }
 
 std::shared_ptr<FluidityModel> process_constant_fluidity(
@@ -557,6 +567,16 @@ std::shared_ptr<FluidityModel> process_constant_fluidity(
   std::shared_ptr<Interpolate> eta = scalar_param(node, "eta", ier);
 
   return std::make_shared<ConstantFluidity>(eta);
+}
+
+std::shared_ptr<FluidityModel> process_saturating_fluidity(
+    const xmlpp::Element * node, int & ier)
+{
+  std::shared_ptr<Interpolate> K0 = scalar_param(node, "K0", ier);
+  std::shared_ptr<Interpolate> A = scalar_param(node, "A", ier);
+  std::shared_ptr<Interpolate> b = scalar_param(node, "b", ier);
+
+  return std::make_shared<SaturatingFluidity>(K0, A, b);
 }
 
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(
@@ -601,7 +621,7 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node,
 
 // Helpers
 bool one_child(const xmlpp::Node * node, std::string name,
-               xmlpp::Element * & child, int & ier)
+               const xmlpp::Element * & child, int & ier)
 {
   auto matches = node->get_children(name);
 
@@ -618,7 +638,7 @@ bool one_child(const xmlpp::Node * node, std::string name,
     return false;
   }
   else {
-    child = dynamic_cast<xmlpp::Element*>(matches.front());
+    child = dynamic_cast<const xmlpp::Element*>(matches.front());
     return true;
   }
 
@@ -656,7 +676,7 @@ std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node,
         << node->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  auto child = dynamic_cast<xmlpp::Element*>(matches.front());
+  auto child = dynamic_cast<const xmlpp::Element*>(matches.front());
   
   // Two cases: raw text implies constant, interpolate node means use an
   // interpolate
@@ -667,7 +687,7 @@ std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node,
     return interpolate_node(matches_inter.front(), ier);
   }
   else if (child->has_child_text()) {
-    std::string sval = child->get_child_text()->get_content();
+    std::string sval = child->get_first_child_text()->get_content();
     if (sval == "") {
       ier = BAD_TEXT;
       std::cerr << "Node " << name << " near line " 
@@ -712,7 +732,7 @@ std::shared_ptr<Interpolate> process_constant(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_child_text()->get_content();
+  std::string sval = child->get_first_child_text()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Constant interpolate node has invalid text near line "
@@ -732,7 +752,7 @@ std::shared_ptr<Interpolate> process_polynomial(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_child_text()->get_content();
+  std::string sval = child->get_first_child_text()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Polynomial interpolate node has invalid text near line "
@@ -755,7 +775,7 @@ std::shared_ptr<Interpolate> process_piecewise(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_child_text()->get_content();
+  std::string sval = child->get_first_child_text()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Polynomial interpolate node has invalid text near line "
@@ -786,7 +806,7 @@ std::shared_ptr<Interpolate> process_mts(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_child_text()->get_content();
+  std::string sval = child->get_first_child_text()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Polynomial interpolate node has invalid text near line "
@@ -838,7 +858,7 @@ vector_param(const xmlpp::Node * node, std::string name, int & ier)
         << node->get_line() << std::endl;
     return {std::shared_ptr<Interpolate>(new InvalidInterpolate())};
   }
-  auto child = dynamic_cast<xmlpp::Element*>(matches.front());
+  auto child = dynamic_cast<const xmlpp::Element*>(matches.front());
   
   // Two cases: text data -> vector of constants or multiple instances of
   // interpolate nodes
@@ -851,7 +871,7 @@ vector_param(const xmlpp::Node * node, std::string name, int & ier)
     return results;
   }
   else if (child->has_child_text()) {
-    std::string sval = child->get_child_text()->get_content();
+    std::string sval = child->get_first_child_text()->get_content();
     if (sval == "") {
       ier = BAD_TEXT;
       std::cerr << "Vector parameter node near line " << child->get_line() << 

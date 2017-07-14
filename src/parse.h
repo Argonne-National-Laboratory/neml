@@ -87,6 +87,9 @@ std::shared_ptr<HardeningRule> process_isotropictag(const xmlpp::Element * node,
 /// Linear isotropic hardening
 std::shared_ptr<HardeningRule> process_linearisotropic(const xmlpp::Element * node, int & ier);
 
+/// Interpolated isotropic hardening
+std::shared_ptr<HardeningRule> process_interpolatedisotropic(const xmlpp::Element * node, int & ier);
+
 /// Voce isotropic hardening
 std::shared_ptr<HardeningRule> process_voceisotropic(const xmlpp::Element * node, int & ier);
 
@@ -138,6 +141,9 @@ std::shared_ptr<FluidityModel> process_fluidity(const xmlpp::Element * node, int
 /// Constant fluidity
 std::shared_ptr<FluidityModel> process_constant_fluidity(const xmlpp::Element * node, int & ier);
 
+/// Saturating fluidity
+std::shared_ptr<FluidityModel> process_saturating_fluidity(const xmlpp::Element * node, int & ier);
+
 /// Associative viscoplasticity processing
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(const xmlpp::Element * node, int & ier);
 
@@ -151,7 +157,7 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node, int
 
 /// Return a single child node with given name, if not return relevant error
 bool one_child(const xmlpp::Node * node, std::string name,
-               xmlpp::Element * & child, int & ier);
+               const xmlpp::Element * & child, int & ier);
 
 /// Return the string value of an attribute with a given name, if not error
 bool one_attribute(const xmlpp::Element * node, std::string name,
@@ -257,7 +263,7 @@ std::shared_ptr<T> dispatch_node(const xmlpp::Node * node,
                                  std::shared_ptr<T> (*fptr)(const xmlpp::Element *, int &),
                                  int & ier)
 {
-  xmlpp::Element * subnode;
+  const xmlpp::Element * subnode;
   if (not one_child(node, nname, subnode, ier)) {
     return std::shared_ptr<T>(nullptr);
   }
@@ -305,7 +311,7 @@ std::vector<std::shared_ptr<T>> dispatch_vector_models(
     int & ier)
 {
   // Get the collection node
-  xmlpp::Element * mnode;
+  const xmlpp::Element * mnode;
   if (not one_child(node, collection_name, mnode, ier)) {
     return {};
   }

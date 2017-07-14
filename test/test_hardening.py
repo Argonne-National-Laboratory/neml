@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import hardening
+from neml import hardening, interpolate
 import unittest
 
 from common import *
@@ -42,6 +42,22 @@ class TestLinearIsotropicHardening(unittest.TestCase, CommonHardening):
   def test_relation(self):
     self.assertTrue(np.allclose(self.model.q(self.hist_trial, self.T), 
       np.array([-self.s0 - self.K * self.hist_trial[0]])))
+
+class TestInterpolatedIsotropicHardening(unittest.TestCase, CommonHardening):
+  def setUp(self):
+    self.points = [0.0, 0.01, 0.02, 0.05]
+    self.values = [100.0, 110.0, 130.0, 135.0]
+    self.ifn = interpolate.PiecewiseLinearInterpolate(self.points, self.values)
+    self.hist0 = np.array([0.0])
+    self.hist_trial = np.array([0.03])
+    self.T = 300.0
+
+    self.model = hardening.InterpolatedIsotropicHardeningRule(self.ifn)
+
+  def test_relation(self):
+    self.assertTrue(np.isclose(self.model.q(self.hist_trial, self.T)[0],
+      -self.ifn(self.hist_trial[0])))
+
 
 class TestVoceIsotropicHardening(unittest.TestCase, CommonHardening):
   def setUp(self):

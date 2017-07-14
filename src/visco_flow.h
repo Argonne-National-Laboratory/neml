@@ -166,6 +166,20 @@ class ConstantFluidity: public FluidityModel {
 
 };
 
+class SaturatingFluidity: public FluidityModel {
+ public:
+  SaturatingFluidity(double K0, double A, double b);
+  SaturatingFluidity(std::shared_ptr<Interpolate> K0,
+                     std::shared_ptr<Interpolate> A,
+                     std::shared_ptr<Interpolate> b);
+  virtual double eta(double a, double T) const;
+  virtual double deta(double a, double T) const;
+
+ private:
+  const std::shared_ptr<const Interpolate> K0_, A_, b_;
+
+};
+
 /// Non-associative flow based on Chaboche's viscoplastic formulation
 //
 //  It uses an associative flow rule, a non-associative hardening rule 

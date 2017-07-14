@@ -3,6 +3,7 @@ import numpy.linalg as la
 
 import scipy.interpolate as inter
 import scipy.optimize as opt
+from numpy.polynomial.legendre import leggauss
 
 class Driver(object):
   """
@@ -10,7 +11,7 @@ class Driver(object):
     results.
   """
   def __init__(self, model, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
-      miter = 20):
+      miter = 100):
     """
       Parameters:
         model       material model to play with
@@ -267,6 +268,8 @@ class Driver_sd_twobar(Driver_sd):
     """
     nsteps_load = kwargs.pop('nsteps_load', 50)
     nsteps_cycle = kwargs.pop('nsteps_cycle', 201)
+    dstrain = kwargs.pop('dstrain', lambda t: 0.0)
+    dts = kwargs.pop('dts', None)
     super(Driver_sd_twobar, self).__init__(*args, **kwargs)
 
     self.A1 = A1
@@ -280,8 +283,7 @@ class Driver_sd_twobar(Driver_sd):
 
     self.nsteps_load = nsteps_load
     self.nsteps_cycle = nsteps_cycle
-
-    self.strain_int = [0.0]
+    self.dstrain = dstrain
 
     self.strain1_int = [np.zeros((6,))]
     self.strain2_int = [np.zeros((6,))]
@@ -309,6 +311,8 @@ class Driver_sd_twobar(Driver_sd):
     self.T1_0 = T1(0.0)
     self.T2_0 = T2(0.0)
 
+    self.dts = dts
+
   @property
   def T1(self):
     return np.array(self.T1_int)
@@ -316,6 +320,14 @@ class Driver_sd_twobar(Driver_sd):
   @property
   def T2(self):
     return np.array(self.T2_int)
+
+  @property
+  def strain1(self):
+    return np.array(self.strain1_int)
+
+  @property
+  def strain2(self):
+    return np.array(self.strain2_int)
 
   @property
   def strain1_mech(self):
@@ -341,7 +353,7 @@ class Driver_sd_twobar(Driver_sd):
   def stress2(self):
     return np.array(self.stress2_int)
 
-  def take_step(self, P, T1, T2, dt):
+  def take_step(self, P, T1, T2, dt, dstrain):
     """
       Take a single load step to get to P, T1, and T2 from the previous state.
     """
@@ -368,7 +380,7 @@ class Driver_sd_twobar(Driver_sd):
 
       R = np.zeros((12,))
       R[0] = s1_np1[0] * self.A1 + s2_np1[0] * self.A2 - P
-      R[1] = e1[0] - e2[0]
+      R[1] = e1[0] - e2[0] - dstrain
       R[2:7] = s1_np1[1:]
       R[7:] = s2_np1[1:]
 
@@ -442,28 +454,35 @@ class Driver_sd_twobar(Driver_sd):
     self.strain1_plastic_int.append(em1 - estrain1)
     self.strain2_plastic_int.append(em2 - estrain2)
 
-    self.strain_int.append(x[0])
-
   def load_up(self):
     """
       Load up to stress
     """
     dt = self.load_time / self.nsteps_load
     for P in np.linspace(0, self.P, self.nsteps_load+1)[1:]:
-      self.take_step(P, self.T1_0, self.T2_0, dt)
+      self.take_step(P, self.T1_0, self.T2_0, dt, 0)
 
   def one_cycle(self):
     """
       Do one cycle at fixed load
     """
-    dt = self.period / self.nsteps_cycle
-    for toffset in np.linspace(0, self.period, self.nsteps_cycle+1)[1:]:
-      self.take_step(self.P, self.T1_fn(toffset), self.T2_fn(toffset), dt)
+    if self.dts is None:
+      dt = self.period / self.nsteps_cycle
+      dts = [dt] * self.nsteps_cycle
+    else:
+      dts = self.dts
+    
+    t = 0.0
+    for dt in dts:
+      t += dt
+      self.take_step(self.P, self.T1_fn(t), self.T2_fn(t), dt,
+          self.dstrain(t))
 
 def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     max_strain = None, min_strain = None, 
     nsteps_load = 50, nsteps_cycle = 201, verbose = False,
-    rtol_classify = 1.0e-4, atol_classify = 1.0e-10):
+    rtol_classify = 1.0e-4, atol_classify = 1.0e-10,
+    dstrain = lambda t: 0.0, dts = None, ret_all = False):
   """
     Run a two bar test and classify
 
@@ -485,9 +504,15 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       verbose       print extra messages
       rtol_classify relative tolerance for cycle classification
       atol_classify absolute tolerance for cycle classification
+      dstrain       direct strain difference between bars
+      dts           manually specified cycle time steps
   """
+  if dts is not None:
+    nsteps_cycle = len(dts)
+
   driver = Driver_sd_twobar(A1, A2, T1, T2, period, P, load_time, model,
-      nsteps_load = nsteps_load, nsteps_cycle = nsteps_cycle, verbose = verbose)
+      nsteps_load = nsteps_load, nsteps_cycle = nsteps_cycle, verbose = verbose,
+      dstrain = dstrain, dts = dts)
   
   try:
     driver.load_up()
@@ -511,7 +536,26 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
   
   cycle_count = 0
   for i in range(ncycles):
-    driver.one_cycle()
+    try:
+      driver.one_cycle()
+    except Exception:
+      return {
+          'strain': [],
+          'ncycles': 0,
+          'T1': [],
+          'T2': [],
+          'time': [],
+          'energy_density': [], 
+          'plastic_work': [],
+          'strain_mech_1': [],
+          'strain_mech_2': [],
+          'strain_inelastic_1': [],
+          'strain_inelastic_2': [],
+          'stress1': [],
+          'stress2': [],
+          'classification': "unstable"
+          }
+
     ep1 = driver.strain1_plastic_int[-1][0]
     ep2 = driver.strain2_plastic_int[-1][0]
     max_s = np.max([np.abs(ep1), np.abs(ep2)])
@@ -521,7 +565,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       break
     if (min_strain is not None) and (min_s > min_strain):
       break
-
+  
   # Use the final cycles
   a = cycle_count * nsteps_cycle - 1
   b = (cycle_count - 1) * nsteps_cycle - 1
@@ -529,9 +573,13 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
   classification = classify(
       driver.u_int[a], driver.u_int[b],
       driver.p_int[a], driver.p_int[b],
-      driver.strain[a], driver.strain[b],
+      driver.strain1_int[a][0], driver.strain1_int[b][0],
+      driver.strain2_int[a][0], driver.strain2_int[b][0],
       rtol = rtol_classify,
       atol = atol_classify)
+
+  if ret_all:
+    nsteps_load = 0
   
   return {
       'strain': driver.strain[nsteps_load:], 
@@ -547,10 +595,12 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       'strain_inelastic_2': driver.strain2_plastic[nsteps_load:,0],
       'stress1': driver.stress1[nsteps_load:,0],
       'stress2': driver.stress2[nsteps_load:,0],
-      'classification': classification
+      'classification': classification,
+      'strain1': driver.strain1[nsteps_load:,0],
+      'strain2': driver.strain2[nsteps_load:,0]
       }
 
-def classify(ua, ub, pa, pb, ea, eb, rtol = 1.0e-4, atol = 1.0e-10):
+def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
   """
     Classify a model as elastic, elastic shakedown, plastic shakedown,
     or ratcheting.
@@ -571,14 +621,14 @@ def classify(ua, ub, pa, pb, ea, eb, rtol = 1.0e-4, atol = 1.0e-10):
     return 'elastic'
   elif np.abs(ub-ua) < rtol * np.abs(ub):
     return 'elastic shakedown'
-  elif np.abs(eb-ea) < rtol * np.abs(eb):
+  elif (np.abs(e1b-e1a) < rtol * np.abs(e1b)) and (np.abs(e2b-e2a) < rtol * np.abs(e2b)):
     return 'plastic shakedown'
   else:
     return 'ratcheting'
 
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
     sdir = np.array([1,0,0,0,0,0]), verbose = False,
-    offset = 0.2/100.0):
+    offset = 0.2/100.0, history = None):
   """
     Make a uniaxial stress/strain curve
 
@@ -593,6 +643,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       sdir      stress direction, default tension in x
       verbose   whether to be verbose
       offset    used to calculate yield stress
+      history   initial model history
 
     Results:
       strain    strain in direction
@@ -600,6 +651,9 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   """
   e_inc = emax / nsteps
   driver = Driver_sd(model, verbose = verbose)
+  if history is not None:
+    driver.stored_int[0] = history
+
   strain = [0.0]
   stress = [0.0]
   for i in range(nsteps):
@@ -1012,7 +1066,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 750,
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1])}
 
 def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100, 
-    sdir = np.array([1,0,0,0,0,0]), verbose = False):
+    sdir = np.array([1,0,0,0,0,0]), verbose = False, history = None):
   """
     Model a uniaxial strain rate jump test
 
@@ -1026,6 +1080,7 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
       nsteps_per    number of steps per strain rate
       sdir          stress direction, default tension in x
       verbose       whether to be verbose
+      history       prior model history
 
     Results:
       strain    strain in direction
@@ -1033,6 +1088,8 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
   """
   e_inc = e_per / nsteps_per
   driver = Driver_sd(model, verbose = verbose)
+  if history is not None:
+    driver.stored_int[0] = history
   strain = [0.0]
   stress = [0.0]
   
@@ -1124,6 +1181,142 @@ def offset_stress(e, s, eo = 0.2/100.0):
 
   return soff
 
+def gauss_points(n):
+  """
+    Helper for the below
+  """
+  xi, wi = leggauss(n)
+  return 0.5*xi + 0.5, 0.5*wi
+
+def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
+    nsteps_cycle = 15, dt_load = 1.0, dt_cycle = 1.0, quadrature = 'midpoint',
+    xi = None, Ai = None):
+  """
+    Solve a Bree problem using an approximate solution to Bree's integral
+    equation.
+
+    Parameters:
+      models        vector of material models, one at each dl
+      lengths       each dl
+      P             primary stress
+      dT            temperature difference
+
+    Optional:
+      T0            initial temperature
+      ncycles       number of loading cycles to run
+      nsteps_up     number of steps to load up in
+      nsteps_cycle  number of steps per half cycle
+      dt_load       time increment for loading
+      dt_cycle      time increment for cycling
+  """
+  n = len(models)
+
+  if xi is not None:
+    if Ai is None:
+      raise ValueError("If directly specifying quadrature must provide "
+          "both xi and Ai")
+    if (np.max(xi) > 1) or (np.min(xi) < 0):
+      raise ValueError("xi should go from zero to one!")
+  else:
+    if quadrature == 'midpoint':
+      xi = (2.0 * (np.array(range(n)) + 1) - 1.0) / (2.0 * n)
+      Ai = 1.0 / n
+    elif quadrature == 'gauss':
+      xi, Ai = gauss_points(n)
+    else:
+      raise ValueError("Unknown quadrature rule %s" % quadrature)
+
+  # Do some housekeeping
+  hist = [m.init_store() for m in models]
+  mech_strain = np.zeros((n,))
+  stresses = np.zeros((n,))
+  temps = np.ones((n,)) * T0
+  tn = 0.0
+
+  # Update to the next increment
+  def update(e, dTi, dt, t_n, hists_n, emechs_n, stresses_n, T_n):
+    tempss = xi * dTi + T0
+    t_np1 = t_n + dt
+
+    stressess = np.zeros((n,))
+    tangents = np.zeros((n,))
+    strains = np.zeros((n,))
+    work = np.zeros((n,))
+    energy = np.zeros((n,))
+    hists = []
+
+    for i in range(n):
+      m_i = models[i]
+      emech_i = e - (tempss[i] - T0) * m_i.alpha(temps[i])
+      strains[i] = emech_i
+      s_i, h_i, A_i, u_i, p_i = m_i.update(
+          emech_i, emechs_n[i], tempss[i], T_n[i], t_np1, t_n, stresses_n[i],
+          hists_n[i], 0.0, 0.0)
+
+      stressess[i] = s_i
+      tangents[i] = A_i
+      work[i] = p_i
+      energy[i] = u_i
+      hists.append(h_i)
+
+    return stressess, tangents, hists, strains, temps, energy, work
+  
+  # Function to solve at each step
+  def RJ(e, dTi, Pi, dt, t_n, hists_n, emechs_n, stresses_n, T_n):
+    stresses, tangents, hists, strains, temps, energy, work = update(e, dTi, dt, t_n,
+        hists_n, emechs_n, stresses_n, T_n)
+    R = np.sum(stresses * Ai) - Pi
+    A = np.sum(tangents * Ai)
+
+    return R, A
+
+  over_strain = [0.0]
+  over_time = [0.0]
+  over_energy = [0.0]
+  over_work = [0.0]
+
+  # Load up the model
+  for Pi in np.linspace(0, P, nsteps_up+1)[1:]:
+    sfn = lambda x: RJ(x, 0.0, Pi, dt_load, over_time[-1], hist, mech_strain,
+        stresses, temps)
+    e = scalar_newton(sfn, over_strain[-1])
+    stresses, tangents, hist, mech_strain, temps, energy, work = update(
+        e, 0.0, dt_load, over_time[-1], hist, mech_strain,
+        stresses, temps) 
+    over_strain.append(e)
+    over_time.append(over_time[-1] + dt_load)
+    over_energy.append(over_energy[-1] + np.sum(energy * Ai))
+    over_work.append(over_work[-1] + np.sum(work * Ai))
+
+  # Cycle the model
+  for ci in range(ncycles):
+    for dTi in np.linspace(0, dT, nsteps_cycle+1)[1:]:
+      sfn = lambda x: RJ(x, dTi, P, dt_load, over_time[-1], hist, mech_strain,
+          stresses, temps)
+      e = scalar_newton(sfn, over_strain[-1])
+      stresses, tangents, hist, mech_strain, temps, energy, work = update(
+          e, dTi, dt_cycle, over_time[-1], hist, mech_strain,
+          stresses, temps) 
+      over_strain.append(e)
+      over_time.append(over_time[-1] + dt_cycle)
+      over_energy.append(over_energy[-1] + np.sum(energy * Ai))
+      over_work.append(over_work[-1] + np.sum(work * Ai))
+
+    for dTi in np.linspace(dT, 0, nsteps_cycle+1)[1:]:
+      sfn = lambda x: RJ(x, dTi, P, dt_load, over_time[-1], hist, mech_strain,
+          stresses, temps)
+      e = scalar_newton(sfn, over_strain[-1])
+      stresses, tangents, hist, mech_strain, temps, energy, work = update(
+          e, dTi, dt_cycle, over_time[-1], hist, mech_strain,
+          stresses, temps) 
+      over_strain.append(e)
+      over_time.append(over_time[-1] + dt_cycle)
+      over_energy.append(over_energy[-1] + np.sum(energy * Ai))
+      over_work.append(over_work[-1] + np.sum(work * Ai))
+
+  return over_time, over_strain, over_energy, over_work
+
+
 class MaximumIterations(RuntimeError):
   def __init__(self):
     super(MaximumIterations, self).__init__("Exceeded the maximum allowed iterations!")
@@ -1133,7 +1326,8 @@ class MaximumSubdivisions(RuntimeError):
     super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
 
 
-def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
+def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
+    quasi = None):
   """
     Manually-code newton-raphson so that I can output convergence info, if
     requested.
@@ -1157,9 +1351,59 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20):
     print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
   while (nR > rtol * nR0) and (nR > atol):
-    x -= la.solve(J, R)
+    if quasi is not None:
+      dx = -la.solve(J, R)
+      x += quasi * dx
+    else:
+      x -= la.solve(J, R)
     R, J = RJ(x)
     nR = la.norm(R)
+    i += 1
+    if verbose:
+      print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
+
+    if i > miter:
+      if verbose:
+        print("")
+      raise MaximumIterations()
+  
+  if verbose:
+    print("")
+
+  return x
+
+def scalar_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
+    quasi = None):
+  """
+    Manually-code newton-raphson so that I can output convergence info, if
+    requested.
+
+    Parameters:
+      RJ        function return the residual + jacobian
+      x0        initial guess
+
+    Optional:
+      verbose   verbose output
+  """
+  R, J = RJ(x0)
+  nR = np.abs(R)
+  nR0 = nR
+  x = x0
+  
+  i = 0
+
+  if verbose:
+    print("Iter.\tnR\t\tnR/nR0")
+    print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
+
+  while (nR > rtol * nR0) and (nR > atol):
+    if quasi is not None:
+      dx = -R/J
+      x += quasi * dx
+    else:
+      x -= R/J
+    R, J = RJ(x)
+    nR = np.abs(R)
     i += 1
     if verbose:
       print("%i\t%e\t%e\t" % (i, nR, nR / nR0))

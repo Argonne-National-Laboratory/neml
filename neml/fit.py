@@ -51,7 +51,7 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
     comm = MPI.COMM_WORLD, penalty = 10000.0, ngen = 500, cp = 0.5, 
     mp = 0.2, eta = 2.0, indpb = 0.05, ts = 3, elite = 5, 
     logfile = 'progress.log', popfile = 'population%i.npy',
-    include_zero = False, population = None, offset = 0):
+    population = [], offset = 0):
   """
     Use DEAP to fit a model to a database
 
@@ -81,8 +81,7 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
       elite         elitism
       logfile       text file for loading information
       popfile       string formatter for generation files
-      include_zero  include a special zero entry in the initial population
-      population    specify the whole population (for restart)
+      population    these members + random population = popsize
   """
   rank = comm.Get_rank()
   
@@ -94,14 +93,9 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
 
   # Setup initial population
   if rank == 0:
-    if population is not None:
-      pop_array = population
-    else:
-      if include_zero:
-        pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(popsize-1)])
-        pop_array = np.vstack((pop_array, np.zeros((len(bounds),))))
-      else:
-        pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(popsize)])
+    ps = len(population)
+    need = popsize - ps
+    pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(need)] + population)
     pop = array2member(pop_array)
     toolbox = base.Toolbox()
     toolbox.register("mate", tools.cxTwoPoint)
@@ -115,7 +109,6 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
   # evaluate initial residual
   res = evaluate_residual_mpi(model_maker, params, 
       database, rweights, tweights, comm = comm, penalty = penalty)
-  #res = np.sum(np.abs(params), axis = 1)
 
   if rank == 0:
     # Assign
@@ -123,7 +116,6 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
     # Log
     log(open(logfile, 'a'), 0 + offset, pop)
     write_pop(popfile % (0+offset), pop)
-
 
   # Loop over generations
   for ii in range(ngen):
@@ -155,7 +147,6 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
       params = member2array(offspring)
       res = evaluate_residual_mpi(model_maker, params, database, rweights, tweights,
         comm = comm, penalty = penalty)
-      #res = np.sum(np.abs(params), axis = 1)
 
       # Assign to the offspring
       offspring = assign_fitness(res, offspring)
@@ -171,13 +162,10 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
       log(open(logfile, 'a'), ii+1+offset, pop)
       write_pop(popfile % (ii+1+offset), pop)
 
-
     else:
       params = None
       res = evaluate_residual_mpi(model_maker, params, database, rweights, tweights,
         comm = comm, penalty = penalty)
-
-  return 
 
 def evaluate_weights(database, tweights):
   """

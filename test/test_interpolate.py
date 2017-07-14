@@ -1,6 +1,8 @@
 import sys
 sys.path.append('..')
 
+from common import *
+
 from neml import interpolate
 import unittest
 
@@ -8,7 +10,13 @@ import numpy as np
 import numpy.random as ra
 import scipy.interpolate as inter
 
-class TestPolynomialInterpolate(unittest.TestCase):
+class BaseInterpolate(object):
+  def test_derivative(self):
+    d = self.interpolate.derivative(self.x)
+    nd = differentiate(lambda x: self.interpolate(x), self.x)
+    self.assertTrue(np.isclose(d, nd, rtol = 1.0e-3))
+
+class TestPolynomialInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.n = 5
     self.coefs = list((ra.random((self.n,)) * 0.5 - 1.0) * 2.0)
@@ -19,12 +27,14 @@ class TestPolynomialInterpolate(unittest.TestCase):
     self.assertTrue(np.isclose(np.polyval(self.coefs, self.x),
       self.interpolate(self.x)))
 
-class TestPiecewiseLinearInterpolate(unittest.TestCase):
+class TestPiecewiseLinearInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.validx = [-10.0, -2.0, 1.0, 2.0, 5.0, 15.0]
     self.invalidx_1 = [-2.0, -10.0, 1.0, 2.0, 5.0, 15.0]
     self.invalidx_2 = [-10.0, -2.0, 1.0, 2.0, 5.0]
     self.points = [50.0, -25.0, 1.0, 0.0, 0.0, 10.0]
+
+    self.x = 17.0
 
     self.valid = interpolate.PiecewiseLinearInterpolate(self.validx, 
         self.points)
@@ -32,6 +42,7 @@ class TestPiecewiseLinearInterpolate(unittest.TestCase):
         self.points)
     self.invalid2 = interpolate.PiecewiseLinearInterpolate(self.invalidx_2, 
         self.points)
+    self.interpolate = self.valid
 
   def test_valid(self):
     self.assertTrue(self.valid.valid)
@@ -47,7 +58,7 @@ class TestPiecewiseLinearInterpolate(unittest.TestCase):
     ys2 = testinter(xs)
     self.assertTrue(np.allclose(ys1, ys2))
 
-class TestConstantInterpolate(unittest.TestCase):
+class TestConstantInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.v = ra.random((1,))[0]
     self.interpolate = interpolate.ConstantInterpolate(self.v)
@@ -56,7 +67,7 @@ class TestConstantInterpolate(unittest.TestCase):
   def test_interpolate(self):
     self.assertTrue(np.isclose(self.v, self.interpolate(self.x)))
 
-class TestMTSInterpolate(unittest.TestCase):
+class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.y0 = 100.0
     self.D = 50.0

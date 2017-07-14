@@ -357,6 +357,39 @@ double ConstantFluidity::deta(double a, double T) const
   return 0.0;
 }
 
+SaturatingFluidity::SaturatingFluidity(double K0, double A, double b)
+  : K0_(new ConstantInterpolate(K0)),
+    A_(new ConstantInterpolate(A)),
+    b_(new ConstantInterpolate(b))
+{
+
+}
+
+SaturatingFluidity::SaturatingFluidity(std::shared_ptr<Interpolate> K0,
+                   std::shared_ptr<Interpolate> A,
+                   std::shared_ptr<Interpolate> b)
+  : K0_(K0), A_(A), b_(b)
+{
+
+}
+
+double SaturatingFluidity::eta(double a, double T) const
+{
+  double K0 = K0_->value(T);
+  double A = A_->value(T);
+  double b = b_->value(T);
+
+  return K0 + A * (1.0 - exp(-b * a));
+}
+
+double SaturatingFluidity::deta(double a, double T) const
+{
+  double A = A_->value(T);
+  double b = b_->value(T);
+
+  return A * b * exp(-b * a);
+}
+
 ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                                    std::shared_ptr<NonAssociativeHardening> hardening,
                                    std::shared_ptr<FluidityModel> fluidity,

@@ -455,6 +455,18 @@ class TestConstantFluidity(unittest.TestCase, CommonFluidity):
     a = self.gen_hist()
     self.assertTrue(np.isclose(self.eta, self.model.eta(a, self.T)))
 
+class TestSaturatingFluidity(unittest.TestCase, CommonFluidity):
+  def setUp(self):
+    self.K0 = 116.0
+    self.A = 238.9
+    self.b = 9.80
+    self.model = visco_flow.SaturatingFluidity(self.K0, self.A, self.b)
+    self.T = 300.0
+
+  def test_eta(self):
+    a = self.gen_hist()
+    self.assertTrue(np.isclose(self.K0 + self.A * (1.0 - np.exp(-self.b * a)), self.model.eta(a, self.T)))
+
 class TestChabocheJ2Voce(unittest.TestCase, CommonFlowRule):
   def setUp(self):
     self.n = 12.0
