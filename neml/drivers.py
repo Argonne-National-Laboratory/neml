@@ -468,7 +468,7 @@ class Driver_sd_twobar(Driver_sd):
     """
     if self.dts is None:
       dt = self.period / self.nsteps_cycle
-      dts = [dts] * self.nsteps_cycle
+      dts = [dt] * self.nsteps_cycle
     else:
       dts = self.dts
     
@@ -482,7 +482,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     max_strain = None, min_strain = None, 
     nsteps_load = 50, nsteps_cycle = 201, verbose = False,
     rtol_classify = 1.0e-4, atol_classify = 1.0e-10,
-    dstrain = lambda t: 0.0, dts = None):
+    dstrain = lambda t: 0.0, dts = None, ret_all = False):
   """
     Run a two bar test and classify
 
@@ -555,6 +555,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
           'stress2': [],
           'classification': "unstable"
           }
+
     ep1 = driver.strain1_plastic_int[-1][0]
     ep2 = driver.strain2_plastic_int[-1][0]
     max_s = np.max([np.abs(ep1), np.abs(ep2)])
@@ -564,7 +565,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       break
     if (min_strain is not None) and (min_s > min_strain):
       break
-
+  
   # Use the final cycles
   a = cycle_count * nsteps_cycle - 1
   b = (cycle_count - 1) * nsteps_cycle - 1
@@ -576,6 +577,9 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       driver.strain2_int[a][0], driver.strain2_int[b][0],
       rtol = rtol_classify,
       atol = atol_classify)
+
+  if ret_all:
+    nsteps_load = 0
   
   return {
       'strain': driver.strain[nsteps_load:], 
