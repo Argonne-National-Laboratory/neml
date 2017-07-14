@@ -201,14 +201,11 @@ int IsoKinJ2I1::f(const double* const s, const double* const q, double T,
               double & fv) const
 {
   double sdev[6];
-  double sgn;
   std::copy(s, s+6, sdev);
   dev_vec(sdev);
   add_vec(sdev, &q[1], 6, sdev);
-  //way1: sgn = (s[0] + s[1] + s[2]) / fabs(s[0] + s[1] + s[2]);
-  //way2: sgn = copysign(x, y) magnitude of x and sign of y
-  sgn = copysign(fabs(s[0] + s[1] + s[2])/fabs(s[0] + s[1] + s[2]), s[0] + s[1] + s[2] );
-  fv = norm2_vec(sdev, 6) + sqrt(2.0/3.0) * q[0] + h_ * pow( fabs(s[0] + s[1] + s[2]), l_ ) * sgn;
+  fv = norm2_vec(sdev, 6) + sqrt(2.0/3.0) * q[0] + 
+      copysign(h_ * pow( fabs(s[0] + s[1] + s[2]), l_ ), s[0] + s[1] + s[2]);
   return 0;
 }
 
@@ -279,13 +276,9 @@ int IsoKinJ2I1::df_dsds(const double* const s, const double* const q, double T,
   }
   
   // Compute ddsh/dsds
-  double sgn;
-  //way1: sgn = (s[0] + s[1] + s[2]) / fabs(s[0] + s[1] + s[2]);
-  //way2: sgn = copysign(x, y) magnitude of x and sign of y
-  sgn = copysign(fabs(s[0] + s[1] + s[2])/fabs(s[0] + s[1] + s[2]), s[0] + s[1] + s[2] );
   double iv2[6];
   for (int i=0; i<3; i++) {
-    iv2[i] = h_ * l_ * (l_ - 1.0) * pow( fabs(s[0]+s[1]+s[2]), l_ - 2.0) * sgn;    
+    iv2[i] = copysign(h_ * l_ * (l_ - 1.0) * pow( fabs(s[0]+s[1]+s[2]), l_ - 2.0), s[0] + s[1] + s[2]);    
   }
   for (int i=3; i<6; i++) {
     iv2[i] = 0.0;
