@@ -13,3 +13,8 @@ debug
 util/c_interface/csimple
 util/f_interface/fsimple
 *-lyxformat-*
+.DS_Store
+*.so.dylib*
+*.dylib
+*.dylib.*
+*.so.*
