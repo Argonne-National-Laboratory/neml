@@ -54,5 +54,11 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
 endif()
 
+# Some apple things
+if(APPLE)
+      set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
+endif(APPLE)
+
 # Recurse
 add_subdirectory(src)

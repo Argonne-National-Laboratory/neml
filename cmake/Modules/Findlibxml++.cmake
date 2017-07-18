@@ -1,3 +1,7 @@
+# Variables to define:
+#  libxml++_FOUND - system has Glib
+#  libxml++_INCLUDE_DIRS - the Glib include directories
+#  libxml++_LIBRARIES - link these to use Glib
 
 IF(libxml++_FIND_REQUIRED)
     FIND_PACKAGE(glibmm REQUIRED)
@@ -7,26 +11,39 @@ ELSE(libxml++_FIND_REQUIRED)
     FIND_PACKAGE(LibXml2)
 ENDIF(libxml++_FIND_REQUIRED)
 
-IF(GLIBMM_FOUND AND LIBXML2_FOUND)
+# Hunt down pkg-config info
+find_package(PkgConfig)
+pkg_search_module(libxml++_PKGCONF libxml++-3.0 libxml++-2.9 libxml++-2.8 libxml++-2.7 libxml++-2.6 REQUIRED)
 
-    #use pkg-config
-    FIND_PACKAGE(PkgConfig)
-    PKG_CHECK_MODULES(PC_LIBXMLPP QUIET libxml++-2.6)
+STRING(SUBSTRING ${libxml++_PKGCONF_VERSION} 0 1 MAJOR_VERSION)
+STRING(COMPARE EQUAL ${MAJOR_VERSION} 3 LIBXML++_V3)
+if (${LIBXML++_V3})
+      add_definitions(-DLIBXML++V3)
+endif()
 
-    FIND_PATH(libxml++_INCLUDE_DIR NAMES libxml++/libxml++.h HINTS ${PC_LIBXMLPP_INCLUDEDIR} ${PC_LIBXMLPP_INCLUDE_DIRS})
-    FIND_PATH(libxml++_config_INCLUDE_DIR NAMES libxml++config.h HINTS ${PC_LIBXMLPP_INCLUDEDIR} ${PC_LIBXMLPP_INCLUDE_DIRS})
-    FIND_LIBRARY(libxml++_LIBRARY NAMES xml++ xml++-2.6 HINTS ${PC_LIBXMLPP_LIBDIR} ${PC_LIBXMLPP_LIBRARY_DIRS})
+# Main include dir
+find_path(libxml++_INCLUDE_DIR
+  NAMES libxml++/libxml++.h
+  PATHS ${libxml++_PKGCONF_INCLUDE_DIRS}
+)
 
-    SET(libxml++_LIBRARIES ${libxml++_LIBRARY} ${PC_LIBXMLPP_PKGCONF_LIBRARIES} ${glibmm_LIBRARIES} ${LIBXML2_LIBRARIES})
-IF(libxml++_config_INCLUDE_DIR)
-    SET(libxml++_INCLUDE_DIRS ${libxml++_INCLUDE_DIR} ${PC_LIBXMLPP_PKGCONF_INCLUDE_DIRS} ${libxml++_config_INCLUDE_DIR} ${glibmm_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIR})
-ELSE(libxml++_config_INCLUDE_DIR)
-    SET(libxml++_INCLUDE_DIRS ${libxml++_INCLUDE_DIR} ${PC_LIBXMLPP_PKGCONF_INCLUDE_DIRS} ${glibmm_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIR})
-ENDIF(libxml++_config_INCLUDE_DIR)
+# Glib-related libraries also use a separate config header, which is in lib dir
+find_path(libxml++Config_INCLUDE_DIR
+  NAMES libxml++config.h
+  PATHS ${libxml++_PKGCONF_INCLUDE_DIRS}
+)
 
-ENDIF(GLIBMM_FOUND AND LIBXML2_FOUND)
+# Finally the library itself
+find_library(libxml++_LIBRARY
+  NAMES xml++ xml++-3.0 xml++-2.9 xml++-2.8 xml++-2.7 xml++-2.6
+  PATHS ${libxml++_PKGCONF_LIBRARY_DIRS}
+)
 
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(libxml++ DEFAULT_MSG libxml++_LIBRARY libxml++_INCLUDE_DIR)
+set(libxml++_FOUND TRUE)
+set(libxml++_INCLUDE_DIRS ${libxml++_INCLUDE_DIR} ${libxml++Config_INCLUDE_DIR} ${glibmm_INCLUDE_DIRS} ${LibXml2_INLUDE_DIRS})
+set(libxml++_LIBRARIES ${libxml++_LIBRARY} ${glibmm_LIBRARIES} ${LibXml2_LIBRARIES})
 
-MARK_AS_ADVANCED(libxml++_INCLUDE_DIR libxml++_config_INCLUDE_DIR libxml++_LIBRARY)
+mark_as_advanced(libxml++Config_INCLUDE_DIR libxml++_INCLUDE_DIR libxml++_LIBRARY)
+
+
+

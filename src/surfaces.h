@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <stdarg.h>
 #include <memory>
+#include <algorithm>
 #include "nemlmath.h"
 
 namespace neml {

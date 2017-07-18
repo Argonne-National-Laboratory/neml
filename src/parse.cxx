@@ -687,7 +687,7 @@ std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node,
     return interpolate_node(matches_inter.front(), ier);
   }
   else if (child->has_child_text()) {
-    std::string sval = child->get_first_child_text()->get_content();
+    std::string sval = child->FIRST_TEXT_FN()->get_content();
     if (sval == "") {
       ier = BAD_TEXT;
       std::cerr << "Node " << name << " near line " 
@@ -732,7 +732,7 @@ std::shared_ptr<Interpolate> process_constant(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_first_child_text()->get_content();
+  std::string sval = child->FIRST_TEXT_FN()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Constant interpolate node has invalid text near line "
@@ -752,7 +752,7 @@ std::shared_ptr<Interpolate> process_polynomial(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_first_child_text()->get_content();
+  std::string sval = child->FIRST_TEXT_FN()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Polynomial interpolate node has invalid text near line "
@@ -775,7 +775,7 @@ std::shared_ptr<Interpolate> process_piecewise(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_first_child_text()->get_content();
+  std::string sval = child->FIRST_TEXT_FN()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Polynomial interpolate node has invalid text near line "
@@ -806,7 +806,7 @@ std::shared_ptr<Interpolate> process_mts(const xmlpp::Element * child,
         << child->get_line() << std::endl;
     return std::shared_ptr<Interpolate>(new InvalidInterpolate());
   }
-  std::string sval = child->get_first_child_text()->get_content();
+  std::string sval = child->FIRST_TEXT_FN()->get_content();
   if (sval == "") {
     ier = BAD_TEXT;
     std::cerr << "Polynomial interpolate node has invalid text near line "
@@ -871,7 +871,7 @@ vector_param(const xmlpp::Node * node, std::string name, int & ier)
     return results;
   }
   else if (child->has_child_text()) {
-    std::string sval = child->get_first_child_text()->get_content();
+    std::string sval = child->FIRST_TEXT_FN()->get_content();
     if (sval == "") {
       ier = BAD_TEXT;
       std::cerr << "Vector parameter node near line " << child->get_line() << 

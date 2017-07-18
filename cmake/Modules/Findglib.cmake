@@ -1,16 +1,34 @@
+# Variables to define:
+#  Glib_FOUND - system has Glib
+#  Glib_INCLUDE_DIRS - the Glib include directories
+#  Glib_LIBRARIES - link these to use Glib
 
-#use pkg-config
-FIND_PACKAGE(PkgConfig)
-PKG_CHECK_MODULES(PC_GLIB glib-2.0)
+# Hunt down pkg-config info
+find_package(PkgConfig)
+pkg_check_modules(Glib_PKGCONF glib-2.0 REQUIRED)
 
-FIND_PATH(glib_INCLUDE_DIR NAMES glib.h HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS})
-FIND_PATH(glib_config_INCLUDE_DIR NAMES glibconfig.h HINTS ${PC_GLIB_INCLUDEDIR} ${PC_GLIB_INCLUDE_DIRS})
-FIND_LIBRARY(glib_LIBRARY NAMES glib glib-2.0 HINTS ${PC_GLIB_LIBDIR} ${PC_GLIB_LIBRARY_DIRS})
+# Main include dir
+find_path(Glib_INCLUDE_DIR
+  NAMES glib.h
+  PATHS ${Glib_PKGCONF_INCLUDE_DIRS}
+  PATH_SUFFIXES glib-2.0
+)
 
-SET(glib_LIBRARIES ${glib_LIBRARY} ${PC_GLIB_PKGCONF_LIBRARIES})
-SET(glib_INCLUDE_DIRS ${glib_INCLUDE_DIR} ${glib_config_INCLUDE_DIR} ${PC_GLIB_PKGCONF_INCLUDE_DIRS})
+# Glib-related libraries also use a separate config header, which is in lib dir
+find_path(GlibConfig_INCLUDE_DIR
+  NAMES glibconfig.h
+  PATHS ${Glib_PKGCONF_INCLUDE_DIRS} /usr
+  PATH_SUFFIXES lib/glib-2.0/include
+)
 
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(glib DEFAULT_MSG glib_LIBRARY glib_INCLUDE_DIR)
+# Finally the library itself
+find_library(Glib_LIBRARY
+  NAMES glib-2.0
+  PATHS ${Glib_PKGCONF_LIBRARY_DIRS}
+)
 
-MARK_AS_ADVANCED(glib_INCLUDE_DIR glib_config_INCLUDE_DIR glib_LIBRARY)
+set(Glib_FOUND TRUE)
+set(Glib_INCLUDE_DIRS ${Glib_INCLUDE_DIR} ${GlibConfig_INCLUDE_DIR})
+set(Glib_LIBRARIES ${Glib_LIBRARY})
+
+mark_as_advanced(GlibConfig_INCLUDE_DIR Glib_INCLUDE_DIR Glib_LIBRARY)

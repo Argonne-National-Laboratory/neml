@@ -1,16 +1,36 @@
+# Variables to define:
+#  sigc++_FOUND - system has Glib
+#  sigc++_INCLUDE_DIRS - the Glib include directories
+#  sigc++_LIBRARIES - link these to use Glib
 
-#use pkg-config
-FIND_PACKAGE(PkgConfig)
-PKG_CHECK_MODULES(PC_SIGCXX sigc++-2.0)
+# Hunt down pkg-config info
+find_package(PkgConfig)
+pkg_check_modules(sigc++_PKGCONF sigc++-2.0 REQUIRED)
 
-FIND_PATH(sigc++_INCLUDE_DIR NAMES sigc++/sigc++.h HINTS ${PC_SIGCXX_INCLUDEDIR} ${PC_SIGCXX_INCLUDE_DIRS})
-FIND_PATH(sigc++_config_INCLUDE_DIR NAMES sigc++config.h HINTS ${PC_SIGCXX_INCLUDEDIR} ${PC_SIGCXX_INCLUDE_DIRS})
-FIND_LIBRARY(sigc++_LIBRARY NAMES sigc sigc-2.0 HINTS ${PC_SIGCXX_LIBDIR} ${PC_SIGCXX_LIBRARY_DIRS})
+# Main include dir
+find_path(sigc++_INCLUDE_DIR
+  NAMES sigc++/sigc++.h
+  PATHS ${sigc++_PKGCONF_INCLUDE_DIRS}
+  PATH_SUFFIXES sigc++-2.0
+)
 
-SET(sigc++_LIBRARIES ${sigc++_LIBRARY} ${PC_SIGCXX_PKGCONF_LIBRARIES})
-SET(sigc++_INCLUDE_DIRS ${sigc++_INCLUDE_DIR} ${sigc++_config_INCLUDE_DIR} ${PC_SIGCXX_PKGCONF_INCLUDE_DIRS})
+# Glib-related libraries also use a separate config header, which is in lib dir
+find_path(sigc++Config_INCLUDE_DIR
+  NAMES sigc++config.h
+  PATHS ${sigc++_PKGCONF_INCLUDE_DIRS}
+  PATH_SUFFIXES lib/sigc++-2.0/include
+)
 
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(sigc++ DEFAULT_MSG sigc++_LIBRARY sigc++_INCLUDE_DIR)
+# Finally the library itself
+find_library(sigc++_LIBRARY
+  NAMES sigc sigc-2.0
+  PATHS ${sigc++_PKGCONF_LIBRARY_DIRS}
+)
 
-MARK_AS_ADVANCED(sigc++_INCLUDE_DIR sigc++_config_INCLUDE_DIR sigc++_LIBRARY)
+set(sigc++_FOUND TRUE)
+set(sigc++_INCLUDE_DIRS ${sigc++_INCLUDE_DIR} ${sigc++Config_INCLUDE_DIR})
+set(sigc++_LIBRARIES ${sigc++_LIBRARY})
+
+mark_as_advanced(sigc++Config_INCLUDE_DIR sigc++_INCLUDE_DIR sigc++_LIBRARY)
+
+
