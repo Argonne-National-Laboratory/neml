@@ -1,7 +1,6 @@
 #ifndef NEML_H
 #define NEML_H
 
-
 #include "elasticity.h"
 #include "ri_flow.h"
 #include "visco_flow.h"
