@@ -1318,10 +1318,16 @@ def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
 
 
 class MaximumIterations(RuntimeError):
+  """
+    An error to use if an iterative method exceeds the maximum allowed iterations.
+  """
   def __init__(self):
     super(MaximumIterations, self).__init__("Exceeded the maximum allowed iterations!")
 
 class MaximumSubdivisions(RuntimeError):
+  """
+    An error to use if adaptive substepping faisl.
+  """
   def __init__(self):
     super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
 

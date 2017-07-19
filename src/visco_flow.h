@@ -17,6 +17,7 @@ class GFlow {
   virtual double dg(double f, double T) const = 0;
 };
 
+/// g is a power law
 class GPowerLaw: public GFlow {
  public:
   GPowerLaw(double n);

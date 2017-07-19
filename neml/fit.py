@@ -12,6 +12,10 @@ from deap import tools
 import calibrate
 
 class Member(list):
+  """
+    A class that allows 2D arrays (i.e. arrays of arrays) to store
+    DEAP populations.
+  """
   def __init__(self, *args):
     list.__init__(self, *args)
     self.fitness = 0.0

@@ -6,6 +6,9 @@
 
 namespace neml {
 
+/// Base class for interpolation functions
+//  This class defines a scalar interpolation function.
+//  An implementation must also define the first derivative. 
 class Interpolate {
  public:
   Interpolate();
@@ -18,6 +21,7 @@ class Interpolate {
   bool valid_;
 };
 
+/// A dummy interpolation.
 class InvalidInterpolate : public Interpolate {
  public:
   InvalidInterpolate();
@@ -25,6 +29,7 @@ class InvalidInterpolate : public Interpolate {
   virtual double derivative(double x) const;
 };
 
+/// Simple polynomial interpolation
 class PolynomialInterpolate : public Interpolate {
  public:
   PolynomialInterpolate(const std::vector<double> coefs);
@@ -37,6 +42,7 @@ class PolynomialInterpolate : public Interpolate {
 
 };
 
+/// Piecewise linear interpolation
 class PiecewiseLinearInterpolate: public Interpolate {
  public:
   PiecewiseLinearInterpolate(const std::vector<double> points,
@@ -49,6 +55,7 @@ class PiecewiseLinearInterpolate: public Interpolate {
 
 };
 
+/// A constant value
 class ConstantInterpolate : public Interpolate {
  public:
   ConstantInterpolate(double v);
@@ -60,6 +67,7 @@ class ConstantInterpolate : public Interpolate {
 
 };
 
+/// The MTS shear modulus function proposed in the original paper
 class MTSShearInterpolate : public Interpolate {
  public:
   MTSShearInterpolate(double V0, double D, double T0);
@@ -70,9 +78,11 @@ class MTSShearInterpolate : public Interpolate {
   const double V0_, D_, T0_;
 };
 
+/// A helper to make a vector of constant interpolates from a vector
 std::vector<std::shared_ptr<Interpolate>> 
   make_vector(const std::vector<double> & iv);
 
+/// A helper to evaluate a vector of interpolates
 std::vector<double> eval_vector(
     const std::vector<std::shared_ptr<Interpolate>> & iv, double x);
 

@@ -9,6 +9,15 @@
 
 namespace neml {
 
+/// Base class for generic yield surfaces
+//  Yield surfaces are defined in terms of the yield function, 1st
+//  derivatives wrt. the stress and history, and second derivatives
+//  wrt. the same.
+//
+//  Hardening models must match the number of history variables but
+//  right now there's no enforcement mechanism to make sure that a model
+//  with the correct number of variables also has the right type of
+//  variables.
 class YieldSurface {
  public:
   // Interface

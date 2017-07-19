@@ -27,20 +27,6 @@ class Solvable {
                  double * const J) = 0;
 };
 
-// This is entirely for testing
-class TestRosenbrock: public Solvable {
- public:
-  TestRosenbrock(size_t N);
-
-  virtual size_t nparams() const;
-  virtual int init_x(double * const x, TrialState * ts);
-  virtual int RJ(const double * const x, TrialState * ts, double * const R,
-                 double * const J);
-
- private:
-  const size_t N_;
-};
-
 /// Call the built-in solver
 int solve(Solvable * system, double * x, TrialState * ts, 
           double tol = 1.0e-8, int miter = 50,

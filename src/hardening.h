@@ -75,7 +75,7 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
 
 };
 
-// Combined hardening rule superimposing a bunch of separate ones
+/// Combined hardening rule superimposing a bunch of separate ones
 class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   CombinedIsotropicHardeningRule(
@@ -90,6 +90,7 @@ class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
 
 };
 
+/// Base class for pure kinematic hardening
 class KinematicHardeningRule: public HardeningRule {
  public:
   virtual size_t nhist() const;
@@ -98,6 +99,7 @@ class KinematicHardeningRule: public HardeningRule {
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const = 0;
 };
 
+/// Simple linear kinematic hardening
 class LinearKinematicHardeningRule: public KinematicHardeningRule {
  public:
   LinearKinematicHardeningRule(double H);
@@ -112,6 +114,7 @@ class LinearKinematicHardeningRule: public KinematicHardeningRule {
   const std::shared_ptr<const Interpolate> H_;
 };
 
+/// Class to combine isotropic and kinematic hardening rules
 class CombinedHardeningRule: public HardeningRule {
  public:
   CombinedHardeningRule(std::shared_ptr<IsotropicHardeningRule> iso,
@@ -161,7 +164,7 @@ class NonAssociativeHardening {
                 double * const dhv) const;
 };
 
-/// Gamma models for the Chaboche backstress
+/// Gamma as a function of equivalent plastic strain
 class GammaModel {
  public:
   virtual double gamma(double ep, double T) const = 0;
@@ -169,6 +172,7 @@ class GammaModel {
 
 };
 
+/// Gamma is just a consant
 class ConstantGamma: public GammaModel {
  public:
   ConstantGamma(double g);
@@ -184,6 +188,7 @@ class ConstantGamma: public GammaModel {
 
 };
 
+/// Gamma evolves with a saturating Voce form
 class SatGamma: public GammaModel {
  public:
   SatGamma(double gs, double g0, double beta);

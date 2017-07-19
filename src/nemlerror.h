@@ -24,13 +24,13 @@ typedef enum Error {
   UNKNOWN_ERROR = -13
 } Error;
 
-// Translate to exception
+/// Translate an error code to an exception
 void py_error(int ier);
 
-// Translate to string
+/// Translate an error code to a string
 std::string string_error(int ier);
 
-// Custom exceptions
+/// Descriptive exception for problems with BLAS/LAPACK
 class LinalgError: public std::runtime_error {
  public:
   LinalgError(const char* m);
