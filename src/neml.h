@@ -219,7 +219,8 @@ class NEMLModel_sd: public NEMLModel {
 
 };
 
-/// Small strain linear elasticity as a test case
+/// Small strain linear elasticity
+//  This is generally only used as a basic test
 class SmallStrainElasticity: public NEMLModel_sd {
  public:
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
@@ -251,9 +252,8 @@ class SmallStrainElasticity: public NEMLModel_sd {
    std::shared_ptr<LinearElasticModel> elastic_;
 };
 
-/// Trial state classes
+/// Small strain perfect plasticity trial state
 //  Store data the solver needs and can be passed into solution interface
-
 class SSPPTrialState : public TrialState {
  public:
   double ys, T;
@@ -266,6 +266,7 @@ class SSPPTrialState : public TrialState {
   double C[36];
 };
 
+/// Small strain rate independent plasticity trial state
 class SSRIPTrialState : public TrialState {
  public:
   double ep_tr[6];
@@ -276,6 +277,7 @@ class SSRIPTrialState : public TrialState {
   std::vector<double> h_tr;
 };
 
+/// Small strain creep+plasticity trial state 
 class SSCPTrialState : public TrialState {
  public:
   double ep_strain[6];
@@ -286,6 +288,7 @@ class SSCPTrialState : public TrialState {
   std::vector<double> h_n;
 };
 
+/// General inelastic integrator trial state
 class GITrialState : public TrialState {
  public:
   double e_dot[6];

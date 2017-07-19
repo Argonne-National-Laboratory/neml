@@ -33,7 +33,6 @@ endif()
 set(BLAS_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
-
 FIND_PACKAGE(libxml++ REQUIRED)
 INCLUDE_DIRECTORIES(${libxml++_INCLUDE_DIRS})
 
@@ -62,3 +61,12 @@ endif(APPLE)
 
 # Recurse
 add_subdirectory(src)
+
+# Documentation control
+option(BUILD_DOCUMENTATION "Build documentation: manual and doxygen" OFF)
+if (BUILD_DOCUMENTATION)
+      option(BUILD_DOXYGEN "Build and install Doxygen documentation" ON)
+      option(BUILD_MANUAL "Build and install LaTeX manual" ON)
+      add_subdirectory(doc)
+endif()
+
