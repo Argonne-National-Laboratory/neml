@@ -1174,7 +1174,7 @@ def offset_stress(e, s, eo = 0.2/100.0):
       eo    strain offset
   """
   iff = inter.interp1d(e, s)
-  E = s[3] / e[3]
+  E = s[1] / e[1]
   
   eoff = opt.brentq(lambda e: iff(e) - E * (e - eo), 0.0,np.max(e))
   soff = iff(eoff)
