@@ -5,6 +5,8 @@ import scipy.interpolate as inter
 import scipy.optimize as opt
 from numpy.polynomial.legendre import leggauss
 
+import numpy.random as ra
+
 class Driver(object):
   """
     Superclass of all drivers, basically just sets up history and reports
@@ -401,6 +403,8 @@ class Driver_sd_twobar(Driver_sd):
       return R, J
 
     x0 = np.hstack((self.strain1_int[-1], self.strain2_int[-1]))
+    x0 *= ( 1.0 + ((0.5 - ra.random((12,)))) / 100.0 )
+
     x = newton(RJ, x0, verbose = self.verbose,
         rtol = self.rtol, atol = self.atol, miter = self.miter)
 
@@ -582,7 +586,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     nsteps_load = 0
   
   return {
-      'strain': driver.strain[nsteps_load:], 
+      'strain': driver.strain1[nsteps_load:], 
       'ncycles': i+1,
       'T1': driver.T1[nsteps_load:],
       'T2': driver.T2[nsteps_load:],
