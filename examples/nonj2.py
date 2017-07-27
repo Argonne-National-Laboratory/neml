@@ -48,9 +48,13 @@ if __name__ == "__main__":
   surface = surfaces.IsoKinJ2I1(h, l)
   
   hiso = hardening.LinearIsotropicHardeningRule(sY, -K/10)
-  hkin = hardening.LinearKinematicHardeningRule(K)
-  hardening = hardening.CombinedHardeningRule(hiso, hkin)
-  flow = ri_flow.RateIndependentAssociativeFlow(surface, hardening)
+  
+  hmodel = hardening.Chaboche(hiso, [K * 3.0/2.0], [hardening.ConstantGamma(0.0)])
+  flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
+
+  #hkin = hardening.LinearKinematicHardeningRule(K)
+  #hmodel = hardening.CombinedHardeningRule(hiso, hkin)
+  #flow = ri_flow.RateIndependentAssociativeFlow(surface, hmodel)
 
   model = neml.SmallStrainRateIndependentPlasticity(emodel, flow)
   
