@@ -17,6 +17,7 @@ class GFlow {
   virtual double dg(double f, double T) const = 0;
 };
 
+/// g is a power law
 class GPowerLaw: public GFlow {
  public:
   GPowerLaw(double n);
@@ -154,6 +155,7 @@ class FluidityModel {
   virtual double deta(double a, double T) const = 0;
 };
 
+/// The fluidity is constant
 class ConstantFluidity: public FluidityModel {
  public:
   ConstantFluidity(double eta);
@@ -166,6 +168,7 @@ class ConstantFluidity: public FluidityModel {
 
 };
 
+/// Voce-like saturating fluidity
 class SaturatingFluidity: public FluidityModel {
  public:
   SaturatingFluidity(double K0, double A, double b);

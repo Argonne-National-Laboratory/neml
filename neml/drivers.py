@@ -1178,7 +1178,7 @@ def offset_stress(e, s, eo = 0.2/100.0):
       eo    strain offset
   """
   iff = inter.interp1d(e, s)
-  E = s[3] / e[3]
+  E = s[1] / e[1]
   
   eoff = opt.brentq(lambda e: iff(e) - E * (e - eo), 0.0,np.max(e))
   soff = iff(eoff)
@@ -1322,10 +1322,16 @@ def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
 
 
 class MaximumIterations(RuntimeError):
+  """
+    An error to use if an iterative method exceeds the maximum allowed iterations.
+  """
   def __init__(self):
     super(MaximumIterations, self).__init__("Exceeded the maximum allowed iterations!")
 
 class MaximumSubdivisions(RuntimeError):
+  """
+    An error to use if adaptive substepping faisl.
+  """
   def __init__(self):
     super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
 

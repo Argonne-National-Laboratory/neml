@@ -59,7 +59,8 @@ class GeneralFlowRule {
                               double * const e_np1) const = 0; 
 };
 
-// First stab at thermo-visco-plasticity
+/// Thermo-visco-plasticity
+//  Stress rates, temperature rates, and time can all enter the model
 class TVPFlowRule : public GeneralFlowRule {
  public:
   TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,

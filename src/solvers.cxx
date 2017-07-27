@@ -10,42 +10,6 @@
 
 namespace neml {
 
-TestRosenbrock::TestRosenbrock(size_t N) :
-    N_(N)
-{
-
-}
-
-size_t TestRosenbrock::nparams() const
-{
-  return N_;
-}
-
-int TestRosenbrock::init_x(double * const x, TrialState * ts)
-{
-  std::fill(x, x+N_, 0.25);
-  return 0;
-}
-
-int TestRosenbrock::RJ(const double * const x, TrialState * ts, 
-                       double * const R, double * const J)
-{
-  R[0] = 1.0 - x[0];
-  for (int i=1; i<N_; i++) {
-    R[i] = 10.0 * (x[i] - x[i-1] * x[i-1]);
-  }
-
-  std::fill(J, J+(N_*N_), 0.0);
-  J[0] = -1.0;
-  for (int i=1; i<N_; i++) {
-    J[CINDEX(i,i-1,N_)] = -20.0 * x[i-1];
-    J[CINDEX(i,i,N_)] = 10.0;
-  }
-
-  return 0;
-}
-
-
 // This function is configured by the build
 int solve(Solvable * system, double * x, TrialState * ts,
           double tol, int miter, bool verbose, bool relative)

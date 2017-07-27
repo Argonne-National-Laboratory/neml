@@ -42,10 +42,6 @@ PYBIND11_PLUGIN(solvers) {
            }, "Residual and jacobian.")
       ;
 
-  py::class_<TestRosenbrock, std::shared_ptr<TestRosenbrock>>(m, "TestRosenbrock", py::base<Solvable>())
-      .def(py::init<size_t>(), py::arg("N"))
-      ;
-
   m.def("solve",
         [](std::shared_ptr<Solvable> system, TrialState & ts, double tol, int miter, bool verbose) -> py::array_t<double>
         {
