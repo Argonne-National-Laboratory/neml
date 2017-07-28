@@ -121,7 +121,7 @@ def evaluate_uniaxial(case, model):
   exp_fn = inter.interp1d(exp_strain, exp_stress)
   mod_fn = inter.interp1d(res['strain'], res['stress'])
   
-  vs = qud.quad(exp_fn, 0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2,
+  vs = qud.quad(lambda e: np.abs(exp_fn(e)), 0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2,
       full_output = 1)
   v1 = vs[0]
   vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
@@ -153,7 +153,7 @@ def evaluate_stressrelax(case, model):
   exp_fn = inter.interp1d(exp_time, exp_relax)
   mod_fn = inter.interp1d(res['rtime'], res['rstress'])
 
-  vs = qud.quad(exp_fn, min_time, max_time*0.99, epsabs = 1.0e-4, 
+  vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_time, max_time*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
   v1 = vs[0]
   vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
@@ -191,7 +191,7 @@ def evaluate_creep(case, model):
   exp_fn = inter.interp1d(exp_time, exp_strain)
   mod_fn = inter.interp1d(res['rtime'], res['rstrain'])
   
-  vs = qud.quad(exp_fn, min_time*1.01, max_time*0.99, epsabs = 1.0e-4, 
+  vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_time*1.01, max_time*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
   v1 = vs[0]
   vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
@@ -239,7 +239,7 @@ def evaluate_cyclic_strain(case, model):
   exp_fn = inter.interp1d(exp_cycle, exp_max)
   mod_fn = inter.interp1d(res['cycles'], res['max'])
 
-  vs = qud.quad(exp_fn, min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, 
+  vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
   v1 = vs[0]
   vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
@@ -291,7 +291,7 @@ def evaluate_cyclic_stress(case, model):
   exp_fn = inter.interp1d(exp_cycle, exp_max)
   mod_fn = inter.interp1d(res['cycles'], res['max'])
   
-  vs = qud.quad(exp_fn, min_cycles, max_cycles*0.99, epsabs = 1.0e-4, 
+  vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_cycles, max_cycles*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
   v1 = vs[0]
   vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
