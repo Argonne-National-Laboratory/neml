@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, creep
+from neml import solvers, creep, elasticity
 import unittest
 
 from common import *
@@ -80,6 +80,45 @@ class TestNortonBaileyCreep(unittest.TestCase, CommonScalarCreep):
     g_direct = self.model.g(self.s, self.e, self.t, self.T)
     g_calc = self.m * self.A**(1.0/self.m) * self.s**(self.n/self.m) * self.e**((self.m-1.0)/self.m)
     self.assertTrue(np.isclose(g_direct, g_calc))
+
+class TestMukherjeeCreep(unittest.TestCase, CommonScalarCreep):
+  def setUp(self):
+    self.A = 1.0e10     # Unitless
+    self.n = 7.9        # Unitless
+    self.D0 = 3.7e-5    # m^2 / s
+    self.Qv = 280.0     # kJ/ mol
+    self.b = 2.28e-10   # m
+
+    self.E = 100000.0
+    self.nu = 0.3
+    self.emodel = elasticity.IsotropicLinearElasticModel(elasticity.YoungsModulus(self.E),
+        elasticity.PoissonsRatio(self.nu))
+    
+    self.k = 1.380e-23 * 1.0e-6 # m^3 * MPa / K
+    self.R = 8.314 / 1000 # kJ / (K * mol)
+
+    self.t = 10.0
+    self.e = 0.1
+    self.s = 150.0
+    self.T = 550.0 + 273.15
+
+    self.model = creep.MukherjeeCreep(self.emodel, self.A, self.n, self.D0,
+        self.Qv, self.b, self.k, self.R)
+
+  def test_properties(self):
+    self.assertTrue(np.isclose(self.A, self.model.A))
+    self.assertTrue(np.isclose(self.n, self.model.n))
+    self.assertTrue(np.isclose(self.D0, self.model.D0))
+    self.assertTrue(np.isclose(self.Qv, self.model.Q))
+    self.assertTrue(np.isclose(self.b, self.model.b))
+    self.assertTrue(np.isclose(self.k, self.model.k))
+    self.assertTrue(np.isclose(self.R, self.model.R))
+
+  def test_g(self):
+    g_direct = self.model.g(self.s, self.e, self.t, self.T)
+    mu = self.emodel.G(self.T)
+    g_calc = self.A * self.D0 * np.exp(-self.Qv / (self.R * self.T)
+        ) * mu * self.b / (self.k * self.T) * (self.s / mu) ** self.n
 
 class CommonCreepModel(object):
   """

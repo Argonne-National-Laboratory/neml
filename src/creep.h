@@ -1,6 +1,7 @@
 #ifndef CREEP_H
 #define CREEP_H
 
+#include "elasticity.h"
 #include "interpolate.h"
 #include "solvers.h"
 
@@ -50,6 +51,30 @@ class NortonBaileyCreep: public ScalarCreepRule {
 
  private:
    const std::shared_ptr<const Interpolate> A_, m_, n_;
+
+};
+
+/// Classical Mukherjee creep
+class MukherjeeCreep: public ScalarCreepRule {
+ public:
+  MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel, double A, double n,
+                 double D0, double Q, double b, double k, double R);
+
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
+
+  double A() const;
+  double n() const;
+  double D0() const;
+  double Q() const;
+  double b() const;
+  double k() const;
+  double R() const;
+
+ private:
+  const std::shared_ptr<const LinearElasticModel> emodel_;
+  const double A_, n_, D0_, Q_, b_, k_, R_;
 
 };
 

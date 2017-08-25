@@ -157,6 +157,75 @@ double NortonBaileyCreep::n(double T) const
   return n_->value(T);
 }
 
+
+MukherjeeCreep::MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel,
+                               double A, double n, double D0, double Q,
+                               double b, double k, double R) :
+    emodel_(emodel), A_(A), n_(n), D0_(D0), Q_(Q), b_(b), k_(k), R_(R)
+{
+  
+}
+
+int MukherjeeCreep::g(double seq, double eeq, double t, double T, 
+                      double & g) const
+{
+  double mu = emodel_->G(T);
+  double Dv = D0_ * exp(-Q_ / (R_ * T));
+  g = A_ * Dv * mu * b_ / (k_ * T) * pow(seq / mu, n_);
+  return 0;
+}
+
+int MukherjeeCreep::dg_ds(double seq, double eeq, double t, double T,
+                          double & dg) const
+{
+  double mu = emodel_->G(T);
+  double Dv = D0_ * exp(-Q_ / (R_ * T));
+  dg = n_ * A_ * Dv * mu * b_ / (k_ * T) * pow(seq / mu, n_ - 1.0) / mu;
+  return 0;
+}
+
+int MukherjeeCreep::dg_de(double seq, double eeq, double t, double T,
+                          double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
+double MukherjeeCreep::A() const
+{
+  return A_;
+}
+
+double MukherjeeCreep::n() const
+{
+  return n_;
+}
+
+double MukherjeeCreep::D0() const
+{
+  return D0_;
+}
+
+double MukherjeeCreep::Q() const
+{
+  return Q_;
+}
+
+double MukherjeeCreep::b() const
+{
+  return b_;
+}
+
+double MukherjeeCreep::k() const
+{
+  return k_;
+}
+
+double MukherjeeCreep::R() const
+{
+  return R_;
+}
+
 // Setup for solve
 CreepModel::CreepModel(double tol, int miter, bool verbose) :
     tol_(tol), miter_(miter), verbose_(verbose)

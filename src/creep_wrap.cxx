@@ -189,6 +189,20 @@ PYBIND11_PLUGIN(creep) {
       .def("n", &NortonBaileyCreep::n)
     ;
 
+  py::class_<MukherjeeCreep, std::shared_ptr<MukherjeeCreep>>(m, "MukherjeeCreep", py::base<ScalarCreepRule>())
+      .def(py::init<std::shared_ptr<LinearElasticModel>, double, double, double, double, double, double, double>(), 
+           py::arg("emodel"), py::arg("A"), py::arg("n"), py::arg("D0"), py::arg("Q"), py::arg("b"),
+           py::arg("k"), py::arg("R"))
+
+      .def_property_readonly("A", &MukherjeeCreep::A)
+      .def_property_readonly("n", &MukherjeeCreep::n)
+      .def_property_readonly("D0", &MukherjeeCreep::D0)
+      .def_property_readonly("Q", &MukherjeeCreep::Q)
+      .def_property_readonly("b", &MukherjeeCreep::b)
+      .def_property_readonly("k", &MukherjeeCreep::k)
+      .def_property_readonly("R", &MukherjeeCreep::R)
+    ;
+
   return m.ptr();
 } // PLUGIN(creep)
 
