@@ -13,7 +13,7 @@ class Driver(object):
     results.
   """
   def __init__(self, model, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
-      miter = 100):
+      miter = 25):
     """
       Parameters:
         model       material model to play with
@@ -401,13 +401,66 @@ class Driver_sd_twobar(Driver_sd):
       J[7:,6:] = A2_np1[1:,:]
       
       return R, J
-
+    
     x0 = np.hstack((self.strain1_int[-1], self.strain2_int[-1]))
-    x0 *= ( 1.0 + ((0.5 - ra.random((12,)))) / 100.0 )
+    if len(self.strain1_int) > 1:
+      xn = np.hstack((self.strain1_int[-2], self.strain2_int[-2])) 
+    else:
+      xn = np.zeros((12,))
 
-    x = newton(RJ, x0, verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    xguesses = []
+    xguesses.append(np.copy(x0))
+    xguesses.append(x0 + (x0 - xn))
+    xguesses.append(np.zeros((12,)))
+    xguesses.append(x0*0.1)
 
+    
+    solvers = []
+    def s1(x0i):
+      try:
+        x = newton(RJ, x0i, verbose = self.verbose,
+            rtol = self.rtol, atol = self.atol, miter = self.miter)
+        return x, True
+      except Exception:
+        return np.zeros((12,)), False
+
+    def s2(x0i):
+      try:
+        res = opt.root(RJ, x0i, jac = True, method = 'lm')
+        return res.x, res.success
+      except Exception:
+        return np.zeros((12,)), False
+
+    def s3(x0i):
+      try:
+        res = opt.root(RJ, x0i, jac = True, method = 'hybr')
+        return res.x, res.success
+      except Exception:
+        return np.zeros((12,)), False
+
+    def s4(x0i):
+      try:
+        x = quasi_newton(RJ, x0i, verbose = self.verbose,
+            rtol = self.rtol, atol = self.atol, miter = self.miter)
+        return x, True
+      except Exception:
+        return np.zeros((12,)), False
+    
+    solvers = [s1]
+
+    for i,xi in enumerate(xguesses):
+      bme = False
+      for j,sv in enumerate(solvers):
+        x, success = sv(xi)
+        if success:
+          bme = True
+          break
+      if bme:
+        break
+
+    if not success:
+      raise MaximumIterations()
+    
     e1 = x[:6]
     e2 = x[6:]
 
@@ -510,6 +563,7 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       atol_classify absolute tolerance for cycle classification
       dstrain       direct strain difference between bars
       dts           manually specified cycle time steps
+      ret_all       don't exclude the loading parts of the curves
   """
   if dts is not None:
     nsteps_cycle = len(dts)
@@ -535,30 +589,20 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
         'strain_inelastic_2': [],
         'stress1': [],
         'stress2': [],
-        'classification': "collapse"
+        'classification': "collapse",
+        'strain1': [],
+        'strain2': []
         }
   
   cycle_count = 0
+  unstable = False
   for i in range(ncycles):
     try:
       driver.one_cycle()
-    except Exception:
-      return {
-          'strain': [],
-          'ncycles': 0,
-          'T1': [],
-          'T2': [],
-          'time': [],
-          'energy_density': [], 
-          'plastic_work': [],
-          'strain_mech_1': [],
-          'strain_mech_2': [],
-          'strain_inelastic_1': [],
-          'strain_inelastic_2': [],
-          'stress1': [],
-          'stress2': [],
-          'classification': "unstable"
-          }
+    except Exception as err:
+      print(err)
+      unstable = True
+      break
 
     ep1 = driver.strain1_plastic_int[-1][0]
     ep2 = driver.strain2_plastic_int[-1][0]
@@ -570,17 +614,20 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     if (min_strain is not None) and (min_s > min_strain):
       break
   
-  # Use the final cycles
-  a = cycle_count * nsteps_cycle - 1
-  b = (cycle_count - 1) * nsteps_cycle - 1
+  if unstable:
+    classification = 'unstable'
+  else:
+    # Use the final cycles
+    a = cycle_count * nsteps_cycle - 1
+    b = (cycle_count - 1) * nsteps_cycle - 1
 
-  classification = classify(
-      driver.u_int[a], driver.u_int[b],
-      driver.p_int[a], driver.p_int[b],
-      driver.strain1_int[a][0], driver.strain1_int[b][0],
-      driver.strain2_int[a][0], driver.strain2_int[b][0],
-      rtol = rtol_classify,
-      atol = atol_classify)
+    classification = classify(
+        driver.u_int[a], driver.u_int[b],
+        driver.p_int[a], driver.p_int[b],
+        driver.strain1_int[a][0], driver.strain1_int[b][0],
+        driver.strain2_int[a][0], driver.strain2_int[b][0],
+        rtol = rtol_classify,
+        atol = atol_classify)
 
   if ret_all:
     nsteps_load = 0
@@ -1215,10 +1262,13 @@ def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
   """
   n = len(models)
 
+  if ((xi is not None) and (Ai is None)) or ((Ai is not None) and (xi is None)):
+    raise ValueError("If you specify one of the areas or positions you must"
+        " specify both!")
+
   if xi is not None:
-    if Ai is None:
-      raise ValueError("If directly specifying quadrature must provide "
-          "both xi and Ai")
+    xi = np.array(xi)
+    Ai = np.array(Ai)
     if (np.max(xi) > 1) or (np.min(xi) < 0):
       raise ValueError("xi should go from zero to one!")
   else:
@@ -1357,7 +1407,7 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
   i = 0
 
   if verbose:
-    print("Iter.\tnR\t\tnR/nR0")
+    print("Iter.\tnR\t\tnR/nR0\t\tcond")
     print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
   while (nR > rtol * nR0) and (nR > atol):
@@ -1366,12 +1416,55 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
       x += quasi * dx
     else:
       x -= la.solve(J, R)
+    
     R, J = RJ(x)
     nR = la.norm(R)
     i += 1
     if verbose:
-      print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
+      print("%i\t%e\t%e\t%e" % (i, nR, nR / nR0,la.cond(J)))
+    if i > miter:
+      if verbose:
+        print("")
+      raise MaximumIterations()
+  
+  if verbose:
+    print("")
 
+  return x
+
+def quasi_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, 
+    miter = 20):
+  """
+    Manually-code quasi newton-raphson so that I can output convergence info, if
+    requested.
+
+    Parameters:
+      RJ        function return the residual + jacobian
+      x0        initial guess
+
+    Optional:
+      verbose   verbose output
+  """
+  R, J = RJ(x0)
+  J_use = np.copy(J)
+  nR = la.norm(R)
+  nR0 = nR
+  x = np.copy(x0)
+  
+  i = 0
+
+  if verbose:
+    print("Iter.\tnR\t\tnR/nR0\t\tcond")
+    print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
+
+  while (nR > rtol * nR0) and (nR > atol):
+    x -= la.solve(J_use, R)
+    
+    R, J = RJ(x)
+    nR = la.norm(R)
+    i += 1
+    if verbose:
+      print("%i\t%e\t%e\t%e" % (i, nR, nR / nR0,la.cond(J_use)))
     if i > miter:
       if verbose:
         print("")
@@ -1417,7 +1510,7 @@ def scalar_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter 
     i += 1
     if verbose:
       print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
-
+    
     if i > miter:
       if verbose:
         print("")

@@ -263,10 +263,16 @@ def evaluate_cyclic_stress(case, model):
   ratio = float(case.find('ratio').text)
 
   exp_cycle = expand(case.find('cycle').text)
-  if case.find('max') is None:
+
+  if case.find('max') is not None:
+    compare = 'max'
+  elif case.find('mean') is not None:
+    compare = 'mean'
+  elif case.find('min') is not None:
+    compare = 'min'
+  else:
     return 0.0
-    #raise RuntimeError("Implement this please...")
-  exp_max = expand(case.find('max').text)
+  exp_data = expand(case.find(compare).text)
 
   if case.find('hold') is not None:
     if case.find('hold').attrib['type'] == "max":
@@ -288,8 +294,8 @@ def evaluate_cyclic_stress(case, model):
   res = drivers.stress_cyclic(model, stress, ratio, rate, int(max_cycles)+1,
       T = T, hold_time = hold)
 
-  exp_fn = inter.interp1d(exp_cycle, exp_max)
-  mod_fn = inter.interp1d(res['cycles'], res['max'])
+  exp_fn = inter.interp1d(exp_cycle, exp_data)
+  mod_fn = inter.interp1d(res['cycles'], res[compare])
   
   vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_cycles, max_cycles*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
