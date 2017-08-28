@@ -55,6 +55,20 @@ class PiecewiseLinearInterpolate: public Interpolate {
 
 };
 
+/// Piecewise loglinear interpolation
+class PiecewiseLogLinearInterpolate: public Interpolate {
+ public:
+  PiecewiseLogLinearInterpolate(const std::vector<double> points,
+                             const std::vector<double> values);
+  virtual double value(double x) const;
+  virtual double derivative(double x) const;
+
+ private:
+  const std::vector<double> points_;
+  std::vector<double> values_;
+
+};
+
 /// A constant value
 class ConstantInterpolate : public Interpolate {
  public:

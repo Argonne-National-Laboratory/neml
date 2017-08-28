@@ -40,6 +40,11 @@ PYBIND11_PLUGIN(interpolate) {
            py::arg("points"), py::arg("values"))
       ;
 
+  py::class_<PiecewiseLogLinearInterpolate, std::shared_ptr<PiecewiseLogLinearInterpolate>>(m, "PiecewiseLogLinearInterpolate", py::base<Interpolate>())
+      .def(py::init<std::vector<double>, std::vector<double>>(),
+           py::arg("points"), py::arg("values"))
+      ;
+
   py::class_<ConstantInterpolate, std::shared_ptr<ConstantInterpolate>>(m, "ConstantInterpolate", py::base<Interpolate>())
       .def(py::init<double>(), py::arg("value"))
       ;

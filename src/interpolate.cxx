@@ -122,6 +122,72 @@ double PiecewiseLinearInterpolate::derivative(double x) const
   }
 }
 
+PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
+    const std::vector<double> points,
+    const std::vector<double> values) :
+      points_(points), values_(values), Interpolate()
+{
+  // Check if sorted
+  if (not std::is_sorted(points.begin(), points.end())) {
+    valid_ = false; 
+  }
+
+  if (points.size() != values.size()) {
+    valid_ = false;
+  }
+
+  for (auto it = values_.begin(); it != values_.end(); ++it) {
+    if (*it < 0.0) valid_ = false;
+    *it = log(*it);
+  }
+}
+
+double PiecewiseLogLinearInterpolate::value(double x) const
+{
+  if (x <= points_.front()) {
+    return exp(values_.front());
+  }
+  else if (x >= points_.back()) {
+    return exp(values_.back());
+  }
+  else {
+    auto it = points_.begin();
+    for (it; it != points_.end(); ++it) {
+      if (x <= *it) break;
+    }
+    size_t ind = std::distance(points_.begin(), it);
+    double x1 = points_[ind-1];
+    double x2 = points_[ind];
+    double y1 = values_[ind-1];
+    double y2 = values_[ind];
+
+    return exp((y2-y1)/(x2-x1) * (x - x1) + y1);
+  }
+}
+
+double PiecewiseLogLinearInterpolate::derivative(double x) const
+{
+  if (x <= points_.front()) {
+    return 0.0;
+  }
+  else if (x >= points_.back()) {
+    return 0.0;
+  }
+  else {
+    auto it = points_.begin();
+    for (it; it != points_.end(); ++it) {
+      if (x <= *it) break;
+    }
+    size_t ind = std::distance(points_.begin(), it);
+    double x1 = points_[ind-1];
+    double x2 = points_[ind];
+    double y1 = values_[ind-1];
+    double y2 = values_[ind];
+
+    return exp((y2-y1)/(x2-x1) * (x-x1) + y1) * (y2-y1)/(x2-x1);
+  }
+}
+
 ConstantInterpolate::ConstantInterpolate(double v) :
     v_(v), Interpolate()
 {

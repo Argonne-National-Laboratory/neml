@@ -58,6 +58,43 @@ class TestPiecewiseLinearInterpolate(unittest.TestCase, BaseInterpolate):
     ys2 = testinter(xs)
     self.assertTrue(np.allclose(ys1, ys2))
 
+class TestPiecewiseLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.validx = [-10.0, -2.0, 1.0, 2.0, 5.0, 15.0]
+    self.invalidx_1 = [-2.0, -10.0, 1.0, 2.0, 5.0, 15.0]
+    self.invalidx_2 = [-10.0, -2.0, 1.0, 2.0, 5.0]
+    self.points = [1.0e5, 1.0e0, 1.0e-1, 1.0e-6, 1.0e0, 1.0e2]
+    self.invalidpoints = [1.0e5, 1.0e0, -1.0e-1, 1.0e-6, 1.0e0, 1.0e2]
+
+    self.x = 17.0
+
+    self.valid = interpolate.PiecewiseLogLinearInterpolate(self.validx, 
+        self.points)
+    self.invalid1 = interpolate.PiecewiseLogLinearInterpolate(self.invalidx_1, 
+        self.points)
+    self.invalid2 = interpolate.PiecewiseLogLinearInterpolate(self.invalidx_2, 
+        self.points)
+    self.invalid3 = interpolate.PiecewiseLogLinearInterpolate(self.validx, 
+        self.invalidpoints)
+    self.interpolate = self.valid
+
+  def test_valid(self):
+    self.assertTrue(self.valid.valid)
+    self.assertFalse(self.invalid1.valid)
+    self.assertFalse(self.invalid2.valid)
+    self.assertFalse(self.invalid3.valid)
+
+  def test_interpolate(self):
+    testinter = inter.interp1d(self.validx, np.log(self.points),
+        fill_value = (np.log(self.points[0]), np.log(self.points[-1])),
+        bounds_error = False)
+    xs = np.linspace(-15.0,20.0)
+    ys1 = [self.valid(x) for x in xs]
+    ys2 = np.exp(testinter(xs))
+    print(ys1)
+    print(ys2)
+    self.assertTrue(np.allclose(ys1, ys2))
+
 class TestConstantInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.v = ra.random((1,))[0]
