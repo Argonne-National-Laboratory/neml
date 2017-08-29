@@ -445,7 +445,7 @@ class Driver_sd_twobar(Driver_sd):
         return x, True
       except Exception:
         return np.zeros((12,)), False
-    
+
     solvers = [s1]
 
     for i,xi in enumerate(xguesses):
@@ -1386,8 +1386,8 @@ class MaximumSubdivisions(RuntimeError):
     super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
 
 
-def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
-    quasi = None):
+def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 50,
+    linesearch = 'none', bt_tau = 0.5, bt_c = 1.0e-4):
   """
     Manually-code newton-raphson so that I can output convergence info, if
     requested.
@@ -1407,21 +1407,25 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
   i = 0
 
   if verbose:
-    print("Iter.\tnR\t\tnR/nR0\t\tcond")
+    print("Iter.\tnR\t\tnR/nR0\t\tcond\t\tlinesearch")
     print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
 
   while (nR > rtol * nR0) and (nR > atol):
-    if quasi is not None:
-      dx = -la.solve(J, R)
-      x += quasi * dx
+    a = la.solve(J, R)
+
+    if linesearch == 'none':
+      f = 1.0
+    elif linesearch == 'backtracking':
+      f = backtrack(RJ, R, J, x, -a, tau = bt_tau, c = bt_c, verbose = verbose)
     else:
-      x -= la.solve(J, R)
+      raise ValueError("Unknown linesearch type.")
     
+    x -= (a * f)
     R, J = RJ(x)
     nR = la.norm(R)
     i += 1
     if verbose:
-      print("%i\t%e\t%e\t%e" % (i, nR, nR / nR0,la.cond(J)))
+      print("%i\t%e\t%e\t%e\t%f" % (i, nR, nR / nR0,la.cond(J), f))
     if i > miter:
       if verbose:
         print("")
@@ -1431,6 +1435,30 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
     print("")
 
   return x
+
+def backtrack(RJ, R0, J0, x, a, tau = 0.5, c = 1.0e-4, verbose = False):
+  """
+    Do a backtracking line search
+
+    Parameters:
+      RJ        residual/jacobian function
+      R0        value of R, to save a feval
+      J0        value of J, to save a feval
+      x         point to start from
+      a         direction
+
+    Optional:
+      tau       backtrack tau
+      c         backtrack c
+      verbose   verbose output
+  """
+  alpha = 1.0
+  cv = la.norm(RJ(x + alpha * a)[0])
+  while cv > la.norm(R0 + c * alpha * np.dot(J0, a)):
+    alpha *= tau
+    cv = la.norm(RJ(x + alpha * a)[0])
+
+  return alpha
 
 def quasi_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, 
     miter = 20):
