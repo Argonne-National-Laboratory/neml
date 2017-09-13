@@ -735,7 +735,6 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
     verbose = False):
   """
-    HOLD IS BROKEN
     We need a generalized version of the strain_hold_step above to
     make it work, but I'm tired right now.
 
@@ -770,13 +769,15 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
   driver = Driver_sd(model, verbose = verbose)
   emin = emax * R
   if hold_time:
-    raise NotImplementedError("Whoops, this is broken")
     if np.isscalar(hold_time):
       hold_time = [hold_time, hold_time]
+  else:
+    hold_time = [0,0]
 
   # Setup results
   strain = [0.0]
   stress = [0.0]
+  time = [0.0]
   cycles = []
   smax = []
   smin = []
@@ -797,11 +798,22 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
           ainc_guess = ainc)
     strain.append(np.dot(driver.strain_int[-1], sdir))
     stress.append(np.dot(driver.stress_int[-1], sdir))
+    time.append(time[-1] + e_inc / erate)
   
   # Begin cycling
   for s in range(ncycles):
     if verbose:
       print("Cycle %i" % s)
+
+    # Tension hold
+    if hold_time[0] > 0.0:
+      dt = hold_time[0] / n_hold
+      for i in range(n_hold):
+        einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
+            einc_guess = np.zeros((6,)), ainc_guess = -1)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+        time.append(time[-1] + dt)
 
     si = len(driver.strain_int)
     e_inc = np.abs(emin - emax) / nsteps
@@ -815,6 +827,17 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
 
       strain.append(np.dot(driver.strain_int[-1], sdir))
       stress.append(np.dot(driver.stress_int[-1], sdir))
+      time.append(time[-1] + e_inc / erate)
+    
+    # Compression hold
+    if hold_time[1] > 0.0:
+      dt = hold_time[1] / n_hold
+      for i in range(n_hold):
+        einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
+            einc_guess = np.zeros((6,)), ainc_guess = -1)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+        time.append(time[-1] + dt)
 
     e_inc = np.abs(emax - emin) / nsteps
     for i in range(nsteps):
@@ -826,6 +849,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
             einc_guess = einc, ainc_guess = ainc)
       strain.append(np.dot(driver.strain_int[-1], sdir))
       stress.append(np.dot(driver.stress_int[-1], sdir))
+      time.append(time[-1] + e_inc / erate)
 
     # Calculate
     cycles.append(s)
@@ -841,7 +865,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
       "min": np.array(smin), "mean": np.array(smean),
       "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
-      "history": driver.stored_int[-1]}
+      "history": driver.stored_int[-1], "time": np.array(time)}
 
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
