@@ -33,7 +33,6 @@ if __name__ == "__main__":
 
     model = neml.SmallStrainCreepPlasticity(pmodel, cmodel)
     
-    """
     res = drivers.creep(model, 200.0, 1.0e2, 1000.0, verbose = True)
     plt.plot(res['time'], res['strain'])
     plt.show()
@@ -47,40 +46,3 @@ if __name__ == "__main__":
         verbose = True)
     plt.plot(res['strain'], res['stress'])
     plt.show()
-    """
-    
-    tfinal = 100
-    T = 300.0
-    nsteps = 10
-
-    t_n = 0.0
-    strain_n = np.zeros((6,))
-    stress_n = np.zeros((6,))
-    hist_n = model.init_store()
-
-    efinal = np.array([0,0,0,0.0,0.1,0.0])
-
-    u_n = 0.0
-    p_n = 0.0
-
-    for i,m in enumerate(np.linspace(0,1,nsteps)):
-      t_np1 = tfinal * m
-      strain_np1 = efinal * m
-      
-      stress_np1, hist_np1, A_np1, u_np1, p_np1 = model.update_sd(
-          strain_np1, strain_n, T, T, t_np1, t_n, stress_n, hist_n,
-          u_n, p_n)
-      dfn = lambda e: model.update_sd(e,
-          strain_n, T, T, t_np1, t_n, stress_n, hist_n, u_n, p_n)[0]
-
-      print("HMM")
-      print(A_np1)
-      #print(num_A)
-
-      num_A = differentiate(dfn, strain_np1, eps = 1.0e-6)
-      
-      strain_n = strain_np1
-      stress_n = stress_np1
-      hist_n = hist_np1
-      u_n = u_np1
-      p_n = p_np1

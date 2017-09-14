@@ -491,6 +491,10 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
                        SSCPTrialState & ts);
 
  private:
+  int form_tangent_(double * const A, double * const B,
+                    double * const A_np1);
+
+ private:
   std::shared_ptr<NEMLModel_sd> plastic_;
   std::shared_ptr<CreepModel> creep_;
 

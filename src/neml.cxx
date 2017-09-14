@@ -1042,9 +1042,8 @@ int SmallStrainCreepPlasticity::update_sd(
   if (ier != 0) return ier;
 
   // Form the relatively simple tangent
-  invert_mat(A, 6); // This can be singular...
-  for (int i=0; i<36; i++) A_np1[i] = A[i] + B[i];
-  invert_mat(A_np1, 6);
+  ier = form_tangent_(A, B, A_np1);
+  if (ier != 0) return ier;
 
   // Energy calculation (trapezoid rule)
   double de[6];
@@ -1119,9 +1118,6 @@ int SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
                  tss->t_np1, tss->t_n, B);
   if (ier != 0) return ier;
 
-  //creep_->df_ds(s_np1, creep_new, tss->t_np1, tss->T_np1, B);
-  //for (int i=0; i<36; i++) B[i] *= (tss->t_np1 - tss->t_n);
-
   // Form the residual
   for (int i=0; i<6; i++) {
     R[i] = (x[i] + creep_new[i] - tss->e_np1[i]) * sf_;
@@ -1158,6 +1154,41 @@ int SmallStrainCreepPlasticity::make_trial_state(
   return 0;
 }
 
+int SmallStrainCreepPlasticity::form_tangent_(
+    double * const A, double * const B, double * const A_np1)
+{
+  // Okay, what we really want to do is
+  // (A^-1 + B)^-1
+  // BUT A can be singular (i.e. if it's perfectly plastic)
+  // The suspicion is that the whole thing probably isn't singular
+  // even if A is.
+  //
+  // It turns out there is a formula for the inverse of the sum of two
+  // matrices in Henderson and Searle (1981):
+  // (A+B)^-1 = A^-1 - A^-1 B (I + A^-1 B)^-1 A^-1
+  // which does not require *B* to be nonsingular
+  // This reduces to
+  // A - A B (I + A B)^-1 A
+  // for our case, but of course it's not necessarily correct as our
+  // A may be singular.
+  //
+  // That said, it seems to work quite nicely.
+  //
+  double C[36];
+  mat_mat(6,6,6,A,B,C);
+  for (int i=0; i<6; i++) C[CINDEX(i,i,6)] += 1.0;
+  invert_mat(C, 6);
+
+  double D[36];
+  mat_mat(6,6,6,C,A,D);
+  mat_mat(6,6,6,B,D,C);
+  mat_mat(6,6,6,A,C,D);
+
+  std::copy(A,A+36,A_np1);
+  for (int i=0; i<36; i++) A_np1[i] -= D[i];
+
+  return 0;
+}
 
 // Start general integrator implementation
 GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,

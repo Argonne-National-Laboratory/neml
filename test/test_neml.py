@@ -430,7 +430,7 @@ class TestCreepPlasticityPerfect(unittest.TestCase, CommonMatModel):
 
     self.model = neml.SmallStrainCreepPlasticity(self.pmodel, self.cmodel)
 
-    self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
+    self.efinal = np.array([0.1,-0.05,0.02,-0.05,0.1,-0.15])
     self.tfinal = 10.0
     self.T = 300.0
     self.nsteps = 10
