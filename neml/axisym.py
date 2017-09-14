@@ -133,23 +133,23 @@ class AxisymmetricProblem(object):
     
     self.displacements = [[0.0 for i in range(self.nnodes)]]
     self.axialstrain = [0.0]
-    self.stresses = [[np.zeros((4,)) for n in self.ns for i in range(n)]]
-    self.strains = [[np.zeros((4,)) for n in self.ns for i in range(n)]]
-    self.mstrains = [[np.zeros((4,)) for n in self.ns for i in range(n)]]
-    self.estrains = [[np.zeros((4,)) for n in self.ns for i in range(n)]]
-
+    
+    self.ngpts = ngpts
     self.gpoints, self.gweights = lgg(ngpts)
 
-    self.histories = [[[m.init_store() for xi in self.gpoints]
+    self.histories = [[np.array([m.init_store() for xi in self.gpoints])
       for m in self.materials]]
+    self.stresses = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
+    self.strains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
+    self.tstrains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
+    self.mstrains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
 
     self.ls = np.diff(self.mesh)
 
     # Save a bit of time
-    self.ri = np.array([[(xi+1)/2*li + ri for xi in self.gpoints] for li, ri 
-      in zip(self.ls, self.mesh)])
     self.Nl = np.array([[(1-xi)/2, (1+xi)/2] for xi in self.gpoints])
-    self.Bl = np.array([[-1, 1] for xi in self.gpoints])
+    self.ri = np.array([np.dot(self.Nl, self.mesh[e:e+2]) for e in range(self.nelem)])
+    self.Bl = np.array([[-1.0/2, 1.0/2] for xi in self.gpoints])
 
   def step(self, t):
     """
@@ -160,42 +160,100 @@ class AxisymmetricProblem(object):
     """
     T = np.array([self.T(xi, t) for xi in self.mesh])
     p = self.p(t)
-    dt = t - self.times[-1]
-    
+
     # Get a guess
     x0 = np.concatenate((self.displacements[-1], [self.axialstrain[-1]]))
 
-    R0 = self.R(x0, T, p)
+    #R,J,strains,tstrains,mstrains,stresses,histories = self.RJ(x0, T, p, t)
+    sfn = lambda x: self.RJ(x, T, p, t)[0]
+    res = opt.root(sfn, x0, method = 'lm')
+    print(res.message)
+    if not res.success:
+      raise Exception()
+    R, J, strains, tstrains, mstrains, stresses, histories = self.RJ(res.x, T, p, t)
 
     self.times.append(t)
     self.pressures.append(p)
     self.temperatures.append(T)
+    self.strains.append(strains)
+    self.tstrains.append(tstrains)
+    self.mstrains.append(mstrains)
+    self.stresses.append(stresses)
+    self.histories.append(histories)
 
-  def R(self, x, T, p):
+  def strain(self, d, l, r, ez):
     """
-      Compute the residual and the updated history
+      Compute the full strains
+
+      Parameters:
+        d   displacements
+        l   length
+        r   radius
+    """
+    err = np.dot(self.Bl, d) * 2.0 / l
+    ett = np.dot(self.Nl, d) / r
+    ezz = np.array([ez]*len(ett))
+    strain = np.hstack((np.vstack((err, ett, ezz)).T, np.zeros((len(err),3))))
+    return strain
+
+  def RJ(self, x, T, p, t):
+    """
+      Compute the residual, jacobian, and the rest of the updated quantities
 
       Parameters:
         x       iterate
         T       nodal temperatures
+        Tn      previous temperatures
         p       left pressure
     """
     d = x[:-1]
     ez = x[-1]
     
     Fext = np.zeros((self.nnodes+1,))
-    Fext[0] = self.rs[-1] * p
+    Fext[0] = 2*p # Or multiply by two...
     Fext[-1] = p * self.r / self.t
+    
+    strains = np.zeros((self.nelem, self.ngpts, 6))
+    tstrains = np.zeros((self.nelem, self.ngpts, 6))
+    mstrains = np.zeros((self.nelem, self.ngpts, 6))
+    stresses = np.zeros((self.nelem, self.ngpts, 6))
+    histories = []
 
     Fint = np.zeros((self.nnodes+1,))
     for e, (mat, l, rs) in enumerate(zip(self.materials, self.ls, self.ri)):
       de = d[e:e+2]
-      Te = T[e:e+2]
-      Tp = self.temperatures[-1][e:e+2]
-      dT = Te - Tp
-      err = np.dot(self.Bl, de) * 2.0 / l
-      ett = np.dot(self.Nl, de) / rs
-      ezz = np.array([ez, ez])
-      strain = np.vstack((err, ett, ezz)).T
+      T_e = np.dot(self.Nl, T[e:e+2])
+      T_n = np.dot(self.Nl, self.temperatures[-1][e:e+2])
+      
+      therm_inc = np.array([mat.alpha(Ti)*(Ti-Tii)*np.array([1,1,1,0,0,0]) 
+        for Ti, Tii in zip(T_e, T_n)])
 
-    return Fint - Fext
+      strain = self.strain(de, l, rs, ez)
+      tstrain = self.tstrains[-1][e] + therm_inc
+      mstrain = strain - tstrain
+      mstrain_n = self.mstrains[-1][e]
+      stress_n = self.stresses[-1][e]
+      hist_n = self.histories[-1][e]
+
+      stress = np.zeros((self.ngpts,6))
+      history = np.zeros((self.ngpts,len(hist_n[0])))
+      for i in range(self.ngpts):
+        si, hi, ti, ui, pi = mat.update_sd(mstrain[i], mstrain_n[i],
+            T_e[i], T_n[i], t, self.times[-1], stress_n[i], hist_n[i], 
+            0.0, 0.0)
+        stress[i] = si
+        history[i] = hi
+        
+        wi = self.gweights[i]
+        #Actually add in our terms
+        # Divide by two...
+        Fint[e:e+2] += wi * (si[0] * self.Bl[i] * 2.0 / l + si[1] * self.Nl[i] / rs[i]) * l / 2.0
+        Fint[-1] += wi * si[2] * l / 2.0 / self.t
+
+      strains[e] = strain
+      tstrains[e] = tstrain
+      mstrains[e] = mstrain
+      stresses[e] = stress
+      histories.append(history)
+
+    return Fint - Fext, 0.0, strains, tstrains, mstrains, stresses, histories

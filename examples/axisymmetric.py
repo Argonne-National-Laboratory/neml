@@ -18,21 +18,33 @@ def gen_material(E, nu, sY, alpha):
   elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
   surface = surfaces.IsoJ2()
 
-  return neml.SmallStrainPerfectPlasticity(elastic, surface, sY)
+  return neml.SmallStrainPerfectPlasticity(elastic, surface, sY, alpha = alpha)
 
 if __name__ == "__main__":
   tup = 10.0
-  gradient = axisym.generate_thickness_gradient(100.0, 250.0, 400, 600,
+  gradient = axisym.generate_thickness_gradient(240.0, 250.0, 400, 600,
       10.0, hold = 100.0, Tdot_cold = 20.0, hold_together = 20.0,
       delay = tup)
   p = 1.1
   period = 150
 
-  amodel = axisym.AxisymmetricProblem([100.0,150.0,250.0], 
-      [gen_material(100000, 0.3, 100.0, 20.0e-6),
-        gen_material(150000, 0.35, 120.0, 15.0e-6)], [25,25], 
+  amodel = axisym.AxisymmetricProblem([240.0,242.0,250.0], 
+      [gen_material(100000, 0.3, 1000.0, 20.0e-6),
+        gen_material(100000, 0.3, 1000.0, 20.0e-6)], [25,25], 
       gradient, lambda t: p/tup * t, bias = True)
 
-  for t in np.linspace(0,tup+10*period, 4000):
-    amodel.step(t)
+  epoints = amodel.ls/2 + amodel.mesh[:-1]
 
+  amodel.step(tup)
+
+  stresses = np.array(amodel.stresses)
+  plt.plot(epoints, np.mean(stresses[-1], axis=1)[:,0], 'k-')
+  plt.plot(epoints, np.mean(stresses[-1], axis=1)[:,1], 'r-')
+  plt.plot(epoints, np.mean(stresses[-1], axis=1)[:,2], 'b-')
+  plt.show()
+
+  strains = np.array(amodel.strains)
+  plt.plot(epoints, np.mean(strains[-1], axis=1)[:,0], 'k-')
+  plt.plot(epoints, np.mean(strains[-1], axis=1)[:,1], 'r-')
+  plt.plot(epoints, np.mean(strains[-1], axis=1)[:,2], 'b-')
+  plt.show()
