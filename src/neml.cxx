@@ -966,7 +966,7 @@ int SmallStrainRateIndependentPlasticity::check_K_T_(
 // Implementation of small strain rate independent plasticity
 //
 SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
-    std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+    std::shared_ptr<NEMLModel_sd> plastic,
     std::shared_ptr<CreepModel> creep,
     double alpha, double tol,
     int miter, bool verbose, double sf) :
@@ -978,7 +978,7 @@ SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
 }
 
 SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
-    std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+    std::shared_ptr<NEMLModel_sd> plastic,
     std::shared_ptr<CreepModel> creep,
     std::shared_ptr<Interpolate> alpha, double tol,
     int miter, bool verbose, double sf) :

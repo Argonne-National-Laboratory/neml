@@ -451,12 +451,12 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
 //  to solver overall update
 class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
  public:
-  SmallStrainCreepPlasticity(std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+  SmallStrainCreepPlasticity(std::shared_ptr<NEMLModel_sd> plastic,
                              std::shared_ptr<CreepModel> creep,
                              double alpha = 0.0,
                              double tol = 1.0e-8, int miter = 50,
                              bool verbose = false, double sf = 1.0e6);
-  SmallStrainCreepPlasticity(std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic,
+  SmallStrainCreepPlasticity(std::shared_ptr<NEMLModel_sd> plastic,
                              std::shared_ptr<CreepModel> creep,
                              std::shared_ptr<Interpolate> alpha = nullptr,
                              double tol = 1.0e-8, int miter = 50,
@@ -491,7 +491,7 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
                        SSCPTrialState & ts);
 
  private:
-  std::shared_ptr<SmallStrainRateIndependentPlasticity> plastic_;
+  std::shared_ptr<NEMLModel_sd> plastic_;
   std::shared_ptr<CreepModel> creep_;
 
   double tol_, sf_;

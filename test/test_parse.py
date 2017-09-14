@@ -296,3 +296,36 @@ class TestPerfect(CompareMats, unittest.TestCase):
 
   def test_alpha(self):
     self.assertTrue(np.isclose(self.model1.alpha(self.T), 0.1))
+
+class TestPerfectCreep(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_pcreep")
+
+    E = [-100, 100000]
+    nu = 0.3
+
+    youngs = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E))
+    poissons = elasticity.PoissonsRatio(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+
+    surface = surfaces.IsoJ2()
+
+    Ts = [100.0, 300.0, 500.0, 700.0]
+    Sys = [1000.0, 120.0, 60.0, 30.0]
+
+    yields = interpolate.PiecewiseLinearInterpolate(Ts, Sys)
+
+    pmodel = neml.SmallStrainPerfectPlasticity(elastic, surface, yields)
+
+    self.T = 550.0
+    self.tmax = 10.0
+    self.nsteps = 50.0
+    self.emax = np.array([0.1,0.05,0,-0.025,0,0])
+
+    A = 1.85e-10
+    n = 2.5
+
+    smodel = creep.PowerLawCreep(A, n)
+    cmodel = creep.J2CreepModel(smodel)
+
+    self.model2 = neml.SmallStrainCreepPlasticity(pmodel, cmodel)

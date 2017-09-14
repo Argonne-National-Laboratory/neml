@@ -92,50 +92,40 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   if (not one_attribute(plastic_node, "type", ft, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
+
+  std::unique_ptr<NEMLModel_sd> model;
   if (ft == "independent") {
     std::shared_ptr<RateIndependentFlowRule> fr =  process_independent(
         plastic_node, ier);
-    
-    if (found_creep) {
-      auto pmodel =  
-          std::make_shared<SmallStrainRateIndependentPlasticity>(emodel, fr, alpha);
 
-      return std::unique_ptr<SmallStrainCreepPlasticity> (
-          new SmallStrainCreepPlasticity(pmodel, cmodel, alpha));
-    }
-    else {
-      return std::unique_ptr<SmallStrainRateIndependentPlasticity> (
-        new SmallStrainRateIndependentPlasticity(emodel, fr, alpha));
-    }
+    model =  std::unique_ptr<SmallStrainRateIndependentPlasticity> (
+      new SmallStrainRateIndependentPlasticity(emodel, fr, alpha));
   }
   else if (ft == "dependent") {
-    if (found_creep) {
-      ier = CREEP_PLASTICITY;
-      return std::unique_ptr<NEMLModel>(nullptr);
-    }
-
     std::shared_ptr<ViscoPlasticFlowRule> fr = process_dependent(plastic_node, ier);
     std::shared_ptr<TVPFlowRule> gfr = std::make_shared<TVPFlowRule>(emodel, fr);
-    return std::unique_ptr<GeneralIntegrator>(new GeneralIntegrator(gfr, alpha));
+    model = std::unique_ptr<GeneralIntegrator>(new GeneralIntegrator(gfr, alpha));
   }
   else if (ft == "perfect") {
-    if (found_creep) {
-      ier = CREEP_PLASTICITY;
-      return std::unique_ptr<NEMLModel>(nullptr);
-    }
-
     // Surface
     std::shared_ptr<YieldSurface> ys = dispatch_node(plastic_node, "surface",
                                                      &process_surface, ier);
     // Yield stress
     std::shared_ptr<Interpolate> yss = scalar_param(plastic_node, "yield", ier);
-    return std::unique_ptr<SmallStrainPerfectPlasticity>(
+    model = std::unique_ptr<SmallStrainPerfectPlasticity>(
         new SmallStrainPerfectPlasticity(emodel, ys, yss, alpha));
   }
   else {
     ier = UNKNOWN_TYPE;
     return std::unique_ptr<NEMLModel>(nullptr);
   }
+
+  if (found_creep) {
+    return std::unique_ptr<NEMLModel>(
+        new SmallStrainCreepPlasticity(std::move(model), cmodel, alpha));
+  }
+
+  return std::unique_ptr<NEMLModel>(std::move(model));
 }
 
 std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier)

@@ -249,13 +249,13 @@ PYBIND11_PLUGIN(neml) {
       ;
 
   py::class_<SmallStrainCreepPlasticity, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<SmallStrainRateIndependentPlasticity>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
+      .def(py::init<std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
            py::arg("plastic"), py::arg("creep"),
            py::arg("alpha") = 0.0,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("sf") = 1.0e6)
 
-      .def(py::init<std::shared_ptr<SmallStrainRateIndependentPlasticity>, std::shared_ptr<CreepModel>, std::shared_ptr<Interpolate>, double, int , bool, double>(),
+      .def(py::init<std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, std::shared_ptr<Interpolate>, double, int , bool, double>(),
            py::arg("plastic"), py::arg("creep"),
            py::arg("alpha") = nullptr,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
