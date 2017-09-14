@@ -1042,7 +1042,7 @@ int SmallStrainCreepPlasticity::update_sd(
   if (ier != 0) return ier;
 
   // Form the relatively simple tangent
-  invert_mat(A, 6);
+  invert_mat(A, 6); // This can be singular...
   for (int i=0; i<36; i++) A_np1[i] = A[i] + B[i];
   invert_mat(A_np1, 6);
 

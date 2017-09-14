@@ -732,7 +732,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       'youngs': E, 'yield': sY}
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
-    sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
+    sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
     verbose = False):
   """
     We need a generalized version of the strain_hold_step above to
