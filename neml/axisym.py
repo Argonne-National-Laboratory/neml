@@ -210,7 +210,7 @@ class AxisymmetricProblem(object):
     ez = x[-1]
     
     Fext = np.zeros((self.nnodes+1,))
-    Fext[0] = 2*p # Or multiply by two...
+    Fext[0] = p
     Fext[-1] = p * self.r / self.t
     
     strains = np.zeros((self.nelem, self.ngpts, 6))
@@ -247,7 +247,7 @@ class AxisymmetricProblem(object):
         wi = self.gweights[i]
         #Actually add in our terms
         # Divide by two...
-        Fint[e:e+2] += wi * (si[0] * self.Bl[i] * 2.0 / l + si[1] * self.Nl[i] / rs[i]) * l / 2.0
+        Fint[e:e+2] += wi * (si[0] * self.Bl[i] * 2.0 / l + (si[1] - si[0]) * self.Nl[i] / rs[i]) * l / 2.0
         Fint[-1] += wi * si[2] * l / 2.0 / self.t
 
       strains[e] = strain
