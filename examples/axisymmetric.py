@@ -34,8 +34,9 @@ if __name__ == "__main__":
       [gen_material(100000, 0.3, 1000.0, 20.0e-6),
         gen_material(100000, 0.3, 1000.0, 20.0e-6)], [25,25], 
       gradient, lambda t: p/tup * t, bias = True)
-
-  amodel.step(tup)
+  
+  for i in range(1,11):
+    amodel.step(tup * i/10.0, verbose = True)
   stresses = np.array(amodel.stresses)
   strains = np.array(amodel.strains)
 

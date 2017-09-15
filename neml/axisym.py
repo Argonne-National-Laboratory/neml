@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import sys
+sys.path.append('../test')
+
+from common import differentiate
+
 import numpy as np
 import numpy.linalg as la
 from numpy.polynomial.legendre import leggauss as lgg
@@ -151,7 +156,7 @@ class AxisymmetricProblem(object):
     self.ri = np.array([np.dot(self.Nl, self.mesh[e:e+2]) for e in range(self.nelem)])
     self.Bl = np.array([[-1.0/2, 1.0/2] for xi in self.gpoints])
 
-  def step(self, t):
+  def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False):
     """
       Update to the next state
 
@@ -162,15 +167,33 @@ class AxisymmetricProblem(object):
     p = self.p(t)
 
     # Get a guess
-    x0 = np.concatenate((self.displacements[-1], [self.axialstrain[-1]]))
+    x = np.concatenate((self.displacements[-1], [self.axialstrain[-1]]))
 
     #R,J,strains,tstrains,mstrains,stresses,histories = self.RJ(x0, T, p, t)
-    sfn = lambda x: self.RJ(x, T, p, t)[0]
-    res = opt.root(sfn, x0, method = 'lm')
-    print(res.message)
-    if not res.success:
-      raise Exception()
-    R, J, strains, tstrains, mstrains, stresses, histories = self.RJ(res.x, T, p, t)
+    #sfn = lambda x: self.RJ(x, T, p, t)[0]
+    #res = opt.root(sfn, x0, method = 'lm')
+    #print(res.message)
+    #if not res.success:
+    #  raise Exception()
+
+    R, J, strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
+    nR0 = la.norm(R)
+    nR = nR0
+
+    if verbose:
+      print("Iter.\tNorm res")
+      print("%i\t%e" % (0, nR0))
+    
+    i = 0
+    while (nR > atol) or (nR / nR0 > rtol):
+      x -= la.solve(J, R)
+      R, J, strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
+      nR = la.norm(R)
+      i += 1
+
+      if verbose:
+        print("%i\t%e" % (i, nR))
+
 
     self.times.append(t)
     self.pressures.append(p)
@@ -213,6 +236,9 @@ class AxisymmetricProblem(object):
     Fext[0] = p
     Fext[-1] = p * self.r / (2*self.t)
     
+    # Obviously fix at some point
+    J = np.zeros((self.nnodes+1,self.nnodes+1))
+    
     strains = np.zeros((self.nelem, self.ngpts, 6))
     tstrains = np.zeros((self.nelem, self.ngpts, 6))
     mstrains = np.zeros((self.nelem, self.ngpts, 6))
@@ -246,9 +272,22 @@ class AxisymmetricProblem(object):
         
         wi = self.gweights[i]
         #Actually add in our terms
-        # Divide by two...
         Fint[e:e+2] += wi * (si[0] * self.Bl[i] * 2.0 / l + (si[1] - si[0]) * self.Nl[i] / rs[i]) * l / 2.0
         Fint[-1] += wi * si[2] * l / 2.0 / self.t
+        
+        DE = np.array([self.Bl[i] * 2.0/l, self.Nl[i] / rs[i]])
+        
+        # Remember wi and the jacobian
+        J11 = np.outer(2.0/l * self.Bl[i], np.dot(ti[0,:2], DE)) + np.outer(self.Nl[i] / rs[i], 
+            np.dot(ti[1,:2] - ti[0,:2], DE))
+        J12 = ti[0,2] * self.Bl[i] * 2.0 / l + (ti[1,2] - ti[0,2]) * self.Nl[i] / rs[i]
+        J21 = np.dot(ti[2,:2], DE) / self.t
+        J22 = ti[2,2] / self.t
+
+        J[e:e+2,e:e+2] += wi * l / 2.0 * J11
+        J[e:e+2,-1] += wi * l / 2.0 * J12
+        J[-1,e:e+2] += wi * l / 2.0 * J21
+        J[-1,-1] += wi * l / 2.0 * J22 
 
       strains[e] = strain
       tstrains[e] = tstrain
@@ -256,4 +295,4 @@ class AxisymmetricProblem(object):
       stresses[e] = stress
       histories.append(history)
 
-    return Fint - Fext, 0.0, strains, tstrains, mstrains, stresses, histories
+    return Fint - Fext, J, strains, tstrains, mstrains, stresses, histories
