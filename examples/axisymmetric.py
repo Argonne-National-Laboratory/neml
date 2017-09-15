@@ -30,18 +30,29 @@ if __name__ == "__main__":
   p = 1.1
   period = 150
 
+  def pressure(t):
+    if t < tup:
+      return p/tup * t
+    else:
+      return p
+
   amodel = axisym.AxisymmetricProblem([240.0,242.0,250.0], 
-      [gen_material(100000, 0.3, 1000.0, 20.0e-6),
-        gen_material(100000, 0.3, 1000.0, 20.0e-6)], [25,25], 
-      gradient, lambda t: p/tup * t, bias = True)
+      [gen_material(100000, 0.3, 150.0, 20.0e-6),
+        gen_material(100000, 0.3, 150.0, 20.0e-6)], [25,25], 
+      gradient, pressure, bias = False)
   
-  for i in range(1,11):
-    amodel.step(tup * i/10.0, verbose = True)
+  ncycles = 10
+  total = tup + period * ncycles
+
+  for t in np.linspace(0,total, 1250):
+    amodel.step(t, verbose = True)
   stresses = np.array(amodel.stresses)
   strains = np.array(amodel.strains)
+  tstrains = np.array(amodel.tstrains)
 
   stress_vec = [stresses[-1,:,:,i].flatten() for i in range(6)]
   strain_vec = [strains[-1,:,:,i].flatten() for i in range(6)]
+  tstrain_vec = [tstrains[-1,:,:,i].flatten() for i in range(6)]
 
   epoints = np.array(amodel.ri).flatten()
 
@@ -53,4 +64,9 @@ if __name__ == "__main__":
   plt.plot(epoints, strain_vec[0], 'k-')
   plt.plot(epoints, strain_vec[1], 'r-')
   plt.plot(epoints, strain_vec[2], 'b-')
+  plt.show()
+
+  plt.plot(epoints, tstrain_vec[0], 'k-')
+  plt.plot(epoints, tstrain_vec[1], 'r-')
+  plt.plot(epoints, tstrain_vec[2], 'b-')
   plt.show()
