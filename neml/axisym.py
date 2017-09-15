@@ -211,7 +211,7 @@ class AxisymmetricProblem(object):
     
     Fext = np.zeros((self.nnodes+1,))
     Fext[0] = p
-    Fext[-1] = p * self.r / self.t
+    Fext[-1] = p * self.r / (2*self.t)
     
     strains = np.zeros((self.nelem, self.ngpts, 6))
     tstrains = np.zeros((self.nelem, self.ngpts, 6))

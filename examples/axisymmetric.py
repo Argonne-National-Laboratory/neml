@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+import scipy.interpolate as inter
+
 def gen_material(E, nu, sY, alpha):
   """
     Generate a perfectly plastic material model.
@@ -33,18 +35,21 @@ if __name__ == "__main__":
         gen_material(100000, 0.3, 1000.0, 20.0e-6)], [25,25], 
       gradient, lambda t: p/tup * t, bias = True)
 
-  epoints = amodel.ls/2 + amodel.mesh[:-1]
-
   amodel.step(tup)
-
   stresses = np.array(amodel.stresses)
-  plt.plot(epoints, np.mean(stresses[-1], axis=1)[:,0], 'k-')
-  plt.plot(epoints, np.mean(stresses[-1], axis=1)[:,1], 'r-')
-  plt.plot(epoints, np.mean(stresses[-1], axis=1)[:,2], 'b-')
+  strains = np.array(amodel.strains)
+
+  stress_vec = [stresses[-1,:,:,i].flatten() for i in range(6)]
+  strain_vec = [strains[-1,:,:,i].flatten() for i in range(6)]
+
+  epoints = np.array(amodel.ri).flatten()
+
+  plt.plot(epoints, stress_vec[0], 'k-')
+  plt.plot(epoints, stress_vec[1], 'r-')
+  plt.plot(epoints, stress_vec[2], 'b-')
   plt.show()
 
-  strains = np.array(amodel.strains)
-  plt.plot(epoints, np.mean(strains[-1], axis=1)[:,0], 'k-')
-  plt.plot(epoints, np.mean(strains[-1], axis=1)[:,1], 'r-')
-  plt.plot(epoints, np.mean(strains[-1], axis=1)[:,2], 'b-')
+  plt.plot(epoints, strain_vec[0], 'k-')
+  plt.plot(epoints, strain_vec[1], 'r-')
+  plt.plot(epoints, strain_vec[2], 'b-')
   plt.show()
