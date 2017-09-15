@@ -214,10 +214,10 @@ class AxisymmetricProblem(object):
         l   length
         r   radius
     """
-    err = np.dot(self.Bl, d) * 2.0 / l
-    ett = np.dot(self.Nl, d) / r
-    ezz = np.array([ez]*len(ett))
-    strain = np.hstack((np.vstack((err, ett, ezz)).T, np.zeros((len(err),3))))
+    strain = np.zeros((len(r),6))
+    strain[:,0] = np.dot(self.Bl, d) * 2.0 / l
+    strain[:,1] = np.dot(self.Nl, d) / r
+    strain[:,2] = ez 
     return strain
 
   def RJ(self, x, T, p, t):
@@ -284,8 +284,8 @@ class AxisymmetricProblem(object):
         DE = np.array([self.Bl[i] * 2.0/l, self.Nl[i] / rs[i]])
         
         # Remember wi and the jacobian
-        J11 = (np.outer(2.0/l * self.Bl[i], np.dot(ti[0,:2], DE)) + np.outer(self.Nl[i] / rs[i], 
-            np.dot(ti[1,:2] - ti[0,:2], DE))) * wi * l / 2.0 
+        J11 = np.dot(np.outer(2.0/l * self.Bl[i], ti[0,:2]) + np.outer(self.Nl[i] / rs[i], 
+            ti[1,:2] - ti[0,:2]), DE) * wi * l / 2.0 
         J12 = (ti[0,2] * self.Bl[i] * 2.0 / l + (ti[1,2] - ti[0,2]) * self.Nl[i] / rs[i]) * wi * l / 2.0
         J21 = (np.dot(ti[2,:2], DE) / self.t) * wi * l / 2.0 
         J22 = (ti[2,2] / self.t) * wi * l / 2.0
