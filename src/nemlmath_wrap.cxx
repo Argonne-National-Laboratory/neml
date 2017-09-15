@@ -289,6 +289,82 @@ PYBIND11_PLUGIN(nemlmath) {
           return polyval(arr2ptr<double>(poly), poly.request().shape[0], x);
 
         }, "Evaluate a polynomial at x, highest order term first.");
+
+   m.def("dgttrf",
+         [](py::array_t<double, py::array::c_style> DL, py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> DU) ->
+         std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, py::array_t<double>, py::array_t<int>>
+         {
+          auto DL_r = DL.request();
+          auto D_r = D.request();
+          auto DU_r = DU.request();
+
+          if ((DL_r.ndim != 1) or 
+              (D_r.ndim != 1) or
+              (DU_r.ndim != 1)) {
+            throw LinalgError("Diagonals should all be vectors!");
+          }
+
+          int n = D_r.shape[0];
+          if ((DL_r.shape[0] != n-1) or (DU_r.shape[0] != n-1)) {
+            throw LinalgError("Diagonals do not have compatible sizes!");
+          }
+          auto DU2 = alloc_vec<double>(n-2);
+          auto IPIV = alloc_vec<int>(n);
+          
+          int ier;
+
+          dgttrf_(n, arr2ptr<double>(DL), arr2ptr<double>(D), 
+                  arr2ptr<double>(DU), arr2ptr<double>(DU2),
+                  arr2ptr<int>(IPIV), ier);
+          
+          if (ier != 0) {
+            throw LinalgError("Diagonal factorization failed!");
+          }
+
+          return std::make_tuple(DL, D, DU, DU2, IPIV);
+
+         }, "Thin wrapper for DGTTRF");
+
+   m.def("dgttrs",
+         [](py::array_t<double, py::array::c_style> DL, py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> DU, py::array_t<double, py::array::c_style> DU2, py::array_t<int, py::array::c_style> IPIV, py::array_t<double, py::array::c_style> b) ->
+         py::array_t<double>
+         {
+          auto DL_r = DL.request();
+          auto D_r = D.request();
+          auto DU_r = DU.request();
+          auto DU2_r = DU2.request();
+          auto IPIV_r = IPIV.request();
+          auto b_r = b.request();
+
+          if ((DL_r.ndim != 1) or 
+              (D_r.ndim != 1) or
+              (DU_r.ndim != 1) or
+              (DU2_r.ndim != 1) or
+              (IPIV_r.ndim != 1) or
+              (b_r.ndim != 1)) {
+            throw LinalgError("Diagonals should all be vectors!");
+          }
+
+          int n = D_r.shape[0];
+          if ((DL_r.shape[0] != n-1) or (DU_r.shape[0] != n-1) 
+              or (DU2_r.shape[0] != n-2) or (IPIV_r.shape[0] != n)
+              or (b_r.shape[0] != n)) {
+            throw LinalgError("Diagonals do not have compatible sizes!");
+          }
+          int ier;
+          
+          dgttrs_("N", n, 1, arr2ptr<double>(DL), arr2ptr<double>(D),
+                  arr2ptr<double>(DU), arr2ptr<double>(DU2),
+                  arr2ptr<int>(IPIV), arr2ptr<double>(b),
+                  n, ier);
+
+          if (ier != 0) {
+            throw LinalgError("Diagonal factorization failed!");
+          }
+          
+          return b;
+
+         }, "Thin wrapper for DGTTRS");
 }
 
 } // namespace neml

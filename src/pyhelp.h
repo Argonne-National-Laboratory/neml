@@ -25,10 +25,10 @@ template<class T> py::array_t<T> alloc_vec(size_t n)
           py::format_descriptor<T>::value,
           1,
           {n},
-          {sizeof(double)}
+          {sizeof(T)}
           ));
   auto ptr = arr2ptr<T>(arr);
-  std::fill(ptr, ptr + n, 0.0);
+  std::fill(ptr, ptr + n, 0);
   return arr;
 }
 
@@ -41,10 +41,10 @@ template<class T> py::array_t<T> alloc_mat(size_t m, size_t n)
           py::format_descriptor<T>::value,
           2,
           {m, n},
-          {sizeof(double) * n, sizeof(double)}
+          {sizeof(T) * n, sizeof(T)}
           ));
   auto ptr = arr2ptr<T>(arr);
-  std::fill(ptr, ptr + m * n, 0.0);
+  std::fill(ptr, ptr + m * n, 0);
   return arr;
 }
 

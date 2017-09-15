@@ -132,6 +132,27 @@ class TestSolve(unittest.TestCase):
     print(self.b)
     self.assertTrue(np.allclose(x, self.b))
 
+class TestDiagSolve(unittest.TestCase):
+  def setUp(self):
+    self.n = 10
+    self.dl = ra.random((self.n-1,))
+    self.d = ra.random((self.n,))
+    self.du = ra.random((self.n-1))
+    self.A = np.zeros((self.n, self.n))
+    for i in range(self.n):
+      self.A[i,i] = self.d[i]
+      if i != self.n -1:
+        self.A[i,i+1] = self.du[i]
+        self.A[i+1,i] = self.dl[i]
+    
+    self.c = ra.random((self.n,))
+
+  def test_solve(self):
+    x_np = la.solve(self.A, self.c)
+    dl, d, du, du2, ipiv = dgttrf(self.dl, self.d, self.du)
+    x_la = dgttrs(dl, d, du, du2, ipiv, self.c)
+    self.assertTrue(np.allclose(x_np, x_la))
+
 class TestCond(unittest.TestCase):
   def setUp(self):
     self.n = 10

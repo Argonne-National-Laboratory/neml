@@ -38,14 +38,16 @@ if __name__ == "__main__":
 
   amodel = axisym.AxisymmetricProblem([240.0,242.0,250.0], 
       [gen_material(100000, 0.3, 150.0, 20.0e-6),
-        gen_material(100000, 0.3, 150.0, 20.0e-6)], [25,25], 
+        gen_material(100000, 0.3, 150.0, 20.0e-6)], [50,50], 
       gradient, pressure, bias = False)
   
-  ncycles = 10
+  ncycles = 5
   total = tup + period * ncycles
 
-  for t in np.linspace(0,total, 1250):
-    amodel.step(t, verbose = True)
+  for t in np.linspace(0,total, 500):
+    amodel.step(t, verbose = False)
+
+  """
   stresses = np.array(amodel.stresses)
   strains = np.array(amodel.strains)
   tstrains = np.array(amodel.tstrains)
@@ -70,3 +72,4 @@ if __name__ == "__main__":
   plt.plot(epoints, tstrain_vec[1], 'r-')
   plt.plot(epoints, tstrain_vec[2], 'b-')
   plt.show()
+  """

@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.append('../test')
-
-from common import differentiate
-
 import numpy as np
 import numpy.linalg as la
+import scipy.linalg as sla
+import scipy.linalg.lapack as lapack
 from numpy.polynomial.legendre import leggauss as lgg
 import scipy.optimize as opt
+
+import nemlmath
 
 def generate_thickness_gradient(ri, ro, T1, T2, Tdot_hot, hold, 
     Tdot_cold = None, hold_together = 0.0, delay = 0.0):
@@ -169,14 +168,7 @@ class AxisymmetricProblem(object):
     # Get a guess
     x = np.concatenate((self.displacements[-1], [self.axialstrain[-1]]))
 
-    #R,J,strains,tstrains,mstrains,stresses,histories = self.RJ(x0, T, p, t)
-    #sfn = lambda x: self.RJ(x, T, p, t)[0]
-    #res = opt.root(sfn, x0, method = 'lm')
-    #print(res.message)
-    #if not res.success:
-    #  raise Exception()
-
-    R, J, strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
+    R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
     nR0 = la.norm(R)
     nR = nR0
 
@@ -185,15 +177,24 @@ class AxisymmetricProblem(object):
       print("%i\t%e" % (0, nR0))
     
     i = 0
-    while (nR > atol) or (nR / nR0 > rtol):
-      x -= la.solve(J, R)
-      R, J, strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
+    while (nR > atol) and (nR / nR0 > rtol):
+      R1 = R[:-1]
+      R2 = R[-1]
+      c = R1 - R2/J22 * J12
+      u = -J12 / J22
+      v = J21
+      x1 = cute_solve(J11_du, J11_d, J11_dl, u, v, c)
+      x2 = (R2 - np.dot(J21,x1)) / J22
+
+      x[:-1] -= x1
+      x[-1] -= x2
+      
+      R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
       nR = la.norm(R)
       i += 1
 
       if verbose:
         print("%i\t%e" % (i, nR))
-
 
     self.times.append(t)
     self.pressures.append(p)
@@ -236,9 +237,6 @@ class AxisymmetricProblem(object):
     Fext[0] = p
     Fext[-1] = p * self.r / (2*self.t)
     
-    # Obviously fix at some point
-    J = np.zeros((self.nnodes+1,self.nnodes+1))
-    
     strains = np.zeros((self.nelem, self.ngpts, 6))
     tstrains = np.zeros((self.nelem, self.ngpts, 6))
     mstrains = np.zeros((self.nelem, self.ngpts, 6))
@@ -246,6 +244,13 @@ class AxisymmetricProblem(object):
     histories = []
 
     Fint = np.zeros((self.nnodes+1,))
+    A11_dl = np.zeros((self.nnodes-1,))
+    A11_d = np.zeros((self.nnodes,))
+    A11_du = np.zeros((self.nnodes-1,))
+    A12 = np.zeros((self.nnodes,))
+    A21 = np.zeros((self.nnodes,))
+    A22 = 0.0
+
     for e, (mat, l, rs) in enumerate(zip(self.materials, self.ls, self.ri)):
       de = d[e:e+2]
       T_e = np.dot(self.Nl, T[e:e+2])
@@ -263,6 +268,7 @@ class AxisymmetricProblem(object):
 
       stress = np.zeros((self.ngpts,6))
       history = np.zeros((self.ngpts,len(hist_n[0])))
+
       for i in range(self.ngpts):
         si, hi, ti, ui, pi = mat.update_sd(mstrain[i], mstrain_n[i],
             T_e[i], T_n[i], t, self.times[-1], stress_n[i], hist_n[i], 
@@ -278,16 +284,19 @@ class AxisymmetricProblem(object):
         DE = np.array([self.Bl[i] * 2.0/l, self.Nl[i] / rs[i]])
         
         # Remember wi and the jacobian
-        J11 = np.outer(2.0/l * self.Bl[i], np.dot(ti[0,:2], DE)) + np.outer(self.Nl[i] / rs[i], 
-            np.dot(ti[1,:2] - ti[0,:2], DE))
-        J12 = ti[0,2] * self.Bl[i] * 2.0 / l + (ti[1,2] - ti[0,2]) * self.Nl[i] / rs[i]
-        J21 = np.dot(ti[2,:2], DE) / self.t
-        J22 = ti[2,2] / self.t
+        J11 = (np.outer(2.0/l * self.Bl[i], np.dot(ti[0,:2], DE)) + np.outer(self.Nl[i] / rs[i], 
+            np.dot(ti[1,:2] - ti[0,:2], DE))) * wi * l / 2.0 
+        J12 = (ti[0,2] * self.Bl[i] * 2.0 / l + (ti[1,2] - ti[0,2]) * self.Nl[i] / rs[i]) * wi * l / 2.0
+        J21 = (np.dot(ti[2,:2], DE) / self.t) * wi * l / 2.0 
+        J22 = (ti[2,2] / self.t) * wi * l / 2.0
 
-        J[e:e+2,e:e+2] += wi * l / 2.0 * J11
-        J[e:e+2,-1] += wi * l / 2.0 * J12
-        J[-1,e:e+2] += wi * l / 2.0 * J21
-        J[-1,-1] += wi * l / 2.0 * J22 
+        A11_du[e] += J11[0,1]
+        A11_d[e] += J11[0,0]
+        A11_d[e+1] += J11[1,1]
+        A11_dl[e] += J11[1,0]
+        A12[e:e+2] += J12
+        A21[e:e+2] += J21
+        A22 += J22
 
       strains[e] = strain
       tstrains[e] = tstrain
@@ -295,4 +304,20 @@ class AxisymmetricProblem(object):
       stresses[e] = stress
       histories.append(history)
 
-    return Fint - Fext, J, strains, tstrains, mstrains, stresses, histories
+    return Fint - Fext, (A11_du,A11_d,A11_dl,A12,A21,A22), strains, tstrains, mstrains, stresses, histories
+
+
+def cute_solve(DU, D, DL, u, v, c):
+  """
+    Do the cute solve of:
+
+    (B + u v.T) x = c
+
+    with B tri-diagonal
+  """
+  DL, D, DU, DU2, IPIV = nemlmath.dgttrf(DL, D, DU)
+  
+  x = nemlmath.dgttrs(DL,D,DU,DU2,IPIV, c)
+  y = nemlmath.dgttrs(DL,D,DU,DU2,IPIV, u)
+  
+  return x - np.dot(v,x) / (1+np.dot(v,y)) * y
