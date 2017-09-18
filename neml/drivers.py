@@ -76,6 +76,40 @@ class Driver_sd(Driver):
     super(Driver_sd, self).__init__(*args, **kwargs)
     self.strain_int = [np.zeros((6,))]
 
+  def solve_try(self, RJ, x0):
+    solvers = []
+    def s1(x0i):
+      try:
+        x = newton(RJ, x0i, verbose = self.verbose,
+            rtol = self.rtol, atol = self.atol, miter = self.miter)
+        return x, True
+      except Exception:
+        return np.zeros((12,)), False
+
+    def s2(x0i):
+      try:
+        res = opt.root(RJ, x0i, jac = True, method = 'lm')
+        return res.x, res.success
+      except Exception:
+        return np.zeros((12,)), False
+
+    solvers = [s1, s2]
+    guesses = [x0, np.zeros(x0.shape)]
+    
+    success = False
+    for xi in guesses:
+      for solv in solvers:
+        x, success = solv(xi)
+        if success:
+          break
+      if success:
+        break
+
+    if not success:
+      raise MaximumIterations()
+
+    return x
+
   @property
   def strain(self):
     return np.array(self.strain_int)
@@ -119,8 +153,9 @@ class Driver_sd(Driver):
       R = s - s_np1
       return R, A
 
-    e_np1 = newton(RJ, self.strain_int[-1], verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    #e_np1 = newton(RJ, self.strain_int[-1], verbose = self.verbose,
+    #    rtol = self.rtol, atol = self.atol, miter = self.miter)
+    e_np1 = self.solve_try(RJ, self.strain_int[-1])
 
     self.strain_step(e_np1, t_np1, T_np1)
 
@@ -175,8 +210,9 @@ class Driver_sd(Driver):
     else:
       x0[0] = 1.0
 
-    x = newton(RJ, x0, verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    #x = newton(RJ, x0, verbose = self.verbose,
+    #    rtol = self.rtol, atol = self.atol, miter = self.miter)
+    x = self.solve_try(RJ, x0)
     e_np1 = self.strain_int[-1] + x[1:]
 
     self.strain_step(e_np1, t_np1, T_np1)
@@ -209,8 +245,14 @@ class Driver_sd(Driver):
         T_np1       temperature at next time step
 
     """
-    s_np1 = self.stress_int[-1] + sdir / la.norm(sdir) * sinc
-    dt = np.abs(np.dot(s_np1 - self.stress_int[-1], sdir) / srate)
+    if np.allclose(sdir, 0.0):
+      s_np1 = self.stress_int[-1]
+    else:
+      s_np1 = self.stress_int[-1] + sdir / la.norm(sdir) * sinc
+    if np.isclose(srate, 0.0):
+      dt = 0.0
+    else:
+      dt = np.abs(np.dot(s_np1 - self.stress_int[-1], sdir) / srate)
 
     self.stress_step(s_np1, self.t_int[-1] + dt, T_np1)
 
@@ -243,8 +285,9 @@ class Driver_sd(Driver):
       return R, J
     
     x0 = np.copy(self.strain_int[-1])
-    e_np1 = newton(RJ, x0, verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    #e_np1 = newton(RJ, x0, verbose = self.verbose,
+    #    rtol = self.rtol, atol = self.atol, miter = self.miter)
+    e_np1 = self.solve_try(RJ, x0)
 
     self.strain_step(e_np1, t_np1, T_np1)
 

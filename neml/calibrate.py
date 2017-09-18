@@ -7,6 +7,8 @@ import scipy.integrate as qud
 
 import multiprocessing
 
+import matplotlib.pyplot as plt
+
 from lxml import etree as ET
 
 def expand(data, conv = float):
@@ -40,11 +42,20 @@ class Evaluator(object):
     try:
       v = evaluate_case(case, model, weights = self.weights)
     except Exception as e:
-      return self.penalty
+      v = self.penalty
     if np.isnan(v) or np.isinf(v):
-      return self.penalty
-    else:
-      return v
+      v = self.penalty
+    
+    if v > 10.0:
+      print(case.find('source').text)
+      print(case.attrib['type'])
+      print(case.find('control').text)
+      print(float(case.find('temperature').text))
+      print(float(case.find('rate').text))
+      print(float(case.find('value').text))
+
+
+    return v
 
 def evaluate_cases(cases, model_maker, params, weights = {"uniaxial": 1.0,
   "relax_strain": 1.0, "relax_stress": 1.0, "cyclic_stress": 1.0,
@@ -111,6 +122,9 @@ def evaluate_uniaxial(case, model):
   """
   T = float(case.find('temperature').text)
   erate = float(case.find('rate').text)
+  if case.find('strain') is None:
+    # Don't worry about cases with no stress/strain data
+    return 0.0
   exp_strain = expand(case.find('strain').text)
   exp_stress = expand(case.find('stress').text)
 
@@ -190,7 +204,7 @@ def evaluate_creep(case, model):
 
   exp_fn = inter.interp1d(exp_time, exp_strain)
   mod_fn = inter.interp1d(res['rtime'], res['rstrain'])
-  
+ 
   vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_time*1.01, max_time*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
   v1 = vs[0]
@@ -214,14 +228,27 @@ def evaluate_cyclic_strain(case, model):
   ratio = float(case.find('ratio').text)
 
   exp_cycle = expand(case.find('cycle').text)
-  if case.find('max') is None:
+
+  if case.find('max') is not None:
+    compare = 'max'
+  elif case.find('mean') is not None:
+    compare = 'mean'
+  elif case.find('min') is not None:
+    compare = 'min'
+  else:
     return 0.0
-    #raise RuntimeError("Implement this please...")
-  exp_max = expand(case.find('max').text)
+
+  exp_data = expand(case.find(compare).text)
 
   if case.find('hold') is not None:
-    #raise RuntimeError("Holds on strain controlled tests not implemented...")
-    return 0
+    if case.find('hold').attrib['type'] == "max":
+      hold = [float(case.find('hold').text), 0.0]
+    elif case.find('hold').attrib['type'] == "min":
+      hold = [0.0, float(case.find('hold').text)]
+    else:
+      raise ValueError("Unknown hold type!")
+  else:
+    hold = None
   
   max_cycles = np.max(exp_cycle)
   min_cycles = np.min(exp_cycle)
@@ -231,13 +258,18 @@ def evaluate_cyclic_strain(case, model):
     max_cycles = 2000
 
   res = drivers.strain_cyclic(model, strain, ratio, rate,
-      int(max_cycles)+1, T = T)
+      int(max_cycles)+1, T = T, hold_time = hold)
 
   max_cycles = min([max_cycles, np.max(res['cycles'])])
   min_cycles = max([min_cycles, np.min(res['cycles'])])
 
-  exp_fn = inter.interp1d(exp_cycle, exp_max)
-  mod_fn = inter.interp1d(res['cycles'], res['max'])
+  exp_fn = inter.interp1d(exp_cycle, exp_data)
+  mod_fn = inter.interp1d(res['cycles'], res[compare])
+
+  #x = np.linspace(min_cycles, max_cycles * 0.99, 100)
+  #plt.plot(x, exp_fn(x), 'k-')
+  #plt.plot(x, mod_fn(x), 'k--')
+  #plt.show()
 
   vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
@@ -296,12 +328,15 @@ def evaluate_cyclic_stress(case, model):
 
   exp_fn = inter.interp1d(exp_cycle, exp_data)
   mod_fn = inter.interp1d(res['cycles'], res[compare])
-  
-  vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_cycles, max_cycles*0.99, epsabs = 1.0e-4, 
+ 
+  max_cycles = min([max_cycles, np.max(res['cycles'])])
+  min_cycles = max([min_cycles, np.min(res['cycles'])])
+
+  vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_cycles*1.01, max_cycles*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
   v1 = vs[0]
   vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
-      min_cycles, max_cycles*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
+      min_cycles*1.01, max_cycles*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
   v2 = vs[0]
 
