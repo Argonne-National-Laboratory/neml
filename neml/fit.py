@@ -248,12 +248,12 @@ def evaluate_residual_mpi(model_maker, params, database, rweights, tweights,
   if rank == 0:
     n = np.array(params.shape, dtype = int)
     comm.Bcast(n, root = 0)
-    comm.Bcast(params, root = 0)
+    comm.bcast(params, root = 0)
   else:
     n = np.zeros((2,), dtype = int)
     comm.Bcast(n, root = 0)
     params = np.zeros(n)
-    comm.Bcast(params, root = 0)
+    comm.bcast(params, root = 0)
 
   # Root runs weight calculations and does partitioning
   # Partitioning matrix is nmodels x ndatabase
