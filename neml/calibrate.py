@@ -46,15 +46,6 @@ class Evaluator(object):
     if np.isnan(v) or np.isinf(v):
       v = self.penalty
     
-    if v > 10.0:
-      print(case.find('source').text)
-      print(case.attrib['type'])
-      print(case.find('control').text)
-      print(float(case.find('temperature').text))
-      print(float(case.find('rate').text))
-      print(float(case.find('value').text))
-
-
     return v
 
 def evaluate_cases(cases, model_maker, params, weights = {"uniaxial": 1.0,
