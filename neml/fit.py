@@ -24,7 +24,7 @@ def array2member(array):
   return [Member(list(a)) for a in array]
 
 def member2array(pop):
-  return np.array([np.array(a) for a in pop])
+  return np.array([a for a in pop])
 
 def assign_fitness(res, pop):
   for i, r in enumerate(res):
@@ -243,17 +243,17 @@ def evaluate_residual_mpi(model_maker, params, database, rweights, tweights,
   """
   size = comm.Get_size()
   rank = comm.Get_rank()
-
+  
   # Broadcast params as a numpy array
   if rank == 0:
     n = np.array(params.shape, dtype = int)
     comm.Bcast(n, root = 0)
-    comm.bcast(params, root = 0)
+    comm.Bcast(np.array(params), root = 0)
   else:
     n = np.zeros((2,), dtype = int)
     comm.Bcast(n, root = 0)
     params = np.zeros(n)
-    comm.bcast(params, root = 0)
+    comm.Bcast(params, root = 0)
 
   # Root runs weight calculations and does partitioning
   # Partitioning matrix is nmodels x ndatabase
