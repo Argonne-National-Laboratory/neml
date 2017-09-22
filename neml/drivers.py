@@ -76,6 +76,40 @@ class Driver_sd(Driver):
     super(Driver_sd, self).__init__(*args, **kwargs)
     self.strain_int = [np.zeros((6,))]
 
+  def solve_try(self, RJ, x0):
+    solvers = []
+    def s1(x0i):
+      try:
+        x = newton(RJ, x0i, verbose = self.verbose,
+            rtol = self.rtol, atol = self.atol, miter = self.miter)
+        return x, True
+      except Exception:
+        return np.zeros((12,)), False
+
+    def s2(x0i):
+      try:
+        res = opt.root(RJ, x0i, jac = True, method = 'lm')
+        return res.x, res.success
+      except Exception:
+        return np.zeros((12,)), False
+
+    solvers = [s1, s2]
+    guesses = [x0, np.zeros(x0.shape)]
+    
+    success = False
+    for xi in guesses:
+      for solv in solvers:
+        x, success = solv(xi)
+        if success:
+          break
+      if success:
+        break
+
+    if not success:
+      raise MaximumIterations()
+
+    return x
+
   @property
   def strain(self):
     return np.array(self.strain_int)
@@ -119,8 +153,9 @@ class Driver_sd(Driver):
       R = s - s_np1
       return R, A
 
-    e_np1 = newton(RJ, self.strain_int[-1], verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    #e_np1 = newton(RJ, self.strain_int[-1], verbose = self.verbose,
+    #    rtol = self.rtol, atol = self.atol, miter = self.miter)
+    e_np1 = self.solve_try(RJ, self.strain_int[-1])
 
     self.strain_step(e_np1, t_np1, T_np1)
 
@@ -175,8 +210,9 @@ class Driver_sd(Driver):
     else:
       x0[0] = 1.0
 
-    x = newton(RJ, x0, verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    #x = newton(RJ, x0, verbose = self.verbose,
+    #    rtol = self.rtol, atol = self.atol, miter = self.miter)
+    x = self.solve_try(RJ, x0)
     e_np1 = self.strain_int[-1] + x[1:]
 
     self.strain_step(e_np1, t_np1, T_np1)
@@ -209,8 +245,14 @@ class Driver_sd(Driver):
         T_np1       temperature at next time step
 
     """
-    s_np1 = self.stress_int[-1] + sdir / la.norm(sdir) * sinc
-    dt = np.abs(np.dot(s_np1 - self.stress_int[-1], sdir) / srate)
+    if np.allclose(sdir, 0.0):
+      s_np1 = self.stress_int[-1]
+    else:
+      s_np1 = self.stress_int[-1] + sdir / la.norm(sdir) * sinc
+    if np.isclose(srate, 0.0):
+      dt = 0.0
+    else:
+      dt = np.abs(np.dot(s_np1 - self.stress_int[-1], sdir) / srate)
 
     self.stress_step(s_np1, self.t_int[-1] + dt, T_np1)
 
@@ -243,8 +285,9 @@ class Driver_sd(Driver):
       return R, J
     
     x0 = np.copy(self.strain_int[-1])
-    e_np1 = newton(RJ, x0, verbose = self.verbose,
-        rtol = self.rtol, atol = self.atol, miter = self.miter)
+    #e_np1 = newton(RJ, x0, verbose = self.verbose,
+    #    rtol = self.rtol, atol = self.atol, miter = self.miter)
+    e_np1 = self.solve_try(RJ, x0)
 
     self.strain_step(e_np1, t_np1, T_np1)
 
@@ -732,10 +775,9 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       'youngs': E, 'yield': sY}
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
-    sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
+    sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
     verbose = False):
   """
-    HOLD IS BROKEN
     We need a generalized version of the strain_hold_step above to
     make it work, but I'm tired right now.
 
@@ -770,13 +812,15 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
   driver = Driver_sd(model, verbose = verbose)
   emin = emax * R
   if hold_time:
-    raise NotImplementedError("Whoops, this is broken")
     if np.isscalar(hold_time):
       hold_time = [hold_time, hold_time]
+  else:
+    hold_time = [0,0]
 
   # Setup results
   strain = [0.0]
   stress = [0.0]
+  time = [0.0]
   cycles = []
   smax = []
   smin = []
@@ -797,11 +841,22 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
           ainc_guess = ainc)
     strain.append(np.dot(driver.strain_int[-1], sdir))
     stress.append(np.dot(driver.stress_int[-1], sdir))
+    time.append(time[-1] + e_inc / erate)
   
   # Begin cycling
   for s in range(ncycles):
     if verbose:
       print("Cycle %i" % s)
+
+    # Tension hold
+    if hold_time[0] > 0.0:
+      dt = hold_time[0] / n_hold
+      for i in range(n_hold):
+        einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
+            einc_guess = np.zeros((6,)), ainc_guess = -1)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+        time.append(time[-1] + dt)
 
     si = len(driver.strain_int)
     e_inc = np.abs(emin - emax) / nsteps
@@ -815,6 +870,17 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
 
       strain.append(np.dot(driver.strain_int[-1], sdir))
       stress.append(np.dot(driver.stress_int[-1], sdir))
+      time.append(time[-1] + e_inc / erate)
+    
+    # Compression hold
+    if hold_time[1] > 0.0:
+      dt = hold_time[1] / n_hold
+      for i in range(n_hold):
+        einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
+            einc_guess = np.zeros((6,)), ainc_guess = -1)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+        time.append(time[-1] + dt)
 
     e_inc = np.abs(emax - emin) / nsteps
     for i in range(nsteps):
@@ -826,6 +892,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
             einc_guess = einc, ainc_guess = ainc)
       strain.append(np.dot(driver.strain_int[-1], sdir))
       stress.append(np.dot(driver.stress_int[-1], sdir))
+      time.append(time[-1] + e_inc / erate)
 
     # Calculate
     cycles.append(s)
@@ -841,7 +908,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
       "min": np.array(smin), "mean": np.array(smean),
       "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
-      "history": driver.stored_int[-1]}
+      "history": driver.stored_int[-1], "time": np.array(time)}
 
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,

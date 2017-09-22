@@ -31,9 +31,11 @@ class CommonMatModel(object):
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n, u_n, p_n)[0]
       num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
+
+      print(strain_np1)
       
       if i != 0:
-        self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e2))
+        self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e-1))
       
       strain_n = strain_np1
       stress_n = stress_np1
@@ -383,6 +385,52 @@ class TestCreepPlasticityJ2LinearPowerLaw(unittest.TestCase, CommonMatModel):
     self.model = neml.SmallStrainCreepPlasticity(self.pmodel, self.cmodel)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 10
+
+  def gen_hist(self):
+    return np.array(range(1,7) + [1.0] + range(1,7)) / 7.0
+
+  def gen_x(self):
+    return np.array(range(1,7)) / 7.0
+
+  def gen_start_stress(self):
+    return np.zeros((6,)) + 100.0
+
+  def gen_start_strain(self):
+    return np.zeros((6,)) + 0.01
+
+class TestCreepPlasticityPerfect(unittest.TestCase, CommonMatModel):
+  """
+    Test the combined creep/plasticity algorithm with J2 plasticity with
+    perfect plasticity
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((6,))
+
+    self.A = 1.85e-10
+    self.n = 2.5
+
+    self.smodel = creep.PowerLawCreep(self.A, self.n)
+    self.cmodel = creep.J2CreepModel(self.smodel)
+
+    self.E = 150000.0
+    self.nu = 0.3
+    self.sY = 200.0
+
+    self.youngs = elasticity.YoungsModulus(self.E)
+    self.poisson = elasticity.PoissonsRatio(self.nu)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.youngs, 
+        self.poisson)
+    self.surface = surfaces.IsoJ2()
+
+    self.pmodel = neml.SmallStrainPerfectPlasticity(self.elastic, 
+        self.surface, self.sY)
+
+    self.model = neml.SmallStrainCreepPlasticity(self.pmodel, self.cmodel)
+
+    self.efinal = np.array([0.1,-0.05,0.02,-0.05,0.1,-0.15])
     self.tfinal = 10.0
     self.T = 300.0
     self.nsteps = 10
