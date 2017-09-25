@@ -88,6 +88,13 @@ def mesh(rs, ns, bias = False, n = 2.0):
 class AxisymmetricProblem(object):
   """
     Python driver for our axisymmetric reduced problem.
+
+    My coordinate system uses:
+    x = radius
+    y = theta
+    z = z
+
+    when we call into the material model
   """
   def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
       bias = False, factor = 2.0, ngpts = 2):
