@@ -643,7 +643,6 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
     try:
       driver.one_cycle()
     except Exception as err:
-      print(err)
       unstable = True
       break
 
@@ -691,7 +690,8 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       'stress2': driver.stress2[nsteps_load:,0],
       'classification': classification,
       'strain1': driver.strain1[nsteps_load:,0],
-      'strain2': driver.strain2[nsteps_load:,0]
+      'strain2': driver.strain2[nsteps_load:,0],
+      'nsteps_cycle': nsteps_cycle
       }
 
 def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
