@@ -97,20 +97,20 @@ class AxisymmetricProblem(object):
     when we call into the material model
   """
   def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
-      bias = False, factor = 2.0, ngpts = 2):
+      bias = False, factor = 2.0, ngpts = 1):
     """
       Parameters:
         rs      radii deliminating each region
         mats    material model for each region
         ns      number of elements per region
         T       temperature as a function of (r, t)
-        factor  pressure, as a function of (t)
+        p       pressure, as a function of (t)
 
       Optional:
         rtol    relative tolerance for N-R solve
         atol    absolute tolerance for N-R solve
         bias    if true bias the mesh to the edges
-        n       bias factor
+        factor  bias factor
         ngpts   number of gauss points to use per element
     """
     # Check
