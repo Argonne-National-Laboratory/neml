@@ -11,6 +11,21 @@ from matplotlib.animation import FuncAnimation
 
 import scipy.interpolate as inter
 
+def progress(f, l = 20):
+  """
+    Progress bar
+
+    Parameters:
+      f         completed fraction
+
+    Optional:
+      l         length
+  """
+  fill = int(round(f*l))
+  pprint = "\rProgress: [%s] %6.2f%%" % ("#"*fill + "-"*(l-fill), f*100)
+  sys.stdout.write(pprint)
+  sys.stdout.flush()
+
 def gen_material(E, nu, sY, alpha, A, n):
   """
     Generate a perfectly plastic + creep material model.
@@ -89,9 +104,10 @@ if __name__ == "__main__":
   times = np.concatenate(times)
 
   for i,t in enumerate(times):
-    print(i)
-    amodel.step(t, verbose = True)
-
+    amodel.step(t)
+    progress(float(i)/(len(times)-1))
+  print("")
+  
   # These are working back from 
   stresses = np.array(amodel.stresses)
   mstrains = np.array(amodel.mstrains)
