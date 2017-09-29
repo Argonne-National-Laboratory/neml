@@ -162,18 +162,26 @@ class AxisymmetricProblem(object):
     self.ri = np.array([np.dot(self.Nl, self.mesh[e:e+2]) for e in range(self.nelem)])
     self.Bl = np.array([[-1.0/2, 1.0/2] for xi in self.gpoints])
 
-  def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False):
+  def take_step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
+      predict = 1.0):
     """
-      Update to the next state
-
+      Actually take a time step, used to sort out adaptive integration
+      
       Parameters:
-        t       time requested
+        t       next time
     """
     T = np.array([self.T(xi, t) for xi in self.mesh])
     p = self.p(t)
 
     # Get a guess
-    x = np.concatenate((self.displacements[-1], [self.axialstrain[-1]]))
+    if len(self.displacements) < 2:
+      x0 = np.concatenate((self.displacements[-1] ,
+        [self.axialstrain[-1]]))
+    else:
+      x0 = np.concatenate((self.displacements[-1] + (self.displacements[-1] - self.displacements[-2]) * predict,
+        [self.axialstrain[-1] + (self.axialstrain[-1] - self.axialstrain[-2]) * predict]))
+
+    x = np.copy(x0)
 
     R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
     nR0 = la.norm(R)
@@ -203,14 +211,46 @@ class AxisymmetricProblem(object):
       if verbose:
         print("%i\t%e" % (i, nR))
 
-    self.times.append(t)
-    self.pressures.append(p)
-    self.temperatures.append(T)
-    self.strains.append(strains)
-    self.tstrains.append(tstrains)
-    self.mstrains.append(mstrains)
-    self.stresses.append(stresses)
-    self.histories.append(histories)
+    return p, T, strains, tstrains, mstrains, stresses, histories, x[:-1], x[-1]
+
+  def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
+      div = 2, max_div = 4, predict = 1.0):
+    """
+      Update to the next state
+
+      Parameters:
+        t       time requested
+    """
+    istep = div**max_div
+    sstep = istep
+    cstep = 0
+    cdiv = 0
+    dt = t - self.times[-1]
+
+    while cstep != istep:
+      cstep += sstep      
+      try:
+        p, T, strains, tstrains, mstrains, stresses, histories, disp, axial = self.take_step(
+            self.times[-1] + dt * float(cstep)/istep, rtol = rtol, atol = atol,
+            verbose = verbose, predict = predict)
+        self.times.append(t)
+        self.pressures.append(p)
+        self.temperatures.append(T)
+        self.strains.append(strains)
+        self.tstrains.append(tstrains)
+        self.mstrains.append(mstrains)
+        self.stresses.append(stresses)
+        self.histories.append(histories)
+        self.displacements.append(disp)
+        self.axialstrain.append(axial)
+      except RuntimeError as e:
+        cstep -= sstep
+        cdiv += 1
+        if cdiv > max_div:
+          raise e
+        sstep /= div
+        if verbose:
+          print("Substepping: new step fraction %f" % (float(sstep) / istep))
 
   def strain(self, d, l, r, ez):
     """

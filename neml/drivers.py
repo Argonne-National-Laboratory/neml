@@ -93,7 +93,7 @@ class Driver_sd(Driver):
       except Exception:
         return np.zeros((12,)), False
 
-    solvers = [s1, s2]
+    solvers = [s1]
     guesses = [x0, np.zeros(x0.shape)]
     
     success = False
@@ -253,7 +253,7 @@ class Driver_sd(Driver):
       dt = 0.0
     else:
       dt = np.abs(np.dot(s_np1 - self.stress_int[-1], sdir) / srate)
-
+    
     self.stress_step(s_np1, self.t_int[-1] + dt, T_np1)
 
   def strain_hold_step(self, i, t_np1, T_np1):
@@ -1147,7 +1147,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 750,
   stress = [0]
 
   # Ramp up
-  sinc = smax / nsteps_up
+  sinc = float(smax) / nsteps_up
   for i in range(nsteps_up):
     driver.srate_sinc_step(sdir, srate, sinc, T)
     time.append(driver.t[-1])

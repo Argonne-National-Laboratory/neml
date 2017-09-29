@@ -28,7 +28,6 @@ def gen_material(E, nu, sY, alpha, A, n):
 
 if __name__ == "__main__":
   vdata = np.loadtxt('warp-3d-data.csv', delimiter = ',', skiprows = 1)
-  mdata = np.loadtxt('moose-axi-data.csv', delimiter = ',', skiprows = 1)
 
   base = gen_material(156000.0, 0.31, 102, 1.99e-5, 6.94e-22, 6.0)
   clad = gen_material(174000.0, 0.3, 43.0, 1.58e-5, 4.66e-19, 4.6)
@@ -38,14 +37,14 @@ if __name__ == "__main__":
   tclad = 3.0
   
   p = 0.85
-  tramp = 5.0
+  tramp = 5.0 * 3600.0
   nramp = 25
 
-  theat = 5.0
+  theat = 5.0 * 3600.0
   nheat = 50
-  thold = 10000.0
+  thold = 10000.0 * 3600.0
   nhold = 5
-  tcool = 5.0
+  tcool = 5.0 * 3600.0
   ncool = 50
 
   ncycles = 30
@@ -89,8 +88,9 @@ if __name__ == "__main__":
   
   times = np.concatenate(times)
 
-  for t in times:
-    amodel.step(t, verbose = False)
+  for i,t in enumerate(times):
+    print(i)
+    amodel.step(t, verbose = True)
 
   # These are working back from 
   stresses = np.array(amodel.stresses)
@@ -104,13 +104,12 @@ if __name__ == "__main__":
    
   # Order rr, tt, zz, rz
   cols_me = [0,1,2,5]
-  cols_warp = [1,2,3,6]
+  cols_warp = [28,29,30,33]
   cols_moose = [6,7,8,9]
   colors = ['k', 'r', 'b', 'g']
   for cm,cw,cmo,c in zip(cols_me, cols_warp, cols_moose, colors):
     plt.plot(epoints, emstrains[-1,:,cm], color = c, ls = '-')
-    plt.plot(vdata[:,0], vdata[:,cw], color = c, ls = '--')
-    plt.plot(mdata[:,19], mdata[:,cmo], color = c, ls = ':')
+    plt.plot(vdata[:,65], vdata[:,cw], color = c, ls = '--')
 
   plt.xlabel("Position (mm)")
   plt.ylabel("Strain (mm/mm)")
@@ -118,12 +117,11 @@ if __name__ == "__main__":
 
   plt.show()
 
-  cols_warp = [7,8,9,12]
+  cols_warp = [2,3,4,7]
   cols_moose = [10,11,12,13]
   for cm,cw,cmo,c in zip(cols_me, cols_warp, cols_moose, colors):
     plt.plot(epoints, estresses[-1,:,cm], color = c, ls = '-')
-    plt.plot(vdata[:,0], vdata[:,cw], color = c, ls = '--')
-    plt.plot(mdata[:,19], mdata[:,cmo], color = c, ls = ':')
+    plt.plot(vdata[:,65], vdata[:,cw], color = c, ls = '--')
   
   plt.xlabel("Position (mm)")
   plt.ylabel("Stress (MPa)")
