@@ -32,7 +32,7 @@ if (WRAP_PYTHON)
 
       # yield surfaces
       add_library(surfaces SHARED surfaces_wrap.cxx surfaces.cxx)
-      target_link_libraries(surfaces helpers nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      target_link_libraries(surfaces helpers nemlmath interpolate ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
       set_target_properties(surfaces PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET surfaces PROPERTY OUTPUT_NAME "surfaces.so")

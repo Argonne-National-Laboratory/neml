@@ -183,6 +183,13 @@ int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
 // J2I1 implementation
 // Combined isotropic/kinematic with some I1 contribution
 IsoKinJ2I1::IsoKinJ2I1(const double h, const double l) :
+    h_(new ConstantInterpolate(h)), l_(new ConstantInterpolate(l))
+{
+
+}
+
+IsoKinJ2I1::IsoKinJ2I1(std::shared_ptr<Interpolate> h, 
+                       std::shared_ptr<Interpolate> l) :
     h_(h), l_(l)
 {
 
@@ -206,7 +213,8 @@ int IsoKinJ2I1::f(const double* const s, const double* const q, double T,
   dev_vec(sdev);
   add_vec(sdev, &q[1], 6, sdev);
   fv = norm2_vec(sdev, 6) + sqrt(2.0/3.0) * q[0] + 
-      copysign(h_ * pow( fabs(s[0] + s[1] + s[2]), l_ ), s[0] + s[1] + s[2]);
+      copysign(h_->value(T) * pow( fabs(s[0] + s[1] + s[2]), l_->value(T) ),
+               s[0] + s[1] + s[2]);
   return 0;
 }
 
@@ -221,7 +229,8 @@ int IsoKinJ2I1::df_ds(const double* const s, const double* const q, double T,
   // Compute dsh/ds
   double dsh[6];
   for (int i=0; i<3; i++) {
-    dsh[i] = h_ * l_ * pow( fabs(s[0] + s[1] + s[2]), l_ - 1.0 );
+    dsh[i] = h_->value(T) * l_->value(T) * pow( fabs(s[0] + s[1] + s[2]),
+                                               l_->value(T) - 1.0 );
   }
   for (int i=3; i<6; i++) {
     dsh[i] = 0.0;
@@ -279,7 +288,9 @@ int IsoKinJ2I1::df_dsds(const double* const s, const double* const q, double T,
   // Compute ddsh/dsds
   double iv2[6];
   for (int i=0; i<3; i++) {
-    iv2[i] = copysign(h_ * l_ * (l_ - 1.0) * pow( fabs(s[0]+s[1]+s[2]), l_ - 2.0), s[0] + s[1] + s[2]);    
+    iv2[i] = copysign(h_->value(T) * l_->value(T) * (l_->value(T) - 1.0) *
+                      pow( fabs(s[0]+s[1]+s[2]), l_->value(T) - 2.0),
+                      s[0] + s[1] + s[2]);    
   }
   for (int i=3; i<6; i++) {
     iv2[i] = 0.0;

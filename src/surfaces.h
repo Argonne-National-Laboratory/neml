@@ -5,7 +5,9 @@
 #include <stdarg.h>
 #include <memory>
 #include <algorithm>
+
 #include "nemlmath.h"
+#include "interpolate.h"
 
 namespace neml {
 
@@ -211,6 +213,7 @@ class IsoJ2: public IsoFunction<IsoKinJ2> {
 class IsoKinJ2I1: public YieldSurface {
  public:
   IsoKinJ2I1(const double h, const double l);
+  IsoKinJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l);
   virtual ~IsoKinJ2I1();
  
   // Defined interface
@@ -234,15 +237,18 @@ class IsoKinJ2I1: public YieldSurface {
                 double * const ddf) const;
 
  private:
-  const double h_, l_;
+  const std::shared_ptr<Interpolate> h_;
+  const std::shared_ptr<Interpolate> l_;
  
 };
 
 /// Isotropic only version of J2I1 surface
-class IsoJ2I1: public IsoFunction<IsoKinJ2I1, double, double> {
+class IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
+    std::shared_ptr<Interpolate>> {
  public:
-  IsoJ2I1(const double h, const double l) :
-      IsoFunction<IsoKinJ2I1, double, double>(h, l)
+  IsoJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l) :
+      IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>, 
+      std::shared_ptr<Interpolate>>(h, l)
   {
   }
 

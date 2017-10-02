@@ -97,10 +97,21 @@ PYBIND11_PLUGIN(surfaces) {
 
   py::class_<IsoKinJ2I1, std::shared_ptr<IsoKinJ2I1>>(m, "IsoKinJ2I1", py::base<YieldSurface>())
       .def(py::init<double, double>(), py::arg("h"), py::arg("l"))
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(),
+           py::arg("h"), py::arg("l"))
+
       ;
 
   py::class_<IsoJ2I1, std::shared_ptr<IsoJ2I1>>(m, "IsoJ2I1", py::base<YieldSurface>())
-      .def(py::init<double, double>(), py::arg("h"), py::arg("l"))
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("h"), py::arg("l"))
+      .def("__init__",
+           [](IsoJ2I1 & instance, double h, double l)
+           {
+            auto hi = std::make_shared<ConstantInterpolate>(h);
+            auto li = std::make_shared<ConstantInterpolate>(l);
+            new (&instance) IsoJ2I1(hi, li);
+           }, "Direct value constructure",
+           py::arg("h"), py::arg("l"))
       ;
 
   return m.ptr();
