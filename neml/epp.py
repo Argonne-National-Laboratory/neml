@@ -21,13 +21,13 @@ def yanli_cooling_cycle(T1, T2, dT, hold, delay):
   T1f = lambda t: np.piecewise(t,
       [t<=httime, np.logical_and(t<=(httime+hold), t>httime), 
         np.logical_and(t<=(2.0*httime+hold), t>(httime+hold)),
-          t>=(2.0*httime+hold)],
+          t>(2.0*httime+hold)],
       [lambda tt: tt*dT + T1, T2, lambda tt: T2 - dT*(t-httime-hold), T1])
 
   T2f = lambda t: np.piecewise(t,
       [t<=httime, np.logical_and(t<=(httime+hold), t>httime), 
-        np.logical_and(t<=(2.0*httime+hold), t>(httime+hold)),
-          t>=(2.0*httime+hold)],
+        np.logical_and(t<=(httime+hold+delay), t>(httime+hold)),
+          t>(httime+hold+delay)],
       [lambda tt: tt*dT + T1, T2, T2, lambda tt: T2 - dT*(t-httime-hold-delay)])
 
   return T1f, T2f, per

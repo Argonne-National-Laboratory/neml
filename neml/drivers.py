@@ -337,6 +337,9 @@ class Driver_sd_twobar(Driver_sd):
     
     self.strain1_plastic_int = [np.zeros((6,))]
     self.strain2_plastic_int = [np.zeros((6,))]
+    
+    self.strain1_thermal_int = [np.zeros((6,))]
+    self.strain2_thermal_int = [np.zeros((6,))]
 
     self.stress1_int = [np.zeros((6,))]
     self.stress2_int = [np.zeros((6,))]
@@ -409,8 +412,11 @@ class Driver_sd_twobar(Driver_sd):
       a1 = self.model.alpha(T1)
       a2 = self.model.alpha(T2)
 
-      em1 = e1 - np.array([1,1,1,0,0,0]) * a1 * (T1 - self.T1_0)
-      em2 = e2 - np.array([1,1,1,0,0,0]) * a2 * (T2 - self.T2_0)
+      eT1 = self.strain1_thermal_int[-1] + a1 * (T1 - self.T1_int[-1]) * np.array([1,1,1,0,0,0]) 
+      eT2 = self.strain2_thermal_int[-1] + a2 * (T2 - self.T2_int[-1]) * np.array([1,1,1,0,0,0])
+      
+      em1 = e1 - eT1
+      em2 = e2 - eT2
       
       s1_np1, h1_np1, A1_np1, u1_np1, p1_np1 = self.model.update_sd(
           em1, self.strain1_mech_int[-1],
@@ -513,8 +519,11 @@ class Driver_sd_twobar(Driver_sd):
     a1 = self.model.alpha(T1)
     a2 = self.model.alpha(T2)
 
-    em1 = e1 - np.array([1,1,1,0,0,0]) * a1 * (T1 - self.T1_0)
-    em2 = e2 - np.array([1,1,1,0,0,0]) * a2 * (T2 - self.T2_0)
+    eT1 = self.strain1_thermal_int[-1] + a1 * (T1 - self.T1_int[-1]) * np.array([1,1,1,0,0,0]) 
+    eT2 = self.strain2_thermal_int[-1] + a2 * (T2 - self.T2_int[-1]) * np.array([1,1,1,0,0,0])
+
+    em1 = e1 - eT1
+    em2 = e2 - eT2
 
     s1_np1, h1_np1, A1_np1, u1_np1, p1_np1 = self.model.update_sd(
         em1, self.strain1_mech_int[-1],
@@ -529,6 +538,9 @@ class Driver_sd_twobar(Driver_sd):
 
     self.strain1_mech_int.append(em1)
     self.strain2_mech_int.append(em2)
+
+    self.strain1_thermal_int.append(eT1)
+    self.strain2_thermal_int.append(eT2)
 
     self.t_int.append(self.t_int[-1] + dt)
     self.T1_int.append(T1)
