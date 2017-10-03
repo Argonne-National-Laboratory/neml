@@ -412,8 +412,14 @@ class Driver_sd_twobar(Driver_sd):
       a1 = self.model.alpha(T1)
       a2 = self.model.alpha(T2)
 
-      eT1 = self.strain1_thermal_int[-1] + a1 * (T1 - self.T1_int[-1]) * np.array([1,1,1,0,0,0]) 
-      eT2 = self.strain2_thermal_int[-1] + a2 * (T2 - self.T2_int[-1]) * np.array([1,1,1,0,0,0])
+      a1p = self.model.alpha(self.T1_int[-1])
+      a2p = self.model.alpha(self.T2_int[-1])
+
+      dT1 = T1 - self.T1_int[-1]
+      dT2 = T2 - self.T2_int[-1]
+
+      eT1 = self.strain1_thermal_int[-1] + dT1 * (a1+a1p)/2 * np.array([1,1,1,0,0,0]) 
+      eT2 = self.strain2_thermal_int[-1] + dT2 * (a2+a2p)/2 * np.array([1,1,1,0,0,0])
       
       em1 = e1 - eT1
       em2 = e2 - eT2
@@ -461,14 +467,22 @@ class Driver_sd_twobar(Driver_sd):
     xguesses.append(np.copy(x0))
     xguesses.append(x0 + (x0 - xn))
     xguesses.append(np.zeros((12,)))
-    xguesses.append(x0*0.1)
-
+    xguesses.append(x0 - (x0 - xn))
     
     solvers = []
     def s1(x0i):
       try:
         x = newton(RJ, x0i, verbose = self.verbose,
             rtol = self.rtol, atol = self.atol, miter = self.miter)
+        return x, True
+      except Exception:
+        return np.zeros((12,)), False
+
+    def s5(x0i):
+      try:
+        x = newton(RJ, x0i, verbose = self.verbose,
+            rtol = self.rtol, atol = self.atol, miter = self.miter,
+            linesearch = 'backtracking')
         return x, True
       except Exception:
         return np.zeros((12,)), False
@@ -495,7 +509,7 @@ class Driver_sd_twobar(Driver_sd):
       except Exception:
         return np.zeros((12,)), False
 
-    solvers = [s1]
+    solvers = [s1, s5, s2]
 
     for i,xi in enumerate(xguesses):
       bme = False
@@ -519,8 +533,14 @@ class Driver_sd_twobar(Driver_sd):
     a1 = self.model.alpha(T1)
     a2 = self.model.alpha(T2)
 
-    eT1 = self.strain1_thermal_int[-1] + a1 * (T1 - self.T1_int[-1]) * np.array([1,1,1,0,0,0]) 
-    eT2 = self.strain2_thermal_int[-1] + a2 * (T2 - self.T2_int[-1]) * np.array([1,1,1,0,0,0])
+    a1p = self.model.alpha(self.T1_int[-1])
+    a2p = self.model.alpha(self.T2_int[-1])
+
+    dT1 = T1 - self.T1_int[-1]
+    dT2 = T2 - self.T2_int[-1]
+
+    eT1 = self.strain1_thermal_int[-1] + dT1 * (a1+a1p)/2 * np.array([1,1,1,0,0,0]) 
+    eT2 = self.strain2_thermal_int[-1] + dT2 * (a2+a2p)/2 * np.array([1,1,1,0,0,0])
 
     em1 = e1 - eT1
     em2 = e2 - eT2
@@ -703,7 +723,9 @@ def twobar_test(model, A1, A2, T1, T2, period, P, load_time, ncycles,
       'classification': classification,
       'strain1': driver.strain1[nsteps_load:,0],
       'strain2': driver.strain2[nsteps_load:,0],
-      'nsteps_cycle': nsteps_cycle
+      'nsteps_cycle': nsteps_cycle,
+      'energy': driver.u_int[nsteps_load:],
+      'dissipation': driver.p_int[nsteps_load:]
       }
 
 def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
