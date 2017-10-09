@@ -76,7 +76,7 @@ class Driver_sd(Driver):
     super(Driver_sd, self).__init__(*args, **kwargs)
     self.strain_int = [np.zeros((6,))]
 
-  def solve_try(self, RJ, x0):
+  def solve_try(self, RJ, x0, extra = []):
     solvers = []
     def s1(x0i):
       try:
@@ -94,7 +94,7 @@ class Driver_sd(Driver):
         return np.zeros((12,)), False
 
     solvers = [s1]
-    guesses = [x0, np.zeros(x0.shape)]
+    guesses = [x0] + extra
     
     success = False
     for xi in guesses:
@@ -155,7 +155,13 @@ class Driver_sd(Driver):
 
     #e_np1 = newton(RJ, self.strain_int[-1], verbose = self.verbose,
     #    rtol = self.rtol, atol = self.atol, miter = self.miter)
-    e_np1 = self.solve_try(RJ, self.strain_int[-1])
+    if len(self.strain_int) > 1:
+      inc = self.strain_int[-1] - self.strain_int[-2]
+      extra = [self.strain_int[-1] + inc]
+    else:
+      extra = []
+
+    e_np1 = self.solve_try(RJ, self.strain_int[-1], extra = extra)
 
     self.strain_step(e_np1, t_np1, T_np1)
 
@@ -1205,15 +1211,20 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       break
     if np.any(np.abs(driver.strain_int[-1]) > elimit):
       break
+    
+    ed = np.dot(driver.strain_int[-1],sdir)
+    if ed < strain[-1]:
+      break
+
     time.append(t)
-    strain.append(np.dot(driver.strain_int[-1],sdir))
+    strain.append(ed)
     stress.append(np.dot(driver.stress_int[-1],sdir))
 
   time = np.array(time)
   strain = np.array(strain)
   stress = np.array(stress)
   rrate = np.diff(strain[ri:]) / np.diff(time[ri:])
-  rstrain = strain[ri:]
+  rstrain = strain[ri:] - strain[ri]
   
   return {'time': np.copy(time), 'strain': np.copy(strain), 
       'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),

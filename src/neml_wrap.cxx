@@ -368,7 +368,7 @@ PYBIND11_PLUGIN(neml) {
            py::arg("alpha") = 0.0)
       .def(py::init<std::vector<std::shared_ptr<NEMLModel_sd>>,
            std::vector<double>, std::shared_ptr<LinearElasticModel>,
-           double, double, double, double>(),
+           double, double, double, std::shared_ptr<Interpolate>>(),
            py::arg("models"), py::arg("gs"), py::arg("emodel"),
            py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
            py::arg("alpha") = nullptr)

@@ -133,6 +133,12 @@ def evaluate_uniaxial(case, model):
       0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2, full_output = 1)
   v2 = vs[0]
 
+  #x = np.linspace(0.0, emax*0.99, 100)
+  #plt.plot(x, exp_fn(x), 'k-')
+  #plt.plot(x, mod_fn(x), 'k--')
+  #plt.title('Uni: %f' % (v2/v1))
+  #plt.show()
+
   return v2 / v1
 
 def cost_uniaxial(case):
@@ -165,6 +171,12 @@ def evaluate_stressrelax(case, model):
       min_time*1.01, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
   v2 = vs[0]
+
+  #x = np.linspace(min_time*1.01, max_time * 0.99, 100)
+  #plt.plot(x, exp_fn(x), 'k-')
+  #plt.plot(x, mod_fn(x), 'k--')
+  #plt.title('Stress relax: %f' % (v2/v1))
+  #plt.show()
 
   return v2 / v1
 
@@ -203,6 +215,12 @@ def evaluate_creep(case, model):
       min_time*1.01, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
   v2 = vs[0]
+
+  #x = np.linspace(min_time*1.01, max_time * 0.99, 100)
+  #plt.plot(x, exp_fn(x), 'k-')
+  #plt.plot(x, mod_fn(x), 'k--')
+  #plt.title('%s creep, %f: %f' % (case.find('source').text, T, v2/v1))
+  #plt.show()
 
   return v2/v1
 
@@ -245,22 +263,22 @@ def evaluate_cyclic_strain(case, model):
   min_cycles = np.min(exp_cycle)
 
   # This is a hack, please fix for the love of god
-  if max_cycles > 2000:
-    max_cycles = 2000
+  if max_cycles > 1000:
+    max_cycles = 1000
 
   res = drivers.strain_cyclic(model, strain, ratio, rate,
       int(max_cycles)+1, T = T, hold_time = hold)
+
+  if np.max(res['cycles']) < max_cycles:
+    pen = max_cycles / np.max(res['cycles'])
+  else:
+    pen = 1.0
 
   max_cycles = min([max_cycles, np.max(res['cycles'])])
   min_cycles = max([min_cycles, np.min(res['cycles'])])
 
   exp_fn = inter.interp1d(exp_cycle, exp_data)
   mod_fn = inter.interp1d(res['cycles'], res[compare])
-
-  #x = np.linspace(min_cycles, max_cycles * 0.99, 100)
-  #plt.plot(x, exp_fn(x), 'k-')
-  #plt.plot(x, mod_fn(x), 'k--')
-  #plt.show()
 
   vs = qud.quad(lambda e: np.abs(exp_fn(e)), min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, 
       epsrel = 1.0e-3, full_output = 1)
@@ -270,7 +288,13 @@ def evaluate_cyclic_strain(case, model):
       full_output = 1)
   v2 = vs[0]
 
-  return v2/v1
+  #x = np.linspace(min_cycles, max_cycles * 0.99, 100)
+  #plt.plot(x, exp_fn(x), 'k-')
+  #plt.plot(x, mod_fn(x), 'k--')
+  #plt.title('Cyclic strain: %f' % (v2/v1))
+  #plt.show()
+
+  return v2/v1 * pen
 
 def cost_cycle_strain(case):
   nsteps = np.max(expand(case.find('cycle').text))
@@ -311,15 +335,20 @@ def evaluate_cyclic_stress(case, model):
   min_cycles = np.min(exp_cycle)
 
   # This is a hack, please fix for the love of god
-  if max_cycles > 2000:
-    max_cycles = 2000
+  if max_cycles > 1000:
+    max_cycles = 1000
 
   res = drivers.stress_cyclic(model, stress, ratio, rate, int(max_cycles)+1,
       T = T, hold_time = hold)
 
   exp_fn = inter.interp1d(exp_cycle, exp_data)
   mod_fn = inter.interp1d(res['cycles'], res[compare])
- 
+
+  if np.max(res['cycles']) < max_cycles:
+    pen = max_cycles / np.max(res['cycles'])
+  else:
+    pen = 1.0
+
   max_cycles = min([max_cycles, np.max(res['cycles'])])
   min_cycles = max([min_cycles, np.min(res['cycles'])])
 
@@ -331,7 +360,13 @@ def evaluate_cyclic_stress(case, model):
       full_output = 1)
   v2 = vs[0]
 
-  return v2/v1
+  #x = np.linspace(min_cycles, max_cycles * 0.99, 100)
+  #plt.plot(x, exp_fn(x), 'k-')
+  #plt.plot(x, mod_fn(x), 'k--')
+  #plt.title('Cyclic stress: %f' % (v2/v1))
+  #plt.show()
+
+  return v2/v1 * pen
 
 def cost_cycle_stress(case):
   nsteps = np.max(expand(case.find('cycle').text))
