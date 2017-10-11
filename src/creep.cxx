@@ -77,7 +77,7 @@ RegionKMCreep::RegionKMCreep(std::vector<double> cuts, std::vector<double> A,
     cuts_(cuts), A_(A), B_(B), kboltz_(kboltz), b_(b), eps0_(eps0), 
     emodel_(emodel), b3_(pow(b,3))
 {
-  
+
 }
 
 int RegionKMCreep::g(double seq, double eeq, double t, double T, double & g) const
@@ -86,7 +86,7 @@ int RegionKMCreep::g(double seq, double eeq, double t, double T, double & g) con
   select_region_(seq, T, A, B);
   double G = emodel_->G(T);
   double C1 = -G * b3_ / (kboltz_*T);
-  
+
   g = eps0_ * exp(C1*B) * pow(seq / G, C1 * A);
 
   return 0;
@@ -114,20 +114,23 @@ void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & B
 {
   double mu = emodel_->G(T);
   double neq = seq / mu;
-  
+
   int i;
-  Ai = A_[0];
-  Bi = B_[0];
+  if (neq < cuts_[0]) {
+    Ai = A_[0];
+    Bi = B_[0];
+    return;
+  }
   for (i=0; i<cuts_.size(); i++) {
     if (neq > cuts_[i]) {
       Ai = A_[i+1];
       Bi = B_[i+1];
-      break;
+      return;
     }
   }
   if (i == cuts_.size()) {
-    Ai = A_[i+1];
-    Bi = B_[i+1];
+    Ai = A_[i];
+    Bi = B_[i];
   }
 }
 
