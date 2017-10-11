@@ -39,6 +39,9 @@ std::shared_ptr<ScalarCreepRule> process_scalarmodel(const xmlpp::Element * node
 /// Power law scalar creep
 std::shared_ptr<ScalarCreepRule> process_powerlaw_creep(const xmlpp::Element * node, int & ier);
 
+/// Region KM creep
+std::shared_ptr<ScalarCreepRule> process_regionkm_creep(const xmlpp::Element * node, int & ier);
+
 /// Norton-Bailey creep
 std::shared_ptr<ScalarCreepRule> process_nb_creep(const xmlpp::Element * node, int & ier);
 
@@ -174,6 +177,9 @@ std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node,
                                           std::string name,
                                           int & ier);
 
+/// Return the constant scalar value of a named child node
+double scalar_constant(const xmlpp::Node * node, std::string name, int & ier);
+
 /// Return an interpolate object from a node
 std::shared_ptr<Interpolate> interpolate_node(const xmlpp::Node * node,
                                               int & ier);
@@ -195,6 +201,9 @@ std::vector<double> split_string(std::string sval);
 std::vector<std::shared_ptr<Interpolate>> 
     vector_param(const xmlpp::Node * node, std::string name, int & ier);
 
+/// Return the constant vector value of a named child node
+std::vector<double> 
+    vector_constant(const xmlpp::Node * node, std::string name, int & ier);
 
 /* Templates */
 

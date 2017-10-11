@@ -147,8 +147,8 @@ std::shared_ptr<CreepModel> process_j2creep(const xmlpp::Element * node, int & i
 std::shared_ptr<ScalarCreepRule> process_scalarmodel(const xmlpp::Element * node, int & ier)
 {
   // dispatch on type
-  return dispatch_attribute<ScalarCreepRule>(node, "type", {"powerlaw", "nortonbailey"},
-                                             {&process_powerlaw_creep, &process_nb_creep},
+  return dispatch_attribute<ScalarCreepRule>(node, "type", {"powerlaw", "nortonbailey", "regionkm"},
+                                             {&process_powerlaw_creep, &process_nb_creep, &process_regionkm_creep},
                                              ier);
 }
 
@@ -158,6 +158,25 @@ std::shared_ptr<ScalarCreepRule> process_powerlaw_creep(const xmlpp::Element * n
   return std::shared_ptr<ScalarCreepRule>(new PowerLawCreep(
           scalar_param(node, "A", ier),
           scalar_param(node, "n", ier)
+          ));
+}
+
+std::shared_ptr<ScalarCreepRule> process_regionkm_creep(const xmlpp::Element * node, int & ier)
+{
+  // Must have an "elastic" node
+  const xmlpp::Element * elastic_node;
+  if (not one_child(node, "elastic", elastic_node, ier)) {
+    return std::unique_ptr<ScalarCreepRule>(nullptr);
+  }
+
+  return std::shared_ptr<ScalarCreepRule>(new RegionKMCreep(
+          vector_constant(node, "cuts", ier),
+          vector_constant(node, "As", ier),
+          vector_constant(node, "Bs", ier),
+          scalar_constant(node, "kboltz", ier),
+          scalar_constant(node, "b", ier),
+          scalar_constant(node, "eps0", ier),
+          process_linearelastic(elastic_node, ier)
           ));
 }
 
@@ -695,6 +714,42 @@ std::shared_ptr<Interpolate> scalar_param(const xmlpp::Node * node,
 
 }
 
+double scalar_constant(const xmlpp::Node * node, std::string name, int & ier)
+{
+  auto matches = node->get_children(name);
+  if (matches.size() > 1) {
+    ier = TOO_MANY_NODES;
+    std::cerr << "Multiple nodes of type " << name << " found near line " 
+        << node->get_line() << std::endl;
+    return 0.0;
+  }
+  else if (matches.size() < 1) {
+    ier = NODE_NOT_FOUND;
+    std::cerr << "Required node type " << name << " not found near line " 
+        << node->get_line() << std::endl;
+    return 0.0;
+  }
+  auto child = dynamic_cast<const xmlpp::Element*>(matches.front());
+
+  if (child->has_child_text()) {
+    std::string sval = child->FIRST_TEXT_FN()->get_content();
+    if (sval == "") {
+      ier = BAD_TEXT;
+      std::cerr << "Node " << name << " near line " 
+          << node->get_line() << " does not appear to store data" << std::endl;
+      return 0.0;
+    }
+    return std::stod(sval);
+  }
+  else {
+    ier = BAD_TEXT;
+    std::cerr << "Unable to process scalar parameter input near line " <<
+        node->get_line() << std::endl;
+    return 0.0;
+  }
+
+}
+
 std::shared_ptr<Interpolate> interpolate_node(const xmlpp::Node * node,
                                               int & ier)
 {
@@ -913,5 +968,42 @@ vector_param(const xmlpp::Node * node, std::string name, int & ier)
     return {std::shared_ptr<Interpolate>(new InvalidInterpolate())};
   }
 }
+
+std::vector<double> 
+vector_constant(const xmlpp::Node * node, std::string name, int & ier)
+{
+  auto matches = node->get_children(name);
+  if (matches.size() > 1) {
+    ier = TOO_MANY_NODES;
+    std::cerr << "Multiple nodes of type " << name << " found near line " 
+        << node->get_line() << std::endl;
+    return std::vector<double>();
+  }
+  else if (matches.size() < 1) {
+    ier = NODE_NOT_FOUND;
+    std::cerr << "Required node type " << name << " not found near line " 
+        << node->get_line() << std::endl;
+    return std::vector<double>();
+  }
+  auto child = dynamic_cast<const xmlpp::Element*>(matches.front());
+  
+  if (child->has_child_text()) {
+    std::string sval = child->FIRST_TEXT_FN()->get_content();
+    if (sval == "") {
+      ier = BAD_TEXT;
+      std::cerr << "Vector parameter node near line " << child->get_line() << 
+          " does not store text!" << std::endl;
+      return std::vector<double>();
+    }
+    return split_string(sval);
+  }
+  else {
+    ier = BAD_TEXT;
+    std::cerr << "Unable to process vector parameter near line " << 
+        child->get_line() << std::endl;
+    return std::vector<double>();
+  }
+}
+
 
 } // namespace neml
