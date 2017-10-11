@@ -69,6 +69,68 @@ double PowerLawCreep::n(double T) const
   return n_->value(T);
 }
 
+// Implementation of the mechanism switching model
+RegionKMCreep::RegionKMCreep(std::vector<double> cuts, std::vector<double> A, 
+                             std::vector<double> B, double kboltz, double b,
+                             double eps0, 
+                             std::shared_ptr<LinearElasticModel> emodel) :
+    cuts_(cuts), A_(A), B_(B), kboltz_(kboltz), b_(b), eps0_(eps0), 
+    emodel_(emodel), b3_(pow(b,3))
+{
+  
+}
+
+int RegionKMCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  double A, B;
+  select_region_(seq, T, A, B);
+  double G = emodel_->G(T);
+  double C1 = -G * b3_ / (kboltz_*T);
+  
+  g = eps0_ * exp(C1*B) * pow(seq / G, C1 * A);
+
+  return 0;
+}
+
+int RegionKMCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  double A, B;
+  select_region_(seq, T, A, B);
+  double G = emodel_->G(T);
+  double C1 = -G * b3_ / (kboltz_*T);
+  
+  dg = eps0_ * exp(C1*B) * C1 * A / G * pow(seq / G, C1 * A - 1.0);
+
+  return 0;
+}
+
+int RegionKMCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
+void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & Bi) const
+{
+  double mu = emodel_->G(T);
+  double neq = seq / mu;
+  
+  int i;
+  Ai = A_[0];
+  Bi = B_[0];
+  for (i=0; i<cuts_.size(); i++) {
+    if (neq > cuts_[i]) {
+      Ai = A_[i+1];
+      Bi = B_[i+1];
+      break;
+    }
+  }
+  if (i == cuts_.size()) {
+    Ai = A_[i+1];
+    Bi = B_[i+1];
+  }
+}
+
 // Implementation of Norton-Bailey creep
 NortonBaileyCreep::NortonBaileyCreep(double A, double m, double n) :
     A_(new ConstantInterpolate(A)), m_(new ConstantInterpolate(m)),

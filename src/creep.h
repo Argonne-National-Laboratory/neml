@@ -34,6 +34,28 @@ class PowerLawCreep: public ScalarCreepRule {
    const std::shared_ptr<const Interpolate> A_, n_;
 };
 
+/// A power law type model that uses KM concepts to switch between mechanisms
+class RegionKMCreep: public ScalarCreepRule {
+  public:
+   RegionKMCreep(std::vector<double> cuts, std::vector<double> A, std::vector<double> B,
+                 double kboltz, double b, double eps0,
+                 std::shared_ptr<LinearElasticModel> emodel);
+
+   virtual int g(double seq, double eeq, double t, double T, double & g) const;
+   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
+   virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
+
+  private:
+   void select_region_(double seq, double T, double & Ai, double & Bi) const;
+
+  private:
+   const std::vector<double> cuts_;
+   const std::vector<double> A_;
+   const std::vector<double> B_;
+   const double kboltz_, b_, eps0_, b3_;
+   const std::shared_ptr<LinearElasticModel> emodel_;
+};
+
 /// Classical Norton-Bailey creep
 class NortonBaileyCreep: public ScalarCreepRule {
  public:

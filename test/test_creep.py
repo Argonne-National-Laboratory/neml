@@ -58,6 +58,30 @@ class TestPowerLawCreep(unittest.TestCase, CommonScalarCreep):
     g_calc = self.A * self.s ** (self.n)
     self.assertTrue(np.isclose(g_direct, g_calc))
 
+class TestRegionKMCreep(unittest.TestCase, CommonScalarCreep):
+  def setUp(self):
+    self.b = 2.019 * 1.0e-7
+    self.eps0 = 1.0e6
+    self.E = 160000.0
+    self.nu = 0.3
+
+    self.emodel = elasticity.IsotropicLinearElasticModel(elasticity.YoungsModulus(self.E),
+        elasticity.PoissonsRatio(self.nu))
+
+    self.kboltz = 1.38064e-23 * 1000.0
+    
+    self.cuts = [0.00145709]
+    self.A = [-0.7869, -0.1695]
+    self.B = [-4.2388, -0.2065]
+
+    self.model = creep.RegionKMCreep(self.cuts, self.A, self.B, self.kboltz,
+        self.b, self.eps0, self.emodel)
+
+    self.T = 300.0
+    self.e = 0.1
+    self.s = 300.0
+    self.t = 10.0
+
 class TestNortonBaileyCreep(unittest.TestCase, CommonScalarCreep):
   def setUp(self):
     self.A = 1.0e-6

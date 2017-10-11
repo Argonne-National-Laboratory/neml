@@ -180,6 +180,10 @@ PYBIND11_PLUGIN(creep) {
       .def("n", &PowerLawCreep::n)
     ;
 
+  py::class_<RegionKMCreep, std::shared_ptr<RegionKMCreep>>(m, "RegionKMCreep", py::base<ScalarCreepRule>())
+      .def(py::init<std::vector<double>, std::vector<double>, std::vector<double>, double, double, double, std::shared_ptr<LinearElasticModel>>(), py::arg("cuts"), py::arg("A"), py::arg("B"), py::arg("kboltz"), py::arg("b"), py::arg("eps0"), py::arg("emodel"))
+  ;
+
   py::class_<NortonBaileyCreep, std::shared_ptr<NortonBaileyCreep>>(m, "NortonBaileyCreep", py::base<ScalarCreepRule>())
       .def(py::init<double, double, double>(), py::arg("A"), py::arg("m"), py::arg("n"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("m"), py::arg("n"))
