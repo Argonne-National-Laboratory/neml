@@ -1224,11 +1224,17 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
   strain = np.array(strain)
   stress = np.array(stress)
   rrate = np.diff(strain[ri:]) / np.diff(time[ri:])
-  rstrain = strain[ri:] - strain[ri]
+  if len(strain) > ri +1:
+    rstrain = strain[ri:] - strain[ri]
+    rtime = time[ri:] - time[ri]
+  else:
+    rstrain = []
+    rtime = []
   
   return {'time': np.copy(time), 'strain': np.copy(strain), 
-      'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
-      'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1])}
+      'stress': np.copy(stress), 'rtime': np.copy(rtime[:-1]),
+      'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1]),
+      'tstrain': np.copy(strain[ri:-1])}
 
 def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100, 
     sdir = np.array([1,0,0,0,0,0]), verbose = False, history = None):
@@ -1296,7 +1302,7 @@ def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
   def strain(stress):
     res = creep(model, stress, srate, time, T = T, nsteps = nsteps,
         history = history)
-    return res['rstrain'][-1]
+    return res['tstrain'][-1]
 
   strains = [0.0]
   stresses = [0.0]
