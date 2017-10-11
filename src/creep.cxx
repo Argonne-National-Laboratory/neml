@@ -114,6 +114,12 @@ void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & B
 {
   double mu = emodel_->G(T);
   double neq = seq / mu;
+  int nregion = A_.size();
+  if (nregion == 1) {
+    Ai = A_[0];
+    Bi = B_[0];
+    return;
+  }
 
   int i;
   if (neq < cuts_[0]) {
