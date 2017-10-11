@@ -183,6 +183,8 @@ std::shared_ptr<Interpolate> process_polynomial(const xmlpp::Element * child,
                                               int & ier);
 std::shared_ptr<Interpolate> process_piecewise(const xmlpp::Element * child,
                                               int & ier);
+std::shared_ptr<Interpolate> process_logpiecewise(const xmlpp::Element * child,
+                                              int & ier);
 std::shared_ptr<Interpolate> process_mts(const xmlpp::Element * child,
                                               int & ier);
 

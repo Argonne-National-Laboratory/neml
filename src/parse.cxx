@@ -707,8 +707,8 @@ std::shared_ptr<Interpolate> interpolate_node(const xmlpp::Node * node,
   auto child = dynamic_cast<const xmlpp::Element*>(node);
 
   return dispatch_attribute<Interpolate>(child, "type", 
-                                         {"constant", "polynomial", "piecewise", "mts"},
-                                         {&process_constant, &process_polynomial, &process_piecewise, &process_mts},
+                                         {"constant", "polynomial", "piecewise", "mts", "logpiecewise"},
+                                         {&process_constant, &process_polynomial, &process_piecewise, &process_mts, &process_logpiecewise},
                                          ier);
 }
 
@@ -784,6 +784,37 @@ std::shared_ptr<Interpolate> process_piecewise(const xmlpp::Element * child,
   }
 
   return std::shared_ptr<Interpolate>(new PiecewiseLinearInterpolate(points, values));
+}
+
+std::shared_ptr<Interpolate> process_logpiecewise(const xmlpp::Element * child,
+                                              int & ier)
+{
+  // The text is a intermoven list of (point, value) tuples
+  if (not child->has_child_text()) {
+    ier = BAD_TEXT;
+    std::cerr << "Log piecewise interpolate node has no text near line " 
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate());
+  }
+  std::string sval = child->FIRST_TEXT_FN()->get_content();
+  if (sval == "") {
+    ier = BAD_TEXT;
+    std::cerr << "Polynomial log piecewise interpolate node has invalid text near line "
+        << child->get_line() << std::endl;
+    return std::shared_ptr<Interpolate>(new InvalidInterpolate()); 
+  }
+
+  std::vector<double> splits = split_string(sval);
+  
+  std::vector<double> points;
+  std::vector<double> values;
+
+  for (int i = 0; i < splits.size()/2; i++) {
+    points.push_back(splits[i*2]);
+    values.push_back(splits[i*2+1]);
+  }
+
+  return std::shared_ptr<Interpolate>(new PiecewiseLogLinearInterpolate(points, values));
 }
 
 std::shared_ptr<Interpolate> process_mts(const xmlpp::Element * child,
