@@ -162,8 +162,8 @@ class AxisymmetricProblem(object):
     self.ri = np.array([np.dot(self.Nl, self.mesh[e:e+2]) for e in range(self.nelem)])
     self.Bl = np.array([[-1.0/2, 1.0/2] for xi in self.gpoints])
 
-  def take_step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
-      predict = 1.0):
+  def take_step(self, t, rtol = 1.0e-6, atol = 1.0e-8, ilimit = 10,
+      verbose = False, predict = 1.0):
     """
       Actually take a time step, used to sort out adaptive integration
       
@@ -192,7 +192,7 @@ class AxisymmetricProblem(object):
       print("%i\t%e" % (0, nR0))
     
     i = 0
-    while (nR > atol) and (nR / nR0 > rtol):
+    while (nR > atol) and (nR / nR0 > rtol) and (i < ilimit):
       R1 = R[:-1]
       R2 = R[-1]
       c = R1 - R2/J22 * J12
@@ -210,6 +210,9 @@ class AxisymmetricProblem(object):
 
       if verbose:
         print("%i\t%e" % (i, nR))
+
+    if i == ilimit:
+      raise RuntimeError("Exceeded maximum allowed iterations!")
 
     return p, T, strains, tstrains, mstrains, stresses, histories, x[:-1], x[-1]
 

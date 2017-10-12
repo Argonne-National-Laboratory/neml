@@ -6,6 +6,8 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
 
+#include "Python.h"
+
 namespace py = pybind11;
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
@@ -312,10 +314,15 @@ PYBIND11_PLUGIN(nemlmath) {
           auto IPIV = alloc_vec<int>(n);
           
           int ier;
-
-          dgttrf_(n, arr2ptr<double>(DL), arr2ptr<double>(D), 
-                  arr2ptr<double>(DU), arr2ptr<double>(DU2),
-                  arr2ptr<int>(IPIV), ier);
+          double * DLp = arr2ptr<double>(DL);
+          double * Dp = arr2ptr<double>(D);
+          double * DUp = arr2ptr<double>(DU);
+          double * DU2p = arr2ptr<double>(DU2);
+          int * IPIVp = arr2ptr<int>(IPIV);
+          
+          Py_BEGIN_ALLOW_THREADS
+          dgttrf_(n, DLp, Dp, DUp, DU2p,IPIVp, ier);
+          Py_END_ALLOW_THREADS
           
           if (ier != 0) {
             throw LinalgError("Diagonal factorization failed!");
@@ -352,11 +359,17 @@ PYBIND11_PLUGIN(nemlmath) {
             throw LinalgError("Diagonals do not have compatible sizes!");
           }
           int ier;
+
+          double * DLp = arr2ptr<double>(DL);
+          double * Dp = arr2ptr<double>(D);
+          double * DUp = arr2ptr<double>(DU);
+          double * DU2p = arr2ptr<double>(DU2);
+          int * IPIVp = arr2ptr<int>(IPIV);
+          double * bp = arr2ptr<double>(b);
           
-          dgttrs_("N", n, 1, arr2ptr<double>(DL), arr2ptr<double>(D),
-                  arr2ptr<double>(DU), arr2ptr<double>(DU2),
-                  arr2ptr<int>(IPIV), arr2ptr<double>(b),
-                  n, ier);
+          Py_BEGIN_ALLOW_THREADS
+          dgttrs_("N", n, 1, DLp, Dp, DUp, DU2p, IPIVp, bp, n, ier);
+          Py_END_ALLOW_THREADS
 
           if (ier != 0) {
             throw LinalgError("Diagonal factorization failed!");
