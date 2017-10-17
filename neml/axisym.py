@@ -230,6 +230,8 @@ class AxisymmetricProblem(object):
     cdiv = 0
     dt = t - self.times[-1]
 
+    ostep = len(self.times)
+
     while cstep != istep:
       cstep += sstep      
       try:
@@ -250,10 +252,32 @@ class AxisymmetricProblem(object):
         cstep -= sstep
         cdiv += 1
         if cdiv > max_div:
+          self.times = self.times[:ostep]
+          self.pressures = self.pressures[:ostep]
+          self.temperatures = self.temperatures[:ostep]
+          self.strains = self.strains[:ostep]
+          self.tstrains = self.tstrains[:ostep]
+          self.mstrains = self.mstrains[:ostep]
+          self.stresses = self.stresses[:ostep]
+          self.histories = self.histories[:ostep]
+          self.displacements = self.displacements[:ostep]
+          self.axialstrain = self.axialstrain[:ostep]
           raise e
         sstep /= div
         if verbose:
           print("Substepping: new step fraction %f" % (float(sstep) / istep))
+
+    self.times = self.times[:ostep] + [self.times[-1]]
+    self.pressures = self.pressures[:ostep] + [self.pressures[-1]]
+    self.temperatures = self.temperatures[:ostep] + [self.temperatures[-1]]
+    self.strains = self.strains[:ostep] + [self.strains[-1]]
+    self.tstrains = self.tstrains[:ostep] + [self.tstrains[-1]]
+    self.mstrains = self.mstrains[:ostep] + [self.mstrains[-1]]
+    self.stresses = self.stresses[:ostep] + [self.stresses[-1]]
+    self.histories = self.histories[:ostep] + [self.histories[-1]]
+    self.displacements = self.displacements[:ostep] + [self.displacements[-1]]
+    self.axialstrain = self.axialstrain[:ostep] + [self.axialstrain[-1]]
+
 
   def strain(self, d, l, r, ez):
     """
