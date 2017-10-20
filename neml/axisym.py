@@ -217,7 +217,7 @@ class AxisymmetricProblem(object):
     return p, T, strains, tstrains, mstrains, stresses, histories, x[:-1], x[-1]
 
   def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
-      div = 2, max_div = 4, predict = 1.0):
+      div = 2, max_div = 4, predict = 1.0, ilimit = 10):
     """
       Update to the next state
 
@@ -237,7 +237,7 @@ class AxisymmetricProblem(object):
       try:
         p, T, strains, tstrains, mstrains, stresses, histories, disp, axial = self.take_step(
             self.times[-1] + dt * float(cstep)/istep, rtol = rtol, atol = atol,
-            verbose = verbose, predict = predict)
+            verbose = verbose, predict = predict, ilimit = ilimit)
         self.times.append(t)
         self.pressures.append(p)
         self.temperatures.append(T)
