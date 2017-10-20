@@ -27,7 +27,7 @@ def generate_thickness_gradient(ri, ro, T1, T2, Tdot_hot, hold,
       hold_together     hold at no temperature gradient
   """
   if Tdot_cold is None:
-    Tdot_cold = Tdot
+    Tdot_cold = Tdot_hot
 
   dT = T2 - T1
   thot = np.abs(dT / Tdot_hot)
