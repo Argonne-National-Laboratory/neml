@@ -13,13 +13,14 @@ ENDIF(libxml++_FIND_REQUIRED)
 
 # Hunt down pkg-config info
 find_package(PkgConfig)
-pkg_search_module(libxml++_PKGCONF libxml++-3.0 libxml++-2.9 libxml++-2.8 libxml++-2.7 libxml++-2.6 REQUIRED)
 
-STRING(SUBSTRING ${libxml++_PKGCONF_VERSION} 0 1 MAJOR_VERSION)
-STRING(COMPARE EQUAL ${MAJOR_VERSION} 3 LIBXML++_V3)
-if (${LIBXML++_V3})
+pkg_search_module(libxml++_PKGCONF libxml++-3.0)
+if(${libxml++_PKGCONF_FOUND})
       add_definitions(-DLIBXML++V3)
+else()
+      pkg_search_module(libxml++_PKGCONF REQUIRED libxml++-2.9 libxml++-2.8 libxml++-2.7 libxml++-2.6)
 endif()
+
 
 # Main include dir
 find_path(libxml++_INCLUDE_DIR
