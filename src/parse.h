@@ -9,7 +9,11 @@
 
 #include <libxml++/libxml++.h>
 
+#ifdef LIBXML++V3
 #define FIRST_TEXT_FN get_first_child_text
+#else
+#define FIRST_TEXT_FN get_child_text
+#endif
 
 namespace neml {
 
