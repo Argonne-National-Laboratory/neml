@@ -935,7 +935,145 @@ g & = & mA^{1/m}\sigma_{eq}^{n/m}\left(\varepsilon_{eq}\right)^{\left(m-1\right)
 \end_layout
 
 \begin_layout Chapter
-Algorithms
+Integration Algorithms
+\end_layout
+
+\begin_layout Section
+Elasticity
+\end_layout
+
+\begin_layout Standard
+The equations are simply
+\begin_inset Formula 
+\begin{align*}
+\bm{\sigma}_{n+1} & = & \bm{C}_{n+1}:\bm{\varepsilon}_{n+1}\\
+\boldsymbol{A}_{n+1} & = & \bm{C}_{n+1}
+\end{align*}
+
+\end_inset
+
+where 
+\begin_inset Formula $\boldsymbol{C}$
+\end_inset
+
+ is some (possibly temperature dependent) elasticity tensor.
+ This model has no history variables.
+\end_layout
+
+\begin_layout Section
+Perfect plasticity
+\end_layout
+
+\begin_layout Itemize
+Trial state:
+\begin_inset Formula $\bm{\varepsilon}_{n+1}^{e}=\bm{\varepsilon}_{n}^{e}$
+\end_inset
+
+, 
+\begin_inset Formula $\bm{\sigma}_{n+1}=\mathbf{C}_{n+1}:\left(\bm{\varepsilon}_{n+1}-\bm{\varepsilon}_{n}+\bm{\varepsilon}_{n+1}^{e}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Evaluate 
+\begin_inset Formula $f\left(\bm{\sigma}_{n+1}\right)$
+\end_inset
+
+.
+ If less than zero return, else do Newton iteration on the scheme described
+ here.
+\end_layout
+
+\begin_layout Standard
+Equations:
+\begin_inset Formula 
+\begin{eqnarray*}
+\bm{\varepsilon}_{n+1}^{p} & = & \bm{\varepsilon}_{n}^{p}+\frac{\partial f_{n+1}}{\partial\bm{\sigma}_{n+1}}\Delta\gamma_{n+1}\\
+f\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1}\right) & = & 0
+\end{eqnarray*}
+
+\end_inset
+
+with 
+\begin_inset Formula $\bm{\sigma}_{n+1}=\mathbf{C}_{n+1}:\left(\bm{\varepsilon}_{n+1}-\bm{\varepsilon}_{n+1}^{p}\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Use an unknowns:
+\begin_inset Formula 
+\[
+\boldsymbol{x}=\left[\begin{array}{cc}
+\bm{\sigma}_{n+1} & \Delta\gamma_{n+1}\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Residual:
+\begin_inset Formula 
+\[
+\mathbf{R}=\left[\begin{array}{c}
+-\bm{\varepsilon}_{n+1}+\mathbf{C}_{n+1}^{-1}:\bm{\sigma}_{n+1}+\bm{\varepsilon}_{n+1}-\bm{\varepsilon}_{n}^{e}+\frac{\partial f_{n+1}}{\partial\bm{\sigma}}\Delta\gamma_{n+1}\\
+f_{n+1}
+\end{array}\right]=\left[\begin{array}{c}
+\mathbf{R}_{1}\\
+R_{2}
+\end{array}\right].
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Jacobian.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathbf{J}=\left[\begin{array}{cc}
+\mathbf{C}_{n+1}^{-1}+\frac{\partial^{2}f_{n+1}}{\partial\bm{\sigma}^{2}}\Delta\gamma_{n+1} & \frac{\partial f_{n+1}}{\partial\bm{\sigma}}\\
+\frac{\partial f_{n+1}}{\partial\bm{\sigma}_{n+1}} & 0
+\end{array}\right]=\left[\begin{array}{cc}
+\mathbf{J}_{11} & \mathbf{J}_{12}\\
+\mathbf{J}_{21} & J_{22}
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The algorithmic tangent is 
+\begin_inset Formula 
+\[
+\bm{\Phi}=\left(\mathbf{C}_{n+1}^{-1}+\frac{\partial^{2}f_{n+1}}{\partial\bm{\sigma}^{2}}\Delta\gamma_{n+1}\right)^{-1}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\boldsymbol{A}_{n+1}=\bm{\Phi}-\frac{\left[\bm{\Phi}\cdot\frac{\partial f_{n+1}}{\partial\bm{\sigma}}\right]\otimes\left[\bm{\Phi}\cdot\frac{\partial f_{n+1}}{\partial\bm{\sigma}}\right]}{\left[\frac{\partial f_{n+1}}{\partial\bm{\sigma}}\cdot\bm{\Phi}\cdot\frac{\partial f_{n+1}}{\partial\bm{\sigma}}\right]^{2}}
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -1211,283 +1349,7 @@ With
 \end_layout
 
 \begin_layout Section
-Combined plasticity and creep
-\end_layout
-
-\begin_layout Standard
-Start with two functions: 
-\begin_inset Formula 
-\[
-\bm{\sigma}_{n+1}^{ep}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right)
-\]
-
-\end_inset
-
-as defined in the previous section and 
-\begin_inset Formula 
-\[
-\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}^{cr},\bm{\sigma}_{n+1}^{cr},\Delta t_{n+1},T_{n+1}\right)
-\]
-
-\end_inset
-
-defined above.
- We want to make a combined update so that
-\begin_inset Formula 
-\begin{align*}
-\bm{\varepsilon}_{n+1} & = & \bm{\varepsilon}_{n+1}^{ep}+\bm{\varepsilon}_{n+1}^{cr}\\
-\bm{\sigma}_{n+1}^{cr} & = & \bm{\sigma}_{n+1}^{ep}.
-\end{align*}
-
-\end_inset
-
-Combine these two equations into the residual
-\begin_inset Formula 
-\[
-\boldsymbol{R}=\bm{\varepsilon}_{n+1}^{ep}+\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}-\bm{\varepsilon}_{n}^{ep},\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right),\Delta t_{n+1},T_{n+1}\right)-\bm{\varepsilon}_{n+1}
-\]
-
-\end_inset
-
-which means we need to supplement the history variables of the elastic-plastic
- model with 
-\begin_inset Formula $\bm{\varepsilon}^{ep}$
-\end_inset
-
-.
- We want to solve this residual equation for 
-\begin_inset Formula $\bm{\varepsilon}_{n+1}^{ep}$
-\end_inset
-
- using Newton's method.
- The Jacobian of this residual is
-\begin_inset Formula 
-\[
-\frac{d\boldsymbol{R}}{d\bm{\varepsilon}_{n+1}^{ep}}=\boldsymbol{I}+\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}
-\]
-
-\end_inset
-
-where 
-\begin_inset Formula $\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}$
-\end_inset
-
- is the algorithmic tangent of the rate independent model and 
-\begin_inset Formula $\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}$
-\end_inset
-
- is an output of the creep model.
- Finally, the overall algorithmic tangent is 
-\begin_inset Formula 
-\[
-\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\left(\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}+\left(\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}\right)^{-1}\right)^{-1}
-\]
-
-\end_inset
-
-which is annoying but doable.
-\end_layout
-
-\begin_layout Section
-General Newton algorithm for visco-plasticity
-\end_layout
-
-\begin_layout Subsection
-Continuous equations
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{eqnarray*}
-\dot{\bm{\varepsilon}}^{p} & = & \gamma\mathbf{g}\left(\bm{\sigma},\bm{\alpha}\right)\\
-\dot{\bm{\alpha}} & = & \gamma\mathbf{h}\left(\bm{\sigma},\bm{\alpha}\right)\\
-\gamma & = & y\left(\bm{\sigma},\bm{\alpha}\right)
-\end{eqnarray*}
-
-\end_inset
-
-Note these are nearly the same equations as above.
- We can condense out the last equation:
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{eqnarray*}
-\dot{\bm{\varepsilon}}^{p} & = & y\left(\bm{\sigma},\bm{\alpha}\right)\mathbf{g}\left(\bm{\sigma},\bm{\alpha}\right)\\
-\dot{\bm{\alpha}} & = & y\left(\bm{\sigma},\bm{\alpha}\right)\mathbf{h}\left(\bm{\sigma},\bm{\alpha}\right)
-\end{eqnarray*}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Newton integration scheme
-\end_layout
-
-\begin_layout Itemize
-Trial state: 
-\begin_inset Formula $\bm{\alpha}_{n+1}=\bm{\alpha}_{n}$
-\end_inset
-
-,
-\begin_inset Formula $\bm{\varepsilon}_{n+1}^{p}=\bm{\varepsilon}_{n}^{p}$
-\end_inset
-
-, 
-\begin_inset Formula $\bm{\sigma}_{n+1}=\mathbf{C}_{n+1}:\left(\bm{\varepsilon}_{n+1}-\bm{\varepsilon}_{n+1}^{p}\right)$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Evaluate 
-\begin_inset Formula $y\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1}\right)$
-\end_inset
-
-.
- If zero return, else do Newton iteration on the scheme described here.
-\end_layout
-
-\begin_layout Standard
-Equations:
-\begin_inset Formula 
-\begin{eqnarray*}
-\bm{\varepsilon}_{n+1}^{p} & = & \bm{\varepsilon}_{n}^{p}+\mathbf{g}_{n+1}y_{n+1}\Delta t_{n+1}\\
-\bm{\alpha}_{n+1} & = & \bm{\alpha}_{n}+\mathbf{h}_{n+1}y_{n+1}\Delta t_{n+1}
-\end{eqnarray*}
-
-\end_inset
-
-with 
-\begin_inset Formula $\bm{\sigma}_{n+1}=\mathbf{C}_{n+1}:\left(\bm{\varepsilon}_{n+1}-\bm{\varepsilon}_{n+1}^{p}\right)$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Standard
-Residual:
-\begin_inset Formula 
-\[
-\mathbf{R}=\left[\begin{array}{c}
--\bm{\varepsilon}_{n+1}^{p}+\bm{\varepsilon}_{n}^{p}+\mathbf{g}_{n+1}y_{n+1}\Delta t_{n+1}\\
--\bm{\alpha}_{n+1}+\bm{\alpha}_{n}+\mathbf{h}_{n+1}y_{n+1}\Delta t_{n+1}
-\end{array}\right]=\left[\begin{array}{c}
-\mathbf{R}_{1}\\
-\mathbf{R}_{2}
-\end{array}\right].
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Jacobian.
- Helpful note is that 
-\begin_inset Formula 
-\[
-\bm{\varepsilon}_{n+1}^{p}=\bm{\varepsilon}_{n+1}-\mathbf{C}_{n+1}^{-1}:\bm{\sigma}_{n+1}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\frac{\partial\bm{\sigma}_{n+1}}{\partial\bm{\varepsilon}_{n+1}^{p}}=-\mathbf{C}_{n+1}
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-\mathbf{J}=\left[\begin{array}{cc}
--\mathbf{I}-\left(\frac{\partial\mathbf{g}_{n+1}}{\partial\bm{\sigma}_{n+1}}y_{n+1}+\mathbf{g}_{n+1}\otimes\frac{\partial y_{n+1}}{\partial\bm{\sigma}_{n+1}}\right):\mathbf{C}_{n+1}\Delta t_{n+1} & \left(\frac{\partial\mathbf{g}_{n+1}}{\partial\bm{\alpha}_{n+1}}y_{n+1}+\mathbf{g}_{n+1}\otimes\frac{\partial y_{n+1}}{\partial\bm{\alpha}_{n+1}}\right)\Delta t_{n+1}\\
--\left(\frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\sigma}_{n+1}}y_{n+1}+\mathbf{h}_{n+1}\otimes\frac{\partial y_{n+1}}{\partial\bm{\sigma}_{n+1}}\right):\mathbf{C}_{n+1}\Delta t_{n+1} & -\mathbf{I}+\left(\frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\alpha}_{n+1}}y_{n+1}+\mathbf{h}_{n+1}\otimes\frac{\partial y_{n+1}}{\partial\bm{\alpha}_{n+1}}\right)\Delta t_{n+1}
-\end{array}\right]=\left[\begin{array}{cc}
-\mathbf{J}_{11} & \mathbf{J}_{12}\\
-\mathbf{J}_{21} & \mathbf{J}_{22}
-\end{array}\right]
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Algorithmic tangent
-\end_layout
-
-\begin_layout Standard
-We can use a very similar algorithm to the one above.
- 
-\end_layout
-
-\begin_layout Standard
-Let 
-\begin_inset Formula 
-\[
-\mathbf{A}=\frac{\partial\mathbf{R}_{1}}{\partial\bm{\varepsilon}_{n+1}}=\left(\frac{\partial\mathbf{g}_{n+1}}{\partial\bm{\sigma}_{n+1}}y_{n+1}+\mathbf{g}_{n+1}\otimes\frac{\partial y_{n+1}}{\partial\bm{\sigma}_{+1}}\right):\mathbf{C}_{n+1}\Delta t_{n+1}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\mathbf{B}=\frac{\partial\mathbf{R}_{2}}{\partial\bm{\varepsilon}_{n+1}}=\left(\frac{\partial\mathbf{h}_{n+1}}{\partial\bm{\sigma}_{n+1}}y_{n+1}+\mathbf{h}_{n+1}\otimes\frac{\partial y_{n+1}}{\partial\bm{\sigma}_{+1}}\right):\mathbf{C}_{n+1}\Delta t_{n+1}
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\mathbf{0}=\left[\begin{array}{c}
-\mathbf{A}\\
-\mathbf{B}
-\end{array}\right]+\left[\begin{array}{cc}
-\mathbf{J}_{11} & \mathbf{J}_{12}\\
-\mathbf{J}_{21} & \mathbf{J}_{22}
-\end{array}\right]\left[\begin{array}{c}
-\mathbf{K}\\
-\mathbf{E}
-\end{array}\right]
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\mathbf{K}=\left(\mathbf{J}_{11}-\mathbf{J}_{12}\mathbf{J}_{22}^{-1}\mathbf{J}_{21}\right)^{-1}\left(\mathbf{J}_{12}\mathbf{J}_{22}^{-1}\mathbf{B}-\mathbf{A}\right)
-\]
-
-\end_inset
-
-
-\begin_inset Formula 
-\[
-\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\mathbf{C}:\left(\mathbf{I}-\mathbf{K}\right).
-\]
-
-\end_inset
-
-So it's the same as above but with slightly smaller blocks.
-\end_layout
-
-\begin_layout Section
-General integration algorithm for thermo-elasto-viscoplasticity
+General integration algorithm for viscoplasticity
 \end_layout
 
 \begin_layout Subsection
@@ -1643,6 +1505,376 @@ The derivatives are then
 \frac{\partial\dot{\mathbf{q}}}{\partial\mathbf{q}} & = & \frac{\partial\mathbf{h}_{\gamma}}{\partial\mathbf{q}}\dot{\gamma}+\left(\mathbf{h}_{\gamma}\otimes\frac{\partial\dot{\gamma}}{\partial\bm{\sigma}}\right)+\frac{\partial\mathbf{h}_{T}}{\partial\mathbf{q}}\dot{T}+\frac{\partial\mathbf{h}_{t}}{\partial\mathbf{q}}\\
 \frac{\partial\dot{\bm{\sigma}}}{\partial\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{C}\\
 \frac{\partial\dot{\mathbf{q}}}{\partial\dot{\bm{\varepsilon}}_{n+1}} & = & \mathbf{0}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Chapter
+Meta-model algorithms
+\end_layout
+
+\begin_layout Section
+Combined plasticity and creep
+\end_layout
+
+\begin_layout Standard
+The idea is to combine one of the base models described in the previous
+ chapter with some rate dependent creep law.
+\end_layout
+
+\begin_layout Standard
+Start with two functions: 
+\begin_inset Formula 
+\[
+\bm{\sigma}_{n+1}^{ep}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right)
+\]
+
+\end_inset
+
+as defined in the previous chapter and 
+\begin_inset Formula 
+\[
+\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}^{cr},\bm{\sigma}_{n+1}^{cr},\Delta t_{n+1},T_{n+1}\right)
+\]
+
+\end_inset
+
+defined above.
+ We want to make a combined update so that
+\begin_inset Formula 
+\begin{align*}
+\bm{\varepsilon}_{n+1} & = & \bm{\varepsilon}_{n+1}^{ep}+\bm{\varepsilon}_{n+1}^{cr}\\
+\bm{\sigma}_{n+1}^{cr} & = & \bm{\sigma}_{n+1}^{ep}.
+\end{align*}
+
+\end_inset
+
+Combine these two equations into the residual
+\begin_inset Formula 
+\[
+\boldsymbol{R}=\bm{\varepsilon}_{n+1}^{ep}+\bm{\varepsilon}_{n+1}^{cr}\left(\bm{\varepsilon}_{n}-\bm{\varepsilon}_{n}^{ep},\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1}^{ep},\bm{\varepsilon}_{n}^{ep},\boldsymbol{h}_{n},\Delta t_{n+1},T_{n+1}\right),\Delta t_{n+1},T_{n+1}\right)-\bm{\varepsilon}_{n+1}
+\]
+
+\end_inset
+
+which means we need to supplement the history variables of the elastic-plastic
+ model with 
+\begin_inset Formula $\bm{\varepsilon}^{ep}$
+\end_inset
+
+.
+ We want to solve this residual equation for 
+\begin_inset Formula $\bm{\varepsilon}_{n+1}^{ep}$
+\end_inset
+
+ using Newton's method.
+ The Jacobian of this residual is
+\begin_inset Formula 
+\[
+\frac{d\boldsymbol{R}}{d\bm{\varepsilon}_{n+1}^{ep}}=\boldsymbol{I}+\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}$
+\end_inset
+
+ is the algorithmic tangent of the rate independent model and 
+\begin_inset Formula $\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}$
+\end_inset
+
+ is an output of the creep model.
+ Finally, the overall algorithmic tangent is 
+\begin_inset Formula 
+\[
+\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=\left(\frac{d\bm{\varepsilon}_{n+1}^{cr}}{d\bm{\sigma}_{n+1}}+\left(\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}^{ep}}\right)^{-1}\right)^{-1}
+\]
+
+\end_inset
+
+which is annoying but doable.
+\end_layout
+
+\begin_layout Section
+Kocks-Mecking regime model
+\end_layout
+
+\begin_layout Standard
+The goal of this meta-model is to switch between different material representati
+ons depending on the normalized thermal activation energy.
+ 
+\end_layout
+
+\begin_layout Standard
+The model takes as parameters a collection of material models, as definined
+ in the previous chapter, a collection of activation energies, and the constants
+ required to compute the normalized activation energy:
+\begin_inset Formula 
+\[
+g=\frac{kT}{\mu b^{3}}\ln\frac{\dot{\varepsilon}_{0}}{\dot{\varepsilon}}.
+\]
+
+\end_inset
+
+Let the material models be represented by the tuples of functions 
+\begin_inset Formula 
+\[
+\left[\left(\bm{\sigma}_{1},\boldsymbol{A}_{1},\boldsymbol{h}_{1}\right),\left(\bm{\sigma}_{2},\boldsymbol{A}_{2},\boldsymbol{h}_{2}\right),\ldots,\left(\bm{\sigma}_{n-1},\boldsymbol{A}_{n-1},\boldsymbol{h}_{n-1}\right),\left(\bm{\sigma}_{n},\boldsymbol{A}_{n},\boldsymbol{h}_{n}\right)\right]
+\]
+
+\end_inset
+
+and the cutoffs be
+\begin_inset Formula 
+\[
+\left[g_{1},g_{2},\ldots g_{n-1}\right].
+\]
+
+\end_inset
+
+The meta model first computes the normalized activation energy of the update
+ from the total strain rate and temperature.
+ It then dispatches the call for a stress update to the appropriate function
+ through the rule:
+\begin_inset Formula 
+\[
+\left(\bm{\sigma},\boldsymbol{A},\boldsymbol{h}\right)=\begin{cases}
+\left(\bm{\sigma}_{1},\boldsymbol{A}_{1},\boldsymbol{h}_{1}\right) & g\le g_{1}\\
+\left(\bm{\sigma}_{i},\boldsymbol{A}_{i},\boldsymbol{h}_{i}\right) & g_{i-1}<g\le g_{i}\\
+\left(\bm{\sigma}_{n},\boldsymbol{A}_{n},\boldsymbol{h}_{n}\right) & g>g_{n-1}.
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Continuum damage mechanics
+\end_layout
+
+\begin_layout Subsection
+Most generic
+\end_layout
+
+\begin_layout Standard
+A damage model is a function 
+\begin_inset Formula 
+\begin{align*}
+\bm{\sigma}_{n+1}^{\prime} & = & \bm{\sigma}^{\prime}\left(\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\bm{\omega}_{n+1}\right)\\
+\bm{\omega}_{n+1} & = & \boldsymbol{w}\left(\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\bm{\omega}_{n+1}\right)
+\end{align*}
+
+\end_inset
+
+where 
+\begin_inset Formula $\bm{\sigma}_{n+1}$
+\end_inset
+
+ and 
+\begin_inset Formula $\boldsymbol{h}_{n+1}$
+\end_inset
+
+ are the stress tensor and history variables resulting from an umodified
+ stress update, using one of the models above, and 
+\begin_inset Formula $\bm{\omega}_{n+1}$
+\end_inset
+
+ is a set of damage variables.
+ The model returns the damaged stress tensor 
+\begin_inset Formula $\bm{\sigma}_{n+1}^{\prime}$
+\end_inset
+
+, the set of composite history variables 
+\begin_inset Formula $\bm{h}_{n+1}^{\prime}=\left[\begin{array}{cc}
+\boldsymbol{h}_{n+1} & \bm{\omega}_{n+1}\end{array}\right]$
+\end_inset
+
+ and the modified tangent 
+\begin_inset Formula 
+\[
+\bm{A}_{n+1}^{\prime}=\frac{d\bm{\sigma}_{n+1}^{\prime}}{d\bm{\varepsilon}_{n+1}}.
+\]
+
+\end_inset
+
+Of course these equations must be solved simultaneously with the original
+ material update, complicating the stress update algorithm.
+\end_layout
+
+\begin_layout Subsection
+Scalar
+\end_layout
+
+\begin_layout Standard
+A scalar damage model simplfies the general equations to 
+\begin_inset Formula 
+\begin{align*}
+\bm{\sigma}_{n+1}^{\prime} & = & \left(1-\omega_{n+1}\right)\bm{\sigma}_{n+1}\\
+\omega_{n+1} & = & w\left(\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\omega_{n+1}\right)
+\end{align*}
+
+\end_inset
+
+with 
+\begin_inset Formula $\omega_{n+1}\in\left[0,1\right]$
+\end_inset
+
+.
+ The modified tangent is 
+\begin_inset Formula 
+\[
+\bm{A}_{n+1}^{\prime}=\left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}\otimes\bm{\sigma}_{n+1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Simplified scalar
+\end_layout
+
+\begin_layout Standard
+In this simplified case the dependence on the history of the undamage model
+ is limited to the equivalent plastic strain.
+ So: 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\bm{\sigma}_{n+1}^{\prime} & = & \left[1-\omega_{n+1}\right]\bm{\sigma}_{n+1}\\
+\dot{\omega}_{n+1} & = & \dot{\omega}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime},\dot{\bar{\varepsilon}}_{p}\right)\\
+\dot{\bar{\varepsilon}}_{p} & = & \sqrt{\frac{2}{3}\dot{\bm{\varepsilon}}_{p}:\dot{\bm{\varepsilon}}_{p}}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Update
+\end_layout
+
+\begin_layout Standard
+Our combined residual equation is 
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\boldsymbol{R}_{1}\\
+R_{2}
+\end{array}\right]=\left[\begin{array}{c}
+\bm{\sigma}_{n+1}^{\prime}-\left[1-\omega_{n+1}\right]\bm{\sigma}_{n+1}\left(\Delta\bm{\varepsilon}_{n+1}\right)\\
+-\omega_{n+1}+\omega_{n}+\dot{\omega}_{n+1}\Delta t
+\end{array}\right]=\left[\begin{array}{c}
+\boldsymbol{0}\\
+0
+\end{array}\right]
+\]
+
+\end_inset
+
+for unknowns 
+\begin_inset Formula $x=\left[\begin{array}{cc}
+\bm{\sigma}_{n+1}^{\prime} & \omega_{n+1}\end{array}\right]$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+For convience we're going to assume we can additively decompose the update
+ into two parts:
+\begin_inset Formula 
+\[
+\dot{\omega}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime},\dot{\bar{\varepsilon}}_{p}\right)=\dot{\omega}_{p}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime}\right)\dot{\bar{\varepsilon}}_{p}+\dot{\omega}_{o}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime}\right)
+\]
+
+\end_inset
+
+which makes the residual 
+\begin_inset Formula 
+\[
+\left[\begin{array}{c}
+\boldsymbol{R}_{1}\\
+R_{2}
+\end{array}\right]=\left[\begin{array}{c}
+\bm{\sigma}_{n+1}^{\prime}-\left[1-\omega_{n+1}\right]\bm{\sigma}_{n+1}\left(\Delta\bm{\varepsilon}_{n+1}\right)\\
+-\omega_{n+1}+\omega_{n}+\dot{\omega}_{p}\Delta\bar{\varepsilon}_{p}+\dot{\omega}_{o}\Delta t
+\end{array}\right]=\left[\begin{array}{c}
+\boldsymbol{0}\\
+0
+\end{array}\right]
+\]
+
+\end_inset
+
+and the Jacobian
+\begin_inset Formula 
+\[
+\left[\begin{array}{cc}
+\boldsymbol{J}_{11} & \boldsymbol{J}_{12}\\
+\boldsymbol{J}_{21} & J_{22}
+\end{array}\right]=\left[\begin{array}{cc}
+\boldsymbol{I} & \bm{\sigma}_{n+1}\\
+\frac{\partial\dot{\omega}_{p}}{\partial\boldsymbol{\sigma}_{n+1}^{\prime}}\Delta\bar{\varepsilon}_{p}+\frac{\partial\dot{\omega}_{o}}{\partial\boldsymbol{\sigma}_{n+1}^{\prime}}\Delta t+\dot{\omega}_{p}\frac{\partial\Delta\bar{\varepsilon}_{p}}{\partial\boldsymbol{\sigma}_{n+1}^{\prime}} & \frac{\partial\dot{\omega}_{p}}{\partial\omega_{n+1}}\Delta\bar{\varepsilon}_{p}+\frac{\partial\dot{\omega}_{o}}{\partial\omega_{n+1}}\Delta t-1
+\end{array}\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Now the question is can we get 
+\begin_inset Formula $\Delta\bar{\varepsilon}_{p}$
+\end_inset
+
+ without explicit knowledge of the plastic strain? 
+\begin_inset Formula 
+\[
+\dot{\bm{\varepsilon}}_{p}=\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}_{e}=\dot{\bm{\varepsilon}}-\boldsymbol{C}^{-1}:\bm{\sigma}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\dot{\bar{\varepsilon}}_{p}=\sqrt{\frac{2}{3}\dot{\bm{\varepsilon}}_{p}:\dot{\bm{\varepsilon}}_{p}}=\sqrt{\frac{2}{3}\left(\dot{\bm{\varepsilon}}:\dot{\bm{\varepsilon}}+\boldsymbol{C}^{-1}:\bm{\sigma}:\boldsymbol{C}^{-1}:\bm{\sigma}-2\dot{\bm{\varepsilon}}:\boldsymbol{C}^{-1}:\bm{\sigma}\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Tangent
+\end_layout
+
+\begin_layout Subsection
+Chaboche
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\bm{\sigma}_{n+1}^{\prime} & = & \left(1-\omega_{n+1}\right)\bm{\sigma}_{n+1}\\
+\dot{\omega}_{n+1} & = & \frac{\partial\phi_{n+1}}{\partial y_{n+1}}\\
+\phi_{n+1} & = & \phi\left(\omega_{n+1},y_{n+1},s_{n+1},\dot{\bar{\varepsilon}}_{p}\right)\\
+y_{n+1} & = & -\frac{\sigma_{eq}^{2}}{2E\left(1-D\right)^{2}}\left[\frac{2}{3}\left(1+\nu\right)+3\left(1-2\nu\right)\left(\frac{\sigma_{m}}{\sigma_{eq}}\right)^{2}\right]\\
+s_{n+1} & = & \sigma_{ep}\sqrt{\frac{2}{3}\left(1+\nu\right)+3\left(1-2\nu\right)\left(\frac{\sigma_{m}}{\sigma_{eq}}\right)^{2}}\\
+\dot{\bar{\varepsilon}}_{p} & = & \sqrt{\frac{2}{3}\dot{\bm{\varepsilon}}_{p}:\dot{\bm{\varepsilon}}_{p}}
 \end{align*}
 
 \end_inset
