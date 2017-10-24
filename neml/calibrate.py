@@ -7,8 +7,6 @@ import scipy.integrate as qud
 
 import multiprocessing
 
-import matplotlib.pyplot as plt
-
 from lxml import etree as ET
 
 def expand(data, conv = float):
@@ -42,8 +40,10 @@ class Evaluator(object):
     try:
       v = evaluate_case(case, model, weights = self.weights)
     except Exception as e:
+      print(scase)
       v = self.penalty
     if np.isnan(v) or np.isinf(v):
+      print(scase)
       v = self.penalty
     
     return v
@@ -133,12 +133,6 @@ def evaluate_uniaxial(case, model):
       0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2, full_output = 1)
   v2 = vs[0]
 
-  #x = np.linspace(0.0, emax*0.99, 100)
-  #plt.plot(x, exp_fn(x), 'k-')
-  #plt.plot(x, mod_fn(x), 'k--')
-  #plt.title('Uni: %f' % (v2/v1))
-  #plt.show()
-
   return v2 / v1
 
 def cost_uniaxial(case):
@@ -171,12 +165,6 @@ def evaluate_stressrelax(case, model):
       min_time*1.01, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
   v2 = vs[0]
-
-  #x = np.linspace(min_time*1.01, max_time * 0.99, 100)
-  #plt.plot(x, exp_fn(x), 'k-')
-  #plt.plot(x, mod_fn(x), 'k--')
-  #plt.title('Stress relax: %f' % (v2/v1))
-  #plt.show()
 
   return v2 / v1
 
@@ -215,12 +203,6 @@ def evaluate_creep(case, model):
       min_time*1.01, max_time*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
   v2 = vs[0]
-
-  #x = np.linspace(min_time*1.01, max_time * 0.99, 100)
-  #plt.plot(x, exp_fn(x), 'k-')
-  #plt.plot(x, mod_fn(x), 'k--')
-  #plt.title('%s creep, %f: %f' % (case.find('source').text, T, v2/v1))
-  #plt.show()
 
   return v2/v1
 
@@ -269,8 +251,8 @@ def evaluate_cyclic_strain(case, model):
   res = drivers.strain_cyclic(model, strain, ratio, rate,
       int(max_cycles)+1, T = T, hold_time = hold)
 
-  if np.max(res['cycles']) < max_cycles:
-    pen = max_cycles / np.max(res['cycles'])
+  if np.max(res['cycles']) < int(max_cycles / 4.0):
+    pen = 2.0
   else:
     pen = 1.0
 
@@ -287,12 +269,6 @@ def evaluate_cyclic_strain(case, model):
       min_cycles, int(max_cycles)*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
   v2 = vs[0]
-
-  #x = np.linspace(min_cycles, max_cycles * 0.99, 100)
-  #plt.plot(x, exp_fn(x), 'k-')
-  #plt.plot(x, mod_fn(x), 'k--')
-  #plt.title('Cyclic strain: %f' % (v2/v1))
-  #plt.show()
 
   return v2/v1 * pen
 
@@ -344,8 +320,8 @@ def evaluate_cyclic_stress(case, model):
   exp_fn = inter.interp1d(exp_cycle, exp_data)
   mod_fn = inter.interp1d(res['cycles'], res[compare])
 
-  if np.max(res['cycles']) < max_cycles:
-    pen = max_cycles / np.max(res['cycles'])
+  if np.max(res['cycles']) < int(max_cycles / 4.0):
+    pen = 2.0
   else:
     pen = 1.0
 
@@ -359,12 +335,6 @@ def evaluate_cyclic_stress(case, model):
       min_cycles*1.01, max_cycles*0.99, epsabs = 1.0e-4, epsrel = 1.0e-3,
       full_output = 1)
   v2 = vs[0]
-
-  #x = np.linspace(min_cycles, max_cycles * 0.99, 100)
-  #plt.plot(x, exp_fn(x), 'k-')
-  #plt.plot(x, mod_fn(x), 'k--')
-  #plt.title('Cyclic stress: %f' % (v2/v1))
-  #plt.show()
 
   return v2/v1 * pen
 
