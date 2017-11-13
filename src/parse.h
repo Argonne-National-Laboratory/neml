@@ -27,6 +27,9 @@ std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier
 /// Setup a small strain model
 std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier);
 
+/// Setup a KM region model
+std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & ier);
+
 /// Setup a creep model
 std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier);
 
@@ -83,6 +86,12 @@ std::shared_ptr<YieldSurface> process_isoj2(const xmlpp::Element * node, int & i
 
 /// Kinematic J2
 std::shared_ptr<YieldSurface> process_isokinj2(const xmlpp::Element * node, int & ier);
+
+/// Isotropic J2I1
+std::shared_ptr<YieldSurface> process_isoj2i1(const xmlpp::Element * node, int & ier);
+
+/// Kinematic J2I1
+std::shared_ptr<YieldSurface> process_isokinj2i1(const xmlpp::Element * node, int & ier);
 
 /// Hardening rules
 std::shared_ptr<HardeningRule> process_hardening(const xmlpp::Element * node, int & ier);

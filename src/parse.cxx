@@ -43,10 +43,74 @@ std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
 std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier)
 {
   return dispatch_attribute_unique<NEMLModel>(node, "type",
-                                          {"smallstrain"},
-                                          {&process_smallstrain},
+                                          {"smallstrain","kmregion"},
+                                          {&process_smallstrain,&process_kmregion},
                                           ier);
 }
+
+std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & ier)
+{
+  // Basically need:
+  //  1) A list of n smallstrain models
+  //  2) A list of n-1 cutoffs
+  //  3) An elastic model
+  //  4) Boltzmann constant, in your units
+  //  5) Burgers vector, in your units
+  //  6) Reference strain rate, in your units
+ 
+  // 1)
+  std::vector<std::shared_ptr<NEMLModel_sd>> models;
+  const xmlpp::Element * models_node;
+  if (not one_child(node, "models", models_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  auto model_nodes = models_node->get_children("model");
+  for (auto it = model_nodes.begin(); it != model_nodes.end(); ++it) {
+    auto modeli = process_smallstrain(dynamic_cast<xmlpp::Element*>(*it), ier);
+    std::shared_ptr<NEMLModel> modeli_sh = std::move(modeli);
+    models.push_back(std::dynamic_pointer_cast<NEMLModel_sd>(modeli_sh));
+  }
+
+  // 2)
+  std::vector<double> gs = vector_constant(node, "gcut", ier);
+
+  // Check for lengths
+  if (models.size() != (gs.size() + 1)) {
+    ier = INCOMPATIBLE_KM;
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+
+  // 3)
+  const xmlpp::Element * elastic_node;
+  if (not one_child(node, "elastic", elastic_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  std::shared_ptr<LinearElasticModel> emodel = process_linearelastic(elastic_node, ier);
+  
+  // 4)
+  double k = scalar_constant(node, "kboltz", ier);
+
+  // 5) 
+  double b = scalar_constant(node, "burgers", ier);
+
+  // 6)
+  double eps0 = scalar_constant(node, "refrate", ier);
+
+  // CTE, if provided
+  std::shared_ptr<Interpolate> alpha;
+  auto a_nodes = node->get_children("alpha");
+  if (a_nodes.size() > 0) {
+    alpha = process_alpha(dynamic_cast<const xmlpp::Element*>(a_nodes.front()), ier);
+  }
+  else {
+    alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
+  }
+
+  // Return final model
+  return std::unique_ptr<NEMLModel>(
+      new KMRegimeModel(models, gs, emodel, k, b, eps0, alpha));
+}
+
 
 std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int & ier)
 {
@@ -308,8 +372,10 @@ std::shared_ptr<YieldSurface> process_surface(
 {
   // Switch on type: isoj2, isokinj2
   return dispatch_attribute<YieldSurface>(node, "type",
-                                          {"isoj2", "isokinj2"},
-                                          {&process_isoj2, &process_isokinj2},
+                                          {"isoj2", "isokinj2",
+                                          "isoj2i1", "isokinj2i1"},
+                                          {&process_isoj2, &process_isokinj2,
+                                          &process_isoj2i1, &process_isokinj2i1},
                                           ier);
 }
 
@@ -325,6 +391,22 @@ std::shared_ptr<YieldSurface> process_isokinj2(const xmlpp::Element * node,
 {
   // No parameters!
   return std::make_shared<IsoKinJ2>();
+}
+
+std::shared_ptr<YieldSurface> process_isoj2i1(const xmlpp::Element * node,
+                                            int & ier)
+{
+  auto h = scalar_param(node, "h", ier);
+  auto l = scalar_param(node, "l", ier);
+  return std::make_shared<IsoJ2I1>(h,l);
+}
+
+std::shared_ptr<YieldSurface> process_isokinj2i1(const xmlpp::Element * node,
+                                               int & ier)
+{
+  auto h = scalar_param(node, "h", ier);
+  auto l = scalar_param(node, "l", ier);
+  return std::make_shared<IsoKinJ2I1>(h,l);
 }
 
 std::shared_ptr<HardeningRule> process_hardening(
@@ -477,9 +559,18 @@ std::shared_ptr<NonAssociativeHardening> process_nonass_chaboche(
   std::vector< std::shared_ptr<GammaModel> > gvec = 
       dispatch_vector_models<GammaModel>(
           node, "gammamodels", "gammamodel", &process_gammamodel, ier);
-  
-  // Create our object
-  return std::make_shared<Chaboche>(cir, c, gvec);
+
+  auto matches = node->get_children("A");  
+  if (matches.size() > 1) {
+    std::vector<std::shared_ptr<Interpolate>> A = vector_param(node, "A", ier);
+    std::vector<std::shared_ptr<Interpolate>> a = vector_param(node, "a", ier);
+    // Create our object
+    return std::make_shared<Chaboche>(cir, c, gvec, A, a);
+  }
+  else {  
+    // Create our object
+    return std::make_shared<Chaboche>(cir, c, gvec);
+  }
 }
 
 std::shared_ptr<GammaModel> process_gammamodel(
