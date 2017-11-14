@@ -192,6 +192,8 @@ def evaluate_weights(database, tweights):
       result.append(tweights['cyclic_strain'](case))
     elif case.attrib['type'] == 'cyclic' and case.find('control').text == 'stress':
       result.append(tweights['cyclic_stress'](case))
+    elif case.attrib['type'] == 'isochronous':
+      result.append(tweights['isochronous'](case))
     else:
       raise ValueError("Unknown experiment with type %s." % case.attrib['type'])
 

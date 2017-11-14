@@ -50,7 +50,7 @@ class Evaluator(object):
 
 def evaluate_cases(cases, model_maker, params, weights = {"uniaxial": 1.0,
   "relax_strain": 1.0, "relax_stress": 1.0, "cyclic_stress": 1.0,
-  "cyclic_strain": 1.0}, nthreads = 1, penalty = 1.0e4):
+  "cyclic_strain": 1.0, "isochronous": 1.0}, nthreads = 1, penalty = 1.0e4):
   """
     Evaluate a bunch of cases
 
@@ -79,7 +79,7 @@ def evaluate_cases(cases, model_maker, params, weights = {"uniaxial": 1.0,
 
 def evaluate_case(case, model, weights = {"uniaxial": 1.0,
   "relax_strain": 1.0, "relax_stress": 1.0, "cyclic_stress": 1.0,
-  "cyclic_strain": 1.0}):
+  "cyclic_strain": 1.0, "isochronous": 1.0}):
   """
     Evaluate a model against an xedl experimental case
     
@@ -104,6 +104,8 @@ def evaluate_case(case, model, weights = {"uniaxial": 1.0,
     return weights['cyclic_strain'] * evaluate_cyclic_strain(case, model)
   elif case.attrib['type'] == 'cyclic' and case.find('control').text == 'stress':
     return weights['cyclic_stress'] * evaluate_cyclic_stress(case, model)
+  elif case.attrib['type'] == 'isochronous':
+    return weights['isochronous'] * evaluate_isochronous(case, model)
   else:
     raise ValueError("Unknown experiment with type %s." % case.attrib['type'])
 
@@ -341,3 +343,34 @@ def evaluate_cyclic_stress(case, model):
 def cost_cycle_stress(case):
   nsteps = np.max(expand(case.find('cycle').text))
   return 50 * nsteps
+
+def evaluate_isochronous(case, model):
+  """
+    Evaluate against an isochronous curve
+  """
+  T = float(case.find('temperature').text)
+  rate = float(case.find('rate').text)
+  time = float(case.find('time').text)
+
+  estrain = np.array(expand(case.find('strain').text))
+  estress = np.array(expand(case.find('stress').text))
+
+  emax = np.max(estrain)
+
+  res = drivers.isochronous_curve(model, time, T = T, emax = emax, srate = rate,
+      ds = 2.0)
+
+  exp_fn = inter.interp1d(estrain, estress)
+  mod_fn = inter.interp1d(res['strain'], res['stress'])
+  
+  vs = qud.quad(lambda e: np.abs(exp_fn(e)), 0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2,
+      full_output = 1)
+  v1 = vs[0]
+  vs = qud.quad(lambda e: np.abs(exp_fn(e) - mod_fn(e)), 
+      0.0, emax, epsabs = 1.0e-4, epsrel = 1.0e-2, full_output = 1)
+  v2 = vs[0]
+
+  return v2 / v1
+
+def cost_isochronous(case):
+  return cost_creep(case) * 25
