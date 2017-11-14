@@ -248,9 +248,10 @@ def evaluate_residual_mpi(model_maker, params, database, rweights, tweights,
   
   # Broadcast params as a numpy array
   if rank == 0:
+    params = np.array(params)
     n = np.array(params.shape, dtype = int)
     comm.Bcast(n, root = 0)
-    comm.Bcast(np.array(params), root = 0)
+    comm.Bcast(params, root = 0)
   else:
     n = np.zeros((2,), dtype = int)
     comm.Bcast(n, root = 0)
