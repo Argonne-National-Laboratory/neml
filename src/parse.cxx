@@ -66,7 +66,7 @@ std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & i
   }
   auto model_nodes = models_node->get_children("model");
   for (auto it = model_nodes.begin(); it != model_nodes.end(); ++it) {
-    auto modeli = process_smallstrain(dynamic_cast<xmlpp::Element*>(*it), ier);
+    auto modeli = process_smallstrain(dynamic_cast<const xmlpp::Element*>(*it), ier);
     std::shared_ptr<NEMLModel> modeli_sh = std::move(modeli);
     models.push_back(std::dynamic_pointer_cast<NEMLModel_sd>(modeli_sh));
   }
