@@ -46,11 +46,64 @@ def generate_thickness_gradient(ri, ro, T1, T2, Tdot_hot, hold,
     elif t < thot + hold + tcold:
       Tright = T2 - (t - thot - hold) * Tdot_cold * np.sign(dT)
     else:
-      return T1
+      Tright = T1
 
     xi = (r - ri) / (ro - ri)
 
     return (1-xi) * T1 + xi * Tright
+
+  return gradient
+
+def generate_multimaterial_thickness_gradient(rs, ks, T1, T2, Tdot_hot,
+    hold, Tdot_cold = None, hold_together = 0.0, delay = 0.0):
+  """
+    Generate a thermal gradient alternating between hot and cold for the
+    case of a multilayer material.
+
+    This function assumes the "slab" limit, i.e. a thin walled section.
+
+    Parameters:
+      rs                radii
+      ks                heat conduction coefficients
+      T1                initial temperature
+      T2                hot temperature
+      Tdot_hot          heating rate, also cooling rate if not specified
+      hold              hold at gradient
+
+    Optional:
+      Tdot_cold         cooling rate
+      hold_together     hold at no temperature gradient
+  """
+  if Tdot_cold is None:
+    Tdot_cold = Tdot_hot
+
+  if len(rs) != (len(ks)+1):
+    raise ValueError("Incompatible radii and thermal conductivity arrays")
+
+  dT = T2 - T1
+  thot = np.abs(dT / Tdot_hot)
+  tcold = np.abs(dT / Tdot_cold)
+  period = thot + hold + tcold + hold_together
+
+  def gradient(r, t):
+    if t < delay:
+      return T1
+    t = (t-delay) % period
+
+    if t < thot:
+      Tright = T1 + t * Tdot_hot * np.sign(dT)
+    elif t < thot + hold:
+      Tright = T2
+    elif t < thot + hold + tcold:
+      Tright = T2 - (t - thot - hold) * Tdot_cold * np.sign(dT)
+    else:
+      Tright = T1
+
+    Rs = np.diff(rs) / np.array(ks)
+    Rt = np.sum(Rs)
+    Ti = T1 + np.cumsum(np.insert(Rs,0,0.0)) / Rt * (Tright - T1)
+
+    return np.interp(r, rs, Ti)
 
   return gradient
 
