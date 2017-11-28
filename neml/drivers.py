@@ -13,7 +13,7 @@ class Driver(object):
     results.
   """
   def __init__(self, model, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
-      miter = 25):
+      miter = 25, T_init = 0.0):
     """
       Parameters:
         model       material model to play with
@@ -33,7 +33,7 @@ class Driver(object):
     self.stress_int = [np.zeros((6,))]
 
     self.stored_int = [self.model.init_store()]
-    self.T_int = [0.0]
+    self.T_int = [T_init]
     self.t_int = [0.0]
 
     self.u_int = [0.0]
@@ -75,6 +75,8 @@ class Driver_sd(Driver):
   def __init__(self, *args, **kwargs):
     super(Driver_sd, self).__init__(*args, **kwargs)
     self.strain_int = [np.zeros((6,))]
+    self.thermal_strain_int = [np.zeros((6,))]
+    self.mechanical_strain_int = [np.zeros((6,))]
 
   def solve_try(self, RJ, x0, extra = []):
     solvers = []
@@ -114,6 +116,21 @@ class Driver_sd(Driver):
   def strain(self):
     return np.array(self.strain_int)
 
+  @property
+  def thermal_strain(self):
+    return np.array(self.thermal_strain_int)
+
+  @property
+  def mechanical_strain(self):
+    return np.array(self.mechanical_strain_int)
+
+  def update_thermal_strain(self, T_np1):
+    dT = T_np1 - self.T_int[-1]
+    a_np1 = self.model.alpha(T_np1)
+    a_n = self.model.alpha(self.T_int[-1])
+
+    return self.thermal_strain_int[-1] + dT * (a_np1 + a_n) / 2 * np.array([1.0,1,1,0,0,0])
+
   def strain_step(self, e_np1, t_np1, T_np1):
     """
       Take a strain-controlled step
@@ -123,12 +140,15 @@ class Driver_sd(Driver):
         t_np1       next time
         T_np1       next temperature
     """
-    s_np1, h_np1, A_np1, u_np1, p_np1 = self.model.update_sd(e_np1, 
-        self.strain_int[-1],
+    enext = self.update_thermal_strain(T_np1)
+    s_np1, h_np1, A_np1, u_np1, p_np1 = self.model.update_sd(e_np1 - enext, 
+        self.mechanical_strain_int[-1],
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
         self.stored_int[-1], self.u_int[-1], self.p_int[-1])
 
     self.strain_int.append(np.copy(e_np1))
+    self.mechanical_strain_int.append(e_np1 - enext)
+    self.thermal_strain_int.append(enext)
     self.stress_int.append(np.copy(s_np1))
     self.stored_int.append(np.copy(h_np1))
     self.T_int.append(T_np1)
@@ -145,8 +165,9 @@ class Driver_sd(Driver):
         t_np1       next time
         T_np1       next temperature
     """
+    enext = self.update_thermal_strain(T_np1)
     def RJ(e):
-      s, h, A, u, p = self.model.update_sd(e, self.strain_int[-1],
+      s, h, A, u, p = self.model.update_sd(e - enext, self.mechanical_strain_int[-1],
         T_np1, self.T_int[-1], t_np1, self.t_int[-1], 
         self.stress_int[-1],
         self.stored_int[-1], self.u_int[-1], self.p_int[-1])
@@ -183,11 +204,13 @@ class Driver_sd(Driver):
     """
     sdir = sdir / la.norm(sdir)
     dt = t_np1 - self.t_int[-1]
+    enext = self.update_thermal_strain(T_np1)
+
     def RJ(x):
       a = x[0]
       e_inc = x[1:]
-      s, h, A, u, p = self.model.update_sd(self.strain_int[-1] + e_inc,
-          self.strain_int[-1],
+      s, h, A, u, p = self.model.update_sd(self.strain_int[-1] + e_inc - enext,
+          self.mechanical_strain_int[-1],
           T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
           self.stored_int[-1],
           self.u_int[-1], self.p_int[-1])
@@ -273,10 +296,11 @@ class Driver_sd(Driver):
         t_np1       next time
         T_np1       next temperature
     """
+    enext = self.update_thermal_strain(T_np1)
     oset = sorted(list(set(range(6)) - set([i])))
     def RJ(e_np1):
-      s, h, A, u, p = self.model.update_sd(e_np1,
-          self.strain_int[-1],
+      s, h, A, u, p = self.model.update_sd(e_np1 - enext,
+          self.mechanical_strain_int[-1],
           T_np1, self.T_int[-1], t_np1, self.t_int[-1], self.stress_int[-1],
           self.stored_int[-1], self.u_int[-1], self.p_int[-1])
 
@@ -1179,7 +1203,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       history       use damaged material
   """
   # Setup
-  driver = Driver_sd(model, verbose = verbose)
+  driver = Driver_sd(model, verbose = verbose, T_init = T)
   if history is not None:
     driver.stored_int[0] = history
   time = [0]
@@ -1236,6 +1260,54 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1]),
       'tstrain': np.copy(strain[ri:-1])}
 
+def thermomechanical_strain_raw(model, time, temperature, strain, 
+    sdir = np.array([1,0,0,0,0,0.0]), verbose = False, substep = 1):
+  """
+    Directly drive a model using the output of a strain controlled thermomechanical test
+
+    Parameters:
+      model         material model
+      time          list of times
+      temperature   list of temperatures
+      strain        list of strains
+
+    Optional:
+      sdir          direction of stress
+      verbose       print information
+      substep       take substep steps per data point
+  """
+  stress = np.zeros((len(time),))
+  mechstrain = np.zeros((len(time),))
+  driver = Driver_sd(model, verbose = verbose, T_init = temperature[0])
+
+  einc = None
+  ainc = None
+
+  for i in range(1,len(stress)):
+    for k in range(substep):
+      ei_np1 = (strain[i] - strain[i-1]) / substep * (k+1) + strain[i-1]
+      ti_np1 = (time[i] - time[i-1]) / substep * (k+1) + time[i-1]
+      Ti_np1 = (temperature[i] - temperature[i-1]) / substep * (k+1) + temperature[i-1]
+
+      ei_n = (strain[i] - strain[i-1]) / substep * (k) + strain[i-1]
+      ti_n = (time[i] - time[i-1]) / substep * (k) + time[i-1]
+      Ti_n = (temperature[i] - temperature[i-1]) / substep * (k) + temperature[i-1]
+
+      erate = (ei_np1 - ei_n) / (ti_np1 - ti_n)
+      if i == 1:
+        einc, ainc = driver.erate_step(sdir, erate, ti_np1, Ti_np1)
+      else:
+        einc, ainc = driver.erate_step(sdir, erate, ti_np1, Ti_np1,
+            einc_guess = einc, ainc_guess = ainc)
+    
+    stress[i] = np.dot(driver.stress_int[-1], sdir)
+    mechstrain[i] = np.dot(driver.thermal_strain_int[-1], sdir)
+
+
+  return {'time': np.copy(time), 'temperature': np.copy(temperature), 'strain': np.copy(strain),
+      'stress': np.copy(stress), 'mechanical strain': np.copy(mechstrain)}
+
+
 def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100, 
     sdir = np.array([1,0,0,0,0,0]), verbose = False, history = None):
   """
@@ -1282,7 +1354,7 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
       'plastic_work': np.copy(driver.p)}
 
 
-def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
+def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0,
     ds = 10.0, max_cut = 10, nsteps = 250, history = None):
   """
     Generates an isochronous stress-strain curve at the given time and
@@ -1309,7 +1381,6 @@ def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0e-2,
   ncut = 0
   try:
     while strains[-1] < emax:
-      #print(strains[-1])
       target = stresses[-1] + ds
       try:
         enext = strain(target)
