@@ -79,7 +79,6 @@ class Driver_sd(Driver):
     self.mechanical_strain_int = [np.zeros((6,))]
 
   def solve_try(self, RJ, x0, extra = []):
-    solvers = []
     def s1(x0i):
       try:
         x = newton(RJ, x0i, verbose = self.verbose,
@@ -95,7 +94,16 @@ class Driver_sd(Driver):
       except Exception:
         return np.zeros((12,)), False
 
-    solvers = [s1]
+    def s3(x0i):
+      try:
+        x = newton(RJ, x0i, verbose = self.verbose,
+            rtol = self.rtol, atol = self.atol, miter = self.miter,
+            linesearch = 'backtracking')
+        return x, True
+      except Exception:
+        return np.zeros((12,)), False
+
+    solvers = [s1,s2,s3]
     guesses = [x0] + extra
     
     success = False
@@ -1284,6 +1292,7 @@ def thermomechanical_strain_raw(model, time, temperature, strain,
   ainc = None
 
   for i in range(1,len(stress)):
+    quit = False
     for k in range(substep):
       ei_np1 = (strain[i] - strain[i-1]) / substep * (k+1) + strain[i-1]
       ti_np1 = (time[i] - time[i-1]) / substep * (k+1) + time[i-1]
@@ -1294,18 +1303,24 @@ def thermomechanical_strain_raw(model, time, temperature, strain,
       Ti_n = (temperature[i] - temperature[i-1]) / substep * (k) + temperature[i-1]
 
       erate = (ei_np1 - ei_n) / (ti_np1 - ti_n)
-      if i == 1:
-        einc, ainc = driver.erate_step(sdir, erate, ti_np1, Ti_np1)
-      else:
-        einc, ainc = driver.erate_step(sdir, erate, ti_np1, Ti_np1,
-            einc_guess = einc, ainc_guess = ainc)
+      try:
+        if i == 1:
+          einc, ainc = driver.erate_step(sdir, erate, ti_np1, Ti_np1)
+        else:
+          einc, ainc = driver.erate_step(sdir, erate, ti_np1, Ti_np1,
+              einc_guess = einc, ainc_guess = ainc)
+      except MaximumIterations:
+        quit = True
+        break
+    if quit:
+      break
     
     stress[i] = np.dot(driver.stress_int[-1], sdir)
     mechstrain[i] = np.dot(driver.thermal_strain_int[-1], sdir)
 
 
-  return {'time': np.copy(time), 'temperature': np.copy(temperature), 'strain': np.copy(strain),
-      'stress': np.copy(stress), 'mechanical strain': np.copy(mechstrain)}
+  return {'time': np.copy(time)[:i], 'temperature': np.copy(temperature)[:i], 'strain': np.copy(strain)[:i],
+      'stress': np.copy(stress)[:i], 'mechanical strain': np.copy(mechstrain)[:i]}
 
 
 def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100, 
