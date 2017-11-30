@@ -13,7 +13,7 @@ class Driver(object):
     results.
   """
   def __init__(self, model, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
-      miter = 25, T_init = 0.0):
+      miter = 25, T_init = 0.0, no_thermal_strain = False):
     """
       Parameters:
         model       material model to play with
@@ -29,6 +29,7 @@ class Driver(object):
     self.rtol = rtol
     self.atol = atol
     self.miter = miter
+    self.nts = no_thermal_strain
 
     self.stress_int = [np.zeros((6,))]
 
@@ -133,11 +134,14 @@ class Driver_sd(Driver):
     return np.array(self.mechanical_strain_int)
 
   def update_thermal_strain(self, T_np1):
-    dT = T_np1 - self.T_int[-1]
-    a_np1 = self.model.alpha(T_np1)
-    a_n = self.model.alpha(self.T_int[-1])
+    if self.nts:
+      return np.zeros((6,))
+    else:
+      dT = T_np1 - self.T_int[-1]
+      a_np1 = self.model.alpha(T_np1)
+      a_n = self.model.alpha(self.T_int[-1])
 
-    return self.thermal_strain_int[-1] + dT * (a_np1 + a_n) / 2 * np.array([1.0,1,1,0,0,0])
+      return self.thermal_strain_int[-1] + dT * (a_np1 + a_n) / 2 * np.array([1.0,1,1,0,0,0])
 
   def strain_step(self, e_np1, t_np1, T_np1):
     """
@@ -353,7 +357,12 @@ class Driver_sd_twobar(Driver_sd):
     nsteps_cycle = kwargs.pop('nsteps_cycle', 201)
     dstrain = kwargs.pop('dstrain', lambda t: 0.0)
     dts = kwargs.pop('dts', None)
-    super(Driver_sd_twobar, self).__init__(*args, **kwargs)
+
+    if (T1(0) != T2(0)):
+      raise ValueError("Initial bar temperatures do not match!")
+
+    super(Driver_sd_twobar, self).__init__(*args, 
+        no_thermal_strain = True, **kwargs)
 
     self.A1 = A1
     self.A2 = A2
