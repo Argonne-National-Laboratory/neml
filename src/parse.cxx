@@ -145,19 +145,35 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     found_creep = true;
   }
   
+  std::unique_ptr<NEMLModel_sd> model;
+  
+  auto p_nodes = node->get_children("plastic");
+  if (p_nodes.size() == 0) {
+    // You must be an elastic-only model!
+    model = std::unique_ptr<SmallStrainElasticity>(
+        new SmallStrainElasticity(emodel, alpha));
+
+    if (found_creep) {
+      return std::unique_ptr<NEMLModel>(
+          new SmallStrainCreepPlasticity(std::move(model), cmodel, alpha));
+    }
+    else {
+      return std::unique_ptr<NEMLModel>(std::move(model));
+    }
+  }
+
   // Logic here because we treat viscoplasticity differently
   const xmlpp::Element * plastic_node;
   if (not one_child(node, "plastic", plastic_node, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
-  
+
   // Select then on independent/dependent
   std::string ft;
   if (not one_attribute(plastic_node, "type", ft, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
 
-  std::unique_ptr<NEMLModel_sd> model;
   if (ft == "independent") {
     std::shared_ptr<RateIndependentFlowRule> fr =  process_independent(
         plastic_node, ier);

@@ -816,7 +816,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       stress    stress in direction
   """
   e_inc = emax / nsteps
-  driver = Driver_sd(model, verbose = verbose)
+  driver = Driver_sd(model, verbose = verbose, T_init = T)
   if history is not None:
     driver.stored_int[0] = history
 
@@ -838,8 +838,11 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   E = np.abs(stress[1]) / np.abs(strain[1])
   sfn = inter.interp1d(np.abs(strain), np.abs(stress))
   tfn = lambda e: E * (e - offset)
-  sYe = opt.brentq(lambda e: sfn(e) - tfn(e), 0.0, np.max(strain))
-  sY = tfn(sYe)
+  try:
+    sYe = opt.brentq(lambda e: sfn(e) - tfn(e), 0.0, np.max(strain))
+    sY = tfn(sYe)
+  except Exception:
+    sY = np.inf
 
   return {'strain': strain, 'stress': stress, 
       'energy_density': np.copy(driver.u),
@@ -881,7 +884,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       
   """
   # Setup
-  driver = Driver_sd(model, verbose = verbose)
+  driver = Driver_sd(model, verbose = verbose, T_init = T)
   emin = emax * R
   if hold_time:
     if np.isscalar(hold_time):
@@ -1014,7 +1017,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       
   """
   # Setup
-  driver = Driver_sd(model, verbose = verbose)
+  driver = Driver_sd(model, verbose = verbose, T_init = T)
   smin = smax * R
   if hold_time:
     if np.isscalar(hold_time):
@@ -1147,7 +1150,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
       rrate         stress relaxation rate
   """
   # Setup
-  driver = Driver_sd(model, verbose = verbose)
+  driver = Driver_sd(model, verbose = verbose, T_init = T)
   time = [0]
   strain = [0]
   stress = [0]
@@ -1345,7 +1348,7 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
       stress    stress in direction
   """
   e_inc = e_per / nsteps_per
-  driver = Driver_sd(model, verbose = verbose)
+  driver = Driver_sd(model, verbose = verbose, T_init = T)
   if history is not None:
     driver.stored_int[0] = history
   strain = [0.0]
