@@ -22,6 +22,38 @@
     </plastic>
   </material>
 
+  <material name="test_j2isocomb" type="smallstrain">
+    <elastic type="isotropic">
+      <youngs>
+        <modulus>150000.0</modulus>
+      </youngs>
+      <poissons>
+        <modulus>0.3</modulus>
+      </poissons>
+    </elastic>
+    <plastic type="independent">
+      <rule type="associative">
+        <surface type="isoj2">
+        </surface>
+        <hardening type="isotropic">
+          <isotropic type="combined">
+            <models>
+              <isotropic type="linear">
+                <yield>100.0</yield>
+                <harden>100.0</harden>
+              </isotropic>
+              <isotropic type="voce">
+                <yield>0.0</yield>
+                <r>100.0</r>
+                <d>1000.0</d>
+              </isotropic>
+            </models>
+          </isotropic>
+        </hardening>
+      </rule>
+    </plastic>
+  </material>
+
   <material name="test_creep_plasticity" type="smallstrain">
     <elastic type="isotropic">
       <youngs>

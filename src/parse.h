@@ -100,16 +100,19 @@ std::shared_ptr<HardeningRule> process_hardening(const xmlpp::Element * node, in
 std::shared_ptr<HardeningRule> process_isotropic(const xmlpp::Element * node, int & ier);
 
 /// The actual tag (rather than type)
-std::shared_ptr<HardeningRule> process_isotropictag(const xmlpp::Element * node, int & ier);
+std::shared_ptr<IsotropicHardeningRule> process_isotropictag(const xmlpp::Element * node, int & ier);
 
 /// Linear isotropic hardening
-std::shared_ptr<HardeningRule> process_linearisotropic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<IsotropicHardeningRule> process_linearisotropic(const xmlpp::Element * node, int & ier);
 
 /// Interpolated isotropic hardening
-std::shared_ptr<HardeningRule> process_interpolatedisotropic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<IsotropicHardeningRule> process_interpolatedisotropic(const xmlpp::Element * node, int & ier);
+
+/// Combined isotropic hardening
+std::shared_ptr<IsotropicHardeningRule> process_combinedisotropic(const xmlpp::Element * node, int & ier);
 
 /// Voce isotropic hardening
-std::shared_ptr<HardeningRule> process_voceisotropic(const xmlpp::Element * node, int & ier);
+std::shared_ptr<IsotropicHardeningRule> process_voceisotropic(const xmlpp::Element * node, int & ier);
 
 /// Kinematic hardening
 std::shared_ptr<HardeningRule> process_kinematic(const xmlpp::Element * node, int & ier);

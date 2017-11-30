@@ -443,16 +443,16 @@ std::shared_ptr<HardeningRule> process_isotropic(
   return dispatch_node(node, "isotropic", &process_isotropictag, ier);
 }
 
-std::shared_ptr<HardeningRule> process_isotropictag(
+std::shared_ptr<IsotropicHardeningRule> process_isotropictag(
     const xmlpp::Element * node, int & ier)
 {
-  return dispatch_attribute<HardeningRule>(node, "type",
-                                          {"linear", "interpolated", "voce"},
-                                          {&process_linearisotropic, &process_interpolatedisotropic, &process_voceisotropic},
+  return dispatch_attribute<IsotropicHardeningRule>(node, "type",
+                                          {"linear", "interpolated", "voce", "combined"},
+                                          {&process_linearisotropic, &process_interpolatedisotropic, &process_voceisotropic, &process_combinedisotropic},
                                           ier);
 }
 
-std::shared_ptr<HardeningRule> process_linearisotropic(
+std::shared_ptr<IsotropicHardeningRule> process_linearisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Two parameters: "yield" and "harden"
@@ -463,7 +463,7 @@ std::shared_ptr<HardeningRule> process_linearisotropic(
   return std::make_shared<LinearIsotropicHardeningRule>(yield, harden);
 }
 
-std::shared_ptr<HardeningRule> process_interpolatedisotropic(
+std::shared_ptr<IsotropicHardeningRule> process_interpolatedisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Just the flow curve
@@ -472,7 +472,7 @@ std::shared_ptr<HardeningRule> process_interpolatedisotropic(
   return std::make_shared<InterpolatedIsotropicHardeningRule>(flow);
 }
 
-std::shared_ptr<HardeningRule> process_voceisotropic(
+std::shared_ptr<IsotropicHardeningRule> process_voceisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Three parameters: "yield", "r", and "d"
@@ -483,6 +483,16 @@ std::shared_ptr<HardeningRule> process_voceisotropic(
   std::shared_ptr<Interpolate> d = scalar_param(node, "d", ier);
 
   return std::make_shared<VoceIsotropicHardeningRule>(yield, r, d);
+}
+
+std::shared_ptr<IsotropicHardeningRule> process_combinedisotropic(
+    const xmlpp::Element * node, int & ier)
+{
+  std::vector< std::shared_ptr<IsotropicHardeningRule> > mvec = 
+      dispatch_vector_models<IsotropicHardeningRule>(
+          node, "models", "isotropic", &process_isotropictag, ier);
+
+  return std::make_shared<CombinedIsotropicHardeningRule>(mvec);
 }
 
 

@@ -75,6 +75,35 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     self.nsteps = 100.0
     self.emax = np.array([0.1,0,0,0,0,0])
 
+class TestJ2Iso(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_j2isocomb")
+  
+    E = 150000.0
+    nu = 0.3
+
+    ys = 100.0
+    H = 100.0
+    r = 100.0
+    d = 1000.0
+
+    ym = elasticity.YoungsModulus(E)
+    pr = elasticity.PoissonsRatio(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(ym, pr)
+
+    surface = surfaces.IsoJ2()
+    hrule1 = hardening.LinearIsotropicHardeningRule(ys, H)
+    hrule2 = hardening.VoceIsotropicHardeningRule(0.0, r, d)
+    hrule = hardening.CombinedIsotropicHardeningRule([hrule1,hrule2])
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+
+    self.T = 300.0
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.1,0,0,0,0,0])
+
 class TestCreepPlasticity(CompareMats, unittest.TestCase):
   def setUp(self):
     self.model1 = parse.parse_xml("test/examples.xml", "test_creep_plasticity")
