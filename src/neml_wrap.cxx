@@ -28,7 +28,7 @@ PYBIND11_PLUGIN(neml) {
            }, "Initialize stored variables.")
 
       .def_property_readonly("nhist", &NEMLModel::nhist, "Number of actual history variables.")
-      .def("init_store",
+      .def("init_hist",
            [](NEMLModel & m) -> py::array_t<double>
            {
             auto h = alloc_vec<double>(m.nhist());
