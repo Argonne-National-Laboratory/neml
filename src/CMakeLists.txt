@@ -127,6 +127,7 @@ else()
             parse.cxx
             cinterface.cxx
             interpolate.cxx
-            creep.cxx)
+            creep.cxx
+            damage.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 endif()

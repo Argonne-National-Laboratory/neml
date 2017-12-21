@@ -1666,8 +1666,8 @@ Most generic
 A damage model is a function 
 \begin_inset Formula 
 \begin{align*}
-\bm{\sigma}_{n+1}^{\prime} & = & \bm{\sigma}^{\prime}\left(\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\bm{\omega}_{n+1}\right)\\
-\bm{\omega}_{n+1} & = & \boldsymbol{w}\left(\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\bm{\omega}_{n+1}\right)
+\bm{\sigma}_{n+1}^{\prime} & = & \bm{\sigma}^{\prime}\left(\bm{\varepsilon}_{n+1},\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\bm{\omega}_{n+1}\right)\\
+\bm{\omega}_{n+1} & = & \boldsymbol{w}\left(\bm{\varepsilon}_{n+1},\bm{\sigma}_{n+1},\bm{\omega}_{n+1}\right)
 \end{align*}
 
 \end_inset
@@ -1712,11 +1712,11 @@ Scalar
 \end_layout
 
 \begin_layout Standard
-A scalar damage model simplfies the general equations to 
+A scalar damage model simplifies the general equations to 
 \begin_inset Formula 
 \begin{align*}
-\bm{\sigma}_{n+1}^{\prime} & = & \left(1-\omega_{n+1}\right)\bm{\sigma}_{n+1}\\
-\omega_{n+1} & = & w\left(\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\omega_{n+1}\right)
+\bm{\sigma}_{n+1} & = & \left(1-\omega_{n+1}\right)\bm{\sigma}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)\\
+\omega_{n+1} & = & w\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\omega_{n+1}\right)
 \end{align*}
 
 \end_inset
@@ -1726,38 +1726,6 @@ with
 \end_inset
 
 .
- The modified tangent is 
-\begin_inset Formula 
-\[
-\bm{A}_{n+1}^{\prime}=\left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}\otimes\bm{\sigma}_{n+1}
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Simplified scalar
-\end_layout
-
-\begin_layout Standard
-In this simplified case the dependence on the history of the undamage model
- is limited to the equivalent plastic strain.
- So: 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{align*}
-\bm{\sigma}_{n+1}^{\prime} & = & \left[1-\omega_{n+1}\right]\bm{\sigma}_{n+1}\\
-\dot{\omega}_{n+1} & = & \dot{\omega}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime},\dot{\bar{\varepsilon}}_{p}\right)\\
-\dot{\bar{\varepsilon}}_{p} & = & \sqrt{\frac{2}{3}\dot{\bm{\varepsilon}}_{p}:\dot{\bm{\varepsilon}}_{p}}
-\end{align*}
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Subsubsection
@@ -1765,68 +1733,104 @@ Update
 \end_layout
 
 \begin_layout Standard
-Our combined residual equation is 
+Form the residual
 \begin_inset Formula 
 \[
 \left[\begin{array}{c}
 \boldsymbol{R}_{1}\\
 R_{2}
 \end{array}\right]=\left[\begin{array}{c}
-\bm{\sigma}_{n+1}^{\prime}-\left[1-\omega_{n+1}\right]\bm{\sigma}_{n+1}\left(\Delta\bm{\varepsilon}_{n+1}\right)\\
--\omega_{n+1}+\omega_{n}+\dot{\omega}_{n+1}\Delta t
+\bm{\sigma}_{n+1}-\left[1-\omega_{n+1}\right]\bm{\sigma}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)\\
+\omega_{n+1}-w\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\omega_{n+1}\right)
 \end{array}\right]=\left[\begin{array}{c}
 \boldsymbol{0}\\
 0
+\end{array}\right].
+\]
+
+\end_inset
+
+The Jacobian of this guy is
+\begin_inset Formula 
+\[
+\boldsymbol{J}=\left[\begin{array}{cc}
+\boldsymbol{I} & \bm{\sigma}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)\\
+\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}\frac{1}{1-\omega_{n+1}} & 1-\frac{\partial\omega}{\partial\omega_{n+1}}
 \end{array}\right]
 \]
 
 \end_inset
 
-for unknowns 
-\begin_inset Formula $x=\left[\begin{array}{cc}
-\bm{\sigma}_{n+1}^{\prime} & \omega_{n+1}\end{array}\right]$
+
+\end_layout
+
+\begin_layout Subsubsection
+Tangent
+\end_layout
+
+\begin_layout Standard
+The modified tangent is 
+\begin_inset Formula 
+\[
+\bm{A}_{n+1}^{\prime}=\boldsymbol{A}_{n+1}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}\otimes\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)
+\]
+
+\end_inset
+
+So the thing to figure out is 
+\begin_inset Formula $\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}$
+\end_inset
+
+.
+ Using the implicit function theorem, as usual:
+\begin_inset Formula 
+\[
+dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}d\bm{\varepsilon}_{n+1}+\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}\frac{1}{1-\omega_{n+1}}d\bm{\sigma}_{n+1}=0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial R_{2}}{\partial\omega_{n+1}}\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}+\frac{1}{1-\omega_{n+1}}\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}=\frac{\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}+\frac{1}{1-\omega_{n+1}}\frac{\partial\omega}{\partial\bm{\sigma}_{n+1}}:\boldsymbol{A}_{n+1}}{1-\frac{\partial\omega}{\partial\omega_{n+1}}}.
+\]
+
+\end_inset
+
+So the method requires three derivatives: 
+\begin_inset Formula $\frac{\partial\omega}{\partial\omega_{n+1}}$
+\end_inset
+
+, 
+\begin_inset Formula $\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}$
+\end_inset
+
+, and 
+\begin_inset Formula $\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}$
 \end_inset
 
 .
 \end_layout
 
+\begin_layout Subsection
+Simplified scalar
+\end_layout
+
 \begin_layout Standard
-For convience we're going to assume we can additively decompose the update
- into two parts:
+The usual case is the damage is a function of the equivalent plastic strain.
+ So:
 \begin_inset Formula 
 \[
-\dot{\omega}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime},\dot{\bar{\varepsilon}}_{p}\right)=\dot{\omega}_{p}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime}\right)\dot{\bar{\varepsilon}}_{p}+\dot{\omega}_{o}\left(\omega_{n+1},\boldsymbol{\sigma}_{n+1}^{\prime}\right)
-\]
-
-\end_inset
-
-which makes the residual 
-\begin_inset Formula 
-\[
-\left[\begin{array}{c}
-\boldsymbol{R}_{1}\\
-R_{2}
-\end{array}\right]=\left[\begin{array}{c}
-\bm{\sigma}_{n+1}^{\prime}-\left[1-\omega_{n+1}\right]\bm{\sigma}_{n+1}\left(\Delta\bm{\varepsilon}_{n+1}\right)\\
--\omega_{n+1}+\omega_{n}+\dot{\omega}_{p}\Delta\bar{\varepsilon}_{p}+\dot{\omega}_{o}\Delta t
-\end{array}\right]=\left[\begin{array}{c}
-\boldsymbol{0}\\
-0
-\end{array}\right]
-\]
-
-\end_inset
-
-and the Jacobian
-\begin_inset Formula 
-\[
-\left[\begin{array}{cc}
-\boldsymbol{J}_{11} & \boldsymbol{J}_{12}\\
-\boldsymbol{J}_{21} & J_{22}
-\end{array}\right]=\left[\begin{array}{cc}
-\boldsymbol{I} & \bm{\sigma}_{n+1}\\
-\frac{\partial\dot{\omega}_{p}}{\partial\boldsymbol{\sigma}_{n+1}^{\prime}}\Delta\bar{\varepsilon}_{p}+\frac{\partial\dot{\omega}_{o}}{\partial\boldsymbol{\sigma}_{n+1}^{\prime}}\Delta t+\dot{\omega}_{p}\frac{\partial\Delta\bar{\varepsilon}_{p}}{\partial\boldsymbol{\sigma}_{n+1}^{\prime}} & \frac{\partial\dot{\omega}_{p}}{\partial\omega_{n+1}}\Delta\bar{\varepsilon}_{p}+\frac{\partial\dot{\omega}_{o}}{\partial\omega_{n+1}}\Delta t-1
-\end{array}\right]
+\omega_{n+1}=\omega_{n}+f\left(\boldsymbol{\sigma}_{n+1}\right)\dot{\bar{\varepsilon}}_{p}\Delta t=\omega_{n}+f\left(\boldsymbol{\sigma}_{n+1}\right)\Delta\bar{\varepsilon}_{p}
 \]
 
 \end_inset
@@ -1842,7 +1846,7 @@ Now the question is can we get
  without explicit knowledge of the plastic strain? 
 \begin_inset Formula 
 \[
-\dot{\bm{\varepsilon}}_{p}=\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}_{e}=\dot{\bm{\varepsilon}}-\boldsymbol{C}^{-1}:\bm{\sigma}
+\dot{\bm{\varepsilon}}_{p}=\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}_{e}=\dot{\bm{\varepsilon}}-\boldsymbol{C}^{-1}:\dot{\bm{\sigma}}
 \]
 
 \end_inset
@@ -1850,7 +1854,61 @@ Now the question is can we get
 
 \begin_inset Formula 
 \[
-\dot{\bar{\varepsilon}}_{p}=\sqrt{\frac{2}{3}\dot{\bm{\varepsilon}}_{p}:\dot{\bm{\varepsilon}}_{p}}=\sqrt{\frac{2}{3}\left(\dot{\bm{\varepsilon}}:\dot{\bm{\varepsilon}}+\boldsymbol{C}^{-1}:\bm{\sigma}:\boldsymbol{C}^{-1}:\bm{\sigma}-2\dot{\bm{\varepsilon}}:\boldsymbol{C}^{-1}:\bm{\sigma}\right)}
+\dot{\bar{\varepsilon}}_{p}=\sqrt{\frac{2}{3}\dot{\bm{\varepsilon}}_{p}:\dot{\bm{\varepsilon}}_{p}}=\sqrt{\frac{2}{3}\left(\dot{\bm{\varepsilon}}:\dot{\bm{\varepsilon}}+\boldsymbol{C}^{-1}:\dot{\bm{\sigma}}:\boldsymbol{C}^{-1}:\dot{\bm{\sigma}}-2\dot{\bm{\varepsilon}}:\boldsymbol{C}^{-1}:\dot{\bm{\sigma}}\right)}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{multline*}
+\Delta\bar{\varepsilon}_{p}=\sqrt{\frac{2}{3}\left(\dot{\bm{\varepsilon}}:\dot{\bm{\varepsilon}}+\boldsymbol{C}^{-1}:\dot{\bm{\sigma}}:\boldsymbol{C}^{-1}:\dot{\bm{\sigma}}-2\dot{\bm{\varepsilon}}:\boldsymbol{C}^{-1}:\dot{\bm{\sigma}}\right)\Delta t^{2}}\\
+=\sqrt{\frac{2}{3}\left(\Delta\bm{\varepsilon}:\Delta\bm{\varepsilon}+\boldsymbol{C}^{-1}:\Delta\bm{\sigma}:\boldsymbol{C}^{-1}:\Delta\bm{\sigma}-2\Delta\bm{\varepsilon}:\boldsymbol{C}^{-1}:\Delta\bm{\sigma}\right)}
+\end{multline*}
+
+\end_inset
+
+So yes.
+ Now the derivatives
+\begin_inset Formula 
+\[
+\frac{\partial\Delta\bar{\varepsilon}_{p}}{\partial\Delta\bm{\sigma}}=\frac{2}{3\Delta\bar{\varepsilon}_{p}}\boldsymbol{C}^{-1}:\left(\boldsymbol{C}^{-1}:\Delta\bm{\sigma}-\Delta\bm{\varepsilon}\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\Delta\bar{\varepsilon}_{p}}{\partial\Delta\bm{\varepsilon}}=\frac{2}{3\Delta\bar{\varepsilon}_{p}}\left(\Delta\bm{\varepsilon}-\boldsymbol{C}^{-1}:\Delta\bm{\sigma}\right).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To put everything together:
+\begin_inset Formula 
+\[
+\frac{\partial\omega}{\partial\omega_{n+1}}=0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\omega}{\partial\bm{\sigma}_{n+1}}=\frac{\partial f}{\partial\bm{\sigma}_{n+1}}\Delta\bar{\varepsilon}_{p}+\frac{2f_{n+1}}{3\Delta\bar{\varepsilon}_{p}}\boldsymbol{C}^{-1}:\left(\boldsymbol{C}^{-1}:\Delta\bm{\sigma}-\Delta\bm{\varepsilon}\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}=\frac{2f_{n+1}}{3\Delta\bar{\varepsilon}_{p}}\left(\Delta\bm{\varepsilon}-\boldsymbol{C}^{-1}:\Delta\bm{\sigma}\right)
 \]
 
 \end_inset
@@ -1859,17 +1917,93 @@ Now the question is can we get
 \end_layout
 
 \begin_layout Subsubsection
-Tangent
+Simple power law
 \end_layout
 
-\begin_layout Subsection
+\begin_layout Standard
+The easiest damage function is 
+\begin_inset Formula 
+\[
+f=A\sigma_{e}^{a}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\sigma_{e}$
+\end_inset
+
+ is the von Mises equivalent stress and 
+\begin_inset Formula $A$
+\end_inset
+
+ and 
+\begin_inset Formula $a$
+\end_inset
+
+ are material parameters.
+ The required derivatives are
+\begin_inset Formula 
+\[
+\frac{\partial f}{\partial\bm{\sigma}}=\frac{3Aa}{2}\sigma_{e}^{a-2}\boldsymbol{s}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Leckie and Hayhurst
+\end_layout
+
+\begin_layout Standard
+Leckie and Hayhurst suggested 
+\begin_inset Formula 
+\[
+f=A\sigma_{e}^{a}+B\sigma_{1}^{b}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\sigma_{e}$
+\end_inset
+
+ is the von Mises equivalent stress, 
+\begin_inset Formula $\sigma_{1}$
+\end_inset
+
+ the maximum principal stress, and 
+\begin_inset Formula $A$
+\end_inset
+
+, 
+\begin_inset Formula $a$
+\end_inset
+
+, 
+\begin_inset Formula $B$
+\end_inset
+
+, and 
+\begin_inset Formula $b$
+\end_inset
+
+ all material parameters.
+\end_layout
+
+\begin_layout Subsubsection
 Chaboche
+\end_layout
+
+\begin_layout Standard
+The below has not been cast correctly yet
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \begin{align*}
-\bm{\sigma}_{n+1}^{\prime} & = & \left(1-\omega_{n+1}\right)\bm{\sigma}_{n+1}\\
 \dot{\omega}_{n+1} & = & \frac{\partial\phi_{n+1}}{\partial y_{n+1}}\\
 \phi_{n+1} & = & \phi\left(\omega_{n+1},y_{n+1},s_{n+1},\dot{\bar{\varepsilon}}_{p}\right)\\
 y_{n+1} & = & -\frac{\sigma_{eq}^{2}}{2E\left(1-D\right)^{2}}\left[\frac{2}{3}\left(1+\nu\right)+3\left(1-2\nu\right)\left(\frac{\sigma_{m}}{\sigma_{eq}}\right)^{2}\right]\\
