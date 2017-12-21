@@ -55,7 +55,7 @@ def generate_thickness_gradient(ri, ro, T1, T2, Tdot_hot, hold,
   return gradient
 
 def generate_multimaterial_thickness_gradient(rs, ks, T1, T2, Tdot_hot,
-    hold, Tdot_cold = None, hold_together = 0.0, delay = 0.0):
+    hold, Tdot_cold = None, hold_together = 0.0, delay = 0.0, flip = False):
   """
     Generate a thermal gradient alternating between hot and cold for the
     case of a multilayer material.
@@ -73,6 +73,7 @@ def generate_multimaterial_thickness_gradient(rs, ks, T1, T2, Tdot_hot,
     Optional:
       Tdot_cold         cooling rate
       hold_together     hold at no temperature gradient
+      flip              have gradient going the other direction
   """
   if Tdot_cold is None:
     Tdot_cold = Tdot_hot
@@ -101,7 +102,11 @@ def generate_multimaterial_thickness_gradient(rs, ks, T1, T2, Tdot_hot,
 
     Rs = np.diff(rs) / np.array(ks)
     Rt = np.sum(Rs)
-    Ti = T1 + np.cumsum(np.insert(Rs,0,0.0)) / Rt * (Tright - T1)
+    
+    if flip:
+      Ti = list(T1 + (1-np.cumsum(np.insert(Rs,0,0.0)) / Rt) * (Tright - T1)) 
+    else:
+      Ti = list(T1 + np.cumsum(np.insert(Rs,0,0.0)) / Rt * (Tright - T1))
 
     return np.interp(r, rs, Ti)
 
