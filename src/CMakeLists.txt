@@ -111,6 +111,15 @@ if (WRAP_PYTHON)
             set_property(TARGET creep PROPERTY SUFFIX "")
       endif()
 
+      # damage models
+      add_library(damage SHARED damage_wrap.cxx damage.cxx)
+      target_link_libraries(damage neml helpers nemlmath interpolate solvers ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(damage PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET damage PROPERTY OUTPUT_NAME "damage.so")
+            set_property(TARGET damage PROPERTY SUFFIX "")
+      endif()
+
 else()
       # Everything in a big shared library
       add_library(neml SHARED 

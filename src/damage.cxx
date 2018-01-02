@@ -247,8 +247,12 @@ int NEMLStandardScalarDamagedModel_sd::damage(
     double t_np1, double t_n,
     double * const dd) const
 {
+  double fval;
+  int ier = f(s_np1, T_np1, fval);
+  double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
+  *dd = d_n + fval * deps;
 
-
+  return 0;
 }
 
 int NEMLStandardScalarDamagedModel_sd::ddamage_dd(
@@ -259,7 +263,8 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_dd(
     double t_np1, double t_n,
     double * const dd) const
 {
-
+  *dd = 0.0;
+  return 0;
 }
 
 int NEMLStandardScalarDamagedModel_sd::ddamage_de(
@@ -270,7 +275,28 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
     double t_np1, double t_n,
     double * const dd) const
 {
+  double fval;
+  int ier = f(s_np1, T_np1, fval);
+  double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
+  
+  double ds[6];
+  double de[6];
+  for (int i=0; i<6; i++) {
+    ds[i] = s_np1[i] - s_n[i];
+    de[i] = e_np1[i] - e_n[i];
+  }
 
+  double S[36];
+  emodel_->S(T_np1, S);
+
+  double dee[36];
+  mat_vec(S, 6, ds, 6, dee);
+
+  for (int i=0; i<6; i++) {
+    dd[i] = (2.0 * fval) / (3.0 * deps) * (de[i] - dee[i]); 
+  }
+
+  return 0;
 }
 
 int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
@@ -281,7 +307,122 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
     double t_np1, double t_n,
     double * const dd) const
 {
+  double fval;
+  int ier = f(s_np1, T_np1, fval);
+  double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
 
+  double ds[6];
+  double de[6];
+  for (int i=0; i<6; i++) {
+    ds[i] = s_np1[i] - s_n[i];
+    de[i] = e_np1[i] - e_n[i];
+  }
+
+  double S[36];
+  emodel_->S(T_np1, S);
+
+  double dee[36];
+  mat_vec(S, 6, ds, 6, dee);
+
+  double v1[6];
+  for (int i=0; i<6; i++) {
+    v1[i] = (2.0 * fval) / (3.0 * deps) * (de[i] - dee[i]); 
+  }
+
+  mat_vec(S, 6, v1, 6, dd);
+
+  double dds[6];
+  df(s_np1, T_np1, dds);
+
+  for (int i=0; i<6; i++) {
+    dd[i] = dds[i] * deps + dd[i];
+  }
+
+  return 0;
+}
+
+double NEMLStandardScalarDamagedModel_sd::dep(
+    const double * const s_np1, const double * const s_n,
+    const double * const e_np1, const double * const e_n,
+    double T_np1) const
+{
+  double S[36];
+  emodel_->S(T_np1, S);
+  
+  double ds[6];
+  double de[6];
+  for (int i=0; i<6; i++) {
+    ds[i] = s_np1[i] - s_n[i];
+    de[i] = e_np1[i] - e_n[i];
+  }
+
+  double dee[36];
+  mat_vec(S, 6, ds, 6, dee);
+
+  return sqrt(2.0/3.0 * (dot_vec(de, de, 6) + dot_vec(dee, dee, 6) -
+                         2.0 * dot_vec(de, dee, 6)));
+}
+
+NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
+    std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> a, 
+    std::shared_ptr<NEMLModel_sd> base,
+    std::shared_ptr<LinearElasticModel> emodel,
+    std::shared_ptr<Interpolate> alpha,
+    double tol, int miter,
+    bool verbose) :
+      NEMLStandardScalarDamagedModel_sd(base, emodel, alpha, tol, miter, 
+                                        verbose), 
+      A_(A), a_(a)
+{
+
+}
+
+NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
+    double A, double a,
+    std::shared_ptr<NEMLModel_sd> base,
+    std::shared_ptr<LinearElasticModel> emodel,
+    double alpha,
+    double tol, int miter,
+    bool verbose) :
+      NEMLStandardScalarDamagedModel_sd(base, emodel, alpha, tol, miter,
+                                        verbose),
+      A_(new ConstantInterpolate(A)), a_(new ConstantInterpolate(a))
+{
+
+}
+
+int NEMLPowerLawDamagedModel_sd::f(const double * const s_np1, 
+                                double T_np1, double & f) const
+{
+  double sev = se(s_np1);
+  double A = A_->value(T_np1);
+  double a = a_->value(T_np1);
+
+  f = A * pow(sev, a);
+
+  return 0;
+}
+
+int NEMLPowerLawDamagedModel_sd::df(const double * const s_np1, double T_np1,
+                                 double * const df) const
+{
+  double sev = se(s_np1);
+  double A = A_->value(T_np1);
+  double a = a_->value(T_np1);
+  
+  std::copy(s_np1, s_np1+6, df);
+  double sm = (s_np1[0] + s_np1[1] + s_np1[2]) / 3.0;
+  for (int i=0; i<3; i++) df[i] -= sm;
+  for (int i=0; i<6; i++) df[i] *= (3.0 * A * a / 2.0 * pow(sev, a - 2.0));
+
+  return 0;
+}
+
+double NEMLPowerLawDamagedModel_sd::se(const double * const s) const
+{
+  return sqrt((pow(s[0]-s[1], 2.0) + pow(s[1] - s[2], 2.0) + 
+               pow(s[2] - s[0], 2.0) + 6.0 * (pow(s[3], 2.0) + pow(s[4], 2.0) + 
+                                              pow(s[5], 2.0))) / 2.0);
 }
 
 }
