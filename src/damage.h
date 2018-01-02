@@ -4,6 +4,8 @@
 #include "neml.h"
 #include "elasticity.h"
 
+#include <memory>
+
 namespace neml {
 
 /// Small strain damage model
@@ -54,9 +56,13 @@ class SDTrialState: public TrialState {
 class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
  public:
   NEMLScalarDamagedModel_sd(std::shared_ptr<NEMLModel_sd> base,
-                            std::shared_ptr<Interpolate> alpha = nullptr);
+                            std::shared_ptr<Interpolate> alpha = nullptr,
+                            double tol = 1.0e-8, int miter = 50,
+                            bool verbose = false);
   NEMLScalarDamagedModel_sd(std::shared_ptr<NEMLModel_sd> base,
-                            double alpha = 0.0);
+                            double alpha = 0.0,
+                            double tol = 1.0e-8, int miter = 50,
+                            bool verbose = false);
   virtual ~NEMLScalarDamagedModel_sd();
 
   virtual int update_sd(
@@ -80,24 +86,105 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
-  virtual int damage(double d, const double * const e_np1, 
-                     double * const s_np1, double * const d_np1) const = 0;
-  virtual int ddamage_dd(double d, const double * const e_np1, 
-                     double * const s_np1, double * const dd) const = 0;
-  virtual int ddamage_de(double d, const double * const e_np1, 
-                     double * const s_np1, double * const dd) const = 0;
-  virtual int ddamage_ds(double d, const double * const e_np1, 
-                     double * const s_np1, double * const dd) const = 0;
+  virtual int damage(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+  virtual int ddamage_dd(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+  virtual int ddamage_de(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+  virtual int ddamage_ds(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+
+ protected:
+  int tangent_(const double * const e_np1, const double * const e_n,
+               const double * const s_np1, const double * const s_n,
+               double T_np1, double T_n, double t_np1, double t_n,
+               double w_np1, double w_n, const double * const A_prime,
+               double * const A);
+
+ protected:
+  double tol_;
+  int miter_;
+  bool verbose_;
 };
 
 /// The standard damage model where the damage rate goes as the plastic strain
-class NEMLStandardDamagedModel_sd: public NEMLScalarDamagedModel_sd {
+class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
+ public:
+  NEMLStandardScalarDamagedModel_sd(
+      std::shared_ptr<NEMLModel_sd> base,
+      std::shared_ptr<LinearElasticModel> emodel,
+      std::shared_ptr<Interpolate> alpha = nullptr,
+      double tol = 1.0e-8, int miter = 50,
+      bool verbose = false);
+  NEMLStandardScalarDamagedModel_sd(
+      std::shared_ptr<NEMLModel_sd> base,
+      std::shared_ptr<LinearElasticModel> emodel,
+      double alpha = 0.0,
+      double tol = 1.0e-8, int miter = 50,
+      bool verbose = false);
+  virtual ~NEMLStandardScalarDamagedModel_sd();
+
+  virtual int damage(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_dd(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_de(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_ds(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+
+  virtual int f(const double * const s_np1, const double * const s_n,
+                const double * const e_np1, const double * const e_n,
+                double T_np1, double T_n,
+                double t_np1, double t_n,
+                double & f) const = 0;
+  virtual int df(const double * const s_np1, const double * const s_n,
+                const double * const e_np1, const double * const e_n,
+                double T_np1, double T_n,
+                double t_np1, double t_n,
+                double * const df) const = 0;
+
+ protected:
+  std::shared_ptr<LinearElasticModel> emodel_;
 
 
 };
 
 /// Simple power law damage
-class NEMLPowerLawDamagedModel_sd: public NEMLStandardDamagedModel_sd {
+class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
 
 
 };
