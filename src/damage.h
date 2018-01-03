@@ -83,6 +83,11 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
   virtual int init_x(double * const x, TrialState * ts);
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
+  int make_trial_state(const double * const e_np1, const double * const e_n,
+                       double T_np1, double T_n, double t_np1, double t_n,
+                       const double * const s_n, const double * const h_n,
+                       double u_n, double p_n,
+                       SDTrialState & tss);
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
@@ -111,7 +116,7 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
 
  protected:
   int tangent_(const double * const e_np1, const double * const e_n,
-               const double * const s_np1, const double * const s_n,
+               const double * const s_np1_prime, const double * const s_n_prime,
                double T_np1, double T_n, double t_np1, double t_n,
                double w_np1, double w_n, const double * const A_prime,
                double * const A);

@@ -29,7 +29,7 @@ PYBIND11_PLUGIN(damage) {
            }, "Initialize damage variables.")
       ;
 
-  py::class_<SDTrialState>(m, "SDTrialState", py::base<TrialState>())
+  py::class_<SDTrialState, std::shared_ptr<SDTrialState>>(m, "SDTrialState", py::base<TrialState>())
       ;
 
   py::class_<NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd", py::base<NEMLDamagedModel_sd>())
@@ -81,7 +81,7 @@ PYBIND11_PLUGIN(damage) {
       // Remove if/when pybind11 supports multiple inheritance
       .def_property_readonly("nparams", &NEMLScalarDamagedModel_sd::nparams, "Number of variables in nonlinear equations.")
       .def("init_x",
-           [](NEMLScalarDamagedModel_sd & m, SSPPTrialState & ts) -> py::array_t<double>
+           [](NEMLScalarDamagedModel_sd & m, SDTrialState & ts) -> py::array_t<double>
            {
             auto x = alloc_vec<double>(m.nparams());
             int ier = m.init_x(arr2ptr<double>(x), &ts);
@@ -89,7 +89,7 @@ PYBIND11_PLUGIN(damage) {
             return x;
            }, "Initialize guess.")
       .def("RJ",
-           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> x, SSPPTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
+           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> x, SDTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
            {
             auto R = alloc_vec<double>(m.nparams());
             auto J = alloc_mat<double>(m.nparams(), m.nparams());
@@ -99,8 +99,21 @@ PYBIND11_PLUGIN(damage) {
 
             return std::make_tuple(R, J);
            }, "Residual and jacobian.")
-      ;
       // End remove block
+      .def("make_trial_state",
+           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::unique_ptr<SDTrialState>
+           {
+            std::unique_ptr<SDTrialState> ts(new SDTrialState);
+            int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+                                         arr2ptr<double>(e_n),
+                                         T_np1, T_n, t_np1, t_n,
+                                         arr2ptr<double>(s_n),
+                                         arr2ptr<double>(h_n),
+                                         u_n, p_n, *ts);
+            py_error(ier);
+
+            return ts;
+           }, "Make a trial state, mostly for testing.")
       ;
 
   py::class_<NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd", py::base<NEMLScalarDamagedModel_sd>())

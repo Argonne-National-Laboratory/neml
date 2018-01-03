@@ -1755,7 +1755,7 @@ The Jacobian of this guy is
 \[
 \boldsymbol{J}=\left[\begin{array}{cc}
 \boldsymbol{I} & \bm{\sigma}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)\\
-\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}\frac{1}{1-\omega_{n+1}} & 1-\frac{\partial\omega}{\partial\omega_{n+1}}
+-\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}\frac{1}{1-\omega_{n+1}} & 1-\frac{\partial\omega}{\partial\omega_{n+1}}-\frac{1}{\left(1-\omega_{n+1}\right)^{2}}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}:\boldsymbol{\sigma}_{n+1}
 \end{array}\right]
 \]
 
@@ -1772,7 +1772,7 @@ Tangent
 The modified tangent is 
 \begin_inset Formula 
 \[
-\bm{A}_{n+1}^{\prime}=\boldsymbol{A}_{n+1}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}\otimes\bm{\sigma}_{n+1}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)
+\bm{A}_{n+1}^{\prime}=\left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}\otimes\bm{\sigma}_{n+1}
 \]
 
 \end_inset
@@ -1785,7 +1785,7 @@ So the thing to figure out is
  Using the implicit function theorem, as usual:
 \begin_inset Formula 
 \[
-dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}d\bm{\varepsilon}_{n+1}+\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}\frac{1}{1-\omega_{n+1}}d\bm{\sigma}_{n+1}=0
+dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}d\bm{\varepsilon}_{n+1}+\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}d\bm{\sigma}_{n+1}=0
 \]
 
 \end_inset
@@ -1793,7 +1793,7 @@ dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R
 
 \begin_inset Formula 
 \[
-\frac{\partial R_{2}}{\partial\omega_{n+1}}\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}+\frac{1}{1-\omega_{n+1}}\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=0
+\frac{\partial R_{2}}{\partial\omega_{n+1}}\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}+\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=0
 \]
 
 \end_inset
@@ -1801,7 +1801,15 @@ dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R
 
 \begin_inset Formula 
 \[
-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}=\frac{\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}+\frac{1}{1-\omega_{n+1}}\frac{\partial\omega}{\partial\bm{\sigma}_{n+1}}:\boldsymbol{A}_{n+1}}{1-\frac{\partial\omega}{\partial\omega_{n+1}}}.
+\left[1-\frac{\partial\omega}{\partial\omega_{n+1}}-\frac{1}{\left(1-\omega_{n+1}\right)^{2}}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}:\boldsymbol{\sigma}_{n+1}\right]\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}-\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}-\frac{1}{\left(1-\omega_{n+1}\right)}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=0
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}=\frac{\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}+\frac{1}{\left(1-\omega_{n+1}\right)}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}\boldsymbol{A}_{n+1}}{1-\frac{\partial\omega}{\partial\omega_{n+1}}-\frac{1}{\left(1-\omega_{n+1}\right)^{2}}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}:\boldsymbol{\sigma}_{n+1}}
 \]
 
 \end_inset

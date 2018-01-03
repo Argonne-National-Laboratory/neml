@@ -60,18 +60,7 @@ int NEMLScalarDamagedModel_sd::update_sd(
 {
   // Make trial state
   SDTrialState tss;
-  std::copy(e_np1, e_np1+6, tss.e_np1);
-  std::copy(e_n, e_n+6, tss.e_n);
-  tss.T_np1 = T_np1;
-  tss.T_n = T_n;
-  tss.t_np1 = t_np1;
-  tss.t_n = t_n;
-  std::copy(s_n, s_n+6, tss.s_n);
-  tss.h_n.resize(base_->nstore());
-  std::copy(h_n+1, h_n+base_->nstore()+1, tss.h_n.begin());
-  tss.u_n = u_n;
-  tss.p_n = p_n;
-  tss.w_n = h_n[0];
+  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n, tss);
   
   // Call solve
   double x[nparams()];
@@ -130,6 +119,8 @@ int NEMLScalarDamagedModel_sd::init_x(double * const x, TrialState * ts)
   SDTrialState * tss = static_cast<SDTrialState *>(ts);
   std::copy(tss->s_n, tss->s_n+6, x);
   x[6] = tss->w_n;
+
+  return 0;
 }
 
 int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts, 
@@ -139,7 +130,7 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   const double * s_curr = x;
   double w_curr = x[6];
   double s_prime_curr[6];
-  for (int i=0; i<6; i++)  s_prime_curr[i] = s_curr[i] / w_curr;
+  for (int i=0; i<6; i++)  s_prime_curr[i] = s_curr[i] / (1-w_curr);
 
   double s_np1[6];
   double * h_np1 = new double [base_->nstore()];
@@ -152,17 +143,20 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_n[6];
   std::copy(tss->s_n, tss->s_n+6, s_prime_n);
   for (int i=0; i<6; i++) s_prime_n[i] /= (1-tss->w_n);
-  
-  base_->update_sd(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
+
+  res = base_->update_sd(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
                    tss->t_np1, tss->t_n, s_np1, s_prime_n,
-                   h_np1, &tss->h_n[0],
+                   h_np1, &tss->h_n[1],
                    A_np1, u_np1, tss->u_n, p_np1, tss->p_n);
+  if (res != SUCCESS) return res;
+  
   for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * s_np1[i];
 
   double w_np1;
-  damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  res = damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, &w_np1);
+  if (res != SUCCESS) return res;
   R[6] = w_curr - w_np1;
 
   std::fill(J, J+49, 0.0);
@@ -178,7 +172,7 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, ws);
   for (int i=0; i<6; i++) {
-    J[CINDEX(6,i,7)] = ws[i] / (1 - w_curr); 
+    J[CINDEX(6,i,7)] = -ws[i] / (1 - w_curr); 
   }
   
   double ww;
@@ -186,34 +180,65 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, &ww);
   
-  J[CINDEX(6,6,7)] = 1.0 - ww;
+  J[CINDEX(6,6,7)] = 1.0 - ww - dot_vec(ws, s_curr, 6) / pow(1-w_curr,2.0);
   
   delete [] h_np1;
 
   return 0;
 }
 
+int NEMLScalarDamagedModel_sd::make_trial_state(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    const double * const s_n, const double * const h_n,
+    double u_n, double p_n,
+    SDTrialState & tss)
+{
+  std::copy(e_np1, e_np1+6, tss.e_np1);
+  std::copy(e_n, e_n+6, tss.e_n);
+  tss.T_np1 = T_np1;
+  tss.T_n = T_n;
+  tss.t_np1 = t_np1;
+  tss.t_n = t_n;
+  std::copy(s_n, s_n+6, tss.s_n);
+  tss.h_n.resize(base_->nstore());
+  std::copy(h_n+1, h_n+base_->nstore()+1, tss.h_n.begin());
+  tss.u_n = u_n;
+  tss.p_n = p_n;
+  tss.w_n = h_n[0];
+
+  return 0;
+}
+
 int NEMLScalarDamagedModel_sd::tangent_(
     const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
+    const double * const s_np1_prime, const double * const s_n_prime,
     double T_np1, double T_n, double t_np1, double t_n,
     double w_np1, double w_n,
     const double * const A_prime, double * const A)
 {
-  double de[6];
-  ddamage_de(w_np1, w_n, e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n, de);
-  double ds[6];
-  ddamage_ds(w_np1, w_n, e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n, ds);
-  double dw;
-  ddamage_dd(w_np1, w_n, e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n, &dw);
+  double s_np1_hat[6];
+  for (int i=0; i<6; i++) s_np1_hat[i] = s_np1_prime[i] * (1 - w_np1);
 
-  double dde[6];
-  mat_vec_trans(A_prime, 6, ds, 6, dde);
-  for (int i=0; i<6; i++) dde[i] = (de[i] + 1.0 / (1 - w_np1) * dde[i]) / 
-    (1.0 - dw);
+  double de[6];
+  ddamage_de(w_np1, w_n, e_np1, e_n, s_np1_prime, s_n_prime, T_np1, T_n, t_np1, t_n, de);
+  double ds[6];
+  ddamage_ds(w_np1, w_n, e_np1, e_n, s_np1_prime, s_n_prime, T_np1, T_n, t_np1, t_n, ds);
+  double dw;
+  ddamage_dd(w_np1, w_n, e_np1, e_n, s_np1_prime, s_n_prime, T_np1, T_n, t_np1, t_n, &dw);
   
-  std::copy(A_prime, A_prime + 36, A);
-  outer_update_minus(dde, 6, s_np1, 6, A);
+  double v[6];
+  mat_vec_trans(A_prime, 6, ds, 6, v);
+  for (int i=0; i<6; i++) v[i] += de[i];
+  
+  
+  std::cout << std::endl;
+  for (int i=0; i<6; i++) std::cout << v[i] << " ";
+  std::cout << std::endl;
+
+  std::copy(A_prime, A_prime+36, A);
+  for (int i=0; i<36; i++) A[i] *= (1 - w_np1);
+  //outer_update_minus(s_np1_prime, 6, v, 6, A);
 
   return 0;
 }
@@ -326,7 +351,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
 
   double v1[6];
   for (int i=0; i<6; i++) {
-    v1[i] = (2.0 * fval) / (3.0 * deps) * (de[i] - dee[i]); 
+    v1[i] = (2.0 * fval) / (3.0 * deps) * (dee[i] - de[i]); 
   }
 
   mat_vec(S, 6, v1, 6, dd);
@@ -421,7 +446,7 @@ int NEMLPowerLawDamagedModel_sd::df(const double * const s_np1, double T_np1,
 double NEMLPowerLawDamagedModel_sd::se(const double * const s) const
 {
   return sqrt((pow(s[0]-s[1], 2.0) + pow(s[1] - s[2], 2.0) + 
-               pow(s[2] - s[0], 2.0) + 6.0 * (pow(s[3], 2.0) + pow(s[4], 2.0) + 
+               pow(s[2] - s[0], 2.0) + 3.0 * (pow(s[3], 2.0) + pow(s[4], 2.0) + 
                                               pow(s[5], 2.0))) / 2.0);
 }
 
