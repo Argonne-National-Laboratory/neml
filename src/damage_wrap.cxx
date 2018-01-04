@@ -17,7 +17,7 @@ namespace neml {
 PYBIND11_PLUGIN(damage) {
   py::module m("damage", "NEML damage models.");
 
-  py::class_<NEMLDamagedModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd", py::base<NEMLModel>())
+  py::class_<NEMLDamagedModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd", py::base<NEMLModel_sd>())
       .def_property_readonly("ndamage", &NEMLDamagedModel_sd::ndamage, "Number of damage variables.")
       .def("init_damage",
            [](NEMLDamagedModel_sd & m) -> py::array_t<double>

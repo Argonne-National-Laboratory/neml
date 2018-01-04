@@ -312,6 +312,11 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
   double fval;
   int ier = f(s_np1, T_np1, fval);
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
+
+  if (deps == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
   
   double ds[6];
   double de[6];
@@ -344,6 +349,11 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
   double fval;
   int ier = f(s_np1, T_np1, fval);
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
+
+  if (deps == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
 
   double ds[6];
   double de[6];
