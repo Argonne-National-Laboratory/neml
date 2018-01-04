@@ -1666,7 +1666,7 @@ Most generic
 A damage model is a function 
 \begin_inset Formula 
 \begin{align*}
-\bm{\sigma}_{n+1}^{\prime} & = & \bm{\sigma}^{\prime}\left(\bm{\varepsilon}_{n+1},\bm{\sigma}_{n+1},\boldsymbol{h}_{n+1},\bm{\omega}_{n+1}\right)\\
+\bm{\sigma}_{n+1}^{\prime} & = & \bm{\sigma}^{\prime}\left(\bm{\varepsilon}_{n+1},\boldsymbol{h}_{n+1},\bm{\omega}_{n+1}\right)\\
 \bm{\omega}_{n+1} & = & \boldsymbol{w}\left(\bm{\varepsilon}_{n+1},\bm{\sigma}_{n+1},\bm{\omega}_{n+1}\right)
 \end{align*}
 
@@ -1715,7 +1715,7 @@ Scalar
 A scalar damage model simplifies the general equations to 
 \begin_inset Formula 
 \begin{align*}
-\bm{\sigma}_{n+1} & = & \left(1-\omega_{n+1}\right)\bm{\sigma}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)\\
+\bm{\sigma}_{n+1} & = & \left(1-\omega_{n+1}\right)\bm{\sigma}\left(\bm{\varepsilon}_{n+1},\boldsymbol{h}_{n+1}\right)\\
 \omega_{n+1} & = & w\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\omega_{n+1}\right)
 \end{align*}
 
@@ -1740,7 +1740,7 @@ Form the residual
 \boldsymbol{R}_{1}\\
 R_{2}
 \end{array}\right]=\left[\begin{array}{c}
-\bm{\sigma}_{n+1}-\left[1-\omega_{n+1}\right]\bm{\sigma}\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\boldsymbol{h}_{n+1}\right)\\
+\bm{\sigma}_{n+1}-\left[1-\omega_{n+1}\right]\bm{\sigma}\left(\bm{\varepsilon}_{n+1},\boldsymbol{h}_{n+1}\right)\\
 \omega_{n+1}-w\left(\bm{\varepsilon}_{n+1},\frac{\bm{\sigma}_{n+1}}{1-\omega_{n+1}},\omega_{n+1}\right)
 \end{array}\right]=\left[\begin{array}{c}
 \boldsymbol{0}\\
@@ -1772,7 +1772,7 @@ Tangent
 The modified tangent is 
 \begin_inset Formula 
 \[
-\bm{A}_{n+1}^{\prime}=\left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}\otimes\bm{\sigma}_{n+1}
+\bm{A}_{n+1}=\left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}^{\prime}-\bm{\sigma}_{n+1}^{\prime}\otimes\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}
 \]
 
 \end_inset
@@ -1785,7 +1785,7 @@ So the thing to figure out is
  Using the implicit function theorem, as usual:
 \begin_inset Formula 
 \[
-dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}d\bm{\varepsilon}_{n+1}+\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}d\bm{\sigma}_{n+1}=0
+\frac{d\omega}{d\bm{\varepsilon}}=\frac{\partial\omega}{\partial\bm{\varepsilon}}+\left(\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\frac{\partial\bm{\sigma}^{\prime}}{\partial\omega}\right)\frac{d\omega}{d\bm{\varepsilon}}+\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\frac{\partial\bm{\sigma}^{\prime}}{\partial\bm{\sigma}}\frac{d\bm{\sigma}}{d\bm{\varepsilon}}+\frac{\partial\omega}{\partial\omega}\frac{d\omega}{d\bm{\varepsilon}}
 \]
 
 \end_inset
@@ -1793,7 +1793,7 @@ dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R
 
 \begin_inset Formula 
 \[
-\frac{\partial R_{2}}{\partial\omega_{n+1}}\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}+\frac{\partial R_{2}}{\partial\bm{\varepsilon}_{n+1}}+\frac{\partial R_{2}}{\partial\bm{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=0
+\frac{d\omega}{d\bm{\varepsilon}}=\frac{\partial\omega}{\partial\bm{\varepsilon}}+\left(\frac{1}{1-\omega}\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\bm{\sigma}^{\prime}\right)\frac{d\omega}{d\bm{\varepsilon}}+\frac{1}{1-\omega}\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\frac{d\bm{\sigma}}{d\bm{\varepsilon}}+\frac{\partial\omega}{\partial\omega}\frac{d\omega}{d\bm{\varepsilon}}
 \]
 
 \end_inset
@@ -1801,7 +1801,27 @@ dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R
 
 \begin_inset Formula 
 \[
-\left[1-\frac{\partial\omega}{\partial\omega_{n+1}}-\frac{1}{\left(1-\omega_{n+1}\right)^{2}}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}:\boldsymbol{\sigma}_{n+1}\right]\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}-\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}-\frac{1}{\left(1-\omega_{n+1}\right)}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}\frac{d\bm{\sigma}_{n+1}}{d\bm{\varepsilon}_{n+1}}=0
+\left(1-\frac{1}{1-\omega}\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\bm{\sigma}^{\prime}-\frac{\partial\omega}{\partial\omega}\right)\frac{d\omega}{d\bm{\varepsilon}}=\frac{\partial\omega}{\partial\bm{\varepsilon}}+\frac{1}{1-\omega}\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\frac{d\bm{\sigma}}{d\bm{\varepsilon}}
+\]
+
+\end_inset
+
+Let 
+\begin_inset Formula $k=1-\frac{1}{1-\omega}\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\bm{\sigma}^{\prime}-\frac{\partial\omega}{\partial\omega}$
+\end_inset
+
+ then 
+\begin_inset Formula 
+\[
+\frac{d\omega}{d\bm{\varepsilon}}=\frac{1}{k}\frac{\partial\omega}{\partial\bm{\varepsilon}}+\frac{1}{k\left(1-\omega\right)}\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\cdot\frac{d\bm{\sigma}}{d\bm{\varepsilon}}.
+\]
+
+\end_inset
+
+Combine this with the original expression
+\begin_inset Formula 
+\[
+\bm{A}_{n+1}=\left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}^{\prime}-\frac{1}{k}\left(\bm{\sigma}_{n+1}^{\prime}\otimes\frac{\partial\omega}{\partial\bm{\varepsilon}}\right)-\frac{1}{k\left(1-\omega\right)}\left(\bm{\sigma}_{n+1}^{\prime}\otimes\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\right)\cdot\bm{A}_{n+1}
 \]
 
 \end_inset
@@ -1809,11 +1829,23 @@ dR_{2}=\frac{\partial R_{2}}{\partial\omega_{n+1}}d\omega_{n+1}+\frac{\partial R
 
 \begin_inset Formula 
 \[
-\frac{d\omega_{n+1}}{d\bm{\varepsilon}_{n+1}}=\frac{\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}+\frac{1}{\left(1-\omega_{n+1}\right)}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}\boldsymbol{A}_{n+1}}{1-\frac{\partial\omega}{\partial\omega_{n+1}}-\frac{1}{\left(1-\omega_{n+1}\right)^{2}}\frac{\partial\omega}{\partial\boldsymbol{\sigma}_{n+1}}:\boldsymbol{\sigma}_{n+1}}
+\bm{A}_{n+1}+\frac{1}{k\left(1-\omega\right)}\left(\bm{\sigma}_{n+1}^{\prime}\otimes\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\right)\cdot\bm{A}_{n+1}=\left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}^{\prime}-\frac{1}{k}\left(\bm{\sigma}_{n+1}^{\prime}\otimes\frac{\partial\omega}{\partial\bm{\varepsilon}}\right)
 \]
 
 \end_inset
 
+
+\begin_inset Formula 
+\[
+\bm{A}_{n+1}=\left\{ \boldsymbol{I}+\frac{1}{k\left(1-\omega\right)}\left(\bm{\sigma}_{n+1}^{\prime}\otimes\frac{\partial\omega}{\partial\bm{\sigma}^{\prime}}\right)\right\} ^{-1}\left\{ \left(1-\omega_{n+1}\right)\boldsymbol{A}_{n+1}^{\prime}-\frac{1}{k}\left(\bm{\sigma}_{n+1}^{\prime}\otimes\frac{\partial\omega}{\partial\bm{\varepsilon}}\right)\right\} 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 So the method requires three derivatives: 
 \begin_inset Formula $\frac{\partial\omega}{\partial\omega_{n+1}}$
 \end_inset
@@ -1826,7 +1858,8 @@ So the method requires three derivatives:
 \begin_inset Formula $\frac{\partial\omega}{\partial\bm{\varepsilon}_{n+1}}$
 \end_inset
 
-.
+, two of which are already needed for the Jacobian, along with the undamaged
+ material tangent.
 \end_layout
 
 \begin_layout Subsection

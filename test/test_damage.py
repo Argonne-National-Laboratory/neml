@@ -84,6 +84,30 @@ class CommonScalarDamageModel(object):
 
     self.assertTrue(np.allclose(me, them))
 
+  def test_R(self):
+    trial_state = self.model.make_trial_state(
+        self.e_np1, self.e_n,
+        self.T_np1, self.T_n, self.t_np1, self.t_n,
+        self.s_n, self.hist_n, self.u_n, self.p_n)
+
+    R, J = self.model.RJ(self.x_trial, trial_state)
+
+    s_trial = self.x_trial[:6]
+    w_trial = self.x_trial[6]
+
+    R_calc = np.zeros((7,))
+    s_p_np1, h_p, A_p, u_p, p_p =self.bmodel.update_sd(self.e_np1, self.e_n,
+        self.T_np1, self.T_n,
+        self.t_np1, self.t_n, self.s_n / (1-self.d_n), self.hist_n[1:],
+        self.u_n, self.p_n)
+    R_calc[:6] = s_trial - (1-w_trial) * s_p_np1
+    d_np1 = self.model.damage(w_trial, self.d_n, self.e_np1, self.e_n, 
+        s_trial / (1 - w_trial), self.s_n / (1-self.d_n), self.T_np1,
+        self.T_n, self.t_np1, self.t_n)
+    R_calc[6] = w_trial - d_np1
+
+    self.assertTrue(np.allclose(R_calc, R))
+
   def test_jacobian(self):
     trial_state = self.model.make_trial_state(
         self.e_np1, self.e_n,
@@ -106,7 +130,7 @@ class CommonDamagedModel(object):
     comp = list(damg) + list(base)
     fromm = self.model.init_store()
     self.assertTrue(np.allclose(fromm, comp))
-
+  
   def test_tangent_proportional_strain(self):
     t_n = 0.0
     e_n = np.zeros((6,))
@@ -118,33 +142,24 @@ class CommonDamagedModel(object):
     for m in np.linspace(0,1,self.nsteps+1)[1:]:
       t_np1 = m * self.ttarget
       e_np1 = m * self.etarget
+     
+      trial_state = self.model.make_trial_state(
+          e_np1, e_n,
+          self.T, self.T, t_np1, t_n,
+          s_n, hist_n, u_n, p_n)
 
       s_np1, hist_np1, A_np1, u_np1, p_np1 = self.model.update_sd(
           e_np1, e_n, self.T, self.T, t_np1, t_n, s_n, hist_n,
           u_n, p_n)
 
-      dfn = lambda e: self.model.update_sd(e, e_n, self.T, self.T,
-          t_np1, t_n, s_n, hist_n, u_n, p_n)[0]
-      num_A = differentiate(dfn, e_np1)
-      
-      damage_fn = lambda e: self.model.update_sd(e, e_n, self.T, self.T, 
-          t_np1, t_n, s_n, hist_n, u_n, p_n)[1][0]
-      
-      print(m)
-      #print(A_np1/num_A)
-      diff = A_np1 - num_A
-      #print(A_np1 - num_A)
-      de = differentiate(damage_fn, e_np1)
-      sp = s_np1 / (1 - hist_np1[0])
-      print(de)
-      #print(np.outer(sp, de))
-      
-      if np.isclose(m,1.0):
-        self.assertTrue(np.allclose(A_np1, num_A, rtol = 1.0e-3))
+      A_num = differentiate(lambda e: self.model.update_sd(e, e_n,
+        self.T, self.T, t_np1, t_n, s_n, hist_n, u_n, p_n)[0], e_np1)
 
-      e_n = e_np1
-      s_n = s_np1
-      hist_n = hist_np1
+      self.assertTrue(np.allclose(A_num, A_np1, rtol = 1.0e-3, atol = 1.0e-1))
+
+      e_n = np.copy(e_np1)
+      s_n = np.copy(s_np1)
+      hist_n = np.copy(hist_np1)
       u_n = u_np1
       p_n = p_np1
       t_n = t_np1
@@ -173,7 +188,7 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
-    self.A = 1.0e-6
+    self.A = 8.0e-6
     self.a = 2.2
 
     self.model = damage.NEMLPowerLawDamagedModel_sd(self.A, self.a, 
@@ -183,13 +198,13 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.T = 100.0
 
     self.s_np1 = self.stress
-    self.s_n = self.stress / 2.0
+    self.s_n = np.array([-25,150,250,-25,-100,25])
 
     self.d_np1 = 0.5
     self.d_n = 0.4
 
     self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15])
-    self.e_n = self.e_np1 / 3.0
+    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13])
 
     self.T_np1 = self.T
     self.T_n = 90.0

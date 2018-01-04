@@ -69,21 +69,25 @@ int NEMLScalarDamagedModel_sd::update_sd(
   if (ier != SUCCESS) return ier;
   
   // Do actual stress update
-  double s_np1_p[6];
-  double s_n_p[6];
-  double A_p[36];
-  double w_n = h_n[0];
-  std::copy(s_n, s_n+6, s_n_p);
-  for (int i=0; i<6; i++) s_n_p[i] /= (1-w_n);
-  base_->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1_p, s_n_p,
-                   &h_np1[1], &h_n[1], A_p, u_np1, u_n, p_np1, p_n);
+  double s_prime_np1[6];
+  double s_prime_n[6];
+  double A_prime_np1[36];
+  std::copy(s_n, s_n+6, s_prime_n);
+  for (int i=0; i<6; i++) s_prime_n[i] /= (1-h_n[0]);
+
+  ier = base_->update_sd(e_np1, e_n, T_np1, T_n,
+                   t_np1, t_n, s_prime_np1, s_prime_n,
+                   &h_np1[1], &h_n[1],
+                   A_prime_np1, u_np1, u_n, p_np1, p_n);
+  if (ier != SUCCESS) return ier;
+  
+  for (int i=0; i<6; i++) s_np1[i] = (1-x[6]) * s_prime_np1[i];
   h_np1[0] = x[6];
-  for (int i=0; i<6; i++) s_np1[i] = (1-h_np1[0]) * s_np1_p[i];
   
   // Create the tangent
-  ier = tangent_(e_np1, e_n, s_np1_p, s_n_p,
+  ier = tangent_(e_np1, e_n, s_np1, s_n,
                  T_np1, T_n, t_np1, t_n, 
-                 x[6], h_n[0], A_p, A_np1);
+                 x[6], h_n[0], A_prime_np1, A_np1);
   if (ier != SUCCESS) return ier;
 
   return 0;
@@ -132,30 +136,28 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_curr[6];
   for (int i=0; i<6; i++)  s_prime_curr[i] = s_curr[i] / (1-w_curr);
 
-  double s_np1[6];
+  int res;
+  double s_prime_np1[6];
+  double s_prime_n[6];
+  double A_prime_np1[36];
   double * h_np1 = new double [base_->nstore()];
-  double A_np1[36];
   double u_np1;
   double p_np1;
 
-  int res;
-
-  double s_prime_n[6];
   std::copy(tss->s_n, tss->s_n+6, s_prime_n);
   for (int i=0; i<6; i++) s_prime_n[i] /= (1-tss->w_n);
 
   res = base_->update_sd(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
-                   tss->t_np1, tss->t_n, s_np1, s_prime_n,
-                   h_np1, &tss->h_n[1],
-                   A_np1, u_np1, tss->u_n, p_np1, tss->p_n);
+                   tss->t_np1, tss->t_n, s_prime_np1, s_prime_n,
+                   h_np1, &tss->h_n[0],
+                   A_prime_np1, u_np1, tss->u_n, p_np1, tss->p_n);
   if (res != SUCCESS) return res;
   
-  for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * s_np1[i];
+  for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * s_prime_np1[i];
 
   double w_np1;
   res = damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
-         tss->T_np1, tss->T_n,
-         tss->t_np1, tss->t_n, &w_np1);
+         tss->T_np1, tss->T_n, tss->t_np1, tss->t_n, &w_np1);
   if (res != SUCCESS) return res;
   R[6] = w_curr - w_np1;
 
@@ -164,7 +166,7 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
     J[CINDEX(i,i,7)] = 1.0; 
   }
   for (int i=0; i<6; i++) {
-    J[CINDEX(i,6,7)] = s_np1[i];
+    J[CINDEX(i,6,7)] = s_prime_np1[i];
   }
 
   double ws[6];
@@ -212,33 +214,40 @@ int NEMLScalarDamagedModel_sd::make_trial_state(
 
 int NEMLScalarDamagedModel_sd::tangent_(
     const double * const e_np1, const double * const e_n,
-    const double * const s_np1_prime, const double * const s_n_prime,
+    const double * const s_np1, const double * const s_n,
     double T_np1, double T_n, double t_np1, double t_n,
-    double w_np1, double w_n,
-    const double * const A_prime, double * const A)
+    double w_np1, double w_n, const double * const A_prime,
+    double * const A)
 {
-  double s_np1_hat[6];
-  for (int i=0; i<6; i++) s_np1_hat[i] = s_np1_prime[i] * (1 - w_np1);
+  double s_prime_np1[6];
+  for (int i=0; i<6; i++) s_prime_np1[i] = s_np1[i] / (1.0 - w_np1);
+  double s_prime_n[6];
+  for (int i=0; i<6; i++) s_prime_n[i] = s_n[i] / (1.0 - w_n);
 
-  double de[6];
-  ddamage_de(w_np1, w_n, e_np1, e_n, s_np1_prime, s_n_prime, T_np1, T_n, t_np1, t_n, de);
-  double ds[6];
-  ddamage_ds(w_np1, w_n, e_np1, e_n, s_np1_prime, s_n_prime, T_np1, T_n, t_np1, t_n, ds);
-  double dw;
-  ddamage_dd(w_np1, w_n, e_np1, e_n, s_np1_prime, s_n_prime, T_np1, T_n, t_np1, t_n, &dw);
-  
-  double v[6];
-  mat_vec_trans(A_prime, 6, ds, 6, v);
-  for (int i=0; i<6; i++) v[i] += de[i];
-  
-  
-  std::cout << std::endl;
-  for (int i=0; i<6; i++) std::cout << v[i] << " ";
-  std::cout << std::endl;
+  double dw_ds[6];
+  ddamage_ds(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+             t_np1, t_n, dw_ds);
+  double dw_de[6];
+  ddamage_de(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+             t_np1, t_n, dw_de);
+  double dw_dw;
+  ddamage_dd(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+             t_np1, t_n, &dw_dw);
 
-  std::copy(A_prime, A_prime+36, A);
-  for (int i=0; i<36; i++) A[i] *= (1 - w_np1);
-  //outer_update_minus(s_np1_prime, 6, v, 6, A);
+  double k1 = 1.0 - 1.0 / (1.0 - w_np1) * dot_vec(dw_ds, s_prime_np1, 6) - dw_dw;
+  double B[36];
+  std::fill(B, B+36, 0);
+  for (int i=0; i<6; i++) B[CINDEX(i,i,6)] = 1.0;
+  for (int i=0; i<6; i++) dw_ds[i] /= (k1 * (1.0 - w_np1));
+  outer_update(s_prime_np1, 6, dw_ds, 6, B);
+  invert_mat(B, 6);
+
+  double C[36];
+  std::copy(A_prime, A_prime+36, C);
+  for (int i=0; i<36; i++) C[i] *= (1 - w_np1);
+  for (int i=0; i<6; i++) dw_de[i] /= k1;
+  outer_update_minus(s_prime_np1, 6, dw_de, 6, C);
+  mat_mat(6, 6, 6, B, C, A);
 
   return 0;
 }
