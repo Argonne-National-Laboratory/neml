@@ -143,7 +143,7 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double * h_np1 = new double [base_->nstore()];
   double u_np1;
   double p_np1;
-
+  
   std::copy(tss->s_n, tss->s_n+6, s_prime_n);
   for (int i=0; i<6; i++) s_prime_n[i] /= (1-tss->w_n);
 
@@ -183,7 +183,7 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
          tss->t_np1, tss->t_n, &ww);
   
   J[CINDEX(6,6,7)] = 1.0 - ww - dot_vec(ws, s_curr, 6) / pow(1-w_curr,2.0);
-  
+
   delete [] h_np1;
 
   return 0;
@@ -460,7 +460,12 @@ int NEMLPowerLawDamagedModel_sd::df(const double * const s_np1, double T_np1,
   double sev = se(s_np1);
   double A = A_->value(T_np1);
   double a = a_->value(T_np1);
-  
+
+  if (sev == 0.0) {
+    std::fill(df, df+6, 0.0);
+    return 0.0;
+  }
+
   std::copy(s_np1, s_np1+6, df);
   double sm = (s_np1[0] + s_np1[1] + s_np1[2]) / 3.0;
   for (int i=0; i<3; i++) df[i] -= sm;
