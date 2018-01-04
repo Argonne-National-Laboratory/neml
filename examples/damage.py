@@ -8,7 +8,7 @@ from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, sur
 
 import matplotlib.pyplot as plt
 
-if __name__ == "__main__":
+def simple():
   E = 92000.0
   nu = 0.3
 
@@ -37,9 +37,12 @@ if __name__ == "__main__":
   A = 2e-5
   model_on = damage.NEMLPowerLawDamagedModel_sd(A, a, bmodel, elastic)
 
-  res_off = drivers.uniaxial_test(model_off, 1.0e-2, emax = 0.10)
-  res_on = drivers.uniaxial_test(model_on, 1.0e-2, emax = 0.10)
+  res_off = drivers.uniaxial_test(model_off, 1.0e-2, emax = 0.13)
+  res_on = drivers.uniaxial_test(model_on, 1.0e-2, emax = 0.13)
 
   plt.plot(res_off['strain'], res_off['stress'], 'k-')
   plt.plot(res_on['strain'], res_on['stress'], 'r-')
   plt.show()
+
+if __name__ == "__main__":
+  simple()

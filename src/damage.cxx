@@ -403,8 +403,15 @@ double NEMLStandardScalarDamagedModel_sd::dep(
   double dee[36];
   mat_vec(S, 6, ds, 6, dee);
 
-  return sqrt(2.0/3.0 * (dot_vec(de, de, 6) + dot_vec(dee, dee, 6) -
-                         2.0 * dot_vec(de, dee, 6)));
+  double val_sq =  2.0/3.0 * (dot_vec(de, de, 6) + dot_vec(dee, dee, 6) -
+                         2.0 * dot_vec(de, dee, 6));
+  
+  if (val_sq < 0.0) {
+    return 0.0;
+  }
+  else {
+    return sqrt(val_sq);
+  }
 }
 
 NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
