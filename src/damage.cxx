@@ -93,15 +93,6 @@ int NEMLScalarDamagedModel_sd::update_sd(
   return 0;
 }
 
-int NEMLScalarDamagedModel_sd::elastic_strains(
-    const double * const s_np1,
-    double T_np1,
-    double * const e_np1) const
-{
-  // ARG this is going to require an interface change
-  return 0;
-}
-
 size_t NEMLScalarDamagedModel_sd::ndamage() const
 {
   return 1;
@@ -271,6 +262,16 @@ NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(
       emodel_(emodel)
 {
 
+}
+
+int NEMLStandardScalarDamagedModel_sd::elastic_strains(
+    const double * const s_np1, double T_np1,
+    const double * const h_np1, double * const e_np1) const
+{
+  double Sv[36];
+  emodel_->S(T_np1, Sv);
+  for (int i=0; i<36; i++) Sv[i] /= (1 - h_np1[0]);
+  return mat_vec(Sv, 6, s_np1, 6, e_np1);
 }
 
 int NEMLStandardScalarDamagedModel_sd::damage(

@@ -44,6 +44,62 @@ def simple_ex():
   plt.plot(res_on['strain'], res_on['stress'], 'r-')
   plt.show()
 
+def unload_ex():
+  E = 92000.0
+  nu = 0.3
+
+  s0 = 180.0
+  Kp = 1000.0
+  H = 1000.0
+
+  E = elasticity.YoungsModulus(E)
+  v = elasticity.PoissonsRatio(nu)
+  elastic = elasticity.IsotropicLinearElasticModel(E, v)
+
+  surface = surfaces.IsoKinJ2()
+  iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
+  kin = hardening.LinearKinematicHardeningRule(H)
+  hrule = hardening.CombinedHardeningRule(iso, kin)
+
+  flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+  bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+      flow)
+
+  A = 2e-5
+  a = 2.2
+  model = damage.NEMLPowerLawDamagedModel_sd(A, a, bmodel, elastic)
+
+  driver = drivers.Driver_sd(model)
+  nsteps = 25
+  sdir = np.array([1,0,0,0,0,0])
+  erate = 1.0e-5
+  e_inc = 0.1 / nsteps
+  for i in range(nsteps):
+    einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, 0.0)
+
+  estrain = model.elastic_strains(driver.stress_int[-1], driver.T_int[-1],
+      driver.stored[-1])
+
+  print("Calculated elastic strain: %f" % estrain[0])
+
+  nsteps = 20
+  dt = 0.1
+  rstress = driver.stress_int[-1]
+  rstrain = driver.strain_int[-1][0]
+  for m in np.linspace(0,1.0,nsteps, endpoint = False)[::-1]:
+    driver.stress_step(rstress*m, driver.t_int[-1] + dt, driver.T_int[-1])
+
+  fstrain = driver.strain_int[-1][0]
+
+  print("Actual elastic strain: %f" % (rstrain-fstrain))
+
+  print("Calculated final elastic strain: %f" % model.elastic_strains(
+    driver.stress_int[-1], driver.T_int[-1], driver.stored[-1])[0])
+
+  plt.plot(driver.strain[:,0], driver.stress[:,0])
+  plt.show()
+
 def creep_ex():
   E = 92000.0
   nu = 0.3
@@ -95,4 +151,5 @@ def creep_ex():
 
 if __name__ == "__main__":
   #simple()
-  creep_ex()
+  #creep_ex()
+  unload_ex()

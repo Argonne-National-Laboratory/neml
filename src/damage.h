@@ -29,7 +29,7 @@ class NEMLDamagedModel_sd: public NEMLModel_sd {
       double & u_np1, double u_n,
       double & p_np1, double p_n) = 0;
   virtual int elastic_strains(const double * const s_np1,
-                              double T_np1,
+                              double T_np1, const double * const h_np1,
                               double * const e_np1) const = 0;
 
   virtual size_t ndamage() const = 0;
@@ -73,8 +73,8 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
       double & u_np1, double u_n,
       double & p_np1, double p_n);
   virtual int elastic_strains(const double * const s_np1,
-                              double T_np1,
-                              double * const e_np1) const;
+                              double T_np1, const double * const h_np1,
+                              double * const e_np1) const = 0;
 
   virtual size_t ndamage() const;
   virtual int init_damage(double * const damage) const;
@@ -142,6 +142,10 @@ class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
       double alpha = 0.0,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
+
+  virtual int elastic_strains(const double * const s_np1,
+                              double T_np1, const double * const h_np1,
+                              double * const e_np1) const;
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,

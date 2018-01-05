@@ -21,7 +21,7 @@ void destroy_nemlmodel(NEMLMODEL * model, int * ier);
 
 double alpha_nemlmodel(NEMLMODEL * model, double T);
 void elastic_strains_nemlmodel(NEMLMODEL * model, double * s_np1, double T_np1,
-                                 double * e_np1, int * ier);
+                                 double * h_np1, double * e_np1, int * ier);
 int nstore_nemlmodel(NEMLMODEL * model);
 void init_store_nemlmodel(NEMLMODEL * model, double * store, int * ier);
 

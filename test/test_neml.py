@@ -60,7 +60,7 @@ class CommonMatModel(object):
           strain_np1, strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n,
           u_n, p_n)
       
-      estrain = self.model.elastic_strains(stress_np1, self.T)
+      estrain = self.model.elastic_strains(stress_np1, self.T, hist_np1)
       S = self.elastic.S(self.T)
       estrain_num = np.dot(S, stress_np1)
       self.assertTrue(np.allclose(estrain, estrain_num))
