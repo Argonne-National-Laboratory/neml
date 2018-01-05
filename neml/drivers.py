@@ -627,8 +627,8 @@ class Driver_sd_twobar(Driver_sd):
     self.stress1_int.append(s1_np1)
     self.stress2_int.append(s2_np1)
 
-    estrain1 = self.model.elastic_strains(s1_np1, T1)
-    estrain2 = self.model.elastic_strains(s2_np1, T2)
+    estrain1 = self.model.elastic_strains(s1_np1, T1, h1_np1)
+    estrain2 = self.model.elastic_strains(s2_np1, T2, h2_np1)
 
     self.strain1_plastic_int.append(em1 - estrain1)
     self.strain2_plastic_int.append(em2 - estrain2)
