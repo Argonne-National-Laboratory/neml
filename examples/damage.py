@@ -150,6 +150,6 @@ def creep_ex():
 
 
 if __name__ == "__main__":
-  #simple()
-  #creep_ex()
+  simple_ex()
+  creep_ex()
   unload_ex()
