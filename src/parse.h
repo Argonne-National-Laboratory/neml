@@ -2,6 +2,7 @@
 #define PARSE_H
 
 #include "neml.h"
+#include "damage.h"
 
 #include <string>
 #include <vector>
@@ -29,6 +30,12 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
 
 /// Setup a KM region model
 std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & ier);
+
+/// Setup a damaged small strain model
+std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * node, int & ier);
+
+/// Process power law damage
+std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node, std::unique_ptr<NEMLModel_sd> bmodel, std::shared_ptr<Interpolate> alpha, int & ier);
 
 /// Setup a creep model
 std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier);

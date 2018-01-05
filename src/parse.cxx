@@ -43,9 +43,79 @@ std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
 std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier)
 {
   return dispatch_attribute_unique<NEMLModel>(node, "type",
-                                          {"smallstrain","kmregion"},
-                                          {&process_smallstrain,&process_kmregion},
+                                          {"smallstrain","kmregion","smallstrain_damage"},
+                                          {&process_smallstrain,&process_kmregion,&process_smallstrain_damage},
                                           ier);
+}
+
+std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * node, int & ier)
+{
+  // Need:
+  //  1) a complete base model
+  //  2) (optionally) a cte
+  //  3) a damage block, defining the damage model
+
+  // 1) 
+  const xmlpp::Element * base_node;
+  if (not one_child(node, "base", base_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  std::unique_ptr<NEMLModel> base_cast = dispatch_attribute_unique<NEMLModel>(
+      base_node, "type", {"smallstrain", "kmregion", "smallstrain_damage"}, 
+      {&process_smallstrain,&process_kmregion,&process_smallstrain_damage}, ier);
+
+  // 2) CTE, if provided
+  std::shared_ptr<Interpolate> alpha;
+  auto a_nodes = node->get_children("alpha");
+  if (a_nodes.size() > 0) {
+    alpha = process_alpha(dynamic_cast<const xmlpp::Element*>(a_nodes.front()), ier);
+  }
+  else {
+    alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
+  }
+
+  // 3) Dispatch manually
+  const xmlpp::Element * damage_node;
+  if (not one_child(node, "damage", damage_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  
+  std::string dtype;
+  if (not one_attribute(damage_node, "type", dtype, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  
+  if (dtype == "power_law") {
+    // BEHOLD THE HORROR!
+    return process_powerlaw_damage(damage_node, 
+                                   std::unique_ptr<NEMLModel_sd>(static_cast<NEMLModel_sd*>(base_cast.release())), 
+                                   alpha, ier);
+  }
+  else {
+    ier = UNKNOWN_TYPE;
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+}
+
+std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node, 
+                                                   std::unique_ptr<NEMLModel_sd> bmodel, 
+                                                   std::shared_ptr<Interpolate> alpha,
+                                                   int & ier)
+{
+  // Must have an "elastic" node
+  const xmlpp::Element * elastic_node;
+  if (not one_child(node, "elastic", elastic_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+
+  return std::unique_ptr<NEMLModel>(
+      new NEMLPowerLawDamagedModel_sd(
+          scalar_param(node, "A", ier),
+          scalar_param(node, "a", ier),
+          std::move(bmodel),
+          process_linearelastic(elastic_node, ier),
+          alpha
+          )); 
 }
 
 std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & ier)
@@ -144,7 +214,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
         dynamic_cast<const xmlpp::Element*>(c_nodes.front()), ier);
     found_creep = true;
   }
-  
+
   std::unique_ptr<NEMLModel_sd> model;
   
   auto p_nodes = node->get_children("plastic");
@@ -199,13 +269,18 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     ier = UNKNOWN_TYPE;
     return std::unique_ptr<NEMLModel>(nullptr);
   }
-
+  
+  // Add on the creep model
+  std::unique_ptr<NEMLModel_sd> comp_creep;
   if (found_creep) {
-    return std::unique_ptr<NEMLModel>(
+    comp_creep = std::unique_ptr<NEMLModel_sd>(
         new SmallStrainCreepPlasticity(std::move(model), cmodel, alpha));
   }
+  else {
+    comp_creep = std::move(model);
+  }
 
-  return std::unique_ptr<NEMLModel>(std::move(model));
+  return std::unique_ptr<NEMLModel>(std::move(comp_creep));
 }
 
 std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier)

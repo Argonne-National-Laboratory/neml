@@ -86,7 +86,7 @@ if (WRAP_PYTHON)
 
       # parser
       add_library(parse SHARED parse_wrap.cxx parse.cxx)
-      target_link_libraries(parse helpers neml ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${libxml++_LIBRARIES})
+      target_link_libraries(parse helpers neml damage ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${libxml++_LIBRARIES})
       set_target_properties(parse PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET parse PROPERTY OUTPUT_NAME "parse.so")

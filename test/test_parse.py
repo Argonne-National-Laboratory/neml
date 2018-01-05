@@ -1,4 +1,4 @@
-from neml import solvers, interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow, creep
+from neml import solvers, interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow, creep, damage
 
 import unittest
 import numpy as np
@@ -49,6 +49,36 @@ class CompareMats(object):
 
       strain_n = strain_np1
 
+class TestPowerLawDamage(CompareMats, unittest.TestCase):
+  def setUp(self):
+    self.model1 = parse.parse_xml("test/examples.xml", "test_powerdamage")
+
+    E = 92000.0
+    nu = 0.3
+
+    s0 = 180.0
+    Kp = 1000.0
+
+    E = elasticity.YoungsModulus(E)
+    v = elasticity.PoissonsRatio(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(E, v)
+
+    surface = surfaces.IsoJ2()
+    hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+        flow)
+
+    a = 2.2
+    A = 2e-5
+    self.model2 = damage.NEMLPowerLawDamagedModel_sd(A, a, bmodel, elastic)
+
+    self.T = 300.0
+    self.tmax = 10.0
+    self.nsteps = 100.0
+    self.emax = np.array([0.05,0,0,0,0,0])
 
 class TestJ2Iso(CompareMats, unittest.TestCase):
   def setUp(self):
