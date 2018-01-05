@@ -1,4 +1,40 @@
 <materials>
+  <material name="test_powerdamage" type="smallstrain_damage">
+    <base type="smallstrain">
+      <elastic type="isotropic">
+        <youngs>
+          <modulus>92000</modulus>
+        </youngs>
+        <poissons>
+          <modulus>0.3</modulus>
+        </poissons>
+      </elastic>
+      <plastic type="independent">
+        <rule type="associative">
+          <surface type="isoj2"/>
+          <hardening type="isotropic">
+            <isotropic type="linear">
+              <yield>180</yield>
+              <harden>1000</harden>
+            </isotropic>
+          </hardening>
+        </rule>
+      </plastic>
+    </base>
+    <damage type="power_law">
+      <A>2.0e-5</A>
+      <a>2.2</a>
+      <elastic type="isotropic">
+        <youngs>
+          <modulus>92000</modulus>
+        </youngs>
+        <poissons>
+          <modulus>0.3</modulus>
+        </poissons>
+      </elastic>
+    </damage>
+  </material>
+
   <material name="test_j2iso" type="smallstrain">
     <elastic type="isotropic">
       <youngs>

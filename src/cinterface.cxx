@@ -36,10 +36,11 @@ double alpha_nemlmodel(NEMLMODEL * model, double T)
 }
 
 void elastic_strains_nemlmodel(NEMLMODEL * model, double * s_np1,
-                               double T_np1, double * e_np1, int * ier)
+                               double T_np1, double * h_np1,
+                               double * e_np1, int * ier)
 {
   try {
-    *ier = model->elastic_strains(s_np1, T_np1, e_np1);
+    *ier = model->elastic_strains(s_np1, T_np1, h_np1, e_np1);
   }
   catch (...) {
     *ier = neml::UNKNOWN_ERROR;
