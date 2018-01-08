@@ -168,12 +168,12 @@ class BarModel(nx.MultiGraph):
       # Assemble internal forces and derivative
       for index_i, node_i in enumerate((i,j)):
         if node_i in free_nodes:
-          idx_i = free_nodes.index(node)
+          idx_i = free_nodes.index(node_i)
           R[idx_i] += self.sign[index_i] * f
 
           for index_j, node_j in enumerate((i,j)):
             if node_j in free_nodes:
-              idx_j = free_nodes.index(node)
+              idx_j = free_nodes.index(node_j)
               J[idx_i, idx_j] += (self.sign[index_i]*self.sign[index_j] * A)
      
     return R, J
