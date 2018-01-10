@@ -315,7 +315,13 @@ int MarkFatigueDamageModel_sd::damage(
     return 0;
   }
 
-  *dd = d_n + C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq, m);
+  double dt = t_np1 - t_n;
+  if (dt == 0.0) {
+    *dd = d_n;
+    return 0;
+  }
+
+  *dd = d_n + C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq/dt, m) * dt;
 
   return 0;
 }
@@ -346,7 +352,13 @@ int MarkFatigueDamageModel_sd::ddamage_dd(
     return 0;
   }
 
-  *dd = C * d_beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq, m);
+  double dt = t_np1 - t_n;
+  if (dt == 0.0) {
+    *dd = 0.0;
+    return 0;
+  }
+
+  *dd = C * d_beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq/dt, m) * dt;
 
   return 0;
 }
@@ -377,8 +389,14 @@ int MarkFatigueDamageModel_sd::ddamage_de(
     return 0;
   }
 
+  double dt = t_np1 - t_n;
+  if (dt == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
+
   dee_(de, dd);
-  double fact = C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * m * pow(eeq, m-1);
+  double fact = C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * m * pow(eeq/dt, m-1);
 
   for (int i=0; i<6; i++) dd[i] *= fact;
 
@@ -411,8 +429,14 @@ int MarkFatigueDamageModel_sd::ddamage_ds(
     return 0;
   }
 
+  double dt = t_np1 - t_n;
+  if (dt == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
+
   dse_(s_np1, dd);
-  double fact = C * beta_fn_(d_np1, fa, fb, r0) * n * pow(seq, n-1) * pow(eeq, m);
+  double fact = C * beta_fn_(d_np1, fa, fb, r0) * n * pow(seq, n-1) * pow(eeq/dt, m) * dt;
 
   for (int i=0; i<6; i++) dd[i] *= fact;
 
