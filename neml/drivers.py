@@ -862,9 +862,6 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
     verbose = False):
   """
-    We need a generalized version of the strain_hold_step above to
-    make it work, but I'm tired right now.
-
     Strain controlled cyclic test.
 
     Parameters:
