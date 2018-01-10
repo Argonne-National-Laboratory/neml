@@ -37,6 +37,9 @@ std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * nod
 /// Process power law damage
 std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node, std::unique_ptr<NEMLModel_sd> bmodel, std::shared_ptr<Interpolate> alpha, int & ier);
 
+/// Process Mark's fatigue damage model
+std::unique_ptr<NEMLModel> process_mark_damage(const xmlpp::Element * node, std::unique_ptr<NEMLModel_sd> bmodel, std::shared_ptr<Interpolate> alpha, int & ier);
+
 /// Setup a creep model
 std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier);
 

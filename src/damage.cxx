@@ -1,6 +1,8 @@
 #include "damage.h"
 #include "elasticity.h"
 
+#include <cmath>
+
 namespace neml {
 
 NEMLDamagedModel_sd::NEMLDamagedModel_sd(std::shared_ptr<NEMLModel_sd> base, 
@@ -241,6 +243,243 @@ int NEMLScalarDamagedModel_sd::tangent_(
   mat_mat(6, 6, 6, B, C, A);
 
   return 0;
+}
+
+
+MarkFatigueDamageModel_sd::MarkFatigueDamageModel_sd(
+    std::shared_ptr<Interpolate> C,
+    std::shared_ptr<Interpolate> m,
+    std::shared_ptr<Interpolate> n,
+    std::shared_ptr<Interpolate> falpha,
+    std::shared_ptr<Interpolate> fbeta,
+    std::shared_ptr<Interpolate> rate0,
+    std::shared_ptr<NEMLModel_sd> base,
+    std::shared_ptr<Interpolate> alpha,
+    double tol, int miter,
+    bool verbose) :
+      NEMLScalarDamagedModel_sd(base, alpha, tol, miter, verbose),
+      C_(C), m_(m), n_(n), falpha_(falpha), fbeta_(fbeta), rate0_(rate0)
+{
+
+
+}
+
+MarkFatigueDamageModel_sd::MarkFatigueDamageModel_sd(
+    double C, double m, double n,
+    double falpha, double fbeta, double rate0,
+    std::shared_ptr<NEMLModel_sd> base,
+    double alpha,
+    double tol, int miter,
+    bool verbose) :
+      NEMLScalarDamagedModel_sd(base, alpha, tol, miter, verbose),
+      C_(new ConstantInterpolate(C)), 
+      m_(new ConstantInterpolate(m)), 
+      n_(new ConstantInterpolate(n)), 
+      falpha_(new ConstantInterpolate(falpha)), 
+      fbeta_(new ConstantInterpolate(fbeta)),
+      rate0_(new ConstantInterpolate(rate0))
+{
+
+}
+
+int MarkFatigueDamageModel_sd::elastic_strains(const double * const s_np1,
+                    double T_np1, const double * const h_np1,
+                    double * const e_np1) const
+{
+  return base_->elastic_strains(s_np1, T_np1, h_np1, e_np1);
+}
+
+int MarkFatigueDamageModel_sd::damage(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double C = C_->value(T_np1);
+  double m = m_->value(T_np1);
+  double n = n_->value(T_np1);
+  double fa = falpha_->value(T_np1);
+  double fb = fbeta_->value(T_np1);
+  double r0 = rate0_->value(T_np1);
+
+  double de[6];
+  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
+
+  double seq = se_(s_np1);
+  double eeq = ee_(de);
+
+  if ((seq == 0) || (eeq == 0)) {
+    *dd = d_n;
+    return 0;
+  }
+
+  *dd = d_n + C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq, m);
+
+  return 0;
+}
+
+int MarkFatigueDamageModel_sd::ddamage_dd(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double C = C_->value(T_np1);
+  double m = m_->value(T_np1);
+  double n = n_->value(T_np1);
+  double fa = falpha_->value(T_np1);
+  double fb = fbeta_->value(T_np1);
+  double r0 = rate0_->value(T_np1);
+
+  double de[6];
+  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
+
+  double seq = se_(s_np1);
+  double eeq = ee_(de);
+
+  if ((seq == 0) || (eeq == 0)) {
+    *dd = 0.0;
+    return 0;
+  }
+
+  *dd = C * d_beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq, m);
+
+  return 0;
+}
+
+int MarkFatigueDamageModel_sd::ddamage_de(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double C = C_->value(T_np1);
+  double m = m_->value(T_np1);
+  double n = n_->value(T_np1);
+  double fa = falpha_->value(T_np1);
+  double fb = fbeta_->value(T_np1);
+  double r0 = rate0_->value(T_np1);
+
+  double de[6];
+  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
+
+  double seq = se_(s_np1);
+  double eeq = ee_(de);
+
+  if ((seq == 0) || (eeq == 0)) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
+
+  dee_(de, dd);
+  double fact = C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * m * pow(eeq, m-1);
+
+  for (int i=0; i<6; i++) dd[i] *= fact;
+
+  return 0;
+}
+
+int MarkFatigueDamageModel_sd::ddamage_ds(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double C = C_->value(T_np1);
+  double m = m_->value(T_np1);
+  double n = n_->value(T_np1);
+  double fa = falpha_->value(T_np1);
+  double fb = fbeta_->value(T_np1);
+  double r0 = rate0_->value(T_np1);
+
+  double de[6];
+  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
+
+  double seq = se_(s_np1);
+  double eeq = ee_(de);
+
+  if ((seq == 0) || (eeq == 0)) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
+
+  dse_(s_np1, dd);
+  double fact = C * beta_fn_(d_np1, fa, fb, r0) * n * pow(seq, n-1) * pow(eeq, m);
+
+  for (int i=0; i<6; i++) dd[i] *= fact;
+
+  return 0;
+
+}
+
+double MarkFatigueDamageModel_sd::beta_fn_(double x, double a, double b, double r0) const
+{
+  double nz = tgamma(a+b) / (tgamma(a) + tgamma(b));
+  return nz * pow(x, a-1) * pow(1-x, b-1) + r0 * (1-x);
+}
+
+double MarkFatigueDamageModel_sd::d_beta_fn_(double x, double a, double b, double r0) const
+{
+  double nz = tgamma(a+b) / (tgamma(a) + tgamma(b));
+  return nz * (
+      (a-1) * pow(x, a-2) * pow(1-x, b-1) - 
+      (b-1) * pow(x, a-1) * pow(1-x, b-2)) - r0;
+}
+
+double MarkFatigueDamageModel_sd::se_(const double * const s) const
+{
+  double sdev[6];
+  std::copy(s, s+6, sdev);
+  dev_vec(sdev);
+  return sqrt(3.0/2.0 * dot_vec(sdev, sdev, 6));
+}
+
+void MarkFatigueDamageModel_sd::dse_(const double * const s, double * const ds) const
+{
+  std::copy(s, s+6, ds);
+  dev_vec(ds);
+  double f = dot_vec(ds, ds, 6);
+  if (f == 0.0) {
+    std::fill(ds, ds+6, 0.0);
+    return;
+  }
+  else {
+    double fact = sqrt(3.0/2.0) / sqrt(f);
+    for (int i = 0; i < 6; i++) ds[i] *= fact;
+    return;
+  }
+}
+
+double MarkFatigueDamageModel_sd::ee_(const double * const e) const
+{
+  double edev[6];
+  std::copy(e, e+6, edev);
+  dev_vec(edev);
+  return sqrt(2.0/3.0 * dot_vec(edev, edev, 6));
+}
+
+void MarkFatigueDamageModel_sd::dee_(const double * const e, double * const de) const
+{
+  std::copy(e, e+6, de);
+  dev_vec(de);
+  double f = dot_vec(de, de, 6);
+  if (f == 0.0) {
+    std::fill(de, de+6, 0.0);
+    return;
+  }
+  else {
+    double fact = sqrt(2.0/3.0) / sqrt(f);
+    for (int i = 0; i < 6; i++) de[i] *= fact;
+    return;
+  }
 }
 
 NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(

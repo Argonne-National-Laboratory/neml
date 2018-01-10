@@ -16,18 +16,6 @@ class CommonStandardDamageModel(object):
     sdev = make_dev(s)
     return np.sqrt(3.0/2.0 * np.dot(sdev, sdev))
 
-  def test_function_derivative(self):
-    d_model = self.model.df(self.stress, self.T)
-    d_calcd = differentiate(lambda x: self.model.f(x, self.T), self.stress)
-    self.assertTrue(np.allclose(d_model, d_calcd))
-
-class CommonScalarDamageModel(object):
-  def test_ndamage(self):
-    self.assertEqual(self.model.ndamage, 1)
-
-  def test_init_damage(self):
-    self.assertTrue(np.allclose(self.model.init_damage(), np.zeros((1,))))
-
   def test_damage(self):
     d_model = self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
@@ -42,6 +30,18 @@ class CommonScalarDamageModel(object):
     d_calcd = self.d_n + f * dp
 
     self.assertTrue(np.isclose(d_model, d_calcd))
+
+  def test_function_derivative(self):
+    d_model = self.model.df(self.stress, self.T)
+    d_calcd = differentiate(lambda x: self.model.f(x, self.T), self.stress)
+    self.assertTrue(np.allclose(d_model, d_calcd))
+
+class CommonScalarDamageModel(object):
+  def test_ndamage(self):
+    self.assertEqual(self.model.ndamage, 1)
+
+  def test_init_damage(self):
+    self.assertTrue(np.allclose(self.model.init_damage(), np.zeros((1,))))
 
   def test_ddamage_ddamage(self):
     dd_model = self.model.ddamage_dd(self.d_np1, self.d_n, self.e_np1, self.e_n,
@@ -154,7 +154,7 @@ class CommonDamagedModel(object):
 
       A_num = differentiate(lambda e: self.model.update_sd(e, e_n,
         self.T, self.T, t_np1, t_n, s_n, hist_n, u_n, p_n)[0], e_np1)
-
+      
       self.assertTrue(np.allclose(A_num, A_np1, rtol = 1.0e-3, atol = 1.0e-1))
 
       e_n = np.copy(e_np1)
@@ -163,6 +163,70 @@ class CommonDamagedModel(object):
       u_n = u_np1
       p_n = p_np1
       t_n = t_np1
+
+class TestMarkDamage(unittest.TestCase, CommonScalarDamageModel, 
+    CommonDamagedModel):
+  def setUp(self):
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+    self.H = 1000.0
+
+    E = elasticity.YoungsModulus(self.E)
+    v = elasticity.PoissonsRatio(self.nu)
+    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    kin = hardening.LinearKinematicHardeningRule(self.H)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+        flow)
+
+    self.C = 8.0e-6
+    self.n = 2.2
+    self.m = 1.0
+    self.alpha = 3.0
+    self.beta = 2.0
+    self.r0 = 0.01
+
+    self.model = damage.MarkFatigueDamageModel_sd(self.C, self.m, self.n, 
+        self.alpha, self.beta, self.r0, self.bmodel)
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+    self.T = 100.0
+
+    self.s_np1 = self.stress
+    self.s_n = np.array([-25,150,250,-25,-100,25])
+
+    self.d_np1 = 0.5
+    self.d_n = 0.4
+
+    self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15])
+    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13])
+
+    self.T_np1 = self.T
+    self.T_n = 90.0
+
+    self.t_np1 = 1.0
+    self.t_n = 0.0
+
+    self.u_n = 0.0
+    self.p_n = 0.0
+  
+    # This is a rather boring baseline history state to probe, but I can't
+    # think of a better way to get a "generic" history from a generic model
+    self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
+    self.x_trial = np.array([50,-25,150,-150,190,100.0] + [0.41])
+
+    self.nsteps = 10
+    self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
+    self.ttarget = 10.0
 
 class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel, 
     CommonScalarDamageModel, CommonDamagedModel):

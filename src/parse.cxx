@@ -91,6 +91,11 @@ std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * nod
                                    std::unique_ptr<NEMLModel_sd>(static_cast<NEMLModel_sd*>(base_cast.release())), 
                                    alpha, ier);
   }
+  else if (dtype == "mark") {
+    return process_mark_damage(damage_node, 
+                                   std::unique_ptr<NEMLModel_sd>(static_cast<NEMLModel_sd*>(base_cast.release())), 
+                                   alpha, ier);
+  }
   else {
     ier = UNKNOWN_TYPE;
     return std::unique_ptr<NEMLModel>(nullptr);
@@ -117,6 +122,26 @@ std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node,
           alpha
           )); 
 }
+
+std::unique_ptr<NEMLModel> process_mark_damage(const xmlpp::Element * node, 
+                                               std::unique_ptr<NEMLModel_sd> bmodel, 
+                                               std::shared_ptr<Interpolate> alpha,
+                                               int & ier)
+{
+
+  return std::unique_ptr<NEMLModel>(
+      new MarkFatigueDamageModel_sd(
+          scalar_param(node, "C", ier),
+          scalar_param(node, "m", ier),
+          scalar_param(node, "n", ier),
+          scalar_param(node, "alpha", ier),
+          scalar_param(node, "beta", ier),
+          scalar_param(node, "rate0", ier),
+          std::move(bmodel),
+          alpha
+          )); 
+}
+
 
 std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & ier)
 {

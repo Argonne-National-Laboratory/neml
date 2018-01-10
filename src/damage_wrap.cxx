@@ -116,6 +116,22 @@ PYBIND11_PLUGIN(damage) {
            }, "Make a trial state, mostly for testing.")
       ;
 
+  py::class_<MarkFatigueDamageModel_sd, std::shared_ptr<MarkFatigueDamageModel_sd>>(m, "MarkFatigueDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
+           std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
+           std::shared_ptr<Interpolate>,
+           std::shared_ptr<NEMLModel_sd>, std::shared_ptr<Interpolate>, double, int, bool>(),
+            py::arg("C"), py::arg("m"), py::arg("n"), py::arg("falpha"), py::arg("fbeta"), py::arg("rate0"),
+            py::arg("base"), py::arg("alpha") = nullptr, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+            py::arg("verbose") = false)
+      .def(py::init<double, double, double,
+           double, double, double,
+           std::shared_ptr<NEMLModel_sd>, double, double, int, bool>(),
+            py::arg("C"), py::arg("m"), py::arg("n"), py::arg("falpha"), py::arg("fbeta"), py::arg("rate0"),
+            py::arg("base"), py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+            py::arg("verbose") = false)
+      ;
+
   py::class_<NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd", py::base<NEMLScalarDamagedModel_sd>())
       .def("f",
            [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1) -> double

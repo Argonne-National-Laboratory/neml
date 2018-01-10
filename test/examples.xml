@@ -35,6 +35,38 @@
     </damage>
   </material>
 
+  <material name="test_markdamage" type="smallstrain_damage">
+    <base type="smallstrain">
+      <elastic type="isotropic">
+        <youngs>
+          <modulus>92000</modulus>
+        </youngs>
+        <poissons>
+          <modulus>0.3</modulus>
+        </poissons>
+      </elastic>
+      <plastic type="independent">
+        <rule type="associative">
+          <surface type="isoj2"/>
+          <hardening type="isotropic">
+            <isotropic type="linear">
+              <yield>180</yield>
+              <harden>1000</harden>
+            </isotropic>
+          </hardening>
+        </rule>
+      </plastic>
+    </base>
+    <damage type="mark">
+      <C>8.0e-6</C>
+      <n>2.2</n>
+      <m>1.0</m>
+      <alpha>3.0</alpha>
+      <beta>2.0</beta>
+      <rate0>0.01</rate0>
+    </damage>
+  </material>
+
   <material name="test_j2iso" type="smallstrain">
     <elastic type="isotropic">
       <youngs>

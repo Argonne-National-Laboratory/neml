@@ -917,75 +917,85 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
   if verbose:
     print("Initial half cycle")
   e_inc = emax / nsteps
-  for i in range(nsteps):
-    if i == 0:
-      einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
-    else:
-      einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
-          ainc_guess = ainc)
-    strain.append(np.dot(driver.strain_int[-1], sdir))
-    stress.append(np.dot(driver.stress_int[-1], sdir))
-    time.append(time[-1] + e_inc / erate)
+  try:
+    for i in range(nsteps):
+      if i == 0:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
+      else:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
+            ainc_guess = ainc)
+      strain.append(np.dot(driver.strain_int[-1], sdir))
+      stress.append(np.dot(driver.stress_int[-1], sdir))
+      time.append(time[-1] + e_inc / erate)
+  except Exception as e:
+    print("Failed to make first half cycle")
+    raise e
   
   # Begin cycling
   for s in range(ncycles):
     if verbose:
       print("Cycle %i" % s)
-
-    # Tension hold
-    if hold_time[0] > 0.0:
-      dt = hold_time[0] / n_hold
-      for i in range(n_hold):
-        einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
-            einc_guess = np.zeros((6,)), ainc_guess = -1)
-        strain.append(np.dot(driver.strain_int[-1], sdir))
-        stress.append(np.dot(driver.stress_int[-1], sdir))
-        time.append(time[-1] + dt)
-
-    si = len(driver.strain_int)
-    e_inc = np.abs(emin - emax) / nsteps
-    for i in range(nsteps):
-      if i == 0:
-        einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
-            einc_guess = -einc, ainc_guess = -ainc)
-      else:
-        einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
-            einc_guess = einc, ainc_guess = ainc)
-
-      strain.append(np.dot(driver.strain_int[-1], sdir))
-      stress.append(np.dot(driver.stress_int[-1], sdir))
-      time.append(time[-1] + e_inc / erate)
     
-    # Compression hold
-    if hold_time[1] > 0.0:
-      dt = hold_time[1] / n_hold
-      for i in range(n_hold):
-        einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
-            einc_guess = np.zeros((6,)), ainc_guess = -1)
+    try:
+      # Tension hold
+      if hold_time[0] > 0.0:
+        dt = hold_time[0] / n_hold
+        for i in range(n_hold):
+          einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
+              einc_guess = np.zeros((6,)), ainc_guess = -1)
+          strain.append(np.dot(driver.strain_int[-1], sdir))
+          stress.append(np.dot(driver.stress_int[-1], sdir))
+          time.append(time[-1] + dt)
+
+      si = len(driver.strain_int)
+      e_inc = np.abs(emin - emax) / nsteps
+      for i in range(nsteps):
+        if i == 0:
+          einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
+              einc_guess = -einc, ainc_guess = -ainc)
+        else:
+          einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
+              einc_guess = einc, ainc_guess = ainc)
+
         strain.append(np.dot(driver.strain_int[-1], sdir))
         stress.append(np.dot(driver.stress_int[-1], sdir))
-        time.append(time[-1] + dt)
+        time.append(time[-1] + e_inc / erate)
+      
+      # Compression hold
+      if hold_time[1] > 0.0:
+        dt = hold_time[1] / n_hold
+        for i in range(n_hold):
+          einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
+              einc_guess = np.zeros((6,)), ainc_guess = -1)
+          strain.append(np.dot(driver.strain_int[-1], sdir))
+          stress.append(np.dot(driver.stress_int[-1], sdir))
+          time.append(time[-1] + dt)
 
-    e_inc = np.abs(emax - emin) / nsteps
-    for i in range(nsteps):
-      if i == 0:
-        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
-            einc_guess = -einc, ainc_guess = -ainc)
-      else:
-        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T,
-            einc_guess = einc, ainc_guess = ainc)
-      strain.append(np.dot(driver.strain_int[-1], sdir))
-      stress.append(np.dot(driver.stress_int[-1], sdir))
-      time.append(time[-1] + e_inc / erate)
+      e_inc = np.abs(emax - emin) / nsteps
+      for i in range(nsteps):
+        if i == 0:
+          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+              einc_guess = -einc, ainc_guess = -ainc)
+        else:
+          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T,
+              einc_guess = einc, ainc_guess = ainc)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+        time.append(time[-1] + e_inc / erate)
 
-    # Calculate
-    cycles.append(s)
-    smax.append(max(stress[si:]))
-    smin.append(min(stress[si:]))
-    smean.append((smax[-1]+smin[-1])/2)
+      # Calculate
+      if np.isnan(max(stress[si:])) or np.isnan(min(stress[si:])):
+        break
 
-    ecycle.append(driver.u_int[-1])
-    pcycle.append(driver.p_int[-1])
+      cycles.append(s)
+      smax.append(max(stress[si:]))
+      smin.append(min(stress[si:]))
+      smean.append((smax[-1]+smin[-1])/2)
+
+      ecycle.append(driver.u_int[-1])
+      pcycle.append(driver.p_int[-1])
+    except Exception as e:
+      break
 
   # Setup and return
   return {"strain": np.array(strain), "stress": np.array(stress),
