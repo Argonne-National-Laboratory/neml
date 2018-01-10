@@ -82,7 +82,7 @@ PYBIND11_PLUGIN(neml) {
 
            }, "Small deformation update.")
 
-      .def("alpha", &NEMLModel_sd::alpha)
+      .def("alpha", &NEMLModel::alpha)
       .def("elastic_strains",
            [](NEMLModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1, py::array_t<double, py::array::c_style> h_np1) -> py::array_t<double>
            {
