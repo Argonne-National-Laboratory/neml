@@ -307,7 +307,7 @@ class Bar(object):
     self.temperature = np.append(self.temperature, self.T_next)
     self.history = np.vstack((self.history, self.history_next))
    
-def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 50,
+def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-8, miter = 50,
     linesearch = 'none', bt_tau = 0.5, bt_c = 1.0e-4):
   """
     Manually-code newton-raphson so that I can output convergence info, if
