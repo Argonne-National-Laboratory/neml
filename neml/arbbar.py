@@ -4,6 +4,8 @@ import networkx as nx
 
 import warnings
 
+import scipy.optimize as opt
+
 import uniaxial
 
 class BarModel(nx.MultiGraph):
@@ -61,24 +63,51 @@ class BarModel(nx.MultiGraph):
     # Sign convention
     self.sign = [-1.0,1.0]
 
-  def solve(self, dt):
+  def solve(self, dt, ndiv = 4, dfact = 2, verbose = False,
+      extrapolate = False):
     """
       Solve the next time increment
 
       Parameters:
         dt      time increment
+
+      Optional:
+        ndiv    max number of adaptive subdivisions
+        dfact   what to divided by (SHOULD BE AN INTEGER)
+        verbose dump a lot of solver info
     """
     if not self.validated:
       self.validate()
     
     free_nodes, fixed_nodes = self.free_fixed_nodes()
-    d_guess = self.make_guess(free_nodes)
 
-    solveme = lambda d: self.RJ(d, free_nodes, dt)
+    dt_total = dt
+    dt_attempt = dt
+    step_total = dfact**ndiv
+    step_attempt = dfact**ndiv
+    step_curr = 0
+    dtried = 0
+    ef = 1.0
 
-    d = newton(solveme, d_guess)
-    
-    self.apply_update(d, free_nodes, dt)
+    while step_curr < step_total:
+      solveme = lambda d: self.RJ(d, free_nodes, dt_attempt)
+      d_guess = self.make_guess(free_nodes, extrapolate = extrapolate,
+          value = ef)   
+      try:
+        d = newton(solveme, d_guess, verbose = verbose, fail_iter = True)
+        step_curr += step_attempt
+      except Exception as e:
+        dtried += 1
+        if verbose:
+          print("Substepping: %i" % dtried)
+        if dtried == ndiv:
+          raise e
+        step_attempt /= dfact
+        dt_attempt /= dfact
+        ef /= dfact
+        continue
+      self.apply_update(d, free_nodes, dt_attempt)
+      ef = 1.0
 
   def apply_update(self, d, free_nodes, dt):
     """
@@ -116,14 +145,19 @@ class BarModel(nx.MultiGraph):
     self.energy = np.append(self.energy, e_sum)
     self.dissipation = np.append(self.dissipation, e_sum)
   
-  def make_guess(self, free_nodes):
+  def make_guess(self, free_nodes, extrapolate = True, value = 1.0):
     """
       Make a displacement guess
 
       Parameters:
         free_nodes  the list of free nodes (this sets dof numbering)
     """
-    return np.array([self.node[n]['displacements'][-1] for n in free_nodes])
+    if (not extrapolate) or (len(self.time) < 2):
+      return np.array([self.node[n]['displacements'][-1] for n in free_nodes])
+    else:
+      xprev = np.array([self.node[n]['displacements'][-1] for n in free_nodes])
+      xprevprev = np.array([self.node[n]['displacements'][-2] for n in free_nodes])
+      return xprev + value * (xprev - xprevprev)
   
   def free_fixed_nodes(self):
     """
@@ -275,6 +309,7 @@ class Bar(object):
         t_n     last time step
     """
     self.T_next = self.T(t_np1)
+
     a_np1 = self.mat.alpha(self.T_next)
     a_n = self.mat.alpha(self.temperature[-1])
     dT = self.T_next - self.temperature[-1]
@@ -283,7 +318,7 @@ class Bar(object):
 
     self.strain_next = d / self.l
     self.mstrain_next = self.strain_next - self.tstrain_next
-
+    
     (self.stress_next, self.history_next, tangent, self.energy_next,
         self.dissipation_next) = self.mat.update(
             self.mstrain_next, self.mstrain[-1], 
@@ -308,7 +343,7 @@ class Bar(object):
     self.history = np.vstack((self.history, self.history_next))
    
 def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-8, miter = 50,
-    linesearch = 'none', bt_tau = 0.5, bt_c = 1.0e-4):
+    linesearch = 'none', bt_tau = 0.5, bt_c = 1.0e-4, fail_iter = True):
   """
     Manually-code newton-raphson so that I can output convergence info, if
     requested.
@@ -350,7 +385,10 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-8, miter = 50,
     if i > miter:
       if verbose:
         print("")
-      raise MaximumIterations()
+      if fail_iter:
+        raise MaximumIterations()
+      else:
+        break
   
   if verbose:
     print("")
