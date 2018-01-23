@@ -226,25 +226,6 @@ A user defining a new material model selects one of these four interfaces
  response [].
 \end_layout
 
-\begin_layout Standard
-The library also provides several non-implementable interfaces:
-\end_layout
-
-\begin_layout Enumerate
-update_warp3d: Interface linking the material library to the warp3d finite
- element code.
-\end_layout
-
-\begin_layout Enumerate
-update_umat_incremental: Interface for linking the material library to ABAQUS
- Implicit via the UMAT interface and using the incremental strains.
-\end_layout
-
-\begin_layout Standard
-These interfaces will introduce similar errors as the small deformation
- to large deformation translation step described above.
-\end_layout
-
 \begin_layout Chapter
 Material models
 \end_layout

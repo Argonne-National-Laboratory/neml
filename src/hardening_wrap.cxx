@@ -223,15 +223,15 @@ PYBIND11_PLUGIN(hardening) {
       ;
 
   py::class_<Chaboche, std::shared_ptr<Chaboche>>(m, "Chaboche", py::base<NonAssociativeHardening>())
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"))
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<GammaModel>>>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"))
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>, bool>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("nonisothermal") = true)
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<GammaModel>>, bool>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("nonisothermal") = true)
 
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>, std::vector<double>, std::vector<double>>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"))
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<GammaModel>>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<Interpolate>>>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"))
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>, std::vector<double>, std::vector<double>, bool>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"), py::arg("nonisothermal") = true)
+      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<GammaModel>>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<Interpolate>>, bool>(),
+           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"), py::arg("nonisothermal") = true)
 
       .def_property_readonly("n", &Chaboche::n, "Number of backstresses")
       .def("c",

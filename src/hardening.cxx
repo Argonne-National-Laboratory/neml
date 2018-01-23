@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 namespace neml {
 
@@ -399,17 +400,20 @@ double SatGamma::beta(double T) const {
 //
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<double> c,
-                   std::vector<std::shared_ptr<GammaModel>> gmodels) :
+                   std::vector<std::shared_ptr<GammaModel>> gmodels,
+                   bool noniso) :
     iso_(iso), c_(make_vector(c)), gmodels_(gmodels), n_(c.size()),
-    relax_(false)
+    relax_(false), noniso_(noniso)
 {
 
 }
 
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<Interpolate>> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels) :
-    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), relax_(false)
+           std::vector<std::shared_ptr<GammaModel>> gmodels,
+           bool noniso) :
+    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), relax_(false),
+    noniso_(noniso)
 {
 
 }
@@ -418,9 +422,10 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
                    std::vector<double> c,
                    std::vector<std::shared_ptr<GammaModel>> gmodels,
                    std::vector<double> A,
-                   std::vector<double> a) :
+                   std::vector<double> a,
+                   bool noniso) :
     iso_(iso), c_(make_vector(c)), gmodels_(gmodels), n_(c.size()),
-    A_(make_vector(A)), a_(make_vector(a)), relax_(true)
+    A_(make_vector(A)), a_(make_vector(a)), relax_(true), noniso_(noniso)
 {
 
 }
@@ -429,9 +434,10 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels,
            std::vector<std::shared_ptr<Interpolate>> A,
-           std::vector<std::shared_ptr<Interpolate>> a) :
+           std::vector<std::shared_ptr<Interpolate>> a,
+           bool noniso) :
     iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), A_(A), a_(a), 
-    relax_(true)
+    relax_(true), noniso_(noniso)
 {
 
 }
@@ -691,6 +697,51 @@ int Chaboche::dh_da_time(const double * const s, const double * const alpha,
         dhv[CINDEX(ia,ib,nh)] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i]-1.0) * (
             d + (a[i] - 1.0) * XX[CINDEX(j,k,6)]);
       }
+    }
+  }
+
+  return 0;
+}
+
+int Chaboche::h_temp(const double * const s, const double * const alpha, double T,
+              double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+  if (not noniso_) return 0;
+
+  std::vector<double> c = eval_vector(c_, T);
+  std::vector<double> dc = eval_deriv_vector(c_, T);
+
+  for (int i=0; i<n_; i++) {
+    if (c[i] == 0.0) continue;
+    for (int j=0; j<6; j++) {
+      hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
+    }
+  }
+  return 0;
+}
+
+int Chaboche::dh_ds_temp(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*6, 0.0);
+  return 0;
+}
+
+int Chaboche::dh_da_temp(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  if (not noniso_) return 0;
+
+  std::vector<double> c = eval_vector(c_, T);
+  std::vector<double> dc = eval_deriv_vector(c_, T);
+
+  for (int i=0; i<n_; i++) {
+    if (c[i] == 0.0) continue;
+    for (int j=0; j<6; j++) {
+      int ci = 1 + i*6 + j;
+      dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
     }
   }
 

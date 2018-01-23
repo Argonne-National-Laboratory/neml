@@ -181,7 +181,7 @@ class CommonNonAssociative(object):
     dfn = lambda x: self.model.h(x, a, self.T)
     dh_num = differentiate(dfn, s)
 
-    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3, atol = 1.0e-5))
 
   def test_dh_da(self):
     s = self.gen_stress()
@@ -191,7 +191,7 @@ class CommonNonAssociative(object):
     dfn = lambda x: self.model.h(s, x, self.T)
     dh_num = differentiate(dfn, a)
 
-    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3, atol = 1.0e-5))
 
   def test_dh_ds_time(self):
     s = self.gen_stress()
@@ -209,6 +209,26 @@ class CommonNonAssociative(object):
 
     dh_model = self.model.dh_da_time(s, a, self.T)
     dfn = lambda x: self.model.h_time(s, x, self.T)
+    dh_num = differentiate(dfn, a)
+
+    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+
+  def test_dh_ds_temp(self):
+    s = self.gen_stress()
+    a = self.gen_hist()
+
+    dh_model = self.model.dh_ds_temp(s, a, self.T)
+    dfn = lambda x: self.model.h_temp(x, a, self.T)
+    dh_num = differentiate(dfn, s)
+
+    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+
+  def test_dh_da_temp(self):
+    s = self.gen_stress()
+    a = self.gen_hist()
+
+    dh_model = self.model.dh_da_temp(s, a, self.T)
+    dfn = lambda x: self.model.h_temp(s, x, self.T)
     dh_num = differentiate(dfn, a)
 
     self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
@@ -402,7 +422,7 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
     self.K = 1000.0
 
     self.n = 2
-    self.cs = list(np.array(range(self.n)) / (2*self.n))
+    self.cs = list(np.array(range(self.n)) / (2*self.n)+10.0)
     self.g0s = np.array(range(1,self.n+1)) * 10.0
     self.gss = 2.0 * self.g0s
     self.betas = np.array(range(self.n)) / self.n
@@ -451,3 +471,36 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
       h_exact[1+i*6:1+(i+1)*6] = -2.0 / 3.0 * self.cs[i] * n - np.sqrt(2.0/3.0)*self.gammas[i].gamma(alpha[0], self.T)*alpha[1+i*6:1+(i+1)*6]
     
     self.assertTrue(np.allclose(h_model, h_exact))
+
+class TestChabocheTempTerm(unittest.TestCase, CommonNonAssociative):
+  """
+    Same as previous but with new-style setup
+  """
+  def setUp(self):
+    s0 = 200.0
+    K = 1000.0
+
+    self.n = 2
+    cvals1 = [1000.0,10.0]
+    cvals2 = [100.0,100.0]
+    Ts = [0.0,1000.0]
+
+    cs = [interpolate.PiecewiseLinearInterpolate(Ts, [ci,cj]) for ci,cj in zip(cvals1, cvals2)]
+    rs = [1.0e-2,1.0]
+    gammas = [hardening.ConstantGamma(r) for r in rs]
+
+    iso = hardening.LinearIsotropicHardeningRule(s0, K)
+
+    self.model = hardening.Chaboche(iso, cs, gammas)
+
+    self.hist0 = np.zeros((1 + self.n*6,))
+    self.conform = 7
+
+    self.T = 300.0
+  
+  def gen_hist(self):
+    hist = np.array(range(1,2+self.n*6)) / (3*self.n)
+    hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
+    for i in range(self.n):
+      hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
+    return hist

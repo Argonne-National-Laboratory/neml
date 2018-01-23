@@ -240,4 +240,14 @@ std::vector<double> eval_vector(
   return vt;
 }
 
+std::vector<double> eval_deriv_vector(
+    const std::vector<std::shared_ptr<Interpolate>> & iv, double x)
+{
+  std::vector<double> vt;
+  for (auto it = iv.begin(); it != iv.end(); ++it) {
+    vt.push_back((*it)->derivative(x));
+  }
+  return vt;
+}
+
 } // namespace neml
