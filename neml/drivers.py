@@ -1343,7 +1343,8 @@ def thermomechanical_strain_raw(model, time, temperature, strain,
 
 
 def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100, 
-    sdir = np.array([1,0,0,0,0,0]), verbose = False, history = None):
+    sdir = np.array([1,0,0,0,0,0]), verbose = False, history = None, 
+    strains = None):
   """
     Model a uniaxial strain rate jump test
 
@@ -1358,6 +1359,7 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
       sdir          stress direction, default tension in x
       verbose       whether to be verbose
       history       prior model history
+      strains       manual definition of jumps
 
     Results:
       strain    strain in direction
@@ -1370,15 +1372,23 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
   strain = [0.0]
   stress = [0.0]
   
-  for erate in erates:
-    for i in range(nsteps_per):
-      if i == 0:
-        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
-      else:
-        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
-            einc_guess = einc, ainc_guess = ainc)
-      strain.append(np.dot(driver.strain_int[-1], sdir))
-      stress.append(np.dot(driver.stress_int[-1], sdir))
+  if strains is None:
+    for erate in erates:
+      for i in range(nsteps_per):
+        if i == 0:
+          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
+        else:
+          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+              einc_guess = einc, ainc_guess = ainc)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+  else:
+    incs = np.diff(np.insert(strains,0,0)) / nsteps_per
+    for e,erate,inc in zip(strains,erates,incs):
+      while strain[-1] < e:
+        einc, ainc = driver.erate_einc_step(sdir, erate, inc, T)
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
 
   strain = np.array(strain)
   stress = np.array(stress)
