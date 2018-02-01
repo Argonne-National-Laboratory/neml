@@ -66,7 +66,7 @@ class NEMLModel {
    virtual double alpha(double T) const = 0;
    // Helper for FEA output
    virtual int elastic_strains(const double * const s_np1,
-                               double T_np1,
+                               double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
 
 };
@@ -211,7 +211,7 @@ class NEMLModel_sd: public NEMLModel {
 
    // Helper for FEA output
    virtual int elastic_strains(const double * const s_np1,
-                               double T_np1,
+                               double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
 
   private:
@@ -242,7 +242,7 @@ class SmallStrainElasticity: public NEMLModel_sd {
 
   // Helper for FEA output
   virtual int elastic_strains(const double * const s_np1,
-                             double T_np1,
+                             double T_np1, const double * const h_np1,
                              double * const e_np1) const;
 
   // Getters
@@ -340,7 +340,7 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
 
   // Helper for FEA output
   virtual int elastic_strains(const double * const s_np1,
-                             double T_np1,
+                             double T_np1, const double * const h_np1,
                              double * const e_np1) const;
 
   // Property getter
@@ -421,7 +421,7 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   
   // Helper for FEA output
   virtual int elastic_strains(const double * const s_np1,
-                             double T_np1,
+                             double T_np1, const double * const h_np1,
                              double * const e_np1) const;
 
   // Getters
@@ -481,7 +481,7 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
   
   // Helper for FEA output
   virtual int elastic_strains(const double * const s_np1,
-                             double T_np1,
+                             double T_np1, const double * const h_np1,
                              double * const e_np1) const;
 
   // Make this public for ease of testing
@@ -536,7 +536,7 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
 
   // Helper for FEA output
   virtual int elastic_strains(const double * const s_np1,
-                             double T_np1,
+                             double T_np1, const double * const h_np1,
                              double * const e_np1) const;
 
   // Make this public for ease of testing
@@ -597,7 +597,7 @@ class KMRegimeModel: public NEMLModel_sd {
  
   // Helper for FEA output
   virtual int elastic_strains(const double * const s_np1,
-                             double T_np1,
+                             double T_np1, const double * const h_np1,
                              double * const e_np1) const;
 
  private:

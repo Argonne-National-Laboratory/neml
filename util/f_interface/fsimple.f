@@ -88,7 +88,7 @@
                   end if
 
                   call elastic_strains_nemlmodel(model, s_np1, temp_np1,
-     &                  ee_np1, ier)
+     &                  h_np1, ee_np1, ier)
 
                   ! write(*,*) s_np1(1)
 

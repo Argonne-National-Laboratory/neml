@@ -54,7 +54,7 @@ class NEMLModel {
    virtual double alpha(double T) const = 0;
    // Helper for FEA output
    virtual int elastic_strains(const double * const s_np1,
-                               double T_np1,
+                               double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
 
 };

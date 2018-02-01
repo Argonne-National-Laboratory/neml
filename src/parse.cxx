@@ -43,10 +43,105 @@ std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname,
 std::unique_ptr<NEMLModel> make_from_node(const xmlpp::Element * node, int & ier)
 {
   return dispatch_attribute_unique<NEMLModel>(node, "type",
-                                          {"smallstrain","kmregion"},
-                                          {&process_smallstrain,&process_kmregion},
+                                          {"smallstrain","kmregion","smallstrain_damage"},
+                                          {&process_smallstrain,&process_kmregion,&process_smallstrain_damage},
                                           ier);
 }
+
+std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * node, int & ier)
+{
+  // Need:
+  //  1) a complete base model
+  //  2) (optionally) a cte
+  //  3) a damage block, defining the damage model
+
+  // 1) 
+  const xmlpp::Element * base_node;
+  if (not one_child(node, "base", base_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  std::unique_ptr<NEMLModel> base_cast = dispatch_attribute_unique<NEMLModel>(
+      base_node, "type", {"smallstrain", "kmregion", "smallstrain_damage"}, 
+      {&process_smallstrain,&process_kmregion,&process_smallstrain_damage}, ier);
+
+  // 2) CTE, if provided
+  std::shared_ptr<Interpolate> alpha;
+  auto a_nodes = node->get_children("alpha");
+  if (a_nodes.size() > 0) {
+    alpha = process_alpha(dynamic_cast<const xmlpp::Element*>(a_nodes.front()), ier);
+  }
+  else {
+    alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
+  }
+
+  // 3) Dispatch manually
+  const xmlpp::Element * damage_node;
+  if (not one_child(node, "damage", damage_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  
+  std::string dtype;
+  if (not one_attribute(damage_node, "type", dtype, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+  
+  if (dtype == "power_law") {
+    // BEHOLD THE HORROR!
+    return process_powerlaw_damage(damage_node, 
+                                   std::unique_ptr<NEMLModel_sd>(static_cast<NEMLModel_sd*>(base_cast.release())), 
+                                   alpha, ier);
+  }
+  else if (dtype == "mark") {
+    return process_mark_damage(damage_node, 
+                                   std::unique_ptr<NEMLModel_sd>(static_cast<NEMLModel_sd*>(base_cast.release())), 
+                                   alpha, ier);
+  }
+  else {
+    ier = UNKNOWN_TYPE;
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+}
+
+std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node, 
+                                                   std::unique_ptr<NEMLModel_sd> bmodel, 
+                                                   std::shared_ptr<Interpolate> alpha,
+                                                   int & ier)
+{
+  // Must have an "elastic" node
+  const xmlpp::Element * elastic_node;
+  if (not one_child(node, "elastic", elastic_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
+
+  return std::unique_ptr<NEMLModel>(
+      new NEMLPowerLawDamagedModel_sd(
+          scalar_param(node, "A", ier),
+          scalar_param(node, "a", ier),
+          std::move(bmodel),
+          process_linearelastic(elastic_node, ier),
+          alpha
+          )); 
+}
+
+std::unique_ptr<NEMLModel> process_mark_damage(const xmlpp::Element * node, 
+                                               std::unique_ptr<NEMLModel_sd> bmodel, 
+                                               std::shared_ptr<Interpolate> alpha,
+                                               int & ier)
+{
+
+  return std::unique_ptr<NEMLModel>(
+      new MarkFatigueDamageModel_sd(
+          scalar_param(node, "C", ier),
+          scalar_param(node, "m", ier),
+          scalar_param(node, "n", ier),
+          scalar_param(node, "alpha", ier),
+          scalar_param(node, "beta", ier),
+          scalar_param(node, "rate0", ier),
+          std::move(bmodel),
+          alpha
+          )); 
+}
+
 
 std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & ier)
 {
@@ -144,20 +239,36 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
         dynamic_cast<const xmlpp::Element*>(c_nodes.front()), ier);
     found_creep = true;
   }
+
+  std::unique_ptr<NEMLModel_sd> model;
   
+  auto p_nodes = node->get_children("plastic");
+  if (p_nodes.size() == 0) {
+    // You must be an elastic-only model!
+    model = std::unique_ptr<SmallStrainElasticity>(
+        new SmallStrainElasticity(emodel, alpha));
+
+    if (found_creep) {
+      return std::unique_ptr<NEMLModel>(
+          new SmallStrainCreepPlasticity(std::move(model), cmodel, alpha));
+    }
+    else {
+      return std::unique_ptr<NEMLModel>(std::move(model));
+    }
+  }
+
   // Logic here because we treat viscoplasticity differently
   const xmlpp::Element * plastic_node;
   if (not one_child(node, "plastic", plastic_node, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
-  
+
   // Select then on independent/dependent
   std::string ft;
   if (not one_attribute(plastic_node, "type", ft, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
 
-  std::unique_ptr<NEMLModel_sd> model;
   if (ft == "independent") {
     std::shared_ptr<RateIndependentFlowRule> fr =  process_independent(
         plastic_node, ier);
@@ -183,13 +294,18 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     ier = UNKNOWN_TYPE;
     return std::unique_ptr<NEMLModel>(nullptr);
   }
-
+  
+  // Add on the creep model
+  std::unique_ptr<NEMLModel_sd> comp_creep;
   if (found_creep) {
-    return std::unique_ptr<NEMLModel>(
+    comp_creep = std::unique_ptr<NEMLModel_sd>(
         new SmallStrainCreepPlasticity(std::move(model), cmodel, alpha));
   }
+  else {
+    comp_creep = std::move(model);
+  }
 
-  return std::unique_ptr<NEMLModel>(std::move(model));
+  return std::unique_ptr<NEMLModel>(std::move(comp_creep));
 }
 
 std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier)
@@ -427,16 +543,16 @@ std::shared_ptr<HardeningRule> process_isotropic(
   return dispatch_node(node, "isotropic", &process_isotropictag, ier);
 }
 
-std::shared_ptr<HardeningRule> process_isotropictag(
+std::shared_ptr<IsotropicHardeningRule> process_isotropictag(
     const xmlpp::Element * node, int & ier)
 {
-  return dispatch_attribute<HardeningRule>(node, "type",
-                                          {"linear", "interpolated", "voce"},
-                                          {&process_linearisotropic, &process_interpolatedisotropic, &process_voceisotropic},
+  return dispatch_attribute<IsotropicHardeningRule>(node, "type",
+                                          {"linear", "interpolated", "voce", "combined"},
+                                          {&process_linearisotropic, &process_interpolatedisotropic, &process_voceisotropic, &process_combinedisotropic},
                                           ier);
 }
 
-std::shared_ptr<HardeningRule> process_linearisotropic(
+std::shared_ptr<IsotropicHardeningRule> process_linearisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Two parameters: "yield" and "harden"
@@ -447,7 +563,7 @@ std::shared_ptr<HardeningRule> process_linearisotropic(
   return std::make_shared<LinearIsotropicHardeningRule>(yield, harden);
 }
 
-std::shared_ptr<HardeningRule> process_interpolatedisotropic(
+std::shared_ptr<IsotropicHardeningRule> process_interpolatedisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Just the flow curve
@@ -456,7 +572,7 @@ std::shared_ptr<HardeningRule> process_interpolatedisotropic(
   return std::make_shared<InterpolatedIsotropicHardeningRule>(flow);
 }
 
-std::shared_ptr<HardeningRule> process_voceisotropic(
+std::shared_ptr<IsotropicHardeningRule> process_voceisotropic(
     const xmlpp::Element * node, int & ier)
 {
   // Three parameters: "yield", "r", and "d"
@@ -467,6 +583,16 @@ std::shared_ptr<HardeningRule> process_voceisotropic(
   std::shared_ptr<Interpolate> d = scalar_param(node, "d", ier);
 
   return std::make_shared<VoceIsotropicHardeningRule>(yield, r, d);
+}
+
+std::shared_ptr<IsotropicHardeningRule> process_combinedisotropic(
+    const xmlpp::Element * node, int & ier)
+{
+  std::vector< std::shared_ptr<IsotropicHardeningRule> > mvec = 
+      dispatch_vector_models<IsotropicHardeningRule>(
+          node, "models", "isotropic", &process_isotropictag, ier);
+
+  return std::make_shared<CombinedIsotropicHardeningRule>(mvec);
 }
 
 

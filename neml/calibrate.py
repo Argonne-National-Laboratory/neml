@@ -40,10 +40,8 @@ class Evaluator(object):
     try:
       v = evaluate_case(case, model, weights = self.weights)
     except Exception as e:
-      print(scase)
       v = self.penalty
     if np.isnan(v) or np.isinf(v):
-      print(scase)
       v = self.penalty
     
     return v

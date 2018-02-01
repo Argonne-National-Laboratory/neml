@@ -28,7 +28,7 @@ PYBIND11_PLUGIN(neml) {
            }, "Initialize stored variables.")
 
       .def_property_readonly("nhist", &NEMLModel::nhist, "Number of actual history variables.")
-      .def("init_store",
+      .def("init_hist",
            [](NEMLModel & m) -> py::array_t<double>
            {
             auto h = alloc_vec<double>(m.nhist());
@@ -82,13 +82,15 @@ PYBIND11_PLUGIN(neml) {
 
            }, "Small deformation update.")
 
-      .def("alpha", &NEMLModel_sd::alpha)
+      .def("alpha", &NEMLModel::alpha)
       .def("elastic_strains",
-           [](NEMLModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1) -> py::array_t<double>
+           [](NEMLModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1, py::array_t<double, py::array::c_style> h_np1) -> py::array_t<double>
            {
             auto e_np1 = alloc_vec<double>(6);
 
-            int ier = m.elastic_strains(arr2ptr<double>(s_np1), T_np1, arr2ptr<double>(e_np1));
+            int ier = m.elastic_strains(
+                arr2ptr<double>(s_np1), T_np1,
+                arr2ptr<double>(h_np1), arr2ptr<double>(e_np1));
             py_error(ier);
 
             return e_np1;

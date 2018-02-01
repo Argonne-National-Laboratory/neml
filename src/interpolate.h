@@ -100,6 +100,10 @@ std::vector<std::shared_ptr<Interpolate>>
 std::vector<double> eval_vector(
     const std::vector<std::shared_ptr<Interpolate>> & iv, double x);
 
+/// A helper to evaluate the derivative of a vector of interpolates
+std::vector<double> eval_deriv_vector(
+    const std::vector<std::shared_ptr<Interpolate>> & iv, double x);
+
 } // namespace neml
 
 

@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 
             // printf("Stress: %lf\n", s_np1[0]);
 
-            elastic_strains_nemlmodel(model, s_np1, T_np1, estrain, &ier);
+            elastic_strains_nemlmodel(model, s_np1, T_np1, h_np1, estrain, &ier);
 
             for (j=0; j<6; j++) {
                   s_n[j] = s_np1[j];

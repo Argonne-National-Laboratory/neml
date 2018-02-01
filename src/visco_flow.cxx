@@ -553,7 +553,7 @@ int ChabocheFlowRule::dh_da(const double * const s, const double * const alpha, 
   return hardening_->dh_da(s, alpha, T, dhv);
 }
 
-// Hardening rule
+// Hardening rule wrt time
 int ChabocheFlowRule::h_time(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
@@ -570,6 +570,25 @@ int ChabocheFlowRule::dh_da_time(const double * const s, const double * const al
               double * const dhv) const
 {
   return hardening_->dh_da_time(s, alpha, T, dhv);
+}
+
+// Hardening rule wrt temperature
+int ChabocheFlowRule::h_temp(const double * const s, const double * const alpha, double T,
+              double * const hv) const
+{
+  return hardening_->h_temp(s, alpha, T, hv);
+}
+
+int ChabocheFlowRule::dh_ds_temp(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  return hardening_->dh_ds_temp(s, alpha, T, dhv);
+}
+
+int ChabocheFlowRule::dh_da_temp(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  return hardening_->dh_da_temp(s, alpha, T, dhv);
 }
 
 YaguchiGr91FlowRule::YaguchiGr91FlowRule()

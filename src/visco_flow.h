@@ -238,6 +238,14 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
   virtual int dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
+  // Hardening rule wrt to temperature
+  virtual int h_temp(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
  private:
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<NonAssociativeHardening> hardening_;

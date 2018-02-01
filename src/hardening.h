@@ -213,22 +213,26 @@ class Chaboche: public NonAssociativeHardening {
   /// NO time relaxation
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<double> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels);
+           std::vector<std::shared_ptr<GammaModel>> gmodels,
+           bool noniso = true);
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<Interpolate>> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels);
+           std::vector<std::shared_ptr<GammaModel>> gmodels,
+           bool noniso = true);
 
   // WITH time relaxation
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<double> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels,
            std::vector<double> A,
-           std::vector<double> a);
+           std::vector<double> a,
+           bool noniso = true);
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels,
            std::vector<std::shared_ptr<Interpolate>> A,
-           std::vector<std::shared_ptr<Interpolate>> a);
+           std::vector<std::shared_ptr<Interpolate>> a,
+           bool noniso = true);
 
   virtual size_t ninter() const; // How many "q" variables it spits out
   virtual size_t nhist() const; // How many internal variables it stores
@@ -252,6 +256,14 @@ class Chaboche: public NonAssociativeHardening {
                 double * const dhv) const;
   virtual int dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
+  
+  // Hardening rule wrt temperature
+  virtual int h_temp(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
 
   // Getters
   int n() const;
@@ -268,6 +280,8 @@ class Chaboche: public NonAssociativeHardening {
   const std::vector<std::shared_ptr<Interpolate>> A_;
   const std::vector<std::shared_ptr<Interpolate>> a_;
   const bool relax_;
+
+  const bool noniso_;
 };
 
 

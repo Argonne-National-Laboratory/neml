@@ -86,7 +86,7 @@ if (WRAP_PYTHON)
 
       # parser
       add_library(parse SHARED parse_wrap.cxx parse.cxx)
-      target_link_libraries(parse helpers neml ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${libxml++_LIBRARIES})
+      target_link_libraries(parse helpers neml damage ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${libxml++_LIBRARIES})
       set_target_properties(parse PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET parse PROPERTY OUTPUT_NAME "parse.so")
@@ -111,6 +111,15 @@ if (WRAP_PYTHON)
             set_property(TARGET creep PROPERTY SUFFIX "")
       endif()
 
+      # damage models
+      add_library(damage SHARED damage_wrap.cxx damage.cxx)
+      target_link_libraries(damage neml helpers nemlmath interpolate solvers ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(damage PROPERTIES PREFIX "")
+      if (APPLE)
+            set_property(TARGET damage PROPERTY OUTPUT_NAME "damage.so")
+            set_property(TARGET damage PROPERTY SUFFIX "")
+      endif()
+
 else()
       # Everything in a big shared library
       add_library(neml SHARED 
@@ -127,6 +136,7 @@ else()
             parse.cxx
             cinterface.cxx
             interpolate.cxx
-            creep.cxx)
+            creep.cxx
+            damage.cxx)
       target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 endif()

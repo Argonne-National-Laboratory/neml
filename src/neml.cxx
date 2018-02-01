@@ -240,7 +240,8 @@ int SmallStrainElasticity::update_sd(
 }
 
 int SmallStrainElasticity::elastic_strains(const double * const s_np1,
-                                           double T_np1,
+                                           double T_np1, 
+                                           const double * const h_np1,
                                            double * const e_np1) const
 {
   double S[36];
@@ -422,6 +423,7 @@ int SmallStrainPerfectPlasticity::update_substep_(
 
 int SmallStrainPerfectPlasticity::elastic_strains(const double * const s_np1,
                                            double T_np1,
+                                           const double * const h_np1,
                                            double * const e_np1) const
 {
   double S[36];
@@ -680,6 +682,7 @@ int SmallStrainRateIndependentPlasticity::update_sd(
 int SmallStrainRateIndependentPlasticity::elastic_strains(
                                            const double * const s_np1,
                                            double T_np1,
+                                           const double * const h_np1,
                                            double * const e_np1) const
 {
   double S[36];
@@ -1063,9 +1066,10 @@ int SmallStrainCreepPlasticity::update_sd(
 int SmallStrainCreepPlasticity::elastic_strains(
                                            const double * const s_np1,
                                            double T_np1,
+                                           const double * const h_np1,
                                            double * const e_np1) const
 {
-  return plastic_->elastic_strains(s_np1, T_np1, e_np1);
+  return plastic_->elastic_strains(s_np1, T_np1, h_np1, e_np1);
 }
 
 size_t SmallStrainCreepPlasticity::nparams() const
@@ -1344,6 +1348,7 @@ int GeneralIntegrator::update_sd(
 
 int GeneralIntegrator::elastic_strains(const double * const s_np1,
                                            double T_np1,
+                                           const double * const h_np1,
                                            double * const e_np1) const
 {
   return rule_->elastic_strains(s_np1, T_np1, e_np1);
@@ -1623,7 +1628,7 @@ int KMRegimeModel::init_hist(double * const hist) const
 }
 
 int KMRegimeModel::elastic_strains(const double * const s_np1,
-                                   double T_np1,
+                                   double T_np1, const double * const h_np1,
                                    double * const e_np1) const
 {
   double S[36];
