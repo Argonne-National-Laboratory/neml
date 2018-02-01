@@ -1003,7 +1003,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
 
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
-    verbose = False):
+    verbose = False, etol = 0.1):
   """
     Stress controlled cyclic test.
 
@@ -1075,6 +1075,9 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
         except:
           quit = True
           break
+        if la.norm(driver.strain_int[-1] - driver.strain_int[-2]) > etol:
+          quit = True
+          break
         strain.append(np.dot(driver.strain_int[-1], sdir))
         stress.append(np.dot(driver.stress_int[-1], sdir))
     
@@ -1086,6 +1089,9 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       try:
         driver.srate_sinc_step(sdir, srate, s_inc, T)
       except:
+        quit = True
+        break
+      if la.norm(driver.strain_int[-1] - driver.strain_int[-2]) > etol:
         quit = True
         break
       strain.append(np.dot(driver.strain_int[-1], sdir))
@@ -1104,6 +1110,9 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
         except:
           quit = True
           break
+        if la.norm(driver.strain_int[-1] - driver.strain_int[-2]) > etol:
+          quit = True
+          break
         strain.append(np.dot(driver.strain_int[-1], sdir))
         stress.append(np.dot(driver.stress_int[-1], sdir))
 
@@ -1115,6 +1124,9 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       try:
         driver.srate_sinc_step(sdir, srate, s_inc, T)
       except:
+        quit = True
+        break
+      if la.norm(driver.strain_int[-1] - driver.strain_int[-2]) > etol:
         quit = True
         break
       strain.append(np.dot(driver.strain_int[-1], sdir))

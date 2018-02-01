@@ -11,6 +11,8 @@ from deap import tools
 
 import calibrate
 
+import multiprocessing
+
 class Member(list):
   """
     A class that allows 2D arrays (i.e. arrays of arrays) to store
@@ -221,6 +223,14 @@ def distribute_by_cost(costs, nmodels, size):
       current %= size
   
   return distrib
+
+def evaluate_residual_multiproc(p, model_maker, database, rweights,
+    penalty = 1.0, nthreads = 1):
+  """
+    Evaluate a residual using python multiprocessing
+  """
+  return calibrate.evaluate_cases(database, model_maker, p, weights = rweights,
+      nthreads = nthreads, penalty = penalty)
 
 def evaluate_residual_mpi(model_maker, params, database, rweights, tweights,
   comm = MPI.COMM_WORLD, penalty = 10000.0):
