@@ -99,7 +99,10 @@ def fit_deap(model_maker, bounds, database, rweights, tweights, popsize = 50,
   if rank == 0:
     ps = len(population)
     need = popsize - ps
-    pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(need)] + population)
+    if need == 0:
+      pop_array = population
+    else:
+      pop_array = np.array([[ra.uniform(p1,p2) for p1,p2 in bounds] for i in range(need)] + population)
     pop = array2member(pop_array)
     toolbox = base.Toolbox()
     toolbox.register("mate", tools.cxTwoPoint)
