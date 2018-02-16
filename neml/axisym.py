@@ -7,7 +7,9 @@ import scipy.linalg.lapack as lapack
 from numpy.polynomial.legendre import leggauss as lgg
 import scipy.optimize as opt
 
-import nemlmath
+import nemlmath, arbbar
+
+from functools import partial
 
 def generate_thickness_gradient(ri, ro, T1, T2, Tdot_hot, hold, 
     Tdot_cold = None, hold_together = 0.0, delay = 0.0):
@@ -53,6 +55,58 @@ def generate_thickness_gradient(ri, ro, T1, T2, Tdot_hot, hold,
     return (1-xi) * T1 + xi * Tright
 
   return gradient
+
+def generate_standard_timesteps(T1, T2, Tdot_hot, hold, nheat, nhold,
+    ncycles, 
+    Tdot_cold = None, ncool = None, hold_together = 0.0,
+    ntogether = None, delay = 0.0, ndelay = None):
+  """
+    Generate a standard time stepping scheme for the thickness gradients
+
+    Parameters:
+      T1                initial temperature
+      T2                hot temperature
+      Tdot_hot          heat rate, also cooling rate if not specified
+      hold              hold at gradient
+      nheat             number of steps during heating
+      nhold             number of steps during hold
+      ncycles           number of cycles
+
+    Optional:
+      Tdot_cold         cooling rate
+      ncool             number of cooling steps
+      hold_together     hold at zero gradient
+      ntogether         number of iso hold steps
+      delay             delay before cycling
+      ndelay            number of delay steps
+  """
+  if Tdot_cold is None:
+    Tdot_cold = Tdot_hot
+  if ncool is None:
+    ncool = nheat
+
+  if (delay != 0.0) and (ndelay is None):
+    raise ValueError("If the delay is not zero you need to provide ndelay!")
+
+  if (hold_together != 0.0) and (ntogether is None):
+    raise ValueError("If you provide hold_together you need to provide ntogether!")
+
+  times = [0.0]
+  if delay > 0.0:
+    times.extend(list(times[-1] + np.linspace(0, delay, ndelay+1)[1:]))
+
+  for i in range(ncycles):
+    times.extend(list(times[-1] + np.linspace(0, np.abs(T2-T1) / Tdot_hot, 
+      nheat+1)[1:]))
+    if hold > 0.0:
+      times.extend(list(times[-1] + np.linspace(0, hold, nhold+1)[1:]))
+    times.extend(list(times[-1] + np.linspace(0, np.abs(T2-T1) / Tdot_cold,
+      ncool+1)[1:]))
+    if hold_together > 0.0:
+      times.extend(list(times[-1] + np.linspace(0, hold_together, 
+        ntogether+1)[1:]))
+
+  return times
 
 def generate_multimaterial_thickness_gradient(rs, ks, T1, T2, Tdot_hot,
     hold, Tdot_cold = None, hold_together = 0.0, delay = 0.0, flip = False):
@@ -143,7 +197,189 @@ def mesh(rs, ns, bias = False, n = 2.0):
 
   return xpoints
 
-class AxisymmetricProblem(object):
+class VesselSectionProblem(object):
+  """
+    This serves as the superclass for both the models of a "section of a
+    cylindrical vessel": the Bree problem and my steady-state axisymmetric 
+    model.
+  """
+  def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8):
+    """
+      Parameters:
+        rs      radii deliminating each region
+        mats    material model for each region
+        ns      number of elements per region
+        T       temperature as a function of (r, t)
+        p       pressure, as a function of (t)
+
+      Optional:
+        rtol    relative tolerance for N-R solve
+        atol    absolute tolerance for N-R solve
+    """
+    # Check
+    if len(rs) - 1 != len(mats):
+      raise ValueError("Length of radii must be one more then length of regions")
+    if len(mats) != len(ns):
+      raise ValueError("Inconsistent region definitions")
+
+    self.rs = rs
+    self.mats = mats
+    self.ns = ns
+    self.T = T
+    self.p = p
+
+    self.rtol = rtol
+    self.atol = atol
+
+    self.ts = np.diff(rs)
+    self.t = np.sum(self.ts)
+    self.r = rs[-1]
+
+    self.times = [0.0]
+    self.pressures = [self.p(0)]
+
+def rect(n):
+  """
+    Rectangle rule points and weights over the
+    standard domain [-1,1]
+
+    Parameters:
+      n     number of points
+  """
+  npts = np.linspace(-1,1,n+1)
+  pts = np.array([(a+b)/2 for a,b in zip(npts[0:],npts[1:])])
+  weights = np.array([2.0/n]*len(pts))
+
+  return pts, weights
+
+class BreeProblem(VesselSectionProblem):
+  """
+    A Bree problem, referenced back to a vessel.
+
+    If you'd rather have a "standard" Bree problem you can
+    make the overall wall thickness = 1 spanning from
+    r = [0,1] and directly apply the hoop stress as the 
+    pressure.
+  """
+  def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
+      itype = "gauss"):
+    """
+      Parameters:
+        rs      radii deliminating each region
+        mats    material model for each region
+        ns      number of elements per region
+        T       temperature as a function of (r, t)
+        p       pressure, as a function of (t)
+
+      Optional:
+        rtol    relative tolerance for N-R solve
+        atol    absolute tolerance for N-R solve
+        bias    bias the mesh towards the interfaces
+        itype   "rectangle" or "gauss", defaults to "gauss"
+    """
+    super(BreeProblem, self).__init__(rs, mats, ns, T, p,
+        rtol = rtol, atol = atol)
+    
+    self.regions = np.diff(self.rs)
+    self.dlength = [r for r,n in zip(self.regions, self.ns) for i in range(n)]
+
+    if itype == "gauss":
+      ifn = lgg
+    elif itype == "rectangle":
+      ifn = rect
+    else:
+      raise ValueError("Unknown integration type %s!" % itype)
+
+    self.ipoints = [(xi+1)*dl/2 + r for dl,r,n in zip(self.regions, self.rs, self.ns) for 
+        xi in ifn(n)[0]]
+    self.weights = [wi * dl/2 for dl,n in zip(self.regions, self.ns) for 
+        wi in ifn(n)[1]]
+    materials = [m for m,n in zip(self.mats, self.ns) for i in range(n)]
+
+    self.npoints = len(self.ipoints)
+    
+    self.P = lambda t: p(t) * self.r / self.t
+
+    # Setup the n bar model
+    self.barmodel = arbbar.BarModel()
+    self.barmodel.add_node(1)
+    self.barmodel.add_node(2)
+
+    for ipt, wt, mat in zip(self.ipoints, self.weights, materials):
+      def tlocal(tt, x = ipt):
+        return self.T(x, tt)
+      self.barmodel.add_edge(1,2, object = arbbar.Bar(mat, wt, 1.0, 
+        T = tlocal))
+
+    self.barmodel.add_displacement_bc(1, lambda t: 0.0)
+    self.barmodel.add_force_bc(2, lambda t: self.P(t) * np.sum(self.weights))
+
+    # Setup fields
+    self.axialstrain = [0.0]
+    self.hoop = [self.P(0.0)]
+    self.force = [0.0]
+    self.temperatures = [np.array([self.barmodel[1][2][i]['object'].temperature[-1]
+      for i in range(self.npoints)])]
+    self.stresses = [np.array([self.barmodel[1][2][i]['object'].stress[-1]
+      for i in range(self.npoints)])]
+    self.tstrains = [np.array([self.barmodel[1][2][i]['object'].tstrain[-1]
+      for i in range(self.npoints)])]
+    self.mstrains = [np.array([self.barmodel[1][2][i]['object'].mstrain[-1]
+      for i in range(self.npoints)])]
+    self.histories = [np.array([self.barmodel[1][2][i]['object'].history[-1]
+      for i in range(self.npoints)])]
+
+    self.energy = [0.0]
+    self.work = [0.0]
+
+  def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
+      ndiv = 4, dfact = 2, extrapolate = False):
+    """
+      Advance to the next step
+
+      Parameters:
+        t           time requested
+
+      Optional:
+        rtol        solver relative tolerance
+        atol        solver absolute tolerance
+        verbose     print a lot of stuff
+        ndiv        maximum number of adaptive subdivisions
+        dfact       subdivision factor
+        extrapolate try to extrapolate displacements
+    """
+    dt = t - self.times[-1]
+    if dt < 0.0:
+      raise ValueError("Requesting negative time step!")
+    
+    self.barmodel.solve(dt, ndiv = ndiv, dfact = dfact, 
+        verbose = verbose, extrapolate = extrapolate)
+    
+    self.times.append(t)
+    self.pressures.append(self.p(t))
+    self.hoop.append(self.P(t))
+    self.force.append(self.barmodel.node[2]['forces'][-1])
+    self.axialstrain.append(self.barmodel.node[2]['displacements'][-1])
+    
+    self.temperatures.append(np.array([self.barmodel[1][2][i]['object'].temperature[-1]
+      for i in range(self.npoints)]))
+    self.stresses.append(np.array([self.barmodel[1][2][i]['object'].stress[-1]
+      for i in range(self.npoints)]))
+    self.tstrains.append(np.array([self.barmodel[1][2][i]['object'].tstrain[-1]
+      for i in range(self.npoints)]))
+    self.mstrains.append(np.array([self.barmodel[1][2][i]['object'].mstrain[-1]
+      for i in range(self.npoints)]))
+    self.histories.append(np.array([self.barmodel[1][2][i]['object'].history[-1]
+      for i in range(self.npoints)]))
+
+    self.energy.append(0.0)
+    self.work.append(0.0)
+    for i,wt in enumerate(self.weights):
+      me = self.barmodel[1][2][i]['object']
+      self.energy[-1] += wt*me.energy[-1]*me.A*me.l
+      self.work[-1] += wt*me.dissipation[-1]*me.A*me.l
+    
+class AxisymmetricProblem(VesselSectionProblem):
   """
     Python driver for our axisymmetric reduced problem.
 
@@ -167,38 +403,19 @@ class AxisymmetricProblem(object):
       Optional:
         rtol    relative tolerance for N-R solve
         atol    absolute tolerance for N-R solve
-        bias    if true bias the mesh to the edges
+        bias    bias the mesh towards the interfaces
         factor  bias factor
-        ngpts   number of gauss points to use per element
+        ngpts   number of gauss points per element
     """
-    # Check
-    if len(rs) - 1 != len(mats):
-      raise ValueError("Length of radii must be one more then length of regions")
-    if len(mats) != len(ns):
-      raise ValueError("Inconsistent region definitions")
-
-    self.rs = rs
-    self.mats = mats
-    self.ns = ns
-    self.T = T
-    self.p = p
-
-    self.rtol = rtol
-    self.atol = atol
-
-    self.ts = np.diff(rs)
-    self.t = np.sum(self.ts)
-    self.r = rs[-1]
+    super(AxisymmetricProblem, self).__init__(rs, mats, ns, T, p,
+        rtol = rtol, atol = atol)
 
     self.mesh = mesh(self.rs, self.ns, bias = bias, n = factor)
     self.nnodes = len(self.mesh)
     self.nelem = len(self.mesh) - 1
+    self.ls = np.diff(self.mesh)
 
     self.materials = [m for m,n in zip(self.mats, self.ns) for i in range(n)]
-    
-    self.times = [0.0]
-    self.pressures = [self.p(0)]
-    self.temperatures = [np.array([self.T(xi, 0) for xi in self.mesh])]
     
     self.displacements = [[0.0 for i in range(self.nnodes)]]
     self.axialstrain = [0.0]
@@ -206,14 +423,14 @@ class AxisymmetricProblem(object):
     self.ngpts = ngpts
     self.gpoints, self.gweights = lgg(ngpts)
 
+    self.temperatures = [np.array([self.T(xi, 0) for xi in self.mesh])]
+
     self.histories = [[np.array([m.init_store() for xi in self.gpoints])
       for m in self.materials]]
     self.stresses = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
     self.strains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
     self.tstrains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
     self.mstrains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
-
-    self.ls = np.diff(self.mesh)
 
     # Save a bit of time
     self.Nl = np.array([[(1-xi)/2, (1+xi)/2] for xi in self.gpoints])
