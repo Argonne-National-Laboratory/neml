@@ -49,7 +49,7 @@ class CommonScalarDamageModel(object):
     dfn = lambda d: self.model.damage(d, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.d_np1)
-
+    
     self.assertTrue(np.isclose(dd_model, dd_calcd))
 
   def test_ddamage_dstrain(self):
@@ -163,6 +163,67 @@ class CommonDamagedModel(object):
       u_n = u_np1
       p_n = p_np1
       t_n = t_np1
+
+class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
+    CommonDamagedModel):
+  def setUp(self):
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+    self.H = 1000.0
+
+    E = elasticity.YoungsModulus(self.E)
+    v = elasticity.PoissonsRatio(self.nu)
+    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    kin = hardening.LinearKinematicHardeningRule(self.H)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+        flow)
+
+    self.xi = 0.478
+    self.phi = 1.914
+    self.A = 10000000.0
+
+    self.model = damage.ClassicalCreepDamageModel_sd(
+        self.A, self.xi, self.phi, self.bmodel)
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+    self.T = 100.0
+
+    self.s_np1 = self.stress
+    self.s_n = np.array([-25,150,250,-25,-100,25])
+
+    self.d_np1 = 0.5
+    self.d_n = 0.4
+
+    self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15])
+    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13])
+
+    self.T_np1 = self.T
+    self.T_n = 90.0
+
+    self.t_np1 = 1.0
+    self.t_n = 0.0
+
+    self.u_n = 0.0
+    self.p_n = 0.0
+  
+    # This is a rather boring baseline history state to probe, but I can't
+    # think of a better way to get a "generic" history from a generic model
+    self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
+    self.x_trial = np.array([50,-25,150,-150,190,100.0] + [0.41])
+
+    self.nsteps = 10
+    self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
+    self.ttarget = 10.0
 
 class TestMarkDamage(unittest.TestCase, CommonScalarDamageModel, 
     CommonDamagedModel):

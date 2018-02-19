@@ -127,6 +127,60 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
   bool verbose_;
 };
 
+class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+ public:
+  ClassicalCreepDamageModel_sd(
+                            std::shared_ptr<Interpolate> A,
+                            std::shared_ptr<Interpolate> xi,
+                            std::shared_ptr<Interpolate> phi,
+                            std::shared_ptr<NEMLModel_sd> base,
+                            std::shared_ptr<Interpolate> alpha = nullptr,
+                            double tol = 1.0e-8, int miter = 50,
+                            bool verbose = false);
+  ClassicalCreepDamageModel_sd(double A, double xi, double phi,
+                            std::shared_ptr<NEMLModel_sd> base,
+                            double alpha = 0.0,
+                            double tol = 1.0e-8, int miter = 50,
+                            bool verbose = false);
+
+  virtual int elastic_strains(const double * const s_np1,
+                              double T_np1, const double * const h_np1,
+                              double * const e_np1) const;
+
+  virtual int damage(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_dd(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_de(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_ds(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+
+ protected:
+  double se(const double * const s) const;
+
+ protected:
+  std::shared_ptr<Interpolate> A_;
+  std::shared_ptr<Interpolate> xi_;
+  std::shared_ptr<Interpolate> phi_;
+};
+
 class MarkFatigueDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   MarkFatigueDamageModel_sd(

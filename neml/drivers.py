@@ -1222,7 +1222,8 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
 
 def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
-    logspace = False, history = None, elimit = 1.0):
+    logspace = False, history = None, elimit = 1.0, check_dmg = False,
+    dtol = 0.9):
   """
     Simulate a creep test
 
@@ -1240,6 +1241,8 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       verbose       whether to be verbose
       logspace      if true logspace the time steps
       history       use damaged material
+      check_dmg     check damage as a break condition
+      dtol          damage to define failure at
   """
   # Setup
   driver = Driver_sd(model, verbose = verbose, T_init = T)
@@ -1278,6 +1281,10 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     ed = np.dot(driver.strain_int[-1],sdir)
     if ed < strain[-1]:
       break
+
+    if check_dmg:
+      if driver.stored_int[-1][0] > dtol:
+        break
 
     time.append(t)
     strain.append(ed)

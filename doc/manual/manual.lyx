@@ -1843,6 +1843,58 @@ So the method requires three derivatives:
  material tangent.
 \end_layout
 
+\begin_layout Subsubsection
+Examples
+\end_layout
+
+\begin_layout Paragraph
+Classical
+\end_layout
+
+\begin_layout Standard
+The classical Leckie/Hayhurst/Kachanov theory is 
+\begin_inset Formula 
+\[
+\dot{\omega}=\left(\frac{\sigma_{e}}{A}\right)^{\chi}\frac{1}{\left(1-\omega\right)^{\phi}}
+\]
+
+\end_inset
+
+which we can integrate as
+\begin_inset Formula 
+\[
+\omega_{n+1}=\omega_{n}+\left(\frac{\sigma_{e}}{A}\right)^{\chi}\frac{1}{\left(1-\omega_{n+1}\right)^{\phi}}\Delta t_{n+1}.
+\]
+
+\end_inset
+
+The derivatives are 
+\begin_inset Formula 
+\[
+\frac{\partial\omega_{n+1}}{\partial\omega}=\left(\frac{\sigma_{e}}{A}\right)^{\chi}\frac{\phi}{\left(1-\omega_{n+1}\right)^{\left(\phi+1\right)}}\Delta t_{n+1}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\omega_{n+1}}{\partial\bm{\sigma}}=\frac{3\chi}{2A\sigma_{e}}\left(\frac{\sigma_{e}}{A}\right)^{\chi-1}\frac{1}{\left(1-\omega_{n+1}\right)^{\phi}}\boldsymbol{s}\Delta t_{n+1}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial\omega_{n+1}}{\partial\bm{\varepsilon}}=\boldsymbol{0}
+\]
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Simplified scalar
 \end_layout
@@ -1973,46 +2025,6 @@ where
 \end_inset
 
 
-\end_layout
-
-\begin_layout Subsubsection
-Leckie and Hayhurst
-\end_layout
-
-\begin_layout Standard
-Leckie and Hayhurst suggested 
-\begin_inset Formula 
-\[
-f=A\sigma_{e}^{a}+B\sigma_{1}^{b}
-\]
-
-\end_inset
-
-where 
-\begin_inset Formula $\sigma_{e}$
-\end_inset
-
- is the von Mises equivalent stress, 
-\begin_inset Formula $\sigma_{1}$
-\end_inset
-
- the maximum principal stress, and 
-\begin_inset Formula $A$
-\end_inset
-
-, 
-\begin_inset Formula $a$
-\end_inset
-
-, 
-\begin_inset Formula $B$
-\end_inset
-
-, and 
-\begin_inset Formula $b$
-\end_inset
-
- all material parameters.
 \end_layout
 
 \begin_layout Subsubsection

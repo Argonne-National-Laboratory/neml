@@ -116,6 +116,23 @@ PYBIND11_PLUGIN(damage) {
            }, "Make a trial state, mostly for testing.")
       ;
 
+  py::class_<ClassicalCreepDamageModel_sd, std::shared_ptr<ClassicalCreepDamageModel_sd>>(m, "ClassicalCreepDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
+           std::shared_ptr<Interpolate>, std::shared_ptr<NEMLModel_sd>,
+           std::shared_ptr<Interpolate>, double, int, bool>(),
+            py::arg("A"), py::arg("xi"), py::arg("phi"),
+            py::arg("base"), py::arg("alpha") = nullptr, 
+            py::arg("tol") = 1.0e-8, py::arg("miter") = 50,
+            py::arg("verbose") = false)
+      .def(py::init<double, double,
+           double, std::shared_ptr<NEMLModel_sd>,
+           double, double, int, bool>(),
+            py::arg("A"), py::arg("xi"), py::arg("phi"),
+            py::arg("base"), py::arg("alpha") = 0.0, 
+            py::arg("tol") = 1.0e-8, py::arg("miter") = 50,
+            py::arg("verbose") = false)
+      ;
+
   py::class_<MarkFatigueDamageModel_sd, std::shared_ptr<MarkFatigueDamageModel_sd>>(m, "MarkFatigueDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
            std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,

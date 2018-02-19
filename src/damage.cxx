@@ -246,6 +246,133 @@ int NEMLScalarDamagedModel_sd::tangent_(
 }
 
 
+ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
+    std::shared_ptr<Interpolate> A,
+    std::shared_ptr<Interpolate> xi,
+    std::shared_ptr<Interpolate> phi,
+    std::shared_ptr<NEMLModel_sd> base,
+    std::shared_ptr<Interpolate> alpha,
+    double tol, int miter,
+    bool verbose) :
+      NEMLScalarDamagedModel_sd(base, alpha, tol, miter, verbose),
+      A_(A), xi_(xi), phi_(phi)
+{
+
+
+}
+
+ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
+    double A, double xi, double phi,
+    std::shared_ptr<NEMLModel_sd> base,
+    double alpha,
+    double tol, int miter,
+    bool verbose) :
+      NEMLScalarDamagedModel_sd(base, alpha, tol, miter, verbose),
+      A_(new ConstantInterpolate(A)), 
+      xi_(new ConstantInterpolate(xi)), 
+      phi_(new ConstantInterpolate(phi)) 
+{
+
+}
+
+int ClassicalCreepDamageModel_sd::elastic_strains(const double * const s_np1,
+                    double T_np1, const double * const h_np1,
+                    double * const e_np1) const
+{
+  return base_->elastic_strains(s_np1, T_np1, h_np1, e_np1);
+}
+
+int ClassicalCreepDamageModel_sd::damage(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double xi = xi_->value(T_np1);
+  double A = A_->value(T_np1);
+  double phi = phi_->value(T_np1);
+
+  double se = this->se(s_np1);
+  double dt = t_np1 - t_n;
+  
+  *dd = d_n + pow(se / A, xi) * pow(1.0 - d_np1, -phi) * dt;
+
+  return 0;
+}
+
+int ClassicalCreepDamageModel_sd::ddamage_dd(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double xi = xi_->value(T_np1);
+  double A = A_->value(T_np1);
+  double phi = phi_->value(T_np1);
+
+  double se = this->se(s_np1);
+  double dt = t_np1 - t_n;
+
+  *dd = pow(se / A, xi) * phi * pow(1.0 - d_np1, -(phi + 1.0)) * dt;
+
+  return 0;
+}
+
+int ClassicalCreepDamageModel_sd::ddamage_de(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  std::fill(dd, dd+6, 0.0);
+
+  return 0;
+}
+
+int ClassicalCreepDamageModel_sd::ddamage_ds(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double xi = xi_->value(T_np1);
+  double A = A_->value(T_np1);
+  double phi = phi_->value(T_np1);
+
+  double se = this->se(s_np1);
+  double dt = t_np1 - t_n;
+
+  if (se == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
+
+  std::copy(s_np1, s_np1+6, dd);
+  double s_m = (s_np1[0] + s_np1[1] + s_np1[2]) / 3.0;
+  for (int i=0; i<3; i++) dd[i] -= s_m;
+
+  double sf = 3.0 * xi / (2.0 * A * se) * pow(se/A, xi - 1.0) * 
+      pow(1 - d_np1, -phi) * dt;
+  for (int i=0; i<6; i++) dd[i] *= sf;
+  
+  return 0;
+}
+
+double ClassicalCreepDamageModel_sd::se(const double * const s) const
+{
+  return sqrt((pow(s[0]-s[1], 2.0) + pow(s[1] - s[2], 2.0) + 
+               pow(s[2] - s[0], 2.0) + 3.0 * (pow(s[3], 2.0) + pow(s[4], 2.0) + 
+                                              pow(s[5], 2.0))) / 2.0);
+}
+
 MarkFatigueDamageModel_sd::MarkFatigueDamageModel_sd(
     std::shared_ptr<Interpolate> C,
     std::shared_ptr<Interpolate> m,
