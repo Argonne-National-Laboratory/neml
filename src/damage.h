@@ -127,6 +127,55 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
   bool verbose_;
 };
 
+class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
+ public:
+  CombinedDamageModel_sd(
+      std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
+      std::shared_ptr<NEMLModel_sd> base,
+      std::shared_ptr<Interpolate> alpha = nullptr,
+      double tol = 1.0e-8, int miter = 50,
+      bool verbose = false);
+  CombinedDamageModel_sd(
+      std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
+      std::shared_ptr<NEMLModel_sd> base,
+      double alpha = 0.0,
+      double tol = 1.0e-8, int miter = 50,
+      bool verbose = false);
+
+  virtual int elastic_strains(const double * const s_np1,
+                              double T_np1, const double * const h_np1,
+                              double * const e_np1) const;
+
+  virtual int damage(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_dd(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_de(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  virtual int ddamage_ds(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+
+ protected:
+  const std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models_;
+
+};
+
 class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   ClassicalCreepDamageModel_sd(

@@ -246,6 +246,105 @@ int NEMLScalarDamagedModel_sd::tangent_(
 }
 
 
+CombinedDamageModel_sd::CombinedDamageModel_sd(
+    std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
+    std::shared_ptr<NEMLModel_sd> base,
+    std::shared_ptr<Interpolate> alpha,
+    double tol, int miter, bool verbose) :
+      NEMLScalarDamagedModel_sd(base, alpha, tol, miter, verbose),
+      models_(models)
+{
+
+
+}
+
+CombinedDamageModel_sd::CombinedDamageModel_sd(
+    std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
+    std::shared_ptr<NEMLModel_sd> base,
+    double alpha, double tol, int miter, bool verbose) :
+      NEMLScalarDamagedModel_sd(base, alpha, tol, miter, verbose),
+      models_(models)
+{
+
+}
+
+int CombinedDamageModel_sd::elastic_strains(
+    const double * const s_np1,
+    double T_np1, const double * const h_np1,
+    double * const e_np1) const
+{
+  return base_->elastic_strains(s_np1, T_np1, h_np1, e_np1);
+}
+
+int CombinedDamageModel_sd::damage(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  *dd = d_n;
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    double di;
+    (*it)->damage(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+               t_np1, t_n, &di);
+    *dd += (di - d_n);
+  }
+  return 0;
+}
+
+int CombinedDamageModel_sd::ddamage_dd(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  *dd = 0.0;
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    double di;
+    (*it)->ddamage_dd(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+               t_np1, t_n, &di);
+    *dd += di;
+  }
+}
+
+int CombinedDamageModel_sd::ddamage_de(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  std::fill(dd, dd+6, 0.0);
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    double di[6];
+    (*it)->ddamage_de(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+               t_np1, t_n, di);
+    for (int i=0; i<6; i++) dd[i] += di[i];
+  }
+}
+
+int CombinedDamageModel_sd::ddamage_ds(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  std::fill(dd, dd+6, 0.0);
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    double di[6];
+    (*it)->ddamage_ds(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+               t_np1, t_n, di);
+    for (int i=0; i<6; i++) dd[i] += di[i];
+  }
+}
+
 ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
     std::shared_ptr<Interpolate> A,
     std::shared_ptr<Interpolate> xi,
