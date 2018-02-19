@@ -151,23 +151,33 @@ PYBIND11_PLUGIN(damage) {
 
   py::class_<NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd", py::base<NEMLScalarDamagedModel_sd>())
       .def("f",
-           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1) -> double
+           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
            {
             double fv;
-            int ier = m.f(arr2ptr<double>(s_np1), T_np1, fv);
+            int ier = m.f(arr2ptr<double>(s_np1), d_np1, T_np1, fv);
             py_error(ier);
             
             return fv;
            }, "The damage evolution function.")
-      .def("df",
-           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1) -> py::array_t<double>
+      .def("df_ds",
+           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> py::array_t<double>
            {
             auto dfv = alloc_vec<double>(6);
-            int ier = m.df(arr2ptr<double>(s_np1), T_np1, arr2ptr<double>(dfv));
+            int ier = m.df_ds(arr2ptr<double>(s_np1), d_np1, T_np1, arr2ptr<double>(dfv));
             py_error(ier);
 
             return dfv;
            }, "The derivative of the damage function wrt. stress.")
+      .def("df_dd",
+           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
+           {
+            double dfv;
+            int ier = m.df_dd(arr2ptr<double>(s_np1), d_np1, T_np1, dfv);
+            py_error(ier);
+            
+            return dfv;
+           }, "The derivative of the damage function wrt. damage")
+
       ;
 
   py::class_<NEMLPowerLawDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd", py::base<NEMLStandardScalarDamagedModel_sd>())
@@ -181,6 +191,21 @@ PYBIND11_PLUGIN(damage) {
            std::shared_ptr<NEMLModel_sd>, std::shared_ptr<LinearElasticModel>,
            double, double, int, bool>(),
             py::arg("A"), py::arg("a"), py::arg("base"), py::arg("emodel"), 
+            py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+            py::arg("verbose") = false)
+      ;
+
+  py::class_<NEMLExponentialWorkDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd", py::base<NEMLStandardScalarDamagedModel_sd>())
+      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
+           std::shared_ptr<NEMLModel_sd>, std::shared_ptr<LinearElasticModel>,
+           std::shared_ptr<Interpolate>, double, int, bool>(),
+            py::arg("W0"), py::arg("k0"), py::arg("base"), py::arg("emodel"), 
+            py::arg("alpha") = nullptr, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
+            py::arg("verbose") = false)
+      .def(py::init<double, double,
+           std::shared_ptr<NEMLModel_sd>, std::shared_ptr<LinearElasticModel>,
+           double, double, int, bool>(),
+            py::arg("W0"), py::arg("k0"), py::arg("base"), py::arg("emodel"), 
             py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
             py::arg("verbose") = false)
       ;

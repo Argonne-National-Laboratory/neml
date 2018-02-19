@@ -1900,11 +1900,12 @@ Simplified scalar
 \end_layout
 
 \begin_layout Standard
-The usual case is the damage is a function of the equivalent plastic strain.
+The usual case is the damage is a function of the equivalent plastic strain
+ and itself.
  So:
 \begin_inset Formula 
 \[
-\omega_{n+1}=\omega_{n}+f\left(\boldsymbol{\sigma}_{n+1}\right)\dot{\bar{\varepsilon}}_{p}\Delta t=\omega_{n}+f\left(\boldsymbol{\sigma}_{n+1}\right)\Delta\bar{\varepsilon}_{p}
+\omega_{n+1}=\omega_{n}+f\left(\boldsymbol{\sigma}_{n+1},\omega_{n+1}\right)\dot{\bar{\varepsilon}}_{p}\Delta t=\omega_{n}+f\left(\boldsymbol{\sigma}_{n+1},\omega_{n+1}\right)\Delta\bar{\varepsilon}_{p}
 \]
 
 \end_inset
@@ -1966,7 +1967,7 @@ So yes.
 To put everything together:
 \begin_inset Formula 
 \[
-\frac{\partial\omega}{\partial\omega_{n+1}}=0
+\frac{\partial\omega}{\partial\omega_{n+1}}=\frac{\partial f}{\partial\omega}\Delta\bar{\varepsilon}_{p}
 \]
 
 \end_inset
@@ -2025,25 +2026,42 @@ where
 \end_inset
 
 
+\begin_inset Formula 
+\[
+\frac{\partial f}{\partial\omega}=0
+\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsubsection
-Chaboche
+Work-based fatigue
 \end_layout
 
 \begin_layout Standard
-The below has not been cast correctly yet
-\end_layout
-
-\begin_layout Standard
+A simple model made up to approximate fatigue damage:
 \begin_inset Formula 
-\begin{align*}
-\dot{\omega}_{n+1} & = & \frac{\partial\phi_{n+1}}{\partial y_{n+1}}\\
-\phi_{n+1} & = & \phi\left(\omega_{n+1},y_{n+1},s_{n+1},\dot{\bar{\varepsilon}}_{p}\right)\\
-y_{n+1} & = & -\frac{\sigma_{eq}^{2}}{2E\left(1-D\right)^{2}}\left[\frac{2}{3}\left(1+\nu\right)+3\left(1-2\nu\right)\left(\frac{\sigma_{m}}{\sigma_{eq}}\right)^{2}\right]\\
-s_{n+1} & = & \sigma_{ep}\sqrt{\frac{2}{3}\left(1+\nu\right)+3\left(1-2\nu\right)\left(\frac{\sigma_{m}}{\sigma_{eq}}\right)^{2}}\\
-\dot{\bar{\varepsilon}}_{p} & = & \sqrt{\frac{2}{3}\dot{\bm{\varepsilon}}_{p}:\dot{\bm{\varepsilon}}_{p}}
-\end{align*}
+\[
+f=\frac{\left(\omega+k\right)\sigma_{e}}{W_{0}}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial f}{\partial\bm{\sigma}}=\frac{3\left(\omega+k\right)}{2\sigma_{e}W_{0}}\boldsymbol{s}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\frac{\partial f}{\partial\omega}=\frac{\sigma_{e}}{W_{0}}
+\]
 
 \end_inset
 

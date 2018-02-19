@@ -26,15 +26,22 @@ class CommonStandardDamageModel(object):
     
     dp = np.sqrt(2.0/3.0 * (np.dot(de, de) + np.dot(dee, dee) - 
       2.0 * np.dot(dee, de)))
-    f = self.model.f(self.s_np1, self.T_np1)
+    f = self.model.f(self.s_np1, self.d_np1, self.T_np1)
     d_calcd = self.d_n + f * dp
 
     self.assertTrue(np.isclose(d_model, d_calcd))
 
-  def test_function_derivative(self):
-    d_model = self.model.df(self.stress, self.T)
-    d_calcd = differentiate(lambda x: self.model.f(x, self.T), self.stress)
+  def test_function_derivative_s(self):
+    d_model = self.model.df_ds(self.stress, self.d_np1, self.T)
+    d_calcd = differentiate(lambda x: self.model.f(x, self.d_np1, self.T),
+        self.stress)
     self.assertTrue(np.allclose(d_model, d_calcd))
+
+  def test_function_derivative_d(self):
+    d_model = self.model.df_dd(self.stress, self.d, self.T)
+    d_calcd = differentiate(lambda x: self.model.f(self.s_np1, x, self.T),
+        self.d)
+    self.assertTrue(np.isclose(d_model, d_calcd))
 
 class CommonScalarDamageModel(object):
   def test_ndamage(self):
@@ -321,6 +328,7 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
+    self.d = 0.45
 
     self.s_np1 = self.stress
     self.s_n = np.array([-25,150,250,-25,-100,25])
@@ -350,7 +358,73 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.ttarget = 10.0
 
   def test_function(self):
-    f_model = self.model.f(self.stress, self.T)
+    f_model = self.model.f(self.stress, self.d_np1, self.T)
     f_calcd = self.A * self.effective(self.stress) ** self.a
+    self.assertTrue(np.isclose(f_model, f_calcd))
+
+class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel, 
+    CommonScalarDamageModel, CommonDamagedModel):
+  def setUp(self):
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+    self.H = 1000.0
+
+    E = elasticity.YoungsModulus(self.E)
+    v = elasticity.PoissonsRatio(self.nu)
+    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    kin = hardening.LinearKinematicHardeningRule(self.H)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+        flow)
+
+    self.W0 = 1.0
+    self.k0 = 0.001
+
+    self.model = damage.NEMLExponentialWorkDamagedModel_sd(self.W0, self.k0, 
+        self.bmodel, self.elastic)
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+    self.T = 100.0
+    self.d = 0.45
+
+    self.s_np1 = self.stress
+    self.s_n = np.array([-25,150,250,-25,-100,25])
+
+    self.d_np1 = 0.5
+    self.d_n = 0.4
+
+    self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15])
+    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13])
+
+    self.T_np1 = self.T
+    self.T_n = 90.0
+
+    self.t_np1 = 1.0
+    self.t_n = 0.0
+
+    self.u_n = 0.0
+    self.p_n = 0.0
+  
+    # This is a rather boring baseline history state to probe, but I can't
+    # think of a better way to get a "generic" history from a generic model
+    self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
+    self.x_trial = np.array([50,-25,150,-150,190,100.0] + [0.41])
+
+    self.nsteps = 10
+    self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
+    self.ttarget = 10.0
+
+  def test_function(self):
+    f_model = self.model.f(self.stress, self.d_np1, self.T)
+    f_calcd = (self.d_np1 + self.k0) * self.effective(self.stress) / self.W0
     self.assertTrue(np.isclose(f_model, f_calcd))
 
