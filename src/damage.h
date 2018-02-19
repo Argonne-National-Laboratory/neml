@@ -398,14 +398,15 @@ class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
 class NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
  public:
   NEMLExponentialWorkDamagedModel_sd(
-      std::shared_ptr<Interpolate> W0, std::shared_ptr<Interpolate> k0, 
+      std::shared_ptr<Interpolate> W0, std::shared_ptr<Interpolate> k0,
+      std::shared_ptr<Interpolate> af,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<LinearElasticModel> emodel,
       std::shared_ptr<Interpolate> alpha = nullptr,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
   NEMLExponentialWorkDamagedModel_sd(
-      double W0, double k0,
+      double W0, double k0, double af,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<LinearElasticModel> emodel,
       double alpha = 0.0,
@@ -425,6 +426,7 @@ class NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_
  protected:
   std::shared_ptr<Interpolate> W0_;
   std::shared_ptr<Interpolate> k0_;
+  std::shared_ptr<Interpolate> af_;
 };
 
 } //namespace neml

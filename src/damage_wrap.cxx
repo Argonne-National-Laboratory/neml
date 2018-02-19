@@ -214,15 +214,16 @@ PYBIND11_PLUGIN(damage) {
 
   py::class_<NEMLExponentialWorkDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd", py::base<NEMLStandardScalarDamagedModel_sd>())
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
+           std::shared_ptr<Interpolate>,
            std::shared_ptr<NEMLModel_sd>, std::shared_ptr<LinearElasticModel>,
            std::shared_ptr<Interpolate>, double, int, bool>(),
-            py::arg("W0"), py::arg("k0"), py::arg("base"), py::arg("emodel"), 
+            py::arg("W0"), py::arg("k0"), py::arg("af"), py::arg("base"), py::arg("emodel"), 
             py::arg("alpha") = nullptr, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
             py::arg("verbose") = false)
-      .def(py::init<double, double,
+      .def(py::init<double, double, double,
            std::shared_ptr<NEMLModel_sd>, std::shared_ptr<LinearElasticModel>,
            double, double, int, bool>(),
-            py::arg("W0"), py::arg("k0"), py::arg("base"), py::arg("emodel"), 
+            py::arg("W0"), py::arg("k0"), py::arg("af"), py::arg("base"), py::arg("emodel"), 
             py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
             py::arg("verbose") = false)
       ;

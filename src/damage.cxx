@@ -985,7 +985,8 @@ double NEMLPowerLawDamagedModel_sd::se(const double * const s) const
 }
 
 NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
-    std::shared_ptr<Interpolate> W0, std::shared_ptr<Interpolate> k0, 
+    std::shared_ptr<Interpolate> W0, std::shared_ptr<Interpolate> k0,
+    std::shared_ptr<Interpolate> af,
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<LinearElasticModel> emodel,
     std::shared_ptr<Interpolate> alpha,
@@ -993,13 +994,13 @@ NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
     bool verbose) :
       NEMLStandardScalarDamagedModel_sd(base, emodel, alpha, tol, miter, 
                                         verbose), 
-      W0_(W0), k0_(k0)
+      W0_(W0), k0_(k0), af_(af)
 {
 
 }
 
 NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
-    double W0, double k0,
+    double W0, double k0, double af,
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<LinearElasticModel> emodel,
     double alpha,
@@ -1007,7 +1008,8 @@ NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
     bool verbose) :
       NEMLStandardScalarDamagedModel_sd(base, emodel, alpha, tol, miter,
                                         verbose),
-      W0_(new ConstantInterpolate(W0)), k0_(new ConstantInterpolate(k0))
+      W0_(new ConstantInterpolate(W0)), k0_(new ConstantInterpolate(k0)),
+      af_(new ConstantInterpolate(af))
 {
 
 }
@@ -1018,8 +1020,9 @@ int NEMLExponentialWorkDamagedModel_sd::f(const double * const s_np1, double d_n
   double sev = se(s_np1);
   double W0 = W0_->value(T_np1);
   double k0 = k0_->value(T_np1);
+  double af = af_->value(T_np1);
 
-  f = (d_np1 + k0) / W0 * sev;
+  f = pow(d_np1 + k0, af) / W0 * sev;
 
   return 0;
 }
@@ -1030,6 +1033,7 @@ int NEMLExponentialWorkDamagedModel_sd::df_ds(const double * const s_np1, double
   double sev = se(s_np1);
   double W0 = W0_->value(T_np1);
   double k0 = k0_->value(T_np1);
+  double af = af_->value(T_np1);
 
   if (sev == 0.0) {
     std::fill(df, df+6, 0.0);
@@ -1039,7 +1043,7 @@ int NEMLExponentialWorkDamagedModel_sd::df_ds(const double * const s_np1, double
   std::copy(s_np1, s_np1+6, df);
   double sm = (s_np1[0] + s_np1[1] + s_np1[2]) / 3.0;
   for (int i=0; i<3; i++) df[i] -= sm;
-  for (int i=0; i<6; i++) df[i] *= (3.0 * (d_np1 + k0) / (2.0 * sev * W0) );
+  for (int i=0; i<6; i++) df[i] *= (3.0 * pow(d_np1 + k0, af) / (2.0 * sev * W0) );
 
   return 0;
 }
@@ -1050,8 +1054,9 @@ int NEMLExponentialWorkDamagedModel_sd::df_dd(const double * const s_np1, double
   double sev = se(s_np1);
   double W0 = W0_->value(T_np1);
   double k0 = k0_->value(T_np1);
+  double af = af_->value(T_np1);
 
-  df = sev / W0;
+  df = af * pow(d_np1 + k0, af - 1.0) * sev / W0;
 
   return 0;
 }

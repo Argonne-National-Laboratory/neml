@@ -860,7 +860,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
-    verbose = False):
+    verbose = False, check_dmg = False, dtol = 0.75):
   """
     Strain controlled cyclic test.
 
@@ -921,6 +921,9 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       else:
         einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
             ainc_guess = ainc)
+      if check_dmg:
+        if driver.stored_int[-1][0] > dtol:
+          raise Exception("Damage check exceeded")
       strain.append(np.dot(driver.strain_int[-1], sdir))
       stress.append(np.dot(driver.stress_int[-1], sdir))
       time.append(time[-1] + e_inc / erate)
@@ -932,7 +935,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
   for s in range(ncycles):
     if verbose:
       print("Cycle %i" % s)
-    
+
     try:
       # Tension hold
       if hold_time[0] > 0.0:
@@ -940,6 +943,9 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
         for i in range(n_hold):
           einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
               einc_guess = np.zeros((6,)), ainc_guess = -1)
+          if check_dmg:
+            if driver.stored_int[-1][0] > dtol:
+              raise Exception("Damage check exceeded")
           strain.append(np.dot(driver.strain_int[-1], sdir))
           stress.append(np.dot(driver.stress_int[-1], sdir))
           time.append(time[-1] + dt)
@@ -953,7 +959,9 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
         else:
           einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
               einc_guess = einc, ainc_guess = ainc)
-
+        if check_dmg:
+          if driver.stored_int[-1][0] > dtol:
+            raise Exception("Damage check exceeded")
         strain.append(np.dot(driver.strain_int[-1], sdir))
         stress.append(np.dot(driver.stress_int[-1], sdir))
         time.append(time[-1] + e_inc / erate)
@@ -964,6 +972,9 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
         for i in range(n_hold):
           einc, ainc = driver.erate_step(sdir, 0.0, time[-1] + dt, T, 
               einc_guess = np.zeros((6,)), ainc_guess = -1)
+          if check_dmg:
+            if driver.stored_int[-1][0] > dtol:
+              raise Exception("Damage check exceeded")
           strain.append(np.dot(driver.strain_int[-1], sdir))
           stress.append(np.dot(driver.stress_int[-1], sdir))
           time.append(time[-1] + dt)
@@ -976,6 +987,9 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
         else:
           einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T,
               einc_guess = einc, ainc_guess = ainc)
+        if check_dmg:
+          if driver.stored_int[-1][0] > dtol:
+            raise Exception("Damage check exceeded")
         strain.append(np.dot(driver.strain_int[-1], sdir))
         stress.append(np.dot(driver.stress_int[-1], sdir))
         time.append(time[-1] + e_inc / erate)
@@ -999,7 +1013,8 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
       "min": np.array(smin), "mean": np.array(smean),
       "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
-      "history": driver.stored_int[-1], "time": np.array(time)}
+      "history": driver.stored_int[-1], "time": np.array(time),
+      "complete_history": np.array(driver.stored_int)}
 
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
@@ -1223,7 +1238,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
 def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
     logspace = False, history = None, elimit = 1.0, check_dmg = False,
-    dtol = 0.9):
+    dtol = 0.75):
   """
     Simulate a creep test
 
