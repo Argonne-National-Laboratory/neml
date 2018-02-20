@@ -997,7 +997,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       # Calculate
       if np.isnan(max(stress[si:])) or np.isnan(min(stress[si:])):
         break
-
+      
       cycles.append(s)
       smax.append(max(stress[si:]))
       smin.append(min(stress[si:]))
@@ -1013,8 +1013,7 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
       "min": np.array(smin), "mean": np.array(smean),
       "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
-      "history": driver.stored_int[-1], "time": np.array(time),
-      "complete_history": np.array(driver.stored_int)}
+      "history": driver.stored_int[-1], "time": np.array(time)}
 
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
@@ -1282,23 +1281,31 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     ts = np.logspace(0, np.log10(hold), num = nsteps) + t0
   else:
     ts = np.linspace(0,hold, num = nsteps) + t0
-   
+    
+  failed = False
   for t in ts:
     # You can exceed the creep life of the sample doing this...
     # Need to allow a non-convergent result to break
     try:
       driver.stress_step(driver.stress_int[-1], t, T)
     except:
+      failed = True
+      break
+    if np.any(np.isnan(driver.strain_int[-1])):
+      failed = True
       break
     if np.any(np.abs(driver.strain_int[-1]) > elimit):
+      failed = True
       break
     
     ed = np.dot(driver.strain_int[-1],sdir)
     if ed < strain[-1]:
+      failed = True
       break
 
     if check_dmg:
       if driver.stored_int[-1][0] > dtol:
+        failed = True
         break
 
     time.append(t)
@@ -1319,7 +1326,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
   return {'time': np.copy(time), 'strain': np.copy(strain), 
       'stress': np.copy(stress), 'rtime': np.copy(rtime[:-1]),
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1]),
-      'tstrain': np.copy(strain[ri:-1])}
+      'tstrain': np.copy(strain[ri:-1]), 'failed': failed}
 
 def thermomechanical_strain_raw(model, time, temperature, strain, 
     sdir = np.array([1,0,0,0,0,0.0]), verbose = False, substep = 1):
@@ -1433,7 +1440,8 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
 
 
 def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0,
-    ds = 10.0, max_cut = 10, nsteps = 250, history = None):
+    ds = 10.0, max_cut = 4, nsteps = 250, history = None,
+    check_dmg = False):
   """
     Generates an isochronous stress-strain curve at the given time and
     temperature.
@@ -1451,17 +1459,20 @@ def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0,
   """
   def strain(stress):
     res = creep(model, stress, srate, time, T = T, nsteps = nsteps,
-        history = history)
-    return res['tstrain'][-1]
+        history = history, check_dmg = check_dmg)
+    return res['tstrain'][-1], res['failed']
 
   strains = [0.0]
   stresses = [0.0]
   ncut = 0
+  failed = False
   try:
     while strains[-1] < emax:
       target = stresses[-1] + ds
       try:
-        enext = strain(target)
+        enext, failed = strain(target)
+        if failed:
+          break
         stresses.append(target)
         strains.append(enext)
       except Exception:
@@ -1471,6 +1482,10 @@ def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0,
         ds /= 2
   except MaximumSubdivisions:
     # We were quite aggressive, so assume the curve goes flat
+    stresses.append(stresses[-1])
+    strains.append(emax)
+
+  if failed:
     stresses.append(stresses[-1])
     strains.append(emax)
 
