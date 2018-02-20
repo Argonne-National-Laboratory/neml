@@ -388,9 +388,10 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
 
     self.W0 = 1.0
     self.k0 = 0.001
+    self.a = 1.0
 
     self.model = damage.NEMLExponentialWorkDamagedModel_sd(self.W0, self.k0, 
-        self.bmodel, self.elastic)
+        self.a, self.bmodel, self.elastic)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -455,15 +456,17 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
 
     self.W0 = 1.0
     self.k0 = 0.001
+    self.a0 = 1.0
 
     self.model1 = damage.NEMLExponentialWorkDamagedModel_sd(self.W0, self.k0, 
-        self.bmodel, self.elastic)
+        self.a0, self.bmodel, self.elastic)
 
     self.W02 = 2.0
     self.k02 = 0.01
+    self.a02 = 1.1
 
     self.model2 = damage.NEMLExponentialWorkDamagedModel_sd(self.W02, self.k02, 
-        self.bmodel, self.elastic)
+        self.a02, self.bmodel, self.elastic)
 
     self.model = damage.CombinedDamageModel_sd([self.model1, self.model2],
         self.bmodel)
