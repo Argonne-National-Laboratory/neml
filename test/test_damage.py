@@ -386,9 +386,9 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
-    self.W0 = 1.0
-    self.k0 = 0.001
-    self.a = 1.0
+    self.W0 = 10.0
+    self.k0 = 0.0001
+    self.a = 2.0
 
     self.model = damage.NEMLExponentialWorkDamagedModel_sd(self.W0, self.k0, 
         self.a, self.bmodel, self.elastic)
@@ -426,7 +426,8 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
 
   def test_function(self):
     f_model = self.model.f(self.stress, self.d_np1, self.T)
-    f_calcd = (self.d_np1 + self.k0) * self.effective(self.stress) / self.W0
+    f_calcd = (self.d_np1 + self.k0) ** self.a * self.effective(self.stress) / self.W0
+
     self.assertTrue(np.isclose(f_model, f_calcd))
 
 
@@ -454,16 +455,16 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
     self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
-    self.W0 = 1.0
-    self.k0 = 0.001
-    self.a0 = 1.0
+    self.W0 = 10.0
+    self.k0 = 0.0001
+    self.a0 = 2.0
 
     self.model1 = damage.NEMLExponentialWorkDamagedModel_sd(self.W0, self.k0, 
         self.a0, self.bmodel, self.elastic)
 
-    self.W02 = 2.0
-    self.k02 = 0.01
-    self.a02 = 1.1
+    self.W02 = 10.0
+    self.k02 = 0.001
+    self.a02 = 1.5
 
     self.model2 = damage.NEMLExponentialWorkDamagedModel_sd(self.W02, self.k02, 
         self.a02, self.bmodel, self.elastic)

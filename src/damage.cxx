@@ -309,6 +309,8 @@ int CombinedDamageModel_sd::ddamage_dd(
                t_np1, t_n, &di);
     *dd += di;
   }
+
+  return 0;
 }
 
 int CombinedDamageModel_sd::ddamage_de(
@@ -326,6 +328,8 @@ int CombinedDamageModel_sd::ddamage_de(
                t_np1, t_n, di);
     for (int i=0; i<6; i++) dd[i] += di[i];
   }
+
+  return 0;
 }
 
 int CombinedDamageModel_sd::ddamage_ds(
@@ -343,6 +347,8 @@ int CombinedDamageModel_sd::ddamage_ds(
                t_np1, t_n, di);
     for (int i=0; i<6; i++) dd[i] += di[i];
   }
+
+  return 0;
 }
 
 ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
@@ -958,7 +964,7 @@ int NEMLPowerLawDamagedModel_sd::df_ds(const double * const s_np1, double d_np1,
 
   if (sev == 0.0) {
     std::fill(df, df+6, 0.0);
-    return 0.0;
+    return 0;
   }
 
   std::copy(s_np1, s_np1+6, df);
