@@ -2044,7 +2044,7 @@ Work-based fatigue
 A simple model made up to approximate fatigue damage:
 \begin_inset Formula 
 \[
-f=\frac{\left(\omega+k\right)\sigma_{e}}{W_{0}}
+f=\frac{\left(\omega+k\right)^{a}\sigma_{e}}{W_{0}}
 \]
 
 \end_inset
@@ -2052,7 +2052,7 @@ f=\frac{\left(\omega+k\right)\sigma_{e}}{W_{0}}
 
 \begin_inset Formula 
 \[
-\frac{\partial f}{\partial\bm{\sigma}}=\frac{3\left(\omega+k\right)}{2\sigma_{e}W_{0}}\boldsymbol{s}
+\frac{\partial f}{\partial\bm{\sigma}}=\frac{3\left(\omega+k\right)^{a}}{2\sigma_{e}W_{0}}\boldsymbol{s}
 \]
 
 \end_inset
@@ -2060,7 +2060,7 @@ f=\frac{\left(\omega+k\right)\sigma_{e}}{W_{0}}
 
 \begin_inset Formula 
 \[
-\frac{\partial f}{\partial\omega}=\frac{\sigma_{e}}{W_{0}}
+\frac{\partial f}{\partial\omega}=\frac{a\left(\omega+k\right)^{a-1}\sigma_{e}}{W_{0}}
 \]
 
 \end_inset

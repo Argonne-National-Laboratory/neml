@@ -1021,8 +1021,14 @@ int NEMLExponentialWorkDamagedModel_sd::f(const double * const s_np1, double d_n
   double W0 = W0_->value(T_np1);
   double k0 = k0_->value(T_np1);
   double af = af_->value(T_np1);
-
-  f = pow(d_np1 + k0, af) / W0 * sev;
+  
+  // Sign, odd case during iteration
+  if ((d_np1 + k0) < 0.0) {
+    f = 0.0;
+  }
+  else {
+    f = pow(d_np1 + k0, af) / W0 * sev;
+  }
 
   return 0;
 }
@@ -1037,7 +1043,12 @@ int NEMLExponentialWorkDamagedModel_sd::df_ds(const double * const s_np1, double
 
   if (sev == 0.0) {
     std::fill(df, df+6, 0.0);
-    return 0.0;
+    return 0;
+  }
+
+  if ((d_np1 + k0) < 0.0) {
+    std::fill(df, df+6, 0.0);
+    return 0;
   }
 
   std::copy(s_np1, s_np1+6, df);
@@ -1055,6 +1066,11 @@ int NEMLExponentialWorkDamagedModel_sd::df_dd(const double * const s_np1, double
   double W0 = W0_->value(T_np1);
   double k0 = k0_->value(T_np1);
   double af = af_->value(T_np1);
+
+  if ((d_np1 + k0) < 0.0) {
+    df = 0.0;
+    return 0;
+  }
 
   df = af * pow(d_np1 + k0, af - 1.0) * sev / W0;
 
