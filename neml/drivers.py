@@ -1166,7 +1166,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
 
 def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
     nsteps_up = 150, index = 0, tc = 1.0,
-    verbose = False):
+    verbose = False, logspace = False):
   """
     Simulate a stress relaxation test.
 
@@ -1183,6 +1183,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
       index         direction to pull in, default x tension
       tc            1.0 for tension -1.0 for compression
       verbose       whether to be verbose
+      logspace      log space the relaxation timesteps
 
     Results:
       time          time
@@ -1217,8 +1218,13 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
   
   if verbose:
     print("Hold")
-  dt = hold / nsteps
-  for i in range(nsteps):
+  if logspace:
+    ts = np.logspace(0, np.log10(hold), num = nsteps+1) 
+    dts = np.diff(ts)
+  else:
+    dt = hold / nsteps
+    dts = [dt] * nsteps
+  for i, dt in enumerate(dts):
     driver.strain_hold_step(index, driver.t_int[-1] + dt, T)
     time.append(driver.t_int[-1])
     strain.append(np.dot(driver.strain_int[-1],sdir))
