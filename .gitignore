@@ -22,3 +22,4 @@ examples/profiling/profile
 doc/doxygen/Doxyfile
 doc/doxygen/html
 doc/doxygen/latex
+util/abaqus/report

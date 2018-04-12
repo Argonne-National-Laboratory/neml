@@ -62,6 +62,10 @@ endif(APPLE)
 # Recurse
 add_subdirectory(src)
 
+if (NOT WRAP_PYTHON)
+      add_subdirectory(util/abaqus)
+endif()
+
 # Documentation control
 option(BUILD_DOCUMENTATION "Build documentation: manual and doxygen" OFF)
 if (BUILD_DOCUMENTATION)
