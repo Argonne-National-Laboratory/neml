@@ -39,7 +39,7 @@ INCLUDE_DIRECTORIES(${libxml++_INCLUDE_DIRS})
 # Option for python
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
-      FIND_PACKAGE(PythonLibs REQUIRED)
+      FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
       INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
       set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
 else()
