@@ -13,8 +13,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(neml) {
-  py::module m("neml", "Base class material models.");
+PYBIND11_MODULE(neml, m) {
+  m.doc() = "Base class for all material models.";
   
   py::class_<NEMLModel, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
@@ -375,9 +375,6 @@ PYBIND11_PLUGIN(neml) {
            py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
            py::arg("alpha") = nullptr)
       ;
-
-  return m.ptr();
 }
-
 
 } // namespace neml

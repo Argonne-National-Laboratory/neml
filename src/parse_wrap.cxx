@@ -12,8 +12,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(parse) {
-  py::module m("parse", "Create a model from an XML file.");
+PYBIND11_MODULE(parse, m) {
+  m.doc() = "Python wrapper to read XML input files.";
   
   m.def("parse_xml", 
         [](std::string fname, std::string mname) -> std::shared_ptr<NEMLModel>
@@ -24,9 +24,6 @@ PYBIND11_PLUGIN(parse) {
 
           return std::move(m);
         }, "Return a model from an XML description");
-
-  return m.ptr();
 }
-
 
 } // namespace neml

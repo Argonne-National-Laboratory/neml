@@ -13,8 +13,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(interpolate) {
-  py::module m("interpolate", "Interpolation schemes for model parameters.");
+PYBIND11_MODULE(interpolate, m) {
+  m.doc() = "Interpolation schemes used to define model parameters.";
   
   py::class_<Interpolate, std::shared_ptr<Interpolate>>(m, "Interpolate")
       .def("value", &Interpolate::value, "Interpolate to x")
@@ -53,10 +53,6 @@ PYBIND11_PLUGIN(interpolate) {
       .def(py::init<double, double, double>(), py::arg("y0"), py::arg("D"), 
            py::arg("x0"))
       ;
-
-  return m.ptr();
 }
-
-
 
 } // namespace neml

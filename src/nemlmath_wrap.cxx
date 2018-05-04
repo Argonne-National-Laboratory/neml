@@ -14,8 +14,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(nemlmath) {
-  py::module m("nemlmath", "Various helper math functions.");
+PYBIND11_MODULE(nemlmath, m) {
+  m.doc() = "Various mathematical helper functions.";
 
   m.def("minus_vec",
         [](py::array_t<double, py::array::c_style> a) -> py::array_t<double>

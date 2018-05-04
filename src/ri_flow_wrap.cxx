@@ -12,8 +12,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(ri_flow) {
-  py::module m("ri_flow", "Rate independent flow models.");
+PYBIND11_MODULE(ri_flow, m) {
+  m.doc() = "Rate independent flow models.";
   
   py::class_<RateIndependentFlowRule, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")
       .def_property_readonly("nhist", &RateIndependentFlowRule::nhist, "Number of history variables.")
@@ -111,8 +111,6 @@ PYBIND11_PLUGIN(ri_flow) {
       .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>>(), 
            py::arg("surface"), py::arg("hardening"))
       ;
-
-  return m.ptr();
 }
 
 } // namespace neml

@@ -12,8 +12,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(solvers) {
-  py::module m("solvers", "Nonlinear solvers.");
+PYBIND11_MODULE(solvers, m) {
+  m.doc() = "Nonlinear solvers and wrappers to nonlinear solver libraries.";
 
   py::class_<TrialState>(m, "TrialState")
       .def(py::init<>())
@@ -55,9 +55,6 @@ PYBIND11_PLUGIN(solvers) {
         py::arg("solvable"), py::arg("trial_state"), py::arg("tol") = 1.0e-8,
         py::arg("miter") = 50,
         py::arg("verbose") = false);
-
-  return m.ptr();
-
 }
 
 } // namespace neml

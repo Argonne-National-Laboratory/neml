@@ -11,8 +11,8 @@ namespace py = pybind11;
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
-PYBIND11_PLUGIN(general_flow) {
-  py::module m("general_flow", "General flow models.");
+PYBIND11_MODULE(general_flow, m) {
+  m.doc() = "General flow models where subclass functions define everything.";
 
   py::class_<GeneralFlowRule, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
       .def_property_readonly("nhist", &GeneralFlowRule::nhist, "Number of history variables.")
@@ -126,8 +126,6 @@ PYBIND11_PLUGIN(general_flow) {
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<ViscoPlasticFlowRule>>(),
            py::arg("elastic"), py::arg("flow"))
       ;
-
-  return m.ptr();
 }
 
 } // namespace neml

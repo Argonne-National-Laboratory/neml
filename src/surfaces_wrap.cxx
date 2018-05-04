@@ -11,8 +11,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(surfaces) {
-  py::module m("surfaces", "Various yield surfaces.");
+PYBIND11_MODULE(surfaces, m) {
+  m.doc() = "Yield (and flow) surface definitions.";
 
   py::class_<YieldSurface, std::shared_ptr<YieldSurface>>(m, "YieldSurface")
       .def_property_readonly("nhist", &YieldSurface::nhist, "Number of history variables.")
@@ -111,9 +111,6 @@ PYBIND11_PLUGIN(surfaces) {
                       return new IsoJ2I1(hi, li);
                     }), "Direct value constructor", py::arg("h"), py::arg("l"));
       ;
-
-  return m.ptr();
 }
-
 
 } // namespace neml

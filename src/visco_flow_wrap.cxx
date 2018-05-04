@@ -11,8 +11,8 @@ namespace py = pybind11;
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
-PYBIND11_PLUGIN(visco_flow) {
-  py::module m("visco_flow", "Viscoplastic flow models.");
+PYBIND11_MODULE(visco_flow, m) {
+  m.doc() = "Viscoplastic flow models.";
 
   py::class_<GFlow, std::shared_ptr<GFlow>>(m, "GFlow")
       .def("g", &GFlow::g, "g function in Perzyna model")
@@ -262,8 +262,6 @@ PYBIND11_PLUGIN(visco_flow) {
         .def("q", &YaguchiGr91FlowRule::q)
         .def("C1", &YaguchiGr91FlowRule::C1)
         ;
-
-  return m.ptr();
 }
 
 } // namespace neml

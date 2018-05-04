@@ -13,8 +13,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(hardening) {
-  py::module m("hardening", "Various hardening rules.");
+PYBIND11_MODULE(hardening, m) {
+  m.doc() = "Various hardening rules.";
 
   py::class_<HardeningRule, std::shared_ptr<HardeningRule>>(m, "HardeningRule")
       .def_property_readonly("nhist", &HardeningRule::nhist, "Number of history variables.")
@@ -243,10 +243,6 @@ PYBIND11_PLUGIN(hardening) {
           return cv;
          }, "c material constant.")
       ;
-
-  return m.ptr();
-
 }
-
 
 } // namespace neml

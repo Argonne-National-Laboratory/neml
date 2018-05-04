@@ -13,8 +13,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(elasticity) {
-  py::module m("elasticity", "Models of elasticity.");
+PYBIND11_MODULE(elasticity, m) {
+  m.doc() = "Elastic models.";
 
   py::class_<Modulus, std::shared_ptr<Modulus>>(m, "Modulus")
       .def(py::init<double>(), py::arg("x"))
@@ -70,9 +70,6 @@ PYBIND11_PLUGIN(elasticity) {
       .def(py::init<std::shared_ptr<YoungsModulus>, std::shared_ptr<PoissonsRatio>>(),
            py::arg("youngs_modulus"), py::arg("poissons_ratio"))
       ;
-
-  return m.ptr();
 }
-
 
 }

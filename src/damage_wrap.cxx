@@ -14,8 +14,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(damage) {
-  py::module m("damage", "NEML damage models.");
+PYBIND11_MODULE(damage, m) {
+  m.doc() = "NEML damage models.";
 
   py::class_<NEMLDamagedModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd", py::base<NEMLModel_sd>())
       .def_property_readonly("ndamage", &NEMLDamagedModel_sd::ndamage, "Number of damage variables.")
@@ -227,8 +227,6 @@ PYBIND11_PLUGIN(damage) {
             py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
             py::arg("verbose") = false)
       ;
-
-  return m.ptr();
 }
 
 } //  namespace neml

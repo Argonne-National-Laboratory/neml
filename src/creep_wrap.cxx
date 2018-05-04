@@ -13,8 +13,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_PLUGIN(creep) {
-  py::module m("creep", "Creep models.");
+PYBIND11_MODULE(creep, m) {
+  m.doc() = "Separate creep models to combine with base NEML models";
 
   py::class_<CreepModelTrialState>(m, "CreepModelTrialState", py::base<TrialState>())
       ;
@@ -206,8 +206,6 @@ PYBIND11_PLUGIN(creep) {
       .def_property_readonly("k", &MukherjeeCreep::k)
       .def_property_readonly("R", &MukherjeeCreep::R)
     ;
-
-  return m.ptr();
-} // PLUGIN(creep)
+} // MODULE(creep, m)
 
 } // namespace neml
