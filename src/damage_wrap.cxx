@@ -29,7 +29,7 @@ PYBIND11_PLUGIN(damage) {
            }, "Initialize damage variables.")
       ;
 
-  py::class_<SDTrialState, std::shared_ptr<SDTrialState>>(m, "SDTrialState", py::base<TrialState>())
+  py::class_<SDTrialState>(m, "SDTrialState", py::base<TrialState>())
       ;
 
   py::class_<NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd", py::base<NEMLDamagedModel_sd>())
