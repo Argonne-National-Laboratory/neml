@@ -7,6 +7,8 @@ from numpy.polynomial.legendre import leggauss
 
 import numpy.random as ra
 
+from nlsolvers import MaximumIterations, MaximumSubdivisions, newton
+
 class Driver(object):
   """
     Superclass of all drivers, basically just sets up history and reports
@@ -297,7 +299,7 @@ class Driver_sd(Driver):
     
     self.stress_step(s_np1, self.t_int[-1] + dt, T_np1)
 
-  def strain_hold_step(self, i, t_np1, T_np1):
+  def strain_hold_step(self, i, t_np1, T_np1, q = 1.0, E = -1.0):
     """
       A special, mixed step which holds the strain in index i constant
       while holding the stress in the other directions to their previous
@@ -307,7 +309,14 @@ class Driver_sd(Driver):
         i           index to hold
         t_np1       next time
         T_np1       next temperature
+
+      Optional:
+        q           follow up factor
+        E           Young's modulus to use -- must redo interface at some point
     """
+    if not np.isclose(q, 1.0) and np.isclose(E, -1.0):
+      raise ValueError("You must supply the Youngs modulus")
+
     enext = self.update_thermal_strain(T_np1)
     oset = sorted(list(set(range(6)) - set([i])))
     def RJ(e_np1):
@@ -317,18 +326,19 @@ class Driver_sd(Driver):
           self.stored_int[-1], self.u_int[-1], self.p_int[-1])
 
       R = np.zeros((6,))
-      R[0] = e_np1[i] - self.strain_int[-1][i]
+      R[0] = (e_np1[i] - self.strain_int[-1][i]
+          ) + (s[i] - self.stress_int[-1][i]) / E * (q - 1)
       R[1:] = s[oset] - self.stress_int[-1][oset]
 
       J = np.zeros((6,6))
       J[0,0] = 1.0
-      J[1:,1:] = A[oset,:][:,oset]
+      J[0,:] += A[i,:] / E * (q - 1)
+      J[1:,:] = A[oset,:][:]
 
       return R, J
     
     x0 = np.copy(self.strain_int[-1])
-    #e_np1 = newton(RJ, x0, verbose = self.verbose,
-    #    rtol = self.rtol, atol = self.atol, miter = self.miter)
+
     e_np1 = self.solve_try(RJ, x0)
 
     self.strain_step(e_np1, t_np1, T_np1)
@@ -803,7 +813,7 @@ def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
 
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
     sdir = np.array([1,0,0,0,0,0]), verbose = False,
-    offset = 0.2/100.0, history = None):
+    offset = 0.2/100.0, history = None, tdir = np.array([0,1,0,0,0,0])):
   """
     Make a uniaxial stress/strain curve
 
@@ -819,6 +829,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       verbose   whether to be verbose
       offset    used to calculate yield stress
       history   initial model history
+      tdir      transverse direction for Poisson's ratio
 
     Results:
       strain    strain in direction
@@ -845,6 +856,8 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
 
   # Calculate the yield stress and Young's modulus
   E = np.abs(stress[1]) / np.abs(strain[1])
+  nu = -np.dot(driver.strain_int[1], tdir) / np.dot(
+      driver.strain_int[1], sdir)
   sfn = inter.interp1d(np.abs(strain), np.abs(stress))
   tfn = lambda e: E * (e - offset)
   try:
@@ -856,7 +869,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   return {'strain': strain, 'stress': stress, 
       'energy_density': np.copy(driver.u),
       'plastic_work': np.copy(driver.p),
-      'youngs': E, 'yield': sY}
+      'youngs': E, 'yield': sY, 'poissons': nu}
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
@@ -1015,6 +1028,182 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
       "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
       "history": driver.stored_int[-1], "time": np.array(time)}
 
+def strain_cyclic_followup(model, emax, R, erate, ncycles, 
+    q = 1.0, T = 300.0, nsteps = 50,
+    sind = 0, hold_time = None, n_hold = 25,
+    verbose = False, check_dmg = False, dtol = 0.75,
+    logspace = False):
+  """
+    Strain controlled cyclic test.
+
+    This is a "fallback" to the old version that does things by index
+    so that I can use the index-based hold routine with follow up
+
+    Parameters:
+      emax      maximum strain
+      R         R = emin / emax
+      erate     strain rate to go at
+      ncycles   number of cycles
+
+    Optional:
+      T         temperature, default 300
+      nsteps    number of steps per half cycle
+      sind      index to pull on
+      hold_time if None don't hold, if scalar then hold symmetrically top/bot
+                if an array specify different hold times for first direction
+                (default tension) and second direction
+      n_hold    number of steps to hold over
+      verbose   whether to be verbose
+
+    Results:
+      strain        strain in direction
+      stress        stress in direction
+      cycles        list of cycle numbers
+      max           maximum stress per cycle
+      min           minimum stress per cycle
+      mean          mean stress per cycle
+      
+  """
+  # Setup
+  sdir = np.zeros((6,))
+  sdir[sind] = 1.0
+
+  res = uniaxial_test(model, erate, T = T, emax = 1.0e-4, nsteps = 2)
+  E = res['youngs']
+
+  driver = Driver_sd(model, verbose = verbose, T_init = T)
+  emin = emax * R
+  if hold_time:
+    if np.isscalar(hold_time):
+      hold_time = [hold_time, hold_time]
+  else:
+    hold_time = [0,0]
+
+  # Setup results
+  strain = [0.0]
+  stress = [0.0]
+  time = [0.0]
+  cycles = []
+  smax = []
+  smin = []
+  smean = []
+
+  ecycle = []
+  pcycle = []
+
+  # First half cycle
+  if verbose:
+    print("Initial half cycle")
+  e_inc = emax / nsteps
+  try:
+    for i in range(nsteps):
+      if i == 0:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
+      else:
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, einc_guess = einc,
+            ainc_guess = ainc)
+      if check_dmg:
+        if driver.stored_int[-1][0] > dtol:
+          raise Exception("Damage check exceeded")
+      strain.append(np.dot(driver.strain_int[-1], sdir))
+      stress.append(np.dot(driver.stress_int[-1], sdir))
+      time.append(time[-1] + e_inc / erate)
+  except Exception as e:
+    print("Failed to make first half cycle")
+    raise e
+  
+  # Begin cycling
+  for s in range(ncycles):
+    if verbose:
+      print("Cycle %i" % s)
+
+    try:
+      # Tension hold
+      if hold_time[0] > 0.0:
+        if logspace:
+          dts = np.diff(np.logspace(0, np.log10(hold_time[0]), n_hold+1))
+        else:
+          dts = np.diff(np.linspace(0,hold_time[0],n_hold+1))
+        #dt = hold_time[0] / n_hold
+        for i, dt in enumerate(dts):
+          driver.strain_hold_step(sind, time[-1] + dt, T, 
+              q = q, E = E)
+          if check_dmg:
+            if driver.stored_int[-1][0] > dtol:
+              raise Exception("Damage check exceeded")
+          strain.append(np.dot(driver.strain_int[-1], sdir))
+          stress.append(np.dot(driver.stress_int[-1], sdir))
+          time.append(time[-1] + dt)
+
+      si = len(driver.strain_int)
+      e_inc = np.abs(emin - emax) / nsteps
+      for i in range(nsteps):
+        if i == 0:
+          einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
+              einc_guess = np.zeros((6,)), ainc_guess = -1)
+        else:
+          einc, ainc = driver.erate_einc_step(-sdir, erate, e_inc, T, 
+              einc_guess = einc, ainc_guess = ainc)
+        if check_dmg:
+          if driver.stored_int[-1][0] > dtol:
+            raise Exception("Damage check exceeded")
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+        time.append(time[-1] + e_inc / erate)
+      
+      # Compression hold
+      if hold_time[1] > 0.0:
+        if logspace:
+          dts = np.diff(np.logspace(0, np.log10(hold_time[1]), n_hold+1))
+        else:
+          dts = np.diff(np.linspace(0,hold_time[1],n_hold+1))
+        for i, dt in enumerate(dts):
+          driver.strain_hold_step(sind, time[-1] + dt, T, 
+              q = q, E = E)
+          if check_dmg:
+            if driver.stored_int[-1][0] > dtol:
+              raise Exception("Damage check exceeded")
+          strain.append(np.dot(driver.strain_int[-1], sdir))
+          stress.append(np.dot(driver.stress_int[-1], sdir))
+          time.append(time[-1] + dt)
+
+      e_inc = np.abs(emax - emin) / nsteps
+      for i in range(nsteps):
+        if i == 0:
+          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T, 
+              einc_guess = np.zeros((6,)), ainc_guess = 1.0)
+        else:
+          einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T,
+              einc_guess = einc, ainc_guess = ainc)
+        if check_dmg:
+          if driver.stored_int[-1][0] > dtol:
+            raise Exception("Damage check exceeded")
+        strain.append(np.dot(driver.strain_int[-1], sdir))
+        stress.append(np.dot(driver.stress_int[-1], sdir))
+        time.append(time[-1] + e_inc / erate)
+
+      # Calculate
+      if np.isnan(max(stress[si:])) or np.isnan(min(stress[si:])):
+        break
+      
+      cycles.append(s)
+      smax.append(max(stress[si:]))
+      smin.append(min(stress[si:]))
+      smean.append((smax[-1]+smin[-1])/2)
+
+      ecycle.append(driver.u_int[-1])
+      pcycle.append(driver.p_int[-1])
+    except Exception as e:
+      break
+
+  # Setup and return
+  return {"strain": np.array(strain), "stress": np.array(stress),
+      "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
+      "min": np.array(smin), "mean": np.array(smean),
+      "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
+      "history": driver.stored_int[-1], "time": np.array(time)}
+
+
 def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 10,
     verbose = False, etol = 0.1):
@@ -1164,9 +1353,9 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       "energy_density": np.array(ecycle), "plastic_work": np.array(pcycle),
       "time": np.array(driver.t_int)}
 
-def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
-    nsteps_up = 150, index = 0, tc = 1.0,
-    verbose = False, logspace = False):
+def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 250,
+    nsteps_up = 50, index = 0, tc = 1.0,
+    verbose = False, logspace = False, q = 1.0):
   """
     Simulate a stress relaxation test.
 
@@ -1184,6 +1373,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
       tc            1.0 for tension -1.0 for compression
       verbose       whether to be verbose
       logspace      log space the relaxation timesteps
+      q             follow up factor
 
     Results:
       time          time
@@ -1197,6 +1387,9 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
   time = [0]
   strain = [0]
   stress = [0]
+
+  res = uniaxial_test(model, erate, T = T, emax = 1.0e-4, nsteps = 2)
+  E = res['youngs']
 
   # Ramp up
   if verbose:
@@ -1225,7 +1418,8 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
     dt = hold / nsteps
     dts = [dt] * nsteps
   for i, dt in enumerate(dts):
-    driver.strain_hold_step(index, driver.t_int[-1] + dt, T)
+    driver.strain_hold_step(index, driver.t_int[-1] + dt, T, 
+        q = q, E = E)
     time.append(driver.t_int[-1])
     strain.append(np.dot(driver.strain_int[-1],sdir))
     stress.append(np.dot(driver.stress_int[-1],sdir))
@@ -1237,8 +1431,8 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 750,
   
   return {'time': np.copy(time), 'strain': np.copy(strain), 
       'stress': np.copy(stress), 'rtime': np.copy(time[ri:-1] - time[ri]),
-      'rrate': np.copy(rrate), 'rstress': np.copy(stress[ri:-1])}
-
+      'rrate': np.copy(rrate), 'rstress': np.copy(stress[ri:-1]),
+      'rstrain': np.copy(strain[ri:-1])}
 
 def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
@@ -1659,182 +1853,3 @@ def bree(models, P, dT, T0 = 0.0, ncycles = 5, nsteps_up = 15,
       over_work.append(over_work[-1] + np.sum(work * Ai))
 
   return over_time, over_strain, over_energy, over_work
-
-
-class MaximumIterations(RuntimeError):
-  """
-    An error to use if an iterative method exceeds the maximum allowed iterations.
-  """
-  def __init__(self):
-    super(MaximumIterations, self).__init__("Exceeded the maximum allowed iterations!")
-
-class MaximumSubdivisions(RuntimeError):
-  """
-    An error to use if adaptive substepping faisl.
-  """
-  def __init__(self):
-    super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
-
-
-def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 50,
-    linesearch = 'none', bt_tau = 0.5, bt_c = 1.0e-4):
-  """
-    Manually-code newton-raphson so that I can output convergence info, if
-    requested.
-
-    Parameters:
-      RJ        function return the residual + jacobian
-      x0        initial guess
-
-    Optional:
-      verbose   verbose output
-  """
-  R, J = RJ(x0)
-  nR = la.norm(R)
-  nR0 = nR
-  x = np.copy(x0)
-  
-  i = 0
-
-  if verbose:
-    print("Iter.\tnR\t\tnR/nR0\t\tcond\t\tlinesearch")
-    print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
-
-  while (nR > rtol * nR0) and (nR > atol):
-    a = la.solve(J, R)
-
-    if linesearch == 'none':
-      f = 1.0
-    elif linesearch == 'backtracking':
-      f = backtrack(RJ, R, J, x, -a, tau = bt_tau, c = bt_c, verbose = verbose)
-    else:
-      raise ValueError("Unknown linesearch type.")
-    
-    x -= (a * f)
-    R, J = RJ(x)
-    nR = la.norm(R)
-    i += 1
-    if verbose:
-      print("%i\t%e\t%e\t%e\t%f" % (i, nR, nR / nR0,la.cond(J), f))
-    if i > miter:
-      if verbose:
-        print("")
-      raise MaximumIterations()
-  
-  if verbose:
-    print("")
-
-  return x
-
-def backtrack(RJ, R0, J0, x, a, tau = 0.5, c = 1.0e-4, verbose = False):
-  """
-    Do a backtracking line search
-
-    Parameters:
-      RJ        residual/jacobian function
-      R0        value of R, to save a feval
-      J0        value of J, to save a feval
-      x         point to start from
-      a         direction
-
-    Optional:
-      tau       backtrack tau
-      c         backtrack c
-      verbose   verbose output
-  """
-  alpha = 1.0
-  cv = la.norm(RJ(x + alpha * a)[0])
-  while cv > la.norm(R0 + c * alpha * np.dot(J0, a)):
-    alpha *= tau
-    cv = la.norm(RJ(x + alpha * a)[0])
-
-  return alpha
-
-def quasi_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, 
-    miter = 20):
-  """
-    Manually-code quasi newton-raphson so that I can output convergence info, if
-    requested.
-
-    Parameters:
-      RJ        function return the residual + jacobian
-      x0        initial guess
-
-    Optional:
-      verbose   verbose output
-  """
-  R, J = RJ(x0)
-  J_use = np.copy(J)
-  nR = la.norm(R)
-  nR0 = nR
-  x = np.copy(x0)
-  
-  i = 0
-
-  if verbose:
-    print("Iter.\tnR\t\tnR/nR0\t\tcond")
-    print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
-
-  while (nR > rtol * nR0) and (nR > atol):
-    x -= la.solve(J_use, R)
-    
-    R, J = RJ(x)
-    nR = la.norm(R)
-    i += 1
-    if verbose:
-      print("%i\t%e\t%e\t%e" % (i, nR, nR / nR0,la.cond(J_use)))
-    if i > miter:
-      if verbose:
-        print("")
-      raise MaximumIterations()
-  
-  if verbose:
-    print("")
-
-  return x
-
-def scalar_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
-    quasi = None):
-  """
-    Manually-code newton-raphson so that I can output convergence info, if
-    requested.
-
-    Parameters:
-      RJ        function return the residual + jacobian
-      x0        initial guess
-
-    Optional:
-      verbose   verbose output
-  """
-  R, J = RJ(x0)
-  nR = np.abs(R)
-  nR0 = nR
-  x = x0
-  
-  i = 0
-
-  if verbose:
-    print("Iter.\tnR\t\tnR/nR0")
-    print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
-
-  while (nR > rtol * nR0) and (nR > atol):
-    if quasi is not None:
-      dx = -R/J
-      x += quasi * dx
-    else:
-      x -= R/J
-    R, J = RJ(x)
-    nR = np.abs(R)
-    i += 1
-    if verbose:
-      print("%i\t%e\t%e\t" % (i, nR, nR / nR0))
-    
-    if i > miter:
-      if verbose:
-        print("")
-      raise MaximumIterations()
-  
-  if verbose:
-    print("")
-
-  return x
