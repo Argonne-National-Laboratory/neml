@@ -391,7 +391,7 @@ class AxisymmetricProblem(VesselSectionProblem):
     when we call into the material model
   """
   def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
-      bias = False, factor = 2.0, ngpts = 1):
+      bias = False, factor = 2.0, ngpts = 1, constrained = False):
     """
       Parameters:
         rs      radii deliminating each region
@@ -401,14 +401,17 @@ class AxisymmetricProblem(VesselSectionProblem):
         p       pressure, as a function of (t)
 
       Optional:
-        rtol    relative tolerance for N-R solve
-        atol    absolute tolerance for N-R solve
-        bias    bias the mesh towards the interfaces
-        factor  bias factor
-        ngpts   number of gauss points per element
+        rtol        relative tolerance for N-R solve
+        atol        absolute tolerance for N-R solve
+        bias        bias the mesh towards the interfaces
+        factor      bias factor
+        ngpts       number of gauss points per element
+        constrained constrain the cylinder against thermal expansion
     """
     super(AxisymmetricProblem, self).__init__(rs, mats, ns, T, p,
         rtol = rtol, atol = atol)
+
+    self.constrained = constrained
 
     self.mesh = mesh(self.rs, self.ns, bias = bias, n = factor)
     self.nnodes = len(self.mesh)
@@ -457,9 +460,15 @@ class AxisymmetricProblem(VesselSectionProblem):
         [self.axialstrain[-1] + (self.axialstrain[-1] - self.axialstrain[-2]) * predict]))
 
     x = np.copy(x0)
+    if self.constrained:
+      x[-1] = 0.0
 
     R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
-    nR0 = la.norm(R)
+
+    if self.constrained:
+      nR0 = la.norm(R[:-1])
+    else:
+      nR0 = la.norm(R)
     nR = nR0
 
     if verbose:
@@ -468,19 +477,29 @@ class AxisymmetricProblem(VesselSectionProblem):
     
     i = 0
     while (nR > atol) and (nR / nR0 > rtol) and (i < ilimit):
-      R1 = R[:-1]
-      R2 = R[-1]
-      c = R1 - R2/J22 * J12
-      u = -J12 / J22
-      v = J21
-      x1 = cute_solve(J11_du, J11_d, J11_dl, u, v, c)
-      x2 = (R2 - np.dot(J21,x1)) / J22
+      if self.constrained:
+        R1 = R[:-1]
+        x1 = tri_solve(J11_du, J11_d, J11_dl, R1)
+        x[:-1] -= x1
 
-      x[:-1] -= x1
-      x[-1] -= x2
-      
+      else:
+        R1 = R[:-1]
+        R2 = R[-1]
+        c = R1 - R2/J22 * J12
+        u = -J12 / J22
+        v = J21
+        x1 = cute_solve(J11_du, J11_d, J11_dl, u, v, c)
+        x2 = (R2 - np.dot(J21,x1)) / J22
+
+        x[:-1] -= x1
+        x[-1] -= x2
+
       R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
-      nR = la.norm(R)
+
+      if self.constrained:
+        nR = la.norm(R[:-1])
+      else:
+        nR = la.norm(R)
       i += 1
 
       if verbose:
@@ -655,6 +674,14 @@ class AxisymmetricProblem(VesselSectionProblem):
 
     return Fint - Fext, (A11_du,A11_d,A11_dl,A12,A21,A22), strains, tstrains, mstrains, stresses, histories
 
+def tri_solve(DU, D, DL, c):
+  """
+    Solve B x = c
+  """
+  DL, D, DU, DU2, IPIV = nemlmath.dgttrf(DL, D, DU)
+  x = nemlmath.dgttrs(DL,D,DU,DU2,IPIV,c)
+
+  return x
 
 def cute_solve(DU, D, DL, u, v, c):
   """
