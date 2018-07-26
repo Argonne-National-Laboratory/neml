@@ -96,7 +96,7 @@ if __name__ == "__main__":
   visco_rd = visco_flow.ChabocheFlowRule(surface, hard_rd, eta_m, n_interp) 
   general_rd = general_flow.TVPFlowRule(elastic_m, visco_rd)
 
-  rate_dependent = neml.GeneralIntegrator(general_rd)
+  rate_dependent = neml.GeneralIntegrator(elastic_m, general_rd)
 
   # Setup rate independent
   sy_interp = interpolate.PiecewiseLinearInterpolate(list(Trange), list(flow_stress))
@@ -112,8 +112,8 @@ if __name__ == "__main__":
       flow_ri)
 
   # Combined model
-  combined = neml.KMRegimeModel([rate_independent, rate_dependent],
-      [g0], elastic_m, kboltz, b, eps0)
+  combined = neml.KMRegimeModel(elastic_m, [rate_independent, rate_dependent],
+      [g0], kboltz, b, eps0)
 
   # Do things
 

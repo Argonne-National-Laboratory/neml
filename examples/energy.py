@@ -32,7 +32,7 @@ if __name__ == "__main__":
   eta = 100.0
   vflow = visco_flow.PerzynaFlowRule(surface, iso, gpower, eta)
   gflow = general_flow.TVPFlowRule(elastic, vflow)
-  model3 = neml.GeneralIntegrator(gflow)
+  model3 = neml.GeneralIntegrator(elastic, gflow)
 
   # T is in hours, strain in percent, stress in MPa
   A = 1.85e-9
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
   smodel = creep.NortonBaileyCreep(A, n, m)
   cmodel = creep.J2CreepModel(smodel)
-  model4 = neml.SmallStrainCreepPlasticity(model1, cmodel)
+  model4 = neml.SmallStrainCreepPlasticity(elastic, model1, cmodel)
 
   erate = 1.0e-4
   emax = 0.025

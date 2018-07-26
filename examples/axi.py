@@ -39,7 +39,7 @@ def gen_material(E, nu, sY, alpha, A, n):
   smodel = creep.PowerLawCreep(A, n)
   cmodel = creep.J2CreepModel(smodel)
 
-  return neml.SmallStrainCreepPlasticity(pmodel, cmodel, alpha = alpha)
+  return neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, alpha = alpha)
 
 if __name__ == "__main__":
   base = gen_material(156000.0, 0.31, 102, 1.99e-5, 6.94e-22, 6.0)

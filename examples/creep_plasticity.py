@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     pmodel = neml.SmallStrainPerfectPlasticity(elastic, surface, sY)
 
-    model = neml.SmallStrainCreepPlasticity(pmodel, cmodel)
+    model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
     
     res = drivers.creep(model, 200.0, 1.0e2, 1000.0, verbose = True)
     plt.plot(res['time'], res['strain'])

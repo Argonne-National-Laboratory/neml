@@ -80,7 +80,7 @@ def example2():
   res1 = drivers.stress_cyclic(pmodel, smax, R, srate, ncycles, 
       hold_time = [0,hold])
 
-  model = neml.SmallStrainCreepPlasticity(pmodel, cmodel, verbose = False)
+  model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, verbose = False)
 
   res2 = drivers.stress_cyclic(model, smax, R, srate, ncycles, 
       hold_time = [0,hold], verbose = False)
@@ -120,7 +120,7 @@ def example3():
   res1 = drivers.stress_cyclic(pmodel, smax, R, srate, ncycles, 
       hold_time = [0,hold])
 
-  model = neml.SmallStrainCreepPlasticity(pmodel, cmodel, verbose = False)
+  model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, verbose = False)
 
   res2 = drivers.stress_cyclic(model, smax, R, srate, ncycles, 
       hold_time = [0,hold], verbose = False)
@@ -151,7 +151,7 @@ def example4():
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
   pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
-  model = neml.SmallStrainCreepPlasticity(pmodel, cmodel)
+  model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
 
   res = drivers.creep(model, 205.0, 3600.0, 100.0, verbose = False, 
       nsteps_up = 500)

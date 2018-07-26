@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  model = neml.GeneralIntegrator(flow, verbose = False)
+  model = neml.GeneralIntegrator(elastic, flow, verbose = False)
   
   # Uniaxial stress/strain curves at decades of strain rates
   erates = np.logspace(-6,2,9)

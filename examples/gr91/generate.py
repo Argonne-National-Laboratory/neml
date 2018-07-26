@@ -25,7 +25,7 @@ def make_yaguchi_model():
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  return neml.GeneralIntegrator(flow)
+  return neml.GeneralIntegrator(elastic, flow)
 
 def make_koo_model(temp):
   """
@@ -104,4 +104,4 @@ def make_koo_model(temp):
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  return neml.GeneralIntegrator(flow, verbose = False)
+  return neml.GeneralIntegrator(elastic, flow, verbose = False)

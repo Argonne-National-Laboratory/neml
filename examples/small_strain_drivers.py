@@ -279,7 +279,7 @@ if __name__ == "__main__":
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  model = neml.GeneralIntegrator(flow, verbose = False) 
+  model = neml.GeneralIntegrator(elastic, flow, verbose = False) 
 
   example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 100.0, 100)
   example_stress(model, np.array([300.0,0,0,0,0,0]), 300.0, 100, 100)
