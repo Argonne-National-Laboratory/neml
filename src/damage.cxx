@@ -33,6 +33,14 @@ int NEMLDamagedModel_sd::init_hist(double * const hist) const
   return base_->init_store(&hist[ndamage()]);
 }
 
+int NEMLDamagedModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
+                                           emodel)
+{
+  elastic_ = emodel;
+  base_->set_elastic_model(emodel);
+  return 0;
+}
+
 NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<NEMLModel_sd> base, 
@@ -346,6 +354,17 @@ int CombinedDamageModel_sd::ddamage_ds(
     for (int i=0; i<6; i++) dd[i] += di[i];
   }
 
+  return 0;
+}
+
+int CombinedDamageModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
+                                          emodel)
+{
+  elastic_ = emodel;
+  base_->set_elastic_model(emodel);
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    (*it)->set_elastic_model(emodel);
+  }
   return 0;
 }
 

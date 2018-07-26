@@ -105,6 +105,8 @@ PYBIND11_MODULE(neml, m) {
       ;
 
   py::class_<NEMLModel_sd, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd", py::base<NEMLModel>())
+      .def_property_readonly("elastic", &NEMLModel_sd::elastic)
+      .def("set_elastic_model", &NEMLModel_sd::set_elastic_model)
       ;
 
   py::class_<SmallStrainElasticity, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity", py::base<NEMLModel_sd>())
@@ -113,7 +115,6 @@ PYBIND11_MODULE(neml, m) {
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
            std::shared_ptr<Interpolate>>(),
            py::arg("elastic"), py::arg("alpha") = nullptr)
-      .def_property_readonly("elastic", &SmallStrainElasticity::elastic)
       ;
 
   py::class_<SSPPTrialState>(m, "SSPPTrialState", py::base<TrialState>())
@@ -149,7 +150,6 @@ PYBIND11_MODULE(neml, m) {
            py::arg("verbose") = false, py::arg("max_divide") = 8)
 
       .def("ys", &SmallStrainPerfectPlasticity::ys)
-      .def_property_readonly("elastic", &SmallStrainPerfectPlasticity::elastic)
 
       .def("make_trial_state",
            [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSPPTrialState>
@@ -206,8 +206,6 @@ PYBIND11_MODULE(neml, m) {
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
            py::arg("check_kt") = false)
-
-      .def_property_readonly("elastic", &SmallStrainRateIndependentPlasticity::elastic)
 
       .def("make_trial_state",
            [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSRIPTrialState>

@@ -120,6 +120,7 @@ PYBIND11_MODULE(general_flow, m) {
             py_error(ier);
             return pi;
            }, "Plastic work rate.")
+      .def("set_elastic_model", &GeneralFlowRule::set_elastic_model)
   ;
 
   py::class_<TVPFlowRule, std::shared_ptr<TVPFlowRule>>(m, "TVPFlowRule", py::base<GeneralFlowRule>())

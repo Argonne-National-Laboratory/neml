@@ -217,6 +217,10 @@ class NEMLModel_sd: public NEMLModel {
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const;
 
+   // This is an extremely dangerous helper function, but too many 
+   // post docs have whined about copy-pasting elastic constants
+   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+
   protected:
    std::shared_ptr<LinearElasticModel> elastic_;
 
@@ -471,6 +475,8 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
                        const double * const s_n, const double * const h_n,
                        SSCPTrialState & ts);
 
+   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+
  private:
   int form_tangent_(double * const A, double * const B,
                     double * const A_np1);
@@ -523,6 +529,8 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
                        const double * const s_n, const double * const h_n,
                        GITrialState & ts);
 
+  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+
  private:
   int calc_tangent_(const double * const x, TrialState * ts, double * const A_np1);
 
@@ -572,7 +580,9 @@ class KMRegimeModel: public NEMLModel_sd {
       double & p_np1, double p_n);
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
- 
+
+  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+
  private:
   double activation_energy_(const double * const e_np1, 
                             const double * const e_n,

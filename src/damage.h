@@ -35,6 +35,8 @@ class NEMLDamagedModel_sd: public NEMLModel_sd {
   virtual size_t ndamage() const = 0;
   virtual int init_damage(double * const damage) const = 0;
 
+  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+
  protected:
    std::shared_ptr<NEMLModel_sd> base_;
 
@@ -167,6 +169,9 @@ class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
+
+  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+  
 
  protected:
   const std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models_;

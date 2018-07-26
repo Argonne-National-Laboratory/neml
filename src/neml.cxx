@@ -204,6 +204,12 @@ int NEMLModel_sd::elastic_strains(const double * const s_np1,
   return 0;
 }
 
+int NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+{
+  elastic_ = emodel;
+  return 0;
+}
+
 // Implementation of small strain elasticity
 SmallStrainElasticity::SmallStrainElasticity(
     std::shared_ptr<LinearElasticModel> elastic,
@@ -1159,6 +1165,13 @@ int SmallStrainCreepPlasticity::form_tangent_(
   return 0;
 }
 
+int SmallStrainCreepPlasticity::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+{
+  elastic_ = emodel;
+  plastic_->set_elastic_model(emodel);
+  return 0;
+}
+
 // Start general integrator implementation
 GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
                                      std::shared_ptr<GeneralFlowRule> rule,
@@ -1526,6 +1539,13 @@ int GeneralIntegrator::calc_tangent_(const double * const x, TrialState * ts,
   return 0;
 }
 
+int GeneralIntegrator::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+{
+  elastic_ = emodel;
+  rule_->set_elastic_model(emodel);
+  return 0;
+}
+
 // Start KMRegimeModel
 KMRegimeModel::KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
                              std::vector<std::shared_ptr<NEMLModel_sd>> models,
@@ -1601,6 +1621,15 @@ double KMRegimeModel::activation_energy_(const double * const e_np1,
   double mu = elastic_->G(T_np1);
   
   return kboltz_ * T_np1 / (mu* pow(b_, 3.0)) * log(eps0_ / rate);
+}
+
+int KMRegimeModel::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+{
+  elastic_ = emodel;
+  for (auto it = models_.begin(); it != models_.end(); ++it) {
+    (*it)->set_elastic_model(emodel);
+  }
+  return 0;
 }
 
 } // namespace neml

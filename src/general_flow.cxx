@@ -18,6 +18,12 @@ int GeneralFlowRule::work_rate(const double * const s,
   return 0;
 }
 
+int GeneralFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel>
+                                       emodel)
+{
+  return 0;
+}
+
 TVPFlowRule::TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
             std::shared_ptr<ViscoPlasticFlowRule> flow) :
     elastic_(elastic), flow_(flow)
@@ -297,6 +303,12 @@ int TVPFlowRule::elastic_strains(const double * const s_np1, double T_np1,
   elastic_->S(T_np1, S);
   mat_vec(S, 6, s_np1, 6, e_np1);
 
+  return 0;
+}
+
+int TVPFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+{
+  elastic_ = emodel;
   return 0;
 }
 
