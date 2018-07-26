@@ -21,6 +21,7 @@ void py_error(int ier)
     case FILE_NOT_FOUND: throw std::runtime_error("File not found");
     case CREEP_PLASTICITY: throw std::runtime_error("Creep models can only be combined with rate independent models");
     case INCOMPATIBLE_KM: throw std::runtime_error("Incompatible lengths in Kocks-Mecking region model: number of models = number of splits + 1");
+    case DUMMY_ELASTIC: throw std::runtime_error("Calling for elastic constants from a dummy elastic model.");
     case UNKNOWN_ERROR: throw std::runtime_error("Unknown error");
 
     default: throw std::runtime_error("Unknown error!");
@@ -44,6 +45,7 @@ std::string string_error(int ier)
     case FILE_NOT_FOUND: return "File not found";
     case CREEP_PLASTICITY: return "Creep models can only be combined with rate independent plasticity models";
     case INCOMPATIBLE_KM: return "Incompatible lengths in Kocks-Mecking region model: number of models = number of splits + 1";
+    case DUMMY_ELASTIC: return "Calling for elastic constants from a dummy elastic model";
     case UNKNOWN_ERROR: return "Unknown error";
 
     default: return "Unknown error";

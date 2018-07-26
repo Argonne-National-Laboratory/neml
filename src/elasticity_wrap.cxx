@@ -47,7 +47,8 @@ PYBIND11_MODULE(elasticity, m) {
            [](const LinearElasticModel & m, double T) -> py::array_t<double>
            {
             auto C = alloc_mat<double>(6,6);
-            m.C(T, arr2ptr<double>(C));
+            int ier = m.C(T, arr2ptr<double>(C));
+            py_error(ier);
             return C;
            }, "Return stiffness elasticity matrix.")
 
@@ -55,7 +56,8 @@ PYBIND11_MODULE(elasticity, m) {
            [](const LinearElasticModel & m, double T) -> py::array_t<double>
            {
             auto S = alloc_mat<double>(6,6);
-            m.S(T, arr2ptr<double>(S));
+            int ier = m.S(T, arr2ptr<double>(S));
+            py_error(ier);
             return S;
            }, "Return compliance elasticity matrix.")
       .def("E", &LinearElasticModel::E, "Young's modulus as a function of temperature.")
@@ -69,6 +71,10 @@ PYBIND11_MODULE(elasticity, m) {
            py::arg("shear_modulus"), py::arg("bulk_modulus"))
       .def(py::init<std::shared_ptr<YoungsModulus>, std::shared_ptr<PoissonsRatio>>(),
            py::arg("youngs_modulus"), py::arg("poissons_ratio"))
+      ;
+  
+  py::class_<BlankElasticModel, std::shared_ptr<BlankElasticModel>>(m, "BlankElasticModel", py::base<LinearElasticModel>())
+      .def(py::init<>())
       ;
 }
 

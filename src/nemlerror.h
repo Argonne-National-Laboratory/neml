@@ -22,7 +22,8 @@ typedef enum Error {
   FILE_NOT_FOUND = -11,
   CREEP_PLASTICITY = -12,
   UNKNOWN_ERROR = -13,
-  INCOMPATIBLE_KM = -14
+  INCOMPATIBLE_KM = -14,
+  DUMMY_ELASTIC = -15
 } Error;
 
 /// Translate an error code to an exception

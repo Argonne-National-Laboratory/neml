@@ -1,6 +1,7 @@
 #include "elasticity.h"
 
 #include "nemlmath.h"
+#include "nemlerror.h"
 
 #include <algorithm>
 
@@ -206,6 +207,41 @@ void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) cons
     G = a / (2.0 * (1.0 + b));
     K = a / (3.0 * (1.0 - 2.0 * b));
   }
+}
+
+BlankElasticModel::BlankElasticModel()
+{
+
+}
+
+int BlankElasticModel::C(double T, double * const Cv) const
+{
+  return DUMMY_ELASTIC;
+}
+
+int BlankElasticModel::S(double T, double * const Sv) const
+{
+  return DUMMY_ELASTIC;
+}
+
+double BlankElasticModel::E(double T) const
+{
+  return 0;
+}
+
+double BlankElasticModel::nu(double T) const
+{
+  return 0;
+}
+
+double BlankElasticModel::G(double T) const
+{
+  return 0;
+}
+
+double BlankElasticModel::K(double T) const
+{
+  return 0;
 }
 
 } // namespace neml

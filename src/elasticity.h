@@ -92,6 +92,20 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
    const modulii have_modulii_;
 };
 
+class BlankElasticModel: public LinearElasticModel {
+ public:
+  BlankElasticModel();
+
+  virtual int C(double T, double * const Cv) const;
+  virtual int S(double T, double * const Sv) const;
+
+  virtual double E(double T) const;
+  virtual double nu(double T) const;
+  virtual double G(double T) const;
+  virtual double K(double T) const;
+
+};
+
 } // namespace neml
 
 
