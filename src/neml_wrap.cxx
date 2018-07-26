@@ -251,13 +251,15 @@ PYBIND11_MODULE(neml, m) {
       ;
 
   py::class_<SmallStrainCreepPlasticity, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
+           py::arg("elastic"),
            py::arg("plastic"), py::arg("creep"),
            py::arg("alpha") = 0.0,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false, py::arg("sf") = 1.0e6)
 
-      .def(py::init<std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, std::shared_ptr<Interpolate>, double, int , bool, double>(),
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, std::shared_ptr<Interpolate>, double, int , bool, double>(),
+           py::arg("elastic"),
            py::arg("plastic"), py::arg("creep"),
            py::arg("alpha") = nullptr,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
@@ -307,14 +309,16 @@ PYBIND11_MODULE(neml, m) {
 
 
   py::class_<GeneralIntegrator, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator", py::base<NEMLModel_sd>())
-      .def(py::init<std::shared_ptr<GeneralFlowRule>, double, double, int , bool, int>(),
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<GeneralFlowRule>, double, double, int , bool, int>(),
+           py::arg("elastic"),
            py::arg("rule"),
            py::arg("alpha") = 0.0,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
            py::arg("verbose") = false,
            py::arg("max_divide") = 6)
 
-      .def(py::init<std::shared_ptr<GeneralFlowRule>, std::shared_ptr<Interpolate>, double, int , bool, int>(),
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<GeneralFlowRule>, std::shared_ptr<Interpolate>, double, int , bool, int>(),
+           py::arg("elastic"),
            py::arg("rule"),
            py::arg("alpha") = nullptr,
            py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
@@ -362,16 +366,17 @@ PYBIND11_MODULE(neml, m) {
       ;
 
   py::class_<KMRegimeModel, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel", py::base<NEMLModel_sd>())
-      .def(py::init<std::vector<std::shared_ptr<NEMLModel_sd>>,
-           std::vector<double>, std::shared_ptr<LinearElasticModel>,
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::vector<std::shared_ptr<NEMLModel_sd>>,
+           std::vector<double>,
            double, double, double, double>(),
-           py::arg("models"), py::arg("gs"), py::arg("emodel"),
+           py::arg("elastic"), py::arg("models"), py::arg("gs"),
            py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
            py::arg("alpha") = 0.0)
-      .def(py::init<std::vector<std::shared_ptr<NEMLModel_sd>>,
-           std::vector<double>, std::shared_ptr<LinearElasticModel>,
+      .def(py::init<std::shared_ptr<LinearElasticModel>, std::vector<std::shared_ptr<NEMLModel_sd>>,
+           std::vector<double>,
            double, double, double, std::shared_ptr<Interpolate>>(),
-           py::arg("models"), py::arg("gs"), py::arg("emodel"),
+           py::arg("elastic"), 
+           py::arg("models"), py::arg("gs"),
            py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
            py::arg("alpha") = nullptr)
       ;

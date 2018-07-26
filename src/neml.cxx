@@ -120,8 +120,10 @@ int NEMLModel_ldI::update_sd(
 
 
 // NEMLModel_sd implementation
-NEMLModel_sd::NEMLModel_sd(std::shared_ptr<Interpolate> alpha) :
-    NEMLModel()
+NEMLModel_sd::NEMLModel_sd(
+    std::shared_ptr<LinearElasticModel> emodel,
+    std::shared_ptr<Interpolate> alpha) :
+      NEMLModel(), elastic_(emodel)
 {
   if (alpha) {
     alpha_ = alpha;
@@ -131,8 +133,10 @@ NEMLModel_sd::NEMLModel_sd(std::shared_ptr<Interpolate> alpha) :
   }
 }
 
-NEMLModel_sd::NEMLModel_sd(double alpha) :
-    alpha_(new ConstantInterpolate(alpha)), NEMLModel()
+NEMLModel_sd::NEMLModel_sd(
+    std::shared_ptr<LinearElasticModel> emodel,
+    double alpha) :
+      elastic_(emodel), alpha_(new ConstantInterpolate(alpha)), NEMLModel()
 {
 
 }
@@ -183,12 +187,28 @@ double NEMLModel_sd::alpha(double T) const
   return alpha_->value(T);
 }
 
+const std::shared_ptr<const LinearElasticModel> NEMLModel_sd::elastic() const
+{
+  return elastic_;
+}
+
+int NEMLModel_sd::elastic_strains(const double * const s_np1,
+                                           double T_np1, 
+                                           const double * const h_np1,
+                                           double * const e_np1) const
+{
+  double S[36];
+  elastic_->S(T_np1, S);
+  mat_vec(S, 6, s_np1, 6, e_np1);
+
+  return 0;
+}
 
 // Implementation of small strain elasticity
 SmallStrainElasticity::SmallStrainElasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<Interpolate> alpha) :
-    elastic_(elastic), NEMLModel_sd(alpha)
+    NEMLModel_sd(elastic, alpha)
 {
 
 
@@ -197,8 +217,7 @@ SmallStrainElasticity::SmallStrainElasticity(
 SmallStrainElasticity::SmallStrainElasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     double alpha) :
-    elastic_(elastic), 
-    NEMLModel_sd(alpha)
+    NEMLModel_sd(elastic, alpha)
 {
 
 
@@ -239,23 +258,6 @@ int SmallStrainElasticity::update_sd(
   return 0;
 }
 
-int SmallStrainElasticity::elastic_strains(const double * const s_np1,
-                                           double T_np1, 
-                                           const double * const h_np1,
-                                           double * const e_np1) const
-{
-  double S[36];
-  elastic_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, e_np1);
-
-  return 0;
-}
-
-const std::shared_ptr<const LinearElasticModel> SmallStrainElasticity::elastic() const
-{
-  return elastic_;
-}
-
 // Implementation of perfect plasticity
 SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
@@ -264,8 +266,8 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     double alpha,
     double tol, int miter,
     bool verbose, int max_divide) :
-      NEMLModel_sd(alpha),
-      elastic_(elastic), surface_(surface), ys_(new ConstantInterpolate(ys)),
+      NEMLModel_sd(elastic, alpha),
+      surface_(surface), ys_(new ConstantInterpolate(ys)),
       tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
 {
 
@@ -278,8 +280,8 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<Interpolate> alpha,
     double tol, int miter,
     bool verbose, int max_divide) :
-      NEMLModel_sd(alpha),
-      elastic_(elastic), surface_(surface), ys_(ys),
+      NEMLModel_sd(elastic, alpha),
+      surface_(surface), ys_(ys),
       tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
 {
 
@@ -421,18 +423,6 @@ int SmallStrainPerfectPlasticity::update_substep_(
   return 0;
 }
 
-int SmallStrainPerfectPlasticity::elastic_strains(const double * const s_np1,
-                                           double T_np1,
-                                           const double * const h_np1,
-                                           double * const e_np1) const
-{
-  double S[36];
-  elastic_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, e_np1);
-
-  return 0;
-}
-
 size_t SmallStrainPerfectPlasticity::nhist() const
 {
   return 0;
@@ -510,11 +500,6 @@ double SmallStrainPerfectPlasticity::ys(double T) const {
   return ys_->value(T);
 }
 
-const std::shared_ptr<const LinearElasticModel> SmallStrainPerfectPlasticity::elastic() const
-{
-  return elastic_;
-}
-
 
 // Make this public for ease of testing
 int SmallStrainPerfectPlasticity::make_trial_state(
@@ -585,8 +570,8 @@ SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<RateIndependentFlowRule> flow, double alpha, double tol,
     int miter, bool verbose, double kttol, bool check_kt) :
-      NEMLModel_sd(alpha),
-      elastic_(elastic), flow_(flow), tol_(tol), miter_(miter),
+      NEMLModel_sd(elastic, alpha),
+      flow_(flow), tol_(tol), miter_(miter),
       verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
 {
 
@@ -597,8 +582,8 @@ SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     std::shared_ptr<RateIndependentFlowRule> flow, 
     std::shared_ptr<Interpolate> alpha, double tol,
     int miter, bool verbose, double kttol, bool check_kt) :
-      NEMLModel_sd(alpha),
-      elastic_(elastic), flow_(flow), tol_(tol), miter_(miter),
+      NEMLModel_sd(elastic, alpha),
+      flow_(flow), tol_(tol), miter_(miter),
       verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
 {
 
@@ -677,19 +662,6 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   // Check K-T and return
   return check_K_T_(s_np1, h_np1, T_np1, dg);
 
-}
-
-int SmallStrainRateIndependentPlasticity::elastic_strains(
-                                           const double * const s_np1,
-                                           double T_np1,
-                                           const double * const h_np1,
-                                           double * const e_np1) const
-{
-  double S[36];
-  elastic_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, e_np1);
-
-  return 0;
 }
 
 size_t SmallStrainRateIndependentPlasticity::nparams() const
@@ -969,11 +941,12 @@ int SmallStrainRateIndependentPlasticity::check_K_T_(
 // Implementation of small strain rate independent plasticity
 //
 SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
+    std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<NEMLModel_sd> plastic,
     std::shared_ptr<CreepModel> creep,
     double alpha, double tol,
     int miter, bool verbose, double sf) :
-      NEMLModel_sd(alpha),
+      NEMLModel_sd(elastic, alpha),
       creep_(creep), plastic_(plastic), tol_(tol), miter_(miter),
       verbose_(verbose), sf_(sf)
 {
@@ -981,11 +954,12 @@ SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
 }
 
 SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
+    std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<NEMLModel_sd> plastic,
     std::shared_ptr<CreepModel> creep,
     std::shared_ptr<Interpolate> alpha, double tol,
     int miter, bool verbose, double sf) :
-      NEMLModel_sd(alpha),
+      NEMLModel_sd(elastic, alpha),
       creep_(creep), plastic_(plastic), tol_(tol), miter_(miter),
       verbose_(verbose), sf_(sf)
 {
@@ -1061,15 +1035,6 @@ int SmallStrainCreepPlasticity::update_sd(
   p_np1 += dot_vec(ds, dec, 6) / 2.0;
   
   return 0;
-}
-
-int SmallStrainCreepPlasticity::elastic_strains(
-                                           const double * const s_np1,
-                                           double T_np1,
-                                           const double * const h_np1,
-                                           double * const e_np1) const
-{
-  return plastic_->elastic_strains(s_np1, T_np1, h_np1, e_np1);
 }
 
 size_t SmallStrainCreepPlasticity::nparams() const
@@ -1195,22 +1160,24 @@ int SmallStrainCreepPlasticity::form_tangent_(
 }
 
 // Start general integrator implementation
-GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
+                                     std::shared_ptr<GeneralFlowRule> rule,
                                      double alpha,
                                      double tol, int miter,
                                      bool verbose, int max_divide) :
-    NEMLModel_sd(alpha),
+    NEMLModel_sd(elastic, alpha),
     rule_(rule), tol_(tol), miter_(miter), verbose_(verbose), 
     max_divide_(max_divide)
 {
 
 }
 
-GeneralIntegrator::GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
+                                     std::shared_ptr<GeneralFlowRule> rule,
                                      std::shared_ptr<Interpolate> alpha,
                                      double tol, int miter,
                                      bool verbose, int max_divide) :
-    NEMLModel_sd(alpha),
+    NEMLModel_sd(elastic, alpha),
     rule_(rule), tol_(tol), miter_(miter), verbose_(verbose), 
     max_divide_(max_divide)
 {
@@ -1344,14 +1311,6 @@ int GeneralIntegrator::update_sd(
   p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * ts.dt;
 
   return 0;
-}
-
-int GeneralIntegrator::elastic_strains(const double * const s_np1,
-                                           double T_np1,
-                                           const double * const h_np1,
-                                           double * const e_np1) const
-{
-  return rule_->elastic_strains(s_np1, T_np1, e_np1);
 }
 
 size_t GeneralIntegrator::nhist() const
@@ -1568,23 +1527,23 @@ int GeneralIntegrator::calc_tangent_(const double * const x, TrialState * ts,
 }
 
 // Start KMRegimeModel
-KMRegimeModel::KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+KMRegimeModel::KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
+                             std::vector<std::shared_ptr<NEMLModel_sd>> models,
                              std::vector<double> gs,
-                             std::shared_ptr<LinearElasticModel> emodel,
                              double kboltz, double b, double eps0, 
                              double alpha) :
-    NEMLModel_sd(alpha), models_(models), gs_(gs), emodel_(emodel), 
+    NEMLModel_sd(emodel, alpha), models_(models), gs_(gs), 
     kboltz_(kboltz), b_(b), eps0_(eps0)
 {
 
 }
 
-KMRegimeModel::KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+KMRegimeModel::KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
+                             std::vector<std::shared_ptr<NEMLModel_sd>> models,
                              std::vector<double> gs,
-                             std::shared_ptr<LinearElasticModel> emodel,
                              double kboltz, double b, double eps0,
                              std::shared_ptr<Interpolate> alpha) :
-    NEMLModel_sd(alpha), models_(models), gs_(gs), emodel_(emodel),
+    NEMLModel_sd(emodel, alpha), models_(models), gs_(gs),
     kboltz_(kboltz), b_(b), eps0_(eps0)
 {
 
@@ -1627,17 +1586,6 @@ int KMRegimeModel::init_hist(double * const hist) const
   return models_[0]->init_hist(hist);
 }
 
-int KMRegimeModel::elastic_strains(const double * const s_np1,
-                                   double T_np1, const double * const h_np1,
-                                   double * const e_np1) const
-{
-  double S[36];
-  emodel_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, e_np1);
-
-  return 0;
-}
-
 double KMRegimeModel::activation_energy_(const double * const e_np1, 
                                          const double * const e_n,
                                          double T_np1,
@@ -1650,7 +1598,7 @@ double KMRegimeModel::activation_energy_(const double * const e_np1,
   err = sub_vec(e_np1, e_n, 6, de);
   for (int i=0; i<6; i++) de[i] /= dt;
   double rate = sqrt(2.0/3.0) * norm2_vec(de, 6);
-  double mu = emodel_->G(T_np1);
+  double mu = elastic_->G(T_np1);
   
   return kboltz_ * T_np1 / (mu* pow(b_, 3.0)) * log(eps0_ / rate);
 }

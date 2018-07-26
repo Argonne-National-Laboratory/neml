@@ -115,10 +115,10 @@ std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node,
 
   return std::unique_ptr<NEMLModel>(
       new NEMLPowerLawDamagedModel_sd(
+          process_linearelastic(elastic_node, ier),
           scalar_param(node, "A", ier),
           scalar_param(node, "a", ier),
           std::move(bmodel),
-          process_linearelastic(elastic_node, ier),
           alpha
           )); 
 }
@@ -128,9 +128,14 @@ std::unique_ptr<NEMLModel> process_mark_damage(const xmlpp::Element * node,
                                                std::shared_ptr<Interpolate> alpha,
                                                int & ier)
 {
+  const xmlpp::Element * elastic_node;
+  if (not one_child(node, "elastic", elastic_node, ier)) {
+    return std::unique_ptr<NEMLModel>(nullptr);
+  }
 
   return std::unique_ptr<NEMLModel>(
       new MarkFatigueDamageModel_sd(
+          process_linearelastic(elastic_node, ier),
           scalar_param(node, "C", ier),
           scalar_param(node, "m", ier),
           scalar_param(node, "n", ier),
@@ -203,7 +208,7 @@ std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & i
 
   // Return final model
   return std::unique_ptr<NEMLModel>(
-      new KMRegimeModel(models, gs, emodel, k, b, eps0, alpha));
+      new KMRegimeModel(emodel, models, gs, k, b, eps0, alpha));
 }
 
 
@@ -250,7 +255,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
 
     if (found_creep) {
       return std::unique_ptr<NEMLModel>(
-          new SmallStrainCreepPlasticity(std::move(model), cmodel, alpha));
+          new SmallStrainCreepPlasticity(emodel, std::move(model), cmodel, alpha));
     }
     else {
       return std::unique_ptr<NEMLModel>(std::move(model));
@@ -279,7 +284,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   else if (ft == "dependent") {
     std::shared_ptr<ViscoPlasticFlowRule> fr = process_dependent(plastic_node, ier);
     std::shared_ptr<TVPFlowRule> gfr = std::make_shared<TVPFlowRule>(emodel, fr);
-    model = std::unique_ptr<GeneralIntegrator>(new GeneralIntegrator(gfr, alpha));
+    model = std::unique_ptr<GeneralIntegrator>(new GeneralIntegrator(emodel, gfr, alpha));
   }
   else if (ft == "perfect") {
     // Surface
@@ -299,7 +304,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   std::unique_ptr<NEMLModel_sd> comp_creep;
   if (found_creep) {
     comp_creep = std::unique_ptr<NEMLModel_sd>(
-        new SmallStrainCreepPlasticity(std::move(model), cmodel, alpha));
+        new SmallStrainCreepPlasticity(emodel, std::move(model), cmodel, alpha));
   }
   else {
     comp_creep = std::move(model);

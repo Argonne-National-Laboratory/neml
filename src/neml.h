@@ -165,8 +165,10 @@ class NEMLModel_ldI: public NEMLModel {
 //
 class NEMLModel_sd: public NEMLModel {
   public:
-    NEMLModel_sd(std::shared_ptr<Interpolate> alpha = nullptr);
-    NEMLModel_sd(double alpha);
+    NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
+                 std::shared_ptr<Interpolate> alpha = nullptr);
+    NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
+                 double alpha = 0.0);
     virtual ~NEMLModel_sd();
 
     // Up to the user to implement
@@ -208,11 +210,15 @@ class NEMLModel_sd: public NEMLModel {
 
    // I suppose this must be defined
    virtual double alpha(double T) const;
+   const std::shared_ptr<const LinearElasticModel> elastic() const;
 
    // Helper for FEA output
    virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
-                               double * const e_np1) const = 0;
+                               double * const e_np1) const;
+
+  protected:
+   std::shared_ptr<LinearElasticModel> elastic_;
 
   private:
    std::shared_ptr<Interpolate> alpha_;
@@ -239,17 +245,6 @@ class SmallStrainElasticity: public NEMLModel_sd {
       double & p_np1, double p_n);
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
-
-  // Helper for FEA output
-  virtual int elastic_strains(const double * const s_np1,
-                             double T_np1, const double * const h_np1,
-                             double * const e_np1) const;
-
-  // Getters
-  const std::shared_ptr<const LinearElasticModel> elastic() const;
-
- private:
-   std::shared_ptr<LinearElasticModel> elastic_;
 };
 
 /// Small strain perfect plasticity trial state
@@ -338,14 +333,8 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
-  // Helper for FEA output
-  virtual int elastic_strains(const double * const s_np1,
-                             double T_np1, const double * const h_np1,
-                             double * const e_np1) const;
-
   // Property getter
   double ys(double T) const;
-  const std::shared_ptr<const LinearElasticModel> elastic() const;
 
   // Make this public for ease of testing
   int make_trial_state(const double * const e_np1, const double * const e_n,
@@ -366,7 +355,6 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
   int calc_tangent_(SSPPTrialState ts, const double * const s_np1, double dg, 
                 double * const A_np1);
 
-  std::shared_ptr<LinearElasticModel> elastic_;
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<Interpolate> ys_;
   const double tol_;
@@ -419,11 +407,6 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
   
-  // Helper for FEA output
-  virtual int elastic_strains(const double * const s_np1,
-                             double T_np1, const double * const h_np1,
-                             double * const e_np1) const;
-
   // Getters
   const std::shared_ptr<const LinearElasticModel> elastic() const;
 
@@ -438,7 +421,6 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
                     const double * const h_np1, double dg, double * const A_np1);
   int check_K_T_(const double * const s_np1, const double * const h_np1, double T_np1, double dg);
 
-  std::shared_ptr<LinearElasticModel> elastic_;
   std::shared_ptr<RateIndependentFlowRule> flow_;
 
   double tol_, kttol_;
@@ -451,12 +433,16 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
 //  to solver overall update
 class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
  public:
-  SmallStrainCreepPlasticity(std::shared_ptr<NEMLModel_sd> plastic,
+  SmallStrainCreepPlasticity(
+                             std::shared_ptr<LinearElasticModel> elastic,
+                             std::shared_ptr<NEMLModel_sd> plastic,
                              std::shared_ptr<CreepModel> creep,
                              double alpha = 0.0,
                              double tol = 1.0e-8, int miter = 50,
                              bool verbose = false, double sf = 1.0e6);
-  SmallStrainCreepPlasticity(std::shared_ptr<NEMLModel_sd> plastic,
+  SmallStrainCreepPlasticity(
+                             std::shared_ptr<LinearElasticModel> elastic,
+                             std::shared_ptr<NEMLModel_sd> plastic,
                              std::shared_ptr<CreepModel> creep,
                              std::shared_ptr<Interpolate> alpha = nullptr,
                              double tol = 1.0e-8, int miter = 50,
@@ -479,11 +465,6 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
   
-  // Helper for FEA output
-  virtual int elastic_strains(const double * const s_np1,
-                             double T_np1, const double * const h_np1,
-                             double * const e_np1) const;
-
   // Make this public for ease of testing
   int make_trial_state(const double * const e_np1, const double * const e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
@@ -509,11 +490,13 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
 //
 class GeneralIntegrator: public NEMLModel_sd, public Solvable {
  public:
-  GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+  GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
+                    std::shared_ptr<GeneralFlowRule> rule,
                     double alpha = 0.0,
                     double tol = 1.0e-8, int miter = 50,
                     bool verbose = false, int max_divide = 6);
-  GeneralIntegrator(std::shared_ptr<GeneralFlowRule> rule,
+  GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
+                    std::shared_ptr<GeneralFlowRule> rule,
                     std::shared_ptr<Interpolate> alpha = nullptr,
                     double tol = 1.0e-8, int miter = 50,
                     bool verbose = false, int max_divide = 6);
@@ -533,11 +516,6 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
   virtual int init_x(double * const x, TrialState * ts);
   virtual int RJ(const double * const x, TrialState * ts,
                  double * const R, double * const J);
-
-  // Helper for FEA output
-  virtual int elastic_strains(const double * const s_np1,
-                             double T_np1, const double * const h_np1,
-                             double * const e_np1) const;
 
   // Make this public for ease of testing
   int make_trial_state(const double * const e_np1, const double * const e_n,
@@ -572,14 +550,14 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
 //
 class KMRegimeModel: public NEMLModel_sd {
  public:
-  KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+  KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
+                std::vector<std::shared_ptr<NEMLModel_sd>> models,
                 std::vector<double> gs, 
-                std::shared_ptr<LinearElasticModel> emodel,
                 double kboltz, double b, double eps0,
                 double alpha = 0.0);
-  KMRegimeModel(std::vector<std::shared_ptr<NEMLModel_sd>> models,
+  KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
+                std::vector<std::shared_ptr<NEMLModel_sd>> models,
                 std::vector<double> gs, 
-                std::shared_ptr<LinearElasticModel> emodel,
                 double kboltz, double b, double eps0,
                 std::shared_ptr<Interpolate> alpha = nullptr);
 
@@ -595,11 +573,6 @@ class KMRegimeModel: public NEMLModel_sd {
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
  
-  // Helper for FEA output
-  virtual int elastic_strains(const double * const s_np1,
-                             double T_np1, const double * const h_np1,
-                             double * const e_np1) const;
-
  private:
   double activation_energy_(const double * const e_np1, 
                             const double * const e_n,
@@ -609,7 +582,6 @@ class KMRegimeModel: public NEMLModel_sd {
  private:
   std::vector<std::shared_ptr<NEMLModel_sd>> models_;
   std::vector<double> gs_;
-  std::shared_ptr<LinearElasticModel> emodel_;
   double kboltz_, b_, eps0_;
 };
 

@@ -11,9 +11,12 @@ namespace neml {
 /// Small strain damage model
 class NEMLDamagedModel_sd: public NEMLModel_sd {
  public:
-  NEMLDamagedModel_sd(std::shared_ptr<NEMLModel_sd> base,
+  NEMLDamagedModel_sd(
+                      std::shared_ptr<LinearElasticModel> elastic,
+                      std::shared_ptr<NEMLModel_sd> base,
                       std::shared_ptr<Interpolate> alpha = nullptr);
-  NEMLDamagedModel_sd(std::shared_ptr<NEMLModel_sd> base,
+  NEMLDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
+                      std::shared_ptr<NEMLModel_sd> base,
                       double alpha = 0.0);
 
   virtual size_t nhist() const;
@@ -28,9 +31,6 @@ class NEMLDamagedModel_sd: public NEMLModel_sd {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n) = 0;
-  virtual int elastic_strains(const double * const s_np1,
-                              double T_np1, const double * const h_np1,
-                              double * const e_np1) const = 0;
 
   virtual size_t ndamage() const = 0;
   virtual int init_damage(double * const damage) const = 0;
@@ -54,11 +54,13 @@ class SDTrialState: public TrialState {
 /// Special case where the damage variable is a scalar
 class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
  public:
-  NEMLScalarDamagedModel_sd(std::shared_ptr<NEMLModel_sd> base,
+  NEMLScalarDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
+                            std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha = nullptr,
                             double tol = 1.0e-8, int miter = 50,
                             bool verbose = false);
-  NEMLScalarDamagedModel_sd(std::shared_ptr<NEMLModel_sd> base,
+  NEMLScalarDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
+                            std::shared_ptr<NEMLModel_sd> base,
                             double alpha = 0.0,
                             double tol = 1.0e-8, int miter = 50,
                             bool verbose = false);
@@ -72,9 +74,6 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-  virtual int elastic_strains(const double * const s_np1,
-                              double T_np1, const double * const h_np1,
-                              double * const e_np1) const = 0;
 
   virtual size_t ndamage() const;
   virtual int init_damage(double * const damage) const;
@@ -130,21 +129,19 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
 class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   CombinedDamageModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha = nullptr,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
   CombinedDamageModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
       std::shared_ptr<NEMLModel_sd> base,
       double alpha = 0.0,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
-
-  virtual int elastic_strains(const double * const s_np1,
-                              double T_np1, const double * const h_np1,
-                              double * const e_np1) const;
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
@@ -179,6 +176,7 @@ class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
 class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   ClassicalCreepDamageModel_sd(
+                            std::shared_ptr<LinearElasticModel> elastic,
                             std::shared_ptr<Interpolate> A,
                             std::shared_ptr<Interpolate> xi,
                             std::shared_ptr<Interpolate> phi,
@@ -186,15 +184,13 @@ class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
                             std::shared_ptr<Interpolate> alpha = nullptr,
                             double tol = 1.0e-8, int miter = 50,
                             bool verbose = false);
-  ClassicalCreepDamageModel_sd(double A, double xi, double phi,
+  ClassicalCreepDamageModel_sd(
+                            std::shared_ptr<LinearElasticModel> elastic,
+                            double A, double xi, double phi,
                             std::shared_ptr<NEMLModel_sd> base,
                             double alpha = 0.0,
                             double tol = 1.0e-8, int miter = 50,
                             bool verbose = false);
-
-  virtual int elastic_strains(const double * const s_np1,
-                              double T_np1, const double * const h_np1,
-                              double * const e_np1) const;
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
@@ -233,6 +229,7 @@ class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
 class MarkFatigueDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   MarkFatigueDamageModel_sd(
+                            std::shared_ptr<LinearElasticModel> elastic,
                             std::shared_ptr<Interpolate> C,
                             std::shared_ptr<Interpolate> m,
                             std::shared_ptr<Interpolate> n,
@@ -243,16 +240,14 @@ class MarkFatigueDamageModel_sd: public NEMLScalarDamagedModel_sd {
                             std::shared_ptr<Interpolate> alpha = nullptr,
                             double tol = 1.0e-8, int miter = 50,
                             bool verbose = false);
-  MarkFatigueDamageModel_sd(double C, double m, double n,
+  MarkFatigueDamageModel_sd(
+                            std::shared_ptr<LinearElasticModel> elastic,
+                            double C, double m, double n,
                             double falpha, double fbeta, double rate0,
                             std::shared_ptr<NEMLModel_sd> base,
                             double alpha = 0.0,
                             double tol = 1.0e-8, int miter = 50,
                             bool verbose = false);
-
-  virtual int elastic_strains(const double * const s_np1,
-                              double T_np1, const double * const h_np1,
-                              double * const e_np1) const;
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
@@ -301,21 +296,17 @@ class MarkFatigueDamageModel_sd: public NEMLScalarDamagedModel_sd {
 class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   NEMLStandardScalarDamagedModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<LinearElasticModel> emodel,
       std::shared_ptr<Interpolate> alpha = nullptr,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
   NEMLStandardScalarDamagedModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<LinearElasticModel> emodel,
       double alpha = 0.0,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
-
-  virtual int elastic_strains(const double * const s_np1,
-                              double T_np1, const double * const h_np1,
-                              double * const e_np1) const;
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
@@ -354,26 +345,22 @@ class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
              const double * const e_np1, const double * const e_n,
              double T_np1) const;
 
- protected:
-  std::shared_ptr<LinearElasticModel> emodel_;
-
-
 };
 
 /// Simple power law damage
 class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
  public:
   NEMLPowerLawDamagedModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> a, 
       std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<LinearElasticModel> emodel,
       std::shared_ptr<Interpolate> alpha = nullptr,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
   NEMLPowerLawDamagedModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       double A, double a,
       std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<LinearElasticModel> emodel,
       double alpha = 0.0,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
@@ -398,17 +385,17 @@ class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
 class NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
  public:
   NEMLExponentialWorkDamagedModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       std::shared_ptr<Interpolate> W0, std::shared_ptr<Interpolate> k0,
       std::shared_ptr<Interpolate> af,
       std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<LinearElasticModel> emodel,
       std::shared_ptr<Interpolate> alpha = nullptr,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
   NEMLExponentialWorkDamagedModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
       double W0, double k0, double af,
       std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<LinearElasticModel> emodel,
       double alpha = 0.0,
       double tol = 1.0e-8, int miter = 50,
       bool verbose = false);
