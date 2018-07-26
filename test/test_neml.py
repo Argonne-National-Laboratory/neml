@@ -382,7 +382,8 @@ class TestCreepPlasticityJ2LinearPowerLaw(unittest.TestCase, CommonMatModel):
     self.pmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
         self.flow)
 
-    self.model = neml.SmallStrainCreepPlasticity(self.pmodel, self.cmodel)
+    self.model = neml.SmallStrainCreepPlasticity(self.elastic, self.pmodel,
+        self.cmodel)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -428,7 +429,8 @@ class TestCreepPlasticityPerfect(unittest.TestCase, CommonMatModel):
     self.pmodel = neml.SmallStrainPerfectPlasticity(self.elastic, 
         self.surface, self.sY)
 
-    self.model = neml.SmallStrainCreepPlasticity(self.pmodel, self.cmodel)
+    self.model = neml.SmallStrainCreepPlasticity(self.elastic, 
+        self.pmodel, self.cmodel)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.05,0.1,-0.15])
     self.tfinal = 10.0
@@ -495,7 +497,7 @@ class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacob
 
     flow = general_flow.TVPFlowRule(self.elastic, vmodel)
 
-    self.model = neml.GeneralIntegrator(flow)
+    self.model = neml.GeneralIntegrator(self.elastic, flow)
 
     self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
     self.tfinal = 10.0
@@ -546,7 +548,7 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
     vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
 
     flow = general_flow.TVPFlowRule(self.elastic, vmodel)
-    self.model = neml.GeneralIntegrator(flow)
+    self.model = neml.GeneralIntegrator(self.elastic, flow)
 
     self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
     self.tfinal = 10.0
@@ -578,7 +580,7 @@ class TestYaguchi(unittest.TestCase, CommonMatModel, CommonJacobian):
 
     flow = general_flow.TVPFlowRule(self.elastic, vmodel)
 
-    self.model = neml.GeneralIntegrator(flow)
+    self.model = neml.GeneralIntegrator(self.elastic, flow)
 
     self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
     self.tfinal = 10.0
@@ -652,7 +654,7 @@ class TestKMSwitch(unittest.TestCase, CommonMatModel):
     visco_rd = visco_flow.ChabocheFlowRule(surface, hard_rd, eta_m, n_interp) 
     general_rd = general_flow.TVPFlowRule(elastic_m, visco_rd)
 
-    rate_dependent = neml.GeneralIntegrator(general_rd)
+    rate_dependent = neml.GeneralIntegrator(elastic_m, general_rd)
 
     # Setup rate independent
     sy_interp = interpolate.PiecewiseLinearInterpolate(list(Trange), list(flow_stress))
@@ -668,8 +670,8 @@ class TestKMSwitch(unittest.TestCase, CommonMatModel):
         flow_ri)
 
     # Combined model
-    self.model = neml.KMRegimeModel([rate_independent, rate_dependent],
-        [g0], elastic_m, kboltz, b, eps0)
+    self.model = neml.KMRegimeModel(elastic_m, [rate_independent, rate_dependent],
+        [g0], kboltz, b, eps0)
 
     self.efinal = np.array([0.05,0,0,0.02,0,-0.01])
     self.tfinal = 10.0

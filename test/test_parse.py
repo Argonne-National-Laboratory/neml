@@ -77,7 +77,8 @@ class TestMarkDamage(CompareMats, unittest.TestCase):
     alpha = 3.0
     beta = 2.0
     r0 = 0.01
-    self.model2 = damage.MarkFatigueDamageModel_sd(C, m, n, alpha, beta, r0, 
+    self.model2 = damage.MarkFatigueDamageModel_sd(elastic, 
+        C, m, n, alpha, beta, r0, 
         bmodel)
 
     self.T = 300.0
@@ -110,7 +111,8 @@ class TestPowerLawDamage(CompareMats, unittest.TestCase):
 
     a = 2.2
     A = 2e-5
-    self.model2 = damage.NEMLPowerLawDamagedModel_sd(A, a, bmodel, elastic)
+    self.model2 = damage.NEMLPowerLawDamagedModel_sd(elastic, 
+        A, a, bmodel)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -195,7 +197,7 @@ class TestCreepPlasticity(CompareMats, unittest.TestCase):
 
     pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
     
-    self.model2 = neml.SmallStrainCreepPlasticity(pmodel, cmodel)
+    self.model2 = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -280,7 +282,7 @@ class TestYaguchi(CompareMats, unittest.TestCase):
 
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(flow)
+    self.model2 = neml.GeneralIntegrator(elastic, flow)
 
     self.T = 500.0
     self.tmax = 10.0
@@ -319,7 +321,7 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     vmodel = visco_flow.ChabocheFlowRule(surface, hmodel, fluidity, n)
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(flow)
+    self.model2 = neml.GeneralIntegrator(elastic, flow)
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
@@ -357,7 +359,7 @@ class TestPerzyna(CompareMats, unittest.TestCase):
     vmodel = visco_flow.PerzynaFlowRule(surface, hmodel, gmodel, eta)
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(flow)
+    self.model2 = neml.GeneralIntegrator(elastic, flow)
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
@@ -424,4 +426,4 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
     smodel = creep.PowerLawCreep(A, n)
     cmodel = creep.J2CreepModel(smodel)
 
-    self.model2 = neml.SmallStrainCreepPlasticity(pmodel, cmodel)
+    self.model2 = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)

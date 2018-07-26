@@ -64,6 +64,14 @@
       <alpha>3.0</alpha>
       <beta>2.0</beta>
       <rate0>0.01</rate0>
+      <elastic type="isotropic">
+        <youngs>
+          <modulus>92000</modulus>
+        </youngs>
+        <poissons>
+          <modulus>0.3</modulus>
+        </poissons>
+      </elastic>
     </damage>
   </material>
 

@@ -200,6 +200,7 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.A = 10000000.0
 
     self.model = damage.ClassicalCreepDamageModel_sd(
+        self.elastic, 
         self.A, self.xi, self.phi, self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
@@ -263,7 +264,8 @@ class TestMarkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.beta = 2.0
     self.r0 = 0.01
 
-    self.model = damage.MarkFatigueDamageModel_sd(self.C, self.m, self.n, 
+    self.model = damage.MarkFatigueDamageModel_sd(
+        self.elastic, self.C, self.m, self.n, 
         self.alpha, self.beta, self.r0, self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
@@ -323,8 +325,8 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.A = 8.0e-6
     self.a = 2.2
 
-    self.model = damage.NEMLPowerLawDamagedModel_sd(self.A, self.a, 
-        self.bmodel, self.elastic)
+    self.model = damage.NEMLPowerLawDamagedModel_sd(self.elastic, self.A, self.a, 
+        self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -390,8 +392,9 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     self.k0 = 0.0001
     self.a = 2.0
 
-    self.model = damage.NEMLExponentialWorkDamagedModel_sd(self.W0, self.k0, 
-        self.a, self.bmodel, self.elastic)
+    self.model = damage.NEMLExponentialWorkDamagedModel_sd(
+        self.elastic, self.W0, self.k0, 
+        self.a, self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -459,18 +462,20 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
     self.k0 = 0.0001
     self.a0 = 2.0
 
-    self.model1 = damage.NEMLExponentialWorkDamagedModel_sd(self.W0, self.k0, 
-        self.a0, self.bmodel, self.elastic)
+    self.model1 = damage.NEMLExponentialWorkDamagedModel_sd(
+        self.elastic, self.W0, self.k0, 
+        self.a0, self.bmodel)
 
     self.W02 = 10.0
     self.k02 = 0.001
     self.a02 = 1.5
 
-    self.model2 = damage.NEMLExponentialWorkDamagedModel_sd(self.W02, self.k02, 
-        self.a02, self.bmodel, self.elastic)
+    self.model2 = damage.NEMLExponentialWorkDamagedModel_sd(
+        self.elastic, self.W02, self.k02, 
+        self.a02, self.bmodel)
 
-    self.model = damage.CombinedDamageModel_sd([self.model1, self.model2],
-        self.bmodel)
+    self.model = damage.CombinedDamageModel_sd(self.elastic, 
+        [self.model1, self.model2], self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
