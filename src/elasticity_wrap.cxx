@@ -64,6 +64,7 @@ PYBIND11_MODULE(elasticity, m) {
       .def("nu", &LinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
       .def("G", &LinearElasticModel::G, "Shear modulus as a function of temperature.")
       .def("K", &LinearElasticModel::K, "Bulk modulus as a function of temperature.")
+      .def_property_readonly("valid", &LinearElasticModel::valid, "Good or dummy model.")
       ;
 
   py::class_<IsotropicLinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel", py::base<LinearElasticModel>())

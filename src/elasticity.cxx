@@ -75,6 +75,10 @@ PoissonsRatio::PoissonsRatio(double nu) :
   
 }
 
+bool LinearElasticModel::valid() const
+{
+  return false;
+}
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
       std::shared_ptr<ShearModulus> shear,
@@ -192,6 +196,11 @@ int IsotropicLinearElasticModel::S_calc_(double G, double K, double * const Sv) 
   Sv[35] = c;
 
   return 0;
+}
+
+bool IsotropicLinearElasticModel::valid() const
+{
+  return true;
 }
 
 void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) const

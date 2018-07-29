@@ -55,10 +55,12 @@ class LinearElasticModel {
   virtual int C(double T, double * const Cv) const = 0;
   virtual int S(double T, double * const Sv) const = 0;
 
-   virtual double E(double T) const = 0;
-   virtual double nu(double T) const = 0;
-   virtual double G(double T) const = 0;
-   virtual double K(double T) const = 0;
+  virtual double E(double T) const = 0;
+  virtual double nu(double T) const = 0;
+  virtual double G(double T) const = 0;
+  virtual double K(double T) const = 0;
+
+  virtual bool valid() const;
 };
 
 /// Isotropic shear modulus generating properties from shear and bulk models
@@ -78,6 +80,8 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
    virtual double nu(double T) const;
    virtual double G(double T) const;
    virtual double K(double T) const;
+
+   virtual bool valid() const;
 
   private:
    int C_calc_(double G, double K, double * const Cv) const;

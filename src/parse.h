@@ -35,10 +35,10 @@ std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & i
 std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * node, int & ier);
 
 /// Process power law damage
-std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node, std::unique_ptr<NEMLModel_sd> bmodel, std::shared_ptr<Interpolate> alpha, int & ier);
+std::unique_ptr<NEMLModel_sd> process_powerlaw_damage(const xmlpp::Element * node, std::unique_ptr<NEMLModel_sd> bmodel, std::shared_ptr<Interpolate> alpha, int & ier);
 
 /// Process Mark's fatigue damage model
-std::unique_ptr<NEMLModel> process_mark_damage(const xmlpp::Element * node, std::unique_ptr<NEMLModel_sd> bmodel, std::shared_ptr<Interpolate> alpha, int & ier);
+std::unique_ptr<NEMLModel_sd> process_mark_damage(const xmlpp::Element * node, std::unique_ptr<NEMLModel_sd> bmodel, std::shared_ptr<Interpolate> alpha, int & ier);
 
 /// Setup a creep model
 std::shared_ptr<CreepModel> process_creep(const xmlpp::Element * node, int & ier);
@@ -184,11 +184,15 @@ std::shared_ptr<GFlow> process_gmodel(const xmlpp::Element * node, int & ier);
 /// Power law G model
 std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node, int & ier);
 
+/// Optionally get an elastic model from a root node
+std::shared_ptr<LinearElasticModel> get_elastic_model(const xmlpp::Element * node, int & ier);
+
 // Begin helpers
 
 /// Return a single child node with given name, if not return relevant error
 bool one_child(const xmlpp::Node * node, std::string name,
-               const xmlpp::Element * & child, int & ier);
+               const xmlpp::Element * & child, int & ier,
+               bool error = true);
 
 /// Return the string value of an attribute with a given name, if not error
 bool one_attribute(const xmlpp::Element * node, std::string name,

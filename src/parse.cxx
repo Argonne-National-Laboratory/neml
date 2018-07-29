@@ -74,25 +74,29 @@ std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * nod
     alpha = std::shared_ptr<Interpolate>(new ConstantInterpolate(0.0));
   }
 
+  // 3.5) Grab elastic model
+  auto emodel = get_elastic_model(node, ier);
+
   // 3) Dispatch manually
   const xmlpp::Element * damage_node;
   if (not one_child(node, "damage", damage_node, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
-  
+ 
+  std::unique_ptr<NEMLModel_sd> model;
+
   std::string dtype;
   if (not one_attribute(damage_node, "type", dtype, ier)) {
     return std::unique_ptr<NEMLModel>(nullptr);
   }
   
   if (dtype == "power_law") {
-    // BEHOLD THE HORROR!
-    return process_powerlaw_damage(damage_node, 
+    model = process_powerlaw_damage(damage_node, 
                                    std::unique_ptr<NEMLModel_sd>(static_cast<NEMLModel_sd*>(base_cast.release())), 
                                    alpha, ier);
   }
   else if (dtype == "mark") {
-    return process_mark_damage(damage_node, 
+    model = process_mark_damage(damage_node, 
                                    std::unique_ptr<NEMLModel_sd>(static_cast<NEMLModel_sd*>(base_cast.release())), 
                                    alpha, ier);
   }
@@ -100,22 +104,25 @@ std::unique_ptr<NEMLModel> process_smallstrain_damage(const xmlpp::Element * nod
     ier = UNKNOWN_TYPE;
     return std::unique_ptr<NEMLModel>(nullptr);
   }
+  
+  if (emodel->valid()) {
+    model->set_elastic_model(emodel);
+  }
+
+  return std::move(model);
+
 }
 
-std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node, 
+std::unique_ptr<NEMLModel_sd> process_powerlaw_damage(const xmlpp::Element * node, 
                                                    std::unique_ptr<NEMLModel_sd> bmodel, 
                                                    std::shared_ptr<Interpolate> alpha,
                                                    int & ier)
 {
-  // Must have an "elastic" node
-  const xmlpp::Element * elastic_node;
-  if (not one_child(node, "elastic", elastic_node, ier)) {
-    return std::unique_ptr<NEMLModel>(nullptr);
-  }
+  auto emodel = get_elastic_model(node, ier);
 
-  return std::unique_ptr<NEMLModel>(
+  return std::unique_ptr<NEMLModel_sd>(
       new NEMLPowerLawDamagedModel_sd(
-          process_linearelastic(elastic_node, ier),
+          emodel,
           scalar_param(node, "A", ier),
           scalar_param(node, "a", ier),
           std::move(bmodel),
@@ -123,19 +130,16 @@ std::unique_ptr<NEMLModel> process_powerlaw_damage(const xmlpp::Element * node,
           )); 
 }
 
-std::unique_ptr<NEMLModel> process_mark_damage(const xmlpp::Element * node, 
+std::unique_ptr<NEMLModel_sd> process_mark_damage(const xmlpp::Element * node, 
                                                std::unique_ptr<NEMLModel_sd> bmodel, 
                                                std::shared_ptr<Interpolate> alpha,
                                                int & ier)
 {
-  const xmlpp::Element * elastic_node;
-  if (not one_child(node, "elastic", elastic_node, ier)) {
-    return std::unique_ptr<NEMLModel>(nullptr);
-  }
+  auto emodel = get_elastic_model(node, ier);
 
-  return std::unique_ptr<NEMLModel>(
+  return std::unique_ptr<NEMLModel_sd>(
       new MarkFatigueDamageModel_sd(
-          process_linearelastic(elastic_node, ier),
+          emodel,
           scalar_param(node, "C", ier),
           scalar_param(node, "m", ier),
           scalar_param(node, "n", ier),
@@ -181,12 +185,8 @@ std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & i
   }
 
   // 3)
-  const xmlpp::Element * elastic_node;
-  if (not one_child(node, "elastic", elastic_node, ier)) {
-    return std::unique_ptr<NEMLModel>(nullptr);
-  }
-  std::shared_ptr<LinearElasticModel> emodel = process_linearelastic(elastic_node, ier);
-  
+  auto emodel = get_elastic_model(node, ier);
+
   // 4)
   double k = scalar_constant(node, "kboltz", ier);
 
@@ -207,8 +207,12 @@ std::unique_ptr<NEMLModel> process_kmregion(const xmlpp::Element * node, int & i
   }
 
   // Return final model
-  return std::unique_ptr<NEMLModel>(
+  auto model = std::unique_ptr<NEMLModel_sd>(
       new KMRegimeModel(emodel, models, gs, k, b, eps0, alpha));
+  
+  model->set_elastic_model(emodel);
+
+  return std::move(model);
 }
 
 
@@ -217,13 +221,7 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
   // Need a elastic node, a plastic node, and optionally creep and thermal
   // expansion nodes
   // Elastic
-  std::shared_ptr<LinearElasticModel> emodel;
-  const xmlpp::Element * elastic_node;
-  if (not one_child(node, "elastic", elastic_node, ier)) {
-    return std::unique_ptr<NEMLModel>(nullptr);
-  }
-  emodel = process_linearelastic(elastic_node, ier);
-  if (ier != SUCCESS) return std::unique_ptr<NEMLModel>(nullptr);
+  auto emodel = get_elastic_model(node, ier);
 
   // Optional alpha
   std::shared_ptr<Interpolate> alpha;
@@ -310,6 +308,8 @@ std::unique_ptr<NEMLModel> process_smallstrain(const xmlpp::Element * node, int 
     comp_creep = std::move(model);
   }
 
+  comp_creep->set_elastic_model(emodel);
+
   return std::unique_ptr<NEMLModel>(std::move(comp_creep));
 }
 
@@ -349,10 +349,7 @@ std::shared_ptr<ScalarCreepRule> process_powerlaw_creep(const xmlpp::Element * n
 std::shared_ptr<ScalarCreepRule> process_regionkm_creep(const xmlpp::Element * node, int & ier)
 {
   // Must have an "elastic" node
-  const xmlpp::Element * elastic_node;
-  if (not one_child(node, "elastic", elastic_node, ier)) {
-    return std::unique_ptr<ScalarCreepRule>(nullptr);
-  }
+  auto emodel = get_elastic_model(node, ier);
 
   return std::shared_ptr<ScalarCreepRule>(new RegionKMCreep(
           vector_constant(node, "cuts", ier),
@@ -361,7 +358,7 @@ std::shared_ptr<ScalarCreepRule> process_regionkm_creep(const xmlpp::Element * n
           scalar_constant(node, "kboltz", ier),
           scalar_constant(node, "b", ier),
           scalar_constant(node, "eps0", ier),
-          process_linearelastic(elastic_node, ier)
+          emodel 
           ));
 }
 
@@ -848,24 +845,39 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node,
   return std::make_shared<GPowerLaw>(n);
 }
 
-
+std::shared_ptr<LinearElasticModel> get_elastic_model(const xmlpp::Element * node, int & ier)
+{
+  const xmlpp::Element * elastic_node;
+  if (not one_child(node, "elastic", elastic_node, ier, false)) {
+    ier = 0;
+    return std::make_shared<BlankElasticModel>();
+  }
+  else {
+    return process_linearelastic(elastic_node, ier);
+  }
+}
 
 // Helpers
 bool one_child(const xmlpp::Node * node, std::string name,
-               const xmlpp::Element * & child, int & ier)
+               const xmlpp::Element * & child, int & ier,
+               bool error)
 {
   auto matches = node->get_children(name);
 
   if (matches.size() > 1) {
     ier = TOO_MANY_NODES;
-    std::cerr << "Multiple nodes with name " << name << " found near line " 
-        << node->get_line() << std::endl;
+    if (error) {
+      std::cerr << "Multiple nodes with name " << name << " found near line " 
+          << node->get_line() << std::endl;
+    }
     return false;
   }
   else if (matches.size() < 1) {
     ier = NODE_NOT_FOUND;
-    std::cerr << "Node with name " << name << " not found near line " 
-        << node->get_line() << std::endl;
+    if (error) {
+      std::cerr << "Node with name " << name << " not found near line " 
+          << node->get_line() << std::endl;
+    }
     return false;
   }
   else {
