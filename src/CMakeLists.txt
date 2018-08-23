@@ -1,4 +1,7 @@
+### python bindings in neml ###
 if (WRAP_PYTHON)
+      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)      
+
       # Simple helper libraries
       add_library(helpers SHARED nemlerror.cxx pyhelp.cxx)
 
@@ -76,12 +79,12 @@ if (WRAP_PYTHON)
       endif()
 
       # actual material models
-      add_library(neml SHARED neml_wrap.cxx neml.cxx)
-      target_link_libraries(neml helpers solvers creep ri_flow visco_flow general_flow nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-      set_target_properties(neml PROPERTIES PREFIX "")
+      add_library(models SHARED models_wrap.cxx models.cxx)
+      target_link_libraries(models helpers solvers creep ri_flow visco_flow general_flow nemlmath ${PYTHON_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+      set_target_properties(models PROPERTIES PREFIX "")
       if (APPLE)
-            set_property(TARGET neml PROPERTY OUTPUT_NAME "neml.so")
-            set_property(TARGET neml PROPERTY SUFFIX "")
+            set_property(TARGET models PROPERTY OUTPUT_NAME "models.so")
+            set_property(TARGET models PROPERTY SUFFIX "")
       endif()
 
       # parser
@@ -119,24 +122,24 @@ if (WRAP_PYTHON)
             set_property(TARGET damage PROPERTY OUTPUT_NAME "damage.so")
             set_property(TARGET damage PROPERTY SUFFIX "")
       endif()
-
-else()
-      # Everything in a big shared library
-      add_library(neml SHARED 
-            neml.cxx 
-            nemlmath.cxx 
-            solvers.cxx 
-            surfaces.cxx 
-            hardening.cxx 
-            ri_flow.cxx
-            visco_flow.cxx 
-            general_flow.cxx 
-            nemlerror.cxx 
-            elasticity.cxx
-            parse.cxx
-            cinterface.cxx
-            interpolate.cxx
-            creep.cxx
-            damage.cxx)
-      target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 endif()
+
+### BASE LIBRARY IN LIB ###
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+add_library(neml SHARED 
+      models.cxx 
+      nemlmath.cxx 
+      solvers.cxx 
+      surfaces.cxx 
+      hardening.cxx 
+      ri_flow.cxx
+      visco_flow.cxx 
+      general_flow.cxx 
+      nemlerror.cxx 
+      elasticity.cxx
+      parse.cxx
+      cinterface.cxx
+      interpolate.cxx
+      creep.cxx
+      damage.cxx)
+target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})

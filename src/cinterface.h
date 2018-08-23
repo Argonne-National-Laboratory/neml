@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 
-#include "neml.h"
+#include "models.h"
 #include "parse.h"
 
 #include <string>

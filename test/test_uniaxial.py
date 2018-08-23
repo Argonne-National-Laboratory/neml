@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, uniaxial
+from neml import interpolate, solvers, models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, uniaxial
 from common import *
 
 import unittest
@@ -70,7 +70,7 @@ class TestUniaxialRI(CommonUniaxial, unittest.TestCase):
     hrule = hardening.Chaboche(iso, c, gmodels)
 
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-    self.model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
+    self.model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
         check_kt = False)
     self.umodel = uniaxial.UniaxialModel(self.model)
     

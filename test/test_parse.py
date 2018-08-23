@@ -1,4 +1,4 @@
-from neml import solvers, interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow, creep, damage
+from neml import solvers, interpolate, models, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow, creep, damage
 
 import unittest
 import numpy as np
@@ -68,7 +68,7 @@ class TestMarkDamage(CompareMats, unittest.TestCase):
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+    bmodel = models.SmallStrainRateIndependentPlasticity(elastic, 
         flow)
 
     C = 8.0e-6
@@ -106,7 +106,7 @@ class TestPowerLawDamage(CompareMats, unittest.TestCase):
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+    bmodel = models.SmallStrainRateIndependentPlasticity(elastic, 
         flow)
 
     a = 2.2
@@ -137,7 +137,7 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     hrule = hardening.LinearIsotropicHardeningRule(ys, H)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -166,7 +166,7 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     hrule = hardening.CombinedIsotropicHardeningRule([hrule1,hrule2])
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -195,9 +195,9 @@ class TestCreepPlasticity(CompareMats, unittest.TestCase):
     iso = hardening.LinearIsotropicHardeningRule(sY, H)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-    pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    pmodel = models.SmallStrainRateIndependentPlasticity(elastic, flow)
     
-    self.model2 = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
+    self.model2 = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -227,7 +227,7 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
     hrule = hardening.CombinedHardeningRule(iso, kin)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -260,7 +260,7 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
     hmodel = hardening.Chaboche(iso, cs, gammas)
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -282,7 +282,7 @@ class TestYaguchi(CompareMats, unittest.TestCase):
 
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(elastic, flow)
+    self.model2 = models.GeneralIntegrator(elastic, flow)
 
     self.T = 500.0
     self.tmax = 10.0
@@ -321,7 +321,7 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     vmodel = visco_flow.ChabocheFlowRule(surface, hmodel, fluidity, n)
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(elastic, flow)
+    self.model2 = models.GeneralIntegrator(elastic, flow)
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
@@ -359,7 +359,7 @@ class TestPerzyna(CompareMats, unittest.TestCase):
     vmodel = visco_flow.PerzynaFlowRule(surface, hmodel, gmodel, eta)
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(elastic, flow)
+    self.model2 = models.GeneralIntegrator(elastic, flow)
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
@@ -385,7 +385,7 @@ class TestPerfect(CompareMats, unittest.TestCase):
 
     yields = interpolate.PiecewiseLinearInterpolate(Ts, Sys)
 
-    self.model2 = neml.SmallStrainPerfectPlasticity(elastic, surface, yields)
+    self.model2 = models.SmallStrainPerfectPlasticity(elastic, surface, yields)
 
     self.T = 550.0
     self.tmax = 10.0
@@ -413,7 +413,7 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
 
     yields = interpolate.PiecewiseLinearInterpolate(Ts, Sys)
 
-    pmodel = neml.SmallStrainPerfectPlasticity(elastic, surface, yields)
+    pmodel = models.SmallStrainPerfectPlasticity(elastic, surface, yields)
 
     self.T = 550.0
     self.tmax = 10.0
@@ -426,4 +426,4 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
     smodel = creep.PowerLawCreep(A, n)
     cmodel = creep.J2CreepModel(smodel)
 
-    self.model2 = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
+    self.model2 = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)

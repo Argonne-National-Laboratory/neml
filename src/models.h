@@ -1,5 +1,5 @@
-#ifndef NEML_H
-#define NEML_H
+#ifndef MODELS_H
+#define MODELS_H
 
 #include "elasticity.h"
 #include "ri_flow.h"
@@ -596,4 +596,4 @@ class KMRegimeModel: public NEMLModel_sd {
 };
 
 } // namespace neml
-#endif // NEML_H
+#endif // MODELS_H

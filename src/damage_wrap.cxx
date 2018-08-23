@@ -1,5 +1,4 @@
 #include "damage.h"
-#include "neml.h"
 
 #include "pyhelp.h"
 #include "nemlerror.h"

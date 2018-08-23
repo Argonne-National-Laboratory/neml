@@ -1,18 +1,16 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
-
 project(NEML LANGUAGES CXX)
 
-# Setup modules
+### Setup modules ###
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-# Need c++ 11
+
+### Need c++ 11 ###
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
 
-# This is risky, but I don't use the preprocessor a lot
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Wp,-w")
 
-# Select nonlinear solver
+### Select nonlinear solver ###
 set(SOLVER "newton" CACHE STRING "Nonlinear solver to use")
 set_property(CACHE SOLVER PROPERTY STRINGS newton nox)
 if (${SOLVER} MATCHES "newton")
@@ -29,24 +27,16 @@ else()
       message("Unknown solver")
 endif()
 
-# Configure libraries
+
+### Configure standard-ish libraries ###
 set(BLAS_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 FIND_PACKAGE(libxml++ REQUIRED)
 INCLUDE_DIRECTORIES(${libxml++_INCLUDE_DIRS})
 
-# Option for python
-option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
-if (WRAP_PYTHON)
-      FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
-      INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
-else()
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-      # Headers?
-endif()
 
+### PLATFORM AND COMPILER SPECIFIC OPTIONS ###
 # Make better debug on Intel
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -traceback -ftrapuv")
@@ -58,15 +48,10 @@ if(APPLE)
       set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
 endif(APPLE)
+######
 
-# Recurse
-add_subdirectory(src)
 
-if (NOT WRAP_PYTHON)
-      add_subdirectory(util/abaqus)
-endif()
-
-# Documentation control
+### DOCUMENTATION ###
 option(BUILD_DOCUMENTATION "Build documentation: manual and doxygen" OFF)
 if (BUILD_DOCUMENTATION)
       option(BUILD_DOXYGEN "Build and install Doxygen documentation" ON)
@@ -74,3 +59,14 @@ if (BUILD_DOCUMENTATION)
       add_subdirectory(doc)
 endif()
 
+
+### PYTHON BINDINGS ###
+option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
+if (WRAP_PYTHON)
+      FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
+      INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
+endif()
+
+### BASE LIBRARY ###
+add_subdirectory(src)
+add_subdirectory(util/abaqus)

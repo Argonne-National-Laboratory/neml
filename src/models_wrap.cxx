@@ -1,4 +1,4 @@
-#include "neml.h"
+#include "models.h"
 
 #include "pyhelp.h"
 #include "nemlerror.h"
@@ -13,7 +13,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
 
 namespace neml {
 
-PYBIND11_MODULE(neml, m) {
+PYBIND11_MODULE(models, m) {
   m.doc() = "Base class for all material models.";
   
   py::class_<NEMLModel, std::shared_ptr<NEMLModel>>(m, "NEMLModel")

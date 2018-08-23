@@ -1,4 +1,4 @@
-#include "neml.h"
+#include "models.h"
 
 #include "nemlmath.h"
 #include "nemlerror.h"

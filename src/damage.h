@@ -1,7 +1,7 @@
 #ifndef DAMAGE_H
 #define DAMAGE_H
 
-#include "neml.h"
+#include "models.h"
 #include "elasticity.h"
 
 #include <memory>
