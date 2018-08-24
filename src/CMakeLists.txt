@@ -12,6 +12,7 @@ endmacro(pybind)
 ### BASE LIBRARY IN LIB ###
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 add_library(neml SHARED 
+      objects.cxx
       models.cxx 
       nemlmath.cxx 
       solvers.cxx 
@@ -38,6 +39,7 @@ if (WRAP_PYTHON)
       add_library(helpers SHARED nemlerror.cxx pyhelp.cxx)
 
       # Actual modules
+      pybind(objects)
       pybind(nemlmath)
       pybind(solvers)
       pybind(elasticity)

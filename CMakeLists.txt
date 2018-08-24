@@ -27,6 +27,8 @@ else()
       message("Unknown solver")
 endif()
 
+### Need Boost (only variant.hpp really) ###
+FIND_PACKAGE(Boost)
 
 ### Configure standard-ish libraries ###
 set(BLAS_VENDOR Generic)
