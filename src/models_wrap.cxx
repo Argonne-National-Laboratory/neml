@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "models.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -98,18 +99,18 @@ PYBIND11_MODULE(models, m) {
            }, "Calculate the elastic strains.")
       ;
 
-  py::class_<NEMLModel_ldF, std::shared_ptr<NEMLModel_ldF>>(m, "NEMLModel_ldF", py::base<NEMLModel>())
+  py::class_<NEMLModel_ldF, NEMLModel, std::shared_ptr<NEMLModel_ldF>>(m, "NEMLModel_ldF")
       ;
 
-  py::class_<NEMLModel_ldI, std::shared_ptr<NEMLModel_ldI>>(m, "NEMLModel_ldI", py::base<NEMLModel>())
+  py::class_<NEMLModel_ldI, NEMLModel, std::shared_ptr<NEMLModel_ldI>>(m, "NEMLModel_ldI")
       ;
 
-  py::class_<NEMLModel_sd, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd", py::base<NEMLModel>())
+  py::class_<NEMLModel_sd, NEMLModel, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd")
       .def_property_readonly("elastic", &NEMLModel_sd::elastic)
       .def("set_elastic_model", &NEMLModel_sd::set_elastic_model)
       ;
 
-  py::class_<SmallStrainElasticity, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity", py::base<NEMLModel_sd>())
+  py::class_<SmallStrainElasticity, NEMLModel_sd, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity")
       .def(py::init<std::shared_ptr<LinearElasticModel>, double>(), 
            py::arg("elastic"), py::arg("alpha") = 0.0)
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
@@ -117,19 +118,19 @@ PYBIND11_MODULE(models, m) {
            py::arg("elastic"), py::arg("alpha") = nullptr)
       ;
 
-  py::class_<SSPPTrialState>(m, "SSPPTrialState", py::base<TrialState>())
+  py::class_<SSPPTrialState, TrialState>(m, "SSPPTrialState")
       ;
 
-  py::class_<SSRIPTrialState>(m, "SSRIPTrialState", py::base<TrialState>())
+  py::class_<SSRIPTrialState, TrialState>(m, "SSRIPTrialState")
       ;
 
-  py::class_<SSCPTrialState>(m, "SSCPTrialState", py::base<TrialState>())
+  py::class_<SSCPTrialState, TrialState>(m, "SSCPTrialState")
       ;
 
-  py::class_<GITrialState>(m, "GITrialState", py::base<TrialState>())
+  py::class_<GITrialState, TrialState>(m, "GITrialState")
       ;
 
-  py::class_<SmallStrainPerfectPlasticity, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity", py::base<NEMLModel_sd>())
+  py::class_<SmallStrainPerfectPlasticity, NEMLModel_sd, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity")
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
            std::shared_ptr<YieldSurface>, 
            double, double,
@@ -192,7 +193,7 @@ PYBIND11_MODULE(models, m) {
       // End remove block
       ;
 
-  py::class_<SmallStrainRateIndependentPlasticity, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity", py::base<NEMLModel_sd>())
+  py::class_<SmallStrainRateIndependentPlasticity, NEMLModel_sd, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool, double, bool>(),
            py::arg("elastic"), py::arg("flow"),
            py::arg("alpha") = 0.0,
@@ -248,7 +249,7 @@ PYBIND11_MODULE(models, m) {
       // End remove block
       ;
 
-  py::class_<SmallStrainCreepPlasticity, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity", py::base<NEMLModel_sd>())
+  py::class_<SmallStrainCreepPlasticity, NEMLModel_sd, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
            py::arg("elastic"),
            py::arg("plastic"), py::arg("creep"),
@@ -306,7 +307,7 @@ PYBIND11_MODULE(models, m) {
 
 
 
-  py::class_<GeneralIntegrator, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator", py::base<NEMLModel_sd>())
+  py::class_<GeneralIntegrator, NEMLModel_sd, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<GeneralFlowRule>, double, double, int , bool, int>(),
            py::arg("elastic"),
            py::arg("rule"),
@@ -363,7 +364,7 @@ PYBIND11_MODULE(models, m) {
       // End remove block
       ;
 
-  py::class_<KMRegimeModel, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel", py::base<NEMLModel_sd>())
+  py::class_<KMRegimeModel, NEMLModel_sd, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::vector<std::shared_ptr<NEMLModel_sd>>,
            std::vector<double>,
            double, double, double, double>(),

@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "parse.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"

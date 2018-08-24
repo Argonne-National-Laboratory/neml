@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "interpolate.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -27,29 +28,29 @@ PYBIND11_MODULE(interpolate, m) {
       .def_property_readonly("valid", &Interpolate::valid)
       ;
 
-  py::class_<InvalidInterpolate, std::shared_ptr<InvalidInterpolate>>(m, "InvalidInterpolate", py::base<Interpolate>())
+  py::class_<InvalidInterpolate, Interpolate, std::shared_ptr<InvalidInterpolate>>(m, "InvalidInterpolate")
       .def(py::init<>())
       ;
 
-  py::class_<PolynomialInterpolate, std::shared_ptr<PolynomialInterpolate>>(m, "PolynomialInterpolate", py::base<Interpolate>())
+  py::class_<PolynomialInterpolate, Interpolate, std::shared_ptr<PolynomialInterpolate>>(m, "PolynomialInterpolate")
       .def(py::init<std::vector<double>>(), py::arg("coefs"))
       ;
 
-  py::class_<PiecewiseLinearInterpolate, std::shared_ptr<PiecewiseLinearInterpolate>>(m, "PiecewiseLinearInterpolate", py::base<Interpolate>())
+  py::class_<PiecewiseLinearInterpolate, Interpolate, std::shared_ptr<PiecewiseLinearInterpolate>>(m, "PiecewiseLinearInterpolate")
       .def(py::init<std::vector<double>, std::vector<double>>(),
            py::arg("points"), py::arg("values"))
       ;
 
-  py::class_<PiecewiseLogLinearInterpolate, std::shared_ptr<PiecewiseLogLinearInterpolate>>(m, "PiecewiseLogLinearInterpolate", py::base<Interpolate>())
+  py::class_<PiecewiseLogLinearInterpolate, Interpolate, std::shared_ptr<PiecewiseLogLinearInterpolate>>(m, "PiecewiseLogLinearInterpolate")
       .def(py::init<std::vector<double>, std::vector<double>>(),
            py::arg("points"), py::arg("values"))
       ;
 
-  py::class_<ConstantInterpolate, std::shared_ptr<ConstantInterpolate>>(m, "ConstantInterpolate", py::base<Interpolate>())
+  py::class_<ConstantInterpolate, Interpolate, std::shared_ptr<ConstantInterpolate>>(m, "ConstantInterpolate")
       .def(py::init<double>(), py::arg("value"))
       ;
 
-  py::class_<MTSShearInterpolate, std::shared_ptr<MTSShearInterpolate>>(m, "MTSShearInterpolate", py::base<Interpolate>())
+  py::class_<MTSShearInterpolate, Interpolate, std::shared_ptr<MTSShearInterpolate>>(m, "MTSShearInterpolate")
       .def(py::init<double, double, double>(), py::arg("y0"), py::arg("D"), 
            py::arg("x0"))
       ;

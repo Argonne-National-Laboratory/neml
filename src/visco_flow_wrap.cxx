@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "visco_flow.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -19,7 +20,7 @@ PYBIND11_MODULE(visco_flow, m) {
       .def("dg", &GFlow::dg, "Derivative of g wrt f")
       ;
 
-  py::class_<GPowerLaw, std::shared_ptr<GPowerLaw>>(m, "GPowerLaw", py::base<GFlow>())
+  py::class_<GPowerLaw, GFlow, std::shared_ptr<GPowerLaw>>(m, "GPowerLaw")
       .def(py::init<double>(), py::arg("n"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("n"))
       .def("n", &GPowerLaw::n)
@@ -213,7 +214,7 @@ PYBIND11_MODULE(visco_flow, m) {
 
       ;
 
-    py::class_<PerzynaFlowRule, std::shared_ptr<PerzynaFlowRule>>(m, "PerzynaFlowRule", py::base<ViscoPlasticFlowRule>())
+    py::class_<PerzynaFlowRule, ViscoPlasticFlowRule, std::shared_ptr<PerzynaFlowRule>>(m, "PerzynaFlowRule")
         .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>, std::shared_ptr<GFlow>, double>(),
              py::arg("surface"), py::arg("hardening"), py::arg("g"), py::arg("eta"))
         .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>, std::shared_ptr<GFlow>, std::shared_ptr<Interpolate>>(),
@@ -226,26 +227,25 @@ PYBIND11_MODULE(visco_flow, m) {
         .def("deta", &FluidityModel::deta)
         ;
 
-    py::class_<ConstantFluidity, std::shared_ptr<ConstantFluidity>>(m, "ConstantFluidity", py::base<FluidityModel>())
+    py::class_<ConstantFluidity, FluidityModel, std::shared_ptr<ConstantFluidity>>(m, "ConstantFluidity")
         .def(py::init<double>(), py::arg("eta"))
         .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("eta"))
         ;
 
-    py::class_<SaturatingFluidity, std::shared_ptr<SaturatingFluidity>>(m, "SaturatingFluidity", py::base<FluidityModel>())
+    py::class_<SaturatingFluidity, FluidityModel, std::shared_ptr<SaturatingFluidity>>(m, "SaturatingFluidity")
         .def(py::init<double, double, double>(), py::arg("K0"), py::arg("A"), py::arg("b"))
         .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("K0"), py::arg("A"), py::arg("b"))
         ;
 
-    py::class_<ChabocheFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule", py::base<ViscoPlasticFlowRule>())
+    py::class_<ChabocheFlowRule, ViscoPlasticFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule")
         .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, double>(),
              py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
         .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, std::shared_ptr<Interpolate>>(),
              py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
         ;
 
-    py::class_<YaguchiGr91FlowRule, std::shared_ptr<YaguchiGr91FlowRule>>(m, "YaguchiGr91FlowRule", py::base<ViscoPlasticFlowRule>())
+    py::class_<YaguchiGr91FlowRule, ViscoPlasticFlowRule, std::shared_ptr<YaguchiGr91FlowRule>>(m, "YaguchiGr91FlowRule")
         .def(py::init<>())
-
         .def("D", &YaguchiGr91FlowRule::D)
         .def("n", &YaguchiGr91FlowRule::n)
         .def("a10", &YaguchiGr91FlowRule::a10)

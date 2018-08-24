@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "creep.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -16,7 +17,7 @@ namespace neml {
 PYBIND11_MODULE(creep, m) {
   m.doc() = "Separate creep models to combine with base NEML models";
 
-  py::class_<CreepModelTrialState>(m, "CreepModelTrialState", py::base<TrialState>())
+  py::class_<CreepModelTrialState, TrialState>(m, "CreepModelTrialState")
       ;
 
   py::class_<CreepModel, std::shared_ptr<CreepModel>>(m, "CreepModel")
@@ -119,7 +120,7 @@ PYBIND11_MODULE(creep, m) {
 
     ;
 
-  py::class_<J2CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel", py::base<CreepModel>())
+  py::class_<J2CreepModel, CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel")
       .def(py::init<std::shared_ptr<ScalarCreepRule>, double, int , bool>(),
            py::arg("rule"), py::arg("tol") = 1.0e-10, py::arg("miter") = 25,
            py::arg("verbose") = false)
@@ -172,7 +173,7 @@ PYBIND11_MODULE(creep, m) {
            }, "Evaluate creep rate wrt temperature.")
       ;
   
-  py::class_<PowerLawCreep, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep", py::base<ScalarCreepRule>())
+  py::class_<PowerLawCreep, ScalarCreepRule, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep")
       .def(py::init<double, double>(), py::arg("A"), py::arg("n"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("n"))
 
@@ -180,11 +181,11 @@ PYBIND11_MODULE(creep, m) {
       .def("n", &PowerLawCreep::n)
     ;
 
-  py::class_<RegionKMCreep, std::shared_ptr<RegionKMCreep>>(m, "RegionKMCreep", py::base<ScalarCreepRule>())
+  py::class_<RegionKMCreep, ScalarCreepRule, std::shared_ptr<RegionKMCreep>>(m, "RegionKMCreep")
       .def(py::init<std::vector<double>, std::vector<double>, std::vector<double>, double, double, double, std::shared_ptr<LinearElasticModel>>(), py::arg("cuts"), py::arg("A"), py::arg("B"), py::arg("kboltz"), py::arg("b"), py::arg("eps0"), py::arg("emodel"))
   ;
 
-  py::class_<NortonBaileyCreep, std::shared_ptr<NortonBaileyCreep>>(m, "NortonBaileyCreep", py::base<ScalarCreepRule>())
+  py::class_<NortonBaileyCreep, ScalarCreepRule, std::shared_ptr<NortonBaileyCreep>>(m, "NortonBaileyCreep")
       .def(py::init<double, double, double>(), py::arg("A"), py::arg("m"), py::arg("n"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("m"), py::arg("n"))
 
@@ -193,7 +194,7 @@ PYBIND11_MODULE(creep, m) {
       .def("n", &NortonBaileyCreep::n)
     ;
 
-  py::class_<MukherjeeCreep, std::shared_ptr<MukherjeeCreep>>(m, "MukherjeeCreep", py::base<ScalarCreepRule>())
+  py::class_<MukherjeeCreep, ScalarCreepRule, std::shared_ptr<MukherjeeCreep>>(m, "MukherjeeCreep")
       .def(py::init<std::shared_ptr<LinearElasticModel>, double, double, double, double, double, double, double>(), 
            py::arg("emodel"), py::arg("A"), py::arg("n"), py::arg("D0"), py::arg("Q"), py::arg("b"),
            py::arg("k"), py::arg("R"))

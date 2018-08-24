@@ -1,12 +1,11 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "nemlmath.h"
 
 #include "nemlerror.h"
-#include "pyhelp.h"
 
 #include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
-
-#include "Python.h"
 
 namespace py = pybind11;
 

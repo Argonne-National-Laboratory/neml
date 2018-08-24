@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "ri_flow.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -102,12 +103,12 @@ PYBIND11_MODULE(ri_flow, m) {
            }, "Hardening rule derivative with respect to history.")
       ;
 
-  py::class_<RateIndependentAssociativeFlow, std::shared_ptr<RateIndependentAssociativeFlow>>(m, "RateIndependentAssociativeFlow", py::base<RateIndependentFlowRule>())
+  py::class_<RateIndependentAssociativeFlow, RateIndependentFlowRule, std::shared_ptr<RateIndependentAssociativeFlow>>(m, "RateIndependentAssociativeFlow")
       .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>>(), 
            py::arg("surface"), py::arg("hardening"))
       ;
 
-  py::class_<RateIndependentNonAssociativeHardening, std::shared_ptr<RateIndependentNonAssociativeHardening>>(m, "RateIndependentNonAssociativeHardening", py::base<RateIndependentFlowRule>())
+  py::class_<RateIndependentNonAssociativeHardening, RateIndependentFlowRule, std::shared_ptr<RateIndependentNonAssociativeHardening>>(m, "RateIndependentNonAssociativeHardening")
       .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>>(), 
            py::arg("surface"), py::arg("hardening"))
       ;

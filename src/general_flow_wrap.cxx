@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "general_flow.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -123,7 +124,7 @@ PYBIND11_MODULE(general_flow, m) {
       .def("set_elastic_model", &GeneralFlowRule::set_elastic_model)
   ;
 
-  py::class_<TVPFlowRule, std::shared_ptr<TVPFlowRule>>(m, "TVPFlowRule", py::base<GeneralFlowRule>())
+  py::class_<TVPFlowRule, GeneralFlowRule, std::shared_ptr<TVPFlowRule>>(m, "TVPFlowRule")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<ViscoPlasticFlowRule>>(),
            py::arg("elastic"), py::arg("flow"))
       ;

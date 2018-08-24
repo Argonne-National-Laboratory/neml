@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "damage.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -16,7 +17,7 @@ namespace neml {
 PYBIND11_MODULE(damage, m) {
   m.doc() = "NEML damage models.";
 
-  py::class_<NEMLDamagedModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd", py::base<NEMLModel_sd>())
+  py::class_<NEMLDamagedModel_sd, NEMLModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd")
       .def_property_readonly("ndamage", &NEMLDamagedModel_sd::ndamage, "Number of damage variables.")
       .def("init_damage",
            [](NEMLDamagedModel_sd & m) -> py::array_t<double>
@@ -28,10 +29,10 @@ PYBIND11_MODULE(damage, m) {
            }, "Initialize damage variables.")
       ;
 
-  py::class_<SDTrialState>(m, "SDTrialState", py::base<TrialState>())
+  py::class_<SDTrialState, TrialState>(m, "SDTrialState")
       ;
 
-  py::class_<NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd", py::base<NEMLDamagedModel_sd>())
+  py::class_<NEMLScalarDamagedModel_sd, NEMLDamagedModel_sd, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd")
       .def("damage",
            [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> double
            {
@@ -115,7 +116,7 @@ PYBIND11_MODULE(damage, m) {
            }, "Make a trial state, mostly for testing.")
       ;
 
-  py::class_<CombinedDamageModel_sd, std::shared_ptr<CombinedDamageModel_sd>>(m, "CombinedDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
+  py::class_<CombinedDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<CombinedDamageModel_sd>>(m, "CombinedDamageModel_sd")
       .def(py::init<
            std::shared_ptr<LinearElasticModel>,
            std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>>,
@@ -138,7 +139,7 @@ PYBIND11_MODULE(damage, m) {
             py::arg("verbose") = false)
       ;
 
-  py::class_<ClassicalCreepDamageModel_sd, std::shared_ptr<ClassicalCreepDamageModel_sd>>(m, "ClassicalCreepDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
+  py::class_<ClassicalCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ClassicalCreepDamageModel_sd>>(m, "ClassicalCreepDamageModel_sd")
       .def(py::init<
            std::shared_ptr<LinearElasticModel>,
            std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
@@ -161,7 +162,7 @@ PYBIND11_MODULE(damage, m) {
             py::arg("verbose") = false)
       ;
 
-  py::class_<MarkFatigueDamageModel_sd, std::shared_ptr<MarkFatigueDamageModel_sd>>(m, "MarkFatigueDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
+  py::class_<MarkFatigueDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<MarkFatigueDamageModel_sd>>(m, "MarkFatigueDamageModel_sd")
       .def(py::init<
            std::shared_ptr<LinearElasticModel>,
            std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
@@ -181,7 +182,7 @@ PYBIND11_MODULE(damage, m) {
             py::arg("verbose") = false)
       ;
 
-  py::class_<NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd", py::base<NEMLScalarDamagedModel_sd>())
+  py::class_<NEMLStandardScalarDamagedModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd")
       .def("f",
            [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
            {
@@ -212,7 +213,7 @@ PYBIND11_MODULE(damage, m) {
 
       ;
 
-  py::class_<NEMLPowerLawDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd", py::base<NEMLStandardScalarDamagedModel_sd>())
+  py::class_<NEMLPowerLawDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd")
       .def(py::init<
            std::shared_ptr<LinearElasticModel>,
            std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
@@ -230,7 +231,7 @@ PYBIND11_MODULE(damage, m) {
             py::arg("verbose") = false)
       ;
 
-  py::class_<NEMLExponentialWorkDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd", py::base<NEMLStandardScalarDamagedModel_sd>())
+  py::class_<NEMLExponentialWorkDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd")
       .def(py::init<
            std::shared_ptr<LinearElasticModel>,
            std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,

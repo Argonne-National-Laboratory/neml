@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "hardening.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -44,10 +45,10 @@ PYBIND11_MODULE(hardening, m) {
            }, "Gradient of map")
       ;
   
-  py::class_<IsotropicHardeningRule, std::shared_ptr<IsotropicHardeningRule>>(m, "IsotropicHardeningRule", py::base<HardeningRule>())
+  py::class_<IsotropicHardeningRule, HardeningRule, std::shared_ptr<IsotropicHardeningRule>>(m, "IsotropicHardeningRule")
       ;
 
-  py::class_<LinearIsotropicHardeningRule, std::shared_ptr<LinearIsotropicHardeningRule>>(m, "LinearIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
+  py::class_<LinearIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<LinearIsotropicHardeningRule>>(m, "LinearIsotropicHardeningRule")
       .def(py::init<double, double>(), py::arg("s0"), py::arg("K"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("s0"), py::arg("K"))
       
@@ -55,11 +56,11 @@ PYBIND11_MODULE(hardening, m) {
       .def("K", &LinearIsotropicHardeningRule::K)
       ;
 
-  py::class_<InterpolatedIsotropicHardeningRule, std::shared_ptr<InterpolatedIsotropicHardeningRule>>(m, "InterpolatedIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
+  py::class_<InterpolatedIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<InterpolatedIsotropicHardeningRule>>(m, "InterpolatedIsotropicHardeningRule")
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("flow_stress"))
       ;
 
-  py::class_<VoceIsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
+  py::class_<VoceIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule")
       .def(py::init<double, double, double>(), py::arg("s0"), py::arg("R"), py::arg("d"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("s0"), py::arg("R"), py::arg("d"))
       
@@ -68,26 +69,25 @@ PYBIND11_MODULE(hardening, m) {
       .def("d", &VoceIsotropicHardeningRule::d)
       ;
 
-  py::class_<CombinedIsotropicHardeningRule, std::shared_ptr<CombinedIsotropicHardeningRule>>(m, "CombinedIsotropicHardeningRule", py::base<IsotropicHardeningRule>())
+  py::class_<CombinedIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<CombinedIsotropicHardeningRule>>(m, "CombinedIsotropicHardeningRule")
       .def(py::init<std::vector<std::shared_ptr<IsotropicHardeningRule>>>(), py::arg("rules"))
       .def_property_readonly("nrules", &CombinedIsotropicHardeningRule::nrules)
       ;
 
-  py::class_<KinematicHardeningRule, std::shared_ptr<KinematicHardeningRule>>(m, "KinematicHardeningRule", py::base<HardeningRule>())
+  py::class_<KinematicHardeningRule, HardeningRule, std::shared_ptr<KinematicHardeningRule>>(m, "KinematicHardeningRule")
       ;
 
-  py::class_<LinearKinematicHardeningRule, std::shared_ptr<LinearKinematicHardeningRule>>(m, "LinearKinematicHardeningRule", py::base<KinematicHardeningRule>())
+  py::class_<LinearKinematicHardeningRule, KinematicHardeningRule, std::shared_ptr<LinearKinematicHardeningRule>>(m, "LinearKinematicHardeningRule")
       .def(py::init<double>(), py::arg("H"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("H"))
       
       .def("H", &LinearKinematicHardeningRule::H)
       ;
 
-  py::class_<CombinedHardeningRule, std::shared_ptr<CombinedHardeningRule>>(m, "CombinedHardeningRule", py::base<HardeningRule>())
+  py::class_<CombinedHardeningRule, HardeningRule, std::shared_ptr<CombinedHardeningRule>>(m, "CombinedHardeningRule")
       .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::shared_ptr<KinematicHardeningRule>>(),
            py::arg("iso"), py::arg("kin"))
       ;
-
 
   py::class_<NonAssociativeHardening, std::shared_ptr<NonAssociativeHardening>>(m, "NonAssociativeHardening")
       .def_property_readonly("ninter", &NonAssociativeHardening::ninter, "Number of q variables.")
@@ -205,14 +205,14 @@ PYBIND11_MODULE(hardening, m) {
       .def("dgamma", &GammaModel::dgamma)
       ;
 
-  py::class_<ConstantGamma, std::shared_ptr<ConstantGamma>>(m, "ConstantGamma", py::base<GammaModel>())
+  py::class_<ConstantGamma, GammaModel, std::shared_ptr<ConstantGamma>>(m, "ConstantGamma")
       .def(py::init<double>(), py::arg("g"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("g"))
 
       .def("g", &ConstantGamma::g)
       ;
 
-  py::class_<SatGamma, std::shared_ptr<SatGamma>>(m, "SatGamma", py::base<GammaModel>())
+  py::class_<SatGamma, GammaModel, std::shared_ptr<SatGamma>>(m, "SatGamma")
       .def(py::init<double,double,double>(), py::arg("gs"), py::arg("g0"),
            py::arg("beta"))
       .def(py::init<std::shared_ptr<Interpolate>,std::shared_ptr<Interpolate>,std::shared_ptr<Interpolate>>(), py::arg("gs"), py::arg("g0"),
@@ -222,7 +222,7 @@ PYBIND11_MODULE(hardening, m) {
       .def("beta", &SatGamma::beta)
       ;
 
-  py::class_<Chaboche, std::shared_ptr<Chaboche>>(m, "Chaboche", py::base<NonAssociativeHardening>())
+  py::class_<Chaboche, NonAssociativeHardening, std::shared_ptr<Chaboche>>(m, "Chaboche")
       .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>, bool>(),
            py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("nonisothermal") = true)
       .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<GammaModel>>, bool>(),

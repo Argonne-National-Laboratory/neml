@@ -1,6 +1,6 @@
-#include "surfaces.h"
+#include "pyhelp.h" // include first to avoid annoying redef warning
 
-#include "pyhelp.h"
+#include "surfaces.h"
 
 #include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
@@ -87,22 +87,22 @@ PYBIND11_MODULE(surfaces, m) {
            }, "Yield function Hessian: history-history")
       ;
  
-  py::class_<IsoJ2, std::shared_ptr<IsoJ2>>(m, "IsoJ2", py::base<YieldSurface>())
+  py::class_<IsoJ2, YieldSurface, std::shared_ptr<IsoJ2>>(m, "IsoJ2")
       .def(py::init<>())
       ;
 
-  py::class_<IsoKinJ2, std::shared_ptr<IsoKinJ2>>(m, "IsoKinJ2", py::base<YieldSurface>())
+  py::class_<IsoKinJ2, YieldSurface, std::shared_ptr<IsoKinJ2>>(m, "IsoKinJ2")
       .def(py::init<>())
       ;
 
-  py::class_<IsoKinJ2I1, std::shared_ptr<IsoKinJ2I1>>(m, "IsoKinJ2I1", py::base<YieldSurface>())
+  py::class_<IsoKinJ2I1, YieldSurface, std::shared_ptr<IsoKinJ2I1>>(m, "IsoKinJ2I1")
       .def(py::init<double, double>(), py::arg("h"), py::arg("l"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(),
            py::arg("h"), py::arg("l"))
 
       ;
 
-  py::class_<IsoJ2I1, std::shared_ptr<IsoJ2I1>>(m, "IsoJ2I1", py::base<YieldSurface>())
+  py::class_<IsoJ2I1, YieldSurface, std::shared_ptr<IsoJ2I1>>(m, "IsoJ2I1")
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("h"), py::arg("l"))
       .def(py::init([](double h, double l)
                     {

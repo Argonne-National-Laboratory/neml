@@ -1,6 +1,9 @@
 #ifndef PYHELP_H
 #define PYHELP_H
 
+// To fix redef warnings
+#include "Python.h"
+
 #include "pybind11/pybind11.h"
 #include "pybind11/numpy.h"
 

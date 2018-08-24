@@ -69,4 +69,9 @@ endif()
 
 ### BASE LIBRARY ###
 add_subdirectory(src)
-add_subdirectory(util/abaqus)
+
+### ABAQUS HELPER ###
+option(ABAQUS_UTILS "Generate helpers for Abaqus UMATS" OFF)
+if (ABAQUS_UTILS)
+      add_subdirectory(util/abaqus)
+endif()

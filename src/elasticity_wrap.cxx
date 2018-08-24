@@ -1,6 +1,7 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "elasticity.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
 
 #include "pybind11/pybind11.h"
@@ -22,22 +23,22 @@ PYBIND11_MODULE(elasticity, m) {
       .def("modulus", &Modulus::modulus, "Modulus as a function of temperature.")
       ;
 
-  py::class_<ShearModulus, std::shared_ptr<ShearModulus>>(m, "ShearModulus", py::base<Modulus>())
+  py::class_<ShearModulus, Modulus, std::shared_ptr<ShearModulus>>(m, "ShearModulus")
       .def(py::init<double>(), py::arg("mu"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("mu"))
       ;
 
-  py::class_<BulkModulus, std::shared_ptr<BulkModulus>>(m, "BulkModulus", py::base<Modulus>())
+  py::class_<BulkModulus, Modulus, std::shared_ptr<BulkModulus>>(m, "BulkModulus")
       .def(py::init<double>(), py::arg("K"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("K"))
       ;
 
-  py::class_<YoungsModulus, std::shared_ptr<YoungsModulus>>(m, "YoungsModulus", py::base<Modulus>())
+  py::class_<YoungsModulus, Modulus, std::shared_ptr<YoungsModulus>>(m, "YoungsModulus")
       .def(py::init<double>(), py::arg("E"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("E"))
       ;
 
-  py::class_<PoissonsRatio, std::shared_ptr<PoissonsRatio>>(m, "PoissonsRatio", py::base<Modulus>())
+  py::class_<PoissonsRatio, Modulus, std::shared_ptr<PoissonsRatio>>(m, "PoissonsRatio")
       .def(py::init<double>(), py::arg("nu"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("nu"))
       ;
@@ -67,14 +68,14 @@ PYBIND11_MODULE(elasticity, m) {
       .def_property_readonly("valid", &LinearElasticModel::valid, "Good or dummy model.")
       ;
 
-  py::class_<IsotropicLinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel", py::base<LinearElasticModel>())
+  py::class_<IsotropicLinearElasticModel, LinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel")
       .def(py::init<std::shared_ptr<ShearModulus>, std::shared_ptr<BulkModulus>>(),
            py::arg("shear_modulus"), py::arg("bulk_modulus"))
       .def(py::init<std::shared_ptr<YoungsModulus>, std::shared_ptr<PoissonsRatio>>(),
            py::arg("youngs_modulus"), py::arg("poissons_ratio"))
       ;
   
-  py::class_<BlankElasticModel, std::shared_ptr<BlankElasticModel>>(m, "BlankElasticModel", py::base<LinearElasticModel>())
+  py::class_<BlankElasticModel, LinearElasticModel, std::shared_ptr<BlankElasticModel>>(m, "BlankElasticModel")
       .def(py::init<>())
       ;
 }
