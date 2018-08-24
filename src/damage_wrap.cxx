@@ -32,7 +32,7 @@ PYBIND11_MODULE(damage, m) {
   py::class_<SDTrialState, TrialState>(m, "SDTrialState")
       ;
 
-  py::class_<NEMLScalarDamagedModel_sd, NEMLDamagedModel_sd, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd")
+  py::class_<NEMLScalarDamagedModel_sd, NEMLDamagedModel_sd, Solvable, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd")
       .def("damage",
            [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> double
            {
@@ -77,29 +77,6 @@ PYBIND11_MODULE(damage, m) {
             py_error(ier);
             return ddamage;
            }, "The derivative of the damage evolution equation wrt. stress.") 
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &NEMLScalarDamagedModel_sd::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](NEMLScalarDamagedModel_sd & m, SDTrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> x, SDTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      // End remove block
       .def("make_trial_state",
            [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::unique_ptr<SDTrialState>
            {

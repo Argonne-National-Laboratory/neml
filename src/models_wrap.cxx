@@ -130,7 +130,7 @@ PYBIND11_MODULE(models, m) {
   py::class_<GITrialState, TrialState>(m, "GITrialState")
       ;
 
-  py::class_<SmallStrainPerfectPlasticity, NEMLModel_sd, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity")
+  py::class_<SmallStrainPerfectPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity")
       .def(py::init<std::shared_ptr<LinearElasticModel>, 
            std::shared_ptr<YieldSurface>, 
            double, double,
@@ -167,33 +167,9 @@ PYBIND11_MODULE(models, m) {
 
               return ts;
            }, "Setup trial state for solve.")
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &SmallStrainPerfectPlasticity::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](SmallStrainPerfectPlasticity & m, SSPPTrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> x, SSPPTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      ;
-      // End remove block
       ;
 
-  py::class_<SmallStrainRateIndependentPlasticity, NEMLModel_sd, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
+  py::class_<SmallStrainRateIndependentPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool, double, bool>(),
            py::arg("elastic"), py::arg("flow"),
            py::arg("alpha") = 0.0,
@@ -223,33 +199,9 @@ PYBIND11_MODULE(models, m) {
 
               return ts;
            }, "Setup trial state for solve.")
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &SmallStrainRateIndependentPlasticity::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](SmallStrainRateIndependentPlasticity & m, SSRIPTrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> x, SSRIPTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      ;
-      // End remove block
       ;
 
-  py::class_<SmallStrainCreepPlasticity, NEMLModel_sd, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity")
+  py::class_<SmallStrainCreepPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
            py::arg("elastic"),
            py::arg("plastic"), py::arg("creep"),
@@ -279,35 +231,11 @@ PYBIND11_MODULE(models, m) {
 
               return ts;
            }, "Setup trial state for solve.")
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &SmallStrainCreepPlasticity::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](SmallStrainCreepPlasticity & m, SSRIPTrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> x, SSCPTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      ;
-      // End remove block
       ;
 
 
 
-  py::class_<GeneralIntegrator, NEMLModel_sd, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
+  py::class_<GeneralIntegrator, NEMLModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
       .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<GeneralFlowRule>, double, double, int , bool, int>(),
            py::arg("elastic"),
            py::arg("rule"),
@@ -338,30 +266,6 @@ PYBIND11_MODULE(models, m) {
               py_error(ier);
               return ts;
            }, "Setup trial state for solve.")
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &GeneralIntegrator::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](GeneralIntegrator & m, GITrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> x, GITrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      ;
-      // End remove block
       ;
 
   py::class_<KMRegimeModel, NEMLModel_sd, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel")

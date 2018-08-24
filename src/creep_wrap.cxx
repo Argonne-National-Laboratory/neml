@@ -20,7 +20,7 @@ PYBIND11_MODULE(creep, m) {
   py::class_<CreepModelTrialState, TrialState>(m, "CreepModelTrialState")
       ;
 
-  py::class_<CreepModel, std::shared_ptr<CreepModel>>(m, "CreepModel")
+  py::class_<CreepModel, Solvable, std::shared_ptr<CreepModel>>(m, "CreepModel")
       .def("update",
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::tuple<py::array_t<double>, py::array_t<double>>
            {
@@ -92,32 +92,6 @@ PYBIND11_MODULE(creep, m) {
             return ts;
 
            }, "Setup trial state for solve")
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &CreepModel::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](CreepModel & m, CreepModelTrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](CreepModel & m, py::array_t<double, py::array::c_style> x, CreepModelTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      ;
-      // End remove block
-
-
     ;
 
   py::class_<J2CreepModel, CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel")
