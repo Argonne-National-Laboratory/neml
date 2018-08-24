@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage
+from neml import interpolate, solvers, models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage
 from common import *
 
 import unittest
@@ -192,7 +192,7 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.xi = 0.478
@@ -254,7 +254,7 @@ class TestMarkDamage(unittest.TestCase, CommonScalarDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.C = 8.0e-6
@@ -319,7 +319,7 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.A = 8.0e-6
@@ -385,7 +385,7 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.W0 = 10.0
@@ -455,7 +455,7 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.W0 = 10.0
