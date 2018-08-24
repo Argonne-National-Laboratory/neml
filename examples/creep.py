@@ -6,7 +6,7 @@ sys.path.append('..')
 import numpy as np
 import scipy.integrate as quad
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, creep
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, creep
 
 import matplotlib.pyplot as plt
 
@@ -69,7 +69,7 @@ def example2():
   iso = hardening.LinearIsotropicHardeningRule(sY, H)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-  pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  pmodel = models.SmallStrainRateIndependentPlasticity(elastic, flow)
   
   smax = 250.0
   R = -0.5
@@ -80,7 +80,7 @@ def example2():
   res1 = drivers.stress_cyclic(pmodel, smax, R, srate, ncycles, 
       hold_time = [0,hold])
 
-  model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, verbose = False)
+  model = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, verbose = False)
 
   res2 = drivers.stress_cyclic(model, smax, R, srate, ncycles, 
       hold_time = [0,hold], verbose = False)
@@ -109,7 +109,7 @@ def example3():
   iso = hardening.LinearIsotropicHardeningRule(sY, H)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-  pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  pmodel = models.SmallStrainRateIndependentPlasticity(elastic, flow)
   
   smax = 250.0
   R = -0.5
@@ -120,7 +120,7 @@ def example3():
   res1 = drivers.stress_cyclic(pmodel, smax, R, srate, ncycles, 
       hold_time = [0,hold])
 
-  model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, verbose = False)
+  model = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, verbose = False)
 
   res2 = drivers.stress_cyclic(model, smax, R, srate, ncycles, 
       hold_time = [0,hold], verbose = False)
@@ -150,8 +150,8 @@ def example4():
   iso = hardening.LinearIsotropicHardeningRule(sY, H)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-  pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
-  model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
+  pmodel = models.SmallStrainRateIndependentPlasticity(elastic, flow)
+  model = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
 
   res = drivers.creep(model, 205.0, 3600.0, 100.0, verbose = False, 
       nsteps_up = 500)

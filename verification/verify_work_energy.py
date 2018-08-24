@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 
@@ -22,22 +22,22 @@ if __name__ == "__main__":
   shear = elasticity.ShearModulus(mu)
   bulk = elasticity.BulkModulus(K)
   elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-  model1 = neml.SmallStrainElasticity(elastic)
+  model1 = models.SmallStrainElasticity(elastic)
   
   surface = surfaces.IsoJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
 
   flow1 = ri_flow.RateIndependentAssociativeFlow(surface, iso)
-  model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow1)
+  model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow1)
   
   n = 10.0
   eta = 100.0
   g = visco_flow.GPowerLaw(n)
   vmodel1 = visco_flow.PerzynaFlowRule(surface, iso, g, eta)
   flow2 = general_flow.TVPFlowRule(elastic, vmodel1)
-  model3 = neml.GeneralIntegrator(flow2)
+  model3 = models.GeneralIntegrator(elastic, flow2)
   
-  models = [model1, model2, model3]
+  mods = [model1, model2, model3]
 
   ey = s0 / E
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
   shouldp = 0.0
   
   print("Elastic range:")
-  for model in models:
+  for model in mods:
     res = drivers.uniaxial_test(model, erate, emax = strain, nsteps = 200)
     ef = res['energy_density'][-1]
     pf = res['plastic_work'][-1]
@@ -63,10 +63,10 @@ if __name__ == "__main__":
   shoulde = s0 * ey / 2.0 + dstrain * s0 + dstrain * dstrain * Kp / 2.0
   shouldp = dstrain * s0 + dstrain * dstrain * Kp / 2.0
 
-  models = [model2, model3]
+  mods = [model2, model3]
   
   print("Plastic range:")
-  for model in models:
+  for model in mods:
     res = drivers.uniaxial_test(model, erate, emax = strain)
     ef = res['energy_density'][-1]
     pf = res['plastic_work'][-1]
@@ -78,7 +78,7 @@ if __name__ == "__main__":
   iso2 = hardening.VoceIsotropicHardeningRule(s0, s0/5, s0)
   vmodel2 = visco_flow.PerzynaFlowRule(surface, iso2, g, eta)
   flow3 = general_flow.TVPFlowRule(elastic, vmodel2)
-  model4 = neml.GeneralIntegrator(flow3) 
+  model4 = models.GeneralIntegrator(elastic, flow3) 
 
   res = drivers.strain_cyclic(model4, 2*ey, -1.0, erate, 50)
   plt.plot(res['strain'], res['stress'], 'k-')

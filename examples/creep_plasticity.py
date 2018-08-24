@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 sys.path.append('../test')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, creep
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, creep
 
 from common import differentiate
 
@@ -29,9 +29,9 @@ if __name__ == "__main__":
         poisson)
     surface = surfaces.IsoJ2()
 
-    pmodel = neml.SmallStrainPerfectPlasticity(elastic, surface, sY)
+    pmodel = models.SmallStrainPerfectPlasticity(elastic, surface, sY)
 
-    model = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
+    model = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
     
     res = drivers.creep(model, 200.0, 1.0e2, 1000.0, verbose = True)
     plt.plot(res['time'], res['strain'])

@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, interpolate
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, interpolate
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,7 +21,7 @@ if __name__ == "__main__":
   ifn = interpolate.PiecewiseLinearInterpolate(points, values)
   iso = hardening.InterpolatedIsotropicHardeningRule(ifn)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
   res = drivers.uniaxial_test(model, 1.0e-4, emax = 0.05)
   

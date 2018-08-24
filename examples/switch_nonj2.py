@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, interpolate, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, interpolate, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -64,14 +64,14 @@ if __name__ == "__main__":
   visco_flow_m = visco_flow.ChabocheFlowRule(surface_m, hmodel_rd, eta_m, 
       n_interp)
   rd_flow = general_flow.TVPFlowRule(elastic_m, visco_flow_m)
-  rd_model = neml.GeneralIntegrator(elastic_m, rd_flow)
+  rd_model = models.GeneralIntegrator(elastic_m, rd_flow)
   
   ri_flow_m = ri_flow.RateIndependentNonAssociativeHardening(surface_m, 
       hmodel_ri)
-  ri_model = neml.SmallStrainRateIndependentPlasticity(elastic_m,
+  ri_model = models.SmallStrainRateIndependentPlasticity(elastic_m,
       ri_flow_m)
 
-  model = neml.KMRegimeModel(elastic_m, [ri_model, rd_model], [g0],
+  model = models.KMRegimeModel(elastic_m, [ri_model, rd_model], [g0],
       kboltz, b, eps0)
 
   smax = 400.0

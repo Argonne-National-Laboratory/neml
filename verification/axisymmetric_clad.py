@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import axisym, neml, elasticity, surfaces, creep
+from neml import axisym, models, elasticity, surfaces, creep
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -35,11 +35,11 @@ def gen_material(E, nu, sY, alpha, A, n):
   elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
   surface = surfaces.IsoJ2()
 
-  pmodel = neml.SmallStrainPerfectPlasticity(elastic, surface, sY)
+  pmodel = models.SmallStrainPerfectPlasticity(elastic, surface, sY)
   smodel = creep.PowerLawCreep(A, n)
   cmodel = creep.J2CreepModel(smodel)
 
-  return neml.SmallStrainCreepPlasticity(pmodel, cmodel, alpha = alpha)
+  return models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel, alpha = alpha)
 
 if __name__ == "__main__":
   vdata = np.loadtxt('warp-3d-data.csv', delimiter = ',', skiprows = 1)

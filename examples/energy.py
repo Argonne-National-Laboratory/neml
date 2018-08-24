@@ -6,7 +6,7 @@ sys.path.append('..')
 import numpy as np
 import scipy.integrate as quad
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, creep, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, creep, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 
@@ -23,16 +23,16 @@ if __name__ == "__main__":
   iso = hardening.LinearIsotropicHardeningRule(sY, H)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-  model1 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  model1 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
-  model2 = neml.SmallStrainPerfectPlasticity(elastic, surface, sY)
+  model2 = models.SmallStrainPerfectPlasticity(elastic, surface, sY)
  
   n = 10.0
   gpower = visco_flow.GPowerLaw(n)
   eta = 100.0
   vflow = visco_flow.PerzynaFlowRule(surface, iso, gpower, eta)
   gflow = general_flow.TVPFlowRule(elastic, vflow)
-  model3 = neml.GeneralIntegrator(elastic, gflow)
+  model3 = models.GeneralIntegrator(elastic, gflow)
 
   # T is in hours, strain in percent, stress in MPa
   A = 1.85e-9
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
   smodel = creep.NortonBaileyCreep(A, n, m)
   cmodel = creep.J2CreepModel(smodel)
-  model4 = neml.SmallStrainCreepPlasticity(elastic, model1, cmodel)
+  model4 = models.SmallStrainCreepPlasticity(elastic, model1, cmodel)
 
   erate = 1.0e-4
   emax = 0.025

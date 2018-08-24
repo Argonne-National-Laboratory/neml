@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from neml import neml, parse, uniaxial, elasticity, surfaces
+from neml import models, parse, uniaxial, elasticity, surfaces
 from neml.drivers import newton, classify
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -218,7 +218,7 @@ def elastic_model(E, a, nu = 0.3):
   vmodel = elasticity.PoissonsRatio(nu)
   elmodel = elasticity.IsotropicLinearElasticModel(Emodel, vmodel)
 
-  return neml.SmallStrainElasticity(elmodel, alpha = a)
+  return models.SmallStrainElasticity(elmodel, alpha = a)
 
 def verify():
   T1 = 0
@@ -328,7 +328,7 @@ def plastic_model(E, Y, a, nu = 0.3):
   elmodel = elasticity.IsotropicLinearElasticModel(Emodel, vmodel)
   surf = surfaces.IsoJ2()
   
-  return neml.SmallStrainPerfectPlasticity(elmodel, surf, Y, alpha = a)
+  return models.SmallStrainPerfectPlasticity(elmodel, surf, Y, alpha = a)
 
 def bree_point(A1, A2, A3, l1, l2, l3, E1, E2, E3, Y1, Y2, Y3, a1, a2, a3, 
     T1, T2, ncycles = 5, nsteps = 25):

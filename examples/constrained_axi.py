@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import axisym, neml, elasticity, surfaces, creep
+from neml import axisym, models, elasticity, surfaces, creep
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,7 +31,7 @@ def gen_material(E, nu, alpha):
   poissons = elasticity.PoissonsRatio(nu)
   elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
 
-  return neml.SmallStrainElasticity(elastic, alpha = alpha)
+  return models.SmallStrainElasticity(elastic, alpha = alpha)
 
 if __name__ == "__main__":
   E = 100000.0

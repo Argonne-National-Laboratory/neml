@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, uniaxial
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, uniaxial
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,7 +29,7 @@ if __name__ == "__main__":
   hrule = hardening.Chaboche(iso, c, gmodels)
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
   umodel = uniaxial.UniaxialModel(model, verbose = True)
 

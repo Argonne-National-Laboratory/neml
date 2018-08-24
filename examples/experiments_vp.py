@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  model = neml.GeneralIntegrator(elastic, flow, verbose = False)
+  model = models.GeneralIntegrator(elastic, flow, verbose = False)
   
   # Uniaxial stress/strain curves at decades of strain rates
   erates = np.logspace(-6,2,9)

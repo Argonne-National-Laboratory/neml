@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, uniaxial
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, uniaxial
 
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -12,17 +12,17 @@ import numpy as np
 import multiprocessing
 
 def single_material_generator(E, nu, sY, alpha, n):
-  models = []
+  mods = []
   for i in range(n):
     youngs = elasticity.YoungsModulus(E)
     poisson = elasticity.PoissonsRatio(nu)
     elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
     surface = surfaces.IsoJ2()
-    models.append(
-        uniaxial.UniaxialModel(neml.SmallStrainPerfectPlasticity(
+    mods.append(
+        uniaxial.UniaxialModel(models.SmallStrainPerfectPlasticity(
           elastic, surface, sY, alpha = alpha)))
 
-  return models
+  return mods
 
 def classify_case(strain, energy, work, ncycle, rtol = 1.0e-4, atol = 1.0e-10):
   ub = energy[-1]

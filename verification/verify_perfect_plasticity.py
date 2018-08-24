@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
   surface = surfaces.IsoJ2()
 
-  model = neml.SmallStrainPerfectPlasticity(elastic, surface, s0)
+  model = models.SmallStrainPerfectPlasticity(elastic, surface, s0)
   
   erate = 1.0e-2
   strain = 0.02

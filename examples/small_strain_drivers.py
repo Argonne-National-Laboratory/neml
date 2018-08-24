@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -201,7 +201,7 @@ if __name__ == "__main__":
   hrule = hardening.Chaboche(iso, c, r)
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True,
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True,
       check_kt = False)
   example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0])/10.0, 300.0, 100.0, 100)
   """
@@ -238,7 +238,7 @@ if __name__ == "__main__":
   flow = visco_flow.ChabocheFlowRule(
       surface, hmodel, fluidity, n)
 
-  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
+  model = models.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
   """
 
   n = 20.0
@@ -279,7 +279,7 @@ if __name__ == "__main__":
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  model = neml.GeneralIntegrator(elastic, flow, verbose = False) 
+  model = models.GeneralIntegrator(elastic, flow, verbose = False) 
 
   example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 100.0, 100)
   example_stress(model, np.array([300.0,0,0,0,0,0]), 300.0, 100, 100)

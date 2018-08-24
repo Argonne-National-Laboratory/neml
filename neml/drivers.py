@@ -7,7 +7,7 @@ from numpy.polynomial.legendre import leggauss
 
 import numpy.random as ra
 
-from nlsolvers import MaximumIterations, MaximumSubdivisions, newton
+from nlsolvers import MaximumIterations, MaximumSubdivisions, newton, scalar_newton
 
 class Driver(object):
   """

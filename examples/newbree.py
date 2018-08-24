@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, surfaces, hardening, ri_flow, uniaxial, axisym
+from neml import solvers, models, elasticity, surfaces, hardening, ri_flow, uniaxial, axisym
 
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -16,7 +16,7 @@ def single_material_generator(E, nu, sY, alpha):
   poisson = elasticity.PoissonsRatio(nu)
   elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
   surface = surfaces.IsoJ2()
-  model = neml.SmallStrainPerfectPlasticity(
+  model = models.SmallStrainPerfectPlasticity(
     elastic, surface, sY, alpha = alpha)
 
   return model

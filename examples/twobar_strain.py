@@ -7,7 +7,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
 
 def cycle_generator(de, edot):
   period = np.abs(2.0 * de/ edot)
@@ -37,7 +37,7 @@ def grid_classical(max_x = 1.1, max_y = 2.5, A = 1.0, sigY = 100.0,
 
   surface = surfaces.IsoJ2()
 
-  model = neml.SmallStrainPerfectPlasticity(emodel, surface, sigY)
+  model = models.SmallStrainPerfectPlasticity(emodel, surface, sigY)
 
   points = []
   conditions = []

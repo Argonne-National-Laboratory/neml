@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,8 +38,9 @@ def koo():
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
-  cs = np.array([C1, C2, C3])
-  gs = np.array([g1, g2, g3])
+  cs = [C1, C2, C3]
+  gs = [hardening.ConstantGamma(g1), hardening.ConstantGamma(g2),
+      hardening.ConstantGamma(g3)]
   hmodel = hardening.Chaboche(iso, cs, gs)
 
   fluidity = visco_flow.ConstantFluidity(eta)
@@ -49,7 +50,7 @@ def koo():
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  model = neml.GeneralIntegrator(flow)
+  model = models.GeneralIntegrator(elastic, flow)
 
 
   e500 = np.array([0.0058793164, 0.0052876081, 0.004710156, 0.0042916722, 0.0038731605, 0.0032237573, 0.0027900399, 0.0024864991, 0.0017489338, 0.000635346, -0.0006668255, -0.0017811254, -0.0034891722, -0.0044012326, -0.0059358454, -0.005661599, -0.0051996206, -0.0048027165, -0.0044347716, -0.0039945684, -0.0034388636, -0.0032440594, -0.0026585856, -0.002036857, -0.001161945, -0.0003736313, 0.0008344368, 0.0022454705, 0.0035554683, 0.0052854997])
@@ -108,8 +109,8 @@ def uniaxial():
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
-  cs = np.array([C1])
-  gs = np.array([g1])
+  cs = [C1]
+  gs = [hardening.ConstantGamma(g1)]
   hmodel = hardening.Chaboche(iso, cs, gs)
 
   fluidity = visco_flow.ConstantFluidity(eta)
@@ -119,7 +120,7 @@ def uniaxial():
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  model = neml.GeneralIntegrator(flow)
+  model = models.GeneralIntegrator(elastic, flow)
 
   erates = [1.0e-7, 1.0e-2, 1.0e-1]
  

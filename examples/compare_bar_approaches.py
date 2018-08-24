@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, surfaces, hardening, ri_flow, arbbar, drivers
+from neml import models, elasticity, surfaces, hardening, ri_flow, arbbar, drivers
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,7 +47,7 @@ def make_mat(E, nu, sy, k, a):
   harden = hardening.LinearIsotropicHardeningRule(sy, k)
   
   flow = ri_flow.RateIndependentAssociativeFlow(surface, harden)
-  return neml.SmallStrainRateIndependentPlasticity(elastic, flow, alpha = a)
+  return models.SmallStrainRateIndependentPlasticity(elastic, flow, alpha = a)
 
 def old_way(A1, A2, mat, l, P, dT, ncycles, nsteps_load = 20, nsteps_cycle = 40):
   T1, T2, per = cycle_generator(dT, 0, 1)
