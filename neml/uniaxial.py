@@ -61,12 +61,12 @@ class UniaxialModel(object):
     """
     return self.model.alpha(T)
 
-  def elastic_strains(self, s, T):
+  def elastic_strains(self, s, T, h):
     """
       Returns the elastic strain for a given stress and temperature
     """
     s_vec = self.ss2sv(s)
-    return sefl.model.elastic_strains(s_vec, T)[0]
+    return self.model.elastic_strains(s_vec, T, h)[0]
 
   def update(self, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n):
     """

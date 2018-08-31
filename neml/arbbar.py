@@ -284,6 +284,7 @@ class Bar(object):
     self.stress = np.zeros((1,))
     self.strain = np.zeros((1,))
     self.mstrain = np.zeros((1,))
+    self.estrain = np.zeros((1,))
     self.tstrain = np.zeros((1,))
     self.energy = np.zeros((1,))
     self.dissipation = np.zeros((1,))
@@ -293,6 +294,7 @@ class Bar(object):
     self.stress_next = 0.0
     self.strain_next = 0.0
     self.mstrain_next = 0.0
+    self.estrain_next = 0.0
     self.tstrain_next = 0.0
     self.energy_next = 0.0
     self.dissipation_next = 0.0
@@ -327,6 +329,9 @@ class Bar(object):
             self.stress[-1], self.history[-1],
             self.energy[-1], self.dissipation[-1])
 
+    self.estrain_next = self.mat.elastic_strains(self.stress_next, self.T_next,
+        self.history_next)
+
     return self.stress_next * self.A, tangent * self.A / self.l
 
   def advance_step(self):
@@ -336,6 +341,7 @@ class Bar(object):
     self.stress = np.append(self.stress, self.stress_next)
     self.strain = np.append(self.strain, self.strain_next)
     self.mstrain = np.append(self.mstrain, self.mstrain_next)
+    self.estrain = np.append(self.estrain, self.estrain_next)
     self.tstrain = np.append(self.tstrain, self.tstrain_next)
     self.energy = np.append(self.energy, self.energy_next)
     self.dissipation = np.append(self.dissipation, self.dissipation_next)

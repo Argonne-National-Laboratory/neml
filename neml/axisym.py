@@ -203,7 +203,8 @@ class VesselSectionProblem(object):
     cylindrical vessel": the Bree problem and my steady-state axisymmetric 
     model.
   """
-  def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8):
+  def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
+      p_ext = lambda t: 0.0):
     """
       Parameters:
         rs      radii deliminating each region
@@ -215,6 +216,7 @@ class VesselSectionProblem(object):
       Optional:
         rtol    relative tolerance for N-R solve
         atol    absolute tolerance for N-R solve
+        p_ext   external pressure, as a function of t
     """
     # Check
     if len(rs) - 1 != len(mats):
@@ -227,6 +229,7 @@ class VesselSectionProblem(object):
     self.ns = ns
     self.T = T
     self.p = p
+    self.p_ext = p_ext
 
     self.rtol = rtol
     self.atol = atol
@@ -234,9 +237,12 @@ class VesselSectionProblem(object):
     self.ts = np.diff(rs)
     self.t = np.sum(self.ts)
     self.r = rs[-1]
+    self.r_inner = rs[0]
+    self.r_outer = rs[-1]
 
     self.times = [0.0]
     self.pressures = [self.p(0)]
+    self.external_pressures = [self.p_ext(0.0)]
 
 def rect(n):
   """
@@ -262,7 +268,7 @@ class BreeProblem(VesselSectionProblem):
     pressure.
   """
   def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
-      itype = "gauss"):
+      itype = "gauss", p_ext = lambda t: 0.0):
     """
       Parameters:
         rs      radii deliminating each region
@@ -276,9 +282,10 @@ class BreeProblem(VesselSectionProblem):
         atol    absolute tolerance for N-R solve
         bias    bias the mesh towards the interfaces
         itype   "rectangle" or "gauss", defaults to "gauss"
+        p_ext   external pressure as a function of t
     """
     super(BreeProblem, self).__init__(rs, mats, ns, T, p,
-        rtol = rtol, atol = atol)
+        rtol = rtol, atol = atol, p_ext = p_ext)
     
     self.regions = np.diff(self.rs)
     self.dlength = [r for r,n in zip(self.regions, self.ns) for i in range(n)]
@@ -298,7 +305,7 @@ class BreeProblem(VesselSectionProblem):
 
     self.npoints = len(self.ipoints)
     
-    self.P = lambda t: p(t) * self.r / self.t
+    self.P = lambda t: (p(t) * self.r_inner - p_ext(t) * self.r_outer) / self.t
 
     # Setup the n bar model
     self.barmodel = arbbar.BarModel()
@@ -325,6 +332,8 @@ class BreeProblem(VesselSectionProblem):
     self.tstrains = [np.array([self.barmodel[1][2][i]['object'].tstrain[-1]
       for i in range(self.npoints)])]
     self.mstrains = [np.array([self.barmodel[1][2][i]['object'].mstrain[-1]
+      for i in range(self.npoints)])]
+    self.estrains = [np.array([self.barmodel[1][2][i]['object'].estrain[-1]
       for i in range(self.npoints)])]
     self.histories = [np.array([self.barmodel[1][2][i]['object'].history[-1]
       for i in range(self.npoints)])]
@@ -357,6 +366,7 @@ class BreeProblem(VesselSectionProblem):
     
     self.times.append(t)
     self.pressures.append(self.p(t))
+    self.external_pressures.append(self.p_ext(t))
     self.hoop.append(self.P(t))
     self.force.append(self.barmodel.node[2]['forces'][-1])
     self.axialstrain.append(self.barmodel.node[2]['displacements'][-1])
@@ -368,6 +378,8 @@ class BreeProblem(VesselSectionProblem):
     self.tstrains.append(np.array([self.barmodel[1][2][i]['object'].tstrain[-1]
       for i in range(self.npoints)]))
     self.mstrains.append(np.array([self.barmodel[1][2][i]['object'].mstrain[-1]
+      for i in range(self.npoints)]))
+    self.estrains.append(np.array([self.barmodel[1][2][i]['object'].estrain[-1]
       for i in range(self.npoints)]))
     self.histories.append(np.array([self.barmodel[1][2][i]['object'].history[-1]
       for i in range(self.npoints)]))
@@ -391,7 +403,8 @@ class AxisymmetricProblem(VesselSectionProblem):
     when we call into the material model
   """
   def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
-      bias = False, factor = 2.0, ngpts = 1, constrained = False):
+      bias = False, factor = 2.0, ngpts = 1, constrained = False,
+      p_ext = lambda t: 0.0):
     """
       Parameters:
         rs      radii deliminating each region
@@ -407,9 +420,10 @@ class AxisymmetricProblem(VesselSectionProblem):
         factor      bias factor
         ngpts       number of gauss points per element
         constrained constrain the cylinder against thermal expansion
+        p_ext       external pressure, as a function of time
     """
     super(AxisymmetricProblem, self).__init__(rs, mats, ns, T, p,
-        rtol = rtol, atol = atol)
+        rtol = rtol, atol = atol, p_ext = p_ext)
 
     self.constrained = constrained
 
@@ -434,6 +448,7 @@ class AxisymmetricProblem(VesselSectionProblem):
     self.strains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
     self.tstrains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
     self.mstrains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
+    self.estrains = [np.array([np.zeros((self.ngpts,6)) for n in self.ns for i in range(n)])]
 
     # Save a bit of time
     self.Nl = np.array([[(1-xi)/2, (1+xi)/2] for xi in self.gpoints])
@@ -449,7 +464,8 @@ class AxisymmetricProblem(VesselSectionProblem):
         t       next time
     """
     T = np.array([self.T(xi, t) for xi in self.mesh])
-    p = self.p(t)
+    p_left = self.p(t)
+    p_right = self.p_ext(t)
 
     # Get a guess
     if len(self.displacements) < 2:
@@ -463,7 +479,7 @@ class AxisymmetricProblem(VesselSectionProblem):
     if self.constrained:
       x[-1] = 0.0
 
-    R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
+    R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, estrains, stresses, histories = self.RJ(x, T, p_left, p_right, t)
 
     if self.constrained:
       nR0 = la.norm(R[:-1])
@@ -494,7 +510,7 @@ class AxisymmetricProblem(VesselSectionProblem):
         x[:-1] -= x1
         x[-1] -= x2
 
-      R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, stresses, histories = self.RJ(x, T, p, t)
+      R, (J11_du,J11_d,J11_dl,J12,J21,J22), strains, tstrains, mstrains, estrains, stresses, histories = self.RJ(x, T, p_left, p_right, t)
 
       if self.constrained:
         nR = la.norm(R[:-1])
@@ -507,8 +523,8 @@ class AxisymmetricProblem(VesselSectionProblem):
 
     if i == ilimit:
       raise RuntimeError("Exceeded maximum allowed iterations!")
-
-    return p, T, strains, tstrains, mstrains, stresses, histories, x[:-1], x[-1]
+    
+    return p_left, p_right, T, strains, tstrains, mstrains, estrains, stresses, histories, x[:-1], x[-1]
 
   def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
       div = 2, max_div = 4, predict = 1.0, ilimit = 10):
@@ -529,15 +545,17 @@ class AxisymmetricProblem(VesselSectionProblem):
     while cstep != istep:
       cstep += sstep      
       try:
-        p, T, strains, tstrains, mstrains, stresses, histories, disp, axial = self.take_step(
+        p_left, p_right, T, strains, tstrains, mstrains, estrains, stresses, histories, disp, axial = self.take_step(
             self.times[-1] + dt * float(cstep)/istep, rtol = rtol, atol = atol,
             verbose = verbose, predict = predict, ilimit = ilimit)
         self.times.append(t)
-        self.pressures.append(p)
+        self.pressures.append(p_left)
+        self.external_pressures.append(p_right)
         self.temperatures.append(T)
         self.strains.append(strains)
         self.tstrains.append(tstrains)
         self.mstrains.append(mstrains)
+        self.estrains.append(estrains)
         self.stresses.append(stresses)
         self.histories.append(histories)
         self.displacements.append(disp)
@@ -548,10 +566,12 @@ class AxisymmetricProblem(VesselSectionProblem):
         if cdiv > max_div:
           self.times = self.times[:ostep]
           self.pressures = self.pressures[:ostep]
+          self.external_pressures = self.external_pressures[:ostep]
           self.temperatures = self.temperatures[:ostep]
           self.strains = self.strains[:ostep]
           self.tstrains = self.tstrains[:ostep]
           self.mstrains = self.mstrains[:ostep]
+          self.estrains = self.estrains[:ostep]
           self.stresses = self.stresses[:ostep]
           self.histories = self.histories[:ostep]
           self.displacements = self.displacements[:ostep]
@@ -563,10 +583,12 @@ class AxisymmetricProblem(VesselSectionProblem):
 
     self.times = self.times[:ostep] + [self.times[-1]]
     self.pressures = self.pressures[:ostep] + [self.pressures[-1]]
+    self.external_pressures = self.external_pressures[:ostep] + [self.external_pressures[-1]]
     self.temperatures = self.temperatures[:ostep] + [self.temperatures[-1]]
     self.strains = self.strains[:ostep] + [self.strains[-1]]
     self.tstrains = self.tstrains[:ostep] + [self.tstrains[-1]]
     self.mstrains = self.mstrains[:ostep] + [self.mstrains[-1]]
+    self.estrains = self.estrains[:ostep] + [self.estrains[-1]]
     self.stresses = self.stresses[:ostep] + [self.stresses[-1]]
     self.histories = self.histories[:ostep] + [self.histories[-1]]
     self.displacements = self.displacements[:ostep] + [self.displacements[-1]]
@@ -588,26 +610,33 @@ class AxisymmetricProblem(VesselSectionProblem):
     strain[:,2] = ez 
     return strain
 
-  def RJ(self, x, T, p, t):
+  def RJ(self, x, T, p_left, p_right, t):
     """
       Compute the residual, jacobian, and the rest of the updated quantities
 
       Parameters:
-        x       iterate
-        T       nodal temperatures
-        Tn      previous temperatures
-        p       left pressure
+        x           iterate
+        T           nodal temperatures
+        Tn          previous temperatures
+        p_left      left pressure
+        t           time
+        p_right     right pressure
     """
     d = x[:-1]
     ez = x[-1]
-    
+
     Fext = np.zeros((self.nnodes+1,))
-    Fext[0] = p
-    Fext[-1] = p * self.r / (2*self.t)
+    Fext[0] = p_left
+    Fext[-2] = -p_right
+    #Fext[-1] = (p_left *self.r_inner - p_right * self.r_outer) / (2*self.t)
+    # We should use the proper thick-walled vessel formula
+    Fext[-1] = (p_left * self.r_inner**2.0 / (self.r_outer**2.0 - self.r_inner**2.0) 
+        -p_right * self.r_outer**2.0 / (self.r_outer**2.0 - self.r_inner**2.0))
     
     strains = np.zeros((self.nelem, self.ngpts, 6))
     tstrains = np.zeros((self.nelem, self.ngpts, 6))
     mstrains = np.zeros((self.nelem, self.ngpts, 6))
+    estrains = np.zeros((self.nelem, self.ngpts, 6))
     stresses = np.zeros((self.nelem, self.ngpts, 6))
     histories = []
 
@@ -636,6 +665,7 @@ class AxisymmetricProblem(VesselSectionProblem):
 
       stress = np.zeros((self.ngpts,6))
       history = np.zeros((self.ngpts,len(hist_n[0])))
+      estrain = np.zeros((self.ngpts,6))
 
       for i in range(self.ngpts):
         si, hi, ti, ui, pi = mat.update_sd(mstrain[i], mstrain_n[i],
@@ -643,6 +673,8 @@ class AxisymmetricProblem(VesselSectionProblem):
             0.0, 0.0)
         stress[i] = si
         history[i] = hi
+
+        estrain[i] = mat.elastic_strains(si, T_e[i], hi)
         
         wi = self.gweights[i]
         #Actually add in our terms
@@ -669,10 +701,11 @@ class AxisymmetricProblem(VesselSectionProblem):
       strains[e] = strain
       tstrains[e] = tstrain
       mstrains[e] = mstrain
+      estrains[e] = estrain
       stresses[e] = stress
       histories.append(history)
 
-    return Fint - Fext, (A11_du,A11_d,A11_dl,A12,A21,A22), strains, tstrains, mstrains, stresses, histories
+    return Fint - Fext, (A11_du,A11_d,A11_dl,A12,A21,A22), strains, tstrains, mstrains, estrains, stresses, histories
 
 def tri_solve(DU, D, DL, c):
   """
