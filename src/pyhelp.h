@@ -8,6 +8,9 @@
 #include "pybind11/numpy.h"
 
 #include <algorithm>
+#include <stdexcept>
+
+#include "objects.h"
 
 namespace py = pybind11;
 
@@ -51,8 +54,9 @@ template<class T> py::array_t<T> alloc_mat(size_t m, size_t n)
   return arr;
 }
 
-/// Raise an exception for error codes
-void raise_py_error(int ier);
+/// Map a python object into a parameter set
+void assign_python_parameter(ParameterSet & pset, std::string name, 
+                             py::object value);
 
 } // namespace neml
 
