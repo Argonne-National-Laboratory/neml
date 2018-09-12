@@ -140,6 +140,13 @@ class Factory {
   /// Create an object from the parameter set
   std::shared_ptr<NEMLObject> create(ParameterSet & params);
 
+  /// Create and cast an object to a type
+  template<typename T>
+  std::shared_ptr<T> create(ParameterSet & params)
+  {
+    return std::static_pointer_cast<T>(create(params));
+  }
+
   /// Register a type with an identifier, create method, and parameter set
   void register_type(std::string type, 
                      std::function<std::shared_ptr<NEMLObject>(ParameterSet &)> creator,

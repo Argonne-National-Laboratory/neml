@@ -8,6 +8,23 @@
 
 namespace neml {
 
+std::string IsoJ2::type()
+{
+  return "IsoJ2";
+}
+
+std::shared_ptr<NEMLObject> IsoJ2::initialize(ParameterSet & params)
+{
+  return std::make_shared<IsoJ2>(); 
+}
+
+ParameterSet IsoJ2::parameters()
+{
+  ParameterSet pset(IsoJ2::type());
+
+  return pset;
+}
+
 // Combined isotropic/kinematic J2 surface
 IsoKinJ2::IsoKinJ2()
 {
@@ -17,6 +34,23 @@ IsoKinJ2::IsoKinJ2()
 IsoKinJ2::~IsoKinJ2()
 {
 
+}
+
+std::string IsoKinJ2::type()
+{
+  return "IsoKinJ2";
+}
+
+std::shared_ptr<NEMLObject> IsoKinJ2::initialize(ParameterSet & params)
+{
+  return std::make_shared<IsoKinJ2>(); 
+}
+
+ParameterSet IsoKinJ2::parameters()
+{
+  ParameterSet pset(IsoKinJ2::type());
+
+  return pset;
 }
 
 size_t IsoKinJ2::nhist() const
@@ -198,6 +232,29 @@ IsoKinJ2I1::IsoKinJ2I1(std::shared_ptr<Interpolate> h,
 IsoKinJ2I1::~IsoKinJ2I1()
 {
 
+}
+
+std::string IsoKinJ2I1::type()
+{
+  return "IsoKinJ2I1";
+}
+
+std::shared_ptr<NEMLObject> IsoKinJ2I1::initialize(ParameterSet & params)
+{
+  return std::make_shared<IsoKinJ2I1>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("h"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("l")
+      ); 
+}
+
+ParameterSet IsoKinJ2I1::parameters()
+{
+  ParameterSet pset(IsoKinJ2I1::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("h");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("l");
+
+  return pset;
 }
 
 size_t IsoKinJ2I1::nhist() const
@@ -407,6 +464,29 @@ int IsoKinJ2I1::df_dqds(const double* const s, const double* const q, double T,
   }
 
   return 0;
+}
+
+std::string IsoJ2I1::type()
+{
+  return "IsoJ2I1";
+}
+
+std::shared_ptr<NEMLObject> IsoJ2I1::initialize(ParameterSet & params)
+{
+  return std::make_shared<IsoJ2I1>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("h"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("l")
+      ); 
+}
+
+ParameterSet IsoJ2I1::parameters()
+{
+  ParameterSet pset(IsoJ2I1::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("h");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("l");
+
+  return pset;
 }
 
 

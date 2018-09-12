@@ -14,7 +14,7 @@ namespace neml {
 PYBIND11_MODULE(surfaces, m) {
   m.doc() = "Yield (and flow) surface definitions.";
 
-  py::class_<YieldSurface, std::shared_ptr<YieldSurface>>(m, "YieldSurface")
+  py::class_<YieldSurface, NEMLObject, std::shared_ptr<YieldSurface>>(m, "YieldSurface")
       .def_property_readonly("nhist", &YieldSurface::nhist, "Number of history variables.")
 
       .def("f", 
@@ -88,28 +88,33 @@ PYBIND11_MODULE(surfaces, m) {
       ;
  
   py::class_<IsoJ2, YieldSurface, std::shared_ptr<IsoJ2>>(m, "IsoJ2")
-      .def(py::init<>())
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<IsoJ2>(args, kwargs, {});
+                    }))
       ;
 
   py::class_<IsoKinJ2, YieldSurface, std::shared_ptr<IsoKinJ2>>(m, "IsoKinJ2")
-      .def(py::init<>())
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<IsoKinJ2>(args, kwargs, {});
+                    }))
       ;
 
   py::class_<IsoKinJ2I1, YieldSurface, std::shared_ptr<IsoKinJ2I1>>(m, "IsoKinJ2I1")
-      .def(py::init<double, double>(), py::arg("h"), py::arg("l"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(),
-           py::arg("h"), py::arg("l"))
-
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<IsoKinJ2I1>(args, kwargs, 
+                                                              {"h", "l"});
+                    }))
       ;
 
   py::class_<IsoJ2I1, YieldSurface, std::shared_ptr<IsoJ2I1>>(m, "IsoJ2I1")
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("h"), py::arg("l"))
-      .def(py::init([](double h, double l)
+       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
-                      auto hi = std::make_shared<ConstantInterpolate>(h);
-                      auto li = std::make_shared<ConstantInterpolate>(l);
-                      return new IsoJ2I1(hi, li);
-                    }), "Direct value constructor", py::arg("h"), py::arg("l"));
+                      return create_object_python<IsoJ2I1>(args, kwargs, 
+                                                              {"h", "l"});
+                    })) 
       ;
 }
 

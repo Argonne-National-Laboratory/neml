@@ -5,7 +5,9 @@
 #include <stdarg.h>
 #include <memory>
 #include <algorithm>
+#include <string>
 
+#include "objects.h"
 #include "nemlmath.h"
 #include "interpolate.h"
 
@@ -20,7 +22,7 @@ namespace neml {
 //  right now there's no enforcement mechanism to make sure that a model
 //  with the correct number of variables also has the right type of
 //  variables.
-class YieldSurface {
+class YieldSurface: public NEMLObject {
  public:
   // Interface
   virtual size_t nhist() const = 0;
@@ -163,6 +165,10 @@ class IsoKinJ2: public YieldSurface {
  public:
   IsoKinJ2();
   virtual ~IsoKinJ2();
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
  
   // Defined interface
   virtual size_t nhist() const;
@@ -186,6 +192,7 @@ class IsoKinJ2: public YieldSurface {
  
 };
 
+static Register<IsoKinJ2> regIsoKinJ2;
 
 /// Just isotropic hardening with a von Mises surface
 //
@@ -202,7 +209,13 @@ class IsoJ2: public IsoFunction<IsoKinJ2> {
       IsoFunction<IsoKinJ2>()
   {
   }
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 };
+
+static Register<IsoJ2> regIsoJ2;
 
 /// Combined isotropic/kinematic hardening with some mean stress contribution
 //
@@ -215,7 +228,11 @@ class IsoKinJ2I1: public YieldSurface {
   IsoKinJ2I1(const double h, const double l);
   IsoKinJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l);
   virtual ~IsoKinJ2I1();
- 
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   // Defined interface
   virtual size_t nhist() const;
 
@@ -242,6 +259,8 @@ class IsoKinJ2I1: public YieldSurface {
  
 };
 
+static Register<IsoKinJ2I1> regIsoKinJ2I1;
+
 /// Isotropic only version of J2I1 surface
 class IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
     std::shared_ptr<Interpolate>> {
@@ -252,7 +271,13 @@ class IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
   {
   }
 
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
 };
+
+static Register<IsoJ2I1> regIsoJ2I1;
 
 } // namespace neml
 

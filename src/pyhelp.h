@@ -54,9 +54,33 @@ template<class T> py::array_t<T> alloc_mat(size_t m, size_t n)
   return arr;
 }
 
-/// Map a python object into a parameter set
+/// Map a python object into a parameter from a set
 void assign_python_parameter(ParameterSet & pset, std::string name, 
                              py::object value);
+
+/// Create an object from args and kwargs
+template<typename T>
+std::shared_ptr<T> create_object_python(py::args args, py::kwargs kwargs,
+                                        std::vector<std::string> names)
+{
+  ParameterSet pset = Factory::Creator()->provide_parameters(T::type());
+
+  // The parameter names must map to each required arg
+  if (args.size() != names.size()) {
+    throw std::runtime_error("Each arg in args does not have a name in names.");
+  }
+
+  for (int i=0; i<args.size(); i++) {
+    assign_python_parameter(pset, names[i], args[i]);
+  }
+
+  for (auto item : kwargs) {
+    assign_python_parameter(pset, item.first.cast<std::string>(),
+                            item.second.cast<py::object>());
+  }
+
+  return Factory::Creator()->create<T>(pset);
+}
 
 } // namespace neml
 
