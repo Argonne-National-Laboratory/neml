@@ -1,7 +1,7 @@
 ### Macro helper for python bindings ###
 macro(pybind sname)
       add_library(${sname} SHARED "${sname}_wrap.cxx")
-      target_link_libraries(${sname} helpers neml ${PYTHON_LIBRARIES})
+      target_link_libraries(${sname} neml ${PYTHON_LIBRARIES})
       set_target_properties(${sname} PROPERTIES PREFIX "")
       if (APPLE)
             set_property(TARGET ${sname} PROPERTY OUTPUT_NAME "${sname}.so")
@@ -34,9 +34,6 @@ target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRAR
 ### python bindings in neml ###
 if (WRAP_PYTHON)
       set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)      
-
-      # Simple helper libraries
-      add_library(helpers SHARED nemlerror.cxx pyhelp.cxx)
 
       # Actual modules
       pybind(objects)
