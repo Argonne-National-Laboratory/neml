@@ -12,9 +12,8 @@ import numpy as np
 import multiprocessing
 
 def single_material_generator(E, nu, sY, alpha):
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
   surface = surfaces.IsoJ2()
   model = models.SmallStrainPerfectPlasticity(
     elastic, surface, sY, alpha = alpha)

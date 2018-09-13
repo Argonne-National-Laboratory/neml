@@ -19,9 +19,7 @@ if __name__ == "__main__":
   s0 = 10.0
   Kp = E / 10.0
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
   model1 = models.SmallStrainElasticity(elastic)
   
   surface = surfaces.IsoJ2()

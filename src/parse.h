@@ -68,16 +68,16 @@ std::shared_ptr<LinearElasticModel> process_linearelastic(const xmlpp::Element *
 std::shared_ptr<LinearElasticModel> process_isotropiclinearelastic(const xmlpp::Element * node, int & ier);
 
 /// Setup shear modulus
-std::shared_ptr<ShearModulus> process_shearmodulus(const xmlpp::Element * node, int & ier);
+std::shared_ptr<Interpolate> process_shearmodulus(const xmlpp::Element * node, int & ier);
 
 /// Setup bulk modulus
-std::shared_ptr<BulkModulus> process_bulkmodulus(const xmlpp::Element * node, int & ier);
+std::shared_ptr<Interpolate> process_bulkmodulus(const xmlpp::Element * node, int & ier);
 
 /// Setup shear modulus
-std::shared_ptr<YoungsModulus> process_youngsmodulus(const xmlpp::Element * node, int & ier);
+std::shared_ptr<Interpolate> process_youngsmodulus(const xmlpp::Element * node, int & ier);
 
 /// Setup bulk modulus
-std::shared_ptr<PoissonsRatio> process_poissonsratio(const xmlpp::Element * node, int & ier);
+std::shared_ptr<Interpolate> process_poissonsratio(const xmlpp::Element * node, int & ier);
 
 /// Rate independent plasticity processing
 std::shared_ptr<RateIndependentFlowRule> process_independent(const xmlpp::Element * node, int & ier);

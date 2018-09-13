@@ -32,7 +32,8 @@ class NEMLObject {
 // This black magic lets us store parameters in a unified map
 typedef boost::variant<double, int, bool, std::vector<double>, 
         std::shared_ptr<NEMLObject>,std::vector<std::shared_ptr<NEMLObject>>,
-        std::shared_ptr<Interpolate>, std::vector<std::shared_ptr<Interpolate>>> param_type;
+        std::shared_ptr<Interpolate>, std::vector<std::shared_ptr<Interpolate>>,
+        std::string> param_type;
 // This is the enum name we assign to each type for the "external" interfaces
 // to use in reconstructing a type from data
 enum ParamType {
@@ -43,7 +44,8 @@ enum ParamType {
   TYPE_NEML_OBJECT      = 4,
   TYPE_VEC_NEML_OBJECT  = 5,
   TYPE_INTERPOLATE      = 6,
-  TYPE_VEC_INTERPOLATE  = 7
+  TYPE_VEC_INTERPOLATE  = 7,
+  TYPE_STRING           = 8
 };
 // This black magic lets us map the actual type of each parameter to the enum
 template <class T> constexpr ParamType GetParamType();
@@ -60,6 +62,7 @@ template <> constexpr ParamType GetParamType<std::shared_ptr<Interpolate>>()
 {return TYPE_INTERPOLATE;}
 template <> constexpr ParamType GetParamType<std::vector<std::shared_ptr<Interpolate>>>()
 {return TYPE_VEC_INTERPOLATE;}
+template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
 
 /// Parameters for objects created through the NEMLObject interface
 class ParameterSet {

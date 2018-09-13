@@ -27,9 +27,7 @@ def progress(f, l = 20):
   sys.stdout.flush()
 
 def gen_material(E, nu, alpha):
-  youngs = elasticity.YoungsModulus(E)
-  poissons = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
   return models.SmallStrainElasticity(elastic, alpha = alpha)
 

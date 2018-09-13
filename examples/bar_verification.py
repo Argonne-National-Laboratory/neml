@@ -7,9 +7,8 @@ from neml import models, elasticity, arbbar
 import numpy as np
 
 def make_mat(E, a, nu = 0.3):
-  youngs = elasticity.YoungsModulus(E)
-  poissons = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, 
+      "poissons")
   
   return models.SmallStrainElasticity(elastic, alpha = a)
 

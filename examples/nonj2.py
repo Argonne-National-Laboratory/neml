@@ -16,9 +16,7 @@ if __name__ == "__main__":
   h = 1.0e-2
   l = 1.0
 
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  emodel = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
   surface = surfaces.IsoJ2I1(h, l)
 
@@ -41,9 +39,7 @@ if __name__ == "__main__":
   l = 1.0
   K = E / 50.0
 
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  emodel = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
   surface = surfaces.IsoKinJ2I1(h, l)
   

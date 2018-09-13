@@ -9,44 +9,6 @@ from common import *
 import numpy as np
 import numpy.linalg as la
 
-class TestConstantShearModulus(unittest.TestCase):
-  def setUp(self):
-    self.mu = 29000.0
-    self.T = 325.0
-    self.model = elasticity.ShearModulus(self.mu)
-
-  def test_modulus(self):
-    self.assertTrue(np.isclose(self.mu, self.model.modulus(self.T)))
-
-class TestPolyShearModulus(unittest.TestCase):
-  def setUp(self):
-    self.coefs = [3.077e-1, 3.003e2, 1.269e5]
-    self.T = 525.0
-    self.model = elasticity.ShearModulus(interpolate.PolynomialInterpolate(self.coefs))
-
-  def test_modulus(self):
-    self.assertTrue(np.isclose(self.model.modulus(self.T), 
-      np.polyval(self.coefs, self.T)))
-
-class TestConstantBulkModulus(unittest.TestCase):
-  def setUp(self):
-    self.K = 64000.0
-    self.T = 325.0
-    self.model = elasticity.BulkModulus(self.K)
-
-  def test_modulus(self):
-    self.assertTrue(np.isclose(self.K, self.model.modulus(self.T)))
-
-class TestPolyBulkModulus(unittest.TestCase):
-  def setUp(self):
-    self.coefs = [3.077e-2, 3.003e3, 1.269e2]
-    self.T = 525.0
-    self.model = elasticity.BulkModulus(interpolate.PolynomialInterpolate(self.coefs))
-
-  def test_modulus(self):
-    self.assertTrue(np.isclose(self.model.modulus(self.T), 
-      np.polyval(self.coefs, self.T)))
-
 class CommonElasticity(object):
   """
     Tests that could apply to any elastic model.
@@ -65,10 +27,8 @@ class TestIsotropicConstantModel(CommonElasticity, unittest.TestCase):
     self.K = 64000.0
     self.T = 325.0
 
-    self.shear = elasticity.ShearModulus(self.mu)
-    self.bulk = elasticity.BulkModulus(self.K)
-
-    self.model = elasticity.IsotropicLinearElasticModel(self.shear, self.bulk)
+    self.model = elasticity.IsotropicLinearElasticModel(self.mu, 
+        "shear", self.K, "bulk")
 
   def test_modulii(self):
     S = self.model.S(self.T)
@@ -89,9 +49,9 @@ class TestEquivalentDefinitions(unittest.TestCase):
     self.K = self.E / (3 * (1 - 2.0 * self.nu))
     
     self.model_Ev = elasticity.IsotropicLinearElasticModel(
-        elasticity.YoungsModulus(self.E), elasticity.PoissonsRatio(self.nu))
+        self.E, "youngs", self.nu, "poissons")
     self.model_GK = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.mu), elasticity.BulkModulus(self.K))
+        self.mu, "shear", self.K, "bulk")
 
     self.T = 300.0
 

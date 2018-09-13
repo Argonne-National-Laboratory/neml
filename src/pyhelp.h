@@ -112,6 +112,9 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
         }
       }
       break;
+    case TYPE_STRING:
+      pset.assign_parameter(name, py::cast<std::string>(value));
+      break;
     default:
       throw std::runtime_error("Unrecognized object type!");
       break;

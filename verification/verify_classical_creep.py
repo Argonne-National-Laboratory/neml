@@ -28,9 +28,7 @@ if __name__ == "__main__":
   srate = 100.0
 
   # Setup model
-  Em = elasticity.YoungsModulus(E)
-  vm = elasticity.PoissonsRatio(nu)
-  emodel = elasticity.IsotropicLinearElasticModel(Em, vm)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
   bmodel = models.SmallStrainElasticity(emodel)
   scmodel = creep.PowerLawCreep(A, n)
   cfmodel = creep.J2CreepModel(scmodel)

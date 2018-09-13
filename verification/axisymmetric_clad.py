@@ -30,9 +30,8 @@ def gen_material(E, nu, sY, alpha, A, n):
   """
     Generate a perfectly plastic + creep material model.
   """
-  youngs = elasticity.YoungsModulus(E)
-  poissons = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, 
+      "poissons")
   surface = surfaces.IsoJ2()
 
   pmodel = models.SmallStrainPerfectPlasticity(elastic, surface, sY)

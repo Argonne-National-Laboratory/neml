@@ -4,76 +4,9 @@
 #include "nemlerror.h"
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace neml {
-
-Modulus::Modulus(double x) :
-    x_(new ConstantInterpolate(x))
-{
-
-}
-
-Modulus::Modulus(std::shared_ptr<Interpolate> x) :
-    x_(x)
-{
-
-}
-
-double Modulus::modulus(double T) const
-{
-  return x_->value(T);
-}
-
-
-ShearModulus::ShearModulus(double mu) :
-    Modulus(mu)
-{
-
-}
-
-ShearModulus::ShearModulus(std::shared_ptr<Interpolate> mu) :
-    Modulus(mu)
-{
-
-}
-
-
-BulkModulus::BulkModulus(std::shared_ptr<Interpolate> K) :
-    Modulus(K)
-{
-  
-}
-
-BulkModulus::BulkModulus(double K) :
-    Modulus(K)
-{
-  
-}
-
-YoungsModulus::YoungsModulus(double E) :
-    Modulus(E)
-{
-
-}
-
-YoungsModulus::YoungsModulus(std::shared_ptr<Interpolate> E) :
-    Modulus(E)
-{
-
-}
-
-
-PoissonsRatio::PoissonsRatio(std::shared_ptr<Interpolate> nu) :
-    Modulus(nu)
-{
-  
-}
-
-PoissonsRatio::PoissonsRatio(double nu) :
-    Modulus(nu)
-{
-  
-}
 
 bool LinearElasticModel::valid() const
 {
@@ -81,19 +14,48 @@ bool LinearElasticModel::valid() const
 }
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
-      std::shared_ptr<ShearModulus> shear,
-      std::shared_ptr<BulkModulus> bulk) :
-    a_(shear), b_(bulk), have_modulii_(GK)
+      std::shared_ptr<Interpolate> m1,
+      std::string m1_type,
+      std::shared_ptr<Interpolate> m2,
+      std::string m2_type) :
+    m1_(m1), m2_(m2), m1_type_(m1_type), m2_type_(m2_type)
 {
-
+  if (m1_type_ == m2_type) {
+    throw std::invalid_argument("Two distinct elastic constants are required!");
+  }
+  if (valid_types_.find(m1_type) == valid_types_.end()) {
+    throw std::invalid_argument("Unknown elastic constant " + m1_type);
+  }
+  if (valid_types_.find(m2_type) == valid_types_.end()) {
+    throw std::invalid_argument("Unknown elastic constant " + m2_type);
+  }
 }
 
-IsotropicLinearElasticModel::IsotropicLinearElasticModel(
-      std::shared_ptr<YoungsModulus> youngs,
-      std::shared_ptr<PoissonsRatio> poisson) :
-    a_(youngs), b_(poisson), have_modulii_(Ev)
+std::string IsotropicLinearElasticModel::type()
 {
+  return "IsotropicLinearElasticModel";
+}
 
+ParameterSet IsotropicLinearElasticModel::parameters()
+{
+  ParameterSet pset(IsotropicLinearElasticModel::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("m1");
+  pset.add_parameter<std::string>("m1_type");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("m2");
+  pset.add_parameter<std::string>("m2_type");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> IsotropicLinearElasticModel::initialize(ParameterSet & params)
+{
+  return std::make_shared<IsotropicLinearElasticModel>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("m1"),
+      params.get_parameter<std::string>("m1_type"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("m2"),
+      params.get_parameter<std::string>("m2_type")
+      ); 
 }
 
 int IsotropicLinearElasticModel::C(double T, double * const Cv) const
@@ -205,22 +167,82 @@ bool IsotropicLinearElasticModel::valid() const
 
 void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) const
 {
-  double a = a_->modulus(T);
-  double b = b_->modulus(T);
+  double m1 = m1_->value(T);
+  double m2 = m2_->value(T);
 
-  if (have_modulii_ == GK) {
-    G = a;
-    K = b;
+  if (m1_type_ == "shear" and m2_type_ == "bulk") {
+    G = m1;
+    K = m2;
   }
-  else if (have_modulii_ == Ev) {
-    G = a / (2.0 * (1.0 + b));
-    K = a / (3.0 * (1.0 - 2.0 * b));
+  else if (m1_type_ == "bulk" and m2_type_ == "shear") {
+    G = m2;
+    K = m1;
+  }
+  else if (m1_type_ == "youngs" and m2_type_ == "poissons") {
+    G = m1 / (2.0 * (1.0 + m2));
+    K = m1 / (3.0 * (1.0 - 2.0 * m2));
+  }
+  else if (m1_type_ == "poissons" and m2_type_ == "youngs") {
+    G = m2 / (2.0 * (1.0 + m1));
+    K = m2 / (3.0 * (1.0 - 2.0 * m1));
+  }
+  else if (m1_type_ == "youngs" and m2_type_ == "shear") {
+    G = m2;
+    K = m1 * m2 / (3.0 * (3.0 * m2 - m1));
+  }
+  else if (m1_type_ == "shear" and m2_type_ == "youngs") {
+    G = m1;
+    K = m2 * m1 / (3.0 * (3.0 * m1 - m2));
+  }
+  else if (m1_type_ == "youngs" and m2_type_ == "bulk") {
+    G = 3.0 * m2 * m1 / (9.0 * m2 - m1);
+    K = m2;
+  }
+  else if (m1_type_ == "bulk" and m2_type_ == "youngs") {
+    G = 3.0 * m1 * m2 / (9.0 * m1 - m2);
+    K = m1;
+  }
+  else if (m1_type_ == "poissons" and m2_type_ == "shear") {
+    G = m2;
+    K = 2.0 * m2 * (1.0 + m1) / (3.0 * (1.0 - 2.0 * m1));
+  }
+  else if (m1_type_ == "shear" and m2_type_ == "poissons") {
+    G = m1;
+    K = 2.0 * m1 * (1.0 + m2) / (3.0 * (1.0 - 2.0 * m2));
+  }
+  else if (m1_type_ == "poissons" and m2_type_ == "bulk") {
+    G = 3.0 * m2 * (1.0 - 2.0 * m1) / (2.0 * (1.0 + m1));
+    K = m2;
+  }
+  else if (m1_type_ == "bulk" and m2_type_ == "poissons") {
+    G = 3.0 * m1 * (1.0 - 2.0 * m2) / (2.0 * (1.0 + m2));
+    K = m1;
+  }
+  else {
+    throw std::invalid_argument("Unknown combination of elastic properties");
   }
 }
 
 BlankElasticModel::BlankElasticModel()
 {
 
+}
+
+std::string BlankElasticModel::type()
+{
+  return "BlankElasticModel";
+}
+
+ParameterSet BlankElasticModel::parameters()
+{
+  ParameterSet pset(BlankElasticModel::type());
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> BlankElasticModel::initialize(ParameterSet & params)
+{
+  return std::make_shared<BlankElasticModel>(); 
 }
 
 int BlankElasticModel::C(double T, double * const Cv) const

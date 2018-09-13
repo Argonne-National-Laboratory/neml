@@ -15,11 +15,11 @@ class TestSimpleMaterials(unittest.TestCase):
     self.K2 = 12000.0
 
     self.elastic1 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G1),
-        elasticity.BulkModulus(self.K1))
+        self.G1, "shear",
+        self.K1, "bulk")
     self.elastic2 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G2),
-        elasticity.BulkModulus(self.K2))
+        self.G2, "shear",
+        self.K2, "bulk")
     
   def are_equal(self, e1, e2, T = 30):
     self.assertTrue(np.allclose(e1.C(T), e2.C(T)))
@@ -62,11 +62,11 @@ class TestCompoundMaterials(unittest.TestCase):
     self.K2 = 12000.0
 
     self.elastic1 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G1),
-        elasticity.BulkModulus(self.K1))
+        self.G1, "shear",
+        self.K1, "bulk")
     self.elastic2 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G2),
-        elasticity.BulkModulus(self.K2))
+        self.G2, "shear",
+        self.K2, "bulk")
 
     self.emodel1 = models.SmallStrainElasticity(self.elastic1)
     self.emodel2 = models.SmallStrainElasticity(self.elastic2)

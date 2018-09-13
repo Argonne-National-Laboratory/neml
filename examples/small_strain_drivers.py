@@ -214,9 +214,8 @@ if __name__ == "__main__":
   mu = E/(2*(1+nu))
   K = E/(3*(1-2*nu))
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, 
+      "bulk")
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 

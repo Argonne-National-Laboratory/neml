@@ -59,9 +59,8 @@ class TestMarkDamage(CompareMats, unittest.TestCase):
     s0 = 180.0
     Kp = 1000.0
 
-    E = elasticity.YoungsModulus(E)
-    v = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+        nu, "poissons")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
@@ -97,9 +96,8 @@ class TestPowerLawDamage(CompareMats, unittest.TestCase):
     s0 = 180.0
     Kp = 1000.0
 
-    E = elasticity.YoungsModulus(E)
-    v = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+        nu, "poissons")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
@@ -129,9 +127,8 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     ys = 100.0
     H = 1000.0
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.LinearIsotropicHardeningRule(ys, H)
@@ -156,9 +153,8 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     r = 100.0
     d = 1000.0
 
-    ym = elasticity.YoungsModulus(E)
-    pr = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(ym, pr)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu,
+        "poissons")
 
     surface = surfaces.IsoJ2()
     hrule1 = hardening.LinearIsotropicHardeningRule(ys, H)
@@ -188,9 +184,8 @@ class TestCreepPlasticity(CompareMats, unittest.TestCase):
     sY = 200.0
     H = E / 50.0
 
-    youngs = elasticity.YoungsModulus(E)
-    poisson = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu,
+        "poissons")
     surface = surfaces.IsoJ2()
     iso = hardening.LinearIsotropicHardeningRule(sY, H)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
@@ -217,9 +212,8 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
 
     KH = 1000.0
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(ys, r, d)
@@ -250,9 +244,8 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
     As = [0.0, 0.0, 0.0]
     ns = [1.0, 1.0, 1.0]
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(ys, r, d)
@@ -275,9 +268,10 @@ class TestYaguchi(CompareMats, unittest.TestCase):
     mu_poly = [-0.11834615, 115.5, 48807.69]
     K_poly = [-0.256417, 250.25, 105750.0]
 
-    shear = elasticity.ShearModulus(interpolate.PolynomialInterpolate(mu_poly))
-    bulk = elasticity.BulkModulus(interpolate.PolynomialInterpolate(K_poly))
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    shear = interpolate.PolynomialInterpolate(mu_poly)
+    bulk = interpolate.PolynomialInterpolate(K_poly)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, "shear",
+        bulk, "bulk")
     
     vmodel = visco_flow.YaguchiGr91FlowRule()
 
@@ -297,9 +291,8 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     mu = 60384.61
     K = 130833.3
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     r = -80.0
     d = 3.0
@@ -339,9 +332,8 @@ class TestPerzyna(CompareMats, unittest.TestCase):
     mu = 40000.0
     K = 84000.0
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
     
     sy = 100.0
     r = 100.0
@@ -377,9 +369,10 @@ class TestPerfect(CompareMats, unittest.TestCase):
     E = [-100, 100000]
     nu = 0.3
 
-    youngs = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E))
-    poissons = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+    youngs = interpolate.PolynomialInterpolate(E)
+    poissons = interpolate.ConstantInterpolate(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(youngs, "youngs",
+        poissons, "poissons")
 
     surface = surfaces.IsoJ2()
 
@@ -405,9 +398,10 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
     E = [-100, 100000]
     nu = 0.3
 
-    youngs = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E))
-    poissons = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+    youngs = interpolate.PolynomialInterpolate(E)
+    poissons = interpolate.ConstantInterpolate(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(youngs, "youngs",
+        poissons, "poissons")
 
     surface = surfaces.IsoJ2()
 

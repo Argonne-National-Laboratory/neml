@@ -17,32 +17,6 @@ namespace neml {
 PYBIND11_MODULE(elasticity, m) {
   m.doc() = "Elastic models.";
 
-  py::class_<Modulus, NEMLObject, std::shared_ptr<Modulus>>(m, "Modulus")
-      .def(py::init<double>(), py::arg("x"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("x"))
-      .def("modulus", &Modulus::modulus, "Modulus as a function of temperature.")
-      ;
-
-  py::class_<ShearModulus, Modulus, std::shared_ptr<ShearModulus>>(m, "ShearModulus")
-      .def(py::init<double>(), py::arg("mu"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("mu"))
-      ;
-
-  py::class_<BulkModulus, Modulus, std::shared_ptr<BulkModulus>>(m, "BulkModulus")
-      .def(py::init<double>(), py::arg("K"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("K"))
-      ;
-
-  py::class_<YoungsModulus, Modulus, std::shared_ptr<YoungsModulus>>(m, "YoungsModulus")
-      .def(py::init<double>(), py::arg("E"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("E"))
-      ;
-
-  py::class_<PoissonsRatio, Modulus, std::shared_ptr<PoissonsRatio>>(m, "PoissonsRatio")
-      .def(py::init<double>(), py::arg("nu"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("nu"))
-      ;
-
   py::class_<LinearElasticModel, NEMLObject, std::shared_ptr<LinearElasticModel>>(m, "LinearElasticModel")
       .def("C",
            [](const LinearElasticModel & m, double T) -> py::array_t<double>
@@ -69,14 +43,17 @@ PYBIND11_MODULE(elasticity, m) {
       ;
 
   py::class_<IsotropicLinearElasticModel, LinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel")
-      .def(py::init<std::shared_ptr<ShearModulus>, std::shared_ptr<BulkModulus>>(),
-           py::arg("shear_modulus"), py::arg("bulk_modulus"))
-      .def(py::init<std::shared_ptr<YoungsModulus>, std::shared_ptr<PoissonsRatio>>(),
-           py::arg("youngs_modulus"), py::arg("poissons_ratio"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<IsotropicLinearElasticModel>(args, kwargs, {"m1", "m1_type", "m2", "m2_type"});
+        }))
       ;
   
   py::class_<BlankElasticModel, LinearElasticModel, std::shared_ptr<BlankElasticModel>>(m, "BlankElasticModel")
-      .def(py::init<>())
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<BlankElasticModel>(args, kwargs, {});
+        }))
       ;
 }
 

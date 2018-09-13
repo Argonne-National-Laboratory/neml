@@ -14,9 +14,7 @@ if __name__ == "__main__":
 
   points = [0.0, 0.01, 0.02, 0.045]
   values = [100.0, 150.0, 160.0, 170.0]
-  youngs = elasticity.YoungsModulus(E)
-  poissons = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
   surface = surfaces.IsoJ2()
   ifn = interpolate.PiecewiseLinearInterpolate(points, values)
   iso = hardening.InterpolatedIsotropicHardeningRule(ifn)

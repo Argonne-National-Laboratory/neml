@@ -32,9 +32,10 @@ if __name__ == "__main__":
   l = 1.0
 
   # Elastic
-  E_m = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E_poly))
-  nu_m = elasticity.PoissonsRatio(nu)
-  elastic_m = elasticity.IsotropicLinearElasticModel(E_m, nu_m)
+  E_m = interpolate.PolynomialInterpolate(E_poly)
+  nu_m = interpolate.ConstantInterpolate(nu)
+  elastic_m = elasticity.IsotropicLinearElasticModel(E_m, "youngs", nu_m,
+      "poissons")
 
   # Rate sensitivity interpolates
   Ts_rate = np.linspace(Tmin, Tmax, num = nrate_sens)

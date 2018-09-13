@@ -83,9 +83,8 @@ class TestLinearElastic(CommonMatModel, unittest.TestCase):
     self.mu = self.E/(2*(1+self.nu))
     self.K = self.E/(3*(1-2*self.nu))
 
-    shear = elasticity.ShearModulus(self.mu)
-    bulk = elasticity.BulkModulus(self.K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
     self.model = models.SmallStrainElasticity(self.elastic)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
@@ -157,9 +156,8 @@ class TestPerfectPlasticity(unittest.TestCase, CommonMatModel, CommonJacobian):
 
     self.s0 = 180.0
 
-    shear = elasticity.ShearModulus(self.mu)
-    bulk = elasticity.BulkModulus(self.K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
 
     surface = surfaces.IsoJ2()
     self.model = models.SmallStrainPerfectPlasticity(self.elastic, surface, self.s0)
@@ -196,9 +194,8 @@ class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, C
 
     self.H = 1000.0
 
-    shear = elasticity.ShearModulus(self.mu)
-    bulk = elasticity.BulkModulus(self.K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -240,9 +237,8 @@ class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel, CommonJacobia
     self.s0 = 180.0
     self.Kp = self.E / 100
 
-    shear = elasticity.ShearModulus(self.mu)
-    bulk = elasticity.BulkModulus(self.K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -280,9 +276,8 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
     self.R = 150.0
     self.d = 10.0
 
-    shear = elasticity.ShearModulus(self.mu)
-    bulk = elasticity.BulkModulus(self.K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
@@ -325,9 +320,8 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
     self.As = [0.0] * self.n
     self.ns = [1.0] * self.n
 
-    shear = elasticity.ShearModulus(self.mu)
-    bulk = elasticity.BulkModulus(self.K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -374,10 +368,9 @@ class TestCreepPlasticityJ2LinearPowerLaw(unittest.TestCase, CommonMatModel):
     self.sY = 200.0
     self.H = self.E / 50.0
 
-    self.youngs = elasticity.YoungsModulus(self.E)
-    self.poisson = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(self.youngs, 
-        self.poisson)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs", 
+        self.nu, "poissons")
+
     self.surface = surfaces.IsoJ2()
     self.iso = hardening.LinearIsotropicHardeningRule(self.sY, self.H)
     self.flow = ri_flow.RateIndependentAssociativeFlow(self.surface, self.iso)
@@ -423,10 +416,8 @@ class TestCreepPlasticityPerfect(unittest.TestCase, CommonMatModel):
     self.nu = 0.3
     self.sY = 200.0
 
-    self.youngs = elasticity.YoungsModulus(self.E)
-    self.poisson = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(self.youngs, 
-        self.poisson)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs", 
+        self.nu, "poissons")
     self.surface = surfaces.IsoJ2()
 
     self.pmodel = models.SmallStrainPerfectPlasticity(self.elastic, 
@@ -496,9 +487,8 @@ class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacob
     mu = E/(2*(1+nu))
     K = E/(3*(1-2*nu))
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(mu,
+        "shear", K, "bulk")
 
     flow = general_flow.TVPFlowRule(self.elastic, vmodel)
 
@@ -542,9 +532,8 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
     self.n = 2.0
     self.eta = 200.0
 
-    shear = elasticity.ShearModulus(self.mu)
-    bulk = elasticity.BulkModulus(self.K)
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
@@ -579,9 +568,10 @@ class TestYaguchi(unittest.TestCase, CommonMatModel, CommonJacobian):
     mu_poly = list(E_poly/(2*(1+nu)))
     K_poly = list(E_poly/(3*(1-2*nu)))
 
-    shear = elasticity.ShearModulus(interpolate.PolynomialInterpolate(mu_poly))
-    bulk = elasticity.BulkModulus(interpolate.PolynomialInterpolate(K_poly))
-    self.elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    shear = interpolate.PolynomialInterpolate(mu_poly)
+    bulk = interpolate.PolynomialInterpolate(K_poly)
+    self.elastic = elasticity.IsotropicLinearElasticModel(shear, "shear", 
+        bulk, "bulk")
 
     flow = general_flow.TVPFlowRule(self.elastic, vmodel)
 
@@ -625,9 +615,10 @@ class TestKMSwitch(unittest.TestCase, CommonMatModel):
     Trange = np.linspace(Tmin, Tmax)
 
     # Elastic
-    E_m = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(Epoly))
-    nu_m = elasticity.PoissonsRatio(nu)
-    elastic_m = elasticity.IsotropicLinearElasticModel(E_m, nu_m)
+    E_m = interpolate.PolynomialInterpolate(Epoly)
+    nu_m = interpolate.ConstantInterpolate(nu)
+    elastic_m = elasticity.IsotropicLinearElasticModel(E_m, "youngs",
+        nu_m, "poissons")
     self.elastic = elastic_m
 
     # Rate sensitivity interpolates values

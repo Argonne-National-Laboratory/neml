@@ -62,9 +62,10 @@ if __name__ == "__main__":
   Trange = np.linspace(Tmin, Tmax)
 
   # Elastic
-  E_m = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(Epoly))
-  nu_m = elasticity.PoissonsRatio(nu)
-  elastic_m = elasticity.IsotropicLinearElasticModel(E_m, nu_m)
+  E_m = interpolate.PolynomialInterpolate(Epoly)
+  nu_m = interpolate.ConstantInterpolate(nu)
+  elastic_m = elasticity.IsotropicLinearElasticModel(E_m, "youngs", nu_m,
+      "poissons")
 
   # Rate sensitivity interpolates values
   mu_values = np.array([elastic_m.G(T) for T in Trange])

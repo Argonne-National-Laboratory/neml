@@ -40,9 +40,7 @@ def cycle_generator_delay(dT, T0, Tdot, delay):
   return T1, T2, period
 
 def make_mat(E, nu, sy, k, a):
-  youngs = elasticity.YoungsModulus(E)
-  poissons = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
   surface = surfaces.IsoJ2()
   harden = hardening.LinearIsotropicHardeningRule(sy, k)
   

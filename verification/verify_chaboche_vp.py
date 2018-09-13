@@ -32,16 +32,14 @@ def koo():
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
   cs = [C1, C2, C3]
   gs = [hardening.ConstantGamma(g1), hardening.ConstantGamma(g2),
       hardening.ConstantGamma(g3)]
-  hmodel = hardening.Chaboche(iso, cs, gs)
+  hmodel = hardening.Chaboche(iso, cs, gs, [0.0]*len(cs), [1.0]*len(cs))
 
   fluidity = visco_flow.ConstantFluidity(eta)
 
@@ -103,15 +101,13 @@ def uniaxial():
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
   cs = [C1]
   gs = [hardening.ConstantGamma(g1)]
-  hmodel = hardening.Chaboche(iso, cs, gs)
+  hmodel = hardening.Chaboche(iso, cs, gs, [0.0], [1.0])
 
   fluidity = visco_flow.ConstantFluidity(eta)
 

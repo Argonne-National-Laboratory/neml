@@ -214,9 +214,7 @@ class ThreeBarProblem(object):
         self.take_step(dt2, Tc, verbose = verbose)
 
 def elastic_model(E, a, nu = 0.3):
-  Emodel = elasticity.YoungsModulus(E)
-  vmodel = elasticity.PoissonsRatio(nu)
-  elmodel = elasticity.IsotropicLinearElasticModel(Emodel, vmodel)
+  elmodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
   return models.SmallStrainElasticity(elmodel, alpha = a)
 
@@ -323,9 +321,8 @@ def run_gr91_316_inelastic():
   plt.show()
 
 def plastic_model(E, Y, a, nu = 0.3):
-  Emodel = elasticity.YoungsModulus(E)
-  vmodel = elasticity.PoissonsRatio(nu)
-  elmodel = elasticity.IsotropicLinearElasticModel(Emodel, vmodel)
+  elmodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
+
   surf = surfaces.IsoJ2()
   
   return models.SmallStrainPerfectPlasticity(elmodel, surf, Y, alpha = a)

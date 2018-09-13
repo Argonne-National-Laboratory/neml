@@ -16,9 +16,8 @@ def simple_ex():
   Kp = 1000.0
   H = 1000.0
 
-  E = elasticity.YoungsModulus(E)
-  v = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(E, v)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
@@ -52,9 +51,8 @@ def unload_ex():
   Kp = 1000.0
   H = 1000.0
 
-  E = elasticity.YoungsModulus(E)
-  v = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(E, v)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
@@ -115,9 +113,8 @@ def creep_ex():
   smodel = creep.PowerLawCreep(A, n)
   cmodel = creep.J2CreepModel(smodel)
 
-  E = elasticity.YoungsModulus(E)
-  v = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(E, v)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)

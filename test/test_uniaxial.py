@@ -63,9 +63,8 @@ class TestUniaxialRI(CommonUniaxial, unittest.TestCase):
     A = [0.0]
     n = [1.0]
     
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
     gmodels = [hardening.ConstantGamma(g) for g in r]

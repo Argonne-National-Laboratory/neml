@@ -25,9 +25,7 @@ if __name__ == "__main__":
   b = 10.0
   beta = 0.0
   
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(k, Q, b)

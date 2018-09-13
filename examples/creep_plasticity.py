@@ -23,10 +23,8 @@ if __name__ == "__main__":
     nu = 0.3
     sY = 200.0
 
-    youngs = elasticity.YoungsModulus(E)
-    poisson = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(youngs, 
-        poisson)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, 
+        "poissons")
     surface = surfaces.IsoJ2()
 
     pmodel = models.SmallStrainPerfectPlasticity(elastic, surface, sY)

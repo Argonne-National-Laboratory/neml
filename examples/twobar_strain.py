@@ -31,9 +31,7 @@ def grid_classical(max_x = 1.1, max_y = 2.5, A = 1.0, sigY = 100.0,
   osx = max_x / (nx)
   osy = max_y / (ny)
 
-  E_model = elasticity.YoungsModulus(E)
-  nu_model = elasticity.PoissonsRatio(nu)
-  emodel = elasticity.IsotropicLinearElasticModel(E_model, nu_model)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
   surface = surfaces.IsoJ2()
 

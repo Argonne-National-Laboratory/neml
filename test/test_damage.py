@@ -181,9 +181,8 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -243,9 +242,8 @@ class TestMarkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -308,9 +306,8 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -374,9 +371,8 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E,
+        "youngs", self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -444,9 +440,8 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E,
+        "youngs", self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)

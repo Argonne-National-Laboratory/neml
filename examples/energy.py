@@ -16,9 +16,8 @@ if __name__ == "__main__":
   sY = 200.0
   H = 0.0
 
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
   surface = surfaces.IsoJ2()
   iso = hardening.LinearIsotropicHardeningRule(sY, H)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
