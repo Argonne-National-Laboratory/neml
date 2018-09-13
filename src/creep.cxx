@@ -39,6 +39,30 @@ PowerLawCreep::PowerLawCreep(std::shared_ptr<Interpolate> A,
 
 }
 
+std::string PowerLawCreep::type()
+{
+  return "PowerLawCreep";
+}
+
+ParameterSet PowerLawCreep::parameters()
+{
+  ParameterSet pset(PowerLawCreep::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("A");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> PowerLawCreep::initialize(ParameterSet & params)
+{
+  return std::make_shared<PowerLawCreep>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("A"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      ); 
+}
+
+
 int PowerLawCreep::g(double seq, double eeq, double t, double T, double & g) const
 {
   g = A_->value(T) * pow(seq, n_->value(T));
@@ -78,6 +102,39 @@ RegionKMCreep::RegionKMCreep(std::vector<double> cuts, std::vector<double> A,
     emodel_(emodel), b3_(pow(b,3))
 {
 
+}
+
+std::string RegionKMCreep::type()
+{
+  return "RegionKMCreep";
+}
+
+ParameterSet RegionKMCreep::parameters()
+{
+  ParameterSet pset(RegionKMCreep::type());
+
+  pset.add_parameter<std::vector<double>>("cuts");
+  pset.add_parameter<std::vector<double>>("A");
+  pset.add_parameter<std::vector<double>>("B");
+  pset.add_parameter<double>("kboltz");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<double>("eps0");
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("emodel");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
+{
+  return std::make_shared<RegionKMCreep>(
+      params.get_parameter<std::vector<double>>("cuts"),
+      params.get_parameter<std::vector<double>>("A"),
+      params.get_parameter<std::vector<double>>("B"),
+      params.get_parameter<double>("kboltz"),
+      params.get_parameter<double>("b"),
+      params.get_parameter<double>("eps0"),
+      params.get_object_parameter<LinearElasticModel>("emodel")
+      ); 
 }
 
 int RegionKMCreep::g(double seq, double eeq, double t, double T, double & g) const
@@ -154,6 +211,31 @@ NortonBaileyCreep::NortonBaileyCreep(std::shared_ptr<Interpolate> A,
     A_(A), m_(m), n_(n)
 {
 
+}
+
+std::string NortonBaileyCreep::type()
+{
+  return "NortonBaileyCreep";
+}
+
+ParameterSet NortonBaileyCreep::parameters()
+{
+  ParameterSet pset(NortonBaileyCreep::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("A");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("m");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> NortonBaileyCreep::initialize(ParameterSet & params)
+{
+  return std::make_shared<NortonBaileyCreep>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("A"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("m"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      ); 
 }
 
 int NortonBaileyCreep::g(double seq, double eeq, double t, double T, double & g) const
@@ -235,6 +317,41 @@ MukherjeeCreep::MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel,
     emodel_(emodel), A_(A), n_(n), D0_(D0), Q_(Q), b_(b), k_(k), R_(R)
 {
   
+}
+
+std::string MukherjeeCreep::type()
+{
+  return "MukherjeeCreep";
+}
+
+ParameterSet MukherjeeCreep::parameters()
+{
+  ParameterSet pset(MukherjeeCreep::type());
+
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("emodel");
+  pset.add_parameter<double>("A");
+  pset.add_parameter<double>("n");
+  pset.add_parameter<double>("D0");
+  pset.add_parameter<double>("Q");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<double>("k");
+  pset.add_parameter<double>("R");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> MukherjeeCreep::initialize(ParameterSet & params)
+{
+  return std::make_shared<MukherjeeCreep>(
+      params.get_object_parameter<LinearElasticModel>("emodel"),
+      params.get_parameter<double>("A"),
+      params.get_parameter<double>("n"),
+      params.get_parameter<double>("D0"),
+      params.get_parameter<double>("Q"),
+      params.get_parameter<double>("b"),
+      params.get_parameter<double>("k"),
+      params.get_parameter<double>("R")
+      ); 
 }
 
 int MukherjeeCreep::g(double seq, double eeq, double t, double T, 
@@ -421,6 +538,34 @@ J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
     CreepModel(tol, miter, verbose), rule_(rule)
 {
 
+}
+
+std::string J2CreepModel::type()
+{
+  return "J2CreepModel";
+}
+
+ParameterSet J2CreepModel::parameters()
+{
+  ParameterSet pset(J2CreepModel::type());
+
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("rule");
+  
+  pset.add_optional_parameter<double>("tol", 1.0e-10);
+  pset.add_optional_parameter<int>("miter", 25);
+  pset.add_optional_parameter<bool>("verbose", false);
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
+{
+  return std::make_shared<J2CreepModel>(
+      params.get_object_parameter<ScalarCreepRule>("rule"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose")
+      ); 
 }
 
 int J2CreepModel::f(const double * const s, const double * const e, double t,

@@ -7,6 +7,7 @@
 #include <memory>
 #include <functional>
 #include <stdexcept>
+#include <algorithm>
 
 #include "boost/variant.hpp"
 

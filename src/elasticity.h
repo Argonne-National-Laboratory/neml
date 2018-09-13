@@ -1,6 +1,7 @@
 #ifndef ELASTICITY_H
 #define ELASTICITY_H
 
+#include "objects.h"
 #include "interpolate.h"
 
 #include <memory>
@@ -9,7 +10,7 @@
 namespace neml {
 
 /// Modulus parent class
-class Modulus {
+class Modulus: public NEMLObject {
  public:
   Modulus(double x);
   Modulus(std::shared_ptr<Interpolate> x);
@@ -50,7 +51,7 @@ class PoissonsRatio: public Modulus {
 
 /// Interface of all linear elastic models
 //    Return properties as a function of temperature
-class LinearElasticModel {
+class LinearElasticModel: public NEMLObject {
  public:
   virtual int C(double T, double * const Cv) const = 0;
   virtual int S(double T, double * const Sv) const = 0;

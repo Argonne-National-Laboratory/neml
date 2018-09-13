@@ -17,7 +17,7 @@ namespace neml {
 PYBIND11_MODULE(elasticity, m) {
   m.doc() = "Elastic models.";
 
-  py::class_<Modulus, std::shared_ptr<Modulus>>(m, "Modulus")
+  py::class_<Modulus, NEMLObject, std::shared_ptr<Modulus>>(m, "Modulus")
       .def(py::init<double>(), py::arg("x"))
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("x"))
       .def("modulus", &Modulus::modulus, "Modulus as a function of temperature.")
@@ -43,7 +43,7 @@ PYBIND11_MODULE(elasticity, m) {
       .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("nu"))
       ;
 
-  py::class_<LinearElasticModel, std::shared_ptr<LinearElasticModel>>(m, "LinearElasticModel")
+  py::class_<LinearElasticModel, NEMLObject, std::shared_ptr<LinearElasticModel>>(m, "LinearElasticModel")
       .def("C",
            [](const LinearElasticModel & m, double T) -> py::array_t<double>
            {

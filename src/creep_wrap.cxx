@@ -20,7 +20,7 @@ PYBIND11_MODULE(creep, m) {
   py::class_<CreepModelTrialState, TrialState>(m, "CreepModelTrialState")
       ;
 
-  py::class_<CreepModel, Solvable, std::shared_ptr<CreepModel>>(m, "CreepModel")
+  py::class_<CreepModel, NEMLObject, Solvable, std::shared_ptr<CreepModel>>(m, "CreepModel")
       .def("update",
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::tuple<py::array_t<double>, py::array_t<double>>
            {
@@ -95,12 +95,13 @@ PYBIND11_MODULE(creep, m) {
     ;
 
   py::class_<J2CreepModel, CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel")
-      .def(py::init<std::shared_ptr<ScalarCreepRule>, double, int , bool>(),
-           py::arg("rule"), py::arg("tol") = 1.0e-10, py::arg("miter") = 25,
-           py::arg("verbose") = false)
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<J2CreepModel>(args, kwargs, {"rule"});
+        }))
     ;
 
-  py::class_<ScalarCreepRule, std::shared_ptr<ScalarCreepRule>>(m, "ScalarCreepRule")
+  py::class_<ScalarCreepRule, NEMLObject, std::shared_ptr<ScalarCreepRule>>(m, "ScalarCreepRule")
       .def("g",
            [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
            {
@@ -151,28 +152,40 @@ PYBIND11_MODULE(creep, m) {
       .def(py::init<double, double>(), py::arg("A"), py::arg("n"))
       .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("n"))
 
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PowerLawCreep>(args, kwargs, {"A", "n"});
+        }))
+
       .def("A", &PowerLawCreep::A)
       .def("n", &PowerLawCreep::n)
     ;
 
   py::class_<RegionKMCreep, ScalarCreepRule, std::shared_ptr<RegionKMCreep>>(m, "RegionKMCreep")
-      .def(py::init<std::vector<double>, std::vector<double>, std::vector<double>, double, double, double, std::shared_ptr<LinearElasticModel>>(), py::arg("cuts"), py::arg("A"), py::arg("B"), py::arg("kboltz"), py::arg("b"), py::arg("eps0"), py::arg("emodel"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<RegionKMCreep>(args, kwargs, {"cuts", "A", "B",
+                                                     "kboltz", "b", "eps0", "emodel"});
+        }))
   ;
 
   py::class_<NortonBaileyCreep, ScalarCreepRule, std::shared_ptr<NortonBaileyCreep>>(m, "NortonBaileyCreep")
-      .def(py::init<double, double, double>(), py::arg("A"), py::arg("m"), py::arg("n"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("m"), py::arg("n"))
-
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<NortonBaileyCreep>(args, kwargs, {"A", "m",
+                                                         "n"});
+        }))
       .def("A", &NortonBaileyCreep::A)
       .def("m", &NortonBaileyCreep::m)
       .def("n", &NortonBaileyCreep::n)
     ;
 
   py::class_<MukherjeeCreep, ScalarCreepRule, std::shared_ptr<MukherjeeCreep>>(m, "MukherjeeCreep")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, double, double, double, double, double, double, double>(), 
-           py::arg("emodel"), py::arg("A"), py::arg("n"), py::arg("D0"), py::arg("Q"), py::arg("b"),
-           py::arg("k"), py::arg("R"))
-
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MukherjeeCreep>(args, kwargs, {"emodel", "A",
+                                                      "n", "D0", "Q", "b", "k", "R"});
+        }))
       .def_property_readonly("A", &MukherjeeCreep::A)
       .def_property_readonly("n", &MukherjeeCreep::n)
       .def_property_readonly("D0", &MukherjeeCreep::D0)

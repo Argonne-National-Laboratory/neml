@@ -1,6 +1,7 @@
 #ifndef CREEP_H
 #define CREEP_H
 
+#include "objects.h"
 #include "elasticity.h"
 #include "interpolate.h"
 #include "solvers.h"
@@ -8,7 +9,7 @@
 namespace neml {
 
 /// Scalar creep functions in terms of effective stress and strain
-class ScalarCreepRule {
+class ScalarCreepRule: public NEMLObject {
   public:
    virtual int g(double seq, double eeq, double t, double T, double & g) const = 0;
    virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const = 0;
@@ -19,42 +20,54 @@ class ScalarCreepRule {
 
 /// Simple power law creep
 class PowerLawCreep: public ScalarCreepRule {
-  public:
-   PowerLawCreep(double A, double n);
-   PowerLawCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
+ public:
+  PowerLawCreep(double A, double n);
+  PowerLawCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
 
-   virtual int g(double seq, double eeq, double t, double T, double & g) const;
-   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
-   virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
-   double A(double T) const;
-   double n(double T) const;
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
 
-  private:
-   const std::shared_ptr<const Interpolate> A_, n_;
+  double A(double T) const;
+  double n(double T) const;
+
+ private:
+  const std::shared_ptr<const Interpolate> A_, n_;
 };
+
+static Register<PowerLawCreep> regPowerLawCreep;
 
 /// A power law type model that uses KM concepts to switch between mechanisms
 class RegionKMCreep: public ScalarCreepRule {
-  public:
-   RegionKMCreep(std::vector<double> cuts, std::vector<double> A, std::vector<double> B,
-                 double kboltz, double b, double eps0,
-                 std::shared_ptr<LinearElasticModel> emodel);
+ public:
+  RegionKMCreep(std::vector<double> cuts, std::vector<double> A, std::vector<double> B,
+                double kboltz, double b, double eps0,
+                std::shared_ptr<LinearElasticModel> emodel);
 
-   virtual int g(double seq, double eeq, double t, double T, double & g) const;
-   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
-   virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
-  private:
-   void select_region_(double seq, double T, double & Ai, double & Bi) const;
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
 
-  private:
-   const std::vector<double> cuts_;
-   const std::vector<double> A_;
-   const std::vector<double> B_;
-   const double kboltz_, b_, eps0_, b3_;
-   const std::shared_ptr<LinearElasticModel> emodel_;
+ private:
+  void select_region_(double seq, double T, double & Ai, double & Bi) const;
+
+ private:
+  const std::vector<double> cuts_;
+  const std::vector<double> A_;
+  const std::vector<double> B_;
+  const double kboltz_, b_, eps0_, b3_;
+  const std::shared_ptr<LinearElasticModel> emodel_;
 };
+
+static Register<RegionKMCreep> regRegionKMCreep;
 
 /// Classical Norton-Bailey creep
 class NortonBaileyCreep: public ScalarCreepRule {
@@ -63,24 +76,33 @@ class NortonBaileyCreep: public ScalarCreepRule {
   NortonBaileyCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> m,
                     std::shared_ptr<Interpolate> n);
 
-   virtual int g(double seq, double eeq, double t, double T, double & g) const;
-   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
-   virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
-   double A(double T) const;
-   double m(double T) const;
-   double n(double T) const;
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
+
+  double A(double T) const;
+  double m(double T) const;
+  double n(double T) const;
 
  private:
-   const std::shared_ptr<const Interpolate> A_, m_, n_;
-
+  const std::shared_ptr<const Interpolate> A_, m_, n_;
 };
+
+static Register<NortonBaileyCreep> regNortonBaileyCreep;
 
 /// Classical Mukherjee creep
 class MukherjeeCreep: public ScalarCreepRule {
  public:
   MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel, double A, double n,
                  double D0, double Q, double b, double k, double R);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
@@ -97,8 +119,9 @@ class MukherjeeCreep: public ScalarCreepRule {
  private:
   const std::shared_ptr<const LinearElasticModel> emodel_;
   const double A_, n_, D0_, Q_, b_, k_, R_;
-
 };
+
+static Register<MukherjeeCreep> regMukherjeeCreep;
 
 /// Creep trial state
 class CreepModelTrialState : public TrialState {
@@ -109,7 +132,7 @@ class CreepModelTrialState : public TrialState {
 };
 
 /// Master class of all creep models defining the interface
-class CreepModel: public Solvable {
+class CreepModel: public NEMLObject, public Solvable {
  public:
   CreepModel(double tol, int miter, bool verbose);
 
@@ -149,7 +172,6 @@ class CreepModel: public Solvable {
   const double tol_;
   const int miter_;
   const bool verbose_;
-
 };
 
 /// J2 creep based on a scalar creep rule
@@ -157,6 +179,10 @@ class J2CreepModel: public CreepModel {
  public:
   J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
                double tol = 1.0e-10, int miter = 25, bool verbose = false);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
   virtual int f(const double * const s, const double * const e, double t, double T, 
                 double * const f) const;
@@ -178,8 +204,9 @@ class J2CreepModel: public CreepModel {
 
  private:
   std::shared_ptr<ScalarCreepRule> rule_;
-
 };
+
+static Register<J2CreepModel> regJ2CreepModel;
 
 } // namespace neml
 
