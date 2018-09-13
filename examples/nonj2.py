@@ -49,7 +49,8 @@ if __name__ == "__main__":
   
   hiso = hardening.LinearIsotropicHardeningRule(sY, -K/10)
   
-  hmodel = hardening.Chaboche(hiso, [K * 3.0/2.0], [hardening.ConstantGamma(0.0)])
+  hmodel = hardening.Chaboche(hiso, [K * 3.0/2.0], 
+      [hardening.ConstantGamma(0.0)], [0.0], [1.0])
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
   #hkin = hardening.LinearKinematicHardeningRule(K)

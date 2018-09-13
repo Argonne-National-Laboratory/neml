@@ -33,7 +33,9 @@ if __name__ == "__main__":
   iso = hardening.VoceIsotropicHardeningRule(k, Q, b)
   cs = [C]
   gs = [hardening.SatGamma(gs, g0, beta)]
-  hmodel = hardening.Chaboche(iso, cs, gs)
+  As = [0.0]
+  ns = [1.0]
+  hmodel = hardening.Chaboche(iso, cs, gs, As, ns)
 
   fluidity = visco_flow.ConstantFluidity(eta)
 

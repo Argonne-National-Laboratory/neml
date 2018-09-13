@@ -26,7 +26,8 @@ if __name__ == "__main__":
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
   gmodels = [hardening.ConstantGamma(g) for g in r]
-  hrule = hardening.Chaboche(iso, c, gmodels)
+  hrule = hardening.Chaboche(iso, c, gmodels, [0.0] * len(c), 
+      [1.0] * len(c))
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
   model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,

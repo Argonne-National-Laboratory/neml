@@ -60,6 +60,8 @@ class TestUniaxialRI(CommonUniaxial, unittest.TestCase):
     Kp = 0.0
     c = [30000.0]
     r = [60.0]
+    A = [0.0]
+    n = [1.0]
     
     shear = elasticity.ShearModulus(mu)
     bulk = elasticity.BulkModulus(K)
@@ -67,7 +69,7 @@ class TestUniaxialRI(CommonUniaxial, unittest.TestCase):
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
     gmodels = [hardening.ConstantGamma(g) for g in r]
-    hrule = hardening.Chaboche(iso, c, gmodels)
+    hrule = hardening.Chaboche(iso, c, gmodels, A, n)
 
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
     self.model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,

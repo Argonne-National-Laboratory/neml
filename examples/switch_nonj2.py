@@ -56,8 +56,10 @@ if __name__ == "__main__":
   iso_ri = hardening.LinearIsotropicHardeningRule(flow_interp, 
       interpolate.ConstantInterpolate(-K/10))
   
-  hmodel_rd = hardening.Chaboche(iso_rd, [K * 3.0/2.0], [hardening.ConstantGamma(0.0)])
-  hmodel_ri = hardening.Chaboche(iso_ri, [K * 3.0/2.0], [hardening.ConstantGamma(0.0)])
+  hmodel_rd = hardening.Chaboche(iso_rd, [K * 3.0/2.0], 
+      [hardening.ConstantGamma(0.0)], [0.0], [1.0])
+  hmodel_ri = hardening.Chaboche(iso_ri, [K * 3.0/2.0], 
+      [hardening.ConstantGamma(0.0)], [0.0], [1.0])
 
   surface_m = surfaces.IsoKinJ2()
 

@@ -63,12 +63,12 @@ PYBIND11_MODULE(hardening, m) {
 
   py::class_<InterpolatedIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<InterpolatedIsotropicHardeningRule>>(m, "InterpolatedIsotropicHardeningRule")
       .def(py::init([](py::args args, py::kwargs kwargs)
-                    {
-                      return
-                      create_object_python<InterpolatedIsotropicHardeningRule>(args,
-                                                                               kwargs,
-                                                                               {"flow"});
-                    }))
+        {
+          return
+          create_object_python<InterpolatedIsotropicHardeningRule>(args,
+                                                                   kwargs,
+                                                                   {"flow"});
+        }))
       ;
 
   py::class_<VoceIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule")
@@ -101,15 +101,20 @@ PYBIND11_MODULE(hardening, m) {
       ;
 
   py::class_<LinearKinematicHardeningRule, KinematicHardeningRule, std::shared_ptr<LinearKinematicHardeningRule>>(m, "LinearKinematicHardeningRule")
-      .def(py::init<double>(), py::arg("H"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("H"))
-      
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<LinearKinematicHardeningRule>(args,
+                                                                    kwargs, {"H"});
+        }))
       .def("H", &LinearKinematicHardeningRule::H)
       ;
 
   py::class_<CombinedHardeningRule, HardeningRule, std::shared_ptr<CombinedHardeningRule>>(m, "CombinedHardeningRule")
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::shared_ptr<KinematicHardeningRule>>(),
-           py::arg("iso"), py::arg("kin"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<CombinedHardeningRule>(args, kwargs,
+                                                             {"iso", "kin"});
+        }))
       ;
 
   py::class_<NonAssociativeHardening, NEMLObject, std::shared_ptr<NonAssociativeHardening>>(m, "NonAssociativeHardening")
@@ -218,9 +223,6 @@ PYBIND11_MODULE(hardening, m) {
             py_error(ier);
             return f;
            }, "Hardening rule (temperature) derivative with respect to history.")
-
-      ;
-
       ;
 
   py::class_<GammaModel, NEMLObject, std::shared_ptr<GammaModel>>(m, "GammaModel")
@@ -229,33 +231,30 @@ PYBIND11_MODULE(hardening, m) {
       ;
 
   py::class_<ConstantGamma, GammaModel, std::shared_ptr<ConstantGamma>>(m, "ConstantGamma")
-      .def(py::init<double>(), py::arg("g"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("g"))
-
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ConstantGamma>(args, kwargs, {"g"});
+        }))
       .def("g", &ConstantGamma::g)
       ;
 
   py::class_<SatGamma, GammaModel, std::shared_ptr<SatGamma>>(m, "SatGamma")
-      .def(py::init<double,double,double>(), py::arg("gs"), py::arg("g0"),
-           py::arg("beta"))
-      .def(py::init<std::shared_ptr<Interpolate>,std::shared_ptr<Interpolate>,std::shared_ptr<Interpolate>>(), py::arg("gs"), py::arg("g0"),
-           py::arg("beta"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<SatGamma>(args, kwargs, {"gs", "g0",
+                                                "beta"});
+        }))
       .def("gs", &SatGamma::gs)
       .def("g0", &SatGamma::g0)
       .def("beta", &SatGamma::beta)
       ;
 
   py::class_<Chaboche, NonAssociativeHardening, std::shared_ptr<Chaboche>>(m, "Chaboche")
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>, bool>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("nonisothermal") = true)
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<GammaModel>>, bool>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("nonisothermal") = true)
-
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<double>, std::vector<std::shared_ptr<GammaModel>>, std::vector<double>, std::vector<double>, bool>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"), py::arg("nonisothermal") = true)
-      .def(py::init<std::shared_ptr<IsotropicHardeningRule>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<GammaModel>>, std::vector<std::shared_ptr<Interpolate>>, std::vector<std::shared_ptr<Interpolate>>, bool>(),
-           py::arg("iso"), py::arg("c"), py::arg("gmodels"), py::arg("A"), py::arg("a"), py::arg("nonisothermal") = true)
-
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<Chaboche>(args, kwargs, {"iso", "C",
+                                                "gmodels", "A", "a"});
+        }))
       .def_property_readonly("n", &Chaboche::n, "Number of backstresses")
       .def("c",
          [](const Chaboche& m, double T) -> py::array_t<double>

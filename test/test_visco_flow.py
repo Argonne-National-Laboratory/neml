@@ -270,8 +270,10 @@ class TestChabocheModel(unittest.TestCase, CommonFlowRule):
     cs = [C1, C2, C3]
     gs = [y1, y2, y3]
     gmodels = [hardening.ConstantGamma(g) for g in gs]
+    A = [0.0, 0.0, 0.0]
+    ae = [1.0, 1.0, 1.0]
 
-    hmodel = hardening.Chaboche(iso, cs, gmodels)
+    hmodel = hardening.Chaboche(iso, cs, gmodels, A, ae)
 
     fluidity = visco_flow.ConstantFluidity(eta)
 
@@ -311,8 +313,11 @@ class TestChebocheFlow(unittest.TestCase):
     self.iso = hardening.VoceIsotropicHardeningRule(self.sY, self.Q, self.b)
     self.cs = [C1, C2, C3]
     self.gs = [y1, y2, y3]
+    self.As = [0.0, 0.0, 0.0]
+    self.ns = [1.0, 1.0, 1.0]
     self.gmodels = [hardening.ConstantGamma(g) for g in self.gs]
-    self.hmodel = hardening.Chaboche(self.iso, self.cs, self.gmodels)
+    self.hmodel = hardening.Chaboche(self.iso, self.cs, self.gmodels, 
+        self.As, self.ns)
 
     self.fluidity = visco_flow.ConstantFluidity(self.eta)
 
@@ -484,7 +489,9 @@ class TestChabocheJ2Voce(unittest.TestCase, CommonFlowRule):
     self.iso = hardening.VoceIsotropicHardeningRule(self.k, self.Q, self.b)
     cs = [self.C]
     gs = [hardening.SatGamma(self.gs, self.g0, self.beta)]
-    self.hardening = hardening.Chaboche(self.iso, cs, gs)
+    As = [0.0]
+    ns = [1.0]
+    self.hardening = hardening.Chaboche(self.iso, cs, gs, As, ns)
 
     self.fluidity = visco_flow.ConstantFluidity(self.K)
 

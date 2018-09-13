@@ -368,10 +368,13 @@ class TestChabocheNewFormLinear(unittest.TestCase, CommonNonAssociative):
     self.cs = list(np.array(range(self.n)) / (1+self.n))
     self.rs = np.array(range(self.n)) * 10.0
     self.gammas = [hardening.ConstantGamma(r) for r in self.rs]
+    self.As = [0.0] * self.n
+    self.ns = [1.0] * self.n
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
 
-    self.model = hardening.Chaboche(self.iso, self.cs, self.gammas)
+    self.model = hardening.Chaboche(self.iso, self.cs, self.gammas, 
+        self.As, self.ns)
 
     self.hist0 = np.zeros((1 + self.n*6,))
     self.conform = 7
@@ -427,10 +430,13 @@ class TestChabocheNewFormSat(unittest.TestCase, CommonNonAssociative):
     self.gss = 2.0 * self.g0s
     self.betas = np.array(range(self.n)) / self.n
     self.gammas = [hardening.SatGamma(a, b, c) for a,b,c in zip(self.g0s, self.gss, self.betas)]
+    self.As = [0.0] * self.n
+    self.ns = [1.0] * self.n
 
     self.iso = hardening.LinearIsotropicHardeningRule(self.s0, self.K)
 
-    self.model = hardening.Chaboche(self.iso, self.cs, self.gammas)
+    self.model = hardening.Chaboche(self.iso, self.cs, self.gammas, self.As,
+        self.ns)
 
     self.hist0 = np.zeros((1 + self.n*6,))
     self.conform = 7
@@ -488,10 +494,12 @@ class TestChabocheTempTerm(unittest.TestCase, CommonNonAssociative):
     cs = [interpolate.PiecewiseLinearInterpolate(Ts, [ci,cj]) for ci,cj in zip(cvals1, cvals2)]
     rs = [1.0e-2,1.0]
     gammas = [hardening.ConstantGamma(r) for r in rs]
+    self.As = [0.0] * self.n
+    self.ns = [1.0] * self.n
 
     iso = hardening.LinearIsotropicHardeningRule(s0, K)
 
-    self.model = hardening.Chaboche(iso, cs, gammas)
+    self.model = hardening.Chaboche(iso, cs, gammas, self.As, self.ns)
 
     self.hist0 = np.zeros((1 + self.n*6,))
     self.conform = 7

@@ -181,66 +181,6 @@ def example_scont_srate(model, sdir, rate, T, stotal, nsteps):
   plt.show()
 
 if __name__ == "__main__":
-  """
-  E = 200000.0
-  nu = 0.27
-
-  mu = E / (2 * (1.0 + nu))
-  K = E / (3 * (1 - 2 * nu))
-
-  s0 = 300.0
-  Kp = 0.0
-  c = np.array([60.0])
-  r = np.array([2.0/3.0*30000.0/60.0])
-  
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-  surface = surfaces.IsoKinJ2()
-  iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
-  hrule = hardening.Chaboche(iso, c, r)
-
-  flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True,
-      check_kt = False)
-  example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0])/10.0, 300.0, 100.0, 100)
-  """
-  
-  """
-  E = 200000.0
-  nu = 0.27
-
-  mu = E / (2 * (1.0 + nu))
-  K = E / (3 * (1 - 2 * nu))
-
-  n = 12.0
-  eta = 150.0
-  k = 6.0
-  C = 24800.0
-  g0 = 300.0
-  Q = 86 - k
-  gs = 300.0
-  b = 10.0
-  beta = 0.0
-  
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-
-  surface = surfaces.IsoKinJ2()
-  iso = hardening.VoceIsotropicHardeningRule(k, Q, b)
-  cs = [C]
-  gs = [hardening.SatGamma(gs, g0, beta)]
-  hmodel = hardening.Chaboche(iso, cs, gs)
-
-  fluidity = visco_flow.ConstantFluidity(eta)
-
-  flow = visco_flow.ChabocheFlowRule(
-      surface, hmodel, fluidity, n)
-
-  model = models.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
-  """
-
   n = 20.0
   eta = 108.0
   sY = 89.0
@@ -261,7 +201,8 @@ if __name__ == "__main__":
   cs = [C1, C2, C3]
   gs = np.array([y1, y2, y3])
   gmodels = [hardening.ConstantGamma(g) for g in gs]
-  hmodel = hardening.Chaboche(iso, cs, gmodels)
+  hmodel = hardening.Chaboche(iso, cs, gmodels, [0.0] * len(cs),
+      [1.0] * len(cs))
 
   fluidity = visco_flow.ConstantFluidity(eta)
 

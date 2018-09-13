@@ -246,8 +246,9 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
     d = 1000.0
     
     cs = [5.0,10.0]
-
     gs = [1000.0,1000.0]
+    As = [0.0, 0.0, 0.0]
+    ns = [1.0, 1.0, 1.0]
 
     shear = elasticity.ShearModulus(mu)
     bulk = elasticity.BulkModulus(K)
@@ -257,7 +258,7 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
     iso = hardening.VoceIsotropicHardeningRule(ys, r, d)
     
     gammas = [hardening.ConstantGamma(g) for g in gs]
-    hmodel = hardening.Chaboche(iso, cs, gammas)
+    hmodel = hardening.Chaboche(iso, cs, gammas, As, ns)
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
     self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
@@ -305,6 +306,8 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
 
     Cs = [135.0e3, 61.0e3, 11.0e3]
     gs = [5.0e4, 1100.0, 1.0]
+    As = [0.0, 0.0, 0.0]
+    ns = [1.0, 1.0, 1.0]
     gmodels = [hardening.ConstantGamma(g) for g in gs]
 
     eta = 701.0
@@ -314,7 +317,7 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(0.0, r, d)
 
-    hmodel = hardening.Chaboche(iso, Cs, gmodels)
+    hmodel = hardening.Chaboche(iso, Cs, gmodels, As, ns)
 
     fluidity = visco_flow.ConstantFluidity(eta)
     

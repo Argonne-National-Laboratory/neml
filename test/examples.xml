@@ -201,6 +201,8 @@
               <g>1000.0</g>
             </gammamodel>
           </gammamodels>
+          <A>0.0 0.0</A>
+          <a>1.0 1.0</a>
         </hardening>
       </rule>
     </plastic>
@@ -262,6 +264,8 @@
               <g>1.0</g>
             </gammamodel>
           </gammamodels>
+          <A>0.0 0.0 0.0</A>
+          <a>1.0 1.0 1.0</a>
         </hardening>
         <fluidity type="constant">
           <eta>701.0</eta>

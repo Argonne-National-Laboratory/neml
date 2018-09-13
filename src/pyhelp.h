@@ -101,6 +101,9 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
         try {
           std::vector<double> v = py::cast<std::vector<double>>(value);
           std::vector<std::shared_ptr<Interpolate>> vect;
+          for (auto it = v.begin(); it != v.end(); ++it) {
+            vect.push_back(std::make_shared<ConstantInterpolate>(*it));
+          }
 
           pset.assign_parameter(name, vect);
         }

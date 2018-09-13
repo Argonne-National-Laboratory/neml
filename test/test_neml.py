@@ -322,6 +322,8 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
     self.cs = [10.0, 2.0]
     self.rs = [5.0, 1.0]
     self.gmodels = [hardening.ConstantGamma(g) for g in self.rs]
+    self.As = [0.0] * self.n
+    self.ns = [1.0] * self.n
 
     shear = elasticity.ShearModulus(self.mu)
     bulk = elasticity.BulkModulus(self.K)
@@ -329,7 +331,8 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
-    hmodel = hardening.Chaboche(iso, self.cs, self.gmodels)
+    hmodel = hardening.Chaboche(iso, self.cs, self.gmodels, 
+        self.As, self.ns)
 
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
@@ -475,8 +478,10 @@ class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacob
     iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
     cs = [C1, C2, C3]
     gs = [y1, y2, y3]
+    As = [0.0, 0.0, 0.0]
+    ns = [1.0, 1.0, 1.0]
     gmodels = [hardening.ConstantGamma(g) for g in gs]
-    hmodel = hardening.Chaboche(iso, cs, gmodels)
+    hmodel = hardening.Chaboche(iso, cs, gmodels, As, ns)
 
     fluidity = visco_flow.ConstantFluidity(eta)
 
