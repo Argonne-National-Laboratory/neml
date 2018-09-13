@@ -17,7 +17,7 @@ namespace neml {
 PYBIND11_MODULE(hardening, m) {
   m.doc() = "Various hardening rules.";
 
-  py::class_<HardeningRule, std::shared_ptr<HardeningRule>>(m, "HardeningRule")
+  py::class_<HardeningRule, NEMLObject, std::shared_ptr<HardeningRule>>(m, "HardeningRule")
       .def_property_readonly("nhist", &HardeningRule::nhist, "Number of history variables.")
 
       .def("init_hist",
@@ -49,28 +49,51 @@ PYBIND11_MODULE(hardening, m) {
       ;
 
   py::class_<LinearIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<LinearIsotropicHardeningRule>>(m, "LinearIsotropicHardeningRule")
-      .def(py::init<double, double>(), py::arg("s0"), py::arg("K"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("s0"), py::arg("K"))
-      
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return
+                      create_object_python<LinearIsotropicHardeningRule>(args,
+                                                                         kwargs,
+                                                                         {"s0",
+                                                                         "K"});
+                    }))      
       .def("s0", &LinearIsotropicHardeningRule::s0)
       .def("K", &LinearIsotropicHardeningRule::K)
       ;
 
   py::class_<InterpolatedIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<InterpolatedIsotropicHardeningRule>>(m, "InterpolatedIsotropicHardeningRule")
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("flow_stress"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return
+                      create_object_python<InterpolatedIsotropicHardeningRule>(args,
+                                                                               kwargs,
+                                                                               {"flow"});
+                    }))
       ;
 
   py::class_<VoceIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule")
-      .def(py::init<double, double, double>(), py::arg("s0"), py::arg("R"), py::arg("d"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("s0"), py::arg("R"), py::arg("d"))
-      
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return
+                      create_object_python<VoceIsotropicHardeningRule>(args,
+                                                                       kwargs,
+                                                                       {"s0",
+                                                                       "R", "d"});
+                    }))
+
       .def("s0", &VoceIsotropicHardeningRule::s0)
       .def("R", &VoceIsotropicHardeningRule::R)
       .def("d", &VoceIsotropicHardeningRule::d)
       ;
 
   py::class_<CombinedIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<CombinedIsotropicHardeningRule>>(m, "CombinedIsotropicHardeningRule")
-      .def(py::init<std::vector<std::shared_ptr<IsotropicHardeningRule>>>(), py::arg("rules"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return
+                      create_object_python<CombinedIsotropicHardeningRule>(args,
+                                                                           kwargs,
+                                                                           {"rules"});
+                    }))
       .def_property_readonly("nrules", &CombinedIsotropicHardeningRule::nrules)
       ;
 
@@ -89,7 +112,7 @@ PYBIND11_MODULE(hardening, m) {
            py::arg("iso"), py::arg("kin"))
       ;
 
-  py::class_<NonAssociativeHardening, std::shared_ptr<NonAssociativeHardening>>(m, "NonAssociativeHardening")
+  py::class_<NonAssociativeHardening, NEMLObject, std::shared_ptr<NonAssociativeHardening>>(m, "NonAssociativeHardening")
       .def_property_readonly("ninter", &NonAssociativeHardening::ninter, "Number of q variables.")
       .def_property_readonly("nhist", &NonAssociativeHardening::nhist, "Number of a variables.")
 
@@ -200,7 +223,7 @@ PYBIND11_MODULE(hardening, m) {
 
       ;
 
-  py::class_<GammaModel, std::shared_ptr<GammaModel>>(m, "GammaModel")
+  py::class_<GammaModel, NEMLObject, std::shared_ptr<GammaModel>>(m, "GammaModel")
       .def("gamma", &GammaModel::gamma)
       .def("dgamma", &GammaModel::dgamma)
       ;

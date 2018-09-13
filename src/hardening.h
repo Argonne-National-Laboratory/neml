@@ -2,6 +2,7 @@
 #define HARDENING_H
 
 #include "interpolate.h"
+#include "objects.h"
 
 #include <cstddef>
 #include <memory>
@@ -12,7 +13,7 @@ namespace neml {
 /// Interface for a generic hardening rule
 //    1) Take alpha to q
 //    2) Give the gradient of that function
-class HardeningRule {
+class HardeningRule: public NEMLObject {
  public:
   virtual size_t nhist() const = 0;
   virtual int init_hist(double * const alpha) const = 0;
@@ -34,6 +35,11 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   LinearIsotropicHardeningRule(double s0, double K);
   LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -43,6 +49,8 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
   const std::shared_ptr<const Interpolate> s0_, K_;
 };
 
+static Register<LinearIsotropicHardeningRule> regLinearIsotropicHardeningRule;
+
 /// Isotropic hardening with flow stress from some interpolation function
 //    The convention will be to provide a flow curve as
 //    (plastic strain, flow stress) tuples, with the value of the curve at
@@ -50,6 +58,11 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
 class InterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   InterpolatedIsotropicHardeningRule(std::shared_ptr<Interpolate> flow);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -58,11 +71,19 @@ class InterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
 
 };
 
+static Register<InterpolatedIsotropicHardeningRule>
+  regInterpolatedIsotropicHardeningRule;
+
 /// Voce isotropic hardening
 class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   VoceIsotropicHardeningRule(double s0, double R, double d);
   VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> R, std::shared_ptr<Interpolate> d);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -72,14 +93,20 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
 
  private:
   const std::shared_ptr<const Interpolate> s0_, R_, d_;
-
 };
+
+static Register<VoceIsotropicHardeningRule> regVoceIsotropicHardeningRule;
 
 /// Combined hardening rule superimposing a bunch of separate ones
 class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   CombinedIsotropicHardeningRule(
       std::vector<std::shared_ptr<IsotropicHardeningRule>> rules);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -89,6 +116,8 @@ class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
   const std::vector<std::shared_ptr<IsotropicHardeningRule>> rules_;
 
 };
+
+static Register<CombinedIsotropicHardeningRule> regCombinedIsotropicHardeningRule;
 
 /// Base class for pure kinematic hardening
 class KinematicHardeningRule: public HardeningRule {
@@ -105,6 +134,10 @@ class LinearKinematicHardeningRule: public KinematicHardeningRule {
   LinearKinematicHardeningRule(double H);
   LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H);
 
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual int q(const double * const alpha, double T, double * const qv) const;
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
 
@@ -114,11 +147,18 @@ class LinearKinematicHardeningRule: public KinematicHardeningRule {
   const std::shared_ptr<const Interpolate> H_;
 };
 
+static Register<LinearKinematicHardeningRule> regLinearKinematicHardeningRule;
+
 /// Class to combine isotropic and kinematic hardening rules
 class CombinedHardeningRule: public HardeningRule {
  public:
   CombinedHardeningRule(std::shared_ptr<IsotropicHardeningRule> iso,
                         std::shared_ptr<KinematicHardeningRule> kin);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual size_t nhist() const;
   virtual int init_hist(double * const alpha) const;
   virtual int q(const double * const alpha, double T, double * const qv) const;
@@ -129,8 +169,10 @@ class CombinedHardeningRule: public HardeningRule {
   std::shared_ptr<KinematicHardeningRule> kin_;
 };
 
+static Register<CombinedHardeningRule> regCombinedHardeningRule;
+
 /// ABC of a non-associative hardening rule
-class NonAssociativeHardening {
+class NonAssociativeHardening: public NEMLObject {
  public:
   virtual size_t ninter() const = 0; // How many "q" variables it spits out
   virtual size_t nhist() const = 0; // How many internal variables it stores
@@ -165,7 +207,7 @@ class NonAssociativeHardening {
 };
 
 /// Gamma as a function of equivalent plastic strain
-class GammaModel {
+class GammaModel: public NEMLObject {
  public:
   virtual double gamma(double ep, double T) const = 0;
   virtual double dgamma(double ep, double T) const = 0;
@@ -178,6 +220,10 @@ class ConstantGamma: public GammaModel {
   ConstantGamma(double g);
   ConstantGamma(std::shared_ptr<Interpolate> g);
 
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual double gamma(double ep, double T) const;
   virtual double dgamma(double ep, double T) const;
 
@@ -185,14 +231,19 @@ class ConstantGamma: public GammaModel {
 
  private:
   const std::shared_ptr<const Interpolate> g_;
-
 };
+
+static Register<ConstantGamma> regConstantGamma;
 
 /// Gamma evolves with a saturating Voce form
 class SatGamma: public GammaModel {
  public:
   SatGamma(double gs, double g0, double beta);
   SatGamma(std::shared_ptr<Interpolate> gs, std::shared_ptr<Interpolate> g0, std::shared_ptr<Interpolate> beta);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
   virtual double gamma(double ep, double T) const;
   virtual double dgamma(double ep, double T) const;
@@ -203,8 +254,9 @@ class SatGamma: public GammaModel {
 
  private:
   const std::shared_ptr<const Interpolate> gs_, g0_, beta_;
-
 };
+
+static Register<SatGamma> regSatGamma;
 
 /// Chaboche model: generalized Frederick-Armstrong
 //    This model degenerates to Frederick-Armstrong for n = 1
@@ -233,6 +285,10 @@ class Chaboche: public NonAssociativeHardening {
            std::vector<std::shared_ptr<Interpolate>> A,
            std::vector<std::shared_ptr<Interpolate>> a,
            bool noniso = true);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
   virtual size_t ninter() const; // How many "q" variables it spits out
   virtual size_t nhist() const; // How many internal variables it stores
@@ -284,6 +340,7 @@ class Chaboche: public NonAssociativeHardening {
   const bool noniso_;
 };
 
+static Register<Chaboche> regChaboche;
 
 } // namespace neml
 

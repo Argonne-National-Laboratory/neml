@@ -110,7 +110,22 @@ class ParameterSet {
   template<typename T>
   std::shared_ptr<T> get_object_parameter(std::string name) 
   {
-    return std::dynamic_pointer_cast<T>(get_parameter<std::shared_ptr<NEMLObject>>(name));
+    return std::static_pointer_cast<T>(get_parameter<std::shared_ptr<NEMLObject>>(name));
+  };
+
+  /// Helper to get a vector of NEMLObjects and cast them to subtype in one go
+  template<typename T>
+  std::vector<std::shared_ptr<T>> get_object_parameter_vector(std::string name)
+  {
+    std::vector<std::shared_ptr<NEMLObject>> ov = 
+        get_parameter<std::vector<std::shared_ptr<NEMLObject>>>(name);
+    std::vector<std::shared_ptr<T>> nv(ov.size());
+    std::transform(std::begin(ov), std::end(ov), std::begin(nv),
+                          [](std::shared_ptr<NEMLObject> const & v)
+                          {
+                            return std::static_pointer_cast<T>(v);
+                          });
+    return nv;
   };
   
   /// Get the type of parameter
