@@ -15,7 +15,7 @@ namespace neml {
 PYBIND11_MODULE(general_flow, m) {
   m.doc() = "General flow models where subclass functions define everything.";
 
-  py::class_<GeneralFlowRule, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
+  py::class_<GeneralFlowRule, NEMLObject, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
       .def_property_readonly("nhist", &GeneralFlowRule::nhist, "Number of history variables.")
       .def("init_hist",
            [](GeneralFlowRule & m) -> py::array_t<double>
@@ -125,8 +125,10 @@ PYBIND11_MODULE(general_flow, m) {
   ;
 
   py::class_<TVPFlowRule, GeneralFlowRule, std::shared_ptr<TVPFlowRule>>(m, "TVPFlowRule")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<ViscoPlasticFlowRule>>(),
-           py::arg("elastic"), py::arg("flow"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<TVPFlowRule>(args, kwargs, {"elastic", "flow"});
+        }))
       ;
 }
 

@@ -31,6 +31,30 @@ TVPFlowRule::TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
 
 }
 
+std::string TVPFlowRule::type()
+{
+  return "TVPFlowRule";
+}
+
+ParameterSet TVPFlowRule::parameters()
+{
+  ParameterSet pset(TVPFlowRule::type());
+
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("elastic");
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("flow");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> TVPFlowRule::initialize(ParameterSet & params)
+{
+  return std::make_shared<TVPFlowRule>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<ViscoPlasticFlowRule>("flow")
+      ); 
+}
+
+
 size_t TVPFlowRule::nhist() const
 {
   return flow_->nhist();

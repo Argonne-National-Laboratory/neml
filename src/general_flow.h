@@ -1,6 +1,7 @@
 #ifndef GENERAL_FLOW
 #define GENERAL_FLOW
 
+#include "objects.h"
 #include "elasticity.h"
 #include "visco_flow.h"
 
@@ -9,7 +10,7 @@
 namespace neml {
 
 /// ABC for a completely general flow rule...
-class GeneralFlowRule {
+class GeneralFlowRule: public NEMLObject {
  public:
   virtual size_t nhist() const = 0;
   virtual int init_hist(double * const h) = 0;
@@ -67,6 +68,10 @@ class TVPFlowRule : public GeneralFlowRule {
   TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
               std::shared_ptr<ViscoPlasticFlowRule> flow);
 
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual size_t nhist() const;
   virtual int init_hist(double * const h);
 
@@ -117,6 +122,7 @@ class TVPFlowRule : public GeneralFlowRule {
   std::shared_ptr<ViscoPlasticFlowRule> flow_;
 };
 
+static Register<TVPFlowRule> regTVPFlowRule;
 
 } // namespace neml
 
