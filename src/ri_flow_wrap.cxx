@@ -16,7 +16,7 @@ namespace neml {
 PYBIND11_MODULE(ri_flow, m) {
   m.doc() = "Rate independent flow models.";
   
-  py::class_<RateIndependentFlowRule, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")
+  py::class_<RateIndependentFlowRule, NEMLObject, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")
       .def_property_readonly("nhist", &RateIndependentFlowRule::nhist, "Number of history variables.")
       .def("init_hist",
            [](RateIndependentFlowRule & m) -> py::array_t<double>
@@ -104,13 +104,17 @@ PYBIND11_MODULE(ri_flow, m) {
       ;
 
   py::class_<RateIndependentAssociativeFlow, RateIndependentFlowRule, std::shared_ptr<RateIndependentAssociativeFlow>>(m, "RateIndependentAssociativeFlow")
-      .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>>(), 
-           py::arg("surface"), py::arg("hardening"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<RateIndependentAssociativeFlow>(args, kwargs, {"surface", "hardening"});
+        }))
       ;
 
   py::class_<RateIndependentNonAssociativeHardening, RateIndependentFlowRule, std::shared_ptr<RateIndependentNonAssociativeHardening>>(m, "RateIndependentNonAssociativeHardening")
-      .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>>(), 
-           py::arg("surface"), py::arg("hardening"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<RateIndependentNonAssociativeHardening>(args, kwargs, {"surface", "hardening"});
+        }))
       ;
 }
 

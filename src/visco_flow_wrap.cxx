@@ -247,7 +247,7 @@ PYBIND11_MODULE(visco_flow, m) {
           }))
         ;
 
-      py::class_<ChabocheFlowRule, ViscoPlasticFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule")
+    py::class_<ChabocheFlowRule, ViscoPlasticFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule")
         .def(py::init([](py::args args, py::kwargs kwargs)
           {
             return create_object_python<ChabocheFlowRule>(args, kwargs, {"surface", "hardening",

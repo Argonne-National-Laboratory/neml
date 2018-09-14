@@ -1,6 +1,7 @@
 #ifndef RI_FLOW_H
 #define RI_FLOW_H
 
+#include "objects.h"
 #include "surfaces.h"
 #include "hardening.h"
 #include "nemlmath.h"
@@ -10,7 +11,7 @@
 namespace neml {
 
 /// ABC describing rate independent flow
-class RateIndependentFlowRule {
+class RateIndependentFlowRule: public NEMLObject {
  public:
   virtual size_t nhist() const = 0;
   virtual int init_hist(double * const h) const = 0;
@@ -46,6 +47,10 @@ class RateIndependentAssociativeFlow: public RateIndependentFlowRule {
   RateIndependentAssociativeFlow(std::shared_ptr<YieldSurface> surface,
                                  std::shared_ptr<HardeningRule> hardening);
 
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
  
@@ -73,8 +78,9 @@ class RateIndependentAssociativeFlow: public RateIndependentFlowRule {
  private:
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<HardeningRule> hardening_;
-
 };
+
+static Register<RateIndependentAssociativeFlow> regRateIndependentAssociativeFlow;
 
 /// Associative plastic flow but non-associative hardening
 //    This is a general and fairly common case where the plastic flow rule
@@ -88,6 +94,11 @@ class RateIndependentNonAssociativeHardening: public RateIndependentFlowRule {
  public:
   RateIndependentNonAssociativeHardening(std::shared_ptr<YieldSurface> surface,
                                          std::shared_ptr<NonAssociativeHardening> hardening);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
  
@@ -115,9 +126,9 @@ class RateIndependentNonAssociativeHardening: public RateIndependentFlowRule {
  private:
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<NonAssociativeHardening> hardening_;
-
 };
 
+static Register<RateIndependentNonAssociativeHardening> regRateIndependentNonAssociativeHardening;
 
 } // namespace neml
 
