@@ -1,6 +1,7 @@
 #ifndef VISCO_FLOW_H
 #define VISCO_FLOW_H
 
+#include "objects.h"
 #include "nemlerror.h"
 #include "surfaces.h"
 #include "hardening.h"
@@ -11,7 +12,7 @@
 namespace neml {
 
 /// The "g" function in the Perzyna model -- often a power law
-class GFlow {
+class GFlow: public NEMLObject {
  public:
   virtual double g(double f, double T) const = 0;
   virtual double dg(double f, double T) const = 0;
@@ -22,6 +23,11 @@ class GPowerLaw: public GFlow {
  public:
   GPowerLaw(double n);
   GPowerLaw(std::shared_ptr<Interpolate> n);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual double g(double f, double T) const;
   virtual double dg(double f, double T) const;
 
@@ -29,12 +35,12 @@ class GPowerLaw: public GFlow {
 
  private:
   const std::shared_ptr<const Interpolate> n_;
-
 };
 
+static Register<GPowerLaw> regGPowerLaw;
 
 /// ABC describing viscoplastic flow
-class ViscoPlasticFlowRule {
+class ViscoPlasticFlowRule: public NEMLObject {
  public:
   virtual size_t nhist() const = 0;
   virtual int init_hist(double * const h) const = 0;
@@ -108,6 +114,10 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
                   std::shared_ptr<GFlow> g,
                   std::shared_ptr<Interpolate> eta);
 
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
   
@@ -143,13 +153,14 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
   std::shared_ptr<HardeningRule> hardening_;
   std::shared_ptr<GFlow> g_;
   const std::shared_ptr<const Interpolate> eta_;
-
 };
+
+static Register<PerzynaFlowRule> regPerzynaFlowRule;
 
 /// Various Chaboche type fluidity models.
 //
 //  These depend only on the equivalent plastic strain
-class FluidityModel {
+class FluidityModel: public NEMLObject {
  public:
   virtual double eta(double a, double T) const = 0;
   virtual double deta(double a, double T) const = 0;
@@ -160,13 +171,19 @@ class ConstantFluidity: public FluidityModel {
  public:
   ConstantFluidity(double eta);
   ConstantFluidity(std::shared_ptr<Interpolate> eta);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual double eta(double a, double T) const;
   virtual double deta(double a, double T) const;
 
  private:
   const std::shared_ptr<const Interpolate> eta_;
-
 };
+
+static Register<ConstantFluidity> regConstantFluidity;
 
 /// Voce-like saturating fluidity
 class SaturatingFluidity: public FluidityModel {
@@ -175,13 +192,19 @@ class SaturatingFluidity: public FluidityModel {
   SaturatingFluidity(std::shared_ptr<Interpolate> K0,
                      std::shared_ptr<Interpolate> A,
                      std::shared_ptr<Interpolate> b);
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
+
   virtual double eta(double a, double T) const;
   virtual double deta(double a, double T) const;
 
  private:
   const std::shared_ptr<const Interpolate> K0_, A_, b_;
-
 };
+
+static Register<SaturatingFluidity> regSaturatingFluidity;
 
 /// Non-associative flow based on Chaboche's viscoplastic formulation
 //
@@ -201,7 +224,9 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
                    std::shared_ptr<FluidityModel> fluidity,
                    std::shared_ptr<Interpolate> n);
 
-  // Recovery
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
@@ -252,8 +277,9 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
   std::shared_ptr<FluidityModel> fluidity_;
   const std::shared_ptr<const Interpolate> n_;
   const bool recovery_;
-
 };
+
+static Register<ChabocheFlowRule> regChabocheFlowRule;
 
 /// Non-associative flow for Gr. 91 from Yaguchi & Takahashi (2000) + (2005)
 //
@@ -268,6 +294,10 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
 class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
  public:
   YaguchiGr91FlowRule();
+
+  static std::string type();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static ParameterSet parameters();
 
   virtual size_t nhist() const;
   virtual int init_hist(double * const h) const;
@@ -327,8 +357,9 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
   void dev_vec_deriv_(const double * const a, double * const b) const;
 
   double log_tol_ = 1.0e-15;
-
 };
+
+static Register<YaguchiGr91FlowRule> regYaguchiGr91FlowRule;
 
 } // namespace neml
 

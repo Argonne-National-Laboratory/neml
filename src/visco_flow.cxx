@@ -120,6 +120,26 @@ GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n) :
 
 }
 
+std::string GPowerLaw::type()
+{
+  return "GPowerLaw";
+}
+
+ParameterSet GPowerLaw::parameters()
+{
+  ParameterSet pset(GPowerLaw::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> GPowerLaw::initialize(ParameterSet & params)
+{
+  return std::make_shared<GPowerLaw>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      ); 
+}
 
 double GPowerLaw::g(double f, double T) const
 {
@@ -163,6 +183,33 @@ PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
     surface_(surface), hardening_(hardening), g_(g), eta_(eta)
 {
   
+}
+
+std::string PerzynaFlowRule::type()
+{
+  return "PerzynaFlowRule";
+}
+
+ParameterSet PerzynaFlowRule::parameters()
+{
+  ParameterSet pset(PerzynaFlowRule::type());
+
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("g");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("eta");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
+{
+  return std::make_shared<PerzynaFlowRule>(
+      params.get_object_parameter<YieldSurface>("surface"),
+      params.get_object_parameter<HardeningRule>("hardening"),
+      params.get_object_parameter<GFlow>("g"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("eta")
+      ); 
 }
 
 size_t PerzynaFlowRule::nhist() const
@@ -347,6 +394,28 @@ ConstantFluidity::ConstantFluidity(std::shared_ptr<Interpolate> eta) :
 
 }
 
+std::string ConstantFluidity::type()
+{
+  return "ConstantFluidity";
+}
+
+ParameterSet ConstantFluidity::parameters()
+{
+  ParameterSet pset(ConstantFluidity::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("eta");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> ConstantFluidity::initialize(ParameterSet & params)
+{
+  return std::make_shared<ConstantFluidity>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("eta")
+      ); 
+}
+
+
 double ConstantFluidity::eta(double a, double T) const
 {
   return eta_->value(T);
@@ -372,6 +441,32 @@ SaturatingFluidity::SaturatingFluidity(std::shared_ptr<Interpolate> K0,
 {
 
 }
+
+std::string SaturatingFluidity::type()
+{
+  return "SaturatingFluidity";
+}
+
+ParameterSet SaturatingFluidity::parameters()
+{
+  ParameterSet pset(SaturatingFluidity::type());
+
+  pset.add_parameter<std::shared_ptr<Interpolate>>("K0");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("A");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("b");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> SaturatingFluidity::initialize(ParameterSet & params)
+{
+  return std::make_shared<SaturatingFluidity>(
+      params.get_parameter<std::shared_ptr<Interpolate>>("K0"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("A"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("b")
+      ); 
+}
+
 
 double SaturatingFluidity::eta(double a, double T) const
 {
@@ -408,6 +503,33 @@ ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
     recovery_(false)
 {
   
+}
+
+std::string ChabocheFlowRule::type()
+{
+  return "ChabocheFlowRule";
+}
+
+ParameterSet ChabocheFlowRule::parameters()
+{
+  ParameterSet pset(ChabocheFlowRule::type());
+
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
+  pset.add_parameter<std::shared_ptr<NEMLObject>>("fluidity");
+  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params)
+{
+  return std::make_shared<ChabocheFlowRule>(
+      params.get_object_parameter<YieldSurface>("surface"),
+      params.get_object_parameter<NonAssociativeHardening>("hardening"),
+      params.get_object_parameter<FluidityModel>("fluidity"),
+      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      ); 
 }
 
 size_t ChabocheFlowRule::nhist() const
@@ -595,6 +717,24 @@ YaguchiGr91FlowRule::YaguchiGr91FlowRule()
 {
 
 }
+
+std::string YaguchiGr91FlowRule::type()
+{
+  return "YaguchiGr91FlowRule";
+}
+
+ParameterSet YaguchiGr91FlowRule::parameters()
+{
+  ParameterSet pset(YaguchiGr91FlowRule::type());
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> YaguchiGr91FlowRule::initialize(ParameterSet & params)
+{
+  return std::make_shared<YaguchiGr91FlowRule>(); 
+}
+
 
 size_t YaguchiGr91FlowRule::nhist() const
 {
