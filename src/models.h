@@ -1,6 +1,7 @@
 #ifndef MODELS_H
 #define MODELS_H
 
+#include "objects.h"
 #include "elasticity.h"
 #include "ri_flow.h"
 #include "visco_flow.h"
@@ -20,7 +21,7 @@ namespace neml {
 /// NEML material model interface definitions
 //  All material models inherit from this base class.  It defines interfaces
 //  and provides the methods for reading in material parameters.
-class NEMLModel {
+class NEMLModel: public NEMLObject {
   public:
    NEMLModel();
    virtual ~NEMLModel();
@@ -238,6 +239,10 @@ class SmallStrainElasticity: public NEMLModel_sd {
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
                         double alpha = 0.0);
 
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -250,6 +255,8 @@ class SmallStrainElasticity: public NEMLModel_sd {
   virtual size_t nhist() const;
   virtual int init_hist(double * const hist) const;
 };
+
+static Register<SmallStrainElasticity> regSmallStrainElasticity;
 
 /// Small strain perfect plasticity trial state
 //  Store data the solver needs and can be passed into solution interface
@@ -320,6 +327,10 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
                                bool verbose = false,
                                int max_divide = 8);
 
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -365,9 +376,9 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
   const int miter_;
   const bool verbose_;
   const int max_divide_;
-
 };
 
+static Register<SmallStrainPerfectPlasticity> regSmallStrainPerfectPlasticity;
 
 /// Small strain, rate-independent plasticity
 //    The algorithm used here is generalized closest point projection
@@ -393,6 +404,11 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
                                        bool verbose = false, 
                                        double kttol = 1.0e-2,
                                        bool check_kt = false);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -432,6 +448,8 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
   bool verbose_, check_kt_;
 };
 
+static Register<SmallStrainRateIndependentPlasticity> regSmallStrainRateIndependentPlasticity;
+
 /// Small strain, rate-independent plasticity + creep
 //  Uses a combined iteration of a rate independent plastic + creep model
 //  to solver overall update
@@ -451,6 +469,11 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
                              std::shared_ptr<Interpolate> alpha = nullptr,
                              double tol = 1.0e-8, int miter = 50,
                              bool verbose = false, double sf = 1.0e6);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -490,6 +513,7 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
   bool verbose_;
 };
 
+static Register<SmallStrainCreepPlasticity> regSmallStrainCreepPlasticity;
 
 /// Small strain general integrator
 //    General NR one some stress rate + history evolution rate
@@ -506,6 +530,11 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
                     std::shared_ptr<Interpolate> alpha = nullptr,
                     double tol = 1.0e-8, int miter = 50,
                     bool verbose = false, int max_divide = 6);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -541,6 +570,8 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
   bool verbose_;
 };
 
+static Register<GeneralIntegrator> regGeneralIntegrator;
+
 /// Combines multiple small strain integrators based on regimes of
 /// rate-dependent behavior.
 //
@@ -569,6 +600,10 @@ class KMRegimeModel: public NEMLModel_sd {
                 double kboltz, double b, double eps0,
                 std::shared_ptr<Interpolate> alpha = nullptr);
 
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -594,6 +629,8 @@ class KMRegimeModel: public NEMLModel_sd {
   std::vector<double> gs_;
   double kboltz_, b_, eps0_;
 };
+
+static Register<KMRegimeModel> regKMRegimeModel;
 
 } // namespace neml
 #endif // MODELS_H

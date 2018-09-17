@@ -17,7 +17,7 @@ namespace neml {
 PYBIND11_MODULE(models, m) {
   m.doc() = "Base class for all material models.";
   
-  py::class_<NEMLModel, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
+  py::class_<NEMLModel, NEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
       .def("init_store",
            [](NEMLModel & m) -> py::array_t<double>
@@ -111,11 +111,11 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainElasticity, NEMLModel_sd, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, double>(), 
-           py::arg("elastic"), py::arg("alpha") = 0.0)
-      .def(py::init<std::shared_ptr<LinearElasticModel>, 
-           std::shared_ptr<Interpolate>>(),
-           py::arg("elastic"), py::arg("alpha") = nullptr)
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<SmallStrainElasticity>(args, kwargs,
+                                                             {"elastic"});
+        }))
       ;
 
   py::class_<SSPPTrialState, TrialState>(m, "SSPPTrialState")
@@ -131,24 +131,12 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainPerfectPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, 
-           std::shared_ptr<YieldSurface>, 
-           double, double,
-           double, int , bool, int>(),
-           py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
-           py::arg("alpha") = 0.0,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false, py::arg("max_divide") = 8)
- 
-      .def(py::init<std::shared_ptr<LinearElasticModel>, 
-           std::shared_ptr<YieldSurface>, 
-           std::shared_ptr<Interpolate>,
-           std::shared_ptr<Interpolate>,
-           double, int , bool, int>(),
-           py::arg("elastic"), py::arg("flow"), py::arg("ys"), 
-           py::arg("alpha") = nullptr,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false, py::arg("max_divide") = 8)
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<SmallStrainPerfectPlasticity>(args, kwargs,
+                                                             {"elastic", "surface",
+                                                             "ys"});
+        }))
 
       .def("ys", &SmallStrainPerfectPlasticity::ys)
 
@@ -170,19 +158,11 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, double, double, int , bool, double, bool>(),
-           py::arg("elastic"), py::arg("flow"),
-           py::arg("alpha") = 0.0,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
-           py::arg("check_kt") = false)
-
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<RateIndependentFlowRule>, std::shared_ptr<Interpolate>, double, int , bool, double, bool>(),
-           py::arg("elastic"), py::arg("flow"),
-           py::arg("alpha") = nullptr,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false, py::arg("kttol") = 1.0e-2,
-           py::arg("check_kt") = false)
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<SmallStrainRateIndependentPlasticity>(args, kwargs,
+                                                             {"elastic", "flow"});
+        }))
 
       .def("make_trial_state",
            [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSRIPTrialState>
@@ -202,20 +182,13 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainCreepPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, double, double, int , bool, double>(),
-           py::arg("elastic"),
-           py::arg("plastic"), py::arg("creep"),
-           py::arg("alpha") = 0.0,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false, py::arg("sf") = 1.0e6)
-
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<NEMLModel_sd>, std::shared_ptr<CreepModel>, std::shared_ptr<Interpolate>, double, int , bool, double>(),
-           py::arg("elastic"),
-           py::arg("plastic"), py::arg("creep"),
-           py::arg("alpha") = nullptr,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false, py::arg("sf") = 1.0e6)
-
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<SmallStrainCreepPlasticity>(args, kwargs,
+                                                                  {"elastic",
+                                                                  "plastic",
+                                                                  "creep"});
+        }))
       .def("make_trial_state",
            [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSCPTrialState>
            {
@@ -236,22 +209,12 @@ PYBIND11_MODULE(models, m) {
 
 
   py::class_<GeneralIntegrator, NEMLModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<GeneralFlowRule>, double, double, int , bool, int>(),
-           py::arg("elastic"),
-           py::arg("rule"),
-           py::arg("alpha") = 0.0,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false,
-           py::arg("max_divide") = 6)
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<GeneralIntegrator>(args, kwargs, 
+                                                         {"elastic", "rule"});
+        }))
 
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<GeneralFlowRule>, std::shared_ptr<Interpolate>, double, int , bool, int>(),
-           py::arg("elastic"),
-           py::arg("rule"),
-           py::arg("alpha") = nullptr,
-           py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-           py::arg("verbose") = false,
-           py::arg("max_divide") = 6)
-  
       .def("make_trial_state",
            [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<GITrialState>
            {
@@ -269,19 +232,13 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<KMRegimeModel, NEMLModel_sd, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel")
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::vector<std::shared_ptr<NEMLModel_sd>>,
-           std::vector<double>,
-           double, double, double, double>(),
-           py::arg("elastic"), py::arg("models"), py::arg("gs"),
-           py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
-           py::arg("alpha") = 0.0)
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::vector<std::shared_ptr<NEMLModel_sd>>,
-           std::vector<double>,
-           double, double, double, std::shared_ptr<Interpolate>>(),
-           py::arg("elastic"), 
-           py::arg("models"), py::arg("gs"),
-           py::arg("kboltz"), py::arg("b"), py::arg("eps0"),
-           py::arg("alpha") = nullptr)
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<KMRegimeModel>(args, kwargs, 
+                                                     {"elastic", "models",
+                                                     "gs", "kboltz",
+                                                     "b", "eps0"});
+        }))
       ;
 }
 

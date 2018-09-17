@@ -217,7 +217,6 @@ SmallStrainElasticity::SmallStrainElasticity(
     NEMLModel_sd(elastic, alpha)
 {
 
-
 }
 
 SmallStrainElasticity::SmallStrainElasticity(
@@ -226,7 +225,31 @@ SmallStrainElasticity::SmallStrainElasticity(
     NEMLModel_sd(elastic, alpha)
 {
 
+}
 
+std::string SmallStrainElasticity::type()
+{
+  return "SmallStrainElasticity";
+}
+
+ParameterSet SmallStrainElasticity::parameters()
+{
+  ParameterSet pset(SmallStrainElasticity::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> SmallStrainElasticity::initialize(ParameterSet & params)
+{
+  return std::make_shared<SmallStrainElasticity>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<Interpolate>("alpha")
+      ); 
 }
 
 size_t SmallStrainElasticity::nhist() const
@@ -291,6 +314,43 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
       tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
 {
 
+}
+
+std::string SmallStrainPerfectPlasticity::type()
+{
+  return "SmallStrainPerfectPlasticity";
+}
+
+ParameterSet SmallStrainPerfectPlasticity::parameters()
+{
+  ParameterSet pset(SmallStrainPerfectPlasticity::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("ys");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<int>("max_divide", 8);
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> SmallStrainPerfectPlasticity::initialize(ParameterSet & params)
+{
+  return std::make_shared<SmallStrainPerfectPlasticity>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<YieldSurface>("surface"),
+      params.get_object_parameter<Interpolate>("ys"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<int>("max_divide")
+      ); 
 }
 
 int SmallStrainPerfectPlasticity::update_sd(
@@ -593,6 +653,43 @@ SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
       verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
 {
 
+}
+
+std::string SmallStrainRateIndependentPlasticity::type()
+{
+  return "SmallStrainRateIndependentPlasticity";
+}
+
+ParameterSet SmallStrainRateIndependentPlasticity::parameters()
+{
+  ParameterSet pset(SmallStrainRateIndependentPlasticity::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("flow");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<double>("kttol", 1.0e-2);
+  pset.add_optional_parameter<bool>("check_kt", false);
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> SmallStrainRateIndependentPlasticity::initialize(ParameterSet & params)
+{
+  return std::make_shared<SmallStrainRateIndependentPlasticity>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<RateIndependentFlowRule>("flow"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<double>("kttol"),
+      params.get_parameter<bool>("check_kt")
+      ); 
 }
 
 size_t SmallStrainRateIndependentPlasticity::nhist() const
@@ -972,6 +1069,43 @@ SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
 
 }
 
+std::string SmallStrainCreepPlasticity::type()
+{
+  return "SmallStrainCreepPlasticity";
+}
+
+ParameterSet SmallStrainCreepPlasticity::parameters()
+{
+  ParameterSet pset(SmallStrainCreepPlasticity::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("plastic");
+  pset.add_parameter<NEMLObject>("creep");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<double>("sf", 1.0e6);
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> SmallStrainCreepPlasticity::initialize(ParameterSet & params)
+{
+  return std::make_shared<SmallStrainCreepPlasticity>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<NEMLModel_sd>("plastic"),
+      params.get_object_parameter<CreepModel>("creep"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<double>("sf")
+      ); 
+}
+
 size_t SmallStrainCreepPlasticity::nhist() const
 {
   // The elastic-plastic strain + the plastic model history
@@ -1195,6 +1329,41 @@ GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic
     max_divide_(max_divide)
 {
 
+}
+
+std::string GeneralIntegrator::type()
+{
+  return "GeneralIntegrator";
+}
+
+ParameterSet GeneralIntegrator::parameters()
+{
+  ParameterSet pset(GeneralIntegrator::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("rule");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<int>("max_divide", 8);
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> GeneralIntegrator::initialize(ParameterSet & params)
+{
+  return std::make_shared<GeneralIntegrator>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<GeneralFlowRule>("rule"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<int>("max_divide")
+      ); 
 }
 
 int GeneralIntegrator::update_sd(
@@ -1567,6 +1736,41 @@ KMRegimeModel::KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
     kboltz_(kboltz), b_(b), eps0_(eps0)
 {
 
+}
+
+std::string KMRegimeModel::type()
+{
+  return "KMRegimeModel";
+}
+
+ParameterSet KMRegimeModel::parameters()
+{
+  ParameterSet pset(KMRegimeModel::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<std::vector<NEMLObject>>("models");
+  pset.add_parameter<std::vector<double>>("gs");
+  pset.add_parameter<double>("kboltz");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<double>("eps0");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> KMRegimeModel::initialize(ParameterSet & params)
+{
+  return std::make_shared<KMRegimeModel>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter_vector<NEMLModel_sd>("models"),
+      params.get_parameter<std::vector<double>>("gs"),
+      params.get_parameter<double>("kboltz"),
+      params.get_parameter<double>("b"),
+      params.get_parameter<double>("eps0"),
+      params.get_object_parameter<Interpolate>("alpha")
+      ); 
 }
 
 int KMRegimeModel::update_sd(
