@@ -6,9 +6,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 
 ### Need c++ 11 ###
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 11)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### Select nonlinear solver ###
 set(SOLVER "newton" CACHE STRING "Nonlinear solver to use")

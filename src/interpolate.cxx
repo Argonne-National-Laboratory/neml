@@ -42,9 +42,9 @@ ParameterSet InvalidInterpolate::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> InvalidInterpolate::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> InvalidInterpolate::initialize(ParameterSet & params)
 {
-  return std::make_shared<InvalidInterpolate>(); 
+  return make_unique<InvalidInterpolate>(); 
 }
 
 double InvalidInterpolate::value(double x) const
@@ -81,9 +81,9 @@ ParameterSet PolynomialInterpolate::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & params)
 {
-  return std::make_shared<PolynomialInterpolate>(
+  return make_unique<PolynomialInterpolate>(
       params.get_parameter<std::vector<double>>("coefs")
       ); 
 }
@@ -129,9 +129,9 @@ ParameterSet PiecewiseLinearInterpolate::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> PiecewiseLinearInterpolate::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> PiecewiseLinearInterpolate::initialize(ParameterSet & params)
 {
-  return std::make_shared<PiecewiseLinearInterpolate>(
+  return make_unique<PiecewiseLinearInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_parameter<std::vector<double>>("values")
       ); 
@@ -218,9 +218,9 @@ ParameterSet PiecewiseLogLinearInterpolate::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> PiecewiseLogLinearInterpolate::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> PiecewiseLogLinearInterpolate::initialize(ParameterSet & params)
 {
-  return std::make_shared<PiecewiseLogLinearInterpolate>(
+  return make_unique<PiecewiseLogLinearInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_parameter<std::vector<double>>("values")
       ); 
@@ -292,9 +292,9 @@ ParameterSet ConstantInterpolate::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> ConstantInterpolate::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> ConstantInterpolate::initialize(ParameterSet & params)
 {
-  return std::make_shared<ConstantInterpolate>(
+  return make_unique<ConstantInterpolate>(
       params.get_parameter<double>("v")
       ); 
 }
@@ -331,9 +331,9 @@ ParameterSet MTSShearInterpolate::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> MTSShearInterpolate::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> MTSShearInterpolate::initialize(ParameterSet & params)
 {
-  return std::make_shared<MTSShearInterpolate>(
+  return make_unique<MTSShearInterpolate>(
       params.get_parameter<double>("V0"),
       params.get_parameter<double>("D"),
       params.get_parameter<double>("T0")

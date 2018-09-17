@@ -455,7 +455,7 @@ std::shared_ptr<RateIndependentFlowRule> process_riassociative(
   std::shared_ptr<HardeningRule> hr = dispatch_node(node, "hardening", 
                                                     &process_hardening, ier);
 
-  return std::make_shared<RateIndependentAssociativeFlow>(ys, hr);
+  return make_unique<RateIndependentAssociativeFlow>(ys, hr);
 }
 
 std::shared_ptr<YieldSurface> process_surface(
@@ -474,14 +474,14 @@ std::shared_ptr<YieldSurface> process_isoj2(const xmlpp::Element * node,
                                             int & ier)
 {
   // No parameters!
-  return std::make_shared<IsoJ2>();
+  return make_unique<IsoJ2>();
 }
 
 std::shared_ptr<YieldSurface> process_isokinj2(const xmlpp::Element * node,
                                                int & ier)
 {
   // No parameters!
-  return std::make_shared<IsoKinJ2>();
+  return make_unique<IsoKinJ2>();
 }
 
 std::shared_ptr<YieldSurface> process_isoj2i1(const xmlpp::Element * node,
@@ -489,7 +489,7 @@ std::shared_ptr<YieldSurface> process_isoj2i1(const xmlpp::Element * node,
 {
   auto h = scalar_param(node, "h", ier);
   auto l = scalar_param(node, "l", ier);
-  return std::make_shared<IsoJ2I1>(h,l);
+  return make_unique<IsoJ2I1>(h,l);
 }
 
 std::shared_ptr<YieldSurface> process_isokinj2i1(const xmlpp::Element * node,
@@ -497,7 +497,7 @@ std::shared_ptr<YieldSurface> process_isokinj2i1(const xmlpp::Element * node,
 {
   auto h = scalar_param(node, "h", ier);
   auto l = scalar_param(node, "l", ier);
-  return std::make_shared<IsoKinJ2I1>(h,l);
+  return make_unique<IsoKinJ2I1>(h,l);
 }
 
 std::shared_ptr<HardeningRule> process_hardening(
@@ -535,7 +535,7 @@ std::shared_ptr<IsotropicHardeningRule> process_linearisotropic(
 
   std::shared_ptr<Interpolate> harden = scalar_param(node, "harden", ier);
 
-  return std::make_shared<LinearIsotropicHardeningRule>(yield, harden);
+  return make_unique<LinearIsotropicHardeningRule>(yield, harden);
 }
 
 std::shared_ptr<IsotropicHardeningRule> process_interpolatedisotropic(
@@ -544,7 +544,7 @@ std::shared_ptr<IsotropicHardeningRule> process_interpolatedisotropic(
   // Just the flow curve
   std::shared_ptr<Interpolate> flow = scalar_param(node, "flow", ier);
 
-  return std::make_shared<InterpolatedIsotropicHardeningRule>(flow);
+  return make_unique<InterpolatedIsotropicHardeningRule>(flow);
 }
 
 std::shared_ptr<IsotropicHardeningRule> process_voceisotropic(
@@ -557,7 +557,7 @@ std::shared_ptr<IsotropicHardeningRule> process_voceisotropic(
 
   std::shared_ptr<Interpolate> d = scalar_param(node, "d", ier);
 
-  return std::make_shared<VoceIsotropicHardeningRule>(yield, r, d);
+  return make_unique<VoceIsotropicHardeningRule>(yield, r, d);
 }
 
 std::shared_ptr<IsotropicHardeningRule> process_combinedisotropic(
@@ -567,7 +567,7 @@ std::shared_ptr<IsotropicHardeningRule> process_combinedisotropic(
       dispatch_vector_models<IsotropicHardeningRule>(
           node, "models", "isotropic", &process_isotropictag, ier);
 
-  return std::make_shared<CombinedIsotropicHardeningRule>(mvec);
+  return make_unique<CombinedIsotropicHardeningRule>(mvec);
 }
 
 
@@ -592,7 +592,7 @@ std::shared_ptr<HardeningRule> process_linearkinematic(
   // One parameter: "harden"
   std::shared_ptr<Interpolate> harden = scalar_param(node, "harden", ier);
 
-  return std::make_shared<LinearKinematicHardeningRule>(harden);
+  return make_unique<LinearKinematicHardeningRule>(harden);
 }
 
 std::shared_ptr<HardeningRule> process_combined(const xmlpp::Element * node,
@@ -615,7 +615,7 @@ std::shared_ptr<HardeningRule> process_combined(const xmlpp::Element * node,
   std::shared_ptr<KinematicHardeningRule> ckr = 
       std::dynamic_pointer_cast<KinematicHardeningRule>(kr);
 
-  return std::make_shared<CombinedHardeningRule>(cir, ckr);
+  return make_unique<CombinedHardeningRule>(cir, ckr);
 }
 
 std::shared_ptr<RateIndependentFlowRule> process_rinonassociative_hardening(
@@ -630,7 +630,7 @@ std::shared_ptr<RateIndependentFlowRule> process_rinonassociative_hardening(
   std::shared_ptr<NonAssociativeHardening> nsr = dispatch_node(
       node, "hardening", &process_nonass_hardening, ier);
 
-  return std::make_shared<RateIndependentNonAssociativeHardening>(
+  return make_unique<RateIndependentNonAssociativeHardening>(
       ys, nsr);
 }
 
@@ -666,11 +666,11 @@ std::shared_ptr<NonAssociativeHardening> process_nonass_chaboche(
     std::vector<std::shared_ptr<Interpolate>> A = vector_param(node, "A", ier);
     std::vector<std::shared_ptr<Interpolate>> a = vector_param(node, "a", ier);
     // Create our object
-    return std::make_shared<Chaboche>(cir, c, gvec, A, a);
+    return make_unique<Chaboche>(cir, c, gvec, A, a);
   }
   else {  
     // Create our object
-    return std::make_shared<Chaboche>(cir, c, gvec);
+    return make_unique<Chaboche>(cir, c, gvec);
   }
 }
 
@@ -690,7 +690,7 @@ std::shared_ptr<GammaModel> process_constant_gamma(
   // Single scalar parameter g
   std::shared_ptr<Interpolate> g = scalar_param(node, "g", ier);
 
-  return std::make_shared<ConstantGamma>(g);
+  return make_unique<ConstantGamma>(g);
 }
 
 std::shared_ptr<GammaModel> process_saturating_gamma(
@@ -701,7 +701,7 @@ std::shared_ptr<GammaModel> process_saturating_gamma(
   std::shared_ptr<Interpolate> g0 = scalar_param(node, "g0", ier);
   std::shared_ptr<Interpolate> beta = scalar_param(node, "beta", ier);
 
-  return std::make_shared<SatGamma>(gs, g0, beta);
+  return make_unique<SatGamma>(gs, g0, beta);
 }
 
 std::shared_ptr<ViscoPlasticFlowRule> process_dependent(
@@ -725,7 +725,7 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rd_yaguchigr91(
     const xmlpp::Element * node, int & ier)
 {
   // Nothing but the model, hardwired coefficients
-  return std::make_shared<YaguchiGr91FlowRule>();
+  return make_unique<YaguchiGr91FlowRule>();
 }
 
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_chaboche(
@@ -748,7 +748,7 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rd_chaboche(
   // Rate n
   std::shared_ptr<Interpolate> n = scalar_param(node, "n", ier);
 
-  return std::make_shared<ChabocheFlowRule>(ys, nsr, fm, n);
+  return make_unique<ChabocheFlowRule>(ys, nsr, fm, n);
 
 }
 
@@ -767,7 +767,7 @@ std::shared_ptr<FluidityModel> process_constant_fluidity(
   // One property, eta
   std::shared_ptr<Interpolate> eta = scalar_param(node, "eta", ier);
 
-  return std::make_shared<ConstantFluidity>(eta);
+  return make_unique<ConstantFluidity>(eta);
 }
 
 std::shared_ptr<FluidityModel> process_saturating_fluidity(
@@ -777,7 +777,7 @@ std::shared_ptr<FluidityModel> process_saturating_fluidity(
   std::shared_ptr<Interpolate> A = scalar_param(node, "A", ier);
   std::shared_ptr<Interpolate> b = scalar_param(node, "b", ier);
 
-  return std::make_shared<SaturatingFluidity>(K0, A, b);
+  return make_unique<SaturatingFluidity>(K0, A, b);
 }
 
 std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(
@@ -799,7 +799,7 @@ std::shared_ptr<ViscoPlasticFlowRule> process_rd_associative(
   // eta
   std::shared_ptr<Interpolate> eta = scalar_param(node, "eta", ier);
 
-  return std::make_shared<PerzynaFlowRule>(ys, hr, gm, eta);
+  return make_unique<PerzynaFlowRule>(ys, hr, gm, eta);
 }
 
 std::shared_ptr<GFlow> process_gmodel(const xmlpp::Element * node, int & ier)
@@ -815,7 +815,7 @@ std::shared_ptr<GFlow> process_gmodel_power_law(const xmlpp::Element * node,
   // Just the parameter n
   std::shared_ptr<Interpolate> n = scalar_param(node, "n", ier);
 
-  return std::make_shared<GPowerLaw>(n);
+  return make_unique<GPowerLaw>(n);
 }
 
 std::shared_ptr<LinearElasticModel> get_elastic_model(const xmlpp::Element * node, int & ier)
@@ -823,7 +823,7 @@ std::shared_ptr<LinearElasticModel> get_elastic_model(const xmlpp::Element * nod
   const xmlpp::Element * elastic_node;
   if (not one_child(node, "elastic", elastic_node, ier, false)) {
     ier = 0;
-    return std::make_shared<BlankElasticModel>();
+    return make_unique<BlankElasticModel>();
   }
   else {
     return process_linearelastic(elastic_node, ier);

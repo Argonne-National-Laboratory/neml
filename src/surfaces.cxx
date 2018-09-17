@@ -13,9 +13,9 @@ std::string IsoJ2::type()
   return "IsoJ2";
 }
 
-std::shared_ptr<NEMLObject> IsoJ2::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> IsoJ2::initialize(ParameterSet & params)
 {
-  return std::make_shared<IsoJ2>(); 
+  return make_unique<IsoJ2>(); 
 }
 
 ParameterSet IsoJ2::parameters()
@@ -41,9 +41,9 @@ std::string IsoKinJ2::type()
   return "IsoKinJ2";
 }
 
-std::shared_ptr<NEMLObject> IsoKinJ2::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> IsoKinJ2::initialize(ParameterSet & params)
 {
-  return std::make_shared<IsoKinJ2>(); 
+  return make_unique<IsoKinJ2>(); 
 }
 
 ParameterSet IsoKinJ2::parameters()
@@ -239,9 +239,9 @@ std::string IsoKinJ2I1::type()
   return "IsoKinJ2I1";
 }
 
-std::shared_ptr<NEMLObject> IsoKinJ2I1::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> IsoKinJ2I1::initialize(ParameterSet & params)
 {
-  return std::make_shared<IsoKinJ2I1>(
+  return make_unique<IsoKinJ2I1>(
       params.get_object_parameter<Interpolate>("h"),
       params.get_object_parameter<Interpolate>("l")
       ); 
@@ -471,9 +471,9 @@ std::string IsoJ2I1::type()
   return "IsoJ2I1";
 }
 
-std::shared_ptr<NEMLObject> IsoJ2I1::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> IsoJ2I1::initialize(ParameterSet & params)
 {
-  return std::make_shared<IsoJ2I1>(
+  return make_unique<IsoJ2I1>(
       params.get_object_parameter<Interpolate>("h"),
       params.get_object_parameter<Interpolate>("l")
       ); 

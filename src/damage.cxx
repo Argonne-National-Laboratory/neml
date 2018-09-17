@@ -304,9 +304,9 @@ ParameterSet CombinedDamageModel_sd::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> CombinedDamageModel_sd::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> CombinedDamageModel_sd::initialize(ParameterSet & params)
 {
-  return std::make_shared<CombinedDamageModel_sd>(
+  return make_unique<CombinedDamageModel_sd>(
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter_vector<NEMLScalarDamagedModel_sd>("models"),
       params.get_object_parameter<NEMLModel_sd>("base"),
@@ -458,9 +458,9 @@ ParameterSet ClassicalCreepDamageModel_sd::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> ClassicalCreepDamageModel_sd::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> ClassicalCreepDamageModel_sd::initialize(ParameterSet & params)
 {
-  return std::make_shared<ClassicalCreepDamageModel_sd>(
+  return make_unique<ClassicalCreepDamageModel_sd>(
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("xi"),
@@ -780,9 +780,9 @@ ParameterSet NEMLPowerLawDamagedModel_sd::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> NEMLPowerLawDamagedModel_sd::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> NEMLPowerLawDamagedModel_sd::initialize(ParameterSet & params)
 {
-  return std::make_shared<NEMLPowerLawDamagedModel_sd>(
+  return make_unique<NEMLPowerLawDamagedModel_sd>(
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("a"),
@@ -895,9 +895,9 @@ ParameterSet NEMLExponentialWorkDamagedModel_sd::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> NEMLExponentialWorkDamagedModel_sd::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> NEMLExponentialWorkDamagedModel_sd::initialize(ParameterSet & params)
 {
-  return std::make_shared<NEMLExponentialWorkDamagedModel_sd>(
+  return make_unique<NEMLExponentialWorkDamagedModel_sd>(
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter<Interpolate>("W0"),
       params.get_object_parameter<Interpolate>("k0"),

@@ -27,9 +27,9 @@ ParameterSet RateIndependentAssociativeFlow::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> RateIndependentAssociativeFlow::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> RateIndependentAssociativeFlow::initialize(ParameterSet & params)
 {
-  return std::make_shared<RateIndependentAssociativeFlow>(
+  return make_unique<RateIndependentAssociativeFlow>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<HardeningRule>("hardening")
       ); 
@@ -190,9 +190,9 @@ ParameterSet RateIndependentNonAssociativeHardening::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> RateIndependentNonAssociativeHardening::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> RateIndependentNonAssociativeHardening::initialize(ParameterSet & params)
 {
-  return std::make_shared<RateIndependentNonAssociativeHardening>(
+  return make_unique<RateIndependentNonAssociativeHardening>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<NonAssociativeHardening>("hardening")
       ); 

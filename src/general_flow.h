@@ -69,7 +69,7 @@ class TVPFlowRule : public GeneralFlowRule {
               std::shared_ptr<ViscoPlasticFlowRule> flow);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual size_t nhist() const;

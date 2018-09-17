@@ -134,9 +134,9 @@ ParameterSet GPowerLaw::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> GPowerLaw::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> GPowerLaw::initialize(ParameterSet & params)
 {
-  return std::make_shared<GPowerLaw>(
+  return make_unique<GPowerLaw>(
       params.get_object_parameter<Interpolate>("n")
       ); 
 }
@@ -202,9 +202,9 @@ ParameterSet PerzynaFlowRule::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
 {
-  return std::make_shared<PerzynaFlowRule>(
+  return make_unique<PerzynaFlowRule>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<HardeningRule>("hardening"),
       params.get_object_parameter<GFlow>("g"),
@@ -408,9 +408,9 @@ ParameterSet ConstantFluidity::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> ConstantFluidity::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> ConstantFluidity::initialize(ParameterSet & params)
 {
-  return std::make_shared<ConstantFluidity>(
+  return make_unique<ConstantFluidity>(
       params.get_object_parameter<Interpolate>("eta")
       ); 
 }
@@ -458,9 +458,9 @@ ParameterSet SaturatingFluidity::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> SaturatingFluidity::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> SaturatingFluidity::initialize(ParameterSet & params)
 {
-  return std::make_shared<SaturatingFluidity>(
+  return make_unique<SaturatingFluidity>(
       params.get_object_parameter<Interpolate>("K0"),
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("b")
@@ -522,9 +522,9 @@ ParameterSet ChabocheFlowRule::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params)
 {
-  return std::make_shared<ChabocheFlowRule>(
+  return make_unique<ChabocheFlowRule>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<NonAssociativeHardening>("hardening"),
       params.get_object_parameter<FluidityModel>("fluidity"),
@@ -730,9 +730,9 @@ ParameterSet YaguchiGr91FlowRule::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> YaguchiGr91FlowRule::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> YaguchiGr91FlowRule::initialize(ParameterSet & params)
 {
-  return std::make_shared<YaguchiGr91FlowRule>(); 
+  return make_unique<YaguchiGr91FlowRule>(); 
 }
 
 

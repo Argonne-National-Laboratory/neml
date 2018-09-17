@@ -48,7 +48,7 @@ class RateIndependentAssociativeFlow: public RateIndependentFlowRule {
                                  std::shared_ptr<HardeningRule> hardening);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual size_t nhist() const;
@@ -96,7 +96,7 @@ class RateIndependentNonAssociativeHardening: public RateIndependentFlowRule {
                                          std::shared_ptr<NonAssociativeHardening> hardening);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual size_t nhist() const;

@@ -36,7 +36,7 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
       std::string m2_type);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual int C(double T, double * const Cv) const;
@@ -69,7 +69,7 @@ class BlankElasticModel: public LinearElasticModel {
   BlankElasticModel();
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual int C(double T, double * const Cv) const;

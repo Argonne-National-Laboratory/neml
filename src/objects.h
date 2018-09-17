@@ -13,6 +13,12 @@
 
 namespace neml {
 
+// We can avoid this with proper C++14, will need ifdefs
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 class NEMLObject {
 
 };
@@ -162,14 +168,14 @@ class Factory {
 
   /// Register a type with an identifier, create method, and parameter set
   void register_type(std::string type, 
-                     std::function<std::shared_ptr<NEMLObject>(ParameterSet &)> creator,
+                     std::function<std::unique_ptr<NEMLObject>(ParameterSet &)> creator,
                      std::function<ParameterSet()> setup);
 
   /// Static factor instance
   static Factory * Creator();
 
  private:
-  std::map<std::string, std::function<std::shared_ptr<NEMLObject>(ParameterSet &)>> creators_;
+  std::map<std::string, std::function<std::unique_ptr<NEMLObject>(ParameterSet &)>> creators_;
   std::map<std::string, std::function<ParameterSet()>> setups_;
 };
 

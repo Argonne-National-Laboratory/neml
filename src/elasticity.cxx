@@ -48,9 +48,9 @@ ParameterSet IsotropicLinearElasticModel::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> IsotropicLinearElasticModel::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> IsotropicLinearElasticModel::initialize(ParameterSet & params)
 {
-  return std::make_shared<IsotropicLinearElasticModel>(
+  return make_unique<IsotropicLinearElasticModel>(
       params.get_object_parameter<Interpolate>("m1"),
       params.get_parameter<std::string>("m1_type"),
       params.get_object_parameter<Interpolate>("m2"),
@@ -240,9 +240,9 @@ ParameterSet BlankElasticModel::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> BlankElasticModel::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> BlankElasticModel::initialize(ParameterSet & params)
 {
-  return std::make_shared<BlankElasticModel>(); 
+  return make_unique<BlankElasticModel>(); 
 }
 
 int BlankElasticModel::C(double T, double * const Cv) const

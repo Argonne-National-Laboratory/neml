@@ -25,7 +25,7 @@ class GPowerLaw: public GFlow {
   GPowerLaw(std::shared_ptr<Interpolate> n);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual double g(double f, double T) const;
@@ -115,7 +115,7 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
                   std::shared_ptr<Interpolate> eta);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual size_t nhist() const;
@@ -173,7 +173,7 @@ class ConstantFluidity: public FluidityModel {
   ConstantFluidity(std::shared_ptr<Interpolate> eta);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual double eta(double a, double T) const;
@@ -194,7 +194,7 @@ class SaturatingFluidity: public FluidityModel {
                      std::shared_ptr<Interpolate> b);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual double eta(double a, double T) const;
@@ -225,7 +225,7 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
                    std::shared_ptr<Interpolate> n);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual size_t nhist() const;
@@ -296,7 +296,7 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
   YaguchiGr91FlowRule();
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual size_t nhist() const;

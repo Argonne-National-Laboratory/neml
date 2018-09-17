@@ -54,9 +54,9 @@ ParameterSet PowerLawCreep::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> PowerLawCreep::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> PowerLawCreep::initialize(ParameterSet & params)
 {
-  return std::make_shared<PowerLawCreep>(
+  return make_unique<PowerLawCreep>(
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("n")
       ); 
@@ -124,9 +124,9 @@ ParameterSet RegionKMCreep::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
 {
-  return std::make_shared<RegionKMCreep>(
+  return make_unique<RegionKMCreep>(
       params.get_parameter<std::vector<double>>("cuts"),
       params.get_parameter<std::vector<double>>("A"),
       params.get_parameter<std::vector<double>>("B"),
@@ -229,9 +229,9 @@ ParameterSet NortonBaileyCreep::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> NortonBaileyCreep::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> NortonBaileyCreep::initialize(ParameterSet & params)
 {
-  return std::make_shared<NortonBaileyCreep>(
+  return make_unique<NortonBaileyCreep>(
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("m"),
       params.get_object_parameter<Interpolate>("n")
@@ -340,9 +340,9 @@ ParameterSet MukherjeeCreep::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> MukherjeeCreep::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> MukherjeeCreep::initialize(ParameterSet & params)
 {
-  return std::make_shared<MukherjeeCreep>(
+  return make_unique<MukherjeeCreep>(
       params.get_object_parameter<LinearElasticModel>("emodel"),
       params.get_parameter<double>("A"),
       params.get_parameter<double>("n"),
@@ -558,9 +558,9 @@ ParameterSet J2CreepModel::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
 {
-  return std::make_shared<J2CreepModel>(
+  return make_unique<J2CreepModel>(
       params.get_object_parameter<ScalarCreepRule>("rule"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),

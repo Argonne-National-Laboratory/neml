@@ -68,7 +68,7 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
 }
 
 void Factory::register_type(std::string type,
-                            std::function<std::shared_ptr<NEMLObject>(ParameterSet &)> creator,
+                            std::function<std::unique_ptr<NEMLObject>(ParameterSet &)> creator,
                             std::function<ParameterSet()> setup)
 {
   creators_[type] = creator;

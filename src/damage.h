@@ -147,7 +147,7 @@ class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
@@ -204,7 +204,7 @@ class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
@@ -317,7 +317,7 @@ class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int f(const double * const s_np1, double d_np1,
                 double T_np1, double & f) const;
@@ -357,7 +357,7 @@ class NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int f(const double * const s_np1, double d_np1,
                 double T_np1, double & f) const;

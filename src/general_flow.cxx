@@ -46,9 +46,9 @@ ParameterSet TVPFlowRule::parameters()
   return pset;
 }
 
-std::shared_ptr<NEMLObject> TVPFlowRule::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> TVPFlowRule::initialize(ParameterSet & params)
 {
-  return std::make_shared<TVPFlowRule>(
+  return make_unique<TVPFlowRule>(
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter<ViscoPlasticFlowRule>("flow")
       ); 

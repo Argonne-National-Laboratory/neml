@@ -25,7 +25,7 @@ class PowerLawCreep: public ScalarCreepRule {
   PowerLawCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
@@ -49,7 +49,7 @@ class RegionKMCreep: public ScalarCreepRule {
                 std::shared_ptr<LinearElasticModel> emodel);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
@@ -77,7 +77,7 @@ class NortonBaileyCreep: public ScalarCreepRule {
                     std::shared_ptr<Interpolate> n);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
@@ -101,7 +101,7 @@ class MukherjeeCreep: public ScalarCreepRule {
                  double D0, double Q, double b, double k, double R);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
@@ -181,7 +181,7 @@ class J2CreepModel: public CreepModel {
                double tol = 1.0e-10, int miter = 25, bool verbose = false);
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   virtual int f(const double * const s, const double * const e, double t, double T, 

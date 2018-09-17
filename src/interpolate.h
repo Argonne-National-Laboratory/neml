@@ -30,7 +30,7 @@ class InvalidInterpolate : public Interpolate {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual double value(double x) const;
   virtual double derivative(double x) const;
@@ -45,7 +45,7 @@ class PolynomialInterpolate : public Interpolate {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual double value(double x) const;
   virtual double derivative(double x) const;
@@ -65,7 +65,7 @@ class PiecewiseLinearInterpolate: public Interpolate {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual double value(double x) const;
   virtual double derivative(double x) const;
@@ -84,7 +84,7 @@ class PiecewiseLogLinearInterpolate: public Interpolate {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual double value(double x) const;
   virtual double derivative(double x) const;
@@ -103,7 +103,7 @@ class ConstantInterpolate : public Interpolate {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual double value(double x) const;
   virtual double derivative(double x) const;
@@ -121,7 +121,7 @@ class MTSShearInterpolate : public Interpolate {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual double value(double x) const;
   virtual double derivative(double x) const;

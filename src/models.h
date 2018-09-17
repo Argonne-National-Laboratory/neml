@@ -241,7 +241,7 @@ class SmallStrainElasticity: public NEMLModel_sd {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
@@ -329,7 +329,7 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
@@ -407,7 +407,7 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
@@ -472,7 +472,7 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
@@ -533,7 +533,7 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
@@ -602,7 +602,7 @@ class KMRegimeModel: public NEMLModel_sd {
 
   static std::string type();
   static ParameterSet parameters();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,

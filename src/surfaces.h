@@ -167,7 +167,7 @@ class IsoKinJ2: public YieldSurface {
   virtual ~IsoKinJ2();
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
  
   // Defined interface
@@ -211,7 +211,7 @@ class IsoJ2: public IsoFunction<IsoKinJ2> {
   }
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 };
 
@@ -230,7 +230,7 @@ class IsoKinJ2I1: public YieldSurface {
   virtual ~IsoKinJ2I1();
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
   // Defined interface
@@ -272,7 +272,7 @@ class IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
   }
 
   static std::string type();
-  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   static ParameterSet parameters();
 
 };
