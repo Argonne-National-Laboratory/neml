@@ -49,43 +49,6 @@ class CompareMats(object):
 
       strain_n = strain_np1
 
-class TestMarkDamage(CompareMats, unittest.TestCase):
-  def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_markdamage")
-
-    E = 92000.0
-    nu = 0.3
-
-    s0 = 180.0
-    Kp = 1000.0
-
-    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
-        nu, "poissons")
-
-    surface = surfaces.IsoJ2()
-    hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
-
-    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
-
-    bmodel = models.SmallStrainRateIndependentPlasticity(elastic, 
-        flow)
-
-    C = 8.0e-6
-    n = 2.2
-    m = 1.0
-    alpha = 3.0
-    beta = 2.0
-    r0 = 0.01
-    self.model2 = damage.MarkFatigueDamageModel_sd(elastic, 
-        C, m, n, alpha, beta, r0, 
-        bmodel)
-
-    self.T = 300.0
-    self.tmax = 10.0
-    self.nsteps = 100.0
-    self.emax = np.array([0.05,0,0,0,0,0])
-
-
 class TestPowerLawDamage(CompareMats, unittest.TestCase):
   def setUp(self):
     self.model1 = parse.parse_xml("test/examples.xml", "test_powerdamage")
