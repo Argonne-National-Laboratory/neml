@@ -129,7 +129,7 @@ ParameterSet GPowerLaw::parameters()
 {
   ParameterSet pset(GPowerLaw::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+  pset.add_parameter<NEMLObject>("n");
 
   return pset;
 }
@@ -137,7 +137,7 @@ ParameterSet GPowerLaw::parameters()
 std::shared_ptr<NEMLObject> GPowerLaw::initialize(ParameterSet & params)
 {
   return std::make_shared<GPowerLaw>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      params.get_object_parameter<Interpolate>("n")
       ); 
 }
 
@@ -197,7 +197,7 @@ ParameterSet PerzynaFlowRule::parameters()
   pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
   pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
   pset.add_parameter<std::shared_ptr<NEMLObject>>("g");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("eta");
+  pset.add_parameter<NEMLObject>("eta");
 
   return pset;
 }
@@ -208,7 +208,7 @@ std::shared_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<HardeningRule>("hardening"),
       params.get_object_parameter<GFlow>("g"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("eta")
+      params.get_object_parameter<Interpolate>("eta")
       ); 
 }
 
@@ -403,7 +403,7 @@ ParameterSet ConstantFluidity::parameters()
 {
   ParameterSet pset(ConstantFluidity::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("eta");
+  pset.add_parameter<NEMLObject>("eta");
 
   return pset;
 }
@@ -411,7 +411,7 @@ ParameterSet ConstantFluidity::parameters()
 std::shared_ptr<NEMLObject> ConstantFluidity::initialize(ParameterSet & params)
 {
   return std::make_shared<ConstantFluidity>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("eta")
+      params.get_object_parameter<Interpolate>("eta")
       ); 
 }
 
@@ -451,9 +451,9 @@ ParameterSet SaturatingFluidity::parameters()
 {
   ParameterSet pset(SaturatingFluidity::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("K0");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("A");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("b");
+  pset.add_parameter<NEMLObject>("K0");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("b");
 
   return pset;
 }
@@ -461,9 +461,9 @@ ParameterSet SaturatingFluidity::parameters()
 std::shared_ptr<NEMLObject> SaturatingFluidity::initialize(ParameterSet & params)
 {
   return std::make_shared<SaturatingFluidity>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("K0"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("A"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("b")
+      params.get_object_parameter<Interpolate>("K0"),
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("b")
       ); 
 }
 
@@ -517,7 +517,7 @@ ParameterSet ChabocheFlowRule::parameters()
   pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
   pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
   pset.add_parameter<std::shared_ptr<NEMLObject>>("fluidity");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+  pset.add_parameter<NEMLObject>("n");
 
   return pset;
 }
@@ -528,7 +528,7 @@ std::shared_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params)
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<NonAssociativeHardening>("hardening"),
       params.get_object_parameter<FluidityModel>("fluidity"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      params.get_object_parameter<Interpolate>("n")
       ); 
 }
 

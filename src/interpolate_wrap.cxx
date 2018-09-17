@@ -17,7 +17,7 @@ namespace neml {
 PYBIND11_MODULE(interpolate, m) {
   m.doc() = "Interpolation schemes used to define model parameters.";
   
-  py::class_<Interpolate, std::shared_ptr<Interpolate>>(m, "Interpolate")
+  py::class_<Interpolate, NEMLObject, std::shared_ptr<Interpolate>>(m, "Interpolate")
       .def("value", &Interpolate::value, "Interpolate to x")
       .def("derivative", &Interpolate::derivative, "Derivative at x")
       .def("__call__", 

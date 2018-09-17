@@ -13,6 +13,7 @@
 #include <stdexcept>
 
 #include "objects.h"
+#include "interpolate.h"
 
 namespace py = pybind11;
 
@@ -74,43 +75,37 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
       pset.assign_parameter(name, py::cast<std::vector<double>>(value));
       break;
     case TYPE_NEML_OBJECT:
+      // If it's a double then we actually want a ConstantInterpolate
+      // I hate using exceptions here, but what I actually want is:
+      //  "is this something that can be cast to a double"
+      // and not
+      //  "is this actually a c++ double"
+      try {
+        double v = py::cast<double>(value);
+        pset.assign_parameter(name, std::make_shared<ConstantInterpolate>(v));
+        break;
+      }
+      catch (py::cast_error e) {
+
+      }
       pset.assign_parameter(name, py::cast<std::shared_ptr<NEMLObject>>(value));
       break;
     case TYPE_VEC_NEML_OBJECT:
-      pset.assign_parameter(name, py::cast<std::vector<std::shared_ptr<NEMLObject>>>(value));
-      break;
-    case TYPE_INTERPOLATE:
+      // If it's a vector<double> then we actually want a vector of
+      // ConstantInterpolates
       try {
-        pset.assign_parameter(name, py::cast<std::shared_ptr<Interpolate>>(value));
+        std::vector<double> v = py::cast<std::vector<double>>(value);
+        std::vector<std::shared_ptr<NEMLObject>> vect;
+        for (auto it = v.begin(); it != v.end(); ++it) {
+          vect.push_back(std::make_shared<ConstantInterpolate>(*it));
+        }
+        pset.assign_parameter(name, vect);
+        break;
       }
       catch (py::cast_error e) {
-        try {
-          double v = py::cast<double>(value);
-          pset.assign_parameter(name, std::make_shared<ConstantInterpolate>(v));
-        }
-        catch (py::cast_error e) {
-          throw std::runtime_error("Cannot convert object to an Interpolate object!");
-        }
-      }
-      break;
-    case TYPE_VEC_INTERPOLATE:
-      try {
-        pset.assign_parameter(name, py::cast<std::vector<std::shared_ptr<Interpolate>>>(value));
-      }
-      catch (py::cast_error e) {
-        try {
-          std::vector<double> v = py::cast<std::vector<double>>(value);
-          std::vector<std::shared_ptr<Interpolate>> vect;
-          for (auto it = v.begin(); it != v.end(); ++it) {
-            vect.push_back(std::make_shared<ConstantInterpolate>(*it));
-          }
 
-          pset.assign_parameter(name, vect);
-        }
-        catch (py::cast_error e) {
-          throw std::runtime_error("Cannot convert object to a vector of Interpolate objects!");
-        }
       }
+      pset.assign_parameter(name, py::cast<std::vector<std::shared_ptr<NEMLObject>>>(value));
       break;
     case TYPE_STRING:
       pset.assign_parameter(name, py::cast<std::string>(value));

@@ -40,9 +40,9 @@ ParameterSet IsotropicLinearElasticModel::parameters()
 {
   ParameterSet pset(IsotropicLinearElasticModel::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("m1");
+  pset.add_parameter<NEMLObject>("m1");
   pset.add_parameter<std::string>("m1_type");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("m2");
+  pset.add_parameter<NEMLObject>("m2");
   pset.add_parameter<std::string>("m2_type");
 
   return pset;
@@ -51,9 +51,9 @@ ParameterSet IsotropicLinearElasticModel::parameters()
 std::shared_ptr<NEMLObject> IsotropicLinearElasticModel::initialize(ParameterSet & params)
 {
   return std::make_shared<IsotropicLinearElasticModel>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("m1"),
+      params.get_object_parameter<Interpolate>("m1"),
       params.get_parameter<std::string>("m1_type"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("m2"),
+      params.get_object_parameter<Interpolate>("m2"),
       params.get_parameter<std::string>("m2_type")
       ); 
 }

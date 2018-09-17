@@ -48,8 +48,8 @@ ParameterSet PowerLawCreep::parameters()
 {
   ParameterSet pset(PowerLawCreep::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("A");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("n");
 
   return pset;
 }
@@ -57,8 +57,8 @@ ParameterSet PowerLawCreep::parameters()
 std::shared_ptr<NEMLObject> PowerLawCreep::initialize(ParameterSet & params)
 {
   return std::make_shared<PowerLawCreep>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("A"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("n")
       ); 
 }
 
@@ -222,9 +222,9 @@ ParameterSet NortonBaileyCreep::parameters()
 {
   ParameterSet pset(NortonBaileyCreep::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("A");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("m");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("n");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("m");
+  pset.add_parameter<NEMLObject>("n");
 
   return pset;
 }
@@ -232,9 +232,9 @@ ParameterSet NortonBaileyCreep::parameters()
 std::shared_ptr<NEMLObject> NortonBaileyCreep::initialize(ParameterSet & params)
 {
   return std::make_shared<NortonBaileyCreep>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("A"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("m"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("n")
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("m"),
+      params.get_object_parameter<Interpolate>("n")
       ); 
 }
 

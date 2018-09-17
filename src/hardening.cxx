@@ -44,8 +44,8 @@ ParameterSet LinearIsotropicHardeningRule::parameters()
 {
   ParameterSet pset(LinearIsotropicHardeningRule::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("s0");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("K");
+  pset.add_parameter<NEMLObject>("s0");
+  pset.add_parameter<NEMLObject>("K");
 
   return pset;
 }
@@ -53,8 +53,8 @@ ParameterSet LinearIsotropicHardeningRule::parameters()
 std::shared_ptr<NEMLObject> LinearIsotropicHardeningRule::initialize(ParameterSet & params)
 {
   return std::make_shared<LinearIsotropicHardeningRule>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("s0"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("K")
+      params.get_object_parameter<Interpolate>("s0"),
+      params.get_object_parameter<Interpolate>("K")
       ); 
 }
 
@@ -101,7 +101,7 @@ ParameterSet InterpolatedIsotropicHardeningRule::parameters()
 {
   ParameterSet pset(InterpolatedIsotropicHardeningRule::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("flow");
+  pset.add_parameter<NEMLObject>("flow");
 
   return pset;
 }
@@ -109,7 +109,7 @@ ParameterSet InterpolatedIsotropicHardeningRule::parameters()
 std::shared_ptr<NEMLObject> InterpolatedIsotropicHardeningRule::initialize(ParameterSet & params)
 {
   return std::make_shared<InterpolatedIsotropicHardeningRule>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("flow")
+      params.get_object_parameter<Interpolate>("flow")
       ); 
 }
 
@@ -152,9 +152,9 @@ ParameterSet VoceIsotropicHardeningRule::parameters()
 {
   ParameterSet pset(VoceIsotropicHardeningRule::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("s0");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("R");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("d");
+  pset.add_parameter<NEMLObject>("s0");
+  pset.add_parameter<NEMLObject>("R");
+  pset.add_parameter<NEMLObject>("d");
 
   return pset;
 }
@@ -162,9 +162,9 @@ ParameterSet VoceIsotropicHardeningRule::parameters()
 std::shared_ptr<NEMLObject> VoceIsotropicHardeningRule::initialize(ParameterSet & params)
 {
   return std::make_shared<VoceIsotropicHardeningRule>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("s0"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("R"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("d")
+      params.get_object_parameter<Interpolate>("s0"),
+      params.get_object_parameter<Interpolate>("R"),
+      params.get_object_parameter<Interpolate>("d")
       ); 
 }
 
@@ -298,7 +298,7 @@ ParameterSet LinearKinematicHardeningRule::parameters()
 {
   ParameterSet pset(LinearKinematicHardeningRule::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("H");
+  pset.add_parameter<NEMLObject>("H");
 
   return pset;
 }
@@ -306,7 +306,7 @@ ParameterSet LinearKinematicHardeningRule::parameters()
 std::shared_ptr<NEMLObject> LinearKinematicHardeningRule::initialize(ParameterSet & params)
 {
   return std::make_shared<LinearKinematicHardeningRule>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("H")
+      params.get_object_parameter<Interpolate>("H")
       ); 
 }
 
@@ -490,7 +490,7 @@ ParameterSet ConstantGamma::parameters()
 {
   ParameterSet pset(ConstantGamma::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("g");
+  pset.add_parameter<NEMLObject>("g");
 
   return pset;
 }
@@ -498,7 +498,7 @@ ParameterSet ConstantGamma::parameters()
 std::shared_ptr<NEMLObject> ConstantGamma::initialize(ParameterSet & params)
 {
   return std::make_shared<ConstantGamma>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("g")
+      params.get_object_parameter<Interpolate>("g")
       ); 
 }
 
@@ -539,9 +539,9 @@ ParameterSet SatGamma::parameters()
 {
   ParameterSet pset(SatGamma::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("gs");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("g0");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("beta");
+  pset.add_parameter<NEMLObject>("gs");
+  pset.add_parameter<NEMLObject>("g0");
+  pset.add_parameter<NEMLObject>("beta");
 
   return pset;
 }
@@ -549,9 +549,9 @@ ParameterSet SatGamma::parameters()
 std::shared_ptr<NEMLObject> SatGamma::initialize(ParameterSet & params)
 {
   return std::make_shared<SatGamma>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("gs"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("g0"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("beta")
+      params.get_object_parameter<Interpolate>("gs"),
+      params.get_object_parameter<Interpolate>("g0"),
+      params.get_object_parameter<Interpolate>("beta")
       ); 
 }
 
@@ -632,10 +632,10 @@ ParameterSet Chaboche::parameters()
   ParameterSet pset(Chaboche::type());
 
   pset.add_parameter<std::shared_ptr<NEMLObject>>("iso");
-  pset.add_parameter<std::vector<std::shared_ptr<Interpolate>>>("C");
+  pset.add_parameter<std::vector<NEMLObject>>("C");
   pset.add_parameter<std::vector<std::shared_ptr<NEMLObject>>>("gmodels");
-  pset.add_parameter<std::vector<std::shared_ptr<Interpolate>>>("A");
-  pset.add_parameter<std::vector<std::shared_ptr<Interpolate>>>("a");
+  pset.add_parameter<std::vector<NEMLObject>>("A");
+  pset.add_parameter<std::vector<NEMLObject>>("a");
 
   pset.add_optional_parameter<bool>("noniso", true);
 
@@ -646,10 +646,10 @@ std::shared_ptr<NEMLObject> Chaboche::initialize(ParameterSet & params)
 {
   return std::make_shared<Chaboche>(
       params.get_object_parameter<IsotropicHardeningRule>("iso"),
-      params.get_parameter<std::vector<std::shared_ptr<Interpolate>>>("C"),
+      params.get_object_parameter_vector<Interpolate>("C"),
       params.get_object_parameter_vector<GammaModel>("gmodels"),
-      params.get_parameter<std::vector<std::shared_ptr<Interpolate>>>("A"),
-      params.get_parameter<std::vector<std::shared_ptr<Interpolate>>>("a"),
+      params.get_object_parameter_vector<Interpolate>("A"),
+      params.get_object_parameter_vector<Interpolate>("a"),
       params.get_parameter<bool>("noniso")
       ); 
 }

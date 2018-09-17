@@ -242,8 +242,8 @@ std::string IsoKinJ2I1::type()
 std::shared_ptr<NEMLObject> IsoKinJ2I1::initialize(ParameterSet & params)
 {
   return std::make_shared<IsoKinJ2I1>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("h"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("l")
+      params.get_object_parameter<Interpolate>("h"),
+      params.get_object_parameter<Interpolate>("l")
       ); 
 }
 
@@ -251,8 +251,8 @@ ParameterSet IsoKinJ2I1::parameters()
 {
   ParameterSet pset(IsoKinJ2I1::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("h");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("l");
+  pset.add_parameter<NEMLObject>("h");
+  pset.add_parameter<NEMLObject>("l");
 
   return pset;
 }
@@ -474,8 +474,8 @@ std::string IsoJ2I1::type()
 std::shared_ptr<NEMLObject> IsoJ2I1::initialize(ParameterSet & params)
 {
   return std::make_shared<IsoJ2I1>(
-      params.get_parameter<std::shared_ptr<Interpolate>>("h"),
-      params.get_parameter<std::shared_ptr<Interpolate>>("l")
+      params.get_object_parameter<Interpolate>("h"),
+      params.get_object_parameter<Interpolate>("l")
       ); 
 }
 
@@ -483,8 +483,8 @@ ParameterSet IsoJ2I1::parameters()
 {
   ParameterSet pset(IsoJ2I1::type());
 
-  pset.add_parameter<std::shared_ptr<Interpolate>>("h");
-  pset.add_parameter<std::shared_ptr<Interpolate>>("l");
+  pset.add_parameter<NEMLObject>("h");
+  pset.add_parameter<NEMLObject>("l");
 
   return pset;
 }

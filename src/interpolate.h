@@ -1,6 +1,8 @@
 #ifndef INTERPOLATE_H
 #define INTERPOLATE_H
 
+#include "objects.h"
+
 #include <vector>
 #include <memory>
 
@@ -9,7 +11,7 @@ namespace neml {
 /// Base class for interpolation functions
 //  This class defines a scalar interpolation function.
 //  An implementation must also define the first derivative. 
-class Interpolate {
+class Interpolate: public NEMLObject {
  public:
   Interpolate();
   virtual double value(double x) const = 0;
