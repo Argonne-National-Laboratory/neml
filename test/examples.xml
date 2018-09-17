@@ -308,37 +308,30 @@
     </plastic>
   </material>
 
-  <material name="test_perfect" type="smallstrain">
-    <elastic type="isotropic">
-      <youngs>
-        <modulus>
-          <interpolate type="polynomial">-100.0 100000.0</interpolate>
-        </modulus>
-      </youngs>
-      <poissons>
-        <modulus>0.3</modulus>
-      </poissons>
+  <test_perfect type="SmallStrainPerfectPlasticity">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1 type="PolynomialInterpolate">
+        <coefs>
+          -100.0 100000.0
+        </coefs>
+      </m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.3</m2>
+      <m2_type>poissons</m2_type>
     </elastic>
 
-    <plastic type="perfect">
-      <surface type="isoj2"></surface>
-      <yield>
-        <interpolate type="piecewise">
-          100.0 1000.0
-          300.0 120.0
-          500.0 60.0
-          700.0 30.0
-        </interpolate>
-      </yield>
-    </plastic>
+    <surface type="IsoJ2"/>
 
-    <alpha>
-      <value>
-        <interpolate type="constant">0.1</interpolate>
-      </value>
+    <ys type="PiecewiseLinearInterpolate">
+      <points>100.0   300.0 500.0 700.0</points>
+      <values>1000.0  120.0 60.0  30.0 </values>
+    </ys>
+
+    <alpha type="ConstantInterpolate">
+      <v>0.1</v>
     </alpha>
 
-  </material>
+  </test_perfect>
 
   <material name="test_pcreep" type="smallstrain">
     <elastic type="isotropic">

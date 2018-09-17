@@ -2,6 +2,7 @@
 #define OBJECTS_H
 
 #include <string>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <memory>
@@ -64,6 +65,29 @@ template <> constexpr ParamType GetParamType<std::vector<NEMLObject>>()
 {return TYPE_VEC_NEML_OBJECT;}
 template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
 
+class UnknownParameter: public std::exception {
+ public:
+  UnknownParameter(std::string object, std::string name) :
+      object_(object), name_(name)
+  {
+  
+  }
+
+  const char* what() const throw()
+  {
+    std::stringstream ss;
+    
+    ss << "Object of type " << object_ << " has no parameter "
+        << name_ << "!";
+
+    return ss.str().c_str();
+  }
+
+ private:
+  std::string object_, name_;
+};
+
+
 /// Parameters for objects created through the NEMLObject interface
 class ParameterSet {
  public:
@@ -88,6 +112,9 @@ class ParameterSet {
   /// Immediately assign an input of the right type to a parameter
   void assign_parameter(std::string name, param_type value)
   {
+    if (std::find(param_names_.begin(), param_names_.end(), name) == param_names_.end()) {
+      throw UnknownParameter(type(), name);
+    }
     params_[name] = value;
   }
   
@@ -134,6 +161,12 @@ class ParameterSet {
   
   /// Get the type of parameter
   ParamType get_object_type(std::string name);
+
+  /// Check if this is an actual parameter
+  bool is_parameter(std::string name) const;
+
+  /// Get a list of unassigned parameters
+  std::vector<std::string> unassigned_parameters();
 
   /// Check to make sure this parameter set is ready to go
   bool fully_assigned();
@@ -198,6 +231,55 @@ class Register {
     Factory::Creator()->register_type(T::type(), &T::initialize, &T::parameters);
   }
 };
+
+/// Error to throw if parameters are not completely defined
+class UndefinedParameters: public std::exception {
+ public:
+  UndefinedParameters(ParameterSet & params) :
+      params_(params)
+  {
+
+  };
+
+  const char* what() const throw()
+  {
+    std::stringstream ss;
+
+    ss << "Parameter set has undefined parameters:" << std::endl;
+    auto ups = params_.unassigned_parameters();
+    for (auto it = ups.begin(); it != ups.end(); ++it) {
+      ss << *it << " ";
+    }
+
+    return ss.str().c_str();
+  }
+
+ private:
+  ParameterSet & params_;
+};
+
+/// Error to throw if the class isn't registered
+class UnregisteredError: public std::exception {
+ public:
+  UnregisteredError(std::string name) :
+      name_(name)
+  {
+
+  };
+
+  const char * what() const throw ()
+  {
+    std::stringstream ss;
+
+    ss << "Object named " << name_ << " not registered with factory!";
+
+    return ss.str().c_str();
+  };
+
+ private:
+  std::string name_;
+};
+
 
 } //namespace neml
 

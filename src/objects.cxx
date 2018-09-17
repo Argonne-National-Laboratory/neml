@@ -34,6 +34,27 @@ ParamType ParameterSet::get_object_type(std::string name)
   return param_types_[name];
 }
 
+bool ParameterSet::is_parameter(std::string name) const
+{
+  return std::find(param_names_.begin(), param_names_.end(), name) != 
+      param_names_.end();
+}
+
+std::vector<std::string> ParameterSet::unassigned_parameters()
+{
+  resolve_objects_();
+
+  std::vector<std::string> uparams;
+
+  for (auto it = param_names_.begin(); it != param_names_.end(); ++it) {
+    if (params_.find(*it) == params_.end()) {
+      uparams.push_back(*it);
+    }
+  }
+
+  return uparams;
+}
+
 bool ParameterSet::fully_assigned()
 {
   resolve_objects_();
@@ -55,24 +76,40 @@ void ParameterSet::resolve_objects_()
 
 ParameterSet Factory::provide_parameters(std::string type)
 {
-  return setups_[type]();
+  try {
+    return setups_[type]();
+  }
+  catch (std::exception & e) {
+    throw UnregisteredError(type);
+  }
 }
 
 std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
 {
   if (not params.fully_assigned()) {
-    throw std::runtime_error("Parameter set not fully assigned!");
+    throw UndefinedParameters(params);
   }
-
-  return creators_[params.type()](params);
+  
+  try {
+    return creators_[params.type()](params);
+  }
+  catch (std::exception & e) {
+    throw UnregisteredError(params.type());
+  }
 }
 
 std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
 {
   if (not params.fully_assigned()) {
-    throw std::runtime_error("Parameter set not fully assigned!");
+    throw UndefinedParameters(params);
   }
-  return creators_[params.type()](params);
+
+  try {
+    return creators_[params.type()](params);
+  }
+  catch (std::exception & e) {
+      throw UnregisteredError(params.type());
+  }
 }
 
 void Factory::register_type(std::string type,
