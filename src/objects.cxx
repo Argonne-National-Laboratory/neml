@@ -67,6 +67,14 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
   return creators_[params.type()](params);
 }
 
+std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
+{
+  if (not params.fully_assigned()) {
+    throw std::runtime_error("Parameter set not fully assigned!");
+  }
+  return creators_[params.type()](params);
+}
+
 void Factory::register_type(std::string type,
                             std::function<std::unique_ptr<NEMLObject>(ParameterSet &)> creator,
                             std::function<ParameterSet()> setup)
