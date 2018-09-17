@@ -27,72 +27,110 @@ class Interpolate: public NEMLObject {
 class InvalidInterpolate : public Interpolate {
  public:
   InvalidInterpolate();
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 };
+
+static Register<InvalidInterpolate> regInvalidInterpolate;
 
 /// Simple polynomial interpolation
 class PolynomialInterpolate : public Interpolate {
  public:
   PolynomialInterpolate(const std::vector<double> coefs);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 
  private:
   const std::vector<double> coefs_;
   std::vector<double> deriv_;
-
 };
+
+static Register<PolynomialInterpolate> regPolynomialInterpolate;
 
 /// Piecewise linear interpolation
 class PiecewiseLinearInterpolate: public Interpolate {
  public:
   PiecewiseLinearInterpolate(const std::vector<double> points,
                              const std::vector<double> values);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 
  private:
   const std::vector<double> points_, values_;
-
 };
+
+static Register<PiecewiseLinearInterpolate> regPiecewiseLinearInterpolate;
 
 /// Piecewise loglinear interpolation
 class PiecewiseLogLinearInterpolate: public Interpolate {
  public:
   PiecewiseLogLinearInterpolate(const std::vector<double> points,
                              const std::vector<double> values);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 
  private:
   const std::vector<double> points_;
   std::vector<double> values_;
-
 };
+
+static Register<PiecewiseLogLinearInterpolate> regPiecewiseLogLinearInterpolate;
 
 /// A constant value
 class ConstantInterpolate : public Interpolate {
  public:
   ConstantInterpolate(double v);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 
  private:
   const double v_;
-
 };
+
+static Register<ConstantInterpolate> regConstantInterpolate;
 
 /// The MTS shear modulus function proposed in the original paper
 class MTSShearInterpolate : public Interpolate {
  public:
   MTSShearInterpolate(double V0, double D, double T0);
+
+  static std::string type();
+  static ParameterSet parameters();
+  static std::shared_ptr<NEMLObject> initialize(ParameterSet & params);
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 
  private:
   const double V0_, D_, T0_;
 };
+
+static Register<MTSShearInterpolate> regMTSShearInterpolate;
 
 /// A helper to make a vector of constant interpolates from a vector
 std::vector<std::shared_ptr<Interpolate>> 

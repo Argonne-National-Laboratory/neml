@@ -29,30 +29,49 @@ PYBIND11_MODULE(interpolate, m) {
       ;
 
   py::class_<InvalidInterpolate, Interpolate, std::shared_ptr<InvalidInterpolate>>(m, "InvalidInterpolate")
-      .def(py::init<>())
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<InvalidInterpolate>(args, kwargs, {});
+        }))
       ;
 
   py::class_<PolynomialInterpolate, Interpolate, std::shared_ptr<PolynomialInterpolate>>(m, "PolynomialInterpolate")
-      .def(py::init<std::vector<double>>(), py::arg("coefs"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PolynomialInterpolate>(args, kwargs, 
+                                                             {"coefs"});
+        }))
       ;
 
   py::class_<PiecewiseLinearInterpolate, Interpolate, std::shared_ptr<PiecewiseLinearInterpolate>>(m, "PiecewiseLinearInterpolate")
-      .def(py::init<std::vector<double>, std::vector<double>>(),
-           py::arg("points"), py::arg("values"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PiecewiseLinearInterpolate>(args, kwargs,
+                                                                  {"points", "values"});
+        }))
       ;
 
   py::class_<PiecewiseLogLinearInterpolate, Interpolate, std::shared_ptr<PiecewiseLogLinearInterpolate>>(m, "PiecewiseLogLinearInterpolate")
-      .def(py::init<std::vector<double>, std::vector<double>>(),
-           py::arg("points"), py::arg("values"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PiecewiseLogLinearInterpolate>(args, kwargs,
+                                                                  {"points", "values"});
+        }))
       ;
 
   py::class_<ConstantInterpolate, Interpolate, std::shared_ptr<ConstantInterpolate>>(m, "ConstantInterpolate")
-      .def(py::init<double>(), py::arg("value"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ConstantInterpolate>(args, kwargs, {"v"});
+        }))
       ;
 
   py::class_<MTSShearInterpolate, Interpolate, std::shared_ptr<MTSShearInterpolate>>(m, "MTSShearInterpolate")
-      .def(py::init<double, double, double>(), py::arg("y0"), py::arg("D"), 
-           py::arg("x0"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MTSShearInterpolate>(args, kwargs, 
+                                                           {"V0", "D", "T0"});
+        }))
       ;
 }
 

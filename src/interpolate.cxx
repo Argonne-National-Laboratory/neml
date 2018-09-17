@@ -30,6 +30,23 @@ InvalidInterpolate::InvalidInterpolate() :
   valid_ = false;
 }
 
+std::string InvalidInterpolate::type()
+{
+  return "InvalidInterpolate";
+}
+
+ParameterSet InvalidInterpolate::parameters()
+{
+  ParameterSet pset(InvalidInterpolate::type());
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> InvalidInterpolate::initialize(ParameterSet & params)
+{
+  return std::make_shared<InvalidInterpolate>(); 
+}
+
 double InvalidInterpolate::value(double x) const
 {
   return std::numeric_limits<double>::quiet_NaN();
@@ -48,6 +65,27 @@ PolynomialInterpolate::PolynomialInterpolate(const std::vector<double> coefs) :
   for (int i = 0; i < n - 1; i++) {
     deriv_[i] = coefs_[i] * ((double) (n - 1 - i));
   }
+}
+
+std::string PolynomialInterpolate::type()
+{
+  return "PolynomialInterpolate";
+}
+
+ParameterSet PolynomialInterpolate::parameters()
+{
+  ParameterSet pset(PolynomialInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("coefs");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & params)
+{
+  return std::make_shared<PolynomialInterpolate>(
+      params.get_parameter<std::vector<double>>("coefs")
+      ); 
 }
 
 double PolynomialInterpolate::value(double x) const
@@ -74,6 +112,29 @@ PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(
   if (points.size() != values.size()) {
     valid_ = false;
   }
+}
+
+std::string PiecewiseLinearInterpolate::type()
+{
+  return "PiecewiseLinearInterpolate";
+}
+
+ParameterSet PiecewiseLinearInterpolate::parameters()
+{
+  ParameterSet pset(PiecewiseLinearInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("points");
+  pset.add_parameter<std::vector<double>>("values");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> PiecewiseLinearInterpolate::initialize(ParameterSet & params)
+{
+  return std::make_shared<PiecewiseLinearInterpolate>(
+      params.get_parameter<std::vector<double>>("points"),
+      params.get_parameter<std::vector<double>>("values")
+      ); 
 }
 
 double PiecewiseLinearInterpolate::value(double x) const
@@ -142,6 +203,29 @@ PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
   }
 }
 
+std::string PiecewiseLogLinearInterpolate::type()
+{
+  return "PiecewiseLogLinearInterpolate";
+}
+
+ParameterSet PiecewiseLogLinearInterpolate::parameters()
+{
+  ParameterSet pset(PiecewiseLogLinearInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("points");
+  pset.add_parameter<std::vector<double>>("values");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> PiecewiseLogLinearInterpolate::initialize(ParameterSet & params)
+{
+  return std::make_shared<PiecewiseLogLinearInterpolate>(
+      params.get_parameter<std::vector<double>>("points"),
+      params.get_parameter<std::vector<double>>("values")
+      ); 
+}
+
 double PiecewiseLogLinearInterpolate::value(double x) const
 {
   if (x <= points_.front()) {
@@ -194,6 +278,27 @@ ConstantInterpolate::ConstantInterpolate(double v) :
 
 }
 
+std::string ConstantInterpolate::type()
+{
+  return "ConstantInterpolate";
+}
+
+ParameterSet ConstantInterpolate::parameters()
+{
+  ParameterSet pset(ConstantInterpolate::type());
+
+  pset.add_parameter<double>("v");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> ConstantInterpolate::initialize(ParameterSet & params)
+{
+  return std::make_shared<ConstantInterpolate>(
+      params.get_parameter<double>("v")
+      ); 
+}
+
 double ConstantInterpolate::value(double x) const
 {
   return v_;
@@ -208,6 +313,31 @@ MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :
     V0_(V0), D_(D), T0_(T0), Interpolate()
 {
   
+}
+
+std::string MTSShearInterpolate::type()
+{
+  return "MTSShearInterpolate";
+}
+
+ParameterSet MTSShearInterpolate::parameters()
+{
+  ParameterSet pset(MTSShearInterpolate::type());
+
+  pset.add_parameter<double>("V0");
+  pset.add_parameter<double>("D");
+  pset.add_parameter<double>("T0");
+
+  return pset;
+}
+
+std::shared_ptr<NEMLObject> MTSShearInterpolate::initialize(ParameterSet & params)
+{
+  return std::make_shared<MTSShearInterpolate>(
+      params.get_parameter<double>("V0"),
+      params.get_parameter<double>("D"),
+      params.get_parameter<double>("T0")
+      ); 
 }
 
 double MTSShearInterpolate::value(double x) const
