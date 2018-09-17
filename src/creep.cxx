@@ -119,7 +119,7 @@ ParameterSet RegionKMCreep::parameters()
   pset.add_parameter<double>("kboltz");
   pset.add_parameter<double>("b");
   pset.add_parameter<double>("eps0");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("emodel");
+  pset.add_parameter<NEMLObject>("emodel");
 
   return pset;
 }
@@ -328,7 +328,7 @@ ParameterSet MukherjeeCreep::parameters()
 {
   ParameterSet pset(MukherjeeCreep::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("emodel");
+  pset.add_parameter<NEMLObject>("emodel");
   pset.add_parameter<double>("A");
   pset.add_parameter<double>("n");
   pset.add_parameter<double>("D0");
@@ -549,7 +549,7 @@ ParameterSet J2CreepModel::parameters()
 {
   ParameterSet pset(J2CreepModel::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("rule");
+  pset.add_parameter<NEMLObject>("rule");
   
   pset.add_optional_parameter<double>("tol", 1.0e-10);
   pset.add_optional_parameter<int>("miter", 25);

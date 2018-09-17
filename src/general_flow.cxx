@@ -40,8 +40,8 @@ ParameterSet TVPFlowRule::parameters()
 {
   ParameterSet pset(TVPFlowRule::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("elastic");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("flow");
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("flow");
 
   return pset;
 }

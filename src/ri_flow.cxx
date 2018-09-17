@@ -21,8 +21,8 @@ ParameterSet RateIndependentAssociativeFlow::parameters()
 {
   ParameterSet pset(RateIndependentAssociativeFlow::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("hardening");
 
   return pset;
 }
@@ -184,8 +184,8 @@ ParameterSet RateIndependentNonAssociativeHardening::parameters()
 {
   ParameterSet pset(RateIndependentNonAssociativeHardening::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("hardening");
 
   return pset;
 }

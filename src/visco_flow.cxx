@@ -194,9 +194,9 @@ ParameterSet PerzynaFlowRule::parameters()
 {
   ParameterSet pset(PerzynaFlowRule::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("g");
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("hardening");
+  pset.add_parameter<NEMLObject>("g");
   pset.add_parameter<NEMLObject>("eta");
 
   return pset;
@@ -514,9 +514,9 @@ ParameterSet ChabocheFlowRule::parameters()
 {
   ParameterSet pset(ChabocheFlowRule::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("surface");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("hardening");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("fluidity");
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("hardening");
+  pset.add_parameter<NEMLObject>("fluidity");
   pset.add_parameter<NEMLObject>("n");
 
   return pset;

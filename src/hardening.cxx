@@ -216,7 +216,7 @@ ParameterSet CombinedIsotropicHardeningRule::parameters()
 {
   ParameterSet pset(CombinedIsotropicHardeningRule::type());
 
-  pset.add_parameter<std::vector<std::shared_ptr<NEMLObject>>>("rules");
+  pset.add_parameter<std::vector<NEMLObject>>("rules");
 
   return pset;
 }
@@ -353,8 +353,8 @@ ParameterSet CombinedHardeningRule::parameters()
 {
   ParameterSet pset(CombinedHardeningRule::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("iso");
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("kin");
+  pset.add_parameter<NEMLObject>("iso");
+  pset.add_parameter<NEMLObject>("kin");
 
   return pset;
 }
@@ -631,9 +631,9 @@ ParameterSet Chaboche::parameters()
 {
   ParameterSet pset(Chaboche::type());
 
-  pset.add_parameter<std::shared_ptr<NEMLObject>>("iso");
+  pset.add_parameter<NEMLObject>("iso");
   pset.add_parameter<std::vector<NEMLObject>>("C");
-  pset.add_parameter<std::vector<std::shared_ptr<NEMLObject>>>("gmodels");
+  pset.add_parameter<std::vector<NEMLObject>>("gmodels");
   pset.add_parameter<std::vector<NEMLObject>>("A");
   pset.add_parameter<std::vector<NEMLObject>>("a");
 
