@@ -33,7 +33,6 @@ class IsotropicHardeningRule: public HardeningRule {
 /// Linear, isotropic hardening
 class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
-  LinearIsotropicHardeningRule(double s0, double K);
   LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K);
 
   static std::string type();
@@ -77,7 +76,6 @@ static Register<InterpolatedIsotropicHardeningRule>
 /// Voce isotropic hardening
 class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
-  VoceIsotropicHardeningRule(double s0, double R, double d);
   VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> R, std::shared_ptr<Interpolate> d);
 
   static std::string type();
@@ -131,7 +129,6 @@ class KinematicHardeningRule: public HardeningRule {
 /// Simple linear kinematic hardening
 class LinearKinematicHardeningRule: public KinematicHardeningRule {
  public:
-  LinearKinematicHardeningRule(double H);
   LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H);
 
   static std::string type();
@@ -217,7 +214,6 @@ class GammaModel: public NEMLObject {
 /// Gamma is just a consant
 class ConstantGamma: public GammaModel {
  public:
-  ConstantGamma(double g);
   ConstantGamma(std::shared_ptr<Interpolate> g);
 
   static std::string type();
@@ -238,7 +234,6 @@ static Register<ConstantGamma> regConstantGamma;
 /// Gamma evolves with a saturating Voce form
 class SatGamma: public GammaModel {
  public:
-  SatGamma(double gs, double g0, double beta);
   SatGamma(std::shared_ptr<Interpolate> gs, std::shared_ptr<Interpolate> g0, std::shared_ptr<Interpolate> beta);
 
   static std::string type();
@@ -262,23 +257,6 @@ static Register<SatGamma> regSatGamma;
 //    This model degenerates to Frederick-Armstrong for n = 1
 class Chaboche: public NonAssociativeHardening {
  public:
-  /// NO time relaxation
-  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<double> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels,
-           bool noniso = true);
-  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<Interpolate>> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels,
-           bool noniso = true);
-
-  // WITH time relaxation
-  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<double> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels,
-           std::vector<double> A,
-           std::vector<double> a,
-           bool noniso = true);
   Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels,

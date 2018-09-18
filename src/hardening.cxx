@@ -23,12 +23,6 @@ int IsotropicHardeningRule::init_hist(double * const alpha) const
 }
 
 // Implementation of linear hardening
-LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(double s0, double K) :
-    s0_(new ConstantInterpolate(s0)), K_(new ConstantInterpolate(K))
-{
-
-}
-
 LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K) :
     s0_(s0), K_(K)
 {
@@ -129,14 +123,6 @@ int InterpolatedIsotropicHardeningRule::dq_da(const double * const alpha,
 }
 
 // Implementation of voce hardening
-VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(double s0, double R,
-                                                       double d) :
-    s0_(new ConstantInterpolate(s0)), R_(new ConstantInterpolate(R)),
-    d_(new ConstantInterpolate(d))
-{
-
-}
-
 VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> R, std::shared_ptr<Interpolate> d) :
     s0_(s0), R_(R), d_(d)
 {
@@ -277,12 +263,6 @@ int KinematicHardeningRule::init_hist(double * const alpha) const
 }
 
 // Implementation of linear kinematic hardening
-LinearKinematicHardeningRule::LinearKinematicHardeningRule(double H) :
-    H_(new ConstantInterpolate(H))
-{
-
-}
-
 LinearKinematicHardeningRule::LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H) :
     H_(H)
 {
@@ -469,12 +449,6 @@ int NonAssociativeHardening::dh_da_temp(const double * const s,
 //
 // Constant
 //
-ConstantGamma::ConstantGamma(double g) :
-    g_(new ConstantInterpolate(g))
-{
-
-}
-
 ConstantGamma::ConstantGamma(std::shared_ptr<Interpolate> g) :
     g_(g)
 {
@@ -517,13 +491,6 @@ double ConstantGamma::g(double T) const {
 //
 // Saturating
 //
-SatGamma::SatGamma(double gs, double g0, double beta) :
-    gs_(new ConstantInterpolate(gs)), g0_(new ConstantInterpolate(g0)),
-    beta_(new ConstantInterpolate(beta))
-{
-
-}
-
 SatGamma::SatGamma(std::shared_ptr<Interpolate> gs, std::shared_ptr<Interpolate> g0, std::shared_ptr<Interpolate> beta) :
     gs_(gs), g0_(g0), beta_(beta)
 {
@@ -578,38 +545,6 @@ double SatGamma::beta(double T) const {
 //
 // Chaboche
 //
-Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-                   std::vector<double> c,
-                   std::vector<std::shared_ptr<GammaModel>> gmodels,
-                   bool noniso) :
-    iso_(iso), c_(make_vector(c)), gmodels_(gmodels), n_(c.size()),
-    relax_(false), noniso_(noniso)
-{
-
-}
-
-Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<Interpolate>> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels,
-           bool noniso) :
-    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), relax_(false),
-    noniso_(noniso)
-{
-
-}
-
-Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-                   std::vector<double> c,
-                   std::vector<std::shared_ptr<GammaModel>> gmodels,
-                   std::vector<double> A,
-                   std::vector<double> a,
-                   bool noniso) :
-    iso_(iso), c_(make_vector(c)), gmodels_(gmodels), n_(c.size()),
-    A_(make_vector(A)), a_(make_vector(a)), relax_(true), noniso_(noniso)
-{
-
-}
-
 Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<Interpolate>> c,
            std::vector<std::shared_ptr<GammaModel>> gmodels,

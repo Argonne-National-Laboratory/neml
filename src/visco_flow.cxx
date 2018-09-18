@@ -108,12 +108,6 @@ int ViscoPlasticFlowRule::dh_da_temp(const double * const s,
 }
 
 // Various g(s) implementations
-GPowerLaw::GPowerLaw(double n) :
-    n_(new ConstantInterpolate(n))
-{
-
-}
-
 GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n) :
     n_(n)
 {
@@ -164,16 +158,6 @@ double GPowerLaw::dg(double f, double T) const
 double GPowerLaw::n(double T) const
 {
   return n_->value(T);
-}
-
-PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
-                std::shared_ptr<HardeningRule> hardening,
-                std::shared_ptr<GFlow> g,
-                double eta) :
-    surface_(surface), hardening_(hardening), g_(g), 
-    eta_(new ConstantInterpolate(eta))
-{
-  
 }
 
 PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
@@ -382,12 +366,6 @@ double PerzynaFlowRule::eta(double T) const
 }
 
 // Begin Chaboche
-ConstantFluidity::ConstantFluidity(double eta) :
-    eta_(new ConstantInterpolate(eta))
-{
-
-}
-
 ConstantFluidity::ConstantFluidity(std::shared_ptr<Interpolate> eta) :
     eta_(eta)
 {
@@ -424,14 +402,6 @@ double ConstantFluidity::eta(double a, double T) const
 double ConstantFluidity::deta(double a, double T) const
 {
   return 0.0;
-}
-
-SaturatingFluidity::SaturatingFluidity(double K0, double A, double b)
-  : K0_(new ConstantInterpolate(K0)),
-    A_(new ConstantInterpolate(A)),
-    b_(new ConstantInterpolate(b))
-{
-
 }
 
 SaturatingFluidity::SaturatingFluidity(std::shared_ptr<Interpolate> K0,
@@ -483,16 +453,6 @@ double SaturatingFluidity::deta(double a, double T) const
   double b = b_->value(T);
 
   return A * b * exp(-b * a);
-}
-
-ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
-                                   std::shared_ptr<NonAssociativeHardening> hardening,
-                                   std::shared_ptr<FluidityModel> fluidity,
-                                   double n) :
-    surface_(surface), hardening_(hardening), fluidity_(fluidity), 
-    n_(new ConstantInterpolate(n)), recovery_(false)
-{
-  
 }
 
 ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,

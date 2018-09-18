@@ -21,7 +21,6 @@ class ScalarCreepRule: public NEMLObject {
 /// Simple power law creep
 class PowerLawCreep: public ScalarCreepRule {
  public:
-  PowerLawCreep(double A, double n);
   PowerLawCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
 
   static std::string type();
@@ -72,7 +71,6 @@ static Register<RegionKMCreep> regRegionKMCreep;
 /// Classical Norton-Bailey creep
 class NortonBaileyCreep: public ScalarCreepRule {
  public:
-  NortonBaileyCreep(double A, double m, double n);
   NortonBaileyCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> m,
                     std::shared_ptr<Interpolate> n);
 
@@ -178,7 +176,7 @@ class CreepModel: public NEMLObject, public Solvable {
 class J2CreepModel: public CreepModel {
  public:
   J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
-               double tol = 1.0e-10, int miter = 25, bool verbose = false);
+               double tol, int miter, bool verbose);
 
   static std::string type();
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);

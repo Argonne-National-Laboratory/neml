@@ -225,7 +225,6 @@ static Register<IsoJ2> regIsoJ2;
 //
 class IsoKinJ2I1: public YieldSurface {
  public:
-  IsoKinJ2I1(const double h, const double l);
   IsoKinJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l);
   virtual ~IsoKinJ2I1();
 

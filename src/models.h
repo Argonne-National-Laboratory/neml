@@ -167,9 +167,7 @@ class NEMLModel_ldI: public NEMLModel {
 class NEMLModel_sd: public NEMLModel {
   public:
     NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
-                 std::shared_ptr<Interpolate> alpha = nullptr);
-    NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
-                 double alpha = 0.0);
+                 std::shared_ptr<Interpolate> alpha);
     virtual ~NEMLModel_sd();
 
     // Up to the user to implement
@@ -235,9 +233,7 @@ class NEMLModel_sd: public NEMLModel {
 class SmallStrainElasticity: public NEMLModel_sd {
  public:
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
-                        std::shared_ptr<Interpolate> alpha = nullptr);
-  SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
-                        double alpha = 0.0);
+                        std::shared_ptr<Interpolate> alpha);
 
   static std::string type();
   static ParameterSet parameters();
@@ -314,18 +310,11 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
  public:
   SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                std::shared_ptr<YieldSurface> surface,
-                               double ys,
-                               double alpha = 0.0,
-                               double tol = 1.0e-8, int miter = 50,
-                               bool verbose = false,
-                               int max_divide = 8);
-  SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
-                               std::shared_ptr<YieldSurface> surface,
                                std::shared_ptr<Interpolate> ys,
-                               std::shared_ptr<Interpolate> alpha = nullptr,
-                               double tol = 1.0e-8, int miter = 50,
-                               bool verbose = false,
-                               int max_divide = 8);
+                               std::shared_ptr<Interpolate> alpha,
+                               double tol, int miter,
+                               bool verbose,
+                               int max_divide);
 
   static std::string type();
   static ParameterSet parameters();
@@ -392,18 +381,9 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
  public:
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
-                                       double alpha = 0.0,
-                                       double tol = 1.0e-8, int miter = 50,
-                                       bool verbose = false, 
-                                       double kttol = 1.0e-2,
-                                       bool check_kt = false);
-  SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
-                                       std::shared_ptr<RateIndependentFlowRule> flow,
-                                       std::shared_ptr<Interpolate> alpha = nullptr,
-                                       double tol = 1.0e-8, int miter = 50,
-                                       bool verbose = false, 
-                                       double kttol = 1.0e-2,
-                                       bool check_kt = false);
+                                       std::shared_ptr<Interpolate> alpha,
+                                       double tol, int miter, bool verbose,double kttol,
+                                       bool check_kt);
 
   static std::string type();
   static ParameterSet parameters();
@@ -459,16 +439,9 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
                              std::shared_ptr<LinearElasticModel> elastic,
                              std::shared_ptr<NEMLModel_sd> plastic,
                              std::shared_ptr<CreepModel> creep,
-                             double alpha = 0.0,
-                             double tol = 1.0e-8, int miter = 50,
-                             bool verbose = false, double sf = 1.0e6);
-  SmallStrainCreepPlasticity(
-                             std::shared_ptr<LinearElasticModel> elastic,
-                             std::shared_ptr<NEMLModel_sd> plastic,
-                             std::shared_ptr<CreepModel> creep,
-                             std::shared_ptr<Interpolate> alpha = nullptr,
-                             double tol = 1.0e-8, int miter = 50,
-                             bool verbose = false, double sf = 1.0e6);
+                             std::shared_ptr<Interpolate> alpha,
+                             double tol, int miter,
+                             bool verbose, double sf);
 
   static std::string type();
   static ParameterSet parameters();
@@ -522,14 +495,9 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
  public:
   GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
                     std::shared_ptr<GeneralFlowRule> rule,
-                    double alpha = 0.0,
-                    double tol = 1.0e-8, int miter = 50,
-                    bool verbose = false, int max_divide = 6);
-  GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
-                    std::shared_ptr<GeneralFlowRule> rule,
-                    std::shared_ptr<Interpolate> alpha = nullptr,
-                    double tol = 1.0e-8, int miter = 50,
-                    bool verbose = false, int max_divide = 6);
+                    std::shared_ptr<Interpolate> alpha,
+                    double tol, int miter,
+                    bool verbose, int max_divide);
 
   static std::string type();
   static ParameterSet parameters();
@@ -593,12 +561,7 @@ class KMRegimeModel: public NEMLModel_sd {
                 std::vector<std::shared_ptr<NEMLModel_sd>> models,
                 std::vector<double> gs, 
                 double kboltz, double b, double eps0,
-                double alpha = 0.0);
-  KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
-                std::vector<std::shared_ptr<NEMLModel_sd>> models,
-                std::vector<double> gs, 
-                double kboltz, double b, double eps0,
-                std::shared_ptr<Interpolate> alpha = nullptr);
+                std::shared_ptr<Interpolate> alpha);
 
   static std::string type();
   static ParameterSet parameters();

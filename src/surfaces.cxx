@@ -216,12 +216,6 @@ int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
 
 // J2I1 implementation
 // Combined isotropic/kinematic with some I1 contribution
-IsoKinJ2I1::IsoKinJ2I1(const double h, const double l) :
-    h_(new ConstantInterpolate(h)), l_(new ConstantInterpolate(l))
-{
-
-}
-
 IsoKinJ2I1::IsoKinJ2I1(std::shared_ptr<Interpolate> h, 
                        std::shared_ptr<Interpolate> l) :
     h_(h), l_(l)

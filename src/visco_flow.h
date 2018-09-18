@@ -21,7 +21,6 @@ class GFlow: public NEMLObject {
 /// g is a power law
 class GPowerLaw: public GFlow {
  public:
-  GPowerLaw(double n);
   GPowerLaw(std::shared_ptr<Interpolate> n);
 
   static std::string type();
@@ -108,10 +107,6 @@ class PerzynaFlowRule : public ViscoPlasticFlowRule {
   PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
                   std::shared_ptr<HardeningRule> hardening,
                   std::shared_ptr<GFlow> g,
-                  double eta);
-  PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
-                  std::shared_ptr<HardeningRule> hardening,
-                  std::shared_ptr<GFlow> g,
                   std::shared_ptr<Interpolate> eta);
 
   static std::string type();
@@ -169,7 +164,6 @@ class FluidityModel: public NEMLObject {
 /// The fluidity is constant
 class ConstantFluidity: public FluidityModel {
  public:
-  ConstantFluidity(double eta);
   ConstantFluidity(std::shared_ptr<Interpolate> eta);
 
   static std::string type();
@@ -188,7 +182,6 @@ static Register<ConstantFluidity> regConstantFluidity;
 /// Voce-like saturating fluidity
 class SaturatingFluidity: public FluidityModel {
  public:
-  SaturatingFluidity(double K0, double A, double b);
   SaturatingFluidity(std::shared_ptr<Interpolate> K0,
                      std::shared_ptr<Interpolate> A,
                      std::shared_ptr<Interpolate> b);
@@ -214,11 +207,6 @@ static Register<SaturatingFluidity> regSaturatingFluidity;
 //
 class ChabocheFlowRule: public ViscoPlasticFlowRule {
  public:
-  // No recovery
-  ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
-                   std::shared_ptr<NonAssociativeHardening> hardening,
-                   std::shared_ptr<FluidityModel> fluidity,
-                   double n);
   ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                    std::shared_ptr<NonAssociativeHardening> hardening,
                    std::shared_ptr<FluidityModel> fluidity,

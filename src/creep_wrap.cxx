@@ -149,9 +149,6 @@ PYBIND11_MODULE(creep, m) {
       ;
   
   py::class_<PowerLawCreep, ScalarCreepRule, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep")
-      .def(py::init<double, double>(), py::arg("A"), py::arg("n"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("n"))
-
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<PowerLawCreep>(args, kwargs, {"A", "n"});

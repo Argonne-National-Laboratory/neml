@@ -26,12 +26,6 @@ int ScalarCreepRule::dg_dT(double seq, double eeq, double t, double T,
 }
 
 // Implementation of power law creep
-PowerLawCreep::PowerLawCreep(double A, double n) :
-    A_(new ConstantInterpolate(A)), n_(new ConstantInterpolate(n))
-{
-
-}
-
 PowerLawCreep::PowerLawCreep(std::shared_ptr<Interpolate> A,
                              std::shared_ptr<Interpolate> n) :
     A_(A), n_(n)
@@ -198,13 +192,6 @@ void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & B
 }
 
 // Implementation of Norton-Bailey creep
-NortonBaileyCreep::NortonBaileyCreep(double A, double m, double n) :
-    A_(new ConstantInterpolate(A)), m_(new ConstantInterpolate(m)),
-    n_(new ConstantInterpolate(n))
-{
-
-}
-
 NortonBaileyCreep::NortonBaileyCreep(std::shared_ptr<Interpolate> A,
                                      std::shared_ptr<Interpolate> m,
                                      std::shared_ptr<Interpolate> n) :

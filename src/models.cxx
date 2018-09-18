@@ -123,20 +123,7 @@ int NEMLModel_ldI::update_sd(
 NEMLModel_sd::NEMLModel_sd(
     std::shared_ptr<LinearElasticModel> emodel,
     std::shared_ptr<Interpolate> alpha) :
-      NEMLModel(), elastic_(emodel)
-{
-  if (alpha) {
-    alpha_ = alpha;
-  }
-  else {
-    alpha_ = std::shared_ptr<ConstantInterpolate>(new ConstantInterpolate(0.0));
-  }
-}
-
-NEMLModel_sd::NEMLModel_sd(
-    std::shared_ptr<LinearElasticModel> emodel,
-    double alpha) :
-      elastic_(emodel), alpha_(new ConstantInterpolate(alpha)), NEMLModel()
+      NEMLModel(), elastic_(emodel), alpha_(alpha)
 {
 
 }
@@ -219,14 +206,6 @@ SmallStrainElasticity::SmallStrainElasticity(
 
 }
 
-SmallStrainElasticity::SmallStrainElasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double alpha) :
-    NEMLModel_sd(elastic, alpha)
-{
-
-}
-
 std::string SmallStrainElasticity::type()
 {
   return "SmallStrainElasticity";
@@ -288,20 +267,6 @@ int SmallStrainElasticity::update_sd(
 }
 
 // Implementation of perfect plasticity
-SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<YieldSurface> surface,
-    double ys,
-    double alpha,
-    double tol, int miter,
-    bool verbose, int max_divide) :
-      NEMLModel_sd(elastic, alpha),
-      surface_(surface), ys_(new ConstantInterpolate(ys)),
-      tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
-{
-
-}
-
 SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<YieldSurface> surface,
@@ -631,18 +596,6 @@ int SmallStrainPerfectPlasticity::calc_tangent_(SSPPTrialState ts,
 
 // Implementation of small strain rate independent plasticity
 //
-
-SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<RateIndependentFlowRule> flow, double alpha, double tol,
-    int miter, bool verbose, double kttol, bool check_kt) :
-      NEMLModel_sd(elastic, alpha),
-      flow_(flow), tol_(tol), miter_(miter),
-      verbose_(verbose), kttol_(kttol), check_kt_(check_kt)
-{
-
-}
-
 SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<RateIndependentFlowRule> flow, 
@@ -1047,19 +1000,6 @@ SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<NEMLModel_sd> plastic,
     std::shared_ptr<CreepModel> creep,
-    double alpha, double tol,
-    int miter, bool verbose, double sf) :
-      NEMLModel_sd(elastic, alpha),
-      creep_(creep), plastic_(plastic), tol_(tol), miter_(miter),
-      verbose_(verbose), sf_(sf)
-{
-
-}
-
-SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> plastic,
-    std::shared_ptr<CreepModel> creep,
     std::shared_ptr<Interpolate> alpha, double tol,
     int miter, bool verbose, double sf) :
       NEMLModel_sd(elastic, alpha),
@@ -1307,18 +1247,6 @@ int SmallStrainCreepPlasticity::set_elastic_model(std::shared_ptr<LinearElasticM
 }
 
 // Start general integrator implementation
-GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
-                                     std::shared_ptr<GeneralFlowRule> rule,
-                                     double alpha,
-                                     double tol, int miter,
-                                     bool verbose, int max_divide) :
-    NEMLModel_sd(elastic, alpha),
-    rule_(rule), tol_(tol), miter_(miter), verbose_(verbose), 
-    max_divide_(max_divide)
-{
-
-}
-
 GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
                                      std::shared_ptr<GeneralFlowRule> rule,
                                      std::shared_ptr<Interpolate> alpha,
@@ -1716,17 +1644,6 @@ int GeneralIntegrator::set_elastic_model(std::shared_ptr<LinearElasticModel> emo
 }
 
 // Start KMRegimeModel
-KMRegimeModel::KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
-                             std::vector<std::shared_ptr<NEMLModel_sd>> models,
-                             std::vector<double> gs,
-                             double kboltz, double b, double eps0, 
-                             double alpha) :
-    NEMLModel_sd(emodel, alpha), models_(models), gs_(gs), 
-    kboltz_(kboltz), b_(b), eps0_(eps0)
-{
-
-}
-
 KMRegimeModel::KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
                              std::vector<std::shared_ptr<NEMLModel_sd>> models,
                              std::vector<double> gs,

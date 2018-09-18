@@ -13,14 +13,6 @@ NEMLDamagedModel_sd::NEMLDamagedModel_sd(std::shared_ptr<LinearElasticModel> ela
 
 }
 
-NEMLDamagedModel_sd::NEMLDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
-                                         std::shared_ptr<NEMLModel_sd> base,
-                                         double alpha) :
-    NEMLModel_sd(elastic, alpha), base_(base)
-{
-
-}
-
 size_t NEMLDamagedModel_sd::nhist() const
 {
   return ndamage() + base_->nstore();
@@ -48,16 +40,6 @@ NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
     double tol, int miter, bool verbose) :
       NEMLDamagedModel_sd(elastic, base, alpha), tol_(tol), miter_(miter),
       verbose_(verbose)
-{
-
-}
-
-NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha, double tol, int miter, bool verbose) :
-      NEMLDamagedModel_sd(elastic, base, alpha), tol_(tol),
-      miter_(miter), verbose_(verbose)
 {
 
 }
@@ -271,17 +253,6 @@ CombinedDamageModel_sd::CombinedDamageModel_sd(
 
 }
 
-CombinedDamageModel_sd::CombinedDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha, double tol, int miter, bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
-      models_(models)
-{
-
-}
-
 std::string CombinedDamageModel_sd::type()
 {
   return "CombinedDamageModel_sd";
@@ -416,21 +387,6 @@ ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
       A_(A), xi_(xi), phi_(phi)
 {
 
-
-}
-
-ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double A, double xi, double phi,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
-      A_(new ConstantInterpolate(A)), 
-      xi_(new ConstantInterpolate(xi)), 
-      phi_(new ConstantInterpolate(phi)) 
-{
 
 }
 
@@ -570,15 +526,6 @@ NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(
     std::shared_ptr<Interpolate> alpha,
     double tol, int miter, bool verbose) :
       NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose) 
-{
-
-}
-
-NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha, double tol, int miter, bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose)
 {
 
 }
@@ -743,20 +690,6 @@ NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
 
 }
 
-NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double A, double a,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, tol, miter,
-                                        verbose),
-      A_(new ConstantInterpolate(A)), a_(new ConstantInterpolate(a))
-{
-
-}
-
 std::string NEMLPowerLawDamagedModel_sd::type()
 {
   return "NEMLPowerLawDamagedModel_sd";
@@ -852,21 +785,6 @@ NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
       NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, tol, miter, 
                                         verbose), 
       W0_(W0), k0_(k0), af_(af)
-{
-
-}
-
-NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double W0, double k0, double af,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, tol, miter,
-                                        verbose),
-      W0_(new ConstantInterpolate(W0)), k0_(new ConstantInterpolate(k0)),
-      af_(new ConstantInterpolate(af))
 {
 
 }
