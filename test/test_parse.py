@@ -204,8 +204,8 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
     
     cs = [5.0,10.0]
     gs = [1000.0,1000.0]
-    As = [0.0, 0.0, 0.0]
-    ns = [1.0, 1.0, 1.0]
+    As = [0.0, 0.0]
+    ns = [1.0, 1.0]
 
     elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
         K, "bulk")
@@ -286,7 +286,6 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     self.tmax = 10.0
     self.nsteps = 100.0
     self.emax = np.array([0.1,0,0,0,0,0])
-
 
 class TestPerzyna(CompareMats, unittest.TestCase):
   def setUp(self):

@@ -69,7 +69,7 @@ std::shared_ptr<NEMLObject> get_object(const xmlpp::Node * node)
 ParameterSet get_parameters(const xmlpp::Node * node)
 {
   std::string type = get_type_of_node(node);
-  
+
   // Needs to have a type at this point
   if (type == "none") {
     throw InvalidType(node->get_name().raw(), type, node->get_line());
@@ -135,77 +135,36 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
 
 double get_double(const xmlpp::Node* node)
 {
-  auto elem = dynamic_cast<const xmlpp::Element*>(node);
-
-  if (elem->has_child_text()) {
-    std::string sval = elem->FIRST_TEXT_FN()->get_content();
-    if (sval == "") {
-      throw InvalidParameter(node->get_name().raw(), node->get_line());
-    }
-    else {
-      return std::stod(sval);
-    }
-  }
-  else {
-    throw InvalidParameter(node->get_name().raw(), node->get_line());
-  }
+  std::string text = get_string(node);
+  return std::stod(text);
 }
 
 int get_int(const xmlpp::Node* node)
 {
-  auto elem = dynamic_cast<const xmlpp::Element*>(node);
-
-  if (elem->has_child_text()) {
-    std::string sval = elem->FIRST_TEXT_FN()->get_content();
-    if (sval == "") {
-      throw InvalidParameter(node->get_name().raw(), node->get_line());
-    }
-    else {
-      return std::stoi(sval);
-    }
-  }
-  else {
-    throw InvalidParameter(node->get_name().raw(), node->get_line());
-  }
+  std::string text = get_string(node);
+  return std::stoi(text);
 }
 
 std::vector<double> get_vector_double(const xmlpp::Node * node)
 {
-  auto elem = dynamic_cast<const xmlpp::Element*>(node);
+  std::string text = get_string(node);
 
-  if (elem->has_child_text()) {
-    std::string sval = elem->FIRST_TEXT_FN()->get_content();
-    if (sval == "") {
-      throw InvalidParameter(node->get_name().raw(), node->get_line());
-    }
-    else {
-      return split_string(sval);
-    }
-  }
-  else {
-    throw InvalidParameter(node->get_name().raw(), node->get_line());
-  }
+  return split_string(text);
 }
 
 bool get_bool(const xmlpp::Node * node)
 {
-  auto elem = dynamic_cast<const xmlpp::Element*>(node);
+  std::string text = get_string(node);
 
-  if (elem->has_child_text()) {
-    std::string sval = elem->FIRST_TEXT_FN()->get_content();
-    if ((sval == "true") || (sval == "True") || (sval == "T") || (sval == "1")) {
-      return true;
-    }
-    else if ((sval == "false") || (sval == "False") || (sval == "F") || (sval == "0")) {
-      return false;
-    }
-    else {
-      throw InvalidParameter(node->get_name().raw(), node->get_line());
-    }
+  if ((text == "true") || (text == "True") || (text == "T") || (text == "1")) {
+    return true;
+  }
+  else if ((text == "false") || (text == "False") || (text == "F") || (text == "0")) {
+    return false;
   }
   else {
     throw InvalidParameter(node->get_name().raw(), node->get_line());
-  }
+  }  
 }
 
 std::string get_string(const xmlpp::Node * node)
