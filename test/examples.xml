@@ -1,120 +1,74 @@
 <materials>
-  <material name="test_powerdamage" type="smallstrain_damage">
-    <elastic type="isotropic">
-      <youngs>
-        <modulus>92000</modulus>
-      </youngs>
-      <poissons>
-        <modulus>0.3</modulus>
-      </poissons>
+  <test_powerdamage type="NEMLPowerLawDamagedModel_sd">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1>92000.0</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.3</m2>
+      <m2_type>poissons</m2_type>
     </elastic>
 
-    <base type="smallstrain">
-      <plastic type="independent">
-        <rule type="associative">
-          <surface type="isoj2"/>
-          <hardening type="isotropic">
-            <isotropic type="linear">
-              <yield>180</yield>
-              <harden>1000</harden>
-            </isotropic>
-          </hardening>
-        </rule>
-      </plastic>
-    </base>
-    <damage type="power_law">
-      <A>2.0e-5</A>
-      <a>2.2</a>
-    </damage>
-  </material>
+    <A>2.0e-5</A>
+    <a>2.2</a>
 
-  <material name="test_markdamage" type="smallstrain_damage">
-    <elastic type="isotropic">
-      <youngs>
-        <modulus>92000</modulus>
-      </youngs>
-      <poissons>
-        <modulus>0.3</modulus>
-      </poissons>
-    </elastic>
-
-    <base type="smallstrain">
-      <plastic type="independent">
-        <rule type="associative">
-          <surface type="isoj2"/>
-          <hardening type="isotropic">
-            <isotropic type="linear">
-              <yield>180</yield>
-              <harden>1000</harden>
-            </isotropic>
-          </hardening>
-        </rule>
-      </plastic>
-    </base>
-    <damage type="mark">
-      <C>8.0e-6</C>
-      <n>2.2</n>
-      <m>1.0</m>
-      <alpha>3.0</alpha>
-      <beta>2.0</beta>
-      <rate0>0.01</rate0>
-    </damage>
-  </material>
-
-  <material name="test_j2iso" type="smallstrain">
-    <elastic type="isotropic">
-      <youngs>
-        <modulus>103561.64383561644</modulus>
-      </youngs>
-      <poissons>
-        <modulus>0.2945205479452055</modulus>
-      </poissons>
-    </elastic>
-    <plastic type="independent">
-      <rule type="associative">
-        <surface type="isoj2">
-        </surface>
-        <hardening type="isotropic">
-          <isotropic type="linear">
-            <yield>100.0</yield>
-            <harden>1000.0</harden>
-          </isotropic>
+    <base type="SmallStrainRateIndependentPlasticity">
+      <elastic type="IsotropicLinearElasticModel">
+        <m1>92000.0</m1>
+        <m1_type>youngs</m1_type>
+        <m2>0.3</m2>
+        <m2_type>poissons</m2_type>
+      </elastic>
+      <flow type="RateIndependentAssociativeFlow">
+        <surface type="IsoJ2"/>
+        <hardening type="LinearIsotropicHardeningRule">
+          <s0>180.0</s0>
+          <K>1000.0</K>
         </hardening>
-      </rule>
-    </plastic>
-  </material>
+      </flow>
+    </base>
+  </test_powerdamage>
 
-  <material name="test_j2isocomb" type="smallstrain">
-    <elastic type="isotropic">
-      <youngs>
-        <modulus>150000.0</modulus>
-      </youngs>
-      <poissons>
-        <modulus>0.3</modulus>
-      </poissons>
+  <test_j2iso type="SmallStrainRateIndependentPlasticity">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1>103561.64383561644</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.2945205479452055</m2>
+      <m2_type>poissons</m2_type>
     </elastic>
-    <plastic type="independent">
-      <rule type="associative">
-        <surface type="isoj2">
-        </surface>
-        <hardening type="isotropic">
-          <isotropic type="combined">
-            <models>
-              <isotropic type="linear">
-                <yield>100.0</yield>
-                <harden>100.0</harden>
-              </isotropic>
-              <isotropic type="voce">
-                <yield>0.0</yield>
-                <r>100.0</r>
-                <d>1000.0</d>
-              </isotropic>
-            </models>
-          </isotropic>
-        </hardening>
-      </rule>
-    </plastic>
-  </material>
+    
+    <flow type="RateIndependentAssociativeFlow">
+      <surface type="IsoJ2"/>
+      <hardening type="LinearIsotropicHardeningRule">
+        <s0>100.0</s0>
+        <K>1000.0</K>
+      </hardening>
+    </flow>
+  </test_j2iso>
+
+  <test_j2isocomb type="SmallStrainRateIndependentPlasticity">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1>150000.0</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.3</m2>
+      <m2_type>poissons</m2_type>
+    </elastic>
+
+    <flow type="RateIndpendentAssociativeFlow">
+      <surface type="IsoJ2"/>
+      <hardening type="CombinedIsotropicHardeningRule">
+        <rules>
+          <hardening type="LinearIsotropicHardeningRule">
+            <s0>100.0</s0>
+            <K>100.0</K>
+          </hardening>
+          <hardening type="VoceIsotropicHardeningRule">
+            <s0>0.0</s0>
+            <R>100.0</R>
+            <d>1000.0</d>
+          </hardening>
+        </rules>
+      </hardening>
+    </flow>
+  </test_j2isocomb>
 
   <material name="test_creep_plasticity" type="smallstrain">
     <elastic type="isotropic">
