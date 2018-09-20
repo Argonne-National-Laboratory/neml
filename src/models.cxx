@@ -42,6 +42,8 @@ size_t NEMLModel_ldF::nstore() const
 int NEMLModel_ldF::init_store(double * const store) const
 {
   assert(false); 
+
+  return 0;
 }
 
 int NEMLModel_ldF::update_ldI(
@@ -55,6 +57,8 @@ int NEMLModel_ldF::update_ldI(
     double & p_np1, double p_n)
 {
   assert(false); // Pass on implementing for now
+
+  return 0;
 }
 
 int NEMLModel_ldF::update_sd(
@@ -68,6 +72,8 @@ int NEMLModel_ldF::update_sd(
     double & p_np1, double p_n)
 {
   assert(false); // Pass on implementing for now
+
+  return 0;
 }
 
 // NEMLModel_ldI implementation
@@ -90,6 +96,8 @@ size_t NEMLModel_ldI::nstore() const
 int NEMLModel_ldI::init_store(double * const store) const
 {
   assert(false); 
+
+  return 0;
 }
 
 int NEMLModel_ldI::update_ldF(
@@ -103,6 +111,8 @@ int NEMLModel_ldI::update_ldF(
     double & p_np1, double p_n)
 {
   assert(false); // Pass for now
+
+  return 0;
 }
 
 int NEMLModel_ldI::update_sd(
@@ -116,6 +126,8 @@ int NEMLModel_ldI::update_sd(
     double & p_np1, double p_n)
 {
   assert(false); // Pass for now
+
+  return 0;
 }
 
 
@@ -141,6 +153,8 @@ size_t NEMLModel_sd::nstore() const
 int NEMLModel_sd::init_store(double * const store) const
 {
   init_hist(store); // Get to this later
+
+  return 0;
 }
 
 int NEMLModel_sd::update_ldF(
@@ -154,6 +168,8 @@ int NEMLModel_sd::update_ldF(
     double & p_np1, double p_n)
 {
   assert(false); // Pass for now
+
+  return 0;
 }
 
 int NEMLModel_sd::update_ldI(
@@ -167,6 +183,8 @@ int NEMLModel_sd::update_ldI(
     double & p_np1, double p_n)
 {
   assert(false); // Pass for now
+
+  return 0;
 }
 
 double NEMLModel_sd::alpha(double T) const

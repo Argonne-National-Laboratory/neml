@@ -147,7 +147,7 @@ double PiecewiseLinearInterpolate::value(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
@@ -170,7 +170,7 @@ double PiecewiseLinearInterpolate::derivative(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
@@ -236,7 +236,7 @@ double PiecewiseLogLinearInterpolate::value(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
@@ -259,7 +259,7 @@ double PiecewiseLogLinearInterpolate::derivative(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
