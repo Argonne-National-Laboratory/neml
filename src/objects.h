@@ -21,7 +21,8 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 }
 
 class NEMLObject {
-
+ public:
+  virtual ~NEMLObject() {};
 };
 
 // This version supports the following types of objects as parameters:
@@ -87,6 +88,23 @@ class UnknownParameter: public std::exception {
   std::string object_, name_;
 };
 
+/// Error to call if you try a bad cast
+class WrongTypeError: public std::exception {
+ public:
+  WrongTypeError()
+  {
+
+  };
+
+  const char * what() const throw ()
+  {
+    std::stringstream ss;
+
+    ss << "Cannot convert object to the correct type!";
+
+    return ss.str().c_str();
+  }
+};
 
 /// Parameters for objects created through the NEMLObject interface
 class ParameterSet {
@@ -141,7 +159,13 @@ class ParameterSet {
   template<typename T>
   std::shared_ptr<T> get_object_parameter(std::string name) 
   {
-    return std::static_pointer_cast<T>(get_parameter<std::shared_ptr<NEMLObject>>(name));
+    auto res = std::dynamic_pointer_cast<T>(get_parameter<std::shared_ptr<NEMLObject>>(name));
+    if (res == nullptr) {
+      throw WrongTypeError();
+    }
+    else {
+      return res;
+    }
   };
 
   /// Helper to get a vector of NEMLObjects and cast them to subtype in one go
@@ -154,7 +178,14 @@ class ParameterSet {
     std::transform(std::begin(ov), std::end(ov), std::begin(nv),
                           [](std::shared_ptr<NEMLObject> const & v)
                           {
-                            return std::static_pointer_cast<T>(v);
+                            auto res = std::dynamic_pointer_cast<T>(v);
+
+                            if (res == nullptr) {
+                              throw WrongTypeError();
+                            }
+                            else {
+                              return res;
+                            }
                           });
     return nv;
   };
@@ -199,14 +230,26 @@ class Factory {
   template<typename T>
   std::shared_ptr<T> create(ParameterSet & params)
   {
-    return std::static_pointer_cast<T>(create(params));
+    auto res = std::dynamic_pointer_cast<T>(create(params));
+    if (res == nullptr) {
+      throw WrongTypeError();
+    }
+    else {
+      return res;
+    }
   }
 
   /// Create and cast an object to a type as a unique_ptr
   template<typename T>
   std::unique_ptr<T> create_unique(ParameterSet & params)
   {
-    return std::unique_ptr<T>(static_cast<T*>(create_unique(params).release()));
+    auto res = std::unique_ptr<T>(dynamic_cast<T*>(create_unique(params).release()));
+    if (res == nullptr) {
+      throw WrongTypeError();
+    }
+    else {
+      return res;
+    }
   }
 
   /// Register a type with an identifier, create method, and parameter set
@@ -279,7 +322,6 @@ class UnregisteredError: public std::exception {
  private:
   std::string name_;
 };
-
 
 } //namespace neml
 

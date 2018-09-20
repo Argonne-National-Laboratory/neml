@@ -18,7 +18,13 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
   std::shared_ptr<NEMLObject> obj = get_object(found);
 
   // Do a dangerous cast
-  return std::static_pointer_cast<NEMLModel>(obj);
+  auto res = std::dynamic_pointer_cast<NEMLModel>(obj);
+  if (res == nullptr) {
+    throw std::runtime_error("Top level objects must be of type NEMLModel!");
+  }
+  else {
+    return res;
+  }
 }
 
 std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname)
@@ -36,8 +42,14 @@ std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname
   // Get the NEMLObject
   std::unique_ptr<NEMLObject> obj = get_object_unique(found);
 
-  // Do a dangerous cast (broken?)
-  return std::unique_ptr<NEMLModel>(static_cast<NEMLModel*>(obj.release()));
+  // Do a dangerous cast
+  auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel*>(obj.release()));
+  if (res == nullptr) {
+    throw std::runtime_error("Top level objects must be of type NEMLModel!");
+  }
+  else {
+    return res;
+  }
 }
 
 std::unique_ptr<NEMLObject> get_object_unique(const xmlpp::Node * node)

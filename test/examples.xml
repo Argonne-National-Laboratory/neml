@@ -1,4 +1,27 @@
 <materials>
+  <test_badtop type="IsotropicLinearElasticModel">
+    <m1>150000.0</m1>
+    <m1_type>youngs</m1_type>
+    <m2>0.3</m2>
+    <m2_type>poissons</m2_type>
+  </test_badtop>
+
+  <test_badobject type="SmallStrainRateIndependentPlasticity">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1>103561.64383561644</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.2945205479452055</m2>
+      <m2_type>poissons</m2_type>
+    </elastic>
+
+    <flow type="IsotropicLinearElasticModel">
+      <m1>103561.64383561644</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.2945205479452055</m2>
+      <m2_type>poissons</m2_type>
+    </flow>
+  </test_badobject>
+
   <test_powerdamage type="NEMLPowerLawDamagedModel_sd">
     <elastic type="IsotropicLinearElasticModel">
       <m1>92000.0</m1>

@@ -3,6 +3,15 @@ from neml import solvers, interpolate, models, elasticity, ri_flow, hardening, s
 import unittest
 import numpy as np
 
+class TestErrors(unittest.TestCase):
+  def test_top(self):
+    with self.assertRaises(RuntimeError):
+      test = parse.parse_xml("test/examples.xml", "test_badtop")
+
+  def test_badobject(self):
+    with self.assertRaises(RuntimeError):
+      test = parse.parse_xml("test/examples.xml", "test_badobject")
+
 class CompareMats(object):
   def test_same(self):
     t_n = 0.0
