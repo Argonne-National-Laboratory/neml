@@ -5,7 +5,7 @@ import numpy as np
 
 class TestErrors(unittest.TestCase):
   def test_top(self):
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(parse.InvalidType):
       test = parse.parse_xml("test/examples.xml", "test_badtop")
 
   def test_badobject(self):

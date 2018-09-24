@@ -20,7 +20,8 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
   // Do a dangerous cast
   auto res = std::dynamic_pointer_cast<NEMLModel>(obj);
   if (res == nullptr) {
-    throw std::runtime_error("Top level objects must be of type NEMLModel!");
+    throw InvalidType(found->get_name().raw(), get_type_of_node(found),
+                      found->get_line(), "NEMLModel");
   }
   else {
     return res;
@@ -45,7 +46,8 @@ std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname
   // Do a dangerous cast
   auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel*>(obj.release()));
   if (res == nullptr) {
-    throw std::runtime_error("Top level objects must be of type NEMLModel!");
+    throw InvalidType(found->get_name().raw(), get_type_of_node(found),
+                      found->get_line(), "NEMLModel");
   }
   else {
     return res;
@@ -61,7 +63,12 @@ std::unique_ptr<NEMLObject> get_object_unique(const xmlpp::Node * node)
   }
   else {
     ParameterSet params = get_parameters(node);
-    return Factory::Creator()->create_unique(params);
+    try {
+      return Factory::Creator()->create_unique(params);
+    }
+    catch (UnregisteredError & e) {
+      throw UnregisteredXML(node->get_name().raw(), type, node->get_line());
+    }
   }
 }
 
@@ -84,10 +91,17 @@ ParameterSet get_parameters(const xmlpp::Node * node)
 
   // Needs to have a type at this point
   if (type == "none") {
-    throw InvalidType(node->get_name().raw(), type, node->get_line());
+    throw InvalidType(node->get_name().raw(), type, node->get_line(),
+                      "NEMLObject");
   }
   
-  ParameterSet pset = Factory::Creator()->provide_parameters(type);
+  ParameterSet pset;
+  try {
+    pset = Factory::Creator()->provide_parameters(type);
+  }
+  catch (UnregisteredError & e) {
+    throw UnregisteredXML(node->get_name().raw(), type, node->get_line());
+  }
 
   auto children = node->get_children();
   for (auto it = children.begin(); it != children.end(); ++it) {
@@ -147,21 +161,38 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
 
 double get_double(const xmlpp::Node* node)
 {
-  std::string text = get_string(node);
-  return std::stod(text);
+  try {
+    std::string text = get_string(node);
+    return std::stod(text);
+  }
+  catch (std::exception & e) {
+    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
+                      node->get_line(), "double");
+  }
 }
 
 int get_int(const xmlpp::Node* node)
 {
-  std::string text = get_string(node);
-  return std::stoi(text);
+  try {
+    std::string text = get_string(node);
+    return std::stoi(text);
+  }
+  catch (std::exception & e) {
+    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
+                      node->get_line(), "int");
+  }
 }
 
 std::vector<double> get_vector_double(const xmlpp::Node * node)
 {
-  std::string text = get_string(node);
-
-  return split_string(text);
+  try {
+    std::string text = get_string(node);
+    return split_string(text);
+  }
+  catch (std::exception & e) {
+    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
+                      node->get_line(), "vector<double>");
+  }
 }
 
 bool get_bool(const xmlpp::Node * node)
@@ -175,7 +206,8 @@ bool get_bool(const xmlpp::Node * node)
     return false;
   }
   else {
-    throw InvalidParameter(node->get_name().raw(), node->get_line());
+    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
+                      node->get_line(), "bool");
   }  
 }
 
@@ -186,14 +218,16 @@ std::string get_string(const xmlpp::Node * node)
   if (elem->has_child_text()) {
     std::string sval = elem->FIRST_TEXT_FN()->get_content();
     if (sval == "") {
-      throw InvalidParameter(node->get_name().raw(), node->get_line());
+      throw InvalidType(node->get_name().raw(), get_type_of_node(node),
+                        node->get_line(), "string");
     }
     else {
       return sval;
     }
   }
   else {
-    throw InvalidParameter(node->get_name().raw(), node->get_line());
+    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
+                           node->get_line(), "string");
   }
 }
 

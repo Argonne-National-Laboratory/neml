@@ -116,8 +116,9 @@ class DuplicateNode: public std::exception {
 /// If the object can't be converted
 class InvalidType: public std::exception {
  public:
-  InvalidType(std::string name, std::string type, int line) :
-      name_(name), type_(type), line_(line)
+  InvalidType(std::string name, std::string type, int line, 
+              std::string ctype) :
+      name_(name), type_(type), line_(line), ctype_(ctype)
   {
 
   };
@@ -128,14 +129,14 @@ class InvalidType: public std::exception {
 
     ss << "Node with name " << name_ << " and type " << type_ 
         << " near line " << line_ 
-        << "cannot be converted to the appropriate type!";
+        << "cannot be converted to the correct type " << ctype_ << "!";
 
     return ss.str().c_str();
   };
 
  private:
-  std::string name_, type_;
-  int line_;
+  const std::string name_, type_, ctype_;
+  const int line_;
 };
 
 /// If a parameter doesn't exist
@@ -158,32 +159,33 @@ class UnknownParameterXML: public std::exception {
   };
 
  private:
-  std::string name_, param_;
-  int line_;
+  const std::string name_, param_;
+  const int line_;
 };
 
-/// Nonsensical or invalid parameter
-class InvalidParameter: public std::exception {
+/// The object isn't in the factory
+class UnregisteredXML: public std::exception {
  public:
-  InvalidParameter(std::string name, int line) :
-      name_(name), line_(line)
+  UnregisteredXML(std::string name, std::string type, int line) :
+      name_(name), type_(type), line_(line)
   {
 
   };
 
-  const char * what() const throw()
+  const char * what() const throw ()
   {
     std::stringstream ss;
 
-    ss << "Parameter " << name_ << " near line " << line_ 
-        << " is invalid!";
+    ss << "Node named " << name_ << " defined near line " << line_ 
+        << " has an unregistered type of " << type_ << "!";
 
     return ss.str().c_str();
   };
 
  private:
-  std::string name_;
-  int line_;
+  const std::string name_, type_;
+  const int line_;
+
 };
 
 } // namespace neml
