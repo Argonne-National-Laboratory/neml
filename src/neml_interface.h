@@ -59,8 +59,7 @@ class NEMLModel {
 
 };
 
-std::unique_ptr<NEMLModel> parse_xml(std::string fname, std::string mname, 
-                                     int & ier);
+std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname);
 
 } // namespace neml
 
