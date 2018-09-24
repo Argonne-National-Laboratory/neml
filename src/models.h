@@ -69,6 +69,8 @@ class NEMLModel: public NEMLObject {
    virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
+   virtual double bulk(double T) const = 0;
+   virtual double shear(double T) const = 0;
 
 };
 
@@ -215,6 +217,8 @@ class NEMLModel_sd: public NEMLModel {
    virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const;
+   virtual double bulk(double T) const;
+   virtual double shear(double T) const;
 
    // This is an extremely dangerous helper function, but too many 
    // post docs have whined about copy-pasting elastic constants
