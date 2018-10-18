@@ -42,10 +42,19 @@ INCLUDE_DIRECTORIES(SYSTEM ${libxml++_INCLUDE_DIRS})
 # Make better debug on Intel
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -traceback -ftrapuv")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -g -Wextra -Wall -Wno-unused-parameter")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -g -Wextra -Wall -Wno-unused-parameter")
+else()
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
 endif()
 
-# Some apple things
+# For MacOS
 if(APPLE)
       set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
