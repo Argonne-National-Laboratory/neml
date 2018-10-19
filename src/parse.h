@@ -118,7 +118,7 @@ class InvalidType: public std::exception {
  public:
   InvalidType(std::string name, std::string type, int line, 
               std::string ctype) :
-      name_(name), type_(type), line_(line), ctype_(ctype)
+      name_(name), type_(type), ctype_(ctype), line_(line)
   {
 
   };
