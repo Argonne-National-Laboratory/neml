@@ -96,13 +96,13 @@ int diff_jac(Solvable * system, const double * const x, TrialState * ts,
 
   system->RJ(x, ts, R0, dJ);
   
-  for (int i=0; i<system->nparams(); i++) {
+  for (size_t i=0; i<system->nparams(); i++) {
     std::copy(x, x+system->nparams(), nX);
     double dx = eps * fabs(nX[i]);
     if (dx < eps) dx = eps;
     nX[i] += dx;
     system->RJ(nX, ts, nR, dJ);
-    for (int j=0; j<system->nparams(); j++) {
+    for (size_t j=0; j<system->nparams(); j++) {
       nJ[CINDEX(j,i,system->nparams())] = (nR[j] - R0[j]) / dx;
     }
   }
@@ -123,7 +123,7 @@ double diff_jac_check(Solvable * system, const double * const x,
   diff_jac(system, x, ts, nJ);
   double ss = 0.0;
   double js = 0.0;
-  for (int i=0; i< system->nparams() * system->nparams(); i++) {
+  for (size_t i=0; i< system->nparams() * system->nparams(); i++) {
     ss += pow(J[i] - nJ[i], 2.0);
     js += pow(J[i], 2.0);
   }
