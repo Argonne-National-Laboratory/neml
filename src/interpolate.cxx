@@ -58,7 +58,7 @@ double InvalidInterpolate::derivative(double x) const
 }
 
 PolynomialInterpolate::PolynomialInterpolate(const std::vector<double> coefs) :
-    coefs_(coefs), Interpolate()
+    Interpolate(), coefs_(coefs)
 {
   int n = coefs_.size();
   deriv_.resize(n - 1);
@@ -102,7 +102,7 @@ double PolynomialInterpolate::derivative(double x) const
 PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(
     const std::vector<double> points,
     const std::vector<double> values) :
-      points_(points), values_(values), Interpolate()
+      Interpolate(), points_(points), values_(values)
 {
   // Check if sorted
   if (not std::is_sorted(points.begin(), points.end())) {
@@ -186,7 +186,7 @@ double PiecewiseLinearInterpolate::derivative(double x) const
 PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
     const std::vector<double> points,
     const std::vector<double> values) :
-      points_(points), values_(values), Interpolate()
+      Interpolate(), points_(points), values_(values)
 {
   // Check if sorted
   if (not std::is_sorted(points.begin(), points.end())) {
@@ -273,7 +273,7 @@ double PiecewiseLogLinearInterpolate::derivative(double x) const
 }
 
 ConstantInterpolate::ConstantInterpolate(double v) :
-    v_(v), Interpolate()
+    Interpolate(), v_(v)
 {
 
 }
@@ -310,7 +310,7 @@ double ConstantInterpolate::derivative(double x) const
 }
 
 MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :
-    V0_(V0), D_(D), T0_(T0), Interpolate()
+    Interpolate(), V0_(V0), D_(D), T0_(T0)
 {
   
 }
