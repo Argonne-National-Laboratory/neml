@@ -230,8 +230,8 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
-    self.emax = np.array([0.1,0,0,0,0,0])
+    self.nsteps = 100
+    self.emax = np.array([0.05,0,0,0,0,0])
 
 class TestYaguchi(CompareMats, unittest.TestCase):
   def setUp(self):

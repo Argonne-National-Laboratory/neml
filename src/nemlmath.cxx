@@ -1,5 +1,7 @@
 #include "nemlmath.h"
 
+#include "nemlerror.h"
+
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -122,10 +124,18 @@ int invert_mat(double * const A, int n)
   int info;
 
   dgetrf_(n, n, A, n, ipiv, info);
+  if (info > 0) {
+    delete [] ipiv;
+    delete [] work;
+    return LINALG_FAILURE;
+  }
+
   dgetri_(n, A, n, ipiv, work, lwork, info);
 
   delete [] ipiv;
   delete [] work;
+
+  if (info > 0) return LINALG_FAILURE;
 
   return 0;
 }
@@ -153,10 +163,15 @@ int solve_mat(const double * const A, int n, double * const x)
 
   delete [] ipiv;
   delete [] B;
+
+  if (info > 0) return LINALG_FAILURE;
   
   return 0;
 }
 
+/*
+ *  No error checking in this function, as it is assumed to be non-critical
+ */
 double condition(const double * const A, int n)
 {
   // Setup
