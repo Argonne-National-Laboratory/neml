@@ -20,5 +20,5 @@ SOFTWARE.
 
 =============================================================================
 
-Refer to src/pybind11/LICENSE for the license of the pybind11 header library
+Refer to pybind11/LICENSE for the license of the pybind11 header library
 contained in the NEML release
