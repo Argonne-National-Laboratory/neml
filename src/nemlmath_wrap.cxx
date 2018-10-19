@@ -239,6 +239,7 @@ PYBIND11_MODULE(nemlmath, m) {
             throw LinalgError("Matrix is not square!");
           }
           int ier = invert_mat(arr2ptr<double>(A), A.request().shape[0]);
+          py_error(ier);
           // Should check non-singular
           return A;
         }, "Invert a matrix IN PLACE.");

@@ -14,6 +14,7 @@
 
 #include "objects.h"
 #include "interpolate.h"
+#include "nemlerror.h"
 
 namespace py = pybind11;
 
