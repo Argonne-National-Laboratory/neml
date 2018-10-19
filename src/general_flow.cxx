@@ -2,6 +2,7 @@
 
 #include "nemlmath.h"
 
+
 #include <algorithm>
 
 #include <iostream>
@@ -150,8 +151,9 @@ int TVPFlowRule::ds_da(const double * const s, const double * const alpha,
   flow_->y(s, alpha, T, yv);
   
   int sz = 6 * nhist();
-
-  double work[sz];
+  
+  std::vector<double> workv(sz);
+  double * work = &workv[0];
   flow_->dg_da(s, alpha, T, work);
   for (int i=0; i<sz; i++) {
     work[i] *= -yv;
@@ -159,11 +161,13 @@ int TVPFlowRule::ds_da(const double * const s, const double * const alpha,
 
   double t1[6];
   flow_->g(s, alpha, T, t1);
-  double t2[nhist()];
+  std::vector<double> t2v(nhist());
+  double * t2 = &t2v[0];
   flow_->dy_da(s, alpha, T, t2);
   outer_update_minus(t1, 6, t2, nhist(), work);
-
-  double t3[sz];
+  
+  std::vector<double> t3v(sz);
+  double * t3 = &t3v[0];
   flow_->dg_da_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) {
     work[i] -= t3[i] * Tdot;
@@ -202,14 +206,15 @@ int TVPFlowRule::a(const double * const s, const double * const alpha,
   flow_->y(s, alpha, T, dg);
 
   flow_->h(s, alpha, T, adot);
-  for (int i=0; i<nhist(); i++) adot[i] *= dg;
-
-  double temp[nhist()];
+  for (size_t i=0; i<nhist(); i++) adot[i] *= dg;
+  
+  std::vector<double> tempv(nhist());
+  double * temp = &tempv[0];
   flow_->h_temp(s, alpha, T, temp);
-  for (int i=0; i<nhist(); i++) adot[i] += temp[i] * Tdot;
+  for (size_t i=0; i<nhist(); i++) adot[i] += temp[i] * Tdot;
 
   flow_->h_time(s, alpha, T, temp);
-  for (int i=0; i<nhist(); i++) adot[i] += temp[i];
+  for (size_t i=0; i<nhist(); i++) adot[i] += temp[i];
 
   return 0;
 
@@ -228,7 +233,8 @@ int TVPFlowRule::da_ds(const double * const s, const double * const alpha,
   flow_->dh_ds(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= dg;
 
-  double t1[nhist()];
+  std::vector<double> t1v(nhist());
+  double * t1 = &t1v[0];
   flow_->h(s, alpha, T, t1);
 
   double t2[6];
@@ -236,7 +242,8 @@ int TVPFlowRule::da_ds(const double * const s, const double * const alpha,
 
   outer_update(t1, nhist(), t2, 6, d_adot);
   
-  double t3[sz];
+  std::vector<double> t3v(sz);
+  double * t3 = &t3v[0];
   flow_->dh_ds_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
 
@@ -259,16 +266,19 @@ int TVPFlowRule::da_da(const double * const s, const double * const alpha,
 
   flow_->dh_da(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= dg;
-
-  double t1[nhist()];
+  
+  std::vector<double> t1v(nhist());
+  double * t1 = &t1v[0];
   flow_->h(s, alpha, T, t1);
-
-  double t2[nhist()];
+  
+  std::vector<double> t2v(nhist());
+  double * t2 = &t2v[0];
   flow_->dy_da(s, alpha, T, t2);
 
   outer_update(t1, nhist(), t2, nhist(), d_adot);
-
-  double t3[sz];
+  
+  std::vector<double> t3v(sz);
+  double * t3 = &t3v[0];
   flow_->dh_da_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
 
