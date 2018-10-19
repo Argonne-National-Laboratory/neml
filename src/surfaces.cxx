@@ -1,5 +1,7 @@
 #include "surfaces.h"
+
 #include "nemlmath.h"
+#include "nemlerror.h"
 
 #include <limits>
 #include <algorithm>
@@ -203,7 +205,8 @@ int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
   std::fill(ddf, ddf+nhist()*6, 0.0);
   
   double ss[36];
-  df_dsds(s, q, T, ss);
+  int ier = df_dsds(s, q, T, ss);
+  if (ier != SUCCESS) return ier;
 
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {

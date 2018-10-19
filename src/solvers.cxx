@@ -37,12 +37,14 @@ int newton(Solvable * system, double * x, TrialState * ts,
   double * R = &Rv[0];
   double * J = &Jv[0];
 
-  system->RJ(x, ts, R, J);
+  int ier = 0;
+
+  ier = system->RJ(x, ts, R, J);
+  if (ier != SUCCESS) return ier;
 
   double nR = norm2_vec(R, n);
   double nR0 = nR;
   int i = 0;
-  int ier = 0;
 
   if (verbose) {
     std::cout << "Iter.\tnR\t\tJe\t\tcn" << std::endl;
@@ -243,10 +245,6 @@ int nox(Solvable * system, double * x, TrialState * ts,
       solverParameters.sublist("Line Search");
   lineSearchParameters.set("Method", "Backtrack");
   
-  //solverParameters.set("Nonlinear Solver", "Trust Region Based");
-  //Teuchos::ParameterList& lineSearchParameters = 
-  //    solverParameters.sublist("Trust Region");
-
 
   Teuchos::ParameterList& directionParameters = 
       solverParameters.sublist("Direction");
