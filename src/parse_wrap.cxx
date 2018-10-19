@@ -2,9 +2,6 @@
 
 #include "parse.h"
 
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
-
 namespace py = pybind11;
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);

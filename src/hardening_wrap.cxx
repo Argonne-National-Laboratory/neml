@@ -4,10 +4,6 @@
 
 #include "nemlerror.h"
 
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
-#include "pybind11/stl.h"
-
 namespace py = pybind11;
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);

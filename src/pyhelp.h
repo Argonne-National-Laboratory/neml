@@ -4,9 +4,9 @@
 // To fix redef warnings
 #include "Python.h"
 
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
-#include "pybind11/stl.h"
+#include "pybind11.h"
+#include "numpy.h"
+#include "stl.h"
 
 #include <vector>
 #include <algorithm>
