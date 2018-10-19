@@ -93,7 +93,7 @@ RegionKMCreep::RegionKMCreep(std::vector<double> cuts, std::vector<double> A,
                              double eps0, 
                              std::shared_ptr<LinearElasticModel> emodel) :
     cuts_(cuts), A_(A), B_(B), kboltz_(kboltz), b_(b), eps0_(eps0), 
-    emodel_(emodel), b3_(pow(b,3))
+    b3_(pow(b,3)), emodel_(emodel)
 {
 
 }
@@ -172,7 +172,7 @@ void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & B
     return;
   }
 
-  int i;
+  size_t i;
   if (neq < cuts_[0]) {
     Ai = A_[0];
     Bi = B_[0];
@@ -437,7 +437,8 @@ int CreepModel::update(const double * const s_np1,
   make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n, ts);
 
   // Solve for the new creep strain
-  double x[nparams()];
+  std::vector<double> xv(nparams());
+  double * x = &xv[0];
   int ier = solve(this, x, &ts, tol_, miter_, verbose_);
   if (ier != 0) return ier;
   
@@ -732,7 +733,7 @@ int J2CreepModel::sdir(double * const s) const
     std::fill(s, s+6, 0.0);
   }
   else {  
-    int ier = dev_vec(s);
+    ier = dev_vec(s);
     for (int i=0; i<6; i++) s[i] /= se;
   }
   return ier;
