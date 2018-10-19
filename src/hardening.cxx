@@ -371,11 +371,13 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
                                  double * const dqv) const
 {
   // Annoying this doesn't work nicely...
-  double * id = new double[iso_->nhist()*iso_->nhist()];
+  std::vector<double> idv(iso_->nhist() * iso_->nhist());
+  double * id = &idv[0];
   int ier = iso_->dq_da(alpha, T, id);
   if (ier != SUCCESS) return ier;
-
-  double * kd = new double [kin_->nhist()*kin_->nhist()];
+  
+  std::vector<double> kdv(kin_->nhist() * kin_->nhist());
+  double * kd = &kdv[0];
   ier = kin_->dq_da(&alpha[iso_->nhist()], T, kd);
   if (ier != SUCCESS) return ier;
 
@@ -393,9 +395,6 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
       dqv[CINDEX((i+os),(j+os),nhist())] = kd[CINDEX(i,j,kin_->nhist())];
     }
   }
-
-  delete [] id;
-  delete [] kd;
 
   return 0;
 }

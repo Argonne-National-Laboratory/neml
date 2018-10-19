@@ -295,7 +295,8 @@ int SmallStrainPerfectPlasticity::update_substep_(
   }
   else {
     // Newton
-    double * x = new double[nparams()];
+    std::vector<double> xv(nparams());
+    double * x = &xv[0];
     int ier = solve(this, x, &ts, tol_, miter_, verbose_);
     if (ier != SUCCESS) return ier;
     
@@ -316,7 +317,6 @@ int SmallStrainPerfectPlasticity::update_substep_(
     sub_vec(de, ee_np1, 6, de);
     add_vec(de, ts.ee_n, 6, de);
     p_np1 = p_n + dot_vec(ds, de, 6) / 2.0;
-    delete [] x;
   }
 
   // Energy calculation (trapezoid rule)
@@ -560,7 +560,8 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   }
   // Else solve and extract updated parameters from the solver vector
   else {
-    double * x = new double[nparams()];
+    std::vector<double> xv(nparams());
+    double * x = &xv[0];
     int ier = solve(this, x, &ts, tol_, miter_, verbose_);
     if (ier != SUCCESS) return ier;
 
@@ -580,8 +581,6 @@ int SmallStrainRateIndependentPlasticity::update_sd(
     add_vec(s_np1, s_n, 6, ds);
     sub_vec(x, ts.ep_tr, 6, dep);
     p_np1 = p_n + dot_vec(ds, dep, 6) / 2.0;
-    
-    delete [] x;
   }
 
   // Energy calculation (trapezoid rule)
@@ -629,7 +628,8 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   // Residual calculation
   double g[6];
   flow_->g(s, alpha, tss->T, g); 
-  double * h = new double[flow_->nhist()];
+  std::vector<double> hv(flow_->nhist());
+  double * h = &hv[0];
   flow_->h(s, alpha, tss->T, h);
   double f;
   flow_->f(s, alpha, tss->T, f);
@@ -660,7 +660,8 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   }
   
   // J12
-  double * J12 = new double[6*nh];
+  std::vector<double> J12v(6*nh);
+  double * J12 = &J12v[0];
   flow_->dg_da(s, alpha, tss->T, J12);
   for (int i=0; i<6*nh; i++) J12[i] *= dg;
   for (int i=0; i<6; i++) {
@@ -668,7 +669,6 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
       J[CINDEX(i,(j+6),n)] = J12[CINDEX(i,j,nh)];
     }
   }
-  delete [] J12;
 
   // J13
   for (int i=0; i<6; i++) {
@@ -676,8 +676,10 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   }
 
   // J21
-  double * ha = new double[nh*6];
-  double * J21 = new double[nh*6];
+  std::vector<double> hav(nh*6);
+  double * ha = &hav[0];
+  std::vector<double> J21v(nh*6);
+  double * J21 = &J21v[0];
   flow_->dh_ds(s, alpha, tss->T, ha);
   mat_mat(nh, 6, 6, ha, tss->C, J21);
   for (int i=0; i<nh*6; i++) J21[i] = -J21[i] * dg;
@@ -686,11 +688,10 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
       J[CINDEX((i+6),j,n)] = J21[CINDEX(i,j,6)];
     }
   }
-  delete [] ha;
-  delete [] J21;
 
   // J22
-  double * J22 = new double[nh*nh];
+  std::vector<double> J22v(nh*nh);
+  double * J22 = &J22v[0];
   flow_->dh_da(s, alpha, tss->T, J22);
   for (int i=0; i<nh*nh; i++) J22[i] *= dg;
   for (int i=0; i<nh; i++) J22[CINDEX(i,i,nh)] -= 1.0;
@@ -699,7 +700,6 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
       J[CINDEX((i+6), (j+6), n)] = J22[CINDEX(i,j,nh)];
     }
   }
-  delete [] J22;
 
   // J23
   for (int i=0; i<nh; i++) {
@@ -717,18 +717,16 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   }
 
   // J32
-  double * J32 = new double[nh];
+  std::vector<double> J32v(nh);
+  double * J32 = &J32v[0];
   flow_->df_da(s, alpha, tss->T, J32);
   for (int i=0; i<nh; i++) {
     J[CINDEX((6+nh), (i+6), n)] = J32[i];
   }
-  delete [] J32;
 
   // J33
   J[CINDEX((6+nh), (6+nh), n)] = 0.0;
   
-  delete [] h;
-
   return 0;
 }
 
@@ -770,58 +768,64 @@ int SmallStrainRateIndependentPlasticity::calc_tangent_(
     const double * const h_np1, double dg, double * const A_np1)
 {
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
-
-  double * R = new double[nparams()];
-  double * J = new double[nparams()*nparams()];
+  
+  std::vector<double> Rv(nparams());
+  double * R = &Rv[0];
+  std::vector<double> Jv(nparams() * nparams());
+  double * J = &Jv[0];
   
   RJ(x, ts, R, J);
-
-  delete [] R;
 
   int n = nparams();
   int nk = 6;
   int ne = nparams() - nk;
   
-  double * Jkk = new double[nk*nk];
+  std::vector<double> Jkkv(nk*nk);
+  double * Jkk = &Jkkv[0];
   for (int i=0; i<nk; i++) {
     for (int j=0; j<nk; j++) {
       Jkk[CINDEX(i,j,nk)] = J[CINDEX(i,j,n)];
     }
   }
-
-  double * Jke = new double[nk*ne];
+  
+  std::vector<double> Jkev(nk*ne);
+  double * Jke = &Jkev[0];
   for (int i=0; i<nk; i++) {
     for (int j=0; j<ne; j++) {
       Jke[CINDEX(i,j,ne)] = J[CINDEX(i,(j+nk),n)];
     }
   }
-
-  double * Jek = new double[ne*nk];
+  
+  std::vector<double> Jekv(ne*nk);
+  double * Jek = &Jekv[0];
   for (int i=0; i<ne; i++) {
     for (int j=0; j<nk; j++) {
       Jek[CINDEX(i,j,nk)] = J[CINDEX((i+nk),(j),n)];
     }
   }
-
-  double * Jee = new double[ne*ne];
+  
+  std::vector<double> Jeev(ne*ne);
+  double * Jee = &Jeev[0];
   for (int i=0; i<ne; i++) {
     for (int j=0; j<ne; j++) {
       Jee[CINDEX(i,j,ne)] = J[CINDEX((i+nk),(j+nk),n)];
     }
   }
 
-  delete [] J;
-
   invert_mat(Jee, ne);
   
-  double * A = new double[nk*6];
-  double * B = new double[ne*6];
+  std::vector<double> Av(nk*6);
+  double * A = &Av[0];
+  std::vector<double> Bv(ne*6);
+  double * B = &Bv[0];
   
   int nh = flow_->nhist();
-
-  double * dg_ds = new double[6*6];
+  
+  std::vector<double> dg_dsv(6*6);
+  double * dg_ds = &dg_dsv[0];
   flow_->dg_ds(s_np1, h_np1, tss->T, dg_ds);
-  double * dh_ds = new double[nh*6];
+  std::vector<double> dh_dsv(nh*6);
+  double * dh_ds = &dh_dsv[0];
   flow_->dh_ds(s_np1, h_np1, tss->T, dh_ds);
   double df_ds[6];
   flow_->df_ds(s_np1, h_np1, tss->T, df_ds);
@@ -833,44 +837,30 @@ int SmallStrainRateIndependentPlasticity::calc_tangent_(
   for (int i=0; i<nh*6; i++) B[i] *= dg;
   mat_vec_trans(tss->C, 6, df_ds, 6, &B[nh*6]);
 
-  delete [] dg_ds;
-  delete [] dh_ds;
-  
-  double * T1 = new double[ne*nk];
+  std::vector<double> T1v(ne*nk); 
+  double * T1 = &T1v[0];
   mat_mat(ne, nk, ne, Jee, Jek, T1);
-  double * T2 = new double[nk*nk];
+  std::vector<double> T2v(nk*nk);
+  double * T2 = &T2v[0];
   mat_mat(nk, nk, ne, Jke, T1, T2);
   for (int i=0; i<nk*nk; i++) T2[i] = Jkk[i] - T2[i];
   invert_mat(T2, nk);
-
-  delete [] T1;
-
-  double * T3 = new double[ne*nk];
+  
+  std::vector<double> T3v(ne*nk);
+  double * T3 = &T3v[0];
   mat_mat(ne, nk, ne, Jee, B, T3);
-  double * T4 = new double[nk*nk];
+  std::vector<double> T4v(nk*nk);
+  double * T4 = &T4v[0];
   mat_mat(nk, nk, ne, Jke, T3, T4);
   for (int i=0; i<nk*nk; i++) T4[i] -= A[i];
 
-  delete [] T3;
-
   double dep[36];
   mat_mat(6, 6, 6, T2, T4, dep);
-
-  delete [] T2;
-  delete [] T4;
 
   for (int i=0; i<36; i++) dep[i] = -dep[i];
   for (int i=0; i<6; i++) dep[CINDEX(i,i,6)] += 1.0;
 
   mat_mat(6, 6, 6, tss->C, dep, A_np1);
-
-  delete [] A;
-  delete [] B;
-
-  delete [] Jkk;
-  delete [] Jke;
-  delete [] Jek;
-  delete [] Jee;
 
   return 0;
 }
@@ -977,7 +967,8 @@ int SmallStrainCreepPlasticity::update_sd(
   // Solve the system to get the update
   SSCPTrialState ts;
   make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
-  double * x = new double[nparams()];
+  std::vector<double> xv(nparams());
+  double * x = &xv[0];
   int ier = solve(this, x, &ts, tol_, miter_, verbose_);
   if (ier != 0) return ier;
 
@@ -991,7 +982,6 @@ int SmallStrainCreepPlasticity::update_sd(
                              &h_np1[6], &h_n[6],
                              A, u_np1, u_n, p_np1, p_n);
   if (ier != 0) return ier;
-  delete [] x;
 
   // Do the creep update to get a tangent component
   double creep_old[6];
@@ -1225,7 +1215,8 @@ int GeneralIntegrator::update_sd(
   // Previous values as we go along, (initialize to step n)
   double e_past[6];
   std::copy(e_n, e_n+6, e_past);
-  double * const h_past = new double [nhist()];
+  std::vector<double> h_pastv(nhist());
+  double * h_past = &h_pastv[0];
   std::copy(h_n, h_n+nhist(), h_past);
   double s_past[6];
   std::copy(s_n, s_n+6, s_past);
@@ -1234,7 +1225,8 @@ int GeneralIntegrator::update_sd(
   
   // Current goal as we go along
   double e_next[6];
-  double * const h_next = new double [nhist()];
+  std::vector<double> h_nextv(nhist());
+  double * h_next = &h_nextv[0];
   double s_next[6];
   double T_next;
   double t_next;
@@ -1254,7 +1246,8 @@ int GeneralIntegrator::update_sd(
                      s_past, h_past, ts);
 
     // Solve for x
-    double * x = new double[nparams()];
+    std::vector<double> xv(nparams());
+    double * x = &xv[0];
     int ier = solve(this, x, &ts, tol_, miter_, verbose_);
 
     // Decide what to do if we fail
@@ -1273,8 +1266,6 @@ int GeneralIntegrator::update_sd(
         if (verbose_) {
           std::cout << "Substepping failed..." << std::endl;
         }
-        delete [] h_past;
-        delete [] h_next;
         return ier;
       }
       continue;
@@ -1283,8 +1274,6 @@ int GeneralIntegrator::update_sd(
     // Extract solved parameters
     std::copy(x, x+6, s_next);
     std::copy(x+6, x+6+nhist(), h_next);
-
-    delete [] x;
 
     // Increment next step
     cs += cm;
@@ -1300,21 +1289,16 @@ int GeneralIntegrator::update_sd(
   std::copy(s_next, s_next+6, s_np1);
   std::copy(h_next, h_next+nhist(), h_np1);
   
-  // Free memory
-  delete [] h_past;
-  delete [] h_next;
-
   // Get tangent over full step
   GITrialState ts;
   make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
-  double * y = new double[nparams()];
+  std::vector<double> yv(nparams());
+  double * y = &yv[0];
   std::copy(s_np1, s_np1+6, y);
   std::copy(h_np1, h_np1+nhist(), &y[6]);
   
   calc_tangent_(y, &ts, A_np1);
 
-  delete [] y;
-  
   // Energy calculation (trapezoid rule)
   double de[6];
   double ds[6];
@@ -1396,27 +1380,27 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
       J[CINDEX(i,j,nparams)] = J11[CINDEX(i,j,6)];
     }
   }
-
-  double * J12 = new double[6*nhist];
+  
+  std::vector<double> J12v(6*nhist);
+  double * J12 = &J12v[0];
   rule_->ds_da(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J12);
   for (int i=0; i<6; i++) {
     for (int j=0; j<nhist; j++) {
       J[CINDEX(i,(j+6),nparams)] = J12[CINDEX(i,j,nhist)] * tss->dt;
     }
   }
-
-  delete [] J12;
-
-  double * J21 = new double[nhist*6];
+  
+  std::vector<double> J21v(nhist*6);
+  double * J21 = &J21v[0];
   rule_->da_ds(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J21);
   for (int i=0; i<nhist; i++) {
     for (int j=0; j<6; j++) {
       J[CINDEX((i+6),j,nparams)] = J21[CINDEX(i,j,6)] * tss->dt;
     }
   }
-  delete [] J21;
-
-  double * J22 = new double[nhist*nhist];
+  
+  std::vector<double> J22v(nhist*nhist);
+  double * J22 = &J22v[0];
   rule_->da_da(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J22);
 
   // More vectorization
@@ -1430,8 +1414,6 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
     }
   }
   
-  delete [] J22;
-
   return 0;
 }
 
@@ -1490,79 +1472,74 @@ int GeneralIntegrator::calc_tangent_(const double * const x, TrialState * ts,
   // Call for extra derivatives
   double A[36];
   rule_->ds_de(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, A);
-  double * B = new double[nhist*6];
+  std::vector<double> Bv(nhist*6);
+  double * B = &Bv[0];
   rule_->da_de(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, B);
 
   // Call for the jacobian
-  double * R = new double[nparams()];
-  double * J = new double[nparams()*nparams()];
+  std::vector<double> Rv(nparams());
+  double * R = &Rv[0];
+  std::vector<double> Jv(nparams()*nparams());
+  double * J = &Jv[0];
   RJ(x, ts, R, J);
-  delete [] R;
 
   // Separate blocks...
   int n = nparams();
   
-  double * J11 = new double[6*6];
+  std::vector<double> J11v(6*6);
+  double * J11 = &J11v[0];
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
       J11[CINDEX(i,j,6)] = J[CINDEX(i,j,n)];
     }
   }
-
-  double * J12 = new double[6*nhist];
+  
+  std::vector<double> J12v(6*nhist);
+  double * J12 = &J12v[0];
   for (int i=0; i<6; i++) {
     for (int j=0; j<nhist; j++) {
       J12[CINDEX(i,j,nhist)] = J[CINDEX(i,(j+6),n)];
     }
   }
-
-  double * J21 = new double[nhist*6];
+  
+  std::vector<double> J21v(nhist*6);
+  double * J21 = &J21v[0];
   for (int i=0; i<nhist; i++) {
     for (int j=0; j<6; j++) {
       J21[CINDEX(i,j,6)] = J[CINDEX((i+6),(j),n)];
     }
   }
-
-  double * J22 = new double[nhist*nhist];
+  
+  std::vector<double> J22v(nhist*nhist);
+  double * J22 = &J22v[0];
   for (int i=0; i<nhist; i++) {
     for (int j=0; j<nhist; j++) {
       J22[CINDEX(i,j,nhist)] = J[CINDEX((i+6),(j+6),n)];
     }
   }
 
-  delete [] J;
-
   // Only need the inverse
   invert_mat(J22, nhist);
 
   // Start multiplying through
-  double * T1 = new double[nhist*6];
+  std::vector<double> T1v(nhist*6);
+  double * T1 = &T1v[0];
   mat_mat(nhist, 6, nhist, J22, J21, T1);
-  double * T2 = new double[6*6];
+  std::vector<double> T2v(6*6);
+  double * T2 = &T2v[0];
   mat_mat(6, 6, nhist, J12, T1, T2);
   for (int i=0; i<6*6; i++) T2[i] = J11[i] - T2[i];
   invert_mat(T2, 6);
 
-  delete [] T1;
-
-  double * T3 = new double[nhist*6];
+  std::vector<double> T3v(nhist*6);
+  double * T3 = &T3v[0];
   mat_mat(nhist, 6, nhist, J22, B, T3);
-  double * T4 = new double[6*6];
+  std::vector<double> T4v(6*6);
+  double * T4 = &T4v[0];
   mat_mat(6, 6, nhist, J12, T3, T4);
   for (int i=0; i<6*6; i++) T4[i] -= A[i];
 
-  delete [] T3;
-
   mat_mat(6, 6, 6, T2, T4, A_np1);
-
-  delete [] T2;
-  delete [] T4;
-
-  delete [] B;
-  delete [] J11;
-  delete [] J12;
-  delete [] J21;
-  delete [] J22;
 
   return 0;
 }

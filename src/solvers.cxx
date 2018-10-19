@@ -30,9 +30,13 @@ int newton(Solvable * system, double * x, TrialState * ts,
 {
   int n = system->nparams();
   system->init_x(x, ts);
-  double * R = new double[n];
-  double * J = new double[n*n];
-  
+
+  std::vector<double> Rv(n);
+  std::vector<double> Jv(n*n);
+
+  double * R = &Rv[0];
+  double * J = &Jv[0];
+
   system->RJ(x, ts, R, J);
 
   double nR = norm2_vec(R, n);
@@ -71,9 +75,6 @@ int newton(Solvable * system, double * x, TrialState * ts,
     }
   }
 
-  delete [] R;
-  delete [] J;
-
   if (verbose) {
     std::cout << std::endl;
   }
@@ -89,10 +90,15 @@ int newton(Solvable * system, double * x, TrialState * ts,
 int diff_jac(Solvable * system, const double * const x, TrialState * ts,
              double * const nJ, double eps)
 {
-  double * R0 = new double[system->nparams()];
-  double * nR = new double[system->nparams()];
-  double * nX = new double[system->nparams()];
-  double * dJ = new double[system->nparams()*system->nparams()];
+  std::vector<double> R0v(system->nparams());
+  std::vector<double> nRv(system->nparams());
+  std::vector<double> nXv(system->nparams());
+  std::vector<double> dJv(system->nparams() * system->nparams());
+
+  double * R0 = &R0v[0];
+  double * nR = &nRv[0];
+  double * nX = &nXv[0];
+  double * dJ = &dJv[0];
 
   system->RJ(x, ts, R0, dJ);
   
@@ -107,10 +113,6 @@ int diff_jac(Solvable * system, const double * const x, TrialState * ts,
     }
   }
   
-  delete [] R0;
-  delete [] nR;
-  delete [] nX;
-  delete [] dJ;
   return 0;
 }
 
@@ -118,7 +120,8 @@ int diff_jac(Solvable * system, const double * const x, TrialState * ts,
 double diff_jac_check(Solvable * system, const double * const x,
                       TrialState * ts, const double * const J)
 {
-  double * nJ = new double[system->nparams() * system->nparams()];
+  std::vector<double> nJv(system->nparams() * system->nparams());
+  double * nJ = &nJv[0];
   
   diff_jac(system, x, ts, nJ);
   double ss = 0.0;
@@ -128,8 +131,6 @@ double diff_jac_check(Solvable * system, const double * const x,
     js += pow(J[i], 2.0);
   }
 
-  delete [] nJ;
-
   return ss/js;
 }
 
@@ -138,12 +139,12 @@ double diff_jac_check(Solvable * system, const double * const x,
 NOXSolver::NOXSolver(Solvable * system) :
     system_(system), nox_guess_(system->nparams()), ts_(ts)
 {
-  double * x = new double[system_->nparams()];
+  std::vector<double> xn(system_->nparams());
+  double * x = &xn[0];
   system_->init_x(x, ts_);
   for (int i=0; i<system_->nparams(); i++) {
     nox_guess_(i) = x[i];
   }
-  delete [] x;
 }
 
 const NOX::LAPACK::Vector& NOXSolver::getInitialGuess()
@@ -154,9 +155,14 @@ const NOX::LAPACK::Vector& NOXSolver::getInitialGuess()
 bool NOXSolver::computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x)
 {
   // This is highly inefficient
-  double * Ri = new double [system_->nparams()];
-  double * Ji = new double [system_->nparams() * system_->nparams()];
-  double * xi = new double [system_->nparams()];
+  std::vector<double> Riv(system_->nparams());
+  std::vector<double> Jiv(system_->nparams());
+  std::vector<double> xiv(system_->nparams());
+  
+  double * Ri = &Riv[0];
+  double * Ji = &Jiv[0];
+  double * xi = &xiv[0];
+
   for (int i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
@@ -166,10 +172,6 @@ bool NOXSolver::computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x)
     f(i) = Ri[i];
   }
 
-  delete [] Ri;
-  delete [] Ji;
-  delete [] xi;
-
   return true;
 }
 
@@ -177,9 +179,14 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
                                 const NOX::LAPACK::Vector & x)
 {
   // This is highly inefficient
-  double * Ri = new double [system_->nparams()];
-  double * Ji = new double [system_->nparams() * system_->nparams()];
-  double * xi = new double [system_->nparams()];
+  std::vector<double> Riv(system_->nparams());
+  std::vector<double> Jiv(system_->nparams());
+  std::vector<double> xiv(system_->nparams());
+  
+  double * Ri = &Riv[0];
+  double * Ji = &Jiv[0];
+  double * xi = &xiv[0];
+
   for (int i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
@@ -190,10 +197,6 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
       J(i,j) = Ji[CINDEX(i,j,system_->nparams())];
     }
   }
-
-  delete [] Ri;
-  delete [] Ji;
-  delete [] xi;
 
   return true;
 }

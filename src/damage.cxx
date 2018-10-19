@@ -127,7 +127,8 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_np1[6];
   double s_prime_n[6];
   double A_prime_np1[36];
-  double * h_np1 = new double [base_->nstore()];
+  std::vector<double> h_np1_v(base_->nstore());
+  double * h_np1 = &h_np1_v[0];
   double u_np1;
   double p_np1;
   
@@ -170,8 +171,6 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
          tss->t_np1, tss->t_n, &ww);
   
   J[CINDEX(6,6,7)] = 1.0 - ww - dot_vec(ws, s_curr, 6) / pow(1-w_curr,2.0);
-
-  delete [] h_np1;
 
   return 0;
 }
