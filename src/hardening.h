@@ -305,7 +305,8 @@ class Chaboche: public NonAssociativeHardening {
 
  private:
   void backstress_(const double * const alpha, double * const X) const;
-
+  
+ private:
   std::shared_ptr<IsotropicHardeningRule> iso_;
   const int n_;
   const std::vector<std::shared_ptr<Interpolate>> c_;

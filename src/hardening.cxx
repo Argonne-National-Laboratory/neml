@@ -1,6 +1,7 @@
 #include "hardening.h"
 
 #include "nemlmath.h"
+#include "nemlerror.h"
 
 #include <cmath>
 #include <algorithm>
@@ -355,6 +356,7 @@ size_t CombinedHardeningRule::nhist() const
 int CombinedHardeningRule::init_hist(double * const alpha) const
 {
   int ier = iso_->init_hist(alpha);
+  if (ier != SUCCESS) return ier;
   return kin_->init_hist(&alpha[iso_->nhist()]);
 }
 
@@ -369,25 +371,31 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
                                  double * const dqv) const
 {
   // Annoying this doesn't work nicely...
-  double id[iso_->nhist()*iso_->nhist()];
+  double * id = new double[iso_->nhist()*iso_->nhist()];
   int ier = iso_->dq_da(alpha, T, id);
-  double kd[kin_->nhist()*kin_->nhist()];
+  if (ier != SUCCESS) return ier;
+
+  double * kd = new double [kin_->nhist()*kin_->nhist()];
   ier = kin_->dq_da(&alpha[iso_->nhist()], T, kd);
+  if (ier != SUCCESS) return ier;
 
   std::fill(dqv, dqv + nhist()*nhist(), 0.0);
 
-  for (int i=0; i<iso_->nhist(); i++) {
-    for (int j=0; j<iso_->nhist(); j++) {
+  for (size_t i=0; i<iso_->nhist(); i++) {
+    for (size_t j=0; j<iso_->nhist(); j++) {
       dqv[CINDEX(i,j,nhist())] = id[CINDEX(i,j,iso_->nhist())];
     }
   }
   
-  int os = iso_->nhist();
-  for (int i=0; i<kin_->nhist(); i++) {
-    for (int j=0; j<kin_->nhist(); j++) {
+  size_t os = iso_->nhist();
+  for (size_t i=0; i<kin_->nhist(); i++) {
+    for (size_t j=0; j<kin_->nhist(); j++) {
       dqv[CINDEX((i+os),(j+os),nhist())] = kd[CINDEX(i,j,kin_->nhist())];
     }
   }
+
+  delete [] id;
+  delete [] kd;
 
   return 0;
 }
@@ -551,7 +559,7 @@ Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
            std::vector<std::shared_ptr<Interpolate>> A,
            std::vector<std::shared_ptr<Interpolate>> a,
            bool noniso) :
-    iso_(iso), c_(c), gmodels_(gmodels), n_(c.size()), A_(A), a_(a), 
+    iso_(iso), n_(c.size()), c_(c), gmodels_(gmodels), A_(A), a_(a), 
     relax_(true), noniso_(noniso)
 {
 
