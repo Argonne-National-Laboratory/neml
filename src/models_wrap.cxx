@@ -37,37 +37,6 @@ PYBIND11_MODULE(models, m) {
             py_error(ier);
             return h;
            }, "Initialize history variables.")
-
-      .def("update_ldF",
-           [](NEMLModel & m, py::array_t<double, py::array::c_style> F_np1, py::array_t<double, py::array::c_style> F_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, double, double>
-           {
-            auto s_np1 = alloc_vec<double>(6);
-            auto h_np1 = alloc_vec<double>(m.nstore());
-            auto A_np1 = alloc_mat<double>(6,6);
-            double u_np1, p_np1;
-
-            int ier = m.update_ldF(arr2ptr<double>(F_np1), arr2ptr<double>(F_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(s_np1), arr2ptr<double>(s_n), arr2ptr<double>(h_np1), arr2ptr<double>(h_n), arr2ptr<double>(A_np1), u_np1, u_n, p_np1, p_n);
-            py_error(ier);
-
-            return std::make_tuple(s_np1, h_np1, A_np1, u_np1, p_np1);
-
-           }, "Large deformation update through the deformation gradient.")
-
-      .def("update_ldI",
-           [](NEMLModel & m, py::array_t<double, py::array::c_style> l_inc, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, double, double>
-           {
-            auto s_np1 = alloc_vec<double>(6);
-            auto h_np1 = alloc_vec<double>(m.nstore());
-            auto A_np1 = alloc_mat<double>(6,6);
-            double u_np1, p_np1;
-
-            int ier = m.update_ldI(arr2ptr<double>(l_inc), T_np1, T_n, t_np1, t_n, arr2ptr<double>(s_np1), arr2ptr<double>(s_n), arr2ptr<double>(h_np1), arr2ptr<double>(h_n), arr2ptr<double>(A_np1), u_np1, u_n, p_np1, p_n);
-            py_error(ier);
-
-            return std::make_tuple(s_np1, h_np1, A_np1, p_np1, p_n);
-
-           }, "Large deformation incremental update through the spatial velocity gradient.")
-
       .def("update_sd",
            [](NEMLModel & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, double, double>
            {
@@ -99,12 +68,6 @@ PYBIND11_MODULE(models, m) {
            }, "Calculate the elastic strains.")
       .def("bulk", &NEMLModel::bulk)
       .def("shear", &NEMLModel::shear)
-      ;
-
-  py::class_<NEMLModel_ldF, NEMLModel, std::shared_ptr<NEMLModel_ldF>>(m, "NEMLModel_ldF")
-      ;
-
-  py::class_<NEMLModel_ldI, NEMLModel, std::shared_ptr<NEMLModel_ldI>>(m, "NEMLModel_ldI")
       ;
 
   py::class_<NEMLModel_sd, NEMLModel, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd")

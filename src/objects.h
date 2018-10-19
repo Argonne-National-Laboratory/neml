@@ -166,7 +166,7 @@ class ParameterSet {
     else {
       return res;
     }
-  };
+  }
 
   /// Helper to get a vector of NEMLObjects and cast them to subtype in one go
   template<typename T>
@@ -188,7 +188,7 @@ class ParameterSet {
                             }
                           });
     return nv;
-  };
+  }
   
   /// Get the type of parameter
   ParamType get_object_type(std::string name);
