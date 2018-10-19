@@ -59,7 +59,8 @@ int NEMLScalarDamagedModel_sd::update_sd(
   make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n, tss);
   
   // Call solve
-  double x[nparams()];
+  std::vector<double> xv(nparams());
+  double * x = &xv[0];
   int ier;
   ier = solve(this, x, &tss, tol_, miter_, verbose_);
   if (ier != SUCCESS) return ier;
@@ -542,7 +543,7 @@ int NEMLStandardScalarDamagedModel_sd::damage(
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
   *dd = d_n + fval * deps;
 
-  return 0;
+  return ier;
 }
 
 int NEMLStandardScalarDamagedModel_sd::ddamage_dd(
@@ -559,7 +560,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_dd(
 
   *dd = df * deps;
 
-  return 0;
+  return ier;
 }
 
 int NEMLStandardScalarDamagedModel_sd::ddamage_de(
@@ -572,6 +573,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
 {
   double fval;
   int ier = f(s_np1, d_np1, T_np1, fval);
+  if (ier != SUCCESS) return ier;
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
 
   if (deps == 0.0) {
@@ -587,10 +589,12 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
   }
 
   double S[36];
-  elastic_->S(T_np1, S);
+  ier = elastic_->S(T_np1, S);
+  if (ier != SUCCESS) return ier;
 
   double dee[36];
-  mat_vec(S, 6, ds, 6, dee);
+  ier = mat_vec(S, 6, ds, 6, dee);
+  if (ier != SUCCESS) return ier;
 
   for (int i=0; i<6; i++) {
     dd[i] = (2.0 * fval) / (3.0 * deps) * (de[i] - dee[i]); 
@@ -609,6 +613,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
 {
   double fval;
   int ier = f(s_np1, d_np1, T_np1, fval);
+  if (ier != SUCCESS) return ier;
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
 
   if (deps == 0.0) {
@@ -624,20 +629,24 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
   }
 
   double S[36];
-  elastic_->S(T_np1, S);
+  ier = elastic_->S(T_np1, S);
+  if (ier != SUCCESS) return ier;
 
   double dee[36];
-  mat_vec(S, 6, ds, 6, dee);
+  ier = mat_vec(S, 6, ds, 6, dee);
+  if (ier != SUCCESS) return ier;
 
   double v1[6];
   for (int i=0; i<6; i++) {
     v1[i] = (2.0 * fval) / (3.0 * deps) * (dee[i] - de[i]); 
   }
 
-  mat_vec(S, 6, v1, 6, dd);
+  ier = mat_vec(S, 6, v1, 6, dd);
+  if (ier != SUCCESS) return ier;
 
   double dds[6];
-  df_ds(s_np1, d_np1, T_np1, dds);
+  ier = df_ds(s_np1, d_np1, T_np1, dds);
+  if (ier != SUCCESS) return ier;
 
   for (int i=0; i<6; i++) {
     dd[i] = dds[i] * deps + dd[i];
