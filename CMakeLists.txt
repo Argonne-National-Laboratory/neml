@@ -65,8 +65,6 @@ endif(APPLE)
 ### DOCUMENTATION ###
 option(BUILD_DOCUMENTATION "Build documentation: manual and doxygen" OFF)
 if (BUILD_DOCUMENTATION)
-      option(BUILD_DOXYGEN "Build and install Doxygen documentation" ON)
-      option(BUILD_MANUAL "Build and install LaTeX manual" ON)
       add_subdirectory(doc)
 endif()
 
