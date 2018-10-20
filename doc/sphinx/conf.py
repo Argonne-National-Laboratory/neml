@@ -39,7 +39,8 @@ release = u'0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc'
+    'sphinx.ext.imgmath',
+    'breathe'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -172,3 +173,8 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+# -- Options for breathe -------------------------------------------------
+breathe_projects = {"neml": "../class-doc/xml"}
+breathe_default_project = "neml"
+

@@ -26,6 +26,7 @@ if (SPHINX_HTML)
             -b html
             ${SPHINX_SRC_DIR}
             ${SPHINX_HTML_DIR}
+            DEPENDS doc-doxygen
             )
 endif()
 
@@ -36,5 +37,6 @@ if (SPHINX_PDF)
             -b latex
             ${SPHINX_SRC_DIR}
             ${SPHINX_PDF_DIR}
+            DEPENDS doc-doxygen
             )
 endif()
