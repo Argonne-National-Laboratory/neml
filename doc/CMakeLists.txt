@@ -9,10 +9,14 @@ endif()
 
 if (USE_SPHINX OR DOXYGEN)
       find_package(Doxygen REQUIRED)
-      set(DOXYGEN_CONF_FILE ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile.in)
+      configure_file(${CMAKE_SOURCE_DIR}/doc/doxygen/Doxyfile.in 
+            ${CMAKE_BINARY_DIR}/doc/doxygen/Doxyfile @ONLY)
       
-      add_custom_target(doc-doxygen ${DOXYGEN_EXECUTABLE} 
-            ${DOXYGEN_CONF_FILE})
+      add_custom_target(doc-doxygen 
+            COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/doc/doxygen/Doxyfile
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc/doxygen
+            COMMENT "Generate Doxygen XML"
+            VERATIM)
 endif()
 
 if (SPHINX_HTML)

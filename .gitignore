@@ -24,3 +24,4 @@ doc/pdf
 doc/class-doc
 util/abaqus/report
 util/cxx_interface/cxxsimple
+doc/doxygen/Doxyfile
