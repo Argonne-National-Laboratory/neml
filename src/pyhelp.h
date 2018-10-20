@@ -129,7 +129,7 @@ std::shared_ptr<T> create_object_python(py::args args, py::kwargs kwargs,
     throw std::runtime_error("Each arg in args does not have a name in names.");
   }
 
-  for (int i=0; i<args.size(); i++) {
+  for (size_t i=0; i<args.size(); i++) {
     assign_python_parameter(pset, names[i], args[i]);
   }
 

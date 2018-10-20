@@ -21,5 +21,6 @@ util/f_interface/fsimple
 examples/profiling/profile
 doc/html
 doc/pdf
+doc/class-doc
 util/abaqus/report
 util/cxx_interface/cxxsimple

@@ -1,8 +1,18 @@
 option(SPHINX_HTML "Build html help with Sphinx" ON)
 option(SPHINX_PDF "Build PDF manual with Sphinx" ON)
+option(DOXYGEN "Build doxygen documentation" ON)
 
 if (SPHINX_HTML OR SPHINX_PDF)
       find_package(Sphinx REQUIRED)
+      set(USE_SPHINX ON)
+endif()
+
+if (USE_SPHINX OR DOXYGEN)
+      find_package(Doxygen REQUIRED)
+      set(DOXYGEN_CONF_FILE ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile.in)
+      
+      add_custom_target(doc-doxygen ${DOXYGEN_EXECUTABLE} 
+            ${DOXYGEN_CONF_FILE})
 endif()
 
 if (SPHINX_HTML)
