@@ -1,20 +1,28 @@
-.. neml documentation master file, created by
-   sphinx-quickstart on Fri Oct 19 17:45:24 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to neml's documentation!
-================================
+NEML -- Nuclear Engineering Material model Library
+==================================================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   about
+   interfaces
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+..
+   about
+   interfaces
+   ri_flow
+   vp_flow
+   surfaces
+   hardening
+   creep
+   damage
+..
+   drivers
+   uniaxial
+   bars
+   axisym
+..
+   objects
+   interpolate
+   math
+   solvers

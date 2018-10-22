@@ -23,9 +23,9 @@ namespace neml {
 //  and provides the methods for reading in material parameters.
 class NEMLModel: public NEMLObject {
   public:
-   // To accommodate the three interfaces we need to store some
-   // "secret" history variables
+   /// Total number of stored internal variables
    virtual size_t nstore() const = 0;
+   /// Initialize the internal variables
    virtual int init_store(double * const store) const = 0;
 
    /// Small strain update interface
@@ -38,30 +38,33 @@ class NEMLModel: public NEMLObject {
        double * const A_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
-
-   virtual size_t nhist() const = 0;  // Actual number of material history variables
+  
+   /// Number of internal variables that are true material history
+   virtual size_t nhist() const = 0;
+   /// Initialize the history variables
    virtual int init_hist(double * const hist) const = 0;
 
-   // Well models will need this...
+   /// Instantaneous thermal expansion coefficient as a function of temperature
    virtual double alpha(double T) const = 0;
-   // Helper for FEA output
+   /// Elastic strain for a given stress, temperature, and history state
    virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
+   /// Model effective bulk modulus
    virtual double bulk(double T) const = 0;
+   /// Model effective shear modulus
    virtual double shear(double T) const = 0;
-
 };
 
-/// Models implemented through the small deformation interface
-//
+/// Small deformation stress update
 class NEMLModel_sd: public NEMLModel {
   public:
+    /// All small strain models use small strain elasticity and CTE
     NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
                  std::shared_ptr<Interpolate> alpha);
     virtual ~NEMLModel_sd();
 
-    // Up to the user to implement
+   /// The small strain stress update interface
    virtual int update_sd(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
@@ -72,27 +75,31 @@ class NEMLModel_sd: public NEMLModel {
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
 
-   // Defined here
+   /// Number of stored variables
    virtual size_t nstore() const;
+   /// Initialize stored variables
    virtual int init_store(double * const store) const;
 
-   // More interface
+   /// Number of stored variables that are true material history
    virtual size_t nhist() const = 0;
+   /// Initialize the stored history
    virtual int init_hist(double * const hist) const = 0;
 
-   // I suppose this must be defined
+   /// Provide the instantaneous CTE
    virtual double alpha(double T) const;
+   /// Returns the elasticity model, for sub-objects that want to use it
    const std::shared_ptr<const LinearElasticModel> elastic() const;
 
-   // Helper for FEA output
+   /// Return the elastic strains
    virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const;
+   /// Return the model elastic bulk modulus
    virtual double bulk(double T) const;
+   /// Return the model elastic shear modulus
    virtual double shear(double T) const;
 
-   // This is an extremely dangerous helper function, but too many 
-   // post docs have whined about copy-pasting elastic constants
+   /// Used to override the linear elastic model to match another object's 
    virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
   protected:
