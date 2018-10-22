@@ -6,31 +6,31 @@ Overview
 
 This class implements rate independent perfect plasticity described by:
 
-The elastic trial:
+   The elastic trial state:
 
-.. math::
+   .. math::
 
-   \bm{\varepsilon}^{p}_{tr} = \bm{\varepsilon}^{p}_n
+      \bm{\varepsilon}^{p}_{tr} = \bm{\varepsilon}^{p}_n
 
-   \bm{\sigma}_{tr} = \mathbf{\mathfrak{C}}_{n+1} : 
-      \left( \bm{\varepsilon}_{n+1} - \bm{\varepsilon}_{tr}^p  \right)
+      \bm{\sigma}_{tr} = \mathbf{\mathfrak{C}}_{n+1} : 
+         \left( \bm{\varepsilon}_{n+1} - \bm{\varepsilon}_{tr}^p  \right)
 
-The plastic correction:
+   The plastic correction:
 
-.. math::
-   \bm{\sigma}_{n+1} = \mathbf{\mathfrak{C}}_{n+1} : 
-      \left( \bm{\varepsilon}_{n+1} - \bm{\varepsilon}_{n+1}^p \right)
+   .. math::
+      \bm{\sigma}_{n+1} = \mathbf{\mathfrak{C}}_{n+1} : 
+         \left( \bm{\varepsilon}_{n+1} - \bm{\varepsilon}_{n+1}^p \right)
 
-   \bm{\varepsilon}_{n+1}^p = 
-      \begin{cases}
-         \bm{\varepsilon}_{p}^{tr} & f\left(\bm{\sigma}^{tr}\right)\le0\\
-         \bm{\varepsilon}_{n}^{tr}+\frac{\partial f_{n+1}}{\partial\bm{\sigma}_{n+1}}\Delta\gamma_{n+1} & f\left(\bm{\sigma}^{tr}\right)>0
-      \end{cases}
+      \bm{\varepsilon}_{n+1}^p = 
+         \begin{cases}
+            \bm{\varepsilon}^{p}_{tr} & f\left(\bm{\sigma}_{tr}\right)\le0\\
+            \bm{\varepsilon}^{p}_{tr}+\frac{\partial f_{n+1}}{\partial\bm{\sigma}_{n+1}}\Delta\gamma_{n+1} & f\left(\bm{\sigma}_{tr}\right)>0
+         \end{cases}
 
-Solving for :math:`\Delta \gamma_{n+1}` such that
+   Solving for :math:`\Delta \gamma_{n+1}` such that
 
-.. math::
-   f\left(\bm{\sigma}_{n+1} \right) = 0
+   .. math::
+      f\left(\bm{\sigma}_{n+1} \right) = 0
 
 In these equations :math:`f` is a yield function, parameterized by the yield
 stress :math:`\sigma_0`.

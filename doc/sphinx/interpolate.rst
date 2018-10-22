@@ -104,8 +104,6 @@ flow stress model
 .. math::
    f\left( x \right) = V_0 - \frac{D}{e^{T_0 / x} - 1}.
 
-.. [MTS] Goto, D. M., Garrett, R. K., Bingert, J., Chen, Shuh-Rong, and Gray, George T. *Mechanical Threshold Stress Constitutive Strength Model Description of HY-100 Steel.* Indian Head Division, Naval Surface Warefare Center Technical Report IHTR 2168, 1999.
-
 .. doxygenclass:: neml::MTSShearInterpolate
    :members:
    :undoc-members:

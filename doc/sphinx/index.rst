@@ -7,9 +7,8 @@ NEML -- Nuclear Engineering Material model Library
    about
    interpolate
    interfaces
-
+   references
 ..
-   about
    interfaces
    ri_flow
    vp_flow
@@ -24,6 +23,5 @@ NEML -- Nuclear Engineering Material model Library
    axisym
 ..
    objects
-   interpolate
    math
    solvers

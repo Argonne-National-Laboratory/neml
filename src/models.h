@@ -280,16 +280,23 @@ static Register<SmallStrainPerfectPlasticity> regSmallStrainPerfectPlasticity;
 //    reporting an error if the conditions are violated.
 class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable {
  public:
+  /// Parameters: elasticity model, flow rule, CTE, solver tolerance, maximum
+  /// solver iterations, verbosity flag, tolerance on the Kuhn-Tucker conditions
+  /// check, and a flag on whether the KT conditions should be evaluated
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
                                        std::shared_ptr<Interpolate> alpha,
                                        double tol, int miter, bool verbose,double kttol,
                                        bool check_kt);
 
+  /// Type for the object system
   static std::string type();
+  /// Parameters for the object system
   static ParameterSet parameters();
+  /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
+  
+  /// The small strain stress update
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -299,19 +306,25 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-
+  
+  /// Number of history variables
   virtual size_t nhist() const;
+  /// Initialize history at time zero
   virtual int init_hist(double * const hist) const;
-
+  
+  /// Number of solver parameters
   virtual size_t nparams() const;
+  /// Setup an iteration vector in the solver
   virtual int init_x(double * const x, TrialState * ts);
+  /// Solver function returning the residual and jacobian of the nonlinear
+  /// system of equations integrating the model
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
   
-  // Getters
+  /// Return the elastic model for subobjects
   const std::shared_ptr<const LinearElasticModel> elastic() const;
 
-  // Make this public for ease of testing
+  /// Setup a trial state
   int make_trial_state(const double * const e_np1, const double * const e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
                        const double * const s_n, const double * const h_n,
@@ -394,16 +407,24 @@ static Register<SmallStrainCreepPlasticity> regSmallStrainCreepPlasticity;
 //
 class GeneralIntegrator: public NEMLModel_sd, public Solvable {
  public:
+  /// Parameters are an elastic model, a general flow rule,
+  /// the CTE, the integration tolerance, the maximum
+  /// nonlinear iterations, a verbosity flag, and the
+  /// maximum number of subdivisions for adaptive integration
   GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
                     std::shared_ptr<GeneralFlowRule> rule,
                     std::shared_ptr<Interpolate> alpha,
                     double tol, int miter,
                     bool verbose, int max_divide);
 
+  /// Type for the object system
   static std::string type();
+  /// Parameters for the object system
   static ParameterSet parameters();
+  /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
+  
+  /// The actual stress update
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -413,20 +434,27 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-  virtual size_t nhist() const;
-  virtual int init_hist(double * const hist) const;
 
+  /// Number of history variables
+  virtual size_t nhist() const;
+  /// Initialize the history at time zero
+  virtual int init_hist(double * const hist) const;
+  
+  /// Number of nonlinear equations
   virtual size_t nparams() const;
+  /// Initialize a guess for the nonlinear iterations
   virtual int init_x(double * const x, TrialState * ts);
+  /// The residual and jacobian for the nonlinear solve
   virtual int RJ(const double * const x, TrialState * ts,
                  double * const R, double * const J);
 
-  // Make this public for ease of testing
+  /// Initialize a trial state
   int make_trial_state(const double * const e_np1, const double * const e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
                        const double * const s_n, const double * const h_n,
                        GITrialState & ts);
-
+  
+  /// Return the elastic model for use elsewhere
   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
