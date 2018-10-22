@@ -81,7 +81,7 @@ endif()
 add_subdirectory(src)
 
 ### ABAQUS HELPER ###
-option(ABAQUS_UTILS "Generate helpers for Abaqus UMATS" OFF)
-if (ABAQUS_UTILS)
-      add_subdirectory(util/abaqus)
+option(BUILD_UTILS "Generate interface examples and helpers for Abaqus UMATS" OFF)
+if (BUILD_UTILS)
+      add_subdirectory(util)
 endif()

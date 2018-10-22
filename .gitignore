@@ -25,3 +25,5 @@ doc/class-doc
 util/abaqus/report
 util/cxx_interface/cxxsimple
 doc/doxygen/Doxyfile
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake
