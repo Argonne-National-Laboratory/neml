@@ -114,13 +114,18 @@ class NEMLModel_sd: public NEMLModel {
 //  This is generally only used as a basic test
 class SmallStrainElasticity: public NEMLModel_sd {
  public:
+  /// Parameters are the minimum: an elastic model and a thermal expansion 
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
                         std::shared_ptr<Interpolate> alpha);
-
+  
+  /// Type for the object system
   static std::string type();
+  /// Setup parameters for the object system
   static ParameterSet parameters();
+  /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
+  
+  /// Small strain stress update
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -130,7 +135,9 @@ class SmallStrainElasticity: public NEMLModel_sd {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
+  /// Number of history variables (=0)
   virtual size_t nhist() const;
+  /// Initialize history (none to setup)
   virtual int init_hist(double * const hist) const;
 };
 
@@ -190,6 +197,9 @@ class GITrialState : public TrialState {
 
 class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
  public:
+  /// Parameters: elastic model, yield surface, yield stress, CTE,
+  /// integration tolerance, maximum number of iterations,
+  /// verbosity flag, and the maximum number of adaptive subdivisions
   SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                std::shared_ptr<YieldSurface> surface,
                                std::shared_ptr<Interpolate> ys,
@@ -197,11 +207,15 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
                                double tol, int miter,
                                bool verbose,
                                int max_divide);
-
+  
+  /// Type for the object system
   static std::string type();
+  /// Parameters for the object system
   static ParameterSet parameters();
+  /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
+  
+  /// The small strain stress update
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -211,18 +225,23 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
+  /// Number of history variables (=0)
   virtual size_t nhist() const;
+  /// Initialize history (nothing to do)
   virtual int init_hist(double * const hist) const;
-
+  
+  /// Number of nonlinear equations to solve in the integration
   virtual size_t nparams() const;
+  /// Setup an initial guess for the nonlinear solution
   virtual int init_x(double * const x, TrialState * ts);
+  /// Integration residual and jacobian equations
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
-  // Property getter
+  /// Helper to return the yield stress
   double ys(double T) const;
 
-  // Make this public for ease of testing
+  /// Setup a trial state for the solver from the input information
   int make_trial_state(const double * const e_np1, const double * const e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
                        const double * const s_n, const double * const h_n,

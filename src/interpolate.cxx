@@ -24,39 +24,6 @@ bool Interpolate::valid() const
   return valid_;
 }
 
-InvalidInterpolate::InvalidInterpolate() :
-    Interpolate()
-{
-  valid_ = false;
-}
-
-std::string InvalidInterpolate::type()
-{
-  return "InvalidInterpolate";
-}
-
-ParameterSet InvalidInterpolate::parameters()
-{
-  ParameterSet pset(InvalidInterpolate::type());
-
-  return pset;
-}
-
-std::unique_ptr<NEMLObject> InvalidInterpolate::initialize(ParameterSet & params)
-{
-  return make_unique<InvalidInterpolate>(); 
-}
-
-double InvalidInterpolate::value(double x) const
-{
-  return std::numeric_limits<double>::quiet_NaN();
-}
-
-double InvalidInterpolate::derivative(double x) const
-{
-  return std::numeric_limits<double>::quiet_NaN();
-}
-
 PolynomialInterpolate::PolynomialInterpolate(const std::vector<double> coefs) :
     Interpolate(), coefs_(coefs)
 {

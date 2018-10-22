@@ -24,13 +24,6 @@ PYBIND11_MODULE(interpolate, m) {
       .def_property_readonly("valid", &Interpolate::valid)
       ;
 
-  py::class_<InvalidInterpolate, Interpolate, std::shared_ptr<InvalidInterpolate>>(m, "InvalidInterpolate")
-      .def(py::init([](py::args args, py::kwargs kwargs)
-        {
-          return create_object_python<InvalidInterpolate>(args, kwargs, {});
-        }))
-      ;
-
   py::class_<PolynomialInterpolate, Interpolate, std::shared_ptr<PolynomialInterpolate>>(m, "PolynomialInterpolate")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {

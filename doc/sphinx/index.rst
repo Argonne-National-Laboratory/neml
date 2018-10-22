@@ -5,6 +5,7 @@ NEML -- Nuclear Engineering Material model Library
    :maxdepth: 2
 
    about
+   interpolate
    interfaces
 
 ..
