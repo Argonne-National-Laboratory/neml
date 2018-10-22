@@ -11,11 +11,7 @@ int main(int argc, char ** argv) {
     return -1;
   }
 
-  int ier;
-  auto model = neml::parse_xml(argv[1], argv[2], ier);
-  if (ier != 0) {
-    std:: cout << "Unable to load model " << argv[2] << " from file " << argv[1] << std::endl;
-  }
+  auto model = neml::parse_xml(argv[1], argv[2]);
 
   int n = model->nstore();
 
