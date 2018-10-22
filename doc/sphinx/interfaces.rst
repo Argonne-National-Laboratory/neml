@@ -22,5 +22,6 @@ The idea of having this abstract base class is that in the future NEML
 can be expanded to other types of large strain material model updates.
 
 .. toctree::
+   :maxdepth: 5
 
    interfaces/NEMLModel
