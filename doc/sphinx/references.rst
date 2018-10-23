@@ -10,3 +10,9 @@ References
 .. [D1959] D. C. Drucker. "A definition of a stable inelastic material," `ASME Journal of Applied Mechanics,` 6: pp. 101-195 (1959).
 
 .. [FA2007] Frederick, C. and P. Armstrong. "A mathematical representation of the multiaxial Bauschinger effect," `Materials at High Temperatures,` 24(1): pp. 1-26 (2007).
+
+.. [P1966] P. Perzyna. "Fundamental problems in viscoplasticity," `Advances in Applied Mechanics,` 9(2): pp. 244-368 (1966).
+
+.. [YT2000] Yaguchi, M. and Y. Takahashi. "A viscoplastic constitutive model incorporating dynamic strain aging effect during cyclic deformation conditions," `International Journal of Plasticity,` 16(3-4): pp. 241-262 (2000).
+
+.. [YT2005] Yaguchi, M. and Y. Takahashi. "Ratchetting of viscoplastic material with cyclid softening, Part 2: application to constitutive models," `International Journal of Plasticity,` 21: pp. 835-860 (2005).

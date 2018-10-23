@@ -9,6 +9,8 @@ NEML -- Nuclear Engineering Material model Library
    interfaces
    elasticity
    ri_flow
+   general_flow
+   vp_flow
    references
 ..
    vp_flow
