@@ -7,6 +7,7 @@ NEML -- Nuclear Engineering Material model Library
    about
    interpolate
    interfaces
+   elasticity
    references
 ..
    interfaces
