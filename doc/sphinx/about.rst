@@ -83,6 +83,9 @@ efficiency.
 Mathematical conventions
 ------------------------
 
+Mandel notation
+^^^^^^^^^^^^^^^
+
 NEML models work in three dimensions.
 This means second order tensors can be expressed by 3-by-3 arrays and
 fourth order tensors are 3-by-3-by-3-by-3 arrays.
@@ -164,6 +167,32 @@ Internally in NEML all tensor operations are implemented as Mandel dot
 products.
 However, the documentation writes the full tensor form of the equations.
 
+Throughout the documentation the deviator of a second order tensor is 
+denoted:
+
+.. math::
+   \operatorname{dev}\left(\mathbf{X}\right) = \mathbf{X} - \frac{1}{3} 
+      \operatorname{tr}\left(\mathbf{X}\right) \mathbf{I}
+
+with :math:`\operatorname{tr}` the trace and :math:`\mathbf{I}` the
+identity tensor.
+
+When describing collections of objects the manual uses square brackets.
+For example,
+
+.. math::
+   \left[ \begin{array}{ccc} s & \mathbf{X} & \mathbf{v} \end{array}\right]
+
+Indicates a collection of a scalar :math:`s`, a vector representing a
+second order tensor :math:`\mathbf{x}` in Mandel notation, and a 
+vector :math:`\mathbf{v}`.
+These collections are ordered.
+This notation indicates the implementation is concatenating the quantities
+into a flat, 1D array (in this case with length :math:`1 + 6 + 3 = 10`).
+
+Interfaces
+^^^^^^^^^^
+
 The documentation describes NEML as a collection of interfaces. 
 An implementation is a collection of functions with the same inputs but
 different outputs.
@@ -186,3 +215,6 @@ The interface might be implemented as three individual functions
    \mathbf{B} = \mathbf{F} \left(d, \mathbf{e}, \mathbf{F} \right)
 
    \mathbf{\mathfrak{C}} = \mathbf{\mathfrak{F}} \left(d, \mathbf{e}, \mathbf{F} \right).
+
+
+
