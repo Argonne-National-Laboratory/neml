@@ -11,8 +11,9 @@ NEML -- Nuclear Engineering Material model Library
    ri_flow
    general_flow
    vp_flow
-   references
    surfaces
+   hardening
+   references
 ..
    hardening
    creep

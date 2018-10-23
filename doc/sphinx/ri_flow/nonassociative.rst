@@ -12,7 +12,12 @@ flow function is associated to the yield surface through the relation
       \frac{\partial f}{\partial \bm{\sigma}}\left(\bm{\sigma}, 
          \mathbf{q}\left(\bm{\alpha}\right), T\right)
 
-The hardening rule is left as a generic interface.
+The hardening rule is left as a generic interface providing the 
+rate of history variable evolution proportional to the equivalent 
+plastic strain rate, :math:`\mathbf{h}_\gamma`.
+Note that rate independent models cannot use hardening proportional to
+time or temperature rate or else the model will not be rate independent!
+
 This type of model is much more common than a fully nonassociative model
 where neither the flow rule or the hardening rule is associated to the
 yield surface.
