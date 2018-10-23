@@ -25,14 +25,14 @@ This class implements rate independent plasticity described by:
 
       \bm{\varepsilon}_{n+1}^p = 
          \begin{cases}
-            \bm{\varepsilon}^{p}_{tr} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_tr\right)\le0\\
-            \bm{\varepsilon}^{p}_{tr}+\mathbf{g}_{n+1}\left( \bm{\sigma}_{n+1}, \bm{\alpha}_{n+1}, T_{n+1} \right)\Delta\gamma_{n+1} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_tr\right)>0
+            \bm{\varepsilon}^{p}_{tr} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_{tr}\right)\le0\\
+            \bm{\varepsilon}^{p}_{tr}+\mathbf{g}_{n+1}\left( \bm{\sigma}_{n+1}, \bm{\alpha}_{n+1}, T_{n+1} \right)\Delta\gamma_{n+1} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_{tr}\right)>0
          \end{cases}
 
       \bm{\alpha}_{n+1} = 
          \begin{cases}
-            \bm{\alpha}_{tr} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_tr\right)\le0\\
-            \bm{\alpha}_{tr}+\mathbf{h}_{n+1}\left( \bm{\sigma}_{n+1}, \bm{\alpha}_{n+1}, T_{n+1} \right)\Delta\gamma_{n+1} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_tr\right)>0
+            \bm{\alpha}_{tr} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_{tr}\right)\le0\\
+            \bm{\alpha}_{tr}+\mathbf{h}_{n+1}\left( \bm{\sigma}_{n+1}, \bm{\alpha}_{n+1}, T_{n+1} \right)\Delta\gamma_{n+1} & f\left(\bm{\sigma}_{tr},\bm{\alpha}_{tr}\right)>0
          \end{cases}
 
    Solving for :math:`\Delta \gamma_{n+1}` such that
@@ -60,8 +60,11 @@ At the end of the step the model (optionally) checks to ensure the step
 met the Kuhn-Tucker conditions
 
 .. math::
+
    \Delta \gamma_{n+1} \ge 0
+
    f\left(\bm{\sigma}_{n+1}, \bm{\alpha}_{n+1} \right) \le 0
+
    \Delta \gamma_{n+1} f\left(\bm{\sigma}_{n+1}, \bm{\alpha}_{n+1} \right) = 0. 
 
 Parameters

@@ -349,6 +349,10 @@ static Register<SmallStrainRateIndependentPlasticity> regSmallStrainRateIndepend
 //  to solver overall update
 class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
  public:
+  /// Parameters are an elastic model, a base NEMLModel_sd, a CreepModel,
+  /// the CTE, a solution tolerance, the maximum number of nonlinear
+  /// iterations, a verbosity flag, and a scale factor to regularize
+  /// the nonlinear equations.
   SmallStrainCreepPlasticity(
                              std::shared_ptr<LinearElasticModel> elastic,
                              std::shared_ptr<NEMLModel_sd> plastic,
@@ -357,10 +361,14 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
                              double tol, int miter,
                              bool verbose, double sf);
 
+  /// Type for the object system
   static std::string type();
+  /// Setup parameters for the object system
   static ParameterSet parameters();
+  /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
+  
+  /// Small strain stress update
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -370,22 +378,28 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-
+  
+  /// Number of history variables matches the base model
   virtual size_t nhist() const;
+  /// Passes call for initial history to base model
   virtual int init_hist(double * const hist) const;
-
+  
+  /// The number of parameters in the nonlinear equation
   virtual size_t nparams() const;
+  /// Initialize the nonlinear solver
   virtual int init_x(double * const x, TrialState * ts);
+  /// Residual equation to solve and corresponding jacobian
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
   
-  // Make this public for ease of testing
+  /// Setup a trial state from known information
   int make_trial_state(const double * const e_np1, const double * const e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
                        const double * const s_n, const double * const h_n,
                        SSCPTrialState & ts);
 
-   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+  /// Set a new elastic model
+  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
   int form_tangent_(double * const A, double * const B,
@@ -454,7 +468,7 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
                        const double * const s_n, const double * const h_n,
                        GITrialState & ts);
   
-  /// Return the elastic model for use elsewhere
+  /// Set a new elastic model
   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
@@ -486,16 +500,24 @@ static Register<GeneralIntegrator> regGeneralIntegrator;
 //
 class KMRegimeModel: public NEMLModel_sd {
  public:
+  /// Parameters are an elastic model, a vector of valid NEMLModel_sd objects,
+  /// the transition activation energies, the Boltzmann constant in appropriate
+  /// units, a Burgers vector for normalization, a reference strain rate,
+  /// and the CTE.
   KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
                 std::vector<std::shared_ptr<NEMLModel_sd>> models,
                 std::vector<double> gs, 
                 double kboltz, double b, double eps0,
                 std::shared_ptr<Interpolate> alpha);
 
+  /// Type for the object system
   static std::string type();
+  /// Parameters for the object system
   static ParameterSet parameters();
+  /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
+  
+  /// The small strain stress update
   virtual int update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
@@ -505,9 +527,13 @@ class KMRegimeModel: public NEMLModel_sd {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-  virtual size_t nhist() const;
-  virtual int init_hist(double * const hist) const;
 
+  /// The number of model history variables
+  virtual size_t nhist() const;
+  /// Initialize history at time zero
+  virtual int init_hist(double * const hist) const;
+  
+  /// Set a new elastic model
   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
