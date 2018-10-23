@@ -14,7 +14,7 @@ if __name__ == "__main__":
   E = 150000.0
   nu = 0.3
   sY = 200.0
-  H = 0.0
+  H = 0.0001
 
   elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
       nu, "poissons")
@@ -26,10 +26,11 @@ if __name__ == "__main__":
 
   model2 = models.SmallStrainPerfectPlasticity(elastic, surface, sY)
  
-  n = 10.0
-  gpower = visco_flow.GPowerLaw(n)
-  eta = 100.0
-  vflow = visco_flow.PerzynaFlowRule(surface, iso, gpower, eta)
+  n = 45.0
+  eta = 200.0
+  iso2 = hardening.LinearIsotropicHardeningRule(0, H)
+  gpower = visco_flow.GPowerLaw(n, eta)
+  vflow = visco_flow.PerzynaFlowRule(surface, iso2, gpower)
   gflow = general_flow.TVPFlowRule(elastic, vflow)
   model3 = models.GeneralIntegrator(elastic, gflow)
 
@@ -48,7 +49,7 @@ if __name__ == "__main__":
   energy = emax * sY - 0.5 * sY * sY/E
 
   dissipated = energy - 0.5 * sY * sY / E
-
+  
   res1 = drivers.uniaxial_test(model1, erate, emax = emax)
   res2 = drivers.uniaxial_test(model2, erate, emax = emax)
   res3 = drivers.uniaxial_test(model3, erate, emax = emax)

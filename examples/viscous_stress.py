@@ -17,7 +17,7 @@ if __name__ == "__main__":
   R = 100.0
   d = 10.0
   n = 3.0
-  eta = 5000.0
+  eta = 10.0
 
   elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
       nu, "poissons")
@@ -27,11 +27,10 @@ if __name__ == "__main__":
 
   ri_model = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
-  gpower = visco_flow.GPowerLaw(n)
-  vflow = visco_flow.PerzynaFlowRule(surface, iso, gpower, eta)
+  gpower = visco_flow.GPowerLaw(n, eta)
+  vflow = visco_flow.PerzynaFlowRule(surface, iso, gpower)
   gflow = general_flow.TVPFlowRule(elastic, vflow)
   rd_model = models.GeneralIntegrator(elastic, gflow)
-
 
   eps_dot = 1.0e2
   emax = 0.5
@@ -44,7 +43,7 @@ if __name__ == "__main__":
   
   plt.plot(res_ri['strain'], res_rd['stress'] - res_ri['stress'], 'b--')
   
-  sigma_v = np.sqrt(3.0 / 2.0) * (eta*eps_dot) ** (1.0 / n)
+  sigma_v = np.sqrt(3.0 / 2.0) * eta * (eps_dot) ** (1.0 / n)
 
   plt.plot(res_ri['strain'], np.ones(res_ri['strain'].shape) * sigma_v, 'b:')
 

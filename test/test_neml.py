@@ -537,9 +537,9 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
 
     surface = surfaces.IsoJ2()
     hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
-    g = visco_flow.GPowerLaw(self.n)
+    g = visco_flow.GPowerLaw(self.n, self.eta)
 
-    vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g, self.eta)
+    vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g)
 
     flow = general_flow.TVPFlowRule(self.elastic, vmodel)
     self.model = models.GeneralIntegrator(self.elastic, flow)

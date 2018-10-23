@@ -320,9 +320,9 @@ class TestPerzyna(CompareMats, unittest.TestCase):
 
     hmodel = hardening.CombinedHardeningRule(iso, kin)
 
-    gmodel = visco_flow.GPowerLaw(n)
+    gmodel = visco_flow.GPowerLaw(n, eta)
     
-    vmodel = visco_flow.PerzynaFlowRule(surface, hmodel, gmodel, eta)
+    vmodel = visco_flow.PerzynaFlowRule(surface, hmodel, gmodel)
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
     self.model2 = models.GeneralIntegrator(elastic, flow)

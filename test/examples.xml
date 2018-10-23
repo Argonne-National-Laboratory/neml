@@ -303,8 +303,8 @@
         </hardening>
         <g type="GPowerLaw">
           <n>5.0</n>
+          <eta>500.0</eta>
         </g>
-        <eta>500.0</eta>
       </flow>
     </rule>
   </test_perzyna>

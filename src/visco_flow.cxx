@@ -108,8 +108,9 @@ int ViscoPlasticFlowRule::dh_da_temp(const double * const s,
 }
 
 // Various g(s) implementations
-GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n) :
-    n_(n)
+GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n, 
+                     std::shared_ptr<Interpolate> eta) :
+    n_(n), eta_(eta)
 {
 
 }
@@ -124,6 +125,7 @@ ParameterSet GPowerLaw::parameters()
   ParameterSet pset(GPowerLaw::type());
 
   pset.add_parameter<NEMLObject>("n");
+  pset.add_parameter<NEMLObject>("eta");
 
   return pset;
 }
@@ -131,28 +133,20 @@ ParameterSet GPowerLaw::parameters()
 std::unique_ptr<NEMLObject> GPowerLaw::initialize(ParameterSet & params)
 {
   return make_unique<GPowerLaw>(
-      params.get_object_parameter<Interpolate>("n")
+      params.get_object_parameter<Interpolate>("n"),
+      params.get_object_parameter<Interpolate>("eta")
       ); 
 }
 
 double GPowerLaw::g(double f, double T) const
 {
-  if (f > 0.0) {
-    return pow(f, n_->value(T));
-  }
-  else {
-    return 0.0;
-  }
+  return pow(f / eta_->value(T), n_->value(T));
 }
 
 double GPowerLaw::dg(double f, double T) const
 {
-  if (f > 0.0) {
-    return n_->value(T) * pow(f, n_->value(T) - 1.0);
-  }
-  else {
-    return 0.0;
-  }
+  return n_->value(T) * pow(f / eta_->value(T), n_->value(T) - 1.0) / 
+      eta_->value(T);
 }
 
 double GPowerLaw::n(double T) const
@@ -160,11 +154,15 @@ double GPowerLaw::n(double T) const
   return n_->value(T);
 }
 
+double GPowerLaw::eta(double T) const
+{
+  return eta_->value(T);
+}
+
 PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
                 std::shared_ptr<HardeningRule> hardening,
-                std::shared_ptr<GFlow> g,
-                std::shared_ptr<Interpolate> eta) :
-    surface_(surface), hardening_(hardening), g_(g), eta_(eta)
+                std::shared_ptr<GFlow> g) :
+    surface_(surface), hardening_(hardening), g_(g)
 {
   
 }
@@ -181,7 +179,6 @@ ParameterSet PerzynaFlowRule::parameters()
   pset.add_parameter<NEMLObject>("surface");
   pset.add_parameter<NEMLObject>("hardening");
   pset.add_parameter<NEMLObject>("g");
-  pset.add_parameter<NEMLObject>("eta");
 
   return pset;
 }
@@ -191,8 +188,7 @@ std::unique_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
   return make_unique<PerzynaFlowRule>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<HardeningRule>("hardening"),
-      params.get_object_parameter<GFlow>("g"),
-      params.get_object_parameter<Interpolate>("eta")
+      params.get_object_parameter<GFlow>("g")
       ); 
 }
 
@@ -222,10 +218,8 @@ int PerzynaFlowRule::y(const double* const s, const double* const alpha, double 
   ier = surface_->f(s, q, T, fv);
   if (ier != SUCCESS) return ier;
 
-  double gv = g_->g(fv, T);
-  
-  if (gv > 0.0) {
-    yv = gv / eta_->value(T);
+  if (fv > 0.0) {
+    yv = g_->g(fabs(fv), T);
   }
   else {
     yv = 0.0;
@@ -246,16 +240,14 @@ int PerzynaFlowRule::dy_ds(const double* const s, const double* const alpha, dou
   ier = surface_->f(s, q, T, fv);
   if (ier != SUCCESS) return ier;
 
-  double gv = g_->g(fv, T);
-
   std::fill(dyv, dyv + 6, 0.0);
 
-  if (gv > 0.0) {
-    double dgv = g_->dg(fv, T);
+  if (fv > 0.0) {
+    double dgv = g_->dg(fabs(fv), T);
     int ier = surface_->df_ds(s, q, T, dyv);
     if (ier != SUCCESS) return ier;
     for (int i=0; i<6; i++) {
-      dyv[i] *= dgv / eta_->value(T);
+      dyv[i] *= dgv;
     }
   }
   
@@ -274,12 +266,10 @@ int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, dou
   ier = surface_->f(s, q, T, fv);
   if (ier != SUCCESS) return ier;
 
-  double gv = g_->g(fv, T);
-  
   std::fill(dyv, dyv + nhist(), 0.0);
 
-  if (gv > 0.0) {
-    double dgv = g_->dg(fv, T);
+  if (fv > 0.0) {
+    double dgv = g_->dg(fabs(fv), T);
     
     std::vector<double> jacv(nhist()*nhist());
     double * jac = &jacv[0];
@@ -295,7 +285,7 @@ int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, dou
     if (ier != SUCCESS) return ier;
 
     for (size_t i=0; i<nhist(); i++) {
-      dyv[i] *= dgv / eta_->value(T);
+      dyv[i] *= dgv;
     }
   }
 
@@ -389,11 +379,6 @@ int PerzynaFlowRule::dh_da(const double * const s, const double * const alpha, d
   if (ier != SUCCESS) return ier;
 
   return mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
-}
-
-double PerzynaFlowRule::eta(double T) const
-{
-  return eta_->value(T);
 }
 
 // Begin Chaboche

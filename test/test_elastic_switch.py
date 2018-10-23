@@ -123,9 +123,9 @@ class TestCompoundMaterials(unittest.TestCase):
 
     surface = surfaces.IsoJ2()
     hrule = hardening.VoceIsotropicHardeningRule(s0, R, d)
-    g = visco_flow.GPowerLaw(n)
+    g = visco_flow.GPowerLaw(n, eta)
 
-    vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g, eta)
+    vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g)
     flow = general_flow.TVPFlowRule(self.elastic1, vmodel)
     model = models.GeneralIntegrator(self.elastic1, flow)
 
