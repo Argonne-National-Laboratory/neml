@@ -98,7 +98,7 @@ For :math:`x < x_1` the function returns :math:`\exp{\left(y_1\right)}` and for 
 MTSShearInterpolate
 -------------------
 
-The shear modulus interpolation used in the Mechanical Threshold Stress [MTS]_
+The shear modulus interpolation used in the Mechanical Threshold Stress [MTS1999]_
 flow stress model 
 
 .. math::

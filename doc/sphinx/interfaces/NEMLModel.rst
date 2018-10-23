@@ -19,8 +19,8 @@ Parameters
 
 None
 
-Class documentation
--------------------
+Class description
+-----------------
 
 .. doxygenclass:: neml::NEMLModel
    :members:

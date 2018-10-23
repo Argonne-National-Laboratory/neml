@@ -56,8 +56,8 @@ emodel    LinearElasticModel    Temperature dependent elastic constants No
 alpha     Interpolate           Temperature dependent instantaneous CTE 0.0
 ========= ===================== ======================================= =======
 
-Class documentation
--------------------
+Class description
+-----------------
 
 .. doxygenclass:: neml::NEMLModel_sd
    :members:

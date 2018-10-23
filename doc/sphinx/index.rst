@@ -8,10 +8,9 @@ NEML -- Nuclear Engineering Material model Library
    interpolate
    interfaces
    elasticity
+   ri_flow
    references
 ..
-   interfaces
-   ri_flow
    vp_flow
    surfaces
    hardening

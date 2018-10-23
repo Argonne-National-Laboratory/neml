@@ -1,12 +1,15 @@
 Elasticity models
 =================
 
+Overview
+--------
+
 Currently, NEML only has small strain linear elasticity models.
 Such models implement the :ref:`LinearElasticModel <le-class>` interface, defined as:
 
 .. math::
    
-   \mathbf{\mathfrak{C}}, \mathbf{\mathfrak{S}}, E, \nu, \mu, K = 
+   \mathbf{\mathfrak{C}}, \mathbf{\mathfrak{S}}, E, \nu, \mu, K \leftarrow 
    \mathcal{E}\left(T\right)
 
 where :math:`\mathbf{\mathfrak{C}}` is the stiffness tensor,
