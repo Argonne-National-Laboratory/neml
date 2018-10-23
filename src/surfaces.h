@@ -24,26 +24,30 @@ namespace neml {
 //  variables.
 class YieldSurface: public NEMLObject {
  public:
-  // Interface
+  /// Indicates how many history variables the model expects to get
   virtual size_t nhist() const = 0;
 
-  // Yield function
+  /// Yield function
   virtual int f(const double* const s, const double* const q, double T,
                 double & fv) const = 0;
 
-  // Gradients
+  /// Gradient wrt stress
   virtual int df_ds(const double* const s, const double* const q, double T,
                 double * const df) const = 0;
+  /// Gradient wrt history
   virtual int df_dq(const double* const s, const double* const q, double T,
                 double * const df) const = 0;
 
-  // Hessian
+  /// Hessian dsds
   virtual int df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
+  /// Hessian dqdq
   virtual int df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
+  /// Hessian dsdq
   virtual int df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
+  /// Hessian dqds
   virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
 };
@@ -52,17 +56,20 @@ class YieldSurface: public NEMLObject {
 template<class BT, typename... Args>
 class IsoFunction: public YieldSurface {
  public:
+  /// Take whatever args the template class takes
   IsoFunction(Args... args) :
       base_(new BT(args...))
   {
 
   }
-
+  
+  /// Also interfaces with a single isotropic hardening variable
   virtual size_t nhist() const
   {
     return 1;
   }
-
+  
+  /// Just call with zero kinematic hardening
   virtual int f(const double* const s, const double* const q, double T,
                 double & fv) const
   {
@@ -71,7 +78,8 @@ class IsoFunction: public YieldSurface {
     delete [] qn;
     return ier;
   }
-
+  
+  /// Call with zero kinematic hardening
   virtual int df_ds(const double* const s, const double* const q, double T,
                 double * const df) const
   {
@@ -81,6 +89,7 @@ class IsoFunction: public YieldSurface {
     return ier;
   }
 
+  /// Call with zero kinematic hardening
   virtual int df_dq(const double* const s, const double* const q, double T,
                 double * const df) const
   {
@@ -93,6 +102,7 @@ class IsoFunction: public YieldSurface {
     return ier;
   }
 
+  /// Call with zero kinematic hardening
   virtual int df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
@@ -102,6 +112,7 @@ class IsoFunction: public YieldSurface {
     return ier;
   }
 
+  /// Call with zero kinematic hardening
   virtual int df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
@@ -114,6 +125,7 @@ class IsoFunction: public YieldSurface {
     return ier;
   }
 
+  /// Call with zero kinematic hardening
   virtual int df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
@@ -129,6 +141,7 @@ class IsoFunction: public YieldSurface {
     return ier;
   }
 
+  /// Call with zero kinematic hardening
   virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
@@ -163,30 +176,41 @@ class IsoFunction: public YieldSurface {
 //
 class IsoKinJ2: public YieldSurface {
  public:
+  /// No parameters
   IsoKinJ2();
   virtual ~IsoKinJ2();
-
+  
+  /// String type for object system
   static std::string type();
+  /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
   static ParameterSet parameters();
  
-  // Defined interface
+  /// Expects 7 history variables [isotropic 6-Mandel-vector-backstress]
   virtual size_t nhist() const;
-
+  
+  /// J2(stress + backstress) + sqrt(2/3) * isotropic
   virtual int f(const double* const s, const double* const q, double T,
                 double & fv) const;
-
+  
+  /// Gradient wrt stress
   virtual int df_ds(const double* const s, const double* const q, double T,
                 double * const df) const;
+  /// Gradient wrt history
   virtual int df_dq(const double* const s, const double* const q, double T,
                 double * const df) const;
-
+  
+  /// Hessian dsds
   virtual int df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
+  /// Hessian dqdq
   virtual int df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
+  /// Hessian dsdq
   virtual int df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
+  /// Hessian dqds
   virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
  
@@ -205,13 +229,17 @@ static Register<IsoKinJ2> regIsoKinJ2;
 //
 class IsoJ2: public IsoFunction<IsoKinJ2> {
  public:
+  /// No parameters
   IsoJ2() :
       IsoFunction<IsoKinJ2>()
   {
   }
-
+  
+  /// String type for object system
   static std::string type();
+  /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
   static ParameterSet parameters();
 };
 
@@ -225,30 +253,42 @@ static Register<IsoJ2> regIsoJ2;
 //
 class IsoKinJ2I1: public YieldSurface {
  public:
+  /// Parameters: h prefactor, l exponent
   IsoKinJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l);
   virtual ~IsoKinJ2I1();
-
+  
+  /// String type for object system
   static std::string type();
+  /// Initialize from parameters
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
   static ParameterSet parameters();
 
-  // Defined interface
+  /// Expects 7 history variables [isotropic 6-Mandel-vector-backstress]
   virtual size_t nhist() const;
-
+  
+  /// J2(stress + backstress) + isotropic + sign(mean_stress) * h *
+  /// |mean_stress|^l
   virtual int f(const double* const s, const double* const q, double T,
                 double & fv) const;
-
+  
+  /// Gradient wrt stress
   virtual int df_ds(const double* const s, const double* const q, double T,
                 double * const df) const;
+  /// Gradient wrt q
   virtual int df_dq(const double* const s, const double* const q, double T,
                 double * const df) const;
-
+  
+  /// Hessian dsds
   virtual int df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
+  /// Hessian dqdq
   virtual int df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
+  /// Hessian dsdq
   virtual int df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
+  /// Hessian dqds
   virtual int df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
 
@@ -264,14 +304,18 @@ static Register<IsoKinJ2I1> regIsoKinJ2I1;
 class IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
     std::shared_ptr<Interpolate>> {
  public:
+  // h prefactor and l exponent
   IsoJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l) :
       IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>, 
       std::shared_ptr<Interpolate>>(h, l)
   {
   }
 
+  /// String type for object system
   static std::string type();
+  /// Initialize from parameters
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
   static ParameterSet parameters();
 
 };

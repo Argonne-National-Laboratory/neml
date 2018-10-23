@@ -12,9 +12,8 @@ NEML -- Nuclear Engineering Material model Library
    general_flow
    vp_flow
    references
-..
-   vp_flow
    surfaces
+..
    hardening
    creep
    damage
