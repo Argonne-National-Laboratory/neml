@@ -175,6 +175,6 @@ epub_title = project
 epub_exclude_files = ['search.html']
 
 # -- Options for breathe -------------------------------------------------
-breathe_projects = {"neml": "/home/messner/projects/neml/doc/class-doc/xml"}
+breathe_projects = {"neml": "../class-doc/xml"}
 breathe_default_project = "neml"
 

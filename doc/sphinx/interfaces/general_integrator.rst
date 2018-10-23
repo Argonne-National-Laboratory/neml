@@ -8,7 +8,7 @@ This class is a generic interface for integrating rate-dependent models.
 It solves the nonlinear equations described by
 
 .. math::
-   \bm{\sigma}_{n+1} = \bm{\sigma}_{n}+\dot{\bm{\sigma}}\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1},\dot{\bm{\varepsilon}}_{n+1},T_{n+1}\dot{T}_{n+1},,t_{n+1}\right)\Delta t_{n+1}
+   \bm{\sigma}_{n+1} = \bm{\sigma}_{n}+\dot{\bm{\sigma}}\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1},\dot{\bm{\varepsilon}}_{n+1},T_{n+1},\dot{T}_{n+1},t_{n+1}\right)\Delta t_{n+1}
 
    \bm{\alpha}_{n+1} = \bm{\alpha}_{n}+\dot{\bm{\alpha}}\left(\bm{\sigma}_{n+1},\bm{\alpha}_{n+1},\dot{\bm{\varepsilon}}_{n+1},T_{n+1},\dot{T}_{n+1},t_{n+1}\right)\Delta t_{n+1}
 
