@@ -16,3 +16,9 @@ References
 .. [YT2000] Yaguchi, M. and Y. Takahashi. "A viscoplastic constitutive model incorporating dynamic strain aging effect during cyclic deformation conditions," `International Journal of Plasticity,` 16(3-4): pp. 241-262 (2000).
 
 .. [YT2005] Yaguchi, M. and Y. Takahashi. "Ratchetting of viscoplastic material with cyclid softening, Part 2: application to constitutive models," `International Journal of Plasticity,` 21: pp. 835-860 (2005).
+
+.. [C2008] J. L. Chaboche. "A review of some plasticity and viscoplasticity constiutive theories," `International Journal of Plasticity,` 24(10): pp. 1642-1693 (2008).
+
+.. [C1989a] Chaboche, J. L. and D. Nouailhas. "A unified constitutive model for cyclic viscoplasticity and its application to various stainless steels," `Journal of Engineering Materials and Technology,` 111: pp. 424-430 (1989).
+
+.. [C1989b] J. L. Chaboche. "Constitutive equations for cyclic plasticity and cyclic viscoplasticity," `International Journal of Plasticity,` 5: pp. 247-302 (1989).
