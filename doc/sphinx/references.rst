@@ -24,3 +24,6 @@ References
 .. [C1989b] J. L. Chaboche. "Constitutive equations for cyclic plasticity and cyclic viscoplasticity," `International Journal of Plasticity,` 5: pp. 247-302 (1989).
 
 .. [BMD1969] Bird, J. E., Mukherjee, A. K., and J. E. Dorn. "Correlations between high-temperature creep behavior and structure," In the proceedings of `The International Conference on Quantitive Relation Between Properties and Microstructure,` Haifa, Israel (1969).
+
+.. [HL1977] Hayhurst, D. R. and F. A. Leckie. "Constutitive equations for creep rupture," `Acta Metallurgica,` 25(9): pp. 1059-1070, 1977.
+

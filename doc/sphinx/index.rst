@@ -14,9 +14,9 @@ NEML -- Nuclear Engineering Material model Library
    surfaces
    hardening
    creep
+   damage
    references
 ..
-   creep
    damage
 ..
    drivers

@@ -46,16 +46,6 @@ Implementations
    creep_plasticity
    km_regime
 
-Parameters
-----------
-
-========= ===================== ======================================= =======
-Parameter Object type           Description                             Default
-========= ===================== ======================================= =======
-emodel    LinearElasticModel    Temperature dependent elastic constants No
-alpha     Interpolate           Temperature dependent instantaneous CTE 0.0
-========= ===================== ======================================= =======
-
 Class description
 -----------------
 
