@@ -22,3 +22,5 @@ References
 .. [C1989a] Chaboche, J. L. and D. Nouailhas. "A unified constitutive model for cyclic viscoplasticity and its application to various stainless steels," `Journal of Engineering Materials and Technology,` 111: pp. 424-430 (1989).
 
 .. [C1989b] J. L. Chaboche. "Constitutive equations for cyclic plasticity and cyclic viscoplasticity," `International Journal of Plasticity,` 5: pp. 247-302 (1989).
+
+.. [BMD1969] Bird, J. E., Mukherjee, A. K., and J. E. Dorn. "Correlations between high-temperature creep behavior and structure," In the proceedings of `The International Conference on Quantitive Relation Between Properties and Microstructure,` Haifa, Israel (1969).

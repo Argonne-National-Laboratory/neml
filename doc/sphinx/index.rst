@@ -2,7 +2,7 @@ NEML -- Nuclear Engineering Material model Library
 ==================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    about
    interpolate
@@ -13,9 +13,9 @@ NEML -- Nuclear Engineering Material model Library
    vp_flow
    surfaces
    hardening
+   creep
    references
 ..
-   hardening
    creep
    damage
 ..

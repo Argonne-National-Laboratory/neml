@@ -194,7 +194,7 @@ Interfaces
 ^^^^^^^^^^
 
 The documentation describes NEML as a collection of interfaces. 
-An implementation is a collection of functions with the same inputs but
+An interface is a collection of functions with the same inputs but
 different outputs.
 These interfaces are implemented as C++ objects in NEML.
 The documentation describes an interface with the notation:
