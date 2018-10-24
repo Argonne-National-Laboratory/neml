@@ -41,18 +41,18 @@ Jacobian using a matrix decomposition formula.
 Parameters
 ----------
 
-========== ======================= ======================================= =======
-Parameter  Object type             Description                             Default
-========== ======================= ======================================= =======
-elastic    LinearElasticModel      Temperature dependent elastic constants No
-plastic    NEMLModel_sd            Base material model                     No
-creep      CreepModel              Rate dependent creep model              No
-alpha      Interpolate             Temperature dependent instantaneous CTE 0.0
-tol        double                  Integration tolerance                   1.0e-8
-miter      int                     Maximum number of integration iters     50
-verbose    bool                    Print lots of convergence info          F
-sf         double                  Scale factor on strain equation         1.0e6
-========== ======================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``elastic``, :cpp:class:`neml::LinearElasticModel`, Temperature dependent elastic constants, No
+   ``plastic``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
+   ``creep``, :cpp:class:`neml::CreepModel`, Rate dependent creep model, No
+   ``alpha``, :cpp:class:`neml::Interpolate`, Temperature dependent instantaneous CTE, ``0.0``
+   ``tol``, :c:type:`double`, Integration tolerance, ``1.0e-8``
+   ``miter``, :c:type:`int`, Maximum number of integration iters, ``50``
+   ``verbose``, :c:type:`bool`, Print lots of convergence info, ``false``
+   ``sf``, :c:type:`double`, Scale factor on strain equation, ``1.0e6``
 
 .. NOTE::
    The scale factor is multiplied by a strain residual equation that may involve

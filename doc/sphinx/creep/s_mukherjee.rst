@@ -17,18 +17,18 @@ the temperature dependent shear modulus, :math:`b` a Burgers vector length, and
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-emodel     LinearElasticModel        Elasticity model (for shear modulus)    No
-A          double                    Prefactor                               No
-n          double                    Stress exponent                         No
-D0         double                    Zero temperature lattice diffusivity    No
-Q          double                    Activation energy for diffusivity       No
-b          double                    Burgers vector                          No
-k          double                    Boltzmann constant                      No
-R          double                    Gas constant                            No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``emodel``, :cpp:class:`neml::LinearElasticModel`, Elasticity model (for shear modulus), No
+   ``A``, :c:type:`double`, Prefactor, No
+   ``n``, :c:type:`double`, Stress exponent, No
+   ``D0``, :c:type:`double`, Zero temperature lattice diffusivity, No
+   ``Q``, :c:type:`double`, Activation energy for diffusivity, No
+   ``b``, :c:type:`double`, Burgers vector, No
+   ``k``, :c:type:`double`, Boltzmann constant, No
+   ``R``, :c:type:`double`, Gas constant, No
 
 Class description
 -----------------

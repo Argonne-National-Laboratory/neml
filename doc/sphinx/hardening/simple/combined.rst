@@ -21,12 +21,12 @@ vector :math:`\bm{\alpha}`.
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-iso        IsotropicHardeningRule    Isotropic hardening rule                No
-kin        KinematicHardeningRule    Kinematic hardening rule                No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``iso``, :cpp:class:`neml::IsotropicHardeningRule`, Isotropic hardening rule, No
+   ``kin``, :cpp:class:`neml::KinematicHardeningRule`, Kinematic hardening rule, No
 
 Class description
 -----------------

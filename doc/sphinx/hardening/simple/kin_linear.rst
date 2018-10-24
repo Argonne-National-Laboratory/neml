@@ -22,11 +22,11 @@ and maps to a length 6 backstress (:math:`\mathbf{X}`).
 Parameters
 ----------
 
-========== =================================== ======================================= =======
-Parameter  Object type                         Description                             Default
-========== =================================== ======================================= =======
-H          Interpolate                         Linear hardening constant               No
-========== =================================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``H``, :cpp:class:`neml::Interpolate`, Linear hardening constant, No
 
 Class description
 -----------------

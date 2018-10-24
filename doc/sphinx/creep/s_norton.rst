@@ -18,13 +18,13 @@ implemented in the strain-hardening formulation
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-A          Interpolate               Prefactor                               No
-m          Interpolate               Stress exponent                         No
-n          Interpolate               Time exponent                           No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``A``, :cpp:class:`neml::Interpolate`, Prefactor, No
+   ``m``, :cpp:class:`neml::Interpolate`, Stress exponent, No
+   ``n``, :cpp:class:`neml::Interpolate`, Time exponent, No
 
 Class description
 -----------------

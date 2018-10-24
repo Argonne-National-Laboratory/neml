@@ -27,12 +27,12 @@ category [FA2007]_.
 Parameters
 ----------
 
-========== =========================== ======================================= =======
-Parameter  Object type                 Description                             Default
-========== =========================== ======================================= =======
-surface    YieldSurface                Yield surface interface                 No
-hardening  NonAssociativeHardeningRule Nonassociative hardening rule interface No
-========== =========================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``surface``, :cpp:class:`neml::YieldSurface`, Yield surface interface, No
+   ``hardening``, :cpp:class:`neml::NonAssociativeHardening`, Nonassociative hardening rule interface, No
 
 Class description
 -----------------

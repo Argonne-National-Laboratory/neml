@@ -32,17 +32,17 @@ model's GeneralFlowRule interface.
 Parameters
 ----------
 
-========== ======================= ======================================= =======
-Parameter  Object type             Description                             Default
-========== ======================= ======================================= =======
-elastic    LinearElasticModel      Temperature dependent elastic constants No
-surface    GeneralFlowRule         Flow rule interface                     No
-alpha      Interpolate             Temperature dependent instantaneous CTE 0.0
-tol        double                  Integration tolerance                   1.0e-8
-miter      int                     Maximum number of integration iters     50
-verbose    bool                    Print lots of convergence info          F
-max_divide int                     Max adaptive integration divides        8
-========== ======================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``elastic``, :cpp:class:`neml::LinearElasticModel`, Temperature dependent elastic constants, No
+   ``surface``, :cpp:class:`neml::GeneralFlowRule`, Flow rule interface, No
+   ``alpha``, :cpp:class:`neml::Interpolate`, Temperature dependent instantaneous CTE, ``0.0``
+   ``tol``, :c:type:`double`, Integration tolerance, ``1.0e-8``
+   ``miter``, :c:type:`int`, Maximum number of integration iters, ``50``
+   ``verbose``, :c:type:`bool`, Print lots of convergence info, ``false``
+   ``max_divide``, :c:type:`int`, Max adaptive integration divides, ``8``
 
 Class description
 -----------------

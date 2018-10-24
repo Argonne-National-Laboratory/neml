@@ -28,14 +28,14 @@ The model maintains the history variables defined by the hardening model.
 Parameters
 ----------
 
-========== =========================== ======================================= =======
-Parameter  Object type                 Description                             Default
-========== =========================== ======================================= =======
-surface    YieldSurface                Flow surface interface                  No
-hardening  NonAssociativeHardeningRule Hardening rule interface                No
-fluidity   FluidityModel               Fluidity definition                     No
-n          Interpolate                 Rate sensitivity exponent               No
-========== =========================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``surface``, :cpp:class:`neml::YieldSurface`, Flow surface interface, No
+   ``hardening``, :cpp:class:`neml::NonAssociativeHardeningRule`, Hardening rule interface, No
+   ``fluidity``, :cpp:class:`neml::FluidityModel`, Fluidity definition, No
+   ``n``, :cpp:class:`neml::Interpolate`, Rate sensitivity exponent, No
 
 Class description
 -----------------
@@ -79,11 +79,11 @@ It can still vary with temperature.
 Parameters
 """"""""""
 
-========== =========================== ======================================= =======
-Parameter  Object type                 Description                             Default
-========== =========================== ======================================= =======
-eta        Interpolate                 Value of the fluidity                   No
-========== =========================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``eta``, :cpp:class:`neml::Interpolate`, Value of the fluidity, No
 
 Class description
 """""""""""""""""
@@ -106,13 +106,13 @@ The fluidity eventually saturates to a final, fixed value.
 Parameters
 """"""""""
 
-========== =========================== ======================================= =======
-Parameter  Object type                 Description                             Default
-========== =========================== ======================================= =======
-K0         Interpolate                 Initial fluidity                        No
-A          Interpolate                 Saturated fluidity is K0 + A            No
-b          Interpolate                 Saturation speed exponent               No
-========== =========================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``K0``, :cpp:class:`neml::Interpolate`, Initial fluidity, No
+   ``A``, :cpp:class:`neml::Interpolate`, Saturated fluidity is K0 + A, No
+   ``b``, :cpp:class:`neml::Interpolate`, Saturation speed exponent, No
 
 Class description
 """""""""""""""""

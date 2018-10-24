@@ -26,11 +26,11 @@ and maps to a single hardening variable (:math:`Q`).
 Parameters
 ----------
 
-========== =================================== ======================================= =======
-Parameter  Object type                         Description                             Default
-========== =================================== ======================================= =======
-rules      std::vector<IsotropicHardeningRule> List of hardening models                No
-========== =================================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``rules``, :c:type:`std::vector<`:cpp:class:`neml::IsotropicHardeningRule`:c:type:`>`, List of hardening models, No
 
 Class description
 -----------------

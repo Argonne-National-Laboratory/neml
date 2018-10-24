@@ -36,12 +36,12 @@ separate interfaces.
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-surface    YieldSurface              Yield surface interface                 No
-hardening  HardeningRule             Hardening rule interface                No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``surface``, :cpp:class:`neml::YieldSurface`, Yield surface interface, No
+   ``hardening``, :cpp:class:`neml::HardeningRule`, Hardening rule interface, No
 
 Class description
 -----------------

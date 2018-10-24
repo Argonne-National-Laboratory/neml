@@ -34,18 +34,6 @@ Scalar creep models
 
    scalar
 
-Parameters
-----------
-
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-rule       ScalarCreepRule           Scalar creep model                      No
-tol        double                    Nonlinear solver tolerance              1.0e-10
-miter      int                       Maximum number of nonlinear iterations  25
-verbose    bool                      Verbosity flag                          false
-========== ========================= ======================================= =======
-
 Class description
 -----------------
 

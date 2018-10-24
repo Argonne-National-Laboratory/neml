@@ -18,17 +18,17 @@ ith damage model.
 Parameters
 ----------
 
-========== ====================================== ======================================= =======
-Parameter  Object type                            Description                             Default
-========== ====================================== ======================================= =======
-elastic    LinearElasticModel                     Elasticity model                        No
-models     std::vector<NEMLScalarDamagedModel_sd> List of damage models to apply          No
-base       NEMLModel_sd                           Base material model                     No
-alpha      Interpolate                            Thermal expansion coefficient           0.0
-tol        double                                 Solver tolerance                        1.0e-8
-miter      int                                    Maximum solver iterations               50
-verbose    bool                                   Verbosity flag                          false
-========== ====================================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``elastic``, :cpp:class:`neml::LinearElasticModel`, Elasticity model, No
+   ``models``, :c:type:`std::vector<`:cpp:class:`neml::NEMLScalarDamagedModel_sd`:c:type:`>`, List of damage models to apply, No
+   ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
+   ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
+   ``tol``, :c:type:`double`, Solver tolerance, ``1.0e-8``
+   ``miter``, :c:type:`int`, Maximum solver iterations, ``50``
+   ``verbose``, :c:type:`bool`, Verbosity flag, ``false``
 
 Class description
 -----------------

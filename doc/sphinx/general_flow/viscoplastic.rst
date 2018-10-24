@@ -24,12 +24,12 @@ and the hardening functions
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-elastic    LinearElasticModel        Elasticity model                        No
-flow       ViscoPlasticFlowRule      Viscoplastic flow rule interface        No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``elastic``, :cpp:class:`neml::LinearElasticModel`, Elasticity model, No
+   ``flow``, :cpp:class:`neml::ViscoPlasticFlowRule`, Viscoplastic flow rule interface, No
 
 Class description
 -----------------

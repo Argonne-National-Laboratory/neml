@@ -59,17 +59,17 @@ is selected for a particular stress update.
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-elastic    LinearElasticModel        Temperature dependent elastic constants No
-models     std::vector<NEMLModel_sd> Vector of base models                   No
-gs         std::vector<double>       Corresponding vector of energies        No
-kboltz     double                    Boltzmann's constant                    No
-b          double                    Burger's vector length                  No
-eps0       double                    Reference strain rate                   No
-alpha      Interpolate               Temperature dependent instantaneous CTE 0.0
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``elastic``, :cpp:class:`neml::LinearElasticModel`, Temperature dependent elastic constants, No
+   ``models``, :c:type:`std::vector<`:cpp:class:`neml::NEMLModel_sd`:c:type:`>`, Vector of base models, No
+   ``gs``, :c:type:`std::vector<`:c:type:`double`:c:type:`>`, Corresponding vector of energies, No
+   ``kboltz``, :c:type:`double`, Boltzmann's constant, No
+   ``b``, :c:type:`double`, Burger's vector length, No
+   ``eps0``, :c:type:`double`, Reference strain rate, No
+   ``alpha``, :cpp:class:`neml::Interpolate`, Temperature dependent instantaneous CTE, ``0.0``
 
 Class description
 -----------------

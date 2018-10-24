@@ -25,11 +25,11 @@ and maps to a single hardening variable (:math:`Q`).
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-flow       Interpolate               Interpolated flow stress                No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``flow``, :cpp:class:`neml::Interpolate`, Interpolated flow stress, No
 
 Class description
 -----------------

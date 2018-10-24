@@ -35,12 +35,12 @@ where :math:`Q` is the isotropic hardening stress and
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-h          Interpolate               Power law prefactor                     No
-l          Interpolate               Power law exponent                      No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``h``, :cpp:class:`neml::Interpolate`, Power law prefactor, No
+   ``l``, :cpp:class:`neml::Interpolate`, Power law exponent, No
 
 Class description
 -----------------

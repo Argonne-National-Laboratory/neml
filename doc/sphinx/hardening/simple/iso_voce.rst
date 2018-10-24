@@ -22,13 +22,13 @@ and maps to a single hardening variable (:math:`Q`).
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-s0         Interpolate               Initial yield stress                    No
-R          Interpolate               Saturated hardening increase            No
-d          Interpolate               Saturation rate constant                No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``s0``, :cpp:class:`neml::Interpolate`, Initial yield stress, No
+   ``R``, :cpp:class:`neml::Interpolate`, Saturated hardening increase, No
+   ``d``, :cpp:class:`neml::Interpolate`, Saturation rate constant, No
 
 Class description
 -----------------

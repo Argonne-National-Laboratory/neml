@@ -24,7 +24,7 @@ contributions.
 The total history vector :math:`\bm{\alpha}` is 
 
 .. math::
-   \bm{\alpha} = \bm{\alpha}=\left[\begin{array}{ccccc} \alpha & \boldsymbol{X}_{1} & \boldsymbol{X}_{2} & \ldots & \boldsymbol{X}_{n}\end{array}\right]
+   \bm{\alpha}=\left[\begin{array}{ccccc} \alpha & \boldsymbol{X}_{1} & \boldsymbol{X}_{2} & \ldots & \boldsymbol{X}_{n}\end{array}\right]
 
 where each :math:`\bm{X}_i` is one of :math:`n` individual backstresses.
 The model converts this vector of history variables into the stress-like
@@ -71,16 +71,16 @@ non-isothermal term turned off the model degenerates to the classical Frederick-
 Parameters
 ----------
 
-========== ========================= ======================================== =======
-Parameter  Object type               Description                              Default
-========== ========================= ======================================== =======
-iso        IsotropicHardeningRule    Isotropic hardening                      No
-c          std::vector<Interpolate>  Values of constant C for each backstress No
-gmodels    std::vector<GammaModel>   The gamma functions for each backstress  No
-A          std::vector<Interpolate>  The value of A for each backstress       No
-a          std::vector<Interpolate>  The value of a for each backstress       No
-noniso     bool                      Include the nonisothermal term?          true
-========== ========================= ======================================== =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``iso``, :cpp:class:`neml::IsotropicHardeningRule`, Isotropic hardening, No
+   ``c``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, Values of constant C for each backstress, No
+   ``gmodels``, :c:type:`std::vector<`:cpp:class:`neml::GammaModel`:c:type:`>`, The gamma functions for each backstress, No
+   ``A``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, The value of A for each backstress, No
+   ``a``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, The value of a for each backstress, No
+   ``noniso``, :c:type:`bool`, Include the nonisothermal term?, ``true``
 
 The number of backstresses is set implicitly from the lengths of these vectors.
 The model will return an error if they have different lengths.
@@ -128,11 +128,11 @@ It still might depend on temperature.  The implementation is
 Parameters
 """"""""""
 
-========== ========================= ======================================== =======
-Parameter  Object type               Description                              Default
-========== ========================= ======================================== =======
-g          Interpolate               Value of gamma as a function of T        No
-========== ========================= ======================================== =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``g``, :cpp:class:`neml::Interpolate`, Value of gamma as a function of T, No
 
 Class description
 """""""""""""""""
@@ -154,13 +154,13 @@ It implements the function
 Parameters 
 """"""""""
 
-========== ========================= ======================================== =======
-Parameter  Object type               Description                              Default
-========== ========================= ======================================== =======
-g0         Interpolate               Initial value of gamma                   No
-gs         Interpolate               Final value of gamma                     No
-beta       Interpolate               Controls the saturation rate             No
-========== ========================= ======================================== =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``g0``, :cpp:class:`neml::Interpolate`, Initial value of gamma, No
+   ``gs``, :cpp:class:`neml::Interpolate`, Final value of gamma, No
+   ``beta``, :cpp:class:`neml::Interpolate`, Controls the saturation rate, No
 
 Class description
 """""""""""""""""

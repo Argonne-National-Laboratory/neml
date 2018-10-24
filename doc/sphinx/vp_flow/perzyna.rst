@@ -32,13 +32,13 @@ model.
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-surface    YieldSurface              Flow surface interface                  No
-hardening  HardeningRule             Hardening rule interface                No
-g          GFlow                     Rate sensitivity function               No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``surface``, :cpp:class:`neml::YieldSurface`, Flow surface interface, No
+   ``hardening``, :cpp:class:`neml::HardeningRule`, Hardening rule interface, No
+   ``g``, :cpp:class:`neml::GFlow`, Rate sensitivity function, No
 
 Class description
 -----------------
@@ -74,12 +74,12 @@ for some temperature-dependent rate sensitivity exponent :math:`n` and fluidity
 Parameters
 """"""""""
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-n          Interpolate               Rate sensitivity exponent               No
-eta        Interpolate               Fluidity                                No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``n``, :cpp:class:`neml::Interpolate`, Rate sensitivity exponent, No
+   ``eta``, :cpp:class:`neml::Interpolate`, Fluidity, No
 
 Class description
 """""""""""""""""

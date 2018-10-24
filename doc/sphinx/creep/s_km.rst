@@ -30,17 +30,17 @@ If :math:`s > c_n` then the model uses :math:`A_n` and :math:`B_n`.
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-cuts       std::vector<double>       Normalized stress cutoffs               No
-A          std::vector<double>       Corresponding A constants               No
-B          std::vector<double>       Corresponding B constants               No
-kboltz     double                    Boltzmann constant                      No
-b          double                    Burgers vector                          No
-eps0       double                    Reference strain rate                   No
-emodel     LinearElasticModel        Elastic model (for shear modulus)       No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``cuts``, :c:type:`std::vector<`:c:type:`double`:c:type:`>`, Normalized stress cutoffs, No
+   ``A``, :c:type:`std::vector<`:c:type:`double`:c:type:`>`, Corresponding A constants, No
+   ``B``, :c:type:`std::vector<`:c:type:`double`:c:type:`>`, Corresponding B constants, No
+   ``kboltz``, :c:type:`double`, Boltzmann constant, No
+   ``b``, :c:type:`double`, Burgers vector, No
+   ``eps0``, :c:type:`double`, Reference strain rate, No
+   ``emodel``, :cpp:class:`neml::LinearElasticModel`, Elastic model (for shear modulus), No
 
 Class description
 -----------------

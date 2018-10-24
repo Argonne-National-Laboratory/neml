@@ -14,12 +14,12 @@ for temperature dependent parameters :math:`A` and :math:`n`.
 Parameters
 ----------
 
-========== ========================= ======================================= =======
-Parameter  Object type               Description                             Default
-========== ========================= ======================================= =======
-A          Interpolate               Prefactor                               No
-n          Interpolate               Exponent                                No
-========== ========================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``A``, :cpp:class:`neml::Interpolate`, Prefactor, No
+   ``n``, :cpp:class:`neml::Interpolate`, Exponent, No
 
 Class description
 -----------------
