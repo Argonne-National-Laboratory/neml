@@ -70,18 +70,18 @@ met the Kuhn-Tucker conditions
 Parameters
 ----------
 
-========== ======================= ======================================= =======
-Parameter  Object type             Description                             Default
-========== ======================= ======================================= =======
-elastic    LinearElasticModel      Temperature dependent elastic constants No
-surface    RateIndependentFlowRule Flow rule interface                     No
-alpha      Interpolate             Temperature dependent instantaneous CTE 0.0
-tol        double                  Integration tolerance                   1.0e-8
-miter      int                     Maximum number of integration iters     50
-verbose    bool                    Print lots of convergence info          F
-kttol      double                  Tolerance on the Kuhn-Tucker conditions 1.0e-2
-check_kt   bool                    Flag to actually check KT               F
-========== ======================= ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``elastic``   , :cpp:class:`neml::LinearElasticModel`     , Temperature dependent elastic constants, No
+   ``surface``   , :cpp:class:`neml::RateIndependentFlowRule`, Flow rule interface                    , No
+   ``alpha``     , :cpp:class:`neml::Interpolate`            , Temperature dependent instantaneous CTE, ``0.0``
+   ``tol``       , :c:type:`double`                 , Integration tolerance                  , ``1.0e-8``
+   ``miter``     , :c:type:`int`                    , Maximum number of integration iters    , ``50``
+   ``verbose``   , :c:type:`bool`                   , Print lots of convergence info         , ``false``
+   ``kttol``     , :c:type:`double`                 , Tolerance on the Kuhn-Tucker conditions, ``1.0e-2``
+   ``check_kt``  , :c:type:`bool`                   , Flag to actually check KT              , ``false``
 
 Class description
 -----------------

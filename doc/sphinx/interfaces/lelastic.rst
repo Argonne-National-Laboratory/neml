@@ -16,12 +16,12 @@ The model does not maintain any  history variables.
 Parameters
 ----------
 
-========= ===================== ======================================= =======
-Parameter Object type           Description                             Default
-========= ===================== ======================================= =======
-emodel    LinearElasticModel    Temperature dependent elastic constants No
-alpha     Interpolate           Temperature dependent instantaneous CTE 0.0
-========= ===================== ======================================= =======
+.. csv-table::
+   :header: "Parameter", "Object type", "Description", "Default"
+   :widths: 12, 30, 50, 8
+
+   ``emodel``, :cpp:class:`neml::LinearElasticModel`, "Temperature dependent elastic constants", "No"
+   ``alpha``, :cpp:class:`neml::Interpolate`, "Temperature dependent instantaneous CTE", ``0.0``
 
 Class description
 -----------------
