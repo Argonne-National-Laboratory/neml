@@ -15,15 +15,11 @@ NEML -- Nuclear Engineering Material model Library
    hardening
    creep
    damage
+   advanced
    references
-..
-   damage
 ..
    drivers
    uniaxial
    bars
    axisym
-..
-   objects
-   math
-   solvers
+

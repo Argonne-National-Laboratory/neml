@@ -14,12 +14,14 @@
 
 namespace neml {
 
-// We can avoid this with proper C++14, will need ifdefs
+/// We can avoid this with proper C++14, will need ifdefs
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
+/// NEMLObjects are current pretty useless.  However, they are a hook
+/// for future work on serialization.
 class NEMLObject {
  public:
   virtual ~NEMLObject() {};
@@ -34,12 +36,12 @@ class NEMLObject {
 //    vector<NEMLObject>
 //    string
 
-// This black magic lets us store parameters in a unified map
+/// This black magic lets us store parameters in a unified map
 typedef boost::variant<double, int, bool, std::vector<double>, 
         std::shared_ptr<NEMLObject>,std::vector<std::shared_ptr<NEMLObject>>,
         std::string> param_type;
-// This is the enum name we assign to each type for the "external" interfaces
-// to use in reconstructing a type from data
+/// This is the enum name we assign to each type for the "external" interfaces
+/// to use in reconstructing a type from data
 enum ParamType {
   TYPE_DOUBLE           = 0,
   TYPE_INT              = 1,
@@ -66,6 +68,7 @@ template <> constexpr ParamType GetParamType<std::vector<NEMLObject>>()
 {return TYPE_VEC_NEML_OBJECT;}
 template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
 
+/// Error if you ask for a parameter that an object doesn't recognize
 class UnknownParameter: public std::exception {
  public:
   UnknownParameter(std::string object, std::string name) :

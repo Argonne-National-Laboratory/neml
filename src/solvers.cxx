@@ -139,13 +139,13 @@ double diff_jac_check(Solvable * system, const double * const x,
 
 // START NOX STUFF
 #ifdef SOLVER_NOX
-NOXSolver::NOXSolver(Solvable * system) :
-    system_(system), nox_guess_(system->nparams()), ts_(ts)
+NOXSolver::NOXSolver(Solvable * system, TrialState * ts) :
+    nox_guess_(system->nparams()), system_(system), ts_(ts)
 {
   std::vector<double> xn(system_->nparams());
   double * x = &xn[0];
   system_->init_x(x, ts_);
-  for (int i=0; i<system_->nparams(); i++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
     nox_guess_(i) = x[i];
   }
 }
@@ -159,19 +159,19 @@ bool NOXSolver::computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x)
 {
   // This is highly inefficient
   std::vector<double> Riv(system_->nparams());
-  std::vector<double> Jiv(system_->nparams());
+  std::vector<double> Jiv(system_->nparams()*system_->nparams());
   std::vector<double> xiv(system_->nparams());
   
   double * Ri = &Riv[0];
   double * Ji = &Jiv[0];
   double * xi = &xiv[0];
 
-  for (int i=0; i<system_->nparams(); i++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
   system_->RJ(xi, ts_, Ri, Ji);
   
-  for (int i=0; i<system_->nparams(); i++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
     f(i) = Ri[i];
   }
 
@@ -183,20 +183,20 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
 {
   // This is highly inefficient
   std::vector<double> Riv(system_->nparams());
-  std::vector<double> Jiv(system_->nparams());
+  std::vector<double> Jiv(system_->nparams()*system_->nparams());
   std::vector<double> xiv(system_->nparams());
   
   double * Ri = &Riv[0];
   double * Ji = &Jiv[0];
   double * xi = &xiv[0];
 
-  for (int i=0; i<system_->nparams(); i++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
   system_->RJ(xi, ts_, Ri, Ji);
 
-  for (int i=0; i<system_->nparams(); i++) {
-    for (int j=0; j<system_->nparams(); j++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
+    for (size_t j=0; j<system_->nparams(); j++) {
       J(i,j) = Ji[CINDEX(i,j,system_->nparams())];
     }
   }
@@ -268,7 +268,7 @@ int nox(Solvable * system, double * x, TrialState * ts,
       dynamic_cast<const NOX::LAPACK::Group&>(nox_solver->getSolutionGroup());
   NOX::LAPACK::Vector soln = dynamic_cast<const NOX::LAPACK::Vector&>(
       solnGrp.getX());
-  for (int i=0; i<system->nparams(); i++) {
+  for (size_t i=0; i<system->nparams(); i++) {
     x[i] = soln(i);
   }
 

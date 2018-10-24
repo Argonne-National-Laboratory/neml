@@ -147,46 +147,44 @@ static Register<SmallStrainElasticity> regSmallStrainElasticity;
 //  Store data the solver needs and can be passed into solution interface
 class SSPPTrialState : public TrialState {
  public:
-  double ys, T;
-  double ee_n[6];
-  double s_n[6];
-  double s_tr[6];
-  double e_np1[6];
-  double e_n[6];
-  double S[36];
-  double C[36];
+  double ys, T;    // Yield stress, temperature
+  double ee_n[6];  // Previous value of elastic strain
+  double s_n[6];   // Previous stress
+  double s_tr[6];  // Elastic trial stress
+  double e_np1[6]; // Next strain
+  double e_n[6];   // Previous strain
+  double S[36];    // Compliance
+  double C[36];    // Stiffness
 };
 
 /// Small strain rate independent plasticity trial state
 class SSRIPTrialState : public TrialState {
  public:
-  double ep_tr[6];
-  double s_tr[6];
-  double e_np1[6];
-  double C[36];
-  double T;
-  std::vector<double> h_tr;
+  double ep_tr[6];          // Trial plastic strain
+  double s_tr[6];           // Trial stress
+  double e_np1[6];          // Next strain
+  double C[36];             // Elastic stiffness
+  double T;                 // Temperature
+  std::vector<double> h_tr; // Trial history
 };
 
 /// Small strain creep+plasticity trial state 
 class SSCPTrialState : public TrialState {
  public:
-  double ep_strain[6];
-
-  double e_n[6], e_np1[6];
-  double s_n[6];
-  double T_n, T_np1, t_n, t_np1;
-  std::vector<double> h_n;
+  double ep_strain[6];            // Current plastic strain
+  double e_n[6], e_np1[6];        // Previous and next total strain
+  double s_n[6];                  // Previous stress
+  double T_n, T_np1, t_n, t_np1;  // Next and previous time and temperature
+  std::vector<double> h_n;        // Previous history vector
 };
 
 /// General inelastic integrator trial state
 class GITrialState : public TrialState {
  public:
-  double e_dot[6];
-  double s_n[6];
-  double T, Tdot, dt;
-  std::vector<double> h_n;
-
+  double e_dot[6];                // Strain rate
+  double s_n[6];                  // Previous stress
+  double T, Tdot, dt;             // Temperature, temperature rate, time inc.
+  std::vector<double> h_n;        // Previous history
 };
 
 /// Small strain, associative, perfect plasticity
