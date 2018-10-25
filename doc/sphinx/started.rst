@@ -49,10 +49,65 @@ looking for volunteers to try it, particularly to interface with
 `Abaqus <https://www.3ds.com/products-services/simulia/products/abaqus/>`_
 through the UMAT system.
 
+First install the prerequisites
+
+.. code-block:: console
+
+   apt-get install build-essential git cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev 
+
+Clone the neml source code
+
+.. code-block:: console
+
+   git clone https://github.com/Argonne-National-Laboratory/neml.git
+
+NEML builds in the source directory.  
+Enter the NEML directory and configure NEML using CMake:
+
+.. code-block:: console
+
+   cmake .
+
+Useful options might include ``-D CMAKE_BUILD_TYPE="Release"`` if you want
+to build an optimized version for production runs.
+
+Then simply make the library:
+
+.. code-block:: console
+
+   make
 
 Python bindings
 """""""""""""""
 
+Building the base library is sufficient to link NEML into external finite 
+element software
+However, all the tests and provided examples use the Python bindings.
+
+To build the bindings you will need a few more prerequisites, in addition
+to those mentioned above:
+
+.. code-block:: console
+
+   apt-get install python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
+
+Configure with CMake to setup the python bindings:
+
+.. code-block:: console
+   
+   cmake -D WRAP_PYTHON=ON .
+
+And build the library
+
+.. code-block:: console
+
+   make
+
+You can now run the test suit with
+
+.. code-block:: console
+
+   nosetests
 
 Running examples
 ----------------
@@ -80,7 +135,7 @@ load material models from XML datafile and use the resulting C++ object
 to call for the material response.
 
 The :file:`util/` directory contains example bindings of NEML into 
-C++, C, and Fortran codes.  The CMake variable :makevar:`BUILD_UTILS` option
+C++, C, and Fortran codes.  The CMake variable ``-D BUILD_UTILS=ON`` option
 compiles these example interfaces.
 During this option on requires a Fortran and C compiler.
 Looking at these examples demonstrates how you can integrate NEML into your
@@ -120,7 +175,7 @@ have Abaqus setup and maintain the correct number of history variables for the
 NEML model.
 The distribution provides a simple program in the :file:`util/abaqus/` directory to 
 report this information.
-The program, called :file:`report` is compiled if the CMake :makevar:`BUILD_UTILS` option is set.
+The program, called :file:`report` is compiled if the CMake ``BUILD_UTILS`` option is set.
 It requires two command line arguments:
 
 **report**
