@@ -21,7 +21,7 @@ if __name__ == "__main__":
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
   model = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
-  res = drivers.uniaxial_test(model, 1.0e-4, emax = 0.05)
+  res = drivers.uniaxial_test(model, 1.0e-4, emax = 0.045)
   
   plt.plot(res['strain'], res['stress'], 'k-')
   plt.plot(res['strain'] + values[0] / E, [ifn(e) for e in res['strain']], 'r-')

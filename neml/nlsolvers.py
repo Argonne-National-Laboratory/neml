@@ -22,11 +22,17 @@ def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 50,
     requested.
 
     Parameters:
-      RJ        function return the residual + jacobian
-      x0        initial guess
+      RJ            function return the residual + jacobian
+      x0            initial guess
 
     Optional:
-      verbose   verbose output
+      verbose       verbose output
+      rtol          relative tolerance
+      atol          absolute tolerance
+      miter         maximum iterations
+      linesearch    available options: "none" and "backtracking"
+      bt_tau        tau factor for backtracking line search
+      bt_c          c factor for backtracking line search
   """
   R, J = RJ(x0)
   nR = la.norm(R)
@@ -101,6 +107,9 @@ def quasi_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
 
     Optional:
       verbose   verbose output
+      rtol      relative tolerance
+      atol      absolute tolerance
+      miter     maximum number of iterations
   """
   R, J = RJ(x0)
   J_use = np.copy(J)
@@ -132,11 +141,10 @@ def quasi_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
 
   return x
 
-def scalar_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 20,
-    quasi = None):
+def scalar_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
+    miter = 20, quasi = None):
   """
-    Manually-code newton-raphson so that I can output convergence info, if
-    requested.
+    Manually-code newton-raphson for scalar problems
 
     Parameters:
       RJ        function return the residual + jacobian
@@ -144,6 +152,10 @@ def scalar_newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter 
 
     Optional:
       verbose   verbose output
+      rtol      relative tolerance
+      atol      absolute tolerance
+      miter     maximum solver iterations
+      quasi     if true use a quasi-newton method
   """
   R, J = RJ(x0)
   nR = np.abs(R)

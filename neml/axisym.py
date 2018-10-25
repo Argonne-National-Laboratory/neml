@@ -167,6 +167,22 @@ def generate_multimaterial_thickness_gradient(rs, ks, T1, T2, Tdot_hot,
   return gradient
 
 def mesh(rs, ns, bias = False, n = 2.0):
+  """
+    Generate a 1D mesh
+
+    Parameters
+      rs        list of points which divide the line into segments
+                each segment is guaranteed to be a node point
+                
+                x----------x-------x--------------x
+                r0         r1      r2             r3
+
+      ns        list giving the number of elements in each segment
+
+    Optional:
+      bias      bias the mesh towards the segment end points
+      n         bias factor
+  """
   if not bias:
     xpoints = [np.linspace(rs[0], rs[1], ns[0]+1)]
     for i in range(1, len(ns)):
@@ -381,14 +397,24 @@ class BreeProblem(VesselSectionProblem):
     
 class AxisymmetricProblem(VesselSectionProblem):
   """
-    Python driver for our axisymmetric reduced problem.
+    Python driver for a axisymmetric reduced problem.
 
     My coordinate system uses:
     x = radius
     y = theta
     z = z
 
-    when we call into the material model
+    when we call into the material model.
+
+    The conditions here are "steady state axisymmetry."
+    The model is 1D and represents the stress state away from structural 
+    discontinuities.
+
+    The default boundary conditions are axisymmetry + generalized plane strain.
+    The generalized plane strain boundary condition prevents initially
+    parallel cross sections from rotating, but allows some net axial strain.
+
+    Using constrained = True gives traditional plane strain
   """
   def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
       bias = False, factor = 2.0, ngpts = 1, constrained = False):
@@ -406,7 +432,7 @@ class AxisymmetricProblem(VesselSectionProblem):
         bias        bias the mesh towards the interfaces
         factor      bias factor
         ngpts       number of gauss points per element
-        constrained constrain the cylinder against thermal expansion
+        constrained fully constrain the cylinder against thermal expansion
     """
     super(AxisymmetricProblem, self).__init__(rs, mats, ns, T, p,
         rtol = rtol, atol = atol)
@@ -447,6 +473,15 @@ class AxisymmetricProblem(VesselSectionProblem):
       
       Parameters:
         t       next time
+
+      Optional:
+        rtol    solver relative tolerance
+        atol    solver absolute tolerance
+        ilimit  solver iteration limit
+        verbose flag to print a lot of convergence info
+        predict factor for forward extrapolation for the initial guess:
+                1.0 = full extrapolation
+                0.0 = use previous step
     """
     T = np.array([self.T(xi, t) for xi in self.mesh])
     p = self.p(t)
@@ -517,6 +552,18 @@ class AxisymmetricProblem(VesselSectionProblem):
 
       Parameters:
         t       time requested
+
+      Optional:
+        rtol    solver relative tolerance
+        atol    solver absolute tolerance
+        verbose flag to print a lot of convergence info
+        div     step division factor for adaptive stepping: 
+                new_time_step = old_time_step / div
+        max_div maximum number of adaptive subdivisions
+        predict factor for forward extrapolation for the initial guess:
+                1.0 = full extrapolation
+                0.0 = use previous step
+        ilimit  solver iteration limit
     """
     istep = div**max_div
     sstep = istep
@@ -581,6 +628,7 @@ class AxisymmetricProblem(VesselSectionProblem):
         d   displacements
         l   length
         r   radius
+        ez  axial strain
     """
     strain = np.zeros((len(r),6))
     strain[:,0] = np.dot(self.Bl, d) * 2.0 / l
@@ -595,8 +643,8 @@ class AxisymmetricProblem(VesselSectionProblem):
       Parameters:
         x       iterate
         T       nodal temperatures
-        Tn      previous temperatures
         p       left pressure
+        t       time
     """
     d = x[:-1]
     ez = x[-1]
@@ -685,7 +733,7 @@ def tri_solve(DU, D, DL, c):
 
 def cute_solve(DU, D, DL, u, v, c):
   """
-    Do the cute solve of:
+    Do a cute solve of:
 
     (B + u v.T) x = c
 

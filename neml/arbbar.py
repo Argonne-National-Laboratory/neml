@@ -120,7 +120,7 @@ class BarModel(nx.MultiGraph):
     """
     t_next = self.time[-1] + dt
     
-    for n in self.nodes_iter():
+    for n in self.nodes():
       # This gets summed below
       self.node[n]['forces'] = np.append(self.node[n]['forces'], 0.0)
       if n in free_nodes:
@@ -133,7 +133,7 @@ class BarModel(nx.MultiGraph):
     
     e_sum = 0.0
     p_sum = 0.0
-    for i,j,data in self.edges_iter(data=True):
+    for i,j,data in self.edges(data=True):
       me = data['object']
       for ni,n in enumerate((i,j)):
         self.node[n]['forces'][-1] += self.sign[ni] * me.stress_next * me.A
@@ -163,8 +163,8 @@ class BarModel(nx.MultiGraph):
     """
       Return lists of the free and fixed nodes
     """
-    free = [n for n in self.nodes_iter() if 'displacement bc' not in self.node[n]]
-    fixed = [n for n in self.nodes_iter() if 'displacement bc' in self.node[n]]
+    free = [n for n in self.nodes() if 'displacement bc' not in self.node[n]]
+    fixed = [n for n in self.nodes() if 'displacement bc' in self.node[n]]
 
     return free, fixed
 
@@ -187,7 +187,7 @@ class BarModel(nx.MultiGraph):
       if 'force bc' in self.node[n]:
         R[i] -= self.node[n]['force bc'](t_next)
       
-    for i,j,data in self.edges_iter(data=True):
+    for i,j,data in self.edges(data=True):
       # Delta d
       dd = 0.0
       for index, node in enumerate((i,j)):
@@ -245,7 +245,7 @@ class BarModel(nx.MultiGraph):
       Iterate through the graph and make sure that everything is okay to
       run.
     """
-    for node in self.nodes_iter():
+    for node in self.nodes():
       if 'displacements' not in self.node[node]:
         self.node[node]['displacements'] = np.array([0.0])
       if 'forces' not in self.node[node]:
@@ -260,7 +260,7 @@ class BarModel(nx.MultiGraph):
         quantity        what to grab
     """
     return np.array([getattr(e['object'], quantity) for i,j,e in 
-      self.edges_iter(data = True)])
+      self.edges(data = True)])
 
 class Bar(object):
   """
