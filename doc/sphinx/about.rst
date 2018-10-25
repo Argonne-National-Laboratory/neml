@@ -53,7 +53,7 @@ codes.
 When using the compiled library, NEML models can be created and archived
 using a hierarchical XML format.
 
-NEML is developed under an NQA-1 quality assurance program.  Because, as
+NEML is developed under a strict quality assurance program.  Because, as
 discussed below, the NEML distribution does not provide models for any
 actual materials, ensuring the quality of the library is a verification 
 problem -- testing to make sure that NEML is correctly implementing the
