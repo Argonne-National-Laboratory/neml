@@ -180,3 +180,4 @@ epub_exclude_files = ['search.html']
 breathe_projects = {"neml": "../class-doc/xml"}
 breathe_default_project = "neml"
 
+# -- Options for napoleon ------------------------------------------------

@@ -18,13 +18,11 @@ class Driver(object):
       miter = 25, T_init = 0.0, no_thermal_strain = False):
     """
       Parameters:
-        model       material model to play with
-
-      Optional:
-        verbose     verbose output
-        rtol        relative tolerance, where needed
-        atol        absolute tolerance, where needed
-        miter       maximum iterations, where needed
+        model:       material model to play with
+        verbose:     verbose output
+        rtol:        relative tolerance, where needed
+        atol:        absolute tolerance, where needed
+        miter:       maximum iterations, where needed
     """
     self.model = model
     self.verbose = verbose
@@ -76,6 +74,14 @@ class Driver_sd(Driver):
     Superclass of generic small strain drivers, contains generic step methods.
   """
   def __init__(self, *args, **kwargs):
+    """
+      Parameters:
+        model:       material model to play with
+        verbose:     verbose output
+        rtol:        relative tolerance, where needed
+        atol:        absolute tolerance, where needed
+        miter:       maximum iterations, where needed
+    """
     super(Driver_sd, self).__init__(*args, **kwargs)
     self.strain_int = [np.zeros((6,))]
     self.thermal_strain_int = [np.zeros((6,))]
@@ -87,12 +93,10 @@ class Driver_sd(Driver):
       one will converge
 
       Parameters:
-        RJ      function that returns the residual equations and associated
-                Jacobian
-        x0      initial guess
-
-      Optional:
-        extra   list of extra solver functions of the type below
+        RJ:      function that returns the residual equations and associated
+                 Jacobian
+        x0:      initial guess
+        extra:   list of extra solver functions of the type below
     """
     def s1(x0i):
       try:
@@ -148,6 +152,12 @@ class Driver_sd(Driver):
     return np.array(self.mechanical_strain_int)
 
   def update_thermal_strain(self, T_np1):
+    """
+      Move the thermal strains to the next step
+
+      Parameters:
+        T_np1:      next temperature
+    """
     if self.nts:
       return np.zeros((6,))
     else:
@@ -162,9 +172,9 @@ class Driver_sd(Driver):
       Take a strain-controlled step
 
       Parameters:
-        e_np1       next strain
-        t_np1       next time
-        T_np1       next temperature
+        e_np1:       next strain
+        t_np1:       next time
+        T_np1:       next temperature
     """
     enext = self.update_thermal_strain(T_np1)
     s_np1, h_np1, A_np1, u_np1, p_np1 = self.model.update_sd(e_np1 - enext, 
@@ -187,9 +197,9 @@ class Driver_sd(Driver):
       Take a stress-controlled step
 
       Parameters:
-        s_np1       next stress
-        t_np1       next time
-        T_np1       next temperature
+        s_np1:       next stress
+        t_np1:       next time
+        T_np1:       next temperature
     """
     enext = self.update_thermal_strain(T_np1)
     def RJ(e):
@@ -217,14 +227,12 @@ class Driver_sd(Driver):
       an actual "stress controlled" experiment.
 
       Parameters:
-        sdir        stress direction
-        erate       strain rate (in the direction)
-        t_np1       next time
-        T_np1       next temperature
-
-      Optional:
-        einc_guess      a guess at the strain increment
-        ainc_guess      a guess at the stress increment
+        sdir:        stress direction
+        erate:       strain rate (in the direction)
+        t_np1:       next time
+        T_np1:       next temperature
+        einc_guess:  a guess at the strain increment
+        ainc_guess:  a guess at the stress increment
     """
     sdir = sdir / la.norm(sdir)
     dt = t_np1 - self.t_int[-1]
@@ -276,10 +284,10 @@ class Driver_sd(Driver):
       time increment.
 
       Parameters:
-        sdir        stress direction
-        erate       strain rate, in stress direction
-        einc        strain increment, in stress direction
-        T_np1       temperature at next time step
+        sdir:        stress direction
+        erate:       strain rate, in stress direction
+        einc:        strain increment, in stress direction
+        T_np1:       temperature at next time step
     """
     dt = einc / erate
     return self.erate_step(sdir, erate, self.t_int[-1] + dt, T_np1, **kwargs)
@@ -290,10 +298,10 @@ class Driver_sd(Driver):
       time increment.
 
       Parameters:
-        sdir        stress direction
-        srate       stress rate
-        sinc        stress increment
-        T_np1       temperature at next time step
+        sdir:        stress direction
+        srate:       stress rate
+        sinc:        stress increment
+        T_np1:       temperature at next time step
 
     """
     if np.allclose(sdir, 0.0):
@@ -314,13 +322,11 @@ class Driver_sd(Driver):
       values
 
       Parameters:
-        i           index to hold
-        t_np1       next time
-        T_np1       next temperature
-
-      Optional:
-        q           follow up factor
-        E           Young's modulus to use -- must redo interface at some point
+        i:           index to hold
+        t_np1:       next time
+        T_np1:       next temperature
+        q:           follow up factor
+        E:           Young's modulus to use -- must redo interface at some point
     """
     if not np.isclose(q, 1.0) and np.isclose(E, -1.0):
       raise ValueError("You must supply the Youngs modulus")
@@ -351,32 +357,6 @@ class Driver_sd(Driver):
 
     self.strain_step(e_np1, t_np1, T_np1)
 
-def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
-  """
-    Classify a model as elastic, elastic shakedown, plastic shakedown,
-    or ratcheting.
-
-    Parameters:
-      ua    cycle a internal energy
-      ub    cycle b internal energy
-      pa    cycle a plastic dissipation
-      pb    cycle b plastic dissipation
-      ea    cycle a strain
-      eb    cycle b strain
-
-    Optional:
-      rtol  relative tolerance
-      atol  absolute tolerance
-  """
-  if np.abs(pb) < atol:
-    return 'elastic'
-  elif np.abs(ub-ua) < rtol * np.abs(ub):
-    return 'elastic shakedown'
-  elif (np.abs(e1b-e1a) < rtol * np.abs(e1b)) and (np.abs(e2b-e2a) < rtol * np.abs(e2b)):
-    return 'plastic shakedown'
-  else:
-    return 'ratcheting'
-
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250, 
     sdir = np.array([1,0,0,0,0,0]), verbose = False,
     offset = 0.2/100.0, history = None, tdir = np.array([0,1,0,0,0,0])):
@@ -384,22 +364,35 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
     Make a uniaxial stress/strain curve
 
     Parameters:
-      model     material model
-      erate     strain rate
-    
-    Optional:
-      T         temperature, default 300.0
-      emax      maximum strain, default 5%
-      nsteps    number of steps to use, default 250
-      sdir      stress direction, default tension in x
-      verbose   whether to be verbose
-      offset    used to calculate yield stress
-      history   initial model history
-      tdir      transverse direction for Poisson's ratio
+      model:            material model
+      erate:            strain rate
 
-    Results:
-      strain    strain in direction
-      stress    stress in direction
+    Keyword Args:
+      T:                temperature, default 300.0
+      emax:             maximum strain, default 5%
+      nsteps:           number of steps to use, default 250
+      sdir:             stress direction, default tension in x
+      verbose:          whether to be verbose
+      offset:           used to calculate yield stress
+      history:          initial model history
+      tdir:             transverse direction for Poisson's ratio
+
+    Returns:
+      dict:             results dictionary containing...
+    
+    
+    **Results in dictionary:**
+      ================= ============================================
+      Name              Description
+      ================= ============================================
+      strain            strain in direction
+      stress            stress in direction
+      energy_density    strain energy density
+      plastic_work      plastic dissipation
+      youngs            young's modulus of initial curve
+      yield             yield stress implied by curve
+      poissons          poisson's ratio implied by non-axial strains
+      ================= ============================================
   """
   e_inc = emax / nsteps
   driver = Driver_sd(model, verbose = verbose, T_init = T)
@@ -444,29 +437,38 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     Strain controlled cyclic test.
 
     Parameters:
-      emax      maximum strain
-      R         R = emin / emax
-      erate     strain rate to go at
-      ncycles   number of cycles
+      emax:         maximum strain
+      R:            R = emin / emax
+      erate:        strain rate to go at
+      ncycles:      number of cycles
+      T:            temperature, default 300
 
-    Optional:
-      T         temperature, default 300
-      nsteps    number of steps per half cycle
-      sdir      stress direction, defaults to x and tension first
-      hold_time if None don't hold, if scalar then hold symmetrically top/bot
-                if an array specify different hold times for first direction
-                (default tension) and second direction
-      n_hold    number of steps to hold over
-      verbose   whether to be verbose
+    Keyword Args:
+      nsteps:       number of steps per half cycle
+      sdir:         stress direction, defaults to x and tension first
+      hold_time:    if None don't hold, if scalar then hold symmetrically top/bot
+                    if an array specify different hold times for first direction
+                    (default tension) and second direction
+      n_hold:       number of steps to hold over
+      verbose:      whether to be verbose
+      check_dmg:    check to see if material damage exceeds dtol, stop the
+                    simulation when that happens
+      dtol:         damage to stop at
 
-    Results:
-      strain        strain in direction
-      stress        stress in direction
-      cycles        list of cycle numbers
-      max           maximum stress per cycle
-      min           minimum stress per cycle
-      mean          mean stress per cycle
-      
+    Returns:
+      dict:         results dictionary containing...
+
+    **Results in dictionary:**
+      ============= ========================
+      Name          Description
+      ============= ========================
+      strain:       strain in direction
+      stress:       stress in direction
+      cycles:       list of cycle numbers
+      max:          maximum stress per cycle
+      min:          minimum stress per cycle
+      mean:         mean stress per cycle
+      ============= ========================
   """
   # Setup
   driver = Driver_sd(model, verbose = verbose, T_init = T)
@@ -600,35 +602,46 @@ def strain_cyclic_followup(model, emax, R, erate, ncycles,
     verbose = False, check_dmg = False, dtol = 0.75,
     logspace = False):
   """
-    Strain controlled cyclic test.
+    Strain controlled cyclic test with follow up.
 
     This is a "fallback" to the old version that does things by index
     so that I can use the index-based hold routine with follow up
 
     Parameters:
-      emax      maximum strain
-      R         R = emin / emax
-      erate     strain rate to go at
-      ncycles   number of cycles
+      emax:      maximum strain
+      R:         R = emin / emax
+      erate:     strain rate to go at
+      ncycles:   number of cycles
 
-    Optional:
-      T         temperature, default 300
-      nsteps    number of steps per half cycle
-      sind      index to pull on
-      hold_time if None don't hold, if scalar then hold symmetrically top/bot
-                if an array specify different hold times for first direction
-                (default tension) and second direction
-      n_hold    number of steps to hold over
-      verbose   whether to be verbose
+    Keyword Args:
+      q:         follow up factor
+      T:         temperature, default 300
+      nsteps:    number of steps per half cycle
+      sind:      index to pull on
+      hold_time: if None don't hold, if scalar then hold symmetrically top/bot
+                 if an array specify different hold times for first direction
+                 (default tension) and second direction
+      n_hold:    number of steps to hold over
+      verbose:   whether to be verbose
+      check_dmg: check to see if damage exceeds a threshold
+      dtol:      damage threshold
+      logspace:  logspace the hold time steps (instead of linspace)
 
-    Results:
-      strain        strain in direction
-      stress        stress in direction
-      cycles        list of cycle numbers
-      max           maximum stress per cycle
-      min           minimum stress per cycle
-      mean          mean stress per cycle
-      
+    Returns:
+      dict:      dictionary of results...
+
+
+    **Results in dictionary**
+      ========= ========================
+      Name      Description
+      ========= ========================
+      strain    strain in direction
+      stress    stress in direction
+      cycles    list of cycle numbers
+      max       maximum stress per cycle
+      min       minimum stress per cycle
+      mean      mean stress per cycle
+      ========= ========================
   """
   # Setup
   sdir = np.zeros((6,))
@@ -777,29 +790,37 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
     Stress controlled cyclic test.
 
     Parameters:
-      smax      maximum stress
-      R         R = smin / smax
-      srate     stress rate to go at
-      ncycles   number of cycles
+      emax:         maximum stress
+      R:            R = smin / smax
+      erate:        strain rate to go at
+      ncycles:      number of cycles
 
-    Optional:
-      T         temperature, default 300
-      nsteps    number of steps per half cycle
-      sdir      stress direction, defaults to x and tension first
-      hold_time if None don't hold, if scalar then hold symmetrically top/bot
-                if an array specify different hold times for first direction
-                (default tension) and second direction
-      n_hold    number of steps to hold over
-      verbose   whether to be verbose
+    Keyword Args:
+      T:            temperature, default 300
+      nsteps:       number of steps per half cycle
+      sdir:         stress direction, defaults to x and tension first
+      hold_time:    if None don't hold, if scalar then hold symmetrically top/bot
+                    if an array specify different hold times for first direction
+                    (default tension) and second direction
+      n_hold:       number of steps to hold over
+      verbose:      whether to be verbose
+      etol:         stop if the strain increment exceeds this threshold
 
-    Results:
+    Returns:
+      dict:         dictionary of results
+
+
+    **Results in dictionary:**
+      ============= ========================
+      Name          Description
+      ============= ========================
       strain        strain in direction
       stress        stress in direction
       cycles        list of cycle numbers
       max           maximum strain per cycle
       min           minimum strain per cycle
-      mean          mean stress per cycle
-      
+      mean          mean strain per cycle
+      ============= ========================
   """
   # Setup
   driver = Driver_sd(model, verbose = verbose, T_init = T)
@@ -926,27 +947,34 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 250,
     Simulate a stress relaxation test.
 
     Parameters:
-      model         material model
-      emax          maximum strain to attain
-      erate         strain rate to take getting there
-      hold          hold time
+      model:         material model
+      emax :         maximum strain to attain
+      erate:         strain rate to take getting there
+      hold:          hold time
 
-    Optional:
-      T             temperature
-      nsteps        number of steps to relax over
-      nsteps_up     number of steps to take getting up to stress
-      index         direction to pull in, default x tension
-      tc            1.0 for tension -1.0 for compression
-      verbose       whether to be verbose
-      logspace      log space the relaxation timesteps
-      q             follow up factor
+    Keyword Args:
+      T:             temperature
+      nsteps:        number of steps to relax over
+      nsteps_up:     number of steps to take getting up to stress
+      index:         direction to pull in, default x tension
+      tc:            1.0 for tension -1.0 for compression
+      verbose:       whether to be verbose
+      logspace:      log space the relaxation timesteps
+      q:             follow up factor
 
     Results:
-      time          time
-      strain        strain
-      stress        stress
-      rtime         relaxation time
-      rrate         stress relaxation rate
+      dict:          dictionary of results
+
+    **Results in dictionary:**
+      ============== ======================
+      Name           Description
+      ============== ======================
+      time           time
+      strain         strain
+      stress         stress
+      rtime          relaxation time
+      rrate          stress relaxation rate
+      ============== ======================
   """
   # Setup
   driver = Driver_sd(model, verbose = verbose, T_init = T)
@@ -1008,21 +1036,24 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     Simulate a creep test
 
     Parameters:
-      model         material model
-      smax          stress to attain
-      srate         stress rate to take getting there
-      hold          total hold time
+      model:         material model
+      smax:          stress to attain
+      srate:         stress rate to take getting there
+      hold:          total hold time
 
-    Optional:
-      T             temperature
-      nsteps        number of steps over relaxation period
-      nsteps_up     number of steps to get to stress value
-      sdir          stress direction, defaults to x-tension
-      verbose       whether to be verbose
-      logspace      if true logspace the time steps
-      history       use damaged material
-      check_dmg     check damage as a break condition
-      dtol          damage to define failure at
+    Keyword Args:
+      T:             temperature
+      nsteps:        number of steps over relaxation period
+      nsteps_up:     number of steps to get to stress value
+      sdir:          stress direction, defaults to x-tension
+      verbose:       whether to be verbose
+      logspace:      if true logspace the time steps
+      history:       use damaged material
+      check_dmg:     check damage as a break condition
+      dtol:          damage to define failure at
+
+    Returns:
+      dict:          results dictionary
   """
   # Setup
   driver = Driver_sd(model, verbose = verbose, T_init = T)
@@ -1097,18 +1128,22 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
 def thermomechanical_strain_raw(model, time, temperature, strain, 
     sdir = np.array([1,0,0,0,0,0.0]), verbose = False, substep = 1):
   """
-    Directly drive a model using the output of a strain controlled thermomechanical test
+    Directly drive a model using the output of a strain controlled 
+    thermomechanical test
 
     Parameters:
-      model         material model
-      time          list of times
-      temperature   list of temperatures
-      strain        list of strains
+      model:         material model
+      time:          list of times
+      temperature:   list of temperatures
+      strain:        list of strains
 
-    Optional:
-      sdir          direction of stress
-      verbose       print information
-      substep       take substep steps per data point
+    Keyword Args:
+      sdir:          direction of stress
+      verbose:       print information
+      substep:       take substep steps per data point
+
+    Returns:
+      dict:          results dictionary
   """
   stress = np.zeros((len(time),))
   mechstrain = np.zeros((len(time),))
@@ -1144,7 +1179,6 @@ def thermomechanical_strain_raw(model, time, temperature, strain,
     stress[i] = np.dot(driver.stress_int[-1], sdir)
     mechstrain[i] = np.dot(driver.thermal_strain_int[-1], sdir)
 
-
   return {'time': np.copy(time)[:i], 'temperature': np.copy(temperature)[:i], 'strain': np.copy(strain)[:i],
       'stress': np.copy(stress)[:i], 'mechanical strain': np.copy(mechstrain)[:i]}
 
@@ -1155,21 +1189,20 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
     Model a uniaxial strain rate jump test
 
     Parameters:
-      model         material model
-      erate         list of strain rates
-    
-    Optional:
-      T             temperature, default 300.0
-      e_per         how much straining to do for each rate
-      nsteps_per    number of steps per strain rate
-      sdir          stress direction, default tension in x
-      verbose       whether to be verbose
-      history       prior model history
-      strains       manual definition of jumps
+      model:         material model
+      erate:         list of strain rates
 
-    Results:
-      strain    strain in direction
-      stress    stress in direction
+    Keyword Args:
+      T:             temperature, default 300.0
+      e_per:         how much straining to do for each rate
+      nsteps_per:    number of steps per strain rate
+      sdir:          stress direction, default tension in x
+      verbose:       whether to be verbose
+      history:       prior model history
+      strains:       manual definition of jumps
+
+    Returns:
+      dict:          results dictionary
   """
   e_inc = e_per / nsteps_per
   driver = Driver_sd(model, verbose = verbose, T_init = T)
@@ -1206,25 +1239,29 @@ def rate_jump_test(model, erates, T = 300.0, e_per = 0.01, nsteps_per = 100,
 
 def isochronous_curve(model, time, T = 300.0, emax = 0.05, srate = 1.0,
     ds = 10.0, max_cut = 4, nsteps = 250, history = None,
-    check_dmg = False):
+    check_dmg = False, dtol = 0.75):
   """
     Generates an isochronous stress-strain curve at the given time and
     temperature.
 
     Parameters:
-      model     material model
-      time      relevant time
+      model:     material model
+      time:      relevant time
 
-    Optional:
-      T         temperature
-      emax      maximum strain to attain on the curves
-      srate     stress rate to use in the ramp part
-      ds        stress increment along the curve
-      max_cut   adaptive refinement
+    Keyword Args:
+      T:         temperature
+      emax:      maximum strain to attain on the curves
+      srate:     stress rate to use in the ramp part
+      ds:        stress increment along the curve
+      max_cut:   adaptive refinement
+      nsteps:    number of creep steps
+      history:   start with a non-zero initial history
+      check_dmg: stop if damage exceeds a threshold
+      dtol:      damage threshold
   """
   def strain(stress):
     res = creep(model, stress, srate, time, T = T, nsteps = nsteps,
-        history = history, check_dmg = check_dmg)
+        history = history, check_dmg = check_dmg, dtol = dtol)
     return res['tstrain'][-1], res['failed']
 
   strains = [0.0]
@@ -1267,11 +1304,9 @@ def offset_stress(e, s, eo = 0.2/100.0):
     Helper function to generate yield stress from offset stress/strain data
     
     Parameters:
-      e     strain data
-      s     stress data
-
-    Optional:
-      eo    strain offset
+      e:     strain data
+      s:     stress data
+      eo:    strain offset
   """
   iff = inter.interp1d(e, s)
   E = s[1] / e[1]
@@ -1280,3 +1315,27 @@ def offset_stress(e, s, eo = 0.2/100.0):
   soff = iff(eoff)
 
   return soff
+
+def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
+  """
+    Classify a model as elastic, elastic shakedown, plastic shakedown,
+    or ratcheting.
+    
+    Parameters:
+      ua:    cycle a internal energy
+      ub:    cycle b internal energy
+      pa:    cycle a plastic dissipation
+      pb:    cycle b plastic dissipation
+      ea:    cycle a strain
+      eb:    cycle b strain
+      rtol:  relative tolerance
+      atol:  absolute tolerance
+  """
+  if np.abs(pb) < atol:
+    return 'elastic'
+  elif np.abs(ub-ua) < rtol * np.abs(ub):
+    return 'elastic shakedown'
+  elif (np.abs(e1b-e1a) < rtol * np.abs(e1b)) and (np.abs(e2b-e2a) < rtol * np.abs(e2b)):
+    return 'plastic shakedown'
+  else:
+    return 'ratcheting'

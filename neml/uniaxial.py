@@ -7,16 +7,19 @@ class UniaxialModel(object):
   """
     Takes a NEML model as input and performs the necessary calculations
     to give it a uniaxial response.
-
-    Parameters:
-      nemlmodel:       the underlying 3D NEML model
-      verbose:         verbosity flag
-      rtol:            newton relative tolerance
-      atol:            newton absolute tolerance
-      miter:           newton max iterations
   """
   def __init__(self, nemlmodel, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
       miter = 20):
+    """
+      Parameters:
+        nemlmodel:       the underlying 3D NEML model
+
+      Keyword Args:
+        verbose:         verbosity flag
+        rtol:            newton relative tolerance
+        atol:            newton absolute tolerance
+        miter:           newton max iterations
+    """
     self.model = nemlmodel
     self.verbose = verbose
     self.rtol = rtol
