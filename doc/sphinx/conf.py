@@ -13,9 +13,17 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import subprocess
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.join(os.path.abspath('.'), '../..'))
+
+# -- readthedocs.io doxygen build --------------------------------------------
+rtdb = os.environ.get('READTHEDOCS', NONE) == 'TRUE'
+
+if rtdb:
+  subprocess.call('cd ../doxygen; doxygen', shell = True)
+
 
 # -- Project information -----------------------------------------------------
 
@@ -24,9 +32,9 @@ copyright = u'2018, UChicago Argonne, LLC'
 author = u'Argonne National Laboratory'
 
 # The short X.Y version
-version = u'1.0'
+version = u'1.0.0'
 # The full version, including alpha/beta/rc tags
-release = u'1.0'
+release = u'1.0.0'
 
 
 # -- General configuration ---------------------------------------------------

@@ -35,7 +35,7 @@ Documentation and tutorials are available here.
 ## License
 
 The library is provided under an MIT license found in the
-[LICENSE](LICENSE.md) file.
+[LICENSE](LICENSE) file.
 The NEML distribution contains a copy of
 the [pybind11](https://github.com/pybind/pybind11) header library, which
 has its own license contained in the pybind11 subdirectory.
