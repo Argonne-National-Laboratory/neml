@@ -7,19 +7,16 @@ class UniaxialModel(object):
   """
     Takes a NEML model as input and performs the necessary calculations
     to give it a uniaxial response.
+
+    Parameters:
+      nemlmodel:       the underlying 3D NEML model
+      verbose:         verbosity flag
+      rtol:            newton relative tolerance
+      atol:            newton absolute tolerance
+      miter:           newton max iterations
   """
   def __init__(self, nemlmodel, verbose = False, rtol = 1.0e-6, atol = 1.0e-10,
       miter = 20):
-    """
-      Parameters:
-        nemlmodel       the underlying 3D NEML model
-
-      Optional:
-        verbose         print lots of stuff
-        rtol            newton relative tolerance
-        atol            newton absolute tolerance
-        miter           newton max iterations
-    """
     self.model = nemlmodel
     self.verbose = verbose
     self.rtol = rtol
@@ -70,19 +67,19 @@ class UniaxialModel(object):
 
   def update(self, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n):
     """
-      Material update function:
+      Material update function
       
       Parameters:
-        e_np1       next strain
-        e_n         previous strain
-        T_np1       next temperature
-        T_n         previous temperature
-        t_np1       next time
-        t_n         previous time
-        s_n         previous stress
-        h_n         previous history
-        u_n         previous energy
-        p_n         previous dissipation
+        e_np1:       next strain
+        e_n:         previous strain
+        T_np1:       next temperature
+        T_n:         previous temperature
+        t_np1:       next time
+        t_n:         previous time
+        s_n:         previous stress
+        h_n:         previous history
+        u_n:         previous energy
+        p_n:         previous dissipation
     """
     e_n_vec = self.es2ev(e_n, h_n)
     s_n_vec = self.ss2sv(s_n)
@@ -119,6 +116,9 @@ class UniaxialModel(object):
   def ss2sv(self, s):
     """
       Helper to convert scalar stress into stress vector
+
+      Parameters:
+        s:       scalar stress
     """
     vec = np.zeros((6,))
     vec[0] = s
@@ -127,6 +127,10 @@ class UniaxialModel(object):
   def es2ev(self, e, h):
     """
       Helper to convert scalar strains into strain vectors
+
+      Parameters:
+        e:       scalar strain
+        h:       history (stores other 5 strain components)
     """
     vec = np.zeros((6,))
     vec[0] = e

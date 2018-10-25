@@ -47,3 +47,4 @@ Class documentation
 
 .. automodule:: neml.uniaxial
    :members:
+   :show-inheritance:
