@@ -11,6 +11,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(hardening, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Various hardening rules.";
 
   py::class_<HardeningRule, NEMLObject, std::shared_ptr<HardeningRule>>(m, "HardeningRule")

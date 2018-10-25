@@ -11,6 +11,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(ri_flow, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Rate independent flow models.";
   
   py::class_<RateIndependentFlowRule, NEMLObject, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")

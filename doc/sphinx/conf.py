@@ -15,18 +15,18 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
-
+sys.path.insert(0, os.path.join(os.path.abspath('.'), '../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = u'neml'
-copyright = u'2018, Argonne National Laboratory'
+project = u'NEML'
+copyright = u'2018, UChicago Argonne, LLC'
 author = u'Argonne National Laboratory'
 
 # The short X.Y version
-version = u''
+version = u'1.0'
 # The full version, including alpha/beta/rc tags
-release = u'0.1'
+release = u'1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,7 +40,9 @@ release = u'0.1'
 # ones.
 extensions = [
     'sphinx.ext.imgmath',
-    'breathe'
+    'breathe',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.naploeon'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -130,7 +132,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'neml.tex', u'neml Documentation',
+    (master_doc, 'neml.tex', u'NEML Documentation',
      u'Argonne National Laboratory', 'manual'),
 ]
 
@@ -140,7 +142,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'neml', u'neml Documentation',
+    (master_doc, 'neml', u'NEML Documentation',
      [author], 1)
 ]
 
@@ -151,8 +153,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'neml', u'neml Documentation',
-     author, 'neml', 'One line description of project.',
+    (master_doc, 'neml', u'NEML Documentation',
+     author, 'NEML', 'One line description of project.',
      'Miscellaneous'),
 ]
 

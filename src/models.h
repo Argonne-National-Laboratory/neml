@@ -1,12 +1,12 @@
 #ifndef MODELS_H
 #define MODELS_H
 
+#include "solvers.h"
 #include "objects.h"
 #include "elasticity.h"
 #include "ri_flow.h"
 #include "visco_flow.h"
 #include "general_flow.h"
-#include "solvers.h"
 #include "interpolate.h"
 #include "creep.h"
 

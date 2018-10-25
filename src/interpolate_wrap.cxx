@@ -11,6 +11,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(interpolate, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Interpolation schemes used to define model parameters.";
   
   py::class_<Interpolate, NEMLObject, std::shared_ptr<Interpolate>>(m, "Interpolate")

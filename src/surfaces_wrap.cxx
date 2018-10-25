@@ -9,6 +9,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(surfaces, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Yield (and flow) surface definitions.";
 
   py::class_<YieldSurface, NEMLObject, std::shared_ptr<YieldSurface>>(m, "YieldSurface")

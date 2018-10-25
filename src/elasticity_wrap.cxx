@@ -11,6 +11,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(elasticity, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Elastic models.";
 
   py::class_<LinearElasticModel, NEMLObject, std::shared_ptr<LinearElasticModel>>(m, "LinearElasticModel")

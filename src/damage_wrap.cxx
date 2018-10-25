@@ -11,6 +11,9 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(damage, m) {
+  py::module::import("neml.objects");
+  py::module::import("neml.solvers");
+
   m.doc() = "NEML damage models.";
 
   py::class_<NEMLDamagedModel_sd, NEMLModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd")

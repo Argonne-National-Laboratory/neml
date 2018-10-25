@@ -11,6 +11,9 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(creep, m) {
+  py::module::import("neml.objects");
+  py::module::import("neml.solvers");
+
   m.doc() = "Separate creep models to combine with base NEML models";
 
   py::class_<CreepModelTrialState, TrialState>(m, "CreepModelTrialState")

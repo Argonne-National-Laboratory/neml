@@ -10,6 +10,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 PYBIND11_MODULE(general_flow, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "General flow models where subclass functions define everything.";
 
   py::class_<GeneralFlowRule, NEMLObject, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
