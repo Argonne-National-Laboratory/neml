@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.join(os.path.abspath('.'), '../..'))
 # -- readthedocs.io doxygen build --------------------------------------------
 rtdb = os.environ.get('READTHEDOCS', None) == 'TRUE'
 
+print(rtdb)
+
 if rtdb:
   subprocess.call('cd ../doxygen; doxygen', shell = True)
 
