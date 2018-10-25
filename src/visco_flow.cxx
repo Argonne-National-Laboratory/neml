@@ -108,37 +108,45 @@ int ViscoPlasticFlowRule::dh_da_temp(const double * const s,
 }
 
 // Various g(s) implementations
-GPowerLaw::GPowerLaw(double n) :
-    n_(new ConstantInterpolate(n))
+GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n, 
+                     std::shared_ptr<Interpolate> eta) :
+    n_(n), eta_(eta)
 {
 
 }
 
-GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n) :
-    n_(n)
+std::string GPowerLaw::type()
 {
-
+  return "GPowerLaw";
 }
 
+ParameterSet GPowerLaw::parameters()
+{
+  ParameterSet pset(GPowerLaw::type());
+
+  pset.add_parameter<NEMLObject>("n");
+  pset.add_parameter<NEMLObject>("eta");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> GPowerLaw::initialize(ParameterSet & params)
+{
+  return make_unique<GPowerLaw>(
+      params.get_object_parameter<Interpolate>("n"),
+      params.get_object_parameter<Interpolate>("eta")
+      ); 
+}
 
 double GPowerLaw::g(double f, double T) const
 {
-  if (f > 0.0) {
-    return pow(f, n_->value(T));
-  }
-  else {
-    return 0.0;
-  }
+  return pow(f / eta_->value(T), n_->value(T));
 }
 
 double GPowerLaw::dg(double f, double T) const
 {
-  if (f > 0.0) {
-    return n_->value(T) * pow(f, n_->value(T) - 1.0);
-  }
-  else {
-    return 0.0;
-  }
+  return n_->value(T) * pow(f / eta_->value(T), n_->value(T) - 1.0) / 
+      eta_->value(T);
 }
 
 double GPowerLaw::n(double T) const
@@ -146,23 +154,42 @@ double GPowerLaw::n(double T) const
   return n_->value(T);
 }
 
-PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
-                std::shared_ptr<HardeningRule> hardening,
-                std::shared_ptr<GFlow> g,
-                double eta) :
-    surface_(surface), hardening_(hardening), g_(g), 
-    eta_(new ConstantInterpolate(eta))
+double GPowerLaw::eta(double T) const
 {
-  
+  return eta_->value(T);
 }
 
 PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
                 std::shared_ptr<HardeningRule> hardening,
-                std::shared_ptr<GFlow> g,
-                std::shared_ptr<Interpolate> eta) :
-    surface_(surface), hardening_(hardening), g_(g), eta_(eta)
+                std::shared_ptr<GFlow> g) :
+    surface_(surface), hardening_(hardening), g_(g)
 {
   
+}
+
+std::string PerzynaFlowRule::type()
+{
+  return "PerzynaFlowRule";
+}
+
+ParameterSet PerzynaFlowRule::parameters()
+{
+  ParameterSet pset(PerzynaFlowRule::type());
+
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("hardening");
+  pset.add_parameter<NEMLObject>("g");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
+{
+  return make_unique<PerzynaFlowRule>(
+      params.get_object_parameter<YieldSurface>("surface"),
+      params.get_object_parameter<HardeningRule>("hardening"),
+      params.get_object_parameter<GFlow>("g")
+      ); 
 }
 
 size_t PerzynaFlowRule::nhist() const
@@ -182,16 +209,17 @@ int PerzynaFlowRule::init_hist(double * const h) const
 int PerzynaFlowRule::y(const double* const s, const double* const alpha, double T,
               double & yv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   double fv;
-  surface_->f(s, q, T, fv);
+  ier = surface_->f(s, q, T, fv);
+  if (ier != SUCCESS) return ier;
 
-  double gv = g_->g(fv, T);
-  
-  if (gv > 0.0) {
-    yv = gv / eta_->value(T);
+  if (fv > 0.0) {
+    yv = g_->g(fabs(fv), T);
   }
   else {
     yv = 0.0;
@@ -203,21 +231,23 @@ int PerzynaFlowRule::y(const double* const s, const double* const alpha, double 
 int PerzynaFlowRule::dy_ds(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   double fv;
-  surface_->f(s, q, T, fv);
-
-  double gv = g_->g(fv, T);
+  ier = surface_->f(s, q, T, fv);
+  if (ier != SUCCESS) return ier;
 
   std::fill(dyv, dyv + 6, 0.0);
 
-  if (gv > 0.0) {
-    double dgv = g_->dg(fv, T);
-    surface_->df_ds(s, q, T, dyv);
+  if (fv > 0.0) {
+    double dgv = g_->dg(fabs(fv), T);
+    int ier = surface_->df_ds(s, q, T, dyv);
+    if (ier != SUCCESS) return ier;
     for (int i=0; i<6; i++) {
-      dyv[i] *= dgv / eta_->value(T);
+      dyv[i] *= dgv;
     }
   }
   
@@ -227,29 +257,35 @@ int PerzynaFlowRule::dy_ds(const double* const s, const double* const alpha, dou
 int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   double fv;
-  surface_->f(s, q, T, fv);
+  ier = surface_->f(s, q, T, fv);
+  if (ier != SUCCESS) return ier;
 
-  double gv = g_->g(fv, T);
-  
   std::fill(dyv, dyv + nhist(), 0.0);
 
-  if (gv > 0.0) {
-    double dgv = g_->dg(fv, T);
+  if (fv > 0.0) {
+    double dgv = g_->dg(fabs(fv), T);
+    
+    std::vector<double> jacv(nhist()*nhist());
+    double * jac = &jacv[0];
+    ier = hardening_->dq_da(alpha, T, jac);
+    if (ier != SUCCESS) return ier;
+    
+    std::vector<double> rdv(nhist());
+    double * rd = &rdv[0];
+    ier = surface_->df_dq(s, q, T, rd);
+    if (ier != SUCCESS) return ier;
 
-    double jac[nhist()*nhist()];
-    hardening_->dq_da(alpha, T, jac);
+    ier = mat_vec_trans(jac, nhist(), rd, nhist(), dyv);
+    if (ier != SUCCESS) return ier;
 
-    double rd[nhist()];
-    surface_->df_dq(s, q, T, rd);
-
-    mat_vec_trans(jac, nhist(), rd, nhist(), dyv);
-
-    for (int i=0; i<nhist(); i++) {
-      dyv[i] *= dgv / eta_->value(T);
+    for (size_t i=0; i<nhist(); i++) {
+      dyv[i] *= dgv;
     }
   }
 
@@ -261,8 +297,10 @@ int PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, dou
 int PerzynaFlowRule::g(const double * const s, const double * const alpha, double T,
               double * const gv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   return surface_->df_ds(s, q, T, gv);
 }
@@ -270,8 +308,10 @@ int PerzynaFlowRule::g(const double * const s, const double * const alpha, doubl
 int PerzynaFlowRule::dg_ds(const double * const s, const double * const alpha, double T,
               double * const dgv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   return surface_->df_dsds(s, q, T, dgv);
 }
@@ -279,26 +319,32 @@ int PerzynaFlowRule::dg_ds(const double * const s, const double * const alpha, d
 int PerzynaFlowRule::dg_da(const double * const s, const double * const alpha, double T,
              double * const dgv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
+  
+  std::vector<double> jacv(nhist() * nhist());
+  double * jac = &jacv[0];
+  ier = hardening_->dq_da(alpha, T, jac);
+  if (ier != SUCCESS) return ier;
+  
+  std::vector<double> ddv(6*nhist());
+  double * dd = &ddv[0];
+  ier = surface_->df_dsdq(s, q, T, dd);
+  if (ier != SUCCESS) return ier;
 
-  double jac[nhist()*nhist()];
-  hardening_->dq_da(alpha, T, jac);
-
-  double dd[6*nhist()];
-  surface_->df_dsdq(s, q, T, dd);
-
-  mat_mat(6, nhist(), nhist(), dd, jac, dgv);
-
-  return 0;
+  return mat_mat(6, nhist(), nhist(), dd, jac, dgv);
 }
 
 // Hardening rule
 int PerzynaFlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   return surface_->df_dq(s, q, T, hv);
 }
@@ -306,8 +352,10 @@ int PerzynaFlowRule::h(const double * const s, const double * const alpha, doubl
 int PerzynaFlowRule::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   return surface_->df_dqds(s, q, T, dhv);
 }
@@ -315,37 +363,52 @@ int PerzynaFlowRule::dh_ds(const double * const s, const double * const alpha, d
 int PerzynaFlowRule::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  double q[nhist()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(nhist());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
+  
+  std::vector<double> jacv(nhist() * nhist());
+  double * jac = &jacv[0];
+  ier = hardening_->dq_da(alpha, T, jac);
+  if (ier != SUCCESS) return ier;
+  
+  std::vector<double> ddv(nhist() * nhist());
+  double * dd = &ddv[0];
+  ier = surface_->df_dqdq(s, q, T, dd);
+  if (ier != SUCCESS) return ier;
 
-  double jac[nhist()*nhist()];
-  hardening_->dq_da(alpha, T, jac);
-
-  double dd[nhist()*nhist()];
-  surface_->df_dqdq(s, q, T, dd);
-
-  mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
-
-  return 0;
-}
-
-double PerzynaFlowRule::eta(double T) const
-{
-  return eta_->value(T);
+  return mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
 }
 
 // Begin Chaboche
-ConstantFluidity::ConstantFluidity(double eta) :
-    eta_(new ConstantInterpolate(eta))
-{
-
-}
-
 ConstantFluidity::ConstantFluidity(std::shared_ptr<Interpolate> eta) :
     eta_(eta)
 {
 
 }
+
+std::string ConstantFluidity::type()
+{
+  return "ConstantFluidity";
+}
+
+ParameterSet ConstantFluidity::parameters()
+{
+  ParameterSet pset(ConstantFluidity::type());
+
+  pset.add_parameter<NEMLObject>("eta");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ConstantFluidity::initialize(ParameterSet & params)
+{
+  return make_unique<ConstantFluidity>(
+      params.get_object_parameter<Interpolate>("eta")
+      ); 
+}
+
 
 double ConstantFluidity::eta(double a, double T) const
 {
@@ -357,14 +420,6 @@ double ConstantFluidity::deta(double a, double T) const
   return 0.0;
 }
 
-SaturatingFluidity::SaturatingFluidity(double K0, double A, double b)
-  : K0_(new ConstantInterpolate(K0)),
-    A_(new ConstantInterpolate(A)),
-    b_(new ConstantInterpolate(b))
-{
-
-}
-
 SaturatingFluidity::SaturatingFluidity(std::shared_ptr<Interpolate> K0,
                    std::shared_ptr<Interpolate> A,
                    std::shared_ptr<Interpolate> b)
@@ -372,6 +427,32 @@ SaturatingFluidity::SaturatingFluidity(std::shared_ptr<Interpolate> K0,
 {
 
 }
+
+std::string SaturatingFluidity::type()
+{
+  return "SaturatingFluidity";
+}
+
+ParameterSet SaturatingFluidity::parameters()
+{
+  ParameterSet pset(SaturatingFluidity::type());
+
+  pset.add_parameter<NEMLObject>("K0");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("b");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> SaturatingFluidity::initialize(ParameterSet & params)
+{
+  return make_unique<SaturatingFluidity>(
+      params.get_object_parameter<Interpolate>("K0"),
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("b")
+      ); 
+}
+
 
 double SaturatingFluidity::eta(double a, double T) const
 {
@@ -393,21 +474,38 @@ double SaturatingFluidity::deta(double a, double T) const
 ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                                    std::shared_ptr<NonAssociativeHardening> hardening,
                                    std::shared_ptr<FluidityModel> fluidity,
-                                   double n) :
-    surface_(surface), hardening_(hardening), fluidity_(fluidity), 
-    n_(new ConstantInterpolate(n)), recovery_(false)
-{
-  
-}
-
-ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
-                                   std::shared_ptr<NonAssociativeHardening> hardening,
-                                   std::shared_ptr<FluidityModel> fluidity,
                                    std::shared_ptr<Interpolate> n) :
     surface_(surface), hardening_(hardening), fluidity_(fluidity), n_(n),
     recovery_(false)
 {
   
+}
+
+std::string ChabocheFlowRule::type()
+{
+  return "ChabocheFlowRule";
+}
+
+ParameterSet ChabocheFlowRule::parameters()
+{
+  ParameterSet pset(ChabocheFlowRule::type());
+
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("hardening");
+  pset.add_parameter<NEMLObject>("fluidity");
+  pset.add_parameter<NEMLObject>("n");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params)
+{
+  return make_unique<ChabocheFlowRule>(
+      params.get_object_parameter<YieldSurface>("surface"),
+      params.get_object_parameter<NonAssociativeHardening>("hardening"),
+      params.get_object_parameter<FluidityModel>("fluidity"),
+      params.get_object_parameter<Interpolate>("n")
+      ); 
 }
 
 size_t ChabocheFlowRule::nhist() const
@@ -427,11 +525,14 @@ int ChabocheFlowRule::init_hist(double * const h) const
 int ChabocheFlowRule::y(const double* const s, const double* const alpha, double T,
               double & yv) const
 {
-  double q[hardening_->ninter()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(hardening_->ninter());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
   
   double fv;
-  surface_->f(s, q, T, fv);
+  ier = surface_->f(s, q, T, fv);
+  if (ier != SUCCESS) return ier;
 
   if (fv > 0.0) {
     double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
@@ -447,16 +548,20 @@ int ChabocheFlowRule::y(const double* const s, const double* const alpha, double
 int ChabocheFlowRule::dy_ds(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
-  double q[hardening_->ninter()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(hardening_->ninter());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
  
   double fv;
-  surface_->f(s, q, T, fv);
+  ier = surface_->f(s, q, T, fv);
+  if (ier != SUCCESS) return ier;
   
   std::fill(dyv, dyv+6, 0.0);
 
   if (fv > 0.0) {
-    surface_->df_ds(s, q, T, dyv);
+    ier = surface_->df_ds(s, q, T, dyv);
+    if (ier != SUCCESS) return ier;
     double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
     double mv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / eta;
     for (int i=0; i<6; i++) dyv[i] *= mv;
@@ -468,26 +573,34 @@ int ChabocheFlowRule::dy_ds(const double* const s, const double* const alpha, do
 int ChabocheFlowRule::dy_da(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
-  double q[hardening_->ninter()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(hardening_->ninter());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   double fv;
-  surface_->f(s, q, T, fv);
+  ier = surface_->f(s, q, T, fv);
+  if (ier != SUCCESS) return ier;
 
   std::fill(dyv, dyv + nhist(), 0.0);
 
   if (fv > 0.0) {
-    double jac[(hardening_->ninter())*nhist()];
-    hardening_->dq_da(alpha, T, jac);
+    std::vector<double> jacv(hardening_->ninter() * nhist());
+    double * jac = &jacv[0];
+    ier = hardening_->dq_da(alpha, T, jac);
+    if (ier != SUCCESS) return ier;
+    
+    std::vector<double> dqv(hardening_->ninter());
+    double * dq = &dqv[0];
+    ier = surface_->df_dq(s, q, T, dq);
+    if (ier != SUCCESS) return ier;
 
-    double dq[hardening_->ninter()];
-    surface_->df_dq(s, q, T, dq);
-
-    mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dyv);
+    ier = mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dyv);
+    if (ier != SUCCESS) return ier;
 
     double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
     double mv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / eta;
-    for (int i=0; i<nhist(); i++) dyv[i] *= mv;
+    for (size_t i=0; i<nhist(); i++) dyv[i] *= mv;
 
     double mv2 = -sqrt(3.0/2.0) * fv * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / (eta * eta);
     double deta = sqrt(2.0/3.0) * fluidity_->deta(alpha[0], T);
@@ -502,8 +615,10 @@ int ChabocheFlowRule::dy_da(const double* const s, const double* const alpha, do
 int ChabocheFlowRule::g(const double * const s, const double * const alpha, double T,
               double * const gv) const
 {
-  double q[hardening_->ninter()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(hardening_->ninter());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   return surface_->df_ds(s, q, T, gv);
 }
@@ -511,8 +626,10 @@ int ChabocheFlowRule::g(const double * const s, const double * const alpha, doub
 int ChabocheFlowRule::dg_ds(const double * const s, const double * const alpha, double T,
               double * const dgv) const
 {
-  double q[hardening_->ninter()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(hardening_->ninter());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
 
   return surface_->df_dsds(s, q, T, dgv);
 }
@@ -520,18 +637,22 @@ int ChabocheFlowRule::dg_ds(const double * const s, const double * const alpha, 
 int ChabocheFlowRule::dg_da(const double * const s, const double * const alpha, double T,
              double * const dgv) const
 {
-  double q[hardening_->ninter()];
-  hardening_->q(alpha, T, q);
+  std::vector<double> qv(hardening_->ninter());
+  double * q = &qv[0];
+  int ier = hardening_->q(alpha, T, q);
+  if (ier != SUCCESS) return ier;
+  
+  std::vector<double> jacv(hardening_->ninter() * nhist());
+  double * jac = &jacv[0];
+  ier = hardening_->dq_da(alpha, T, jac);
+  if (ier != SUCCESS) return ier;
+  
+  std::vector<double> ddv(6 * hardening_->ninter());
+  double * dd = &ddv[0];
+  ier = surface_->df_dsdq(s, q, T, dd);
+  if (ier != SUCCESS) return ier;
 
-  double jac[(hardening_->ninter())*nhist()];
-  hardening_->dq_da(alpha, T, jac);
-
-  double dd[6*hardening_->ninter()];
-  surface_->df_dsdq(s, q, T, dd);
-
-  mat_mat(6, nhist(), hardening_->ninter(), dd, jac, dgv);
-
-  return 0;
+  return mat_mat(6, nhist(), hardening_->ninter(), dd, jac, dgv);
 }
 
 // Hardening rule
@@ -595,6 +716,24 @@ YaguchiGr91FlowRule::YaguchiGr91FlowRule()
 {
 
 }
+
+std::string YaguchiGr91FlowRule::type()
+{
+  return "YaguchiGr91FlowRule";
+}
+
+ParameterSet YaguchiGr91FlowRule::parameters()
+{
+  ParameterSet pset(YaguchiGr91FlowRule::type());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> YaguchiGr91FlowRule::initialize(ParameterSet & params)
+{
+  return make_unique<YaguchiGr91FlowRule>(); 
+}
+
 
 size_t YaguchiGr91FlowRule::nhist() const
 {
@@ -952,7 +1091,8 @@ int YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alph
   std::fill(dhv, dhv+(nh*nh), 0.0);
 
   // Generic X terms
-  double deriv[6*nh];
+  std::vector<double> derivv(6*nh);
+  double * deriv = &derivv[0];
   dg_da(s, alpha, T, deriv);
   double C1i = C1(T);
   double a1i = a10(T) - alpha[12];

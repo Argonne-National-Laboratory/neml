@@ -1,23 +1,22 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "damage.h"
-#include "neml.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
-#include "pybind11/stl.h"
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
 PYBIND11_MODULE(damage, m) {
+  py::module::import("neml.objects");
+  py::module::import("neml.solvers");
+
   m.doc() = "NEML damage models.";
 
-  py::class_<NEMLDamagedModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd", py::base<NEMLModel_sd>())
+  py::class_<NEMLDamagedModel_sd, NEMLModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd")
       .def_property_readonly("ndamage", &NEMLDamagedModel_sd::ndamage, "Number of damage variables.")
       .def("init_damage",
            [](NEMLDamagedModel_sd & m) -> py::array_t<double>
@@ -29,10 +28,10 @@ PYBIND11_MODULE(damage, m) {
            }, "Initialize damage variables.")
       ;
 
-  py::class_<SDTrialState>(m, "SDTrialState", py::base<TrialState>())
+  py::class_<SDTrialState, TrialState>(m, "SDTrialState")
       ;
 
-  py::class_<NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd", py::base<NEMLDamagedModel_sd>())
+  py::class_<NEMLScalarDamagedModel_sd, NEMLDamagedModel_sd, Solvable, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd")
       .def("damage",
            [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> double
            {
@@ -77,29 +76,6 @@ PYBIND11_MODULE(damage, m) {
             py_error(ier);
             return ddamage;
            }, "The derivative of the damage evolution equation wrt. stress.") 
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &NEMLScalarDamagedModel_sd::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](NEMLScalarDamagedModel_sd & m, SDTrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> x, SDTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      // End remove block
       .def("make_trial_state",
            [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::unique_ptr<SDTrialState>
            {
@@ -116,73 +92,28 @@ PYBIND11_MODULE(damage, m) {
            }, "Make a trial state, mostly for testing.")
       ;
 
-  py::class_<CombinedDamageModel_sd, std::shared_ptr<CombinedDamageModel_sd>>(m, "CombinedDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>>,
-           std::shared_ptr<NEMLModel_sd>,
-           std::shared_ptr<Interpolate>, double, int, bool>(),
-            py::arg("elastic"),
-            py::arg("models"),
-            py::arg("base"), py::arg("alpha") = nullptr, 
-            py::arg("tol") = 1.0e-8, py::arg("miter") = 50,
-            py::arg("verbose") = false)
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>>,
-           std::shared_ptr<NEMLModel_sd>,
-           double, double, int, bool>(),
-            py::arg("elastic"),
-            py::arg("models"),
-            py::arg("base"), py::arg("alpha") = 0.0, 
-            py::arg("tol") = 1.0e-8, py::arg("miter") = 50,
-            py::arg("verbose") = false)
+  py::class_<CombinedDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<CombinedDamageModel_sd>>(m, "CombinedDamageModel_sd")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<CombinedDamageModel_sd>(args, kwargs,
+                                                              {"elastic",
+                                                              "models",
+                                                              "base"});
+        }))
       ;
 
-  py::class_<ClassicalCreepDamageModel_sd, std::shared_ptr<ClassicalCreepDamageModel_sd>>(m, "ClassicalCreepDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
-           std::shared_ptr<Interpolate>, std::shared_ptr<NEMLModel_sd>,
-           std::shared_ptr<Interpolate>, double, int, bool>(),
-            py::arg("elastic"),
-            py::arg("A"), py::arg("xi"), py::arg("phi"),
-            py::arg("base"), py::arg("alpha") = nullptr, 
-            py::arg("tol") = 1.0e-8, py::arg("miter") = 50,
-            py::arg("verbose") = false)
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           double, double,
-           double, std::shared_ptr<NEMLModel_sd>,
-           double, double, int, bool>(),
-            py::arg("elastic"),
-            py::arg("A"), py::arg("xi"), py::arg("phi"),
-            py::arg("base"), py::arg("alpha") = 0.0, 
-            py::arg("tol") = 1.0e-8, py::arg("miter") = 50,
-            py::arg("verbose") = false)
+  py::class_<ClassicalCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ClassicalCreepDamageModel_sd>>(m, "ClassicalCreepDamageModel_sd")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ClassicalCreepDamageModel_sd>(args, kwargs,
+                                                                    {"elastic",
+                                                                    "A", "xi",
+                                                                    "phi", 
+                                                                    "base"});
+        }))
       ;
 
-  py::class_<MarkFatigueDamageModel_sd, std::shared_ptr<MarkFatigueDamageModel_sd>>(m, "MarkFatigueDamageModel_sd", py::base<NEMLScalarDamagedModel_sd>())
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
-           std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
-           std::shared_ptr<Interpolate>,
-           std::shared_ptr<NEMLModel_sd>, std::shared_ptr<Interpolate>, double, int, bool>(),
-            py::arg("elastic"), py::arg("C"), py::arg("m"), py::arg("n"), py::arg("falpha"), py::arg("fbeta"), py::arg("rate0"),
-            py::arg("base"), py::arg("alpha") = nullptr, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-            py::arg("verbose") = false)
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           double, double, double,
-           double, double, double,
-           std::shared_ptr<NEMLModel_sd>, double, double, int, bool>(),
-            py::arg("elastic"), py::arg("C"), py::arg("m"), py::arg("n"), py::arg("falpha"), py::arg("fbeta"), py::arg("rate0"),
-            py::arg("base"), py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-            py::arg("verbose") = false)
-      ;
-
-  py::class_<NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd", py::base<NEMLScalarDamagedModel_sd>())
+  py::class_<NEMLStandardScalarDamagedModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd")
       .def("f",
            [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
            {
@@ -213,42 +144,22 @@ PYBIND11_MODULE(damage, m) {
 
       ;
 
-  py::class_<NEMLPowerLawDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd", py::base<NEMLStandardScalarDamagedModel_sd>())
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
-           std::shared_ptr<NEMLModel_sd>,
-           std::shared_ptr<Interpolate>, double, int, bool>(),
-            py::arg("elastic"), py::arg("A"), py::arg("a"), py::arg("base"),
-            py::arg("alpha") = nullptr, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-            py::arg("verbose") = false)
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>, double, double,
-           std::shared_ptr<NEMLModel_sd>,
-           double, double, int, bool>(),
-            py::arg("elastic"), py::arg("A"), py::arg("a"), py::arg("base"), 
-            py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-            py::arg("verbose") = false)
+  py::class_<NEMLPowerLawDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<NEMLPowerLawDamagedModel_sd>(args, kwargs, 
+                                                                   {"elastic",
+                                                                   "A", "a",
+                                                                   "base"});
+        }))
       ;
 
-  py::class_<NEMLExponentialWorkDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd", py::base<NEMLStandardScalarDamagedModel_sd>())
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>,
-           std::shared_ptr<Interpolate>,
-           std::shared_ptr<NEMLModel_sd>,
-           std::shared_ptr<Interpolate>, double, int, bool>(),
-            py::arg("elastic"), py::arg("W0"), py::arg("k0"), py::arg("af"), py::arg("base"), 
-            py::arg("alpha") = nullptr, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-            py::arg("verbose") = false)
-      .def(py::init<
-           std::shared_ptr<LinearElasticModel>,
-           double, double, double,
-           std::shared_ptr<NEMLModel_sd>,
-           double, double, int, bool>(),
-            py::arg("elastic"), py::arg("W0"), py::arg("k0"), py::arg("af"), py::arg("base"), 
-            py::arg("alpha") = 0.0, py::arg("tol") = 1.0e-8, py::arg("miter") = 50, 
-            py::arg("verbose") = false)
+  py::class_<NEMLExponentialWorkDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<NEMLExponentialWorkDamagedModel_sd>(
+              args, kwargs, {"elastic", "W0", "k0", "af", "base"});
+        }))
       ;
 }
 

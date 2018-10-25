@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,16 +22,14 @@ def verify_Q():
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sy, Q, b)
   gmodels = [hardening.ConstantGamma(g)]
-  hrule = hardening.Chaboche(iso, [C], gmodels)
+  hrule = hardening.Chaboche(iso, [C], gmodels, [0.0], [1.0])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
 
   res = drivers.uniaxial_test(model, 1.0e-2, emax = 0.2)
@@ -54,15 +52,14 @@ def verify_Cg():
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sy, Q, b)
-  hrule = hardening.Chaboche(iso, [C], [hardening.ConstantGamma(g)])
+  hrule = hardening.Chaboche(iso, [C], [hardening.ConstantGamma(g)], 
+      [0.0], [1.0])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
 
   res = drivers.strain_cyclic(model, 0.4, -1.0, 1.0e-4, 1)
@@ -88,15 +85,14 @@ def verify_warp3d():
   mu = E / (2 * (1.0 + nu))
   K = E / (3 * (1 - 2 * nu))
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
   surface = surfaces.IsoKinJ2()
   iso = hardening.VoceIsotropicHardeningRule(sy, Q, b)
-  hrule = hardening.Chaboche(iso, [C], [hardening.ConstantGamma(g)])
+  hrule = hardening.Chaboche(iso, [C], [hardening.ConstantGamma(g)], 
+      [0.0], [1.0])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
       check_kt = False)
 
   res = drivers.strain_cyclic(model, 0.0075, -1.0, 1.0e-4, 50)

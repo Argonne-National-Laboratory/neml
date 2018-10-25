@@ -3,18 +3,16 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, surfaces, hardening, ri_flow, uniaxial, axisym
+from neml import solvers, models, elasticity, surfaces, hardening, ri_flow, uniaxial, axisym
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 def single_material_generator(E, nu, sY, alpha):
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
   surface = surfaces.IsoJ2()
-  model = neml.SmallStrainPerfectPlasticity(
-    elastic, surface, sY, alpha = alpha)
+  model = models.SmallStrainPerfectPlasticity(elastic, surface, sY,
+      alpha = alpha)
 
   return model
 
@@ -36,7 +34,8 @@ if __name__ == "__main__":
   p_int = lambda t: t * pi
   p_ext = lambda t: t * po
 
-  bree = axisym.BreeProblem([Ri, Ro], [mat], [n], lambda r, t: 0.0, p_int, p_ext = p_ext)
+  bree = axisym.BreeProblem([Ri, Ro], [mat], [n], 
+      lambda r, t: 0.0, p_int, p_ext = p_ext)
 
   bree.step(1.0)
 

@@ -1,16 +1,12 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "nemlmath.h"
 
 #include "nemlerror.h"
-#include "pyhelp.h"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
-
-#include "Python.h"
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
@@ -243,6 +239,7 @@ PYBIND11_MODULE(nemlmath, m) {
             throw LinalgError("Matrix is not square!");
           }
           int ier = invert_mat(arr2ptr<double>(A), A.request().shape[0]);
+          py_error(ier);
           // Should check non-singular
           return A;
         }, "Invert a matrix IN PLACE.");

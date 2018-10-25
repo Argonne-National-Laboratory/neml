@@ -3,244 +3,12 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, visco_flow, general_flow, interpolate
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-def example_strain(model, strain, T, t, nsteps):
-  """
-    Parameters:
-      model     material model
-      strain    target strain
-      T         constant temperature
-      t         time to take
-      nsteps    number of steps
-  """
-  de = strain / nsteps
-  dt = t / nsteps
-  
-  e = np.zeros((6,))
-  t = 0
-  
-  driver = drivers.Driver_sd(model, verbose = True)
-  
-  print("Driving strain...")
-  for i in range(nsteps):
-    print(i+1)
-    e += de
-    t += dt
-    
-    driver.strain_step(np.copy(e), t, T)
-
-  plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.stress[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.stress[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.history[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.history[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.history[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.history[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.history[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
-  plt.show()
-
-def example_stress(model, stress, T, t, nsteps):
-  """
-    Parameters:
-      model     material model
-      stress    target stress
-      T         constant temperature
-      t         time to take
-      nsteps    number of steps
-  """
-  ds = stress / nsteps
-  dt = t / nsteps
-  
-  s = np.zeros((6,))
-  t = 0
-
-  driver = drivers.Driver_sd(model, verbose = True)
-  
-  print("Driving stress...")
-  for i in range(nsteps):
-    print(i+1)
-    s += ds
-    t += dt
-
-    driver.stress_step(s, t, T)
- 
-  plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.stress[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.stress[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.history[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.history[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.history[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.history[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.history[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
-  plt.show()
-
-def example_econt_erate(model, sdir, rate, T, etotal, nsteps):
-  """
-    Parameters:
-      model     material model
-      sdir      stress direction
-      rate      strain rate
-      T         constant temperature
-      etotal    total strain, in direction
-      nsteps    number of steps
-  """
-  e_inc = etotal / nsteps
-
-  driver = drivers.Driver_sd(model, verbose = True)
-
-  print("Rate controlled...")
-  for i in range(nsteps):
-    print(i+1)
-    driver.erate_einc_step(sdir, rate, e_inc, T)
-  
-  plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.stress[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.stress[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.history[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.history[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.history[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.history[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.history[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
-  plt.show()
-
-def example_scont_srate(model, sdir, rate, T, stotal, nsteps):
-  """
-    Parameters:
-      model     material model
-      sdir      stress direction
-      rate      stress rate
-      T         constant temperature
-      etotal    total stress, in direction
-      nsteps    number of steps
-  """
-  s_inc = stotal / nsteps
-
-  driver = drivers.Driver_sd(model, verbose = True)
-
-  print("Rate controlled...")
-  for i in range(nsteps):
-    print(i+1)
-    driver.srate_sinc_step(sdir, rate, s_inc, T)
-  
-  plt.plot(driver.strain[:,0], driver.stress[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.stress[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.stress[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.stress[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.stress[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.stress[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,0], 'k-')
-  plt.plot(driver.strain[:,0], driver.history[:,1], 'r-')
-  plt.plot(driver.strain[:,0], driver.history[:,2], 'b-')
-
-  plt.plot(driver.strain[:,0], driver.history[:,3], 'k--')
-  plt.plot(driver.strain[:,0], driver.history[:,4], 'r--')
-  plt.plot(driver.strain[:,0], driver.history[:,5], 'b--')
-  plt.show()
-
-  plt.plot(driver.strain[:,0], driver.history[:,6], 'k-')
-  plt.show()
-
 if __name__ == "__main__":
-  """
-  E = 200000.0
-  nu = 0.27
-
-  mu = E / (2 * (1.0 + nu))
-  K = E / (3 * (1 - 2 * nu))
-
-  s0 = 300.0
-  Kp = 0.0
-  c = np.array([60.0])
-  r = np.array([2.0/3.0*30000.0/60.0])
-  
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-  surface = surfaces.IsoKinJ2()
-  iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
-  hrule = hardening.Chaboche(iso, c, r)
-
-  flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = True,
-      check_kt = False)
-  example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0])/10.0, 300.0, 100.0, 100)
-  """
-  
-  """
-  E = 200000.0
-  nu = 0.27
-
-  mu = E / (2 * (1.0 + nu))
-  K = E / (3 * (1 - 2 * nu))
-
-  n = 12.0
-  eta = 150.0
-  k = 6.0
-  C = 24800.0
-  g0 = 300.0
-  Q = 86 - k
-  gs = 300.0
-  b = 10.0
-  beta = 0.0
-  
-  shear = elasticity.ConstantShearModulus(mu)
-  bulk = elasticity.ConstantBulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
-
-  surface = surfaces.IsoKinJ2()
-  iso = hardening.VoceIsotropicHardeningRule(k, Q, b)
-  cs = [C]
-  gs = [hardening.SatGamma(gs, g0, beta)]
-  hmodel = hardening.Chaboche(iso, cs, gs)
-
-  fluidity = visco_flow.ConstantFluidity(eta)
-
-  flow = visco_flow.ChabocheFlowRule(
-      surface, hmodel, fluidity, n)
-
-  model = neml.SmallStrainViscoPlasticity(elastic, flow, verbose = False)
-  """
-
   n = 20.0
   eta = 108.0
   sY = 89.0
@@ -261,7 +29,8 @@ if __name__ == "__main__":
   cs = [C1, C2, C3]
   gs = np.array([y1, y2, y3])
   gmodels = [hardening.ConstantGamma(g) for g in gs]
-  hmodel = hardening.Chaboche(iso, cs, gmodels)
+  hmodel = hardening.Chaboche(iso, cs, gmodels, [0.0] * len(cs),
+      [1.0] * len(cs))
 
   fluidity = visco_flow.ConstantFluidity(eta)
 
@@ -273,15 +42,158 @@ if __name__ == "__main__":
   mu = E/(2*(1+nu))
   K = E/(3*(1-2*nu))
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, 
+      "bulk")
 
   flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-  model = neml.GeneralIntegrator(elastic, flow, verbose = False) 
+  model = models.GeneralIntegrator(elastic, flow, verbose = False) 
 
-  example_strain(model, np.array([0.04,-0.02,-0.02,0,0,0]), 300.0, 100.0, 100)
-  example_stress(model, np.array([300.0,0,0,0,0,0]), 300.0, 100, 100)
-  example_econt_erate(model, np.array([1,0,0,0,0,0]), 1.0e0, 300.0, 0.04, 100)
-  example_scont_srate(model, np.array([1,0,0,0,0,0]), 1.0, 300.0, 300.0, 100)
+  # Uniaxial tension 
+  erate = 1.0e-4
+  res = drivers.uniaxial_test(model, erate)
+  plt.figure()
+  plt.plot(res['strain'], res['stress'], 'k-')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.title("Uniaxial tension")
+  plt.show()
+  
+  # Strain controlled-cyclic
+  emax = 0.01
+  R = -0.75
+  erate = 1.0e-4
+  ncycles = 5
+  hold_time = [10*3600.0,0]
+  res = drivers.strain_cyclic(model, emax, R, erate, ncycles, 
+      hold_time = hold_time)
+  plt.figure()
+  plt.plot(res['strain'], res['stress'], 'k-')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.title("Strain-controlled cyclic")
+  plt.show()
+
+  # Strain controlled-cyclic with follow up
+  emax = 0.01
+  R = -0.75
+  erate = 1.0e-4
+  ncycles = 5
+  hold_time = [10*3600.0,0]
+  res = drivers.strain_cyclic_followup(model, emax, R, erate, ncycles, 
+      hold_time = hold_time, q = 4)
+  plt.figure()
+  plt.plot(res['strain'], res['stress'], 'k-')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.title("Strain-controlled cyclic with follow up")
+  plt.show()
+
+  # Stress controlled-cyclic
+  smax = 200.0
+  R = -0.75
+  erate = 1.0e-4
+  ncycles = 5
+  hold_time = [10*3600.0,0]
+  res = drivers.stress_cyclic(model, smax, R, erate, ncycles, 
+      hold_time = hold_time)
+  plt.figure()
+  plt.plot(res['strain'], res['stress'], 'k-')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.title("Stress-controlled cyclic")
+  plt.show()
+
+  # Stress relaxation
+  emax = 0.05
+  erate = 1.0e-4
+  hold = 1000.0*3600.0
+  res = drivers.stress_relaxation(model, emax, erate, hold)
+  plt.figure()
+  plt.plot(res['rtime']/3600.0, res['rstress'], 'k-')
+  plt.xlabel("Time (hrs)")
+  plt.ylabel("Stress (MPa)")
+  plt.title("Stress relaxation")
+  plt.tight_layout()
+  plt.show()
+
+  # Creep
+  smax = 180.0
+  srate = 1.0
+  hold = 10000.0 * 3600.0
+  res = drivers.creep(model, smax, srate, hold, logspace = True)
+  plt.figure()
+  plt.plot(res['rtime']/3600.0, res['rstrain'], 'k-')
+  plt.xlabel("Time (hrs)")
+  plt.ylabel("Creep strain (mm/mm)")
+  plt.title("Creep")
+  plt.tight_layout()
+  plt.show()
+
+  # Rate jump
+  erates = [1.0e-6, 1.0e-4, 1.0e-2, 1.0, 1.0e-2, 1.0e-4, 1.0e-6]
+  res = drivers.rate_jump_test(model, erates)
+  plt.figure()
+  plt.plot(res['strain'], res['stress'], 'k-')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.title("Strain rate jump test")
+  plt.tight_layout()
+  plt.show()
+
+  # Isochronous curve
+  time = 50000.0 * 3600.0
+  res = drivers.isochronous_curve(model, time)
+  plt.figure()
+  plt.plot(res['strain'], res['stress'], 'k-')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.title("Isochronous stress-strain curve")
+  plt.tight_layout()
+  plt.show()
+  
+  # Need a temperature sensitive model for this one!
+  vmodel = visco_flow.YaguchiGr91FlowRule()
+
+  E_poly = np.array([-3.077e-1, 3.003e2, 1.269e5])
+  nu = 0.3
+
+  mu_poly = list(E_poly/(2*(1+nu)))
+  K_poly = list(E_poly/(3*(1-2*nu)))
+
+  shear = interpolate.PolynomialInterpolate(mu_poly)
+  bulk = interpolate.PolynomialInterpolate(K_poly)
+  elastic = elasticity.IsotropicLinearElasticModel(shear, "shear", 
+      bulk, "bulk")
+
+  flow = general_flow.TVPFlowRule(elastic, vmodel)
+
+  model = models.GeneralIntegrator(elastic, flow)
+  
+  # Thermomechanical
+  time = list(np.linspace(0, 1000))
+  Ts = list(np.linspace(500+273.15,600+273.15))
+  strains = list(np.linspace(0.0,0.02))
+  
+  time = time + time[::-1][1:]
+  Ts = Ts + Ts[::-1][1:]
+  strains = strains + strains[::-1][1:]
+
+  res = drivers.thermomechanical_strain_raw(model, time, Ts,
+      strains)
+
+  fig, ax1 = plt.subplots()
+  ax1.plot(res['strain'], res['stress'], 'k-', label = "stress")
+  ax1.set_xlabel("Strain (mm/mm)")
+  ax1.set_ylabel("Stress (MPa)")
+  
+  ax2 = ax1.twinx()
+  ax2.plot(res['strain'], res['temperature'], 'r-', label = "temperature")
+  ax2.set_ylabel("Temperature (K)")
+
+  ax1.legend(loc = 'best')
+  ax2.legend(loc = 'best')
+
+  plt.title("Thermomechanical test")
+  plt.tight_layout()
+  plt.show()

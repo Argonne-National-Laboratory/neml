@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from neml import neml, parse, uniaxial, elasticity, surfaces
+from neml import models, parse, uniaxial, elasticity, surfaces
 from neml.drivers import newton, classify
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -214,11 +214,9 @@ class ThreeBarProblem(object):
         self.take_step(dt2, Tc, verbose = verbose)
 
 def elastic_model(E, a, nu = 0.3):
-  Emodel = elasticity.YoungsModulus(E)
-  vmodel = elasticity.PoissonsRatio(nu)
-  elmodel = elasticity.IsotropicLinearElasticModel(Emodel, vmodel)
+  elmodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
-  return neml.SmallStrainElasticity(elmodel, alpha = a)
+  return models.SmallStrainElasticity(elmodel, alpha = a)
 
 def verify():
   T1 = 0
@@ -323,12 +321,11 @@ def run_gr91_316_inelastic():
   plt.show()
 
 def plastic_model(E, Y, a, nu = 0.3):
-  Emodel = elasticity.YoungsModulus(E)
-  vmodel = elasticity.PoissonsRatio(nu)
-  elmodel = elasticity.IsotropicLinearElasticModel(Emodel, vmodel)
+  elmodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
+
   surf = surfaces.IsoJ2()
   
-  return neml.SmallStrainPerfectPlasticity(elmodel, surf, Y, alpha = a)
+  return models.SmallStrainPerfectPlasticity(elmodel, surf, Y, alpha = a)
 
 def bree_point(A1, A2, A3, l1, l2, l3, E1, E2, E3, Y1, Y2, Y3, a1, a2, a3, 
     T1, T2, ncycles = 5, nsteps = 25):
@@ -419,80 +416,4 @@ def plot_diagram(x, y, nx, ny, conditions, xlabel = None, ylabel = None):
 
 if __name__ == "__main__":
   verify()
-  compare_gr91_316_elastic()
-  run_gr91_316_inelastic()
-
-  l1 = 58.7375
-  l2 = 46.0375
-  l3 = 12.7
-
-  A1 = np.pi*(19.05**2.0 - (19.05-6.35)**2.0)
-  A2 = np.pi*9.525**2.0 
-  A3 = np.pi*3.175**2.0
-
-  T1 = 0
-
-  Einner = 190680.0
-  ainner = 1.3016e-5
-  Yinner = 370.2
-
-  Eouter = 171760.0
-  aouter = 1.9316e-5/100
-  Youter = 126.7
-  
-  def eval_l3l1(pt):
-    x = pt[0]
-    y = pt[1]
-    l3 = x * l1
-    T2 = y * Yinner / (ainner * Einner)
-    return bree_point(A1, A2, A3, l1, l1 - l3, l3, Eouter, Einner, Einner, 
-        Youter, Yinner, Yinner, aouter, ainner, ainner, T1, T2)
-  
-  x = 1.0
-  y = 4.0
-  nx = 50
-  ny = 50
-  grid = make_grid(x, y, nx, ny)
-
-  pool = multiprocessing.Pool()
-  conditions = pool.map(eval_l3l1, grid)
-  plot_diagram(x, y, nx, ny, conditions, xlabel = r'$\frac{l_3}{l_1}$', 
-      ylabel = r'$\frac{\alpha_{inner} E_{inner}\Delta T}{Y_{inner}}$')
-  
-  def eval_A3A1(pt):
-    x = pt[0]
-    y = pt[1]
-    A3 = x * A2
-    T2 = y * Yinner / (ainner * Einner)
-    return bree_point(A1, A2, A3, l1, l1 - l3, l3, Eouter, Einner, Einner, 
-        Youter, Yinner, Yinner, aouter, ainner, ainner, T1, T2)
-  
-  x = 2.0
-  y = 4.0
-  nx = 50
-  ny = 50
-  grid = make_grid(x, y, nx, ny)
-
-  pool = multiprocessing.Pool()
-  conditions = pool.map(eval_A3A1, grid)
-  plot_diagram(x, y, nx, ny, conditions, xlabel = r'$\frac{A_3}{A_1}$', 
-      ylabel = r'$\frac{\alpha_{inner} E_{inner}\Delta T}{Y_{inner}}$')
-
-  def eval_A2A1(pt):
-    x = pt[0]
-    y = pt[1]
-    A2 = x * A1
-    T2 = y * Yinner / (ainner * Einner)
-    return bree_point(A1, A2, A3, l1, l1 - l3, l3, Eouter, Einner, Einner, 
-        Youter, Yinner, Yinner, aouter, ainner, ainner, T1, T2)
-
-  x = 2.0
-  y = 4.0
-  nx = 50
-  ny = 50
-  grid = make_grid(x, y, nx, ny)
-
-  pool = multiprocessing.Pool()
-  conditions = pool.map(eval_A2A1, grid)
-  plot_diagram(x, y, nx, ny, conditions, xlabel = r'$\frac{A_2}{A_1}$', 
-      ylabel = r'$\frac{\alpha_{inner} E_{inner}\Delta T}{Y_{inner}}$')
+ 

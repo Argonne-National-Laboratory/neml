@@ -13,14 +13,6 @@ NEMLDamagedModel_sd::NEMLDamagedModel_sd(std::shared_ptr<LinearElasticModel> ela
 
 }
 
-NEMLDamagedModel_sd::NEMLDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
-                                         std::shared_ptr<NEMLModel_sd> base,
-                                         double alpha) :
-    NEMLModel_sd(elastic, alpha), base_(base)
-{
-
-}
-
 size_t NEMLDamagedModel_sd::nhist() const
 {
   return ndamage() + base_->nstore();
@@ -37,8 +29,7 @@ int NEMLDamagedModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
                                            emodel)
 {
   elastic_ = emodel;
-  base_->set_elastic_model(emodel);
-  return 0;
+  return base_->set_elastic_model(emodel);
 }
 
 NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
@@ -48,16 +39,6 @@ NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
     double tol, int miter, bool verbose) :
       NEMLDamagedModel_sd(elastic, base, alpha), tol_(tol), miter_(miter),
       verbose_(verbose)
-{
-
-}
-
-NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha, double tol, int miter, bool verbose) :
-      NEMLDamagedModel_sd(elastic, base, alpha), tol_(tol),
-      miter_(miter), verbose_(verbose)
 {
 
 }
@@ -74,11 +55,12 @@ int NEMLScalarDamagedModel_sd::update_sd(
 {
   // Make trial state
   SDTrialState tss;
-  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n, tss);
+  int ier = make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n, tss);
+  if (ier != SUCCESS) return ier;
   
   // Call solve
-  double x[nparams()];
-  int ier;
+  std::vector<double> xv(nparams());
+  double * x = &xv[0];
   ier = solve(this, x, &tss, tol_, miter_, verbose_);
   if (ier != SUCCESS) return ier;
   
@@ -145,7 +127,8 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_np1[6];
   double s_prime_n[6];
   double A_prime_np1[36];
-  double * h_np1 = new double [base_->nstore()];
+  std::vector<double> h_np1_v(base_->nstore());
+  double * h_np1 = &h_np1_v[0];
   double u_np1;
   double p_np1;
   
@@ -175,21 +158,21 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   }
 
   double ws[6];
-  ddamage_ds(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  res = ddamage_ds(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, ws);
+  if (res != SUCCESS) return res;
   for (int i=0; i<6; i++) {
     J[CINDEX(6,i,7)] = -ws[i] / (1 - w_curr); 
   }
   
   double ww;
-  ddamage_dd(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  res = ddamage_dd(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, &ww);
+  if (res != SUCCESS) return res;
   
   J[CINDEX(6,6,7)] = 1.0 - ww - dot_vec(ws, s_curr, 6) / pow(1-w_curr,2.0);
-
-  delete [] h_np1;
 
   return 0;
 }
@@ -230,14 +213,17 @@ int NEMLScalarDamagedModel_sd::tangent_(
   for (int i=0; i<6; i++) s_prime_n[i] = s_n[i] / (1.0 - w_n);
 
   double dw_ds[6];
-  ddamage_ds(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+  int ier = ddamage_ds(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
              t_np1, t_n, dw_ds);
+  if (ier != SUCCESS) return ier;
   double dw_de[6];
-  ddamage_de(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+  ier = ddamage_de(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
              t_np1, t_n, dw_de);
+  if (ier != SUCCESS) return ier;
   double dw_dw;
-  ddamage_dd(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+  ier = ddamage_dd(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
              t_np1, t_n, &dw_dw);
+  if (ier != SUCCESS) return ier;
 
   double k1 = 1.0 - 1.0 / (1.0 - w_np1) * dot_vec(dw_ds, s_prime_np1, 6) - dw_dw;
   double B[36];
@@ -245,7 +231,8 @@ int NEMLScalarDamagedModel_sd::tangent_(
   for (int i=0; i<6; i++) B[CINDEX(i,i,6)] = 1.0;
   for (int i=0; i<6; i++) dw_ds[i] /= (k1 * (1.0 - w_np1));
   outer_update(s_prime_np1, 6, dw_ds, 6, B);
-  invert_mat(B, 6);
+  ier = invert_mat(B, 6);
+  if (ier != SUCCESS) return ier;
 
   double C[36];
   std::copy(A_prime, A_prime+36, C);
@@ -271,15 +258,39 @@ CombinedDamageModel_sd::CombinedDamageModel_sd(
 
 }
 
-CombinedDamageModel_sd::CombinedDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha, double tol, int miter, bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
-      models_(models)
+std::string CombinedDamageModel_sd::type()
 {
+  return "CombinedDamageModel_sd";
+}
 
+ParameterSet CombinedDamageModel_sd::parameters()
+{
+  ParameterSet pset(CombinedDamageModel_sd::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<std::vector<NEMLObject>>("models");
+  pset.add_parameter<NEMLObject>("base");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> CombinedDamageModel_sd::initialize(ParameterSet & params)
+{
+  return make_unique<CombinedDamageModel_sd>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter_vector<NEMLScalarDamagedModel_sd>("models"),
+      params.get_object_parameter<NEMLModel_sd>("base"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose")
+      ); 
 }
 
 int CombinedDamageModel_sd::damage(
@@ -293,8 +304,9 @@ int CombinedDamageModel_sd::damage(
   *dd = d_n;
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di;
-    (*it)->damage(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    int ier = (*it)->damage(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, &di);
+    if (ier != SUCCESS) return ier;
     *dd += (di - d_n);
   }
   return 0;
@@ -311,8 +323,9 @@ int CombinedDamageModel_sd::ddamage_dd(
   *dd = 0.0;
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di;
-    (*it)->ddamage_dd(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    int ier = (*it)->ddamage_dd(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, &di);
+    if (ier != SUCCESS) return ier;
     *dd += di;
   }
 
@@ -330,8 +343,9 @@ int CombinedDamageModel_sd::ddamage_de(
   std::fill(dd, dd+6, 0.0);
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di[6];
-    (*it)->ddamage_de(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    int ier = (*it)->ddamage_de(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, di);
+    if (ier != SUCCESS) return ier;
     for (int i=0; i<6; i++) dd[i] += di[i];
   }
 
@@ -349,8 +363,9 @@ int CombinedDamageModel_sd::ddamage_ds(
   std::fill(dd, dd+6, 0.0);
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di[6];
-    (*it)->ddamage_ds(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    int ier = (*it)->ddamage_ds(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, di);
+    if (ier != SUCCESS) return ier;
     for (int i=0; i<6; i++) dd[i] += di[i];
   }
 
@@ -363,7 +378,8 @@ int CombinedDamageModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel
   elastic_ = emodel;
   base_->set_elastic_model(emodel);
   for (auto it = models_.begin(); it != models_.end(); ++it) {
-    (*it)->set_elastic_model(emodel);
+    int ier = (*it)->set_elastic_model(emodel);
+    if (ier != SUCCESS) return ier;
   }
   return 0;
 }
@@ -384,19 +400,43 @@ ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
 
 }
 
-ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double A, double xi, double phi,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
-      A_(new ConstantInterpolate(A)), 
-      xi_(new ConstantInterpolate(xi)), 
-      phi_(new ConstantInterpolate(phi)) 
+std::string ClassicalCreepDamageModel_sd::type()
 {
+  return "ClassicalCreepDamageModel_sd";
+}
 
+ParameterSet ClassicalCreepDamageModel_sd::parameters()
+{
+  ParameterSet pset(ClassicalCreepDamageModel_sd::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("xi");
+  pset.add_parameter<NEMLObject>("phi");
+  pset.add_parameter<NEMLObject>("base");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ClassicalCreepDamageModel_sd::initialize(ParameterSet & params)
+{
+  return make_unique<ClassicalCreepDamageModel_sd>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("xi"),
+      params.get_object_parameter<Interpolate>("phi"),
+      params.get_object_parameter<NEMLModel_sd>("base"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose")
+      ); 
 }
 
 int ClassicalCreepDamageModel_sd::damage(
@@ -490,276 +530,12 @@ double ClassicalCreepDamageModel_sd::se(const double * const s) const
                                               pow(s[5], 2.0))) / 2.0);
 }
 
-MarkFatigueDamageModel_sd::MarkFatigueDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<Interpolate> C,
-    std::shared_ptr<Interpolate> m,
-    std::shared_ptr<Interpolate> n,
-    std::shared_ptr<Interpolate> falpha,
-    std::shared_ptr<Interpolate> fbeta,
-    std::shared_ptr<Interpolate> rate0,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
-      C_(C), m_(m), n_(n), falpha_(falpha), fbeta_(fbeta), rate0_(rate0)
-{
-
-
-}
-
-MarkFatigueDamageModel_sd::MarkFatigueDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double C, double m, double n,
-    double falpha, double fbeta, double rate0,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
-      C_(new ConstantInterpolate(C)), 
-      m_(new ConstantInterpolate(m)), 
-      n_(new ConstantInterpolate(n)), 
-      falpha_(new ConstantInterpolate(falpha)), 
-      fbeta_(new ConstantInterpolate(fbeta)),
-      rate0_(new ConstantInterpolate(rate0))
-{
-
-}
-
-int MarkFatigueDamageModel_sd::damage(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const dd) const
-{
-  double C = C_->value(T_np1);
-  double m = m_->value(T_np1);
-  double n = n_->value(T_np1);
-  double fa = falpha_->value(T_np1);
-  double fb = fbeta_->value(T_np1);
-  double r0 = rate0_->value(T_np1);
-
-  double de[6];
-  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
-
-  double seq = se_(s_np1);
-  double eeq = ee_(de);
-
-  if ((seq == 0) || (eeq == 0)) {
-    *dd = d_n;
-    return 0;
-  }
-
-  double dt = t_np1 - t_n;
-  if (dt == 0.0) {
-    *dd = d_n;
-    return 0;
-  }
-
-  *dd = d_n + C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq/dt, m) * dt;
-
-  return 0;
-}
-
-int MarkFatigueDamageModel_sd::ddamage_dd(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const dd) const
-{
-  double C = C_->value(T_np1);
-  double m = m_->value(T_np1);
-  double n = n_->value(T_np1);
-  double fa = falpha_->value(T_np1);
-  double fb = fbeta_->value(T_np1);
-  double r0 = rate0_->value(T_np1);
-
-  double de[6];
-  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
-
-  double seq = se_(s_np1);
-  double eeq = ee_(de);
-
-  if ((seq == 0) || (eeq == 0)) {
-    *dd = 0.0;
-    return 0;
-  }
-
-  double dt = t_np1 - t_n;
-  if (dt == 0.0) {
-    *dd = 0.0;
-    return 0;
-  }
-
-  *dd = C * d_beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * pow(eeq/dt, m) * dt;
-
-  return 0;
-}
-
-int MarkFatigueDamageModel_sd::ddamage_de(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const dd) const
-{
-  double C = C_->value(T_np1);
-  double m = m_->value(T_np1);
-  double n = n_->value(T_np1);
-  double fa = falpha_->value(T_np1);
-  double fb = fbeta_->value(T_np1);
-  double r0 = rate0_->value(T_np1);
-
-  double de[6];
-  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
-
-  double seq = se_(s_np1);
-  double eeq = ee_(de);
-
-  if ((seq == 0) || (eeq == 0)) {
-    std::fill(dd, dd+6, 0.0);
-    return 0;
-  }
-
-  double dt = t_np1 - t_n;
-  if (dt == 0.0) {
-    std::fill(dd, dd+6, 0.0);
-    return 0;
-  }
-
-  dee_(de, dd);
-  double fact = C * beta_fn_(d_np1, fa, fb, r0) * pow(seq, n) * m * pow(eeq/dt, m-1);
-
-  for (int i=0; i<6; i++) dd[i] *= fact;
-
-  return 0;
-}
-
-int MarkFatigueDamageModel_sd::ddamage_ds(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const dd) const
-{
-  double C = C_->value(T_np1);
-  double m = m_->value(T_np1);
-  double n = n_->value(T_np1);
-  double fa = falpha_->value(T_np1);
-  double fb = fbeta_->value(T_np1);
-  double r0 = rate0_->value(T_np1);
-
-  double de[6];
-  for (int i=0; i<6; i++) de[i] = e_np1[i] - e_n[i];
-
-  double seq = se_(s_np1);
-  double eeq = ee_(de);
-
-  if ((seq == 0) || (eeq == 0)) {
-    std::fill(dd, dd+6, 0.0);
-    return 0;
-  }
-
-  double dt = t_np1 - t_n;
-  if (dt == 0.0) {
-    std::fill(dd, dd+6, 0.0);
-    return 0;
-  }
-
-  dse_(s_np1, dd);
-  double fact = C * beta_fn_(d_np1, fa, fb, r0) * n * pow(seq, n-1) * pow(eeq/dt, m) * dt;
-
-  for (int i=0; i<6; i++) dd[i] *= fact;
-
-  return 0;
-
-}
-
-double MarkFatigueDamageModel_sd::beta_fn_(double x, double a, double b, double r0) const
-{
-  double nz = tgamma(a+b) / (tgamma(a) + tgamma(b));
-  return nz * pow(x, a-1) * pow(1-x, b-1) + r0 * (1-x);
-}
-
-double MarkFatigueDamageModel_sd::d_beta_fn_(double x, double a, double b, double r0) const
-{
-  double nz = tgamma(a+b) / (tgamma(a) + tgamma(b));
-  return nz * (
-      (a-1) * pow(x, a-2) * pow(1-x, b-1) - 
-      (b-1) * pow(x, a-1) * pow(1-x, b-2)) - r0;
-}
-
-double MarkFatigueDamageModel_sd::se_(const double * const s) const
-{
-  double sdev[6];
-  std::copy(s, s+6, sdev);
-  dev_vec(sdev);
-  return sqrt(3.0/2.0 * dot_vec(sdev, sdev, 6));
-}
-
-void MarkFatigueDamageModel_sd::dse_(const double * const s, double * const ds) const
-{
-  std::copy(s, s+6, ds);
-  dev_vec(ds);
-  double f = dot_vec(ds, ds, 6);
-  if (f == 0.0) {
-    std::fill(ds, ds+6, 0.0);
-    return;
-  }
-  else {
-    double fact = sqrt(3.0/2.0) / sqrt(f);
-    for (int i = 0; i < 6; i++) ds[i] *= fact;
-    return;
-  }
-}
-
-double MarkFatigueDamageModel_sd::ee_(const double * const e) const
-{
-  double edev[6];
-  std::copy(e, e+6, edev);
-  dev_vec(edev);
-  return sqrt(2.0/3.0 * dot_vec(edev, edev, 6));
-}
-
-void MarkFatigueDamageModel_sd::dee_(const double * const e, double * const de) const
-{
-  std::copy(e, e+6, de);
-  dev_vec(de);
-  double f = dot_vec(de, de, 6);
-  if (f == 0.0) {
-    std::fill(de, de+6, 0.0);
-    return;
-  }
-  else {
-    double fact = sqrt(2.0/3.0) / sqrt(f);
-    for (int i = 0; i < 6; i++) de[i] *= fact;
-    return;
-  }
-}
-
 NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<Interpolate> alpha,
     double tol, int miter, bool verbose) :
       NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose) 
-{
-
-}
-
-NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha, double tol, int miter, bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose)
 {
 
 }
@@ -777,7 +553,7 @@ int NEMLStandardScalarDamagedModel_sd::damage(
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
   *dd = d_n + fval * deps;
 
-  return 0;
+  return ier;
 }
 
 int NEMLStandardScalarDamagedModel_sd::ddamage_dd(
@@ -794,7 +570,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_dd(
 
   *dd = df * deps;
 
-  return 0;
+  return ier;
 }
 
 int NEMLStandardScalarDamagedModel_sd::ddamage_de(
@@ -807,6 +583,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
 {
   double fval;
   int ier = f(s_np1, d_np1, T_np1, fval);
+  if (ier != SUCCESS) return ier;
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
 
   if (deps == 0.0) {
@@ -822,10 +599,12 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
   }
 
   double S[36];
-  elastic_->S(T_np1, S);
+  ier = elastic_->S(T_np1, S);
+  if (ier != SUCCESS) return ier;
 
   double dee[36];
-  mat_vec(S, 6, ds, 6, dee);
+  ier = mat_vec(S, 6, ds, 6, dee);
+  if (ier != SUCCESS) return ier;
 
   for (int i=0; i<6; i++) {
     dd[i] = (2.0 * fval) / (3.0 * deps) * (de[i] - dee[i]); 
@@ -844,6 +623,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
 {
   double fval;
   int ier = f(s_np1, d_np1, T_np1, fval);
+  if (ier != SUCCESS) return ier;
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
 
   if (deps == 0.0) {
@@ -859,20 +639,24 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
   }
 
   double S[36];
-  elastic_->S(T_np1, S);
+  ier = elastic_->S(T_np1, S);
+  if (ier != SUCCESS) return ier;
 
   double dee[36];
-  mat_vec(S, 6, ds, 6, dee);
+  ier = mat_vec(S, 6, ds, 6, dee);
+  if (ier != SUCCESS) return ier;
 
   double v1[6];
   for (int i=0; i<6; i++) {
     v1[i] = (2.0 * fval) / (3.0 * deps) * (dee[i] - de[i]); 
   }
 
-  mat_vec(S, 6, v1, 6, dd);
+  ier = mat_vec(S, 6, v1, 6, dd);
+  if (ier != SUCCESS) return ier;
 
   double dds[6];
-  df_ds(s_np1, d_np1, T_np1, dds);
+  ier = df_ds(s_np1, d_np1, T_np1, dds);
+  if (ier != SUCCESS) return ier;
 
   for (int i=0; i<6; i++) {
     dd[i] = dds[i] * deps + dd[i];
@@ -924,18 +708,41 @@ NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
 
 }
 
-NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double A, double a,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, tol, miter,
-                                        verbose),
-      A_(new ConstantInterpolate(A)), a_(new ConstantInterpolate(a))
+std::string NEMLPowerLawDamagedModel_sd::type()
 {
+  return "NEMLPowerLawDamagedModel_sd";
+}
 
+ParameterSet NEMLPowerLawDamagedModel_sd::parameters()
+{
+  ParameterSet pset(NEMLPowerLawDamagedModel_sd::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("a");
+  pset.add_parameter<NEMLObject>("base");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> NEMLPowerLawDamagedModel_sd::initialize(ParameterSet & params)
+{
+  return make_unique<NEMLPowerLawDamagedModel_sd>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("a"),
+      params.get_object_parameter<NEMLModel_sd>("base"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose")
+      ); 
 }
 
 int NEMLPowerLawDamagedModel_sd::f(const double * const s_np1, double d_np1,
@@ -1000,19 +807,43 @@ NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
 
 }
 
-NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    double W0, double k0, double af,
-    std::shared_ptr<NEMLModel_sd> base,
-    double alpha,
-    double tol, int miter,
-    bool verbose) :
-      NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, tol, miter,
-                                        verbose),
-      W0_(new ConstantInterpolate(W0)), k0_(new ConstantInterpolate(k0)),
-      af_(new ConstantInterpolate(af))
+std::string NEMLExponentialWorkDamagedModel_sd::type()
 {
+  return "NEMLExponentialWorkDamagedModel_sd";
+}
 
+ParameterSet NEMLExponentialWorkDamagedModel_sd::parameters()
+{
+  ParameterSet pset(NEMLExponentialWorkDamagedModel_sd::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("W0");
+  pset.add_parameter<NEMLObject>("k0");
+  pset.add_parameter<NEMLObject>("af");
+  pset.add_parameter<NEMLObject>("base");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> NEMLExponentialWorkDamagedModel_sd::initialize(ParameterSet & params)
+{
+  return make_unique<NEMLExponentialWorkDamagedModel_sd>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<Interpolate>("W0"),
+      params.get_object_parameter<Interpolate>("k0"),
+      params.get_object_parameter<Interpolate>("af"),
+      params.get_object_parameter<NEMLModel_sd>("base"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose")
+      ); 
 }
 
 int NEMLExponentialWorkDamagedModel_sd::f(const double * const s_np1, double d_np1,

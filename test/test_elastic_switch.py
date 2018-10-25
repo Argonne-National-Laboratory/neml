@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
 
-from neml import neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage
+from neml import models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage
 from common import *
 
 import unittest
@@ -15,17 +15,17 @@ class TestSimpleMaterials(unittest.TestCase):
     self.K2 = 12000.0
 
     self.elastic1 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G1),
-        elasticity.BulkModulus(self.K1))
+        self.G1, "shear",
+        self.K1, "bulk")
     self.elastic2 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G2),
-        elasticity.BulkModulus(self.K2))
+        self.G2, "shear",
+        self.K2, "bulk")
     
   def are_equal(self, e1, e2, T = 30):
     self.assertTrue(np.allclose(e1.C(T), e2.C(T)))
 
   def test_linear_elastic(self):
-    model = neml.SmallStrainElasticity(self.elastic1)
+    model = models.SmallStrainElasticity(self.elastic1)
     self.are_equal(self.elastic1, model.elastic)
     model.set_elastic_model(self.elastic2)
     self.are_equal(self.elastic2, model.elastic)
@@ -33,7 +33,7 @@ class TestSimpleMaterials(unittest.TestCase):
   def test_perfect_plasicity(self):
     surface = surfaces.IsoJ2()
     sy = 100.0
-    model = neml.SmallStrainPerfectPlasticity(self.elastic1, surface, sy)
+    model = models.SmallStrainPerfectPlasticity(self.elastic1, surface, sy)
     self.are_equal(self.elastic1, model.elastic)
     model.set_elastic_model(self.elastic2)
     self.are_equal(self.elastic2, model.elastic)
@@ -47,7 +47,7 @@ class TestSimpleMaterials(unittest.TestCase):
         hardening.LinearIsotropicHardeningRule(sy, K),
         hardening.LinearKinematicHardeningRule(H))
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
-    model = neml.SmallStrainRateIndependentPlasticity(self.elastic1, 
+    model = models.SmallStrainRateIndependentPlasticity(self.elastic1, 
         flow)
     self.are_equal(self.elastic1, model.elastic)
     model.set_elastic_model(self.elastic2)
@@ -62,14 +62,14 @@ class TestCompoundMaterials(unittest.TestCase):
     self.K2 = 12000.0
 
     self.elastic1 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G1),
-        elasticity.BulkModulus(self.K1))
+        self.G1, "shear",
+        self.K1, "bulk")
     self.elastic2 = elasticity.IsotropicLinearElasticModel(
-        elasticity.ShearModulus(self.G2),
-        elasticity.BulkModulus(self.K2))
+        self.G2, "shear",
+        self.K2, "bulk")
 
-    self.emodel1 = neml.SmallStrainElasticity(self.elastic1)
-    self.emodel2 = neml.SmallStrainElasticity(self.elastic2)
+    self.emodel1 = models.SmallStrainElasticity(self.elastic1)
+    self.emodel2 = models.SmallStrainElasticity(self.elastic2)
 
     self.tiny_strain = np.array([1e-6,0,0,0,0,0])
     self.T = 300.0
@@ -99,13 +99,13 @@ class TestCompoundMaterials(unittest.TestCase):
   def test_creep_plasticity(self):
     surface = surfaces.IsoJ2()
     sy = 100.0
-    bmodel = neml.SmallStrainPerfectPlasticity(self.elastic1, surface, sy)
+    bmodel = models.SmallStrainPerfectPlasticity(self.elastic1, surface, sy)
     A = 1.85e-10
     n = 12.0
     
     smodel = creep.PowerLawCreep(A, n)
     cmodel = creep.J2CreepModel(smodel)
-    model = neml.SmallStrainCreepPlasticity(self.elastic1, bmodel, cmodel)
+    model = models.SmallStrainCreepPlasticity(self.elastic1, bmodel, cmodel)
 
     self.very_close(model, self.emodel1)
 
@@ -123,11 +123,11 @@ class TestCompoundMaterials(unittest.TestCase):
 
     surface = surfaces.IsoJ2()
     hrule = hardening.VoceIsotropicHardeningRule(s0, R, d)
-    g = visco_flow.GPowerLaw(n)
+    g = visco_flow.GPowerLaw(n, eta)
 
-    vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g, eta)
+    vmodel = visco_flow.PerzynaFlowRule(surface, hrule, g)
     flow = general_flow.TVPFlowRule(self.elastic1, vmodel)
-    model = neml.GeneralIntegrator(self.elastic1, flow)
+    model = models.GeneralIntegrator(self.elastic1, flow)
 
     self.very_close(model, self.emodel1)
     
@@ -147,7 +147,7 @@ class TestCompoundMaterials(unittest.TestCase):
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic1, 
+    bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic1, 
         flow)
 
     W0 = 10.0

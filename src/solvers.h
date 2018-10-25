@@ -11,9 +11,8 @@
 
 namespace neml {
 
-/// Trial state classes
-//  Store data the solver needs and can be passed into solution interface
-
+/// Trial state
+///  Store data the solver needs and can be passed into solution interface
 class TrialState {
 
 };
@@ -21,8 +20,11 @@ class TrialState {
 /// Generic nonlinear solver interface
 class Solvable {
  public:
+  /// Number of parameters in the nonlinear equation
   virtual size_t nparams() const = 0;
+  /// Initialize a guess to start the solution iterations
   virtual int init_x(double * const x, TrialState * ts) = 0;
+  /// Nonlinear residual equations and corresponding jacobian
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J) = 0;
 };
@@ -37,14 +39,18 @@ int newton(Solvable * system, double * x, TrialState * ts,
           double tol, int miter, bool verbose, bool relative);
 
 #ifdef SOLVER_NOX
-/// NOX OO interface
+/// NOX object-oriented interface
 class NOXSolver: public NOX::LAPACK::Interface {
  public:
+  /// Setup with the solvable object and the trial state
   NOXSolver(Solvable * system, TrialState * ts);
-
+  
+  /// Get a NOX initial guess
   const NOX::LAPACK::Vector& getInitialGuess();
-
+  
+  /// Compute the residual
   bool computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x);
+  /// Compute the jacobian
   bool computeJacobian(NOX::LAPACK::Matrix<double>& J, 
       const NOX::LAPACK::Vector& x);
 

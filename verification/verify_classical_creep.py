@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import neml, elasticity, drivers, damage, creep
+from neml import models, elasticity, drivers, damage, creep
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,14 +28,12 @@ if __name__ == "__main__":
   srate = 100.0
 
   # Setup model
-  Em = elasticity.YoungsModulus(E)
-  vm = elasticity.PoissonsRatio(nu)
-  emodel = elasticity.IsotropicLinearElasticModel(Em, vm)
-  bmodel = neml.SmallStrainElasticity(emodel)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
+  bmodel = models.SmallStrainElasticity(emodel)
   scmodel = creep.PowerLawCreep(A, n)
   cfmodel = creep.J2CreepModel(scmodel)
-  cmodel = neml.SmallStrainCreepPlasticity(bmodel, cfmodel)
-  model = damage.ClassicalCreepDamageModel_sd(S, xi, phi, cmodel)
+  cmodel = models.SmallStrainCreepPlasticity(emodel, bmodel, cfmodel)
+  model = damage.ClassicalCreepDamageModel_sd(emodel, S, xi, phi, cmodel)
 
   # Computed life
   srange = np.linspace(s0/2,s0*2, 10)

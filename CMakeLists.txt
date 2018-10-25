@@ -1,18 +1,15 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
-
 project(NEML LANGUAGES CXX)
 
-# Setup modules
+### Setup modules ###
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-# Need c++ 11
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+### Need c++ 11 ###
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# This is risky, but I don't use the preprocessor a lot
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Wp,-w")
-
-# Select nonlinear solver
+### Select nonlinear solver ###
 set(SOLVER "newton" CACHE STRING "Nonlinear solver to use")
 set_property(CACHE SOLVER PROPERTY STRINGS newton nox)
 if (${SOLVER} MATCHES "newton")
@@ -21,56 +18,70 @@ if (${SOLVER} MATCHES "newton")
       set(SOLVER_LIBRARIES "")
 elseif (${SOLVER} MATCHES "nox")
       add_definitions(-DSOLVER_NOX)
-      set(NOX_INCLUDE_PATH "$ENV{HOME}/packages/trilinos/include" CACHE STRING "NOX include path")
-      set(NOX_LIBRARY_PATH "$ENV{HOME}/packages/trilinos/lib" CACHE STRING "NOX library path")
-      INCLUDE_DIRECTORIES(${NOX_INCLUDE_PATH})
-      set(SOLVER_LIBRARIES "-L${NOX_LIBRARY_PATH} -lnox -lnoxlapack")
+      set(TRILINOS_PATH "" CACHE STRING "Path to trilinos installation")
+      FIND_PACKAGE(Trilinos PATHS ${TRILINOS_PATH}/lib/cmake/Trilinos ${TRILINOS_PATH})
+      INCLUDE_DIRECTORIES(${Trilinos_INCLUDE_DIRS})
+      set(SOLVER_LIBRARIES ${Trilinos_LIBRARIES})
 else()
       message("Unknown solver")
 endif()
 
-# Configure libraries
+### Need Boost (only variant.hpp really) ###
+FIND_PACKAGE(Boost REQUIRED)
+INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
+
+### Configure standard-ish libraries ###
 set(BLAS_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 FIND_PACKAGE(libxml++ REQUIRED)
-INCLUDE_DIRECTORIES(${libxml++_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(SYSTEM ${libxml++_INCLUDE_DIRS})
 
-# Option for python
-option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
-if (WRAP_PYTHON)
-      FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
-      INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
-else()
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-      # Headers?
-endif()
 
+### PLATFORM AND COMPILER SPECIFIC OPTIONS ###
 # Make better debug on Intel
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -traceback -ftrapuv")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Werror")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -g -Wextra -Wall -Wno-unused-parameter")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Werror")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -g -Wextra -Wall -Wno-unused-parameter")
+else()
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
 endif()
 
-# Some apple things
+# For MacOS
 if(APPLE)
       set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
 endif(APPLE)
+######
 
-# Recurse
-add_subdirectory(src)
 
-if (NOT WRAP_PYTHON)
-      add_subdirectory(util/abaqus)
-endif()
-
-# Documentation control
+### DOCUMENTATION ###
 option(BUILD_DOCUMENTATION "Build documentation: manual and doxygen" OFF)
 if (BUILD_DOCUMENTATION)
-      option(BUILD_DOXYGEN "Build and install Doxygen documentation" ON)
-      option(BUILD_MANUAL "Build and install LaTeX manual" ON)
       add_subdirectory(doc)
 endif()
 
+
+### PYTHON BINDINGS ###
+option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
+if (WRAP_PYTHON)
+      FIND_PACKAGE(PythonLibs REQUIRED)
+      INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
+      INCLUDE_DIRECTORIES(SYSTEM pybind11)
+endif()
+
+### BASE LIBRARY ###
+add_subdirectory(src)
+
+### ABAQUS HELPER ###
+option(BUILD_UTILS "Generate interface examples and helpers for Abaqus UMATS" OFF)
+if (BUILD_UTILS)
+      add_subdirectory(util)
+endif()

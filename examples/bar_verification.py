@@ -2,16 +2,15 @@
 
 import sys
 sys.path.append('..')
-from neml import neml, elasticity, arbbar
+from neml import models, elasticity, arbbar
 
 import numpy as np
 
 def make_mat(E, a, nu = 0.3):
-  youngs = elasticity.YoungsModulus(E)
-  poissons = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, 
+      "poissons")
   
-  return neml.SmallStrainElasticity(elastic, alpha = a)
+  return models.SmallStrainElasticity(elastic, alpha = a)
 
 if __name__ == "__main__":
   T1 = 0

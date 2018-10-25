@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,15 +18,13 @@ if __name__ == "__main__":
   s0 = 300.0
   Kp = E / 100.0
 
-  shear = elasticity.ShearModulus(mu)
-  bulk = elasticity.BulkModulus(K)
-  elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+  elastic = elasticity.IsotropicLinearElasticModel(mu, "shear", K, "bulk")
   surface = surfaces.IsoJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
 
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-  model = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
   erate = 1.0e-4
   res = drivers.uniaxial_test(model, erate, nsteps = 1000)

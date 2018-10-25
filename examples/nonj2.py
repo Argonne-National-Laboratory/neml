@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,13 +16,11 @@ if __name__ == "__main__":
   h = 1.0e-2
   l = 1.0
 
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  emodel = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
   surface = surfaces.IsoJ2I1(h, l)
 
-  model = neml.SmallStrainPerfectPlasticity(emodel, surface, sY)
+  model = models.SmallStrainPerfectPlasticity(emodel, surface, sY)
 
   res_tension = drivers.uniaxial_test(model, 1.0e-2)
   res_compres = drivers.uniaxial_test(model, 1.0e-2, 
@@ -41,22 +39,21 @@ if __name__ == "__main__":
   l = 1.0
   K = E / 50.0
 
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  emodel = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
 
   surface = surfaces.IsoKinJ2I1(h, l)
   
   hiso = hardening.LinearIsotropicHardeningRule(sY, -K/10)
   
-  hmodel = hardening.Chaboche(hiso, [K * 3.0/2.0], [hardening.ConstantGamma(0.0)])
+  hmodel = hardening.Chaboche(hiso, [K * 3.0/2.0], 
+      [hardening.ConstantGamma(0.0)], [0.0], [1.0])
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
   #hkin = hardening.LinearKinematicHardeningRule(K)
   #hmodel = hardening.CombinedHardeningRule(hiso, hkin)
   #flow = ri_flow.RateIndependentAssociativeFlow(surface, hmodel)
 
-  model = neml.SmallStrainRateIndependentPlasticity(emodel, flow)
+  model = models.SmallStrainRateIndependentPlasticity(emodel, flow)
   
   smax = 200.0
   Rs = [-1.0, -0.75, -0.5, -0.25, 0.0]

@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage
+from neml import interpolate, solvers, models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage
 from common import *
 
 import unittest
@@ -181,9 +181,8 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -192,7 +191,7 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.xi = 0.478
@@ -202,71 +201,6 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.model = damage.ClassicalCreepDamageModel_sd(
         self.elastic, 
         self.A, self.xi, self.phi, self.bmodel)
-
-    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
-    self.T = 100.0
-
-    self.s_np1 = self.stress
-    self.s_n = np.array([-25,150,250,-25,-100,25])
-
-    self.d_np1 = 0.5
-    self.d_n = 0.4
-
-    self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15])
-    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13])
-
-    self.T_np1 = self.T
-    self.T_n = 90.0
-
-    self.t_np1 = 1.0
-    self.t_n = 0.0
-
-    self.u_n = 0.0
-    self.p_n = 0.0
-  
-    # This is a rather boring baseline history state to probe, but I can't
-    # think of a better way to get a "generic" history from a generic model
-    self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
-    self.x_trial = np.array([50,-25,150,-150,190,100.0] + [0.41])
-
-    self.nsteps = 10
-    self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
-    self.ttarget = 10.0
-
-class TestMarkDamage(unittest.TestCase, CommonScalarDamageModel, 
-    CommonDamagedModel):
-  def setUp(self):
-    self.E = 92000.0
-    self.nu = 0.3
-
-    self.s0 = 180.0
-    self.Kp = 1000.0
-    self.H = 1000.0
-
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
-
-    surface = surfaces.IsoKinJ2()
-    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
-    kin = hardening.LinearKinematicHardeningRule(self.H)
-    hrule = hardening.CombinedHardeningRule(iso, kin)
-
-    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
-
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
-        flow)
-
-    self.C = 8.0e-6
-    self.n = 2.2
-    self.m = 1.0
-    self.alpha = 3.0
-    self.beta = 2.0
-    self.r0 = 0.01
-
-    self.model = damage.MarkFatigueDamageModel_sd(
-        self.elastic, self.C, self.m, self.n, 
-        self.alpha, self.beta, self.r0, self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -308,9 +242,8 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -319,7 +252,7 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.A = 8.0e-6
@@ -374,9 +307,8 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E,
+        "youngs", self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -385,7 +317,7 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.W0 = 10.0
@@ -444,9 +376,8 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
     self.Kp = 1000.0
     self.H = 1000.0
 
-    E = elasticity.YoungsModulus(self.E)
-    v = elasticity.PoissonsRatio(self.nu)
-    self.elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E,
+        "youngs", self.nu, "poissons")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
@@ -455,7 +386,7 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = neml.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
     self.W0 = 10.0

@@ -65,8 +65,8 @@ class TestRegionKMCreep(unittest.TestCase, CommonScalarCreep):
     self.E = 160000.0
     self.nu = 0.3
 
-    self.emodel = elasticity.IsotropicLinearElasticModel(elasticity.YoungsModulus(self.E),
-        elasticity.PoissonsRatio(self.nu))
+    self.emodel = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
 
     self.kboltz = 1.38064e-23 * 1000.0
     
@@ -115,8 +115,8 @@ class TestMukherjeeCreep(unittest.TestCase, CommonScalarCreep):
 
     self.E = 100000.0
     self.nu = 0.3
-    self.emodel = elasticity.IsotropicLinearElasticModel(elasticity.YoungsModulus(self.E),
-        elasticity.PoissonsRatio(self.nu))
+    self.emodel = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
     
     self.k = 1.380e-23 * 1.0e-6 # m^3 * MPa / K
     self.R = 8.314 / 1000 # kJ / (K * mol)

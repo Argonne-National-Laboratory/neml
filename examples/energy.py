@@ -6,7 +6,7 @@ sys.path.append('..')
 import numpy as np
 import scipy.integrate as quad
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, creep, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, creep, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 
@@ -14,25 +14,25 @@ if __name__ == "__main__":
   E = 150000.0
   nu = 0.3
   sY = 200.0
-  H = 0.0
+  H = 0.0001
 
-  youngs = elasticity.YoungsModulus(E)
-  poisson = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
   surface = surfaces.IsoJ2()
   iso = hardening.LinearIsotropicHardeningRule(sY, H)
   flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-  model1 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+  model1 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
-  model2 = neml.SmallStrainPerfectPlasticity(elastic, surface, sY)
+  model2 = models.SmallStrainPerfectPlasticity(elastic, surface, sY)
  
-  n = 10.0
-  gpower = visco_flow.GPowerLaw(n)
-  eta = 100.0
-  vflow = visco_flow.PerzynaFlowRule(surface, iso, gpower, eta)
+  n = 45.0
+  eta = 200.0
+  iso2 = hardening.LinearIsotropicHardeningRule(0, H)
+  gpower = visco_flow.GPowerLaw(n, eta)
+  vflow = visco_flow.PerzynaFlowRule(surface, iso2, gpower)
   gflow = general_flow.TVPFlowRule(elastic, vflow)
-  model3 = neml.GeneralIntegrator(elastic, gflow)
+  model3 = models.GeneralIntegrator(elastic, gflow)
 
   # T is in hours, strain in percent, stress in MPa
   A = 1.85e-9
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
   smodel = creep.NortonBaileyCreep(A, n, m)
   cmodel = creep.J2CreepModel(smodel)
-  model4 = neml.SmallStrainCreepPlasticity(elastic, model1, cmodel)
+  model4 = models.SmallStrainCreepPlasticity(elastic, model1, cmodel)
 
   erate = 1.0e-4
   emax = 0.025
@@ -49,7 +49,7 @@ if __name__ == "__main__":
   energy = emax * sY - 0.5 * sY * sY/E
 
   dissipated = energy - 0.5 * sY * sY / E
-
+  
   res1 = drivers.uniaxial_test(model1, erate, emax = emax)
   res2 = drivers.uniaxial_test(model2, erate, emax = emax)
   res3 = drivers.uniaxial_test(model3, erate, emax = emax)

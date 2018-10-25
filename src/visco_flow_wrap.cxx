@@ -1,31 +1,20 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "visco_flow.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 PYBIND11_MODULE(visco_flow, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Viscoplastic flow models.";
 
-  py::class_<GFlow, std::shared_ptr<GFlow>>(m, "GFlow")
-      .def("g", &GFlow::g, "g function in Perzyna model")
-      .def("dg", &GFlow::dg, "Derivative of g wrt f")
-      ;
-
-  py::class_<GPowerLaw, std::shared_ptr<GPowerLaw>>(m, "GPowerLaw", py::base<GFlow>())
-      .def(py::init<double>(), py::arg("n"))
-      .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("n"))
-      .def("n", &GPowerLaw::n)
-      ;
-
-  py::class_<ViscoPlasticFlowRule, std::shared_ptr<ViscoPlasticFlowRule>>(m, "ViscoPlasticFlowRule")
+  py::class_<ViscoPlasticFlowRule, NEMLObject, std::shared_ptr<ViscoPlasticFlowRule>>(m, "ViscoPlasticFlowRule")
       .def_property_readonly("nhist", &ViscoPlasticFlowRule::nhist, "Number of history variables.")
       .def("init_hist",
            [](ViscoPlasticFlowRule & m) -> py::array_t<double>
@@ -213,55 +202,78 @@ PYBIND11_MODULE(visco_flow, m) {
 
       ;
 
-    py::class_<PerzynaFlowRule, std::shared_ptr<PerzynaFlowRule>>(m, "PerzynaFlowRule", py::base<ViscoPlasticFlowRule>())
-        .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>, std::shared_ptr<GFlow>, double>(),
-             py::arg("surface"), py::arg("hardening"), py::arg("g"), py::arg("eta"))
-        .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>, std::shared_ptr<GFlow>, std::shared_ptr<Interpolate>>(),
-             py::arg("surface"), py::arg("hardening"), py::arg("g"), py::arg("eta"))
-        .def("eta", &PerzynaFlowRule::eta)
-        ;
+  py::class_<GFlow, NEMLObject, std::shared_ptr<GFlow>>(m, "GFlow")
+      .def("g", &GFlow::g, "g function in Perzyna model")
+      .def("dg", &GFlow::dg, "Derivative of g wrt f")
+      ;
 
-    py::class_<FluidityModel, std::shared_ptr<FluidityModel>>(m, "FluidityModel")
-        .def("eta", &FluidityModel::eta)
-        .def("deta", &FluidityModel::deta)
-        ;
+  py::class_<GPowerLaw, GFlow, std::shared_ptr<GPowerLaw>>(m, "GPowerLaw")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<GPowerLaw>(args, kwargs, {"n", "eta"});
+        }))
 
-    py::class_<ConstantFluidity, std::shared_ptr<ConstantFluidity>>(m, "ConstantFluidity", py::base<FluidityModel>())
-        .def(py::init<double>(), py::arg("eta"))
-        .def(py::init<std::shared_ptr<Interpolate>>(), py::arg("eta"))
-        ;
+      .def("n", &GPowerLaw::n)
+      .def("eta", &GPowerLaw::eta)
+      ;
 
-    py::class_<SaturatingFluidity, std::shared_ptr<SaturatingFluidity>>(m, "SaturatingFluidity", py::base<FluidityModel>())
-        .def(py::init<double, double, double>(), py::arg("K0"), py::arg("A"), py::arg("b"))
-        .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("K0"), py::arg("A"), py::arg("b"))
-        ;
+  py::class_<PerzynaFlowRule, ViscoPlasticFlowRule, std::shared_ptr<PerzynaFlowRule>>(m, "PerzynaFlowRule")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<PerzynaFlowRule>(args, kwargs, {"surface",
+                                                     "hardening",
+                                                     "g"});
+      }))
+      ;
 
-    py::class_<ChabocheFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule", py::base<ViscoPlasticFlowRule>())
-        .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, double>(),
-             py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
-        .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>, std::shared_ptr<FluidityModel>, std::shared_ptr<Interpolate>>(),
-             py::arg("surface"), py::arg("hardening"), py::arg("fluidity"), py::arg("n"))
-        ;
+  py::class_<FluidityModel, NEMLObject, std::shared_ptr<FluidityModel>>(m, "FluidityModel")
+      .def("eta", &FluidityModel::eta)
+      .def("deta", &FluidityModel::deta)
+      ;
 
-    py::class_<YaguchiGr91FlowRule, std::shared_ptr<YaguchiGr91FlowRule>>(m, "YaguchiGr91FlowRule", py::base<ViscoPlasticFlowRule>())
-        .def(py::init<>())
+  py::class_<ConstantFluidity, FluidityModel, std::shared_ptr<ConstantFluidity>>(m, "ConstantFluidity")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ConstantFluidity>(args, kwargs, {"eta"});
+        }))
+      ;
 
-        .def("D", &YaguchiGr91FlowRule::D)
-        .def("n", &YaguchiGr91FlowRule::n)
-        .def("a10", &YaguchiGr91FlowRule::a10)
-        .def("C2", &YaguchiGr91FlowRule::C2)
-        .def("a2", &YaguchiGr91FlowRule::a2)
-        .def("g1", &YaguchiGr91FlowRule::g1)
-        .def("g2", &YaguchiGr91FlowRule::g2)
-        .def("m", &YaguchiGr91FlowRule::m)
-        .def("br", &YaguchiGr91FlowRule::br)
-        .def("bh", &YaguchiGr91FlowRule::bh)
-        .def("A", &YaguchiGr91FlowRule::A)
-        .def("B", &YaguchiGr91FlowRule::B)
-        .def("d", &YaguchiGr91FlowRule::d)
-        .def("q", &YaguchiGr91FlowRule::q)
-        .def("C1", &YaguchiGr91FlowRule::C1)
-        ;
+  py::class_<SaturatingFluidity, FluidityModel, std::shared_ptr<SaturatingFluidity>>(m, "SaturatingFluidity")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<SaturatingFluidity>(args, kwargs, {"K0", "A", "b"});
+        }))
+      ;
+
+  py::class_<ChabocheFlowRule, ViscoPlasticFlowRule, std::shared_ptr<ChabocheFlowRule>>(m, "ChabocheFlowRule")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ChabocheFlowRule>(args, kwargs, {"surface", "hardening",
+                                                        "fluidity", "n"});
+        }))
+      ;
+
+  py::class_<YaguchiGr91FlowRule, ViscoPlasticFlowRule, std::shared_ptr<YaguchiGr91FlowRule>>(m, "YaguchiGr91FlowRule")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<YaguchiGr91FlowRule>(args, kwargs, {});
+        }))
+      .def("D", &YaguchiGr91FlowRule::D)
+      .def("n", &YaguchiGr91FlowRule::n)
+      .def("a10", &YaguchiGr91FlowRule::a10)
+      .def("C2", &YaguchiGr91FlowRule::C2)
+      .def("a2", &YaguchiGr91FlowRule::a2)
+      .def("g1", &YaguchiGr91FlowRule::g1)
+      .def("g2", &YaguchiGr91FlowRule::g2)
+      .def("m", &YaguchiGr91FlowRule::m)
+      .def("br", &YaguchiGr91FlowRule::br)
+      .def("bh", &YaguchiGr91FlowRule::bh)
+      .def("A", &YaguchiGr91FlowRule::A)
+      .def("B", &YaguchiGr91FlowRule::B)
+      .def("d", &YaguchiGr91FlowRule::d)
+      .def("q", &YaguchiGr91FlowRule::q)
+      .def("C1", &YaguchiGr91FlowRule::C1)
+      ;
 }
 
 } // namespace neml

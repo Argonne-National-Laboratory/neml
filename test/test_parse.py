@@ -1,7 +1,16 @@
-from neml import solvers, interpolate, neml, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow, creep, damage
+from neml import solvers, interpolate, models, elasticity, ri_flow, hardening, surfaces, parse, visco_flow, general_flow, creep, damage
 
 import unittest
 import numpy as np
+
+class TestErrors(unittest.TestCase):
+  def test_top(self):
+    with self.assertRaises(parse.InvalidType):
+      test = parse.parse_xml("test/examples.xml", "test_badtop")
+
+  def test_badobject(self):
+    with self.assertRaises(RuntimeError):
+      test = parse.parse_xml("test/examples.xml", "test_badobject")
 
 class CompareMats(object):
   def test_same(self):
@@ -49,44 +58,6 @@ class CompareMats(object):
 
       strain_n = strain_np1
 
-class TestMarkDamage(CompareMats, unittest.TestCase):
-  def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_markdamage")
-
-    E = 92000.0
-    nu = 0.3
-
-    s0 = 180.0
-    Kp = 1000.0
-
-    E = elasticity.YoungsModulus(E)
-    v = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(E, v)
-
-    surface = surfaces.IsoJ2()
-    hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
-
-    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
-
-    bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
-        flow)
-
-    C = 8.0e-6
-    n = 2.2
-    m = 1.0
-    alpha = 3.0
-    beta = 2.0
-    r0 = 0.01
-    self.model2 = damage.MarkFatigueDamageModel_sd(elastic, 
-        C, m, n, alpha, beta, r0, 
-        bmodel)
-
-    self.T = 300.0
-    self.tmax = 10.0
-    self.nsteps = 100.0
-    self.emax = np.array([0.05,0,0,0,0,0])
-
-
 class TestPowerLawDamage(CompareMats, unittest.TestCase):
   def setUp(self):
     self.model1 = parse.parse_xml("test/examples.xml", "test_powerdamage")
@@ -97,16 +68,15 @@ class TestPowerLawDamage(CompareMats, unittest.TestCase):
     s0 = 180.0
     Kp = 1000.0
 
-    E = elasticity.YoungsModulus(E)
-    v = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(E, v)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+        nu, "poissons")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.LinearIsotropicHardeningRule(s0, Kp)
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+    bmodel = models.SmallStrainRateIndependentPlasticity(elastic, 
         flow)
 
     a = 2.2
@@ -129,15 +99,14 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     ys = 100.0
     H = 1000.0
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     surface = surfaces.IsoJ2()
     hrule = hardening.LinearIsotropicHardeningRule(ys, H)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -156,9 +125,8 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     r = 100.0
     d = 1000.0
 
-    ym = elasticity.YoungsModulus(E)
-    pr = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(ym, pr)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu,
+        "poissons")
 
     surface = surfaces.IsoJ2()
     hrule1 = hardening.LinearIsotropicHardeningRule(ys, H)
@@ -166,7 +134,7 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     hrule = hardening.CombinedIsotropicHardeningRule([hrule1,hrule2])
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -188,16 +156,15 @@ class TestCreepPlasticity(CompareMats, unittest.TestCase):
     sY = 200.0
     H = E / 50.0
 
-    youngs = elasticity.YoungsModulus(E)
-    poisson = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(youngs, poisson)
+    elastic = elasticity.IsotropicLinearElasticModel(E, "youngs", nu,
+        "poissons")
     surface = surfaces.IsoJ2()
     iso = hardening.LinearIsotropicHardeningRule(sY, H)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, iso)
 
-    pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    pmodel = models.SmallStrainRateIndependentPlasticity(elastic, flow)
     
-    self.model2 = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
+    self.model2 = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -217,9 +184,8 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
 
     KH = 1000.0
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(ys, r, d)
@@ -227,7 +193,7 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
     hrule = hardening.CombinedHardeningRule(iso, kin)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
@@ -246,26 +212,26 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
     d = 1000.0
     
     cs = [5.0,10.0]
-
     gs = [1000.0,1000.0]
+    As = [0.0, 0.0]
+    ns = [1.0, 1.0]
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(ys, r, d)
     
     gammas = [hardening.ConstantGamma(g) for g in gs]
-    hmodel = hardening.Chaboche(iso, cs, gammas)
+    hmodel = hardening.Chaboche(iso, cs, gammas, As, ns)
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
-    self.model2 = neml.SmallStrainRateIndependentPlasticity(elastic, flow)
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
-    self.emax = np.array([0.1,0,0,0,0,0])
+    self.nsteps = 100
+    self.emax = np.array([0.05,0,0,0,0,0])
 
 class TestYaguchi(CompareMats, unittest.TestCase):
   def setUp(self):
@@ -274,15 +240,16 @@ class TestYaguchi(CompareMats, unittest.TestCase):
     mu_poly = [-0.11834615, 115.5, 48807.69]
     K_poly = [-0.256417, 250.25, 105750.0]
 
-    shear = elasticity.ShearModulus(interpolate.PolynomialInterpolate(mu_poly))
-    bulk = elasticity.BulkModulus(interpolate.PolynomialInterpolate(K_poly))
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    shear = interpolate.PolynomialInterpolate(mu_poly)
+    bulk = interpolate.PolynomialInterpolate(K_poly)
+    elastic = elasticity.IsotropicLinearElasticModel(shear, "shear",
+        bulk, "bulk")
     
     vmodel = visco_flow.YaguchiGr91FlowRule()
 
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(elastic, flow)
+    self.model2 = models.GeneralIntegrator(elastic, flow)
 
     self.T = 500.0
     self.tmax = 10.0
@@ -296,15 +263,16 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     mu = 60384.61
     K = 130833.3
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     r = -80.0
     d = 3.0
 
     Cs = [135.0e3, 61.0e3, 11.0e3]
     gs = [5.0e4, 1100.0, 1.0]
+    As = [0.0, 0.0, 0.0]
+    ns = [1.0, 1.0, 1.0]
     gmodels = [hardening.ConstantGamma(g) for g in gs]
 
     eta = 701.0
@@ -314,20 +282,19 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
     surface = surfaces.IsoKinJ2()
     iso = hardening.VoceIsotropicHardeningRule(0.0, r, d)
 
-    hmodel = hardening.Chaboche(iso, Cs, gmodels)
+    hmodel = hardening.Chaboche(iso, Cs, gmodels, As, ns)
 
     fluidity = visco_flow.ConstantFluidity(eta)
     
     vmodel = visco_flow.ChabocheFlowRule(surface, hmodel, fluidity, n)
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(elastic, flow)
+    self.model2 = models.GeneralIntegrator(elastic, flow)
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
     self.nsteps = 100.0
     self.emax = np.array([0.1,0,0,0,0,0])
-
 
 class TestPerzyna(CompareMats, unittest.TestCase):
   def setUp(self):
@@ -336,9 +303,8 @@ class TestPerzyna(CompareMats, unittest.TestCase):
     mu = 40000.0
     K = 84000.0
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    elastic = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
     
     sy = 100.0
     r = 100.0
@@ -354,12 +320,12 @@ class TestPerzyna(CompareMats, unittest.TestCase):
 
     hmodel = hardening.CombinedHardeningRule(iso, kin)
 
-    gmodel = visco_flow.GPowerLaw(n)
+    gmodel = visco_flow.GPowerLaw(n, eta)
     
-    vmodel = visco_flow.PerzynaFlowRule(surface, hmodel, gmodel, eta)
+    vmodel = visco_flow.PerzynaFlowRule(surface, hmodel, gmodel)
     flow = general_flow.TVPFlowRule(elastic, vmodel)
 
-    self.model2 = neml.GeneralIntegrator(elastic, flow)
+    self.model2 = models.GeneralIntegrator(elastic, flow)
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
@@ -374,9 +340,10 @@ class TestPerfect(CompareMats, unittest.TestCase):
     E = [-100, 100000]
     nu = 0.3
 
-    youngs = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E))
-    poissons = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+    youngs = interpolate.PolynomialInterpolate(E)
+    poissons = interpolate.ConstantInterpolate(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(youngs, "youngs",
+        poissons, "poissons")
 
     surface = surfaces.IsoJ2()
 
@@ -385,7 +352,7 @@ class TestPerfect(CompareMats, unittest.TestCase):
 
     yields = interpolate.PiecewiseLinearInterpolate(Ts, Sys)
 
-    self.model2 = neml.SmallStrainPerfectPlasticity(elastic, surface, yields)
+    self.model2 = models.SmallStrainPerfectPlasticity(elastic, surface, yields)
 
     self.T = 550.0
     self.tmax = 10.0
@@ -402,9 +369,10 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
     E = [-100, 100000]
     nu = 0.3
 
-    youngs = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E))
-    poissons = elasticity.PoissonsRatio(nu)
-    elastic = elasticity.IsotropicLinearElasticModel(youngs, poissons)
+    youngs = interpolate.PolynomialInterpolate(E)
+    poissons = interpolate.ConstantInterpolate(nu)
+    elastic = elasticity.IsotropicLinearElasticModel(youngs, "youngs",
+        poissons, "poissons")
 
     surface = surfaces.IsoJ2()
 
@@ -413,7 +381,7 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
 
     yields = interpolate.PiecewiseLinearInterpolate(Ts, Sys)
 
-    pmodel = neml.SmallStrainPerfectPlasticity(elastic, surface, yields)
+    pmodel = models.SmallStrainPerfectPlasticity(elastic, surface, yields)
 
     self.T = 550.0
     self.tmax = 10.0
@@ -426,4 +394,4 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
     smodel = creep.PowerLawCreep(A, n)
     cmodel = creep.J2CreepModel(smodel)
 
-    self.model2 = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
+    self.model2 = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)

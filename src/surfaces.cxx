@@ -1,5 +1,7 @@
 #include "surfaces.h"
+
 #include "nemlmath.h"
+#include "nemlerror.h"
 
 #include <limits>
 #include <algorithm>
@@ -7,6 +9,23 @@
 #include <cmath>
 
 namespace neml {
+
+std::string IsoJ2::type()
+{
+  return "IsoJ2";
+}
+
+std::unique_ptr<NEMLObject> IsoJ2::initialize(ParameterSet & params)
+{
+  return make_unique<IsoJ2>(); 
+}
+
+ParameterSet IsoJ2::parameters()
+{
+  ParameterSet pset(IsoJ2::type());
+
+  return pset;
+}
 
 // Combined isotropic/kinematic J2 surface
 IsoKinJ2::IsoKinJ2()
@@ -17,6 +36,23 @@ IsoKinJ2::IsoKinJ2()
 IsoKinJ2::~IsoKinJ2()
 {
 
+}
+
+std::string IsoKinJ2::type()
+{
+  return "IsoKinJ2";
+}
+
+std::unique_ptr<NEMLObject> IsoKinJ2::initialize(ParameterSet & params)
+{
+  return make_unique<IsoKinJ2>(); 
+}
+
+ParameterSet IsoKinJ2::parameters()
+{
+  ParameterSet pset(IsoKinJ2::type());
+
+  return pset;
 }
 
 size_t IsoKinJ2::nhist() const
@@ -169,7 +205,8 @@ int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
   std::fill(ddf, ddf+nhist()*6, 0.0);
   
   double ss[36];
-  df_dsds(s, q, T, ss);
+  int ier = df_dsds(s, q, T, ss);
+  if (ier != SUCCESS) return ier;
 
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
@@ -182,12 +219,6 @@ int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
 
 // J2I1 implementation
 // Combined isotropic/kinematic with some I1 contribution
-IsoKinJ2I1::IsoKinJ2I1(const double h, const double l) :
-    h_(new ConstantInterpolate(h)), l_(new ConstantInterpolate(l))
-{
-
-}
-
 IsoKinJ2I1::IsoKinJ2I1(std::shared_ptr<Interpolate> h, 
                        std::shared_ptr<Interpolate> l) :
     h_(h), l_(l)
@@ -198,6 +229,29 @@ IsoKinJ2I1::IsoKinJ2I1(std::shared_ptr<Interpolate> h,
 IsoKinJ2I1::~IsoKinJ2I1()
 {
 
+}
+
+std::string IsoKinJ2I1::type()
+{
+  return "IsoKinJ2I1";
+}
+
+std::unique_ptr<NEMLObject> IsoKinJ2I1::initialize(ParameterSet & params)
+{
+  return make_unique<IsoKinJ2I1>(
+      params.get_object_parameter<Interpolate>("h"),
+      params.get_object_parameter<Interpolate>("l")
+      ); 
+}
+
+ParameterSet IsoKinJ2I1::parameters()
+{
+  ParameterSet pset(IsoKinJ2I1::type());
+
+  pset.add_parameter<NEMLObject>("h");
+  pset.add_parameter<NEMLObject>("l");
+
+  return pset;
 }
 
 size_t IsoKinJ2I1::nhist() const
@@ -407,6 +461,29 @@ int IsoKinJ2I1::df_dqds(const double* const s, const double* const q, double T,
   }
 
   return 0;
+}
+
+std::string IsoJ2I1::type()
+{
+  return "IsoJ2I1";
+}
+
+std::unique_ptr<NEMLObject> IsoJ2I1::initialize(ParameterSet & params)
+{
+  return make_unique<IsoJ2I1>(
+      params.get_object_parameter<Interpolate>("h"),
+      params.get_object_parameter<Interpolate>("l")
+      ); 
+}
+
+ParameterSet IsoJ2I1::parameters()
+{
+  ParameterSet pset(IsoJ2I1::type());
+
+  pset.add_parameter<NEMLObject>("h");
+  pset.add_parameter<NEMLObject>("l");
+
+  return pset;
 }
 
 

@@ -1,20 +1,20 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "general_flow.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 PYBIND11_MODULE(general_flow, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "General flow models where subclass functions define everything.";
 
-  py::class_<GeneralFlowRule, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
+  py::class_<GeneralFlowRule, NEMLObject, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
       .def_property_readonly("nhist", &GeneralFlowRule::nhist, "Number of history variables.")
       .def("init_hist",
            [](GeneralFlowRule & m) -> py::array_t<double>
@@ -123,9 +123,11 @@ PYBIND11_MODULE(general_flow, m) {
       .def("set_elastic_model", &GeneralFlowRule::set_elastic_model)
   ;
 
-  py::class_<TVPFlowRule, std::shared_ptr<TVPFlowRule>>(m, "TVPFlowRule", py::base<GeneralFlowRule>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>, std::shared_ptr<ViscoPlasticFlowRule>>(),
-           py::arg("elastic"), py::arg("flow"))
+  py::class_<TVPFlowRule, GeneralFlowRule, std::shared_ptr<TVPFlowRule>>(m, "TVPFlowRule")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<TVPFlowRule>(args, kwargs, {"elastic", "flow"});
+        }))
       ;
 }
 

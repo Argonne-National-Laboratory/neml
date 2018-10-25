@@ -19,7 +19,14 @@ util/f_interface/fsimple
 *.dylib.*
 *.so.*
 examples/profiling/profile
+doc/html
+doc/pdf
+doc/class-doc
+util/abaqus/report
+util/cxx_interface/cxxsimple
 doc/doxygen/Doxyfile
 doc/doxygen/html
+doc/doxygen/pdf
 doc/doxygen/latex
-util/abaqus/report
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake

@@ -18,7 +18,7 @@ pkg_search_module(libxml++_PKGCONF libxml++-3.0 libxml++-2.9 libxml++-2.8 libxml
 STRING(SUBSTRING ${libxml++_PKGCONF_VERSION} 0 1 MAJOR_VERSION)
 STRING(COMPARE EQUAL ${MAJOR_VERSION} 3 LIBXML++_V3)
 if (${LIBXML++_V3})
-      add_definitions(-DLIBXML++V3)
+      add_definitions(-DLIBXMLppV3)
 endif()
 
 # Main include dir

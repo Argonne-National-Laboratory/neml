@@ -25,7 +25,8 @@ class CommonGFlow(object):
 class TestGPowerLaw(unittest.TestCase, CommonGFlow):
   def setUp(self):
     self.n = 11.0
-    self.model = visco_flow.GPowerLaw(self.n)
+    self.eta = 200.0
+    self.model = visco_flow.GPowerLaw(self.n, self.eta)
     self.T = 300.0
 
   def gen_f(self):
@@ -33,15 +34,15 @@ class TestGPowerLaw(unittest.TestCase, CommonGFlow):
 
   def test_properties(self):
     self.assertTrue(np.isclose(self.n, self.model.n(self.T)))
+    self.assertTrue(np.isclose(self.eta, self.model.eta(self.T)))
 
   def test_g(self):
     s = self.gen_f()
     if (s > 0.0):
-      v = s**self.n
+      v = (s/self.eta)**self.n
     else:
       v = 0.0
     self.assertTrue(np.isclose(self.model.g(s, self.T), v))
-
 
 class CommonFlowRule(object):
   """
@@ -209,19 +210,15 @@ class TestPerzynaIsoJ2Voce(unittest.TestCase, CommonFlowRule):
 
     self.surface = surfaces.IsoJ2()
     self.hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
-    self.g = visco_flow.GPowerLaw(self.n)
+    self.g = visco_flow.GPowerLaw(self.n, self.eta)
 
-    self.model = visco_flow.PerzynaFlowRule(self.surface, self.hrule, self.g, self.eta)
+    self.model = visco_flow.PerzynaFlowRule(self.surface, self.hrule, self.g)
 
     self.hist0 = np.zeros((1,))
     self.T = 300.0
 
   def gen_hist(self):
     return np.array([0.01])
-
-  def test_properties(self):
-    self.assertTrue(np.isclose(self.eta, self.model.eta(self.T)))
-
 
 class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
   def setUp(self):
@@ -233,18 +230,15 @@ class TestPerzynaIsoJ2Linear(unittest.TestCase, CommonFlowRule):
 
     self.surface = surfaces.IsoJ2()
     self.hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
-    self.g = visco_flow.GPowerLaw(self.n)
+    self.g = visco_flow.GPowerLaw(self.n, self.eta)
 
-    self.model = visco_flow.PerzynaFlowRule(self.surface, self.hrule, self.g, self.eta)
+    self.model = visco_flow.PerzynaFlowRule(self.surface, self.hrule, self.g)
 
     self.hist0 = np.zeros((1,))
     self.T = 300.0
 
   def gen_hist(self):
     return np.array([0.01])
-
-  def test_properties(self):
-    self.assertTrue(np.isclose(self.eta, self.model.eta(self.T)))
 
 class TestChabocheModel(unittest.TestCase, CommonFlowRule):
   def setUp(self):
@@ -270,8 +264,10 @@ class TestChabocheModel(unittest.TestCase, CommonFlowRule):
     cs = [C1, C2, C3]
     gs = [y1, y2, y3]
     gmodels = [hardening.ConstantGamma(g) for g in gs]
+    A = [0.0, 0.0, 0.0]
+    ae = [1.0, 1.0, 1.0]
 
-    hmodel = hardening.Chaboche(iso, cs, gmodels)
+    hmodel = hardening.Chaboche(iso, cs, gmodels, A, ae)
 
     fluidity = visco_flow.ConstantFluidity(eta)
 
@@ -311,8 +307,11 @@ class TestChebocheFlow(unittest.TestCase):
     self.iso = hardening.VoceIsotropicHardeningRule(self.sY, self.Q, self.b)
     self.cs = [C1, C2, C3]
     self.gs = [y1, y2, y3]
+    self.As = [0.0, 0.0, 0.0]
+    self.ns = [1.0, 1.0, 1.0]
     self.gmodels = [hardening.ConstantGamma(g) for g in self.gs]
-    self.hmodel = hardening.Chaboche(self.iso, self.cs, self.gmodels)
+    self.hmodel = hardening.Chaboche(self.iso, self.cs, self.gmodels, 
+        self.As, self.ns)
 
     self.fluidity = visco_flow.ConstantFluidity(self.eta)
 
@@ -484,7 +483,9 @@ class TestChabocheJ2Voce(unittest.TestCase, CommonFlowRule):
     self.iso = hardening.VoceIsotropicHardeningRule(self.k, self.Q, self.b)
     cs = [self.C]
     gs = [hardening.SatGamma(self.gs, self.g0, self.beta)]
-    self.hardening = hardening.Chaboche(self.iso, cs, gs)
+    As = [0.0]
+    ns = [1.0]
+    self.hardening = hardening.Chaboche(self.iso, cs, gs, As, ns)
 
     self.fluidity = visco_flow.ConstantFluidity(self.K)
 

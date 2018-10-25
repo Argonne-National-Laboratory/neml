@@ -24,30 +24,35 @@ bool Interpolate::valid() const
   return valid_;
 }
 
-InvalidInterpolate::InvalidInterpolate() :
-    Interpolate()
-{
-  valid_ = false;
-}
-
-double InvalidInterpolate::value(double x) const
-{
-  return std::numeric_limits<double>::quiet_NaN();
-}
-
-double InvalidInterpolate::derivative(double x) const
-{
-  return std::numeric_limits<double>::quiet_NaN();
-}
-
 PolynomialInterpolate::PolynomialInterpolate(const std::vector<double> coefs) :
-    coefs_(coefs), Interpolate()
+    Interpolate(), coefs_(coefs)
 {
   int n = coefs_.size();
   deriv_.resize(n - 1);
   for (int i = 0; i < n - 1; i++) {
     deriv_[i] = coefs_[i] * ((double) (n - 1 - i));
   }
+}
+
+std::string PolynomialInterpolate::type()
+{
+  return "PolynomialInterpolate";
+}
+
+ParameterSet PolynomialInterpolate::parameters()
+{
+  ParameterSet pset(PolynomialInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("coefs");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & params)
+{
+  return make_unique<PolynomialInterpolate>(
+      params.get_parameter<std::vector<double>>("coefs")
+      ); 
 }
 
 double PolynomialInterpolate::value(double x) const
@@ -64,7 +69,7 @@ double PolynomialInterpolate::derivative(double x) const
 PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(
     const std::vector<double> points,
     const std::vector<double> values) :
-      points_(points), values_(values), Interpolate()
+      Interpolate(), points_(points), values_(values)
 {
   // Check if sorted
   if (not std::is_sorted(points.begin(), points.end())) {
@@ -74,6 +79,29 @@ PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(
   if (points.size() != values.size()) {
     valid_ = false;
   }
+}
+
+std::string PiecewiseLinearInterpolate::type()
+{
+  return "PiecewiseLinearInterpolate";
+}
+
+ParameterSet PiecewiseLinearInterpolate::parameters()
+{
+  ParameterSet pset(PiecewiseLinearInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("points");
+  pset.add_parameter<std::vector<double>>("values");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PiecewiseLinearInterpolate::initialize(ParameterSet & params)
+{
+  return make_unique<PiecewiseLinearInterpolate>(
+      params.get_parameter<std::vector<double>>("points"),
+      params.get_parameter<std::vector<double>>("values")
+      ); 
 }
 
 double PiecewiseLinearInterpolate::value(double x) const
@@ -86,7 +114,7 @@ double PiecewiseLinearInterpolate::value(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
@@ -109,7 +137,7 @@ double PiecewiseLinearInterpolate::derivative(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
@@ -125,7 +153,7 @@ double PiecewiseLinearInterpolate::derivative(double x) const
 PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
     const std::vector<double> points,
     const std::vector<double> values) :
-      points_(points), values_(values), Interpolate()
+      Interpolate(), points_(points), values_(values)
 {
   // Check if sorted
   if (not std::is_sorted(points.begin(), points.end())) {
@@ -142,6 +170,29 @@ PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
   }
 }
 
+std::string PiecewiseLogLinearInterpolate::type()
+{
+  return "PiecewiseLogLinearInterpolate";
+}
+
+ParameterSet PiecewiseLogLinearInterpolate::parameters()
+{
+  ParameterSet pset(PiecewiseLogLinearInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("points");
+  pset.add_parameter<std::vector<double>>("values");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PiecewiseLogLinearInterpolate::initialize(ParameterSet & params)
+{
+  return make_unique<PiecewiseLogLinearInterpolate>(
+      params.get_parameter<std::vector<double>>("points"),
+      params.get_parameter<std::vector<double>>("values")
+      ); 
+}
+
 double PiecewiseLogLinearInterpolate::value(double x) const
 {
   if (x <= points_.front()) {
@@ -152,7 +203,7 @@ double PiecewiseLogLinearInterpolate::value(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
@@ -175,7 +226,7 @@ double PiecewiseLogLinearInterpolate::derivative(double x) const
   }
   else {
     auto it = points_.begin();
-    for (it; it != points_.end(); ++it) {
+    for (; it != points_.end(); ++it) {
       if (x <= *it) break;
     }
     size_t ind = std::distance(points_.begin(), it);
@@ -189,9 +240,30 @@ double PiecewiseLogLinearInterpolate::derivative(double x) const
 }
 
 ConstantInterpolate::ConstantInterpolate(double v) :
-    v_(v), Interpolate()
+    Interpolate(), v_(v)
 {
 
+}
+
+std::string ConstantInterpolate::type()
+{
+  return "ConstantInterpolate";
+}
+
+ParameterSet ConstantInterpolate::parameters()
+{
+  ParameterSet pset(ConstantInterpolate::type());
+
+  pset.add_parameter<double>("v");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ConstantInterpolate::initialize(ParameterSet & params)
+{
+  return make_unique<ConstantInterpolate>(
+      params.get_parameter<double>("v")
+      ); 
 }
 
 double ConstantInterpolate::value(double x) const
@@ -205,9 +277,34 @@ double ConstantInterpolate::derivative(double x) const
 }
 
 MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :
-    V0_(V0), D_(D), T0_(T0), Interpolate()
+    Interpolate(), V0_(V0), D_(D), T0_(T0)
 {
   
+}
+
+std::string MTSShearInterpolate::type()
+{
+  return "MTSShearInterpolate";
+}
+
+ParameterSet MTSShearInterpolate::parameters()
+{
+  ParameterSet pset(MTSShearInterpolate::type());
+
+  pset.add_parameter<double>("V0");
+  pset.add_parameter<double>("D");
+  pset.add_parameter<double>("T0");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> MTSShearInterpolate::initialize(ParameterSet & params)
+{
+  return make_unique<MTSShearInterpolate>(
+      params.get_parameter<double>("V0"),
+      params.get_parameter<double>("D"),
+      params.get_parameter<double>("T0")
+      ); 
 }
 
 double MTSShearInterpolate::value(double x) const

@@ -1,25 +1,25 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "creep.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
-#include "pybind11/stl.h"
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
 PYBIND11_MODULE(creep, m) {
+  py::module::import("neml.objects");
+  py::module::import("neml.solvers");
+
   m.doc() = "Separate creep models to combine with base NEML models";
 
-  py::class_<CreepModelTrialState>(m, "CreepModelTrialState", py::base<TrialState>())
+  py::class_<CreepModelTrialState, TrialState>(m, "CreepModelTrialState")
       ;
 
-  py::class_<CreepModel, std::shared_ptr<CreepModel>>(m, "CreepModel")
+  py::class_<CreepModel, NEMLObject, Solvable, std::shared_ptr<CreepModel>>(m, "CreepModel")
       .def("update",
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::tuple<py::array_t<double>, py::array_t<double>>
            {
@@ -91,41 +91,16 @@ PYBIND11_MODULE(creep, m) {
             return ts;
 
            }, "Setup trial state for solve")
-
-      // Remove if/when pybind11 supports multiple inheritance
-      .def_property_readonly("nparams", &CreepModel::nparams, "Number of variables in nonlinear equations.")
-      .def("init_x",
-           [](CreepModel & m, CreepModelTrialState & ts) -> py::array_t<double>
-           {
-            auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
-            return x;
-           }, "Initialize guess.")
-      .def("RJ",
-           [](CreepModel & m, py::array_t<double, py::array::c_style> x, CreepModelTrialState & ts) -> std::tuple<py::array_t<double>, py::array_t<double>>
-           {
-            auto R = alloc_vec<double>(m.nparams());
-            auto J = alloc_mat<double>(m.nparams(), m.nparams());
-            
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
-
-            return std::make_tuple(R, J);
-           }, "Residual and jacobian.")
-      ;
-      // End remove block
-
-
     ;
 
-  py::class_<J2CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel", py::base<CreepModel>())
-      .def(py::init<std::shared_ptr<ScalarCreepRule>, double, int , bool>(),
-           py::arg("rule"), py::arg("tol") = 1.0e-10, py::arg("miter") = 25,
-           py::arg("verbose") = false)
+  py::class_<J2CreepModel, CreepModel, std::shared_ptr<J2CreepModel>>(m, "J2CreepModel")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<J2CreepModel>(args, kwargs, {"rule"});
+        }))
     ;
 
-  py::class_<ScalarCreepRule, std::shared_ptr<ScalarCreepRule>>(m, "ScalarCreepRule")
+  py::class_<ScalarCreepRule, NEMLObject, std::shared_ptr<ScalarCreepRule>>(m, "ScalarCreepRule")
       .def("g",
            [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
            {
@@ -172,32 +147,41 @@ PYBIND11_MODULE(creep, m) {
            }, "Evaluate creep rate wrt temperature.")
       ;
   
-  py::class_<PowerLawCreep, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep", py::base<ScalarCreepRule>())
-      .def(py::init<double, double>(), py::arg("A"), py::arg("n"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("n"))
+  py::class_<PowerLawCreep, ScalarCreepRule, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PowerLawCreep>(args, kwargs, {"A", "n"});
+        }))
 
       .def("A", &PowerLawCreep::A)
       .def("n", &PowerLawCreep::n)
     ;
 
-  py::class_<RegionKMCreep, std::shared_ptr<RegionKMCreep>>(m, "RegionKMCreep", py::base<ScalarCreepRule>())
-      .def(py::init<std::vector<double>, std::vector<double>, std::vector<double>, double, double, double, std::shared_ptr<LinearElasticModel>>(), py::arg("cuts"), py::arg("A"), py::arg("B"), py::arg("kboltz"), py::arg("b"), py::arg("eps0"), py::arg("emodel"))
+  py::class_<RegionKMCreep, ScalarCreepRule, std::shared_ptr<RegionKMCreep>>(m, "RegionKMCreep")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<RegionKMCreep>(args, kwargs, {"cuts", "A", "B",
+                                                     "kboltz", "b", "eps0", "emodel"});
+        }))
   ;
 
-  py::class_<NortonBaileyCreep, std::shared_ptr<NortonBaileyCreep>>(m, "NortonBaileyCreep", py::base<ScalarCreepRule>())
-      .def(py::init<double, double, double>(), py::arg("A"), py::arg("m"), py::arg("n"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("A"), py::arg("m"), py::arg("n"))
-
+  py::class_<NortonBaileyCreep, ScalarCreepRule, std::shared_ptr<NortonBaileyCreep>>(m, "NortonBaileyCreep")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<NortonBaileyCreep>(args, kwargs, {"A", "m",
+                                                         "n"});
+        }))
       .def("A", &NortonBaileyCreep::A)
       .def("m", &NortonBaileyCreep::m)
       .def("n", &NortonBaileyCreep::n)
     ;
 
-  py::class_<MukherjeeCreep, std::shared_ptr<MukherjeeCreep>>(m, "MukherjeeCreep", py::base<ScalarCreepRule>())
-      .def(py::init<std::shared_ptr<LinearElasticModel>, double, double, double, double, double, double, double>(), 
-           py::arg("emodel"), py::arg("A"), py::arg("n"), py::arg("D0"), py::arg("Q"), py::arg("b"),
-           py::arg("k"), py::arg("R"))
-
+  py::class_<MukherjeeCreep, ScalarCreepRule, std::shared_ptr<MukherjeeCreep>>(m, "MukherjeeCreep")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MukherjeeCreep>(args, kwargs, {"emodel", "A",
+                                                      "n", "D0", "Q", "b", "k", "R"});
+        }))
       .def_property_readonly("A", &MukherjeeCreep::A)
       .def_property_readonly("n", &MukherjeeCreep::n)
       .def_property_readonly("D0", &MukherjeeCreep::D0)

@@ -1,20 +1,19 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "surfaces.h"
-
-#include "pyhelp.h"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
 PYBIND11_MODULE(surfaces, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Yield (and flow) surface definitions.";
 
-  py::class_<YieldSurface, std::shared_ptr<YieldSurface>>(m, "YieldSurface")
+  py::class_<YieldSurface, NEMLObject, std::shared_ptr<YieldSurface>>(m, "YieldSurface")
       .def_property_readonly("nhist", &YieldSurface::nhist, "Number of history variables.")
 
       .def("f", 
@@ -23,6 +22,7 @@ PYBIND11_MODULE(surfaces, m) {
             double fv;
 
             int ier = m.f(arr2ptr<double>(s), arr2ptr<double>(h), T, fv);
+            py_error(ier);
 
             return fv;
            }, "Yield function")
@@ -33,6 +33,7 @@ PYBIND11_MODULE(surfaces, m) {
             auto deriv = alloc_vec<double>(6);
             
             int ier = m.df_ds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
+            py_error(ier);
 
             return deriv;
            }, "Yield function gradient wrt. deviatoric stress")
@@ -42,6 +43,7 @@ PYBIND11_MODULE(surfaces, m) {
             auto deriv = alloc_vec<double>(m.nhist());
             
             int ier = m.df_dq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
+            py_error(ier);
 
             return deriv;
            }, "Yield function gradient wrt. the history")
@@ -52,6 +54,7 @@ PYBIND11_MODULE(surfaces, m) {
             auto deriv = alloc_mat<double>(6,6);
             
             int ier = m.df_dsds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
+            py_error(ier);
 
             return deriv;
            }, "Yield function Hessian: stress-stress")
@@ -62,6 +65,7 @@ PYBIND11_MODULE(surfaces, m) {
             auto deriv = alloc_mat<double>(6,m.nhist());
             
             int ier = m.df_dsdq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
+            py_error(ier);
 
             return deriv;
            }, "Yield function Hessian: stress-history")
@@ -72,6 +76,7 @@ PYBIND11_MODULE(surfaces, m) {
             auto deriv = alloc_mat<double>(m.nhist(),6);
             
             int ier = m.df_dqds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
+            py_error(ier);
 
             return deriv;
            }, "Yield function Hessian: history-stress")
@@ -82,34 +87,40 @@ PYBIND11_MODULE(surfaces, m) {
             auto deriv = alloc_mat<double>(m.nhist(),m.nhist());
             
             int ier = m.df_dqdq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
+            py_error(ier);
 
             return deriv;
            }, "Yield function Hessian: history-history")
       ;
  
-  py::class_<IsoJ2, std::shared_ptr<IsoJ2>>(m, "IsoJ2", py::base<YieldSurface>())
-      .def(py::init<>())
-      ;
-
-  py::class_<IsoKinJ2, std::shared_ptr<IsoKinJ2>>(m, "IsoKinJ2", py::base<YieldSurface>())
-      .def(py::init<>())
-      ;
-
-  py::class_<IsoKinJ2I1, std::shared_ptr<IsoKinJ2I1>>(m, "IsoKinJ2I1", py::base<YieldSurface>())
-      .def(py::init<double, double>(), py::arg("h"), py::arg("l"))
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(),
-           py::arg("h"), py::arg("l"))
-
-      ;
-
-  py::class_<IsoJ2I1, std::shared_ptr<IsoJ2I1>>(m, "IsoJ2I1", py::base<YieldSurface>())
-      .def(py::init<std::shared_ptr<Interpolate>, std::shared_ptr<Interpolate>>(), py::arg("h"), py::arg("l"))
-      .def(py::init([](double h, double l)
+  py::class_<IsoJ2, YieldSurface, std::shared_ptr<IsoJ2>>(m, "IsoJ2")
+      .def(py::init([](py::args args, py::kwargs kwargs)
                     {
-                      auto hi = std::make_shared<ConstantInterpolate>(h);
-                      auto li = std::make_shared<ConstantInterpolate>(l);
-                      return new IsoJ2I1(hi, li);
-                    }), "Direct value constructor", py::arg("h"), py::arg("l"));
+                      return create_object_python<IsoJ2>(args, kwargs, {});
+                    }))
+      ;
+
+  py::class_<IsoKinJ2, YieldSurface, std::shared_ptr<IsoKinJ2>>(m, "IsoKinJ2")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<IsoKinJ2>(args, kwargs, {});
+                    }))
+      ;
+
+  py::class_<IsoKinJ2I1, YieldSurface, std::shared_ptr<IsoKinJ2I1>>(m, "IsoKinJ2I1")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<IsoKinJ2I1>(args, kwargs, 
+                                                              {"h", "l"});
+                    }))
+      ;
+
+  py::class_<IsoJ2I1, YieldSurface, std::shared_ptr<IsoJ2I1>>(m, "IsoJ2I1")
+       .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<IsoJ2I1>(args, kwargs, 
+                                                              {"h", "l"});
+                    })) 
       ;
 }
 

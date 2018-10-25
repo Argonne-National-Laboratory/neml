@@ -1,114 +1,115 @@
 #ifndef ELASTICITY_H
 #define ELASTICITY_H
 
+#include "objects.h"
 #include "interpolate.h"
 
 #include <memory>
 #include <vector>
+#include <string>
+#include <set>
 
 namespace neml {
 
-/// Modulus parent class
-class Modulus {
- public:
-  Modulus(double x);
-  Modulus(std::shared_ptr<Interpolate> x);
-  virtual double modulus(double T) const;
-
- protected:
-  std::shared_ptr<Interpolate> x_;
-};
-
-/// Shear modulus model: function of temperature
-class ShearModulus: public Modulus {
- public:
-  ShearModulus(double mu);
-  ShearModulus(std::shared_ptr<Interpolate> mu);
-};
-
-/// Bulk modulus model: function of temperature
-class BulkModulus: public Modulus {
- public:
-  BulkModulus(double K);
-  BulkModulus(std::shared_ptr<Interpolate> K);
-};
-
-/// Youngs modulus model: function of temperature
-class YoungsModulus: public Modulus {
- public:
-  YoungsModulus(double E);
-  YoungsModulus(std::shared_ptr<Interpolate> E);
-};
-
-/// Poissons ratio model: function of temperature
-class PoissonsRatio: public Modulus {
- public:
-  PoissonsRatio(double nu);
-  PoissonsRatio(std::shared_ptr<Interpolate> nu);
-};
-
-
 /// Interface of all linear elastic models
 //    Return properties as a function of temperature
-class LinearElasticModel {
+class LinearElasticModel: public NEMLObject {
  public:
+  /// The stiffness tensor, in Mandel notation
   virtual int C(double T, double * const Cv) const = 0;
+  /// The compliance tensor, in Mandel notation
   virtual int S(double T, double * const Sv) const = 0;
-
+  
+  /// The Young's modulus
   virtual double E(double T) const = 0;
+  /// Poisson's ratio
   virtual double nu(double T) const = 0;
+  /// The shear modulus
   virtual double G(double T) const = 0;
+  /// The bulk modulus
   virtual double K(double T) const = 0;
-
+  
+  /// Is this a valid, usable model?
   virtual bool valid() const;
 };
 
 /// Isotropic shear modulus generating properties from shear and bulk models
 class IsotropicLinearElasticModel: public LinearElasticModel {
-  public:
-   IsotropicLinearElasticModel(
-       std::shared_ptr<ShearModulus> shear, 
-       std::shared_ptr<BulkModulus> bulk);
-   IsotropicLinearElasticModel(
-       std::shared_ptr<YoungsModulus> youngs,
-       std::shared_ptr<PoissonsRatio> poissons);
-
-   virtual int C(double T, double * const Cv) const;
-   virtual int S(double T, double * const Sv) const;
-
-   virtual double E(double T) const;
-   virtual double nu(double T) const;
-   virtual double G(double T) const;
-   virtual double K(double T) const;
-
-   virtual bool valid() const;
-
-  private:
-   int C_calc_(double G, double K, double * const Cv) const;
-   int S_calc_(double G, double K, double * const Sv) const;
-
-   void get_GK_(double T, double & G, double & K) const;
+ public:
+  /// See detailed documentation for how to initialize with elastic constants
+  IsotropicLinearElasticModel(
+      std::shared_ptr<Interpolate> m1, 
+      std::string m1_type,
+      std::shared_ptr<Interpolate> m2,
+      std::string m2_type);
   
-   enum modulii { GK, Ev };
+  /// The string type for the object system
+  static std::string type();
+  /// Setup default parameters for the object system
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Initialize from a parameter set
+  static ParameterSet parameters();
   
-  private:
-   std::shared_ptr<Modulus> a_, b_;
-   const modulii have_modulii_;
+  /// Implement the stiffness tensor
+  virtual int C(double T, double * const Cv) const;
+  /// Implement the compliance tensor
+  virtual int S(double T, double * const Sv) const;
+  
+  /// The Young's modulus
+  virtual double E(double T) const;
+  /// Poisson's ratio
+  virtual double nu(double T) const;
+  /// The shear modulus
+  virtual double G(double T) const;
+  /// The bulk modulus
+  virtual double K(double T) const;
+  
+  /// This is a valid model
+  virtual bool valid() const;
+
+ private:
+  int C_calc_(double G, double K, double * const Cv) const;
+  int S_calc_(double G, double K, double * const Sv) const;
+
+  void get_GK_(double T, double & G, double & K) const;
+  
+ private:
+  std::shared_ptr<Interpolate> m1_, m2_;
+  std::string m1_type_, m2_type_;
+  const std::set<std::string> valid_types_ = {"bulk", "shear", 
+    "youngs", "poissons"};
 };
 
+static Register<IsotropicLinearElasticModel> regIsotropicLinearElasticModel;
+
+/// Dummy model  used to signal "take elastic properties from another object"
 class BlankElasticModel: public LinearElasticModel {
  public:
   BlankElasticModel();
 
+  /// The string type for the object system
+  static std::string type();
+  /// Setup default parameters for the object system
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Initialize from a parameter set
+  static ParameterSet parameters();
+  
+  /// Just raise an error
   virtual int C(double T, double * const Cv) const;
+  /// Raise an error
   virtual int S(double T, double * const Sv) const;
-
+  
+  /// Raise an error
   virtual double E(double T) const;
+  /// Raise an error
   virtual double nu(double T) const;
+  /// Raise an error
   virtual double G(double T) const;
+  /// Raise an error
   virtual double K(double T) const;
-
 };
+
+static Register<BlankElasticModel> regBlankElasticModel;
 
 } // namespace neml
 

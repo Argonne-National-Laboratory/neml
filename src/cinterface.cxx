@@ -5,7 +5,9 @@ NEMLMODEL * create_nemlmodel(const char * fname, const char * mname, int * ier)
 {
   try {
     // Remember, releasing the unique_ptr means you have to reference count!
-    std::unique_ptr<neml::NEMLModel> umodel = neml::parse_xml(fname, mname, *ier);
+    std::unique_ptr<neml::NEMLModel> umodel = neml::parse_xml_unique(fname, mname);
+    *ier = 0;
+
     return umodel.release();
   }
   catch (...) {

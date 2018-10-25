@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <vector>
 
 namespace neml {
 
@@ -30,15 +31,21 @@ int newton(Solvable * system, double * x, TrialState * ts,
 {
   int n = system->nparams();
   system->init_x(x, ts);
-  double * R = new double[n];
-  double * J = new double[n*n];
-  
-  system->RJ(x, ts, R, J);
+
+  std::vector<double> Rv(n);
+  std::vector<double> Jv(n*n);
+
+  double * R = &Rv[0];
+  double * J = &Jv[0];
+
+  int ier = 0;
+
+  ier = system->RJ(x, ts, R, J);
+  if (ier != SUCCESS) return ier;
 
   double nR = norm2_vec(R, n);
   double nR0 = nR;
   int i = 0;
-  int ier = 0;
 
   if (verbose) {
     std::cout << "Iter.\tnR\t\tJe\t\tcn" << std::endl;
@@ -71,9 +78,6 @@ int newton(Solvable * system, double * x, TrialState * ts,
     }
   }
 
-  delete [] R;
-  delete [] J;
-
   if (verbose) {
     std::cout << std::endl;
   }
@@ -89,28 +93,29 @@ int newton(Solvable * system, double * x, TrialState * ts,
 int diff_jac(Solvable * system, const double * const x, TrialState * ts,
              double * const nJ, double eps)
 {
-  double * R0 = new double[system->nparams()];
-  double * nR = new double[system->nparams()];
-  double * nX = new double[system->nparams()];
-  double * dJ = new double[system->nparams()*system->nparams()];
+  std::vector<double> R0v(system->nparams());
+  std::vector<double> nRv(system->nparams());
+  std::vector<double> nXv(system->nparams());
+  std::vector<double> dJv(system->nparams() * system->nparams());
+
+  double * R0 = &R0v[0];
+  double * nR = &nRv[0];
+  double * nX = &nXv[0];
+  double * dJ = &dJv[0];
 
   system->RJ(x, ts, R0, dJ);
   
-  for (int i=0; i<system->nparams(); i++) {
+  for (size_t i=0; i<system->nparams(); i++) {
     std::copy(x, x+system->nparams(), nX);
     double dx = eps * fabs(nX[i]);
     if (dx < eps) dx = eps;
     nX[i] += dx;
     system->RJ(nX, ts, nR, dJ);
-    for (int j=0; j<system->nparams(); j++) {
+    for (size_t j=0; j<system->nparams(); j++) {
       nJ[CINDEX(j,i,system->nparams())] = (nR[j] - R0[j]) / dx;
     }
   }
   
-  delete [] R0;
-  delete [] nR;
-  delete [] nX;
-  delete [] dJ;
   return 0;
 }
 
@@ -118,32 +123,31 @@ int diff_jac(Solvable * system, const double * const x, TrialState * ts,
 double diff_jac_check(Solvable * system, const double * const x,
                       TrialState * ts, const double * const J)
 {
-  double * nJ = new double[system->nparams() * system->nparams()];
+  std::vector<double> nJv(system->nparams() * system->nparams());
+  double * nJ = &nJv[0];
   
   diff_jac(system, x, ts, nJ);
   double ss = 0.0;
   double js = 0.0;
-  for (int i=0; i< system->nparams() * system->nparams(); i++) {
+  for (size_t i=0; i< system->nparams() * system->nparams(); i++) {
     ss += pow(J[i] - nJ[i], 2.0);
     js += pow(J[i], 2.0);
   }
-
-  delete [] nJ;
 
   return ss/js;
 }
 
 // START NOX STUFF
 #ifdef SOLVER_NOX
-NOXSolver::NOXSolver(Solvable * system) :
-    system_(system), nox_guess_(system->nparams()), ts_(ts)
+NOXSolver::NOXSolver(Solvable * system, TrialState * ts) :
+    nox_guess_(system->nparams()), system_(system), ts_(ts)
 {
-  double * x = new double[system_->nparams()];
+  std::vector<double> xn(system_->nparams());
+  double * x = &xn[0];
   system_->init_x(x, ts_);
-  for (int i=0; i<system_->nparams(); i++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
     nox_guess_(i) = x[i];
   }
-  delete [] x;
 }
 
 const NOX::LAPACK::Vector& NOXSolver::getInitialGuess()
@@ -154,21 +158,22 @@ const NOX::LAPACK::Vector& NOXSolver::getInitialGuess()
 bool NOXSolver::computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x)
 {
   // This is highly inefficient
-  double * Ri = new double [system_->nparams()];
-  double * Ji = new double [system_->nparams() * system_->nparams()];
-  double * xi = new double [system_->nparams()];
-  for (int i=0; i<system_->nparams(); i++) {
+  std::vector<double> Riv(system_->nparams());
+  std::vector<double> Jiv(system_->nparams()*system_->nparams());
+  std::vector<double> xiv(system_->nparams());
+  
+  double * Ri = &Riv[0];
+  double * Ji = &Jiv[0];
+  double * xi = &xiv[0];
+
+  for (size_t i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
   system_->RJ(xi, ts_, Ri, Ji);
   
-  for (int i=0; i<system_->nparams(); i++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
     f(i) = Ri[i];
   }
-
-  delete [] Ri;
-  delete [] Ji;
-  delete [] xi;
 
   return true;
 }
@@ -177,23 +182,24 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
                                 const NOX::LAPACK::Vector & x)
 {
   // This is highly inefficient
-  double * Ri = new double [system_->nparams()];
-  double * Ji = new double [system_->nparams() * system_->nparams()];
-  double * xi = new double [system_->nparams()];
-  for (int i=0; i<system_->nparams(); i++) {
+  std::vector<double> Riv(system_->nparams());
+  std::vector<double> Jiv(system_->nparams()*system_->nparams());
+  std::vector<double> xiv(system_->nparams());
+  
+  double * Ri = &Riv[0];
+  double * Ji = &Jiv[0];
+  double * xi = &xiv[0];
+
+  for (size_t i=0; i<system_->nparams(); i++) {
     xi[i] = x(i);
   }
   system_->RJ(xi, ts_, Ri, Ji);
 
-  for (int i=0; i<system_->nparams(); i++) {
-    for (int j=0; j<system_->nparams(); j++) {
+  for (size_t i=0; i<system_->nparams(); i++) {
+    for (size_t j=0; j<system_->nparams(); j++) {
       J(i,j) = Ji[CINDEX(i,j,system_->nparams())];
     }
   }
-
-  delete [] Ri;
-  delete [] Ji;
-  delete [] xi;
 
   return true;
 }
@@ -240,10 +246,6 @@ int nox(Solvable * system, double * x, TrialState * ts,
       solverParameters.sublist("Line Search");
   lineSearchParameters.set("Method", "Backtrack");
   
-  //solverParameters.set("Nonlinear Solver", "Trust Region Based");
-  //Teuchos::ParameterList& lineSearchParameters = 
-  //    solverParameters.sublist("Trust Region");
-
 
   Teuchos::ParameterList& directionParameters = 
       solverParameters.sublist("Direction");
@@ -266,7 +268,7 @@ int nox(Solvable * system, double * x, TrialState * ts,
       dynamic_cast<const NOX::LAPACK::Group&>(nox_solver->getSolutionGroup());
   NOX::LAPACK::Vector soln = dynamic_cast<const NOX::LAPACK::Vector&>(
       solnGrp.getX());
-  for (int i=0; i<system->nparams(); i++) {
+  for (size_t i=0; i<system->nparams(); i++) {
     x[i] = soln(i);
   }
 

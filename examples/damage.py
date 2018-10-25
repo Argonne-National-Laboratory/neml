@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from neml import interpolate, solvers, neml, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage, drivers
+from neml import interpolate, solvers, models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage, drivers
 
 import matplotlib.pyplot as plt
 
@@ -16,9 +16,8 @@ def simple_ex():
   Kp = 1000.0
   H = 1000.0
 
-  E = elasticity.YoungsModulus(E)
-  v = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(E, v)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
@@ -27,7 +26,7 @@ def simple_ex():
 
   flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-  bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+  bmodel = models.SmallStrainRateIndependentPlasticity(elastic, 
       flow)
 
   A = 0.0e-6
@@ -52,9 +51,8 @@ def unload_ex():
   Kp = 1000.0
   H = 1000.0
 
-  E = elasticity.YoungsModulus(E)
-  v = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(E, v)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
@@ -63,7 +61,7 @@ def unload_ex():
 
   flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-  bmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+  bmodel = models.SmallStrainRateIndependentPlasticity(elastic, 
       flow)
 
   A = 2e-5
@@ -115,9 +113,8 @@ def creep_ex():
   smodel = creep.PowerLawCreep(A, n)
   cmodel = creep.J2CreepModel(smodel)
 
-  E = elasticity.YoungsModulus(E)
-  v = elasticity.PoissonsRatio(nu)
-  elastic = elasticity.IsotropicLinearElasticModel(E, v)
+  elastic = elasticity.IsotropicLinearElasticModel(E, "youngs",
+      nu, "poissons")
 
   surface = surfaces.IsoKinJ2()
   iso = hardening.LinearIsotropicHardeningRule(s0, Kp)
@@ -126,10 +123,10 @@ def creep_ex():
 
   flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-  pmodel = neml.SmallStrainRateIndependentPlasticity(elastic, 
+  pmodel = models.SmallStrainRateIndependentPlasticity(elastic, 
       flow)
   
-  bmodel = neml.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
+  bmodel = models.SmallStrainCreepPlasticity(elastic, pmodel, cmodel)
 
   A_damg = 1.0e-2
   a_damg = 1.0

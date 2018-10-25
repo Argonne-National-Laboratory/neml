@@ -1,21 +1,21 @@
+#include "pyhelp.h" // include first to avoid annoying redef warning
+
 #include "ri_flow.h"
 
-#include "pyhelp.h"
 #include "nemlerror.h"
-
-#include "pybind11/pybind11.h"
-#include "pybind11/numpy.h"
 
 namespace py = pybind11;
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
 PYBIND11_MODULE(ri_flow, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Rate independent flow models.";
   
-  py::class_<RateIndependentFlowRule, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")
+  py::class_<RateIndependentFlowRule, NEMLObject, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")
       .def_property_readonly("nhist", &RateIndependentFlowRule::nhist, "Number of history variables.")
       .def("init_hist",
            [](RateIndependentFlowRule & m) -> py::array_t<double>
@@ -102,14 +102,18 @@ PYBIND11_MODULE(ri_flow, m) {
            }, "Hardening rule derivative with respect to history.")
       ;
 
-  py::class_<RateIndependentAssociativeFlow, std::shared_ptr<RateIndependentAssociativeFlow>>(m, "RateIndependentAssociativeFlow", py::base<RateIndependentFlowRule>())
-      .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<HardeningRule>>(), 
-           py::arg("surface"), py::arg("hardening"))
+  py::class_<RateIndependentAssociativeFlow, RateIndependentFlowRule, std::shared_ptr<RateIndependentAssociativeFlow>>(m, "RateIndependentAssociativeFlow")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<RateIndependentAssociativeFlow>(args, kwargs, {"surface", "hardening"});
+        }))
       ;
 
-  py::class_<RateIndependentNonAssociativeHardening, std::shared_ptr<RateIndependentNonAssociativeHardening>>(m, "RateIndependentNonAssociativeHardening", py::base<RateIndependentFlowRule>())
-      .def(py::init<std::shared_ptr<YieldSurface>, std::shared_ptr<NonAssociativeHardening>>(), 
-           py::arg("surface"), py::arg("hardening"))
+  py::class_<RateIndependentNonAssociativeHardening, RateIndependentFlowRule, std::shared_ptr<RateIndependentNonAssociativeHardening>>(m, "RateIndependentNonAssociativeHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<RateIndependentNonAssociativeHardening>(args, kwargs, {"surface", "hardening"});
+        }))
       ;
 }
 

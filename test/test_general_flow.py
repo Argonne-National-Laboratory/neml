@@ -166,8 +166,10 @@ class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
     cs = [C1, C2, C3]
     gs = [y1, y2, y3]
+    As = [0.0, 0.0, 0.0]
+    ns = [1.0, 1.0, 1.0]
     gmodels = [hardening.ConstantGamma(g) for g in gs]
-    hmodel = hardening.Chaboche(iso, cs, gmodels)
+    hmodel = hardening.Chaboche(iso, cs, gmodels, As, ns)
 
     fluidity = visco_flow.ConstantFluidity(eta)
 
@@ -180,9 +182,8 @@ class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     mu = E/(2*(1+nu))
     K = E/(3*(1-2*nu))
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    self.emodel = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.emodel = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     self.model = general_flow.TVPFlowRule(self.emodel, self.vmodel)
 
@@ -231,9 +232,8 @@ class TestTVPYaguchi(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     mu = E/(2*(1+nu))
     K = E/(3*(1-2*nu))
 
-    shear = elasticity.ShearModulus(mu)
-    bulk = elasticity.BulkModulus(K)
-    self.emodel = elasticity.IsotropicLinearElasticModel(shear, bulk)
+    self.emodel = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
 
     self.model = general_flow.TVPFlowRule(self.emodel, self.vmodel)
 

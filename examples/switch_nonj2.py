@@ -3,7 +3,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, neml, elasticity, drivers, surfaces, hardening, ri_flow, interpolate, visco_flow, general_flow
+from neml import solvers, models, elasticity, drivers, surfaces, hardening, ri_flow, interpolate, visco_flow, general_flow
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,9 +32,10 @@ if __name__ == "__main__":
   l = 1.0
 
   # Elastic
-  E_m = elasticity.YoungsModulus(interpolate.PolynomialInterpolate(E_poly))
-  nu_m = elasticity.PoissonsRatio(nu)
-  elastic_m = elasticity.IsotropicLinearElasticModel(E_m, nu_m)
+  E_m = interpolate.PolynomialInterpolate(E_poly)
+  nu_m = interpolate.ConstantInterpolate(nu)
+  elastic_m = elasticity.IsotropicLinearElasticModel(E_m, "youngs", nu_m,
+      "poissons")
 
   # Rate sensitivity interpolates
   Ts_rate = np.linspace(Tmin, Tmax, num = nrate_sens)
@@ -56,22 +57,24 @@ if __name__ == "__main__":
   iso_ri = hardening.LinearIsotropicHardeningRule(flow_interp, 
       interpolate.ConstantInterpolate(-K/10))
   
-  hmodel_rd = hardening.Chaboche(iso_rd, [K * 3.0/2.0], [hardening.ConstantGamma(0.0)])
-  hmodel_ri = hardening.Chaboche(iso_ri, [K * 3.0/2.0], [hardening.ConstantGamma(0.0)])
+  hmodel_rd = hardening.Chaboche(iso_rd, [K * 3.0/2.0], 
+      [hardening.ConstantGamma(0.0)], [0.0], [1.0])
+  hmodel_ri = hardening.Chaboche(iso_ri, [K * 3.0/2.0], 
+      [hardening.ConstantGamma(0.0)], [0.0], [1.0])
 
   surface_m = surfaces.IsoKinJ2()
 
   visco_flow_m = visco_flow.ChabocheFlowRule(surface_m, hmodel_rd, eta_m, 
       n_interp)
   rd_flow = general_flow.TVPFlowRule(elastic_m, visco_flow_m)
-  rd_model = neml.GeneralIntegrator(elastic_m, rd_flow)
+  rd_model = models.GeneralIntegrator(elastic_m, rd_flow)
   
   ri_flow_m = ri_flow.RateIndependentNonAssociativeHardening(surface_m, 
       hmodel_ri)
-  ri_model = neml.SmallStrainRateIndependentPlasticity(elastic_m,
+  ri_model = models.SmallStrainRateIndependentPlasticity(elastic_m,
       ri_flow_m)
 
-  model = neml.KMRegimeModel(elastic_m, [ri_model, rd_model], [g0],
+  model = models.KMRegimeModel(elastic_m, [ri_model, rd_model], [g0],
       kboltz, b, eps0)
 
   smax = 400.0
