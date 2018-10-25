@@ -15,6 +15,7 @@ NEML -- Nuclear Engineering Material model Library
    hardening
    creep
    damage
+   python
    advanced
    references
 ..
