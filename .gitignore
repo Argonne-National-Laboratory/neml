@@ -24,7 +24,6 @@ doc/pdf
 doc/class-doc
 util/abaqus/report
 util/cxx_interface/cxxsimple
-doc/doxygen/Doxyfile
 doc/doxygen/html
 doc/doxygen/pdf
 doc/doxygen/latex

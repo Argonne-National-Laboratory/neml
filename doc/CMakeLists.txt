@@ -9,8 +9,6 @@ endif()
 
 if (USE_SPHINX OR DOXYGEN)
       find_package(Doxygen REQUIRED)
-      configure_file(${CMAKE_SOURCE_DIR}/doc/doxygen/Doxyfile.in 
-            ${CMAKE_BINARY_DIR}/doc/doxygen/Doxyfile @ONLY)
       
       add_custom_target(doc-doxygen 
             COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/doc/doxygen/Doxyfile
