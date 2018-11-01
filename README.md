@@ -32,7 +32,7 @@ ordinary differential equations comprising the model form and to provide
 the algorithmic tangent needed to integrate the model into an implicit
 finite element framework.
 
-Documentation and tutorials are available here.
+Documentation and tutorials are available [here](https://neml.readthedocs.io).
 
 ## License
 
