@@ -1,11 +1,7 @@
-language: python
 sudo: enabled
-python: 
-      - "2.7"
 before_install:
-      - sudo apt-get install -y build-essential cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev
+      - sudo apt-get install -y build-essential cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
 install:
-      - pip install -r neml/requirements.txt
       - cmake -D WRAP_PYTHON=ON .
       - make
 script:
