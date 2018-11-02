@@ -51,11 +51,12 @@ class TestPiecewiseLinearInterpolate(unittest.TestCase, BaseInterpolate):
 
   def test_interpolate(self):
     testinter = inter.interp1d(self.validx, self.points,
-        fill_value = (self.points[0], self.points[-1]),
         bounds_error = False)
     xs = np.linspace(-15.0,20.0)
     ys1 = [self.valid(x) for x in xs]
     ys2 = testinter(xs)
+    ys2[xs < self.validx[0]] = self.points[0]
+    ys2[xs > self.validx[-1]] = self.points[-1]
     self.assertTrue(np.allclose(ys1, ys2))
 
 class TestPiecewiseLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
@@ -86,11 +87,13 @@ class TestPiecewiseLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
 
   def test_interpolate(self):
     testinter = inter.interp1d(self.validx, np.log(self.points),
-        fill_value = (np.log(self.points[0]), np.log(self.points[-1])),
         bounds_error = False)
     xs = np.linspace(-15.0,20.0)
     ys1 = [self.valid(x) for x in xs]
-    ys2 = np.exp(testinter(xs))
+    yp = testinter(xs)
+    yp[xs < self.validx[0]] = np.log(self.points[0])
+    yp[xs > self.validx[-1]] = np.log(self.points[-1])
+    ys2 = np.exp(yp)
     print(ys1)
     print(ys2)
     self.assertTrue(np.allclose(ys1, ys2))
