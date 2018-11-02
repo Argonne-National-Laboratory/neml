@@ -31,7 +31,6 @@ if __name__ == "__main__":
   strain = res['strain']
   stress = res['stress']
 
-
   print("Young's modulus: %f / %f" % (E, stress[1]/strain[1]))
   
   ys_tol = 1.0e-6
