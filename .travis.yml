@@ -5,6 +5,4 @@ install:
       - cmake -D WRAP_PYTHON=ON .
       - make
 script:
-      - which python
-      - which nosetests
       - nosetests
