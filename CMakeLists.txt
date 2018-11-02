@@ -75,7 +75,7 @@ endif()
 ### PYTHON BINDINGS ###
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
-      FIND_PACKAGE(PythonLibs REQUIRED)
+      FIND_PACKAGE(PythonLibs 2.7 REQUIRED)
       INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
 endif()
