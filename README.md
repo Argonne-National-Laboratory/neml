@@ -1,6 +1,7 @@
 # NEML: the Nuclear Engineering material Model Library
 
-[![Documentation Status](https://readthedocs.org/projects/neml/badge/?version=latest)](http://neml.readthedocs.org/en/latest/?badge=latest) [![Build Status](https://travis-ci.org/Argonne-National-Laboratory/neml.svg?branch=master)](https://travis-ci.org/Argonne-National-Laboratory/neml)
+[![Documentation Status](https://readthedocs.org/projects/pip/badge/?version=stable)](https://neml.readthedocs.io/en/stable/) [![Build Status](https://travis-ci.org/Argonne-National-Laboratory/neml.svg?branch=master)](https://travis-ci.org/Argonne-National-Laboratory/neml)
+[![Documentation Status](https://readthedocs.org/projects/pip/badge/?version=dev)](https://neml.readthedocs.io/en/dev/) [![Build Status](https://travis-ci.org/Argonne-National-Laboratory/neml.svg?branch=dev)](https://travis-ci.org/Argonne-National-Laboratory/neml)
 
 NEML (the Nuclear Engineering Material model Library) is a tool for creating
 and running structural material models.
