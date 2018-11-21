@@ -14,24 +14,36 @@ class CommonScalarCreep(object):
     Common tests to impose on scalar creep laws.
   """
   def test_dg_ds(self):
+    """
+      Derivative of creep rate wrt. effective stress
+    """
     dfn = lambda x: self.model.g(x, self.e, self.t, self.T)
     nderiv = differentiate(dfn, self.s)
     cderiv = self.model.dg_ds(self.s, self.e, self.t, self.T)
     self.assertTrue(np.isclose(nderiv, cderiv, rtol = 1.0e-4))
 
   def test_dg_de(self):
+    """
+      Derivative of creep rate wrt. effective strain
+    """
     dfn = lambda x: self.model.g(self.s, x, self.t, self.T)
     nderiv = differentiate(dfn, self.e)
     cderiv = self.model.dg_de(self.s, self.e, self.t, self.T)
     self.assertTrue(np.isclose(nderiv, cderiv, rtol = 1.0e-4))
 
   def test_dg_dt(self):
+    """
+      Derivative of creep rate wrt. time
+    """
     dfn = lambda x: self.model.g(self.s, self.e, x, self.T)
     nderiv = differentiate(dfn, self.t)
     cderiv = self.model.dg_dt(self.s, self.e, self.t, self.T)
     self.assertTrue(np.isclose(nderiv, cderiv))
 
   def test_dg_dT(self):
+    """
+      Derivative of creep rate wrt. temperature
+    """
     dfn = lambda x: self.model.g(self.s, self.e, self.t, x)
     nderiv = differentiate(dfn, self.T)
     cderiv = self.model.dg_dT(self.s, self.e, self.t, self.T)
@@ -146,19 +158,28 @@ class TestMukherjeeCreep(unittest.TestCase, CommonScalarCreep):
     self.assertTrue(np.isclose(g_direct, g_calc))
 
 class TestGenericCreep(unittest.TestCase, CommonScalarCreep):
+  """
+    Tests GenericCreep --- creep law given as a generic interpolation
+    of log stress.
+  """
   def setUp(self):
+    # Polynomial coefficients: log(creep rate) = np.polyval(poly, log(stress))
     self.poly = [2.5, -50.0, 365.0, -1200.0, 1500.0]
-
     self.ifn = interpolate.PolynomialInterpolate(self.poly)
     
+    # Model only has one input parameter (the interpolation formula)
     self.model = creep.GenericCreep(self.ifn)
-
-    self.T = 300.0
-    self.e = 0.1
-    self.s = 150.0
-    self.t = 10.0
+    
+    self.T = 300.0  # Temperature to test at
+    self.e = 0.1    # Effective strain to test at
+    self.s = 150.0  # Effective stress to test at
+    self.t = 10.0   # Time to test at
 
   def test_g(self):
+    """
+      Compare the creep rate calculated "by hand" to the creep rate
+      returned by the model.
+    """
     g_calc = np.exp(np.polyval(self.poly, np.log(self.s)))
     g_model = self.model.g(self.s, self.e, self.t, self.T)
     self.assertTrue(np.isclose(g_calc, g_model))
