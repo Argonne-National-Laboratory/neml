@@ -402,6 +402,59 @@ double MukherjeeCreep::R() const
   return R_;
 }
 
+GenericCreep::GenericCreep(std::shared_ptr<Interpolate> cfn) :
+    cfn_(cfn)
+{
+
+}
+
+std::string GenericCreep::type()
+{
+  return "GenericCreep";
+}
+
+std::unique_ptr<NEMLObject> GenericCreep::initialize(ParameterSet & params)
+{
+  return make_unique<GenericCreep>(
+      params.get_object_parameter<Interpolate>("cfn")
+      );
+}
+
+ParameterSet GenericCreep::parameters()
+{
+  ParameterSet pset(GenericCreep::type());
+
+  pset.add_parameter<NEMLObject>("cfn");
+
+  return pset;
+}
+
+int GenericCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  g = exp(cfn_->value(log(seq)));
+  return 0;
+}
+
+int GenericCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  double f = cfn_->value(log(seq));
+  double df = cfn_->derivative(log(seq));
+  
+  if (seq > 0.0) {
+    dg = f * exp(f) * df / seq;
+  }
+  else {
+    dg = 0.0;
+  }
+  return 0;
+}
+
+int GenericCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
 // Setup for solve
 CreepModel::CreepModel(double tol, int miter, bool verbose) :
     tol_(tol), miter_(miter), verbose_(verbose)

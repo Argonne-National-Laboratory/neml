@@ -190,6 +190,13 @@ PYBIND11_MODULE(creep, m) {
       .def_property_readonly("k", &MukherjeeCreep::k)
       .def_property_readonly("R", &MukherjeeCreep::R)
     ;
+
+  py::class_<GenericCreep, ScalarCreepRule, std::shared_ptr<GenericCreep>>(m, "GenericCreep")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<GenericCreep>(args, kwargs, {"cfn"});
+        }))
+      ;
 } // MODULE(creep, m)
 
 } // namespace neml
