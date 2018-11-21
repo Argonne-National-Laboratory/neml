@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import solvers, creep, elasticity
+from neml import solvers, creep, elasticity, interpolate
 import unittest
 
 from common import *
@@ -143,6 +143,26 @@ class TestMukherjeeCreep(unittest.TestCase, CommonScalarCreep):
     mu = self.emodel.G(self.T)
     g_calc = self.A * self.D0 * np.exp(-self.Qv / (self.R * self.T)
         ) * mu * self.b / (self.k * self.T) * (self.s / mu) ** self.n
+    self.assertTrue(np.isclose(g_direct, g_calc))
+
+class TestGenericCreep(unittest.TestCase, CommonScalarCreep):
+  def setUp(self):
+    self.poly = [2.5, -50.0, 365.0, -1200.0, 1500.0]
+
+    self.ifn = interpolate.PolynomialInterpolate(self.poly)
+    
+    self.model = creep.GenericCreep(self.ifn)
+
+    self.T = 300.0
+    self.e = 0.1
+    self.s = 150.0
+    self.t = 10.0
+
+  def test_g(self):
+    g_calc = np.exp(np.polyval(self.poly, np.log(self.s)))
+    g_model = self.model.g(self.s, self.e, self.t, self.T)
+    self.assertTrue(np.isclose(g_calc, g_model))
+
 
 class CommonCreepModel(object):
   """

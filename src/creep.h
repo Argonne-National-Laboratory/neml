@@ -137,7 +137,7 @@ static Register<NortonBaileyCreep> regNortonBaileyCreep;
 /// Classical Mukherjee creep
 class MukherjeeCreep: public ScalarCreepRule {
  public:
-  /// Parmaeters: elastic model (for shear modulus), prefactor, 
+  /// Parameters: elastic model (for shear modulus), prefactor, 
   /// stress exponent, reference lattice diffusivity, activation energy for
   /// lattice diffusion, burgers vector, boltzmann constant, gas constant
   MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel, double A, double n,
@@ -179,6 +179,32 @@ class MukherjeeCreep: public ScalarCreepRule {
 };
 
 static Register<MukherjeeCreep> regMukherjeeCreep;
+
+/// A generic creep rate model where log(creep_rate) = Interpolate(log(stress))
+class GenericCreep: public ScalarCreepRule {
+ public:
+  /// Parameters: interpolate giving the log creep rate
+  GenericCreep(std::shared_ptr<Interpolate> cfn);
+
+  /// String type for the object system
+  static std::string type();
+  /// Setup from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  /// scalar creep rate = exp(f(log(sigma))) 
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  /// Derivative of creep rate wrt effective stress
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
+  /// Derivative of creep rate wrt effective strain
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
+
+ private:
+  const std::shared_ptr<Interpolate> cfn_;
+};
+
+static Register<GenericCreep> regGenericCreep;
 
 /// Creep trial state
 class CreepModelTrialState : public TrialState {

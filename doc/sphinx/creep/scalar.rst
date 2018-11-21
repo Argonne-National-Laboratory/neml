@@ -23,6 +23,7 @@ Implementations
    s_km
    s_norton
    s_mukherjee
+   s_generic
 
 Class description
 -----------------
