@@ -12,7 +12,7 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
   const auto root = parser.get_document()->get_root_node();
   
   // Find the node with the right name
-  xmlpp::Node * found = get_child(root, mname);
+  const xmlpp::Node * found = get_child(root, mname);
 
   // Get the NEMLObject
   std::shared_ptr<NEMLObject> obj = get_object(found);
@@ -38,7 +38,7 @@ std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname
   const auto root = parser.get_document()->get_root_node();
   
   // Find the node with the right name
-  xmlpp::Node * found = get_child(root, mname);
+  const xmlpp::Node * found = get_child(root, mname);
 
   // Get the NEMLObject
   std::unique_ptr<NEMLObject> obj = get_object_unique(found);
@@ -231,7 +231,7 @@ std::string get_string(const xmlpp::Node * node)
   }
 }
 
-xmlpp::Node * get_child(const xmlpp::Node * node, std::string name)
+const xmlpp::Node * get_child(const xmlpp::Node * node, std::string name)
 {
   auto matches = node->get_children(name);
 

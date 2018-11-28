@@ -57,7 +57,7 @@ std::string get_string(const xmlpp::Node * node);
 
 // Helpers
 /// Get a node with a given name
-xmlpp::Node * get_child(const xmlpp::Node * node, std::string name);
+const xmlpp::Node * get_child(const xmlpp::Node * node, std::string name);
 
 /// Return the type of a node
 std::string get_type_of_node(const xmlpp::Node *);
