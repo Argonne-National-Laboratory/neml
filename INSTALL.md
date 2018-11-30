@@ -1,36 +1,66 @@
-# Building and installing _neml_
+# Building and installing neml
+
+For detailed instructions see the [readthedocs](https://neml.readthedocs.io/en/latest/started.html) documentation.
+
+If you are building only the base library you can build in or out of the source
+directory.
+For the python bindings we recommend building in-source.
+These instructions assuming you are building in the source directory.
+
+## Linux (Ubuntu/APT)
+
+To compile just the base library:
+
+```
+apt-get install build-essential cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev
+cmake .
+make
+```
+
+To compile both the base library and the python bindings:
+
+```
+apt-get install build-essential cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
+cmake -D WRAP_PYTHON=ON .
+make
+```
+
+and run the tests with
+
+```
+nosetests
+```
 
 ## macOS (homebrew)
 
-Install prerequisites and set up environment with
+For just the base library setup prerequisites
 
 ```
-brew install libxml++3 libxml2 boost
+brew install libxml++ boost cmake
+```
+
+and then build the library
+
+```
+cmake .
+make
+```
+
+For the library and the python bindings setup prerequisites
+
+```
+brew install libxml++ boost cmake python@2
+pip install nose numpy scipy nose matplotlib networkx
+```
+
+and then build the library
+```
+cmake -D WRAP_PYTHON=ON .
+make 
+```
+
+Users have reported that if you use libxml++3 you may need to manually request 
+libxml2 as well and add the libxml2 pkgconfig path to the environment:
+```
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/opt/libxml2/lib/pkgconfig
-```
-
-(the addition to the `PKG_CONFIG_PATH` is necessary to allow cmake to properly detect `libxml++3`)
-Next build neml with (in the `neml` directory)
-
-```
-mkdir build && cd build
-cmake ..
-make
-```
-
-## Linux (with APT)
-
-Install prerequisites with
-
-```
-sudo apt install libxml++2.6-dev libboost1.65-dev
-```
-
-(the package versions above are for Ubuntu 18.04.01 LTS, adjust accordingly for newer releases)
-Next build neml with (in the `neml` directory)
-
-```
-mkdir build && cd build
-cmake ..
-make
 ```
