@@ -22,6 +22,34 @@ NEMLModel_sd::~NEMLModel_sd()
 
 }
 
+int NEMLModel_sd::update_ld_inc(
+    const double * const d_np1, const double * const d_n,
+    const double * const w_np1, const double * const w_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1, double * const B_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
+{
+  // Plan: Use the Jaumann stress rate
+  // 1) Pass d_np1, d_n into the base model
+  // 2) Update the stress to account for the incremental spin
+  // 3) Update the tangent to account for the incremental spin
+
+  // Open questions:
+  // 1) d_n can be used by models, but I assume it will be junk
+  // 2) Do I really pass s_n unmodified into the model or do I need to retain
+  //    the unrotated stress from the previous condition?
+  // 3) What about vector/tensor history variables, same question...
+
+  // Just a dummy for now
+  std::fill(B_np1, B_np1 + 18, 0.0);
+  return update_sd(d_np1, d_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
+                   h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
+}
+
 size_t NEMLModel_sd::nstore() const
 {
   return nhist(); // Get to this later...
