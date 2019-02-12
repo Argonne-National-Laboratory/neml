@@ -51,7 +51,7 @@ ParameterSet PowerLawCreep::parameters()
 
 std::unique_ptr<NEMLObject> PowerLawCreep::initialize(ParameterSet & params)
 {
-  return make_unique<PowerLawCreep>(
+  return neml::make_unique<PowerLawCreep>(
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("n")
       ); 
@@ -121,7 +121,7 @@ ParameterSet RegionKMCreep::parameters()
 
 std::unique_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
 {
-  return make_unique<RegionKMCreep>(
+  return neml::make_unique<RegionKMCreep>(
       params.get_parameter<std::vector<double>>("cuts"),
       params.get_parameter<std::vector<double>>("A"),
       params.get_parameter<std::vector<double>>("B"),
@@ -219,7 +219,7 @@ ParameterSet NortonBaileyCreep::parameters()
 
 std::unique_ptr<NEMLObject> NortonBaileyCreep::initialize(ParameterSet & params)
 {
-  return make_unique<NortonBaileyCreep>(
+  return neml::make_unique<NortonBaileyCreep>(
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("m"),
       params.get_object_parameter<Interpolate>("n")
@@ -330,7 +330,7 @@ ParameterSet MukherjeeCreep::parameters()
 
 std::unique_ptr<NEMLObject> MukherjeeCreep::initialize(ParameterSet & params)
 {
-  return make_unique<MukherjeeCreep>(
+  return neml::make_unique<MukherjeeCreep>(
       params.get_object_parameter<LinearElasticModel>("emodel"),
       params.get_parameter<double>("A"),
       params.get_parameter<double>("n"),
@@ -415,7 +415,7 @@ std::string GenericCreep::type()
 
 std::unique_ptr<NEMLObject> GenericCreep::initialize(ParameterSet & params)
 {
-  return make_unique<GenericCreep>(
+  return neml::make_unique<GenericCreep>(
       params.get_object_parameter<Interpolate>("cfn")
       );
 }
@@ -606,7 +606,7 @@ ParameterSet J2CreepModel::parameters()
 
 std::unique_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
 {
-  return make_unique<J2CreepModel>(
+  return neml::make_unique<J2CreepModel>(
       params.get_object_parameter<ScalarCreepRule>("rule"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),

@@ -50,7 +50,7 @@ ParameterSet PolynomialInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & params)
 {
-  return make_unique<PolynomialInterpolate>(
+  return neml::make_unique<PolynomialInterpolate>(
       params.get_parameter<std::vector<double>>("coefs")
       ); 
 }
@@ -98,7 +98,7 @@ ParameterSet PiecewiseLinearInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PiecewiseLinearInterpolate::initialize(ParameterSet & params)
 {
-  return make_unique<PiecewiseLinearInterpolate>(
+  return neml::make_unique<PiecewiseLinearInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_parameter<std::vector<double>>("values")
       ); 
@@ -187,7 +187,7 @@ ParameterSet PiecewiseLogLinearInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PiecewiseLogLinearInterpolate::initialize(ParameterSet & params)
 {
-  return make_unique<PiecewiseLogLinearInterpolate>(
+  return neml::make_unique<PiecewiseLogLinearInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_parameter<std::vector<double>>("values")
       ); 
@@ -261,7 +261,7 @@ ParameterSet ConstantInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> ConstantInterpolate::initialize(ParameterSet & params)
 {
-  return make_unique<ConstantInterpolate>(
+  return neml::make_unique<ConstantInterpolate>(
       params.get_parameter<double>("v")
       ); 
 }
@@ -300,7 +300,7 @@ ParameterSet MTSShearInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> MTSShearInterpolate::initialize(ParameterSet & params)
 {
-  return make_unique<MTSShearInterpolate>(
+  return neml::make_unique<MTSShearInterpolate>(
       params.get_parameter<double>("V0"),
       params.get_parameter<double>("D"),
       params.get_parameter<double>("T0")

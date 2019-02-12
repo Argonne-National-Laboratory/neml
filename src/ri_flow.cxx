@@ -29,7 +29,7 @@ ParameterSet RateIndependentAssociativeFlow::parameters()
 
 std::unique_ptr<NEMLObject> RateIndependentAssociativeFlow::initialize(ParameterSet & params)
 {
-  return make_unique<RateIndependentAssociativeFlow>(
+  return neml::make_unique<RateIndependentAssociativeFlow>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<HardeningRule>("hardening")
       ); 
@@ -216,7 +216,7 @@ ParameterSet RateIndependentNonAssociativeHardening::parameters()
 
 std::unique_ptr<NEMLObject> RateIndependentNonAssociativeHardening::initialize(ParameterSet & params)
 {
-  return make_unique<RateIndependentNonAssociativeHardening>(
+  return neml::make_unique<RateIndependentNonAssociativeHardening>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<NonAssociativeHardening>("hardening")
       ); 

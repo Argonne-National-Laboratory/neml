@@ -59,7 +59,7 @@ std::unique_ptr<NEMLObject> get_object_unique(const xmlpp::Node * node)
   // Special case: could be a ConstantInterpolate
   std::string type = get_type_of_node(node);
   if (type == "none") {
-    return make_unique<ConstantInterpolate>(get_double(node));
+    return neml::make_unique<ConstantInterpolate>(get_double(node));
   }
   else {
     ParameterSet params = get_parameters(node);
