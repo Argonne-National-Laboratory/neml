@@ -15,6 +15,54 @@ class MaximumSubdivisions(RuntimeError):
   def __init__(self):
     super(MaximumSubdivisions, self).__init__("Exceeded the maximum allowed step subdivisions!")
 
+def newton_precalc(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, 
+    miter = 50):
+  """
+    Manually-coded newton-raphson with precalculated jacobian
+
+    This version doesn't do linesearch because ironically that would 
+    require re-inverting everything.
+
+    Parameters:
+      RJ            function return the residual + a function that gives
+                    the action of the inverse jacobian on a vector
+      x0            initial guess
+
+    Optional:
+      verbose       verbose output
+      rtol          relative tolerance
+      atol          absolute tolerance
+      miter         maximum iterations
+  """
+  R, J = RJ(x0)
+  nR = la.norm(R)
+  nR0 = nR
+  x = np.copy(x0)
+  
+  i = 0
+
+  if verbose:
+    print("Iter.\tnR\t\tnR/nR0")
+    print("%i\t%e\t%e\t" % (i, nR, 1.0))
+
+  while (nR > rtol * nR0) and (nR > atol):
+    a = J(R)
+    x -= a
+    R, J = RJ(x)
+    nR = la.norm(R)
+    i += 1
+    if verbose:
+      print("%i\t%e\t%e" % (i, nR, nR / nR0))
+    if i > miter:
+      if verbose:
+        print("")
+      raise MaximumIterations()
+  
+  if verbose:
+    print("")
+
+  return x
+
 def newton(RJ, x0, verbose = False, rtol = 1.0e-6, atol = 1.0e-10, miter = 50,
     linesearch = 'none', bt_tau = 0.5, bt_c = 1.0e-4):
   """
