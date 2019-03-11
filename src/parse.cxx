@@ -2,278 +2,235 @@
 
 namespace neml {
 
-std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
-{
-  // Parse the XML file
-  xmlpp::DomParser parser;
-  parser.parse_file(fname);
+  std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname) {
+    // Parse the XML file
+    rapidxml::file <> xmlFile(fname.c_str());
+    rapidxml::xml_document<> doc;
+    doc.parse<0>(xmlFile.data());
+      
+    // Grab the root node
+    const rapidxml::xml_node<> * root = doc.first_node();
+      
+    // Find the node with the right name
+    const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
+    
+    // Get the NEMLObject
+    std::shared_ptr<NEMLObject> obj = get_object(found);
+
+    // Do a dangerous cast
+    auto res = std::dynamic_pointer_cast<NEMLModel>(obj);
+    if (res == nullptr) {
+      throw InvalidType(found->name(), get_type_of_node(found), 1, "NEMLModel");
+    }
+    else {
+      return res;
+    }
+  }
+
+  std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname) {
+    // Parse the XML file
+    rapidxml::file <> xmlFile(fname.c_str());
+    rapidxml::xml_document<> doc;
+    doc.parse<0>(xmlFile.data());
   
-  // Grab the root node
-  const auto root = parser.get_document()->get_root_node();
+    // Grab the root node
+    const rapidxml::xml_node<> * root = doc.first_node();
   
-  // Find the node with the right name
-  const xmlpp::Node * found = get_child(root, mname);
+    // Find the node with the right name
+    const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
 
-  // Get the NEMLObject
-  std::shared_ptr<NEMLObject> obj = get_object(found);
+    // Get the NEMLObject
+    std::unique_ptr<NEMLObject> obj = get_object_unique(found);
 
-  // Do a dangerous cast
-  auto res = std::dynamic_pointer_cast<NEMLModel>(obj);
-  if (res == nullptr) {
-    throw InvalidType(found->get_name().raw(), get_type_of_node(found),
-                      found->get_line(), "NEMLModel");
+    // Do a dangerous cast
+    auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel*>(obj.release()));
+    if (res == nullptr) {
+      throw InvalidType(found->name(), get_type_of_node(found), 1, "NEMLModel");
+    }
+    else {
+      return res;
+    }
   }
-  else {
-    return res;
-  }
-}
 
-std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname)
-{
-  // Parse the XML file
-  xmlpp::DomParser parser;
-  parser.parse_file(fname);
+  std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node) {
+    // Special case: could be a ConstantInterpolate
+    std::string type = get_type_of_node(node);
+    if (type == "none") {
+      return neml::make_unique<ConstantInterpolate>(get_double(node));
+    }
+    else {
+      ParameterSet params = get_parameters(node);
+      try {
+	return Factory::Creator()->create_unique(params);
+      }
+      catch (UnregisteredError & e) {
+	throw UnregisteredXML(node->name(), type, 1);
+      }
+    }
+  }
+
+  std::shared_ptr<NEMLObject> get_object(const rapidxml::xml_node<> * node) {
+    // Special case: could be a ConstantInterpolate
+    std::string type = get_type_of_node(node);
+    if (type == "none") {
+      return std::make_shared<ConstantInterpolate>(get_double(node));
+    }
+    else {
+      ParameterSet params = get_parameters(node);
+      return Factory::Creator()->create(params);
+    }
+  }
+
+  ParameterSet get_parameters(const rapidxml::xml_node<> * node) {
+    std::string type = get_type_of_node(node);
+
+    // Needs to have a type at this point
+    if (type == "none") {
+      throw InvalidType(node->name(), type, 1, "NEMLObject");
+    }
   
-  // Grab the root node
-  const auto root = parser.get_document()->get_root_node();
-  
-  // Find the node with the right name
-  const xmlpp::Node * found = get_child(root, mname);
-
-  // Get the NEMLObject
-  std::unique_ptr<NEMLObject> obj = get_object_unique(found);
-
-  // Do a dangerous cast
-  auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel*>(obj.release()));
-  if (res == nullptr) {
-    throw InvalidType(found->get_name().raw(), get_type_of_node(found),
-                      found->get_line(), "NEMLModel");
-  }
-  else {
-    return res;
-  }
-}
-
-std::unique_ptr<NEMLObject> get_object_unique(const xmlpp::Node * node)
-{
-  // Special case: could be a ConstantInterpolate
-  std::string type = get_type_of_node(node);
-  if (type == "none") {
-    return neml::make_unique<ConstantInterpolate>(get_double(node));
-  }
-  else {
-    ParameterSet params = get_parameters(node);
+    ParameterSet pset;
     try {
-      return Factory::Creator()->create_unique(params);
+      pset = Factory::Creator()->provide_parameters(type);
     }
     catch (UnregisteredError & e) {
-      throw UnregisteredXML(node->get_name().raw(), type, node->get_line());
+      throw UnregisteredXML(node->name(), type, 1);
     }
-  }
-}
 
-std::shared_ptr<NEMLObject> get_object(const xmlpp::Node * node)
-{
-  // Special case: could be a ConstantInterpolate
-  std::string type = get_type_of_node(node);
-  if (type == "none") {
-    return std::make_shared<ConstantInterpolate>(get_double(node));
-  }
-  else {
-    ParameterSet params = get_parameters(node);
-    return Factory::Creator()->create(params);
-  }
-}
+    for (rapidxml::xml_node<> * child = node->first_node(); child; child = child->next_sibling()) {
+      std::string name = (child)->name();
 
-ParameterSet get_parameters(const xmlpp::Node * node)
-{
-  std::string type = get_type_of_node(node);
+      if (name == "text") continue;
 
-  // Needs to have a type at this point
-  if (type == "none") {
-    throw InvalidType(node->get_name().raw(), type, node->get_line(),
-                      "NEMLObject");
-  }
-  
-  ParameterSet pset;
-  try {
-    pset = Factory::Creator()->provide_parameters(type);
-  }
-  catch (UnregisteredError & e) {
-    throw UnregisteredXML(node->get_name().raw(), type, node->get_line());
-  }
+      if (not pset.is_parameter(name)) {
+	throw UnknownParameterXML(node->name(), name, 1);
+      }
 
-  auto children = node->get_children();
-  for (auto it = children.begin(); it != children.end(); ++it) {
-    std::string name = (*it)->get_name().raw();
-    
-    if (name == "text") continue;
-
-    if (not pset.is_parameter(name)) {
-      throw UnknownParameterXML(node->get_name().raw(), name, (*it)->get_line());
-    }
-    // The master switch block
-    switch (pset.get_object_type(name)) {
+      switch (pset.get_object_type(name)) {
       case TYPE_DOUBLE:
-        pset.assign_parameter(name, get_double(*it));
+        pset.assign_parameter(name, get_double(child));
         break;
       case TYPE_INT:
-        pset.assign_parameter(name, get_int(*it));
+        pset.assign_parameter(name, get_int(child));
         break;
       case TYPE_BOOL:
-        pset.assign_parameter(name, get_bool(*it));
+        pset.assign_parameter(name, get_bool(child));
         break;
       case TYPE_VEC_DOUBLE:
-        pset.assign_parameter(name, get_vector_double(*it));
+        pset.assign_parameter(name, get_vector_double(child));
         break;
       case TYPE_NEML_OBJECT:
-        pset.assign_parameter(name, get_object(*it));
+        pset.assign_parameter(name, get_object(child));
         break;
       case TYPE_VEC_NEML_OBJECT:
-        pset.assign_parameter(name, get_vector_object(*it));
+        pset.assign_parameter(name, get_vector_object(child));
         break;
       case TYPE_STRING:
-        pset.assign_parameter(name, get_string(*it));
+        pset.assign_parameter(name, get_string(child));
         break;
       default:
         throw std::runtime_error("Unrecognized object type!");
         break;
+      }
+    }
+
+    return pset;
+  }
+
+  std::vector<std::shared_ptr<NEMLObject>> get_vector_object(const rapidxml::xml_node<> * node) {
+    std::vector<std::shared_ptr<NEMLObject>> joined;
+    for (rapidxml::xml_node<> * child = node->first_node(); child; child = child->next_sibling()) {
+      std::string name = (child)->name();
+      if (name == "text") continue;
+      joined.push_back(get_object(child));
+    }
+
+    return joined;
+  }
+
+  // Need to find a way to replace node->get_line() in the throw exception
+  double get_double(const rapidxml::xml_node<> * node) {
+    try {
+      std::string text = get_string(node);
+      return std::stod(text);
+    }
+    catch (std::exception & e) {
+      throw InvalidType(node->name(), get_type_of_node(node), 1, "double");
     }
   }
 
-  return pset;
-}
-
-std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
-    const xmlpp::Node * node)
-{
-  std::vector<std::shared_ptr<NEMLObject>> joined;
-  
-  auto children = node->get_children();
-  for (auto it = children.begin(); it != children.end(); ++it) {
-    std::string name = (*it)->get_name().raw();
-    if (name == "text") continue;
-    joined.push_back(get_object(*it));
+  int get_int(const rapidxml::xml_node<> * node) {
+    try {
+      std::string text = get_string(node);
+      return std::stoi(text);
+    }
+    catch (std::exception & e) {
+      throw InvalidType(node->name(), get_type_of_node(node), 1, "int");
+    }
   }
 
-  return joined;
-}
+  std::vector<double> get_vector_double(const rapidxml::xml_node<> * node) {
+    try {
+      std::string text = get_string(node);
+      return split_string(text);
+    }
+    catch (std::exception & e) {
+      throw InvalidType(node->name(), get_type_of_node(node), 1, "vector<double>");
+    }
+  }
 
-double get_double(const xmlpp::Node* node)
-{
-  try {
+  bool get_bool(const rapidxml::xml_node<> * node) {
     std::string text = get_string(node);
-    return std::stod(text);
-  }
-  catch (std::exception & e) {
-    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
-                      node->get_line(), "double");
-  }
-}
 
-int get_int(const xmlpp::Node* node)
-{
-  try {
-    std::string text = get_string(node);
-    return std::stoi(text);
-  }
-  catch (std::exception & e) {
-    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
-                      node->get_line(), "int");
-  }
-}
-
-std::vector<double> get_vector_double(const xmlpp::Node * node)
-{
-  try {
-    std::string text = get_string(node);
-    return split_string(text);
-  }
-  catch (std::exception & e) {
-    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
-                      node->get_line(), "vector<double>");
-  }
-}
-
-bool get_bool(const xmlpp::Node * node)
-{
-  std::string text = get_string(node);
-
-  if ((text == "true") || (text == "True") || (text == "T") || (text == "1")) {
-    return true;
-  }
-  else if ((text == "false") || (text == "False") || (text == "F") || (text == "0")) {
-    return false;
-  }
-  else {
-    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
-                      node->get_line(), "bool");
-  }  
-}
-
-std::string get_string(const xmlpp::Node * node)
-{
-  auto elem = dynamic_cast<const xmlpp::Element*>(node);
-
-  if (elem->has_child_text()) {
-    std::string sval = elem->FIRST_TEXT_FN()->get_content();
-    if (sval == "") {
-      throw InvalidType(node->get_name().raw(), get_type_of_node(node),
-                        node->get_line(), "string");
+    if ((text == "true") || (text == "True") || (text == "T") || (text == "1")) {
+      return true;
+    }
+    else if ((text == "false") || (text == "False") || (text == "F") || (text == "0")) {
+      return false;
     }
     else {
+      throw InvalidType(node->name(), get_type_of_node(node), 1, "bool");
+    }  
+  }
+
+  std::string get_string(const rapidxml::xml_node<> * node) {
+
+    std::string sval = node->first_node()->value();
+  
+    if (sval != "") {
       return sval;
     }
-  }
-  else {
-    throw InvalidType(node->get_name().raw(), get_type_of_node(node),
-                           node->get_line(), "string");
-  }
-}
-
-const xmlpp::Node * get_child(const xmlpp::Node * node, std::string name)
-{
-  auto matches = node->get_children(name);
-
-  if (matches.size() > 1) {
-    throw DuplicateNode(name, node->get_line());
-  }
-  else if (matches.size() < 1) {
-    throw NodeNotFound(name, node->get_line());
-  }
-  else {
-    return matches.front();
-  }
-}
-
-std::string get_type_of_node(const xmlpp::Node * node)
-{
-  auto element = dynamic_cast<const xmlpp::Element*>(node);
-  auto attributes = element->get_attributes();
-  for (auto it = attributes.begin(); it != attributes.end(); ++it)
-  {
-    auto attr = *it;
-    if (attr->get_name() == "type") {
-      return attr->get_value();
+    else {
+      throw InvalidType(node->name(), get_type_of_node(node), 1, "string");
     }
   }
 
-  return "none";
-}
+  std::string get_type_of_node(const rapidxml::xml_node<> * node) {
 
-std::vector<double> split_string(std::string sval)
-{
-  std::vector<std::string> splits;
-  std::stringstream ss(sval);
-  std::string temp;
-  while (ss >> temp) {
-    splits.push_back(temp);
+    auto attributes = node->first_attribute();
+   
+    std::string attr_name = attributes->name();
+   
+    if (attr_name == "type"){
+      return attributes->value();
+    }
+    else {
+      return "none";
+    }
   }
-  std::vector<double> value;
-  for (auto it = splits.begin(); it != splits.end(); ++it) {
-    value.push_back(std::stod(*it));
+
+  std::vector<double> split_string(std::string sval) {
+    std::vector<std::string> splits;
+    std::stringstream ss(sval);
+    std::string temp;
+    while (ss >> temp) {
+      splits.push_back(temp);
+    }
+    std::vector<double> value;
+    for (auto it = splits.begin(); it != splits.end(); ++it) {
+      value.push_back(std::stod(*it));
+    }
+    return value;
   }
-  return value;
-}
 
 } // namespace neml
