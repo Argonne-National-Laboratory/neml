@@ -20,7 +20,7 @@ namespace neml {
     // Do a dangerous cast
     auto res = std::dynamic_pointer_cast<NEMLModel>(obj);
     if (res == nullptr) {
-      throw InvalidType(found->name(), get_type_of_node(found), 1, "NEMLModel");
+      throw InvalidType(found->name(), get_type_of_node(found), "NEMLModel");
     }
     else {
       return res;
@@ -45,7 +45,7 @@ namespace neml {
     // Do a dangerous cast
     auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel*>(obj.release()));
     if (res == nullptr) {
-      throw InvalidType(found->name(), get_type_of_node(found), 1, "NEMLModel");
+      throw InvalidType(found->name(), get_type_of_node(found), "NEMLModel");
     }
     else {
       return res;
@@ -86,7 +86,7 @@ namespace neml {
 
     // Needs to have a type at this point
     if (type == "none") {
-      throw InvalidType(node->name(), type, 1, "NEMLObject");
+      throw InvalidType(node->name(), type, "NEMLObject");
     }
   
     ParameterSet pset;
@@ -155,7 +155,7 @@ namespace neml {
       return std::stod(text);
     }
     catch (std::exception & e) {
-      throw InvalidType(node->name(), get_type_of_node(node), 1, "double");
+      throw InvalidType(node->name(), get_type_of_node(node), "double");
     }
   }
 
@@ -165,7 +165,7 @@ namespace neml {
       return std::stoi(text);
     }
     catch (std::exception & e) {
-      throw InvalidType(node->name(), get_type_of_node(node), 1, "int");
+      throw InvalidType(node->name(), get_type_of_node(node), "int");
     }
   }
 
@@ -175,7 +175,7 @@ namespace neml {
       return split_string(text);
     }
     catch (std::exception & e) {
-      throw InvalidType(node->name(), get_type_of_node(node), 1, "vector<double>");
+      throw InvalidType(node->name(), get_type_of_node(node), "vector<double>");
     }
   }
 
@@ -189,7 +189,7 @@ namespace neml {
       return false;
     }
     else {
-      throw InvalidType(node->name(), get_type_of_node(node), 1, "bool");
+      throw InvalidType(node->name(), get_type_of_node(node), "bool");
     }  
   }
 
@@ -201,7 +201,7 @@ namespace neml {
       return sval;
     }
     else {
-      throw InvalidType(node->name(), get_type_of_node(node), 1, "string");
+      throw InvalidType(node->name(), get_type_of_node(node), "string");
     }
   }
 

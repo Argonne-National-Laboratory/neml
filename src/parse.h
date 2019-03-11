@@ -15,14 +15,6 @@
 #include <algorithm>
 #include <exception>
 
-//#include <libxml++/libxml++.h>
-
-#ifdef LIBXMLppV3
-#define FIRST_TEXT_FN get_first_child_text
-#else
-#define FIRST_TEXT_FN get_child_text
-#endif
-
 namespace neml {
 
   /// Parse from file to a shared_ptr
@@ -119,9 +111,8 @@ namespace neml {
   /// If the object can't be converted
   class InvalidType: public std::exception {
   public:
-    InvalidType(std::string name, std::string type, int line, 
-		std::string ctype) :
-      name_(name), type_(type), ctype_(ctype), line_(line)
+    InvalidType(std::string name, std::string type, std::string ctype) :
+      name_(name), type_(type), ctype_(ctype)
     {
 
     };
@@ -131,7 +122,6 @@ namespace neml {
       std::stringstream ss;
 
       ss << "Node with name " << name_ << " and type " << type_ 
-	 << " near line " << line_ 
 	 << "cannot be converted to the correct type " << ctype_ << "!";
 
       return ss.str().c_str();
@@ -139,14 +129,13 @@ namespace neml {
 
   private:
     const std::string name_, type_, ctype_;
-    const int line_;
   };
 
   /// If a parameter doesn't exist
   class UnknownParameterXML: public std::exception {
   public:
-    UnknownParameterXML(std::string name, std::string param, int line) :
-      name_(name), param_(param), line_(line)
+    UnknownParameterXML(std::string name, std::string param) :
+      name_(name), param_(param)
     {
 
     };
@@ -155,22 +144,21 @@ namespace neml {
     {
       std::stringstream ss;
 
-      ss << "Object " << name_ << " defined near line " << line_ << 
-        " does not have a parameter called " << param_ << "!";
+      ss << "Object " << name_ << " does not have a parameter called " << param_ << "!";
 
       return ss.str().c_str();
     };
 
   private:
     const std::string name_, param_;
-    const int line_;
+
   };
 
   /// The object isn't in the factory
   class UnregisteredXML: public std::exception {
   public:
-    UnregisteredXML(std::string name, std::string type, int line) :
-      name_(name), type_(type), line_(line)
+    UnregisteredXML(std::string name, std::string type) :
+      name_(name), type_(type)
     {
 
     };
@@ -179,15 +167,13 @@ namespace neml {
     {
       std::stringstream ss;
 
-      ss << "Node named " << name_ << " defined near line " << line_ 
-	 << " has an unregistered type of " << type_ << "!";
+      ss << "Node named " << name_ << " has an unregistered type of " << type_ << "!";
 
       return ss.str().c_str();
     };
 
   private:
     const std::string name_, type_;
-    const int line_;
 
   };
 
