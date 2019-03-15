@@ -1,6 +1,6 @@
 sudo: enabled
 before_install:
-      - sudo apt-get install -y build-essential cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
+      - sudo apt-get install -y build-essential cmake libboost-dev libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
 install:
       - cmake -D WRAP_PYTHON=ON .
       - make
