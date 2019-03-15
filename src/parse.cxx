@@ -215,14 +215,14 @@ std::string get_string(const rapidxml::xml_node<> * node)
 
 std::string get_type_of_node(const rapidxml::xml_node<> * node)
 {
-  auto attributes = node->first_attribute();
+  for (auto attributes = node->first_attribute(); attributes; attributes = attributes->next_attribute())
+  {
 
-  std::string attr_name = attributes->name();
-
-  if (attr_name == "type")
-    return attributes->value();
-  else
-    return "none";
+    std::string attr_name = attributes->name();
+    if (attr_name == "type")
+      return attributes->value();
+  }
+  return "none";
 }
 
 std::vector<double> split_string(std::string sval)
