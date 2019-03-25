@@ -5,6 +5,10 @@
 
 #define CINDEX(i,j,n) (j + i * n)
 
+// Note all this uses the notation:
+// symmetric: [E(0,0), E(1,1), E(2,2), sqrt(2) E(1,2), sqrt(2) E(0,2), sqrt(2) E(0,1)]
+// skew: [-W(1,2), W(0,2), -W(0,1)]
+
 // BLAS/lapack defs
 extern "C" {
   void dgetrf_(const int & m, const int & n, double* A, const int & lda, int* ipiv, int & info);
@@ -19,6 +23,9 @@ extern "C" {
 }
 
 namespace neml {
+
+/// E_im W_kl - W_ik E_jn
+int skew_product(const double * const e, const double * const w, double * const A);
 
 /// Negate a vector in place
 int minus_vec(double * const a, int n);

@@ -9,6 +9,71 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as ra
 
+class TestThingsWithSkew(unittest.TestCase):
+  def setUp(self):
+    self.B1 = np.array([[1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]])
+    self.E = 0.5*(self.B1 + self.B1.T)
+    self.Ev = sym(self.E)
+    self.B2 = np.array([[-3.0,-1.0,2.0],[-4.0,5.0,6.0],[9.0,-7.0,-8.0]])
+    self.W = 0.5*(self.B2 - self.B2.T)
+    self.Wv = skew(self.W)
+
+    self.E2 = 0.5*(self.B2 + self.B2.T)
+    self.E2v = sym(self.E2)
+
+    self.B3 = np.array([[0.1,0.5,0.2],[-0.25,0.6,0.4],[1.0,3.0,1.0]])
+    self.E3 = 0.5*(self.B3 + self.B3.T)
+
+  def test_my_understanding(self):
+    ten = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), self.W) - np.einsum('im,jn', self.W, np.eye(3))
+    iten = la.tensorinv(ten)
+    
+    issym = np.einsum('ijkl,kl', iten, self.E2)
+    self.assertTrue(np.allclose(issym - issym.T, np.zeros((3,3))))
+
+    # None of our existing matrix routines will work
+    # We will need a custom operator for the action of the inverse tensor on a Mandel vector
+
+    # How about for general matrices?
+    ten = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), self.B1) - np.einsum('im,jn', self.B1, np.eye(3))
+    iten = la.tensorinv(ten)
+    
+    issym = np.einsum('ijkl,kl', iten, self.E2)
+    self.assertFalse(np.allclose(issym - issym.T, np.zeros((3,3))))
+
+    # So what about the full Lie derivative?  Maybe that extra tr term is needed?
+
+  def test_skew_update_formula(self):
+    # Check how I plan do to the update (long way)
+    W = self.W
+    dS_jau = self.E
+    Sn = self.E2
+
+    J = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), W) - np.einsum('im,jn', W, np.eye(3))
+    Jinv = la.tensorinv(J)
+
+    T1 = dS_jau - np.einsum('mk,kn', Sn, W) + np.einsum('mk,kn', W, Sn)
+
+    Snp1 = Sn + np.einsum('ijmn,mn', Jinv, T1)
+
+    dS1 = Snp1 - Sn
+
+    dS2 = dS_jau - np.einsum('ik,kj', Snp1, W) + np.einsum('ik,kj', W, Snp1)
+
+    self.assertTrue(np.allclose(dS1, dS2))
+
+  def test_inverse_formula(self):
+    """
+      Check the direct inverse formula
+    """
+    W = self.W
+
+    J = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), W) - np.einsum('im,jn', W, np.eye(3))
+    Jinv = la.tensorinv(J)
+
+    print(Jinv)
+    self.assertTrue(False)
+
 class TestAddSubtractNegate(unittest.TestCase):
   def setUp(self):
     self.n = 10

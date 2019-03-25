@@ -8,6 +8,11 @@
 
 namespace neml {
 
+int skew_product(const double * const e, const double * const w, double * const A)
+{
+  std::fill(A, A+36, 0.0);
+}
+
 int minus_vec(double * const a, int n)
 {
   for (int i=0; i<n; i++) {
