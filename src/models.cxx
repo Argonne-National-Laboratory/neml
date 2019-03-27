@@ -60,10 +60,6 @@ int NEMLModel_sd::update_ld_inc(
 
   calc_tangent_(D, W, base_A_np1, s_np1, A_np1, B_np1);
 
-  // Just a dummy for now
-  //std::fill(B_np1, B_np1 + 18, 0.0);
-  //std::copy(base_A_np1, base_A_np1+36, A_np1);
-  
   return ier;
 }
 

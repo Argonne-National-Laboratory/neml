@@ -7,7 +7,7 @@ mandel = ((0,0),(1,1),(2,2),(1,2),(0,2),(0,1))
 mandel_mults = (1,1,1,np.sqrt(2),np.sqrt(2),np.sqrt(2))
 
 skew_inds = ((1,2),(0,2),(0,1))
-skew_mults = ((-1.0,1.0,-1.0))
+skew_mults = (-1.0,1.0,-1.0)
 
 def unroll_fourth(T):
   """

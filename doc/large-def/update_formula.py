@@ -12,7 +12,7 @@ mandel = ((0,0),(1,1),(2,2),(1,2),(0,2),(0,1))
 mandel_mults = (1,1,1,sqrt(2),sqrt(2),sqrt(2))
 
 skew_inds = ((1,2),(0,2),(0,1))
-skew_mults = ((-1,1,-1))
+skew_mults = (-1,1,-1)
 
 def object_einsum(string, *arrays):
   """Simplified object einsum, not as much error checking
