@@ -12,6 +12,196 @@ namespace neml {
 
 PYBIND11_MODULE(nemlmath, m) {
   m.doc() = "Various mathematical helper functions.";
+ 
+  m.def("idsym",
+        []()->py::array_t<double>
+        {
+          auto A = alloc_mat<double>(9,9);
+          auto ptr = arr2ptr<double>(A);
+          std::copy(idsym,idsym+81,ptr);
+          return A;
+        }, "The symmetric identity as a 9x9");
+  m.def("idskew",
+        []()->py::array_t<double>
+        {
+          auto A = alloc_mat<double>(9,9);
+          auto ptr = arr2ptr<double>(A);
+          std::copy(idskew,idskew+81,ptr);
+          return A;
+        }, "The skew symmetric identity as a 9x9");
+  
+  m.def("truesdell_tangent_outer",
+        [](py::array_t<double, py::array::c_style> S) -> py::array_t<double>
+        {
+          if ((S.request().ndim != 1) || (S.request().shape[0] != 6)) {
+            throw LinalgError("Input must be a Mandel vector");
+          }
+
+          auto A = alloc_mat<double>(9,9);
+          truesdell_tangent_outer(arr2ptr<double>(S), arr2ptr<double>(A));
+
+          return A;
+
+        }, "Perform the outer product used in the Truesdell derivative and store as a 9x9");
+
+  m.def("full2skew",
+        [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+          if ((A.request().shape[0] != 9) || (A.request().shape[1] != 9)) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+
+          auto M = alloc_mat<double>(6,3);
+          full2skew(arr2ptr<double>(A), arr2ptr<double>(M));
+
+          return M;
+        }, "Convert a 9x9 to a skew-stored");
+  m.def("skew2full",
+        [](py::array_t<double, py::array::c_style> M) -> py::array_t<double>
+        {
+          if (M.request().ndim != 2) {
+            throw LinalgError("Input must be a 6x3 matrix!");
+          }
+          if ((M.request().shape[0] != 6) || (M.request().shape[1] != 3)) {
+            throw LinalgError("Input must be a 6x3 matrix!");
+          }
+
+          auto A = alloc_mat<double>(9,9);
+          skew2full(arr2ptr<double>(M), arr2ptr<double>(A));
+
+          return A;
+        }, "Convert a skew-stored tensor to a 9x9");
+
+  m.def("full2mandel",
+        [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+          if ((A.request().shape[0] != 9) || (A.request().shape[1] != 9)) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+
+          auto M = alloc_mat<double>(6,6);
+          full2mandel(arr2ptr<double>(A), arr2ptr<double>(M));
+
+          return M;
+        }, "Convert a 9x9 to a Mandel-stored");
+  m.def("mandel2full",
+        [](py::array_t<double, py::array::c_style> M) -> py::array_t<double>
+        {
+          if (M.request().ndim != 2) {
+            throw LinalgError("Input must be a 6x6 matrix!");
+          }
+          if ((M.request().shape[0] != 6) || (M.request().shape[1] != 6)) {
+            throw LinalgError("Input must be a 6x6 matrix!");
+          }
+
+          auto A = alloc_mat<double>(9,9);
+          mandel2full(arr2ptr<double>(M), arr2ptr<double>(A));
+
+          return A;
+        }, "Convert a Mandel-stored tensor to a 9x9");
+  m.def("truesdell_update_sym",
+        [](py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> W, 
+           py::array_t<double, py::array::c_style> Sn, py::array_t<double, py::array::c_style> So) -> py::array_t<double>
+        {
+          if ((D.request().ndim != 1) || (W.request().ndim != 1) || (Sn.request().ndim != 1) || (So.request().ndim != 1)) {
+            throw LinalgError("All inputs must be vectors!");
+          }
+          if ((D.request().shape[0] != 6) || (Sn.request().shape[0] != 6) || (So.request().shape[0]) != 6) {
+            throw LinalgError("D, Sn, and So must be Mandel vectors!");
+          }
+          if (W.request().shape[0] != 3) {
+            throw LinalgError("W must be a skew vector");
+          }
+          
+          auto c = alloc_vec<double>(6);
+
+          truesdell_update_sym(arr2ptr<double>(D), arr2ptr<double>(W), arr2ptr<double>(Sn), arr2ptr<double>(So),
+                        arr2ptr<double>(c));
+
+          return c;
+
+        }, "Form the right hand side of the Truesdell convected update");
+  m.def("truesdell_mat",
+        [](py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> W) -> py::array_t<double>
+        {
+          if ((D.request().ndim != 1) || (W.request().ndim != 1)) {
+            throw LinalgError("All inputs must be vectors!");
+          }
+          if ((D.request().shape[0] != 6)) {
+            throw LinalgError("D must be a Mandel vector!");
+          }
+          if (W.request().shape[0] != 3) {
+            throw LinalgError("W must be a skew vector");
+          }
+
+          auto M = alloc_mat<double>(9,9);
+
+          truesdell_mat(arr2ptr<double>(D), arr2ptr<double>(W), arr2ptr<double>(M));
+
+          return M;
+
+        }, "Form the matrix used in the convected update");
+  m.def("truesdell_rhs",
+        [](py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> W, 
+           py::array_t<double, py::array::c_style> Sn, py::array_t<double, py::array::c_style> So) -> py::array_t<double>
+        {
+          if ((D.request().ndim != 1) || (W.request().ndim != 1) || (Sn.request().ndim != 1) || (So.request().ndim != 1)) {
+            throw LinalgError("All inputs must be vectors!");
+          }
+          if ((D.request().shape[0] != 6) || (Sn.request().shape[0] != 6) || (So.request().shape[0]) != 6) {
+            throw LinalgError("D, Sn, and So must be Mandel vectors!");
+          }
+          if (W.request().shape[0] != 3) {
+            throw LinalgError("W must be a skew vector");
+          }
+          
+          auto c = alloc_vec<double>(6);
+
+          truesdell_rhs(arr2ptr<double>(D), arr2ptr<double>(W), arr2ptr<double>(Sn), arr2ptr<double>(So),
+                        arr2ptr<double>(c));
+
+          return c;
+
+        }, "Form the right hand side of the Truesdell convected update");
+  
+  m.def("sym",
+        [](py::array_t<double, py::array::c_style> M) -> py::array_t<double>
+        {
+          if (M.request().ndim != 2) {
+            throw LinalgError("Input must be a mtrix!");
+          }
+          if ((M.request().shape[0] != 3) || (M.request().shape[1] != 3)) {
+            throw LinalgError("Input must be size 3x3!");
+          }
+          auto v = alloc_vec<double>(6);
+
+          sym(arr2ptr<double>(M), arr2ptr<double>(v));
+
+          return v;
+
+        }, "Convert a full tensor to a Mandel vector.");
+
+  m.def("usym",
+        [](py::array_t<double, py::array::c_style> v) -> py::array_t<double>
+        {
+          if (v.request().ndim != 1) {
+            throw LinalgError("Input must be a vector!");
+          }
+          if (v.request().shape[0] != 6) {
+            throw LinalgError("Input must be a length 6 vector!");
+          }
+          auto M = alloc_mat<double>(3, 3);
+
+          usym(arr2ptr<double>(v), arr2ptr<double>(M));
+          
+          return M;
+        }, "Convert a Mandel vector to a full tensor.");
 
   m.def("minus_vec",
         [](py::array_t<double, py::array::c_style> a) -> py::array_t<double>

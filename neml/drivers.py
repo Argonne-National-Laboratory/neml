@@ -1339,3 +1339,69 @@ def classify(ua, ub, pa, pb, e1a, e1b, e2a, e2b, rtol = 1.0e-4, atol = 1.0e-10):
     return 'plastic shakedown'
   else:
     return 'ratcheting'
+
+def def_grad_driver(model, F, tmax, nsteps, T = 300.0):
+  """
+    Basic large deformation driver pushing a model through the deformation
+    gradient as a function of time
+
+    Parameters:
+      model     model to use
+      F         deformation gradient as a function of time
+      tmax      maximum time
+      nsteps    number of load steps to take
+
+    Optional:
+      T         temperature
+  """
+  time = [0.0]
+  stress = [np.zeros((6,))]
+  deform = [F(0.0)]
+  D_hist = [np.zeros((6,))]
+  W_hist = [np.zeros((3,))]
+  history = [model.init_store()]
+  energy = [0.0]
+  dissipation = [0.0]
+
+  t = 0.0
+  dt = tmax / nsteps
+
+  for i in range(nsteps):
+    t += dt
+    F_np1 = F(t)
+    L = np.dot((F_np1 - deform[-1]), la.inv(F_np1))
+    dD = sym(0.5*(L + L.T))
+    dW = skew(0.5*(L - L.T))
+
+    s_np1, h_np1, A_np1, B_np1, u_np1, p_np1 = model.update_ld_inc(
+        D_hist[-1] + dD, D_hist[-1], 
+        W_hist[-1] + dW, W_hist[-1],
+        T, T, t, time[-1], stress[-1],
+        history[-1], energy[-1], dissipation[-1])
+
+    time.append(t)
+    stress.append(s_np1)
+    deform.append(F_np1)
+    D_hist.append(D_hist[-1] + dD)
+    W_hist.append(W_hist[-1] + dW)
+    history.append(h_np1)
+    energy.append(u_np1)
+    dissipation.append(p_np1)
+
+  return {'time': time, 'stress': stress, 'F': deform, 'D': D_hist,
+      'W': W_hist, 'history': history, 'energy': energy,
+      'dissipation': dissipation}
+
+def sym(A):
+  """
+    Take a symmetric matrix to the Mandel convention vector.
+  """
+  return np.array([A[0,0], A[1,1], A[2,2], np.sqrt(2)*A[1,2], 
+    np.sqrt(2)*A[0,2], np.sqrt(2)*A[0,1]])
+
+def skew(A):
+  """
+    Take a skew matrix to my vector convention.
+  """
+  return np.array([-A[1,2], A[0,2], -A[0,1]])
+

@@ -15,7 +15,8 @@ class NEMLDamagedModel_sd: public NEMLModel_sd {
   NEMLDamagedModel_sd(
                       std::shared_ptr<LinearElasticModel> elastic,
                       std::shared_ptr<NEMLModel_sd> base,
-                      std::shared_ptr<Interpolate> alpha);
+                      std::shared_ptr<Interpolate> alpha,
+                      bool truesdell);
   
   /// How many history variables?  Equal to base_history + ndamage
   virtual size_t nhist() const;
@@ -68,7 +69,7 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
                             double tol, int miter,
-                            bool verbose);
+                            bool verbose, bool truesdell);
   
   /// Stress update using the scalar damage model
   virtual int update_sd(
@@ -153,7 +154,7 @@ class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
       double tol, int miter,
-      bool verbose);
+      bool verbose, bool truesdell);
   
   /// String type for the object system
   static std::string type();
@@ -214,7 +215,7 @@ class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
                             double tol, int miter,
-                            bool verbose);
+                            bool verbose, bool truesdell);
   
   /// String type for the object system
   static std::string type();
@@ -273,7 +274,7 @@ class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
       double tol, int miter,
-      bool verbose);
+      bool verbose, bool truesdell);
   
   /// Damage, now only proportional to the inelastic effective strain
   virtual int damage(double d_np1, double d_n, 
@@ -333,7 +334,7 @@ class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
       double tol, int miter,
-      bool verbose);
+      bool verbose, bool truesdell);
 
   /// String type for the object system
   static std::string type();
@@ -375,7 +376,7 @@ class NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
       double tol, int miter,
-      bool verbose);
+      bool verbose, bool truesdell);
 
   /// String type for the object system
   static std::string type();

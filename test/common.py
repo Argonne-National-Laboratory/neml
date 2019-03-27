@@ -1,8 +1,44 @@
+from __future__ import division
+
 import numpy as np
 import itertools
 
 mandel = ((0,0),(1,1),(2,2),(1,2),(0,2),(0,1))
 mandel_mults = (1,1,1,np.sqrt(2),np.sqrt(2),np.sqrt(2))
+
+skew_inds = ((1,2),(0,2),(0,1))
+skew_mults = ((-1.0,1.0,-1.0))
+
+def unroll_fourth(T):
+  """
+    Unroll a fourth order tensor into a 9x9
+  """
+  M = np.zeros((9,9))
+
+  for i in range(3):
+    for j in range(3):
+      a = i*3+j
+      for k in range(3):
+        for l in range(3):
+          b = k*3+l
+          M[a,b] = T[i,j,k,l]
+
+  return M
+
+def reroll_fourth(M):
+  """
+    Undo unroll_fourth
+  """
+  T = np.zeros((3,3,3,3))
+  for a in range(9):
+    i = a // 3
+    j = a % 3
+    for b in range(9):
+      k = b // 3
+      l = b % 3
+      T[i,j,k,l] = M[a,b]
+
+  return T
 
 def ms2ts(C):
   """
@@ -31,6 +67,36 @@ def ts2ms(C):
       ma = mandel_mults[i]
       mb = mandel_mults[j]
       Cv[i,j] = C[mandel[i]+mandel[j]] * ma * mb
+
+  return Cv
+
+def ws2ts(C):
+  """
+    Convert a skew notation stiffness matrix to a full stiffness tensor.
+  """
+  Ct = np.zeros((3,3,3,3))
+  for a in range(6):
+    for b in range(3):
+      ind_a = itertools.permutations(mandel[a], r=2)
+      ind_b = itertools.permutations(skew_inds[b], r=2)
+      ma = mandel_mults[a]
+      mb = skew_mults[b]
+      indexes = tuple(ai+bi for ai, bi in itertools.product(ind_a, ind_b))
+      for ind in indexes:
+        Ct[ind] = C[a,b] / (ma*mb)
+
+  return Ct
+
+def ts2ws(C):
+  """
+    Convert a stiffness tensor into a skew notation stiffness matrix
+  """
+  Cv = np.zeros((6,3))
+  for i in range(6):
+    for j in range(3):
+      ma = mandel_mults[i]
+      mb = skew_mults[j]
+      Cv[i,j] = C[mandel[i]+skew_inds[j]] * ma * mb
 
   return Cv
 

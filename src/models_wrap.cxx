@@ -50,6 +50,21 @@ PYBIND11_MODULE(models, m) {
             return std::make_tuple(s_np1, h_np1, A_np1, u_np1, p_np1);
 
            }, "Small deformation update.")
+      .def("update_ld_inc",
+           [](NEMLModel & m, py::array_t<double, py::array::c_style> d_np1, py::array_t<double, py::array::c_style> d_n, py::array_t<double, py::array::c_style> w_np1, py::array_t<double, py::array::c_style> w_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, py::array_t<double>, double, double>
+           {
+            auto s_np1 = alloc_vec<double>(6);
+            auto h_np1 = alloc_vec<double>(m.nstore());
+            auto A_np1 = alloc_mat<double>(6,6);
+            auto B_np1 = alloc_mat<double>(6,3);
+            double u_np1, p_np1;
+
+            int ier = m.update_ld_inc(arr2ptr<double>(d_np1), arr2ptr<double>(d_n), arr2ptr<double>(w_np1), arr2ptr<double>(w_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(s_np1), arr2ptr<double>(s_n), arr2ptr<double>(h_np1), arr2ptr<double>(h_n), arr2ptr<double>(A_np1), arr2ptr<double>(B_np1), u_np1, u_n, p_np1, p_n);
+            py_error(ier);
+
+            return std::make_tuple(s_np1, h_np1, A_np1, B_np1, u_np1, p_np1);
+
+           }, "Large deformation incremental update.")
 
       .def("alpha", &NEMLModel::alpha)
       .def("elastic_strains",

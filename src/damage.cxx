@@ -7,22 +7,23 @@ namespace neml {
 
 NEMLDamagedModel_sd::NEMLDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
                                          std::shared_ptr<NEMLModel_sd> base, 
-                                         std::shared_ptr<Interpolate> alpha) :
-    NEMLModel_sd(elastic, alpha), base_(base)
+                                         std::shared_ptr<Interpolate> alpha,
+                                         bool truesdell) :
+    NEMLModel_sd(elastic, alpha, truesdell), base_(base)
 {
 
 }
 
 size_t NEMLDamagedModel_sd::nhist() const
 {
-  return ndamage() + base_->nstore();
+  return ndamage() + base_->nhist();
 }
 
 int NEMLDamagedModel_sd::init_hist(double * const hist) const
 {
   int res = init_damage(hist);
   if (res != 0) return res;
-  return base_->init_store(&hist[ndamage()]);
+  return base_->init_hist(&hist[ndamage()]);
 }
 
 int NEMLDamagedModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
@@ -36,8 +37,9 @@ NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<NEMLModel_sd> base, 
     std::shared_ptr<Interpolate> alpha,
-    double tol, int miter, bool verbose) :
-      NEMLDamagedModel_sd(elastic, base, alpha), tol_(tol), miter_(miter),
+    double tol, int miter, bool verbose,
+    bool truesdell) :
+      NEMLDamagedModel_sd(elastic, base, alpha, truesdell), tol_(tol), miter_(miter),
       verbose_(verbose)
 {
 
@@ -127,7 +129,7 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_np1[6];
   double s_prime_n[6];
   double A_prime_np1[36];
-  std::vector<double> h_np1_v(base_->nstore());
+  std::vector<double> h_np1_v(base_->nhist());
   double * h_np1 = &h_np1_v[0];
   double u_np1;
   double p_np1;
@@ -191,8 +193,8 @@ int NEMLScalarDamagedModel_sd::make_trial_state(
   tss.t_np1 = t_np1;
   tss.t_n = t_n;
   std::copy(s_n, s_n+6, tss.s_n);
-  tss.h_n.resize(base_->nstore());
-  std::copy(h_n+1, h_n+base_->nstore()+1, tss.h_n.begin());
+  tss.h_n.resize(base_->nhist());
+  std::copy(h_n+1, h_n+base_->nhist()+1, tss.h_n.begin());
   tss.u_n = u_n;
   tss.p_n = p_n;
   tss.w_n = h_n[0];
@@ -250,8 +252,8 @@ CombinedDamageModel_sd::CombinedDamageModel_sd(
     std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<Interpolate> alpha,
-    double tol, int miter, bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
+    double tol, int miter, bool verbose, bool truesdell) :
+      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose, truesdell),
       models_(models)
 {
 
@@ -276,6 +278,7 @@ ParameterSet CombinedDamageModel_sd::parameters()
   pset.add_optional_parameter<double>("tol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<bool>("truesdell", true);
 
   return pset;
 }
@@ -289,7 +292,8 @@ std::unique_ptr<NEMLObject> CombinedDamageModel_sd::initialize(ParameterSet & pa
       params.get_object_parameter<Interpolate>("alpha"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose")
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("truesdell")
       ); 
 }
 
@@ -392,8 +396,8 @@ ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<Interpolate> alpha,
     double tol, int miter,
-    bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose),
+    bool verbose, bool truesdell) :
+      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose, truesdell),
       A_(A), xi_(xi), phi_(phi)
 {
 
@@ -420,6 +424,7 @@ ParameterSet ClassicalCreepDamageModel_sd::parameters()
   pset.add_optional_parameter<double>("tol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<bool>("truesdell", true);
 
   return pset;
 }
@@ -435,7 +440,8 @@ std::unique_ptr<NEMLObject> ClassicalCreepDamageModel_sd::initialize(ParameterSe
       params.get_object_parameter<Interpolate>("alpha"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose")
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("truesdell")
       ); 
 }
 
@@ -534,8 +540,8 @@ NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<Interpolate> alpha,
-    double tol, int miter, bool verbose) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose) 
+    double tol, int miter, bool verbose, bool truesdell) :
+      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose, truesdell) 
 {
 
 }
@@ -700,9 +706,9 @@ NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<Interpolate> alpha,
     double tol, int miter,
-    bool verbose) :
+    bool verbose, bool truesdell) :
       NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, tol, miter, 
-                                        verbose), 
+                                        verbose, truesdell), 
       A_(A), a_(a)
 {
 
@@ -728,6 +734,8 @@ ParameterSet NEMLPowerLawDamagedModel_sd::parameters()
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
 
+  pset.add_optional_parameter<bool>("truesdell", true);
+
   return pset;
 }
 
@@ -741,7 +749,8 @@ std::unique_ptr<NEMLObject> NEMLPowerLawDamagedModel_sd::initialize(ParameterSet
       params.get_object_parameter<Interpolate>("alpha"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose")
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("truesdell")
       ); 
 }
 
@@ -799,9 +808,9 @@ NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
     std::shared_ptr<NEMLModel_sd> base,
     std::shared_ptr<Interpolate> alpha,
     double tol, int miter,
-    bool verbose) :
+    bool verbose, bool truesdell) :
       NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, tol, miter, 
-                                        verbose), 
+                                        verbose, truesdell), 
       W0_(W0), k0_(k0), af_(af)
 {
 
@@ -828,6 +837,8 @@ ParameterSet NEMLExponentialWorkDamagedModel_sd::parameters()
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
 
+  pset.add_optional_parameter<bool>("truesdell", true);
+
   return pset;
 }
 
@@ -842,7 +853,8 @@ std::unique_ptr<NEMLObject> NEMLExponentialWorkDamagedModel_sd::initialize(Param
       params.get_object_parameter<Interpolate>("alpha"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose")
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("truesdell")
       ); 
 }
 

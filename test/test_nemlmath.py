@@ -4,75 +4,136 @@ sys.path.append('..')
 from neml.nemlmath import *
 from common import *
 
+from neml import nemlmath
+
 import unittest
 import numpy as np
 import numpy.linalg as la
 import numpy.random as ra
 
-class TestThingsWithSkew(unittest.TestCase):
+class TestLDTangent(unittest.TestCase):
   def setUp(self):
-    self.B1 = np.array([[1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]])
-    self.E = 0.5*(self.B1 + self.B1.T)
-    self.Ev = sym(self.E)
-    self.B2 = np.array([[-3.0,-1.0,2.0],[-4.0,5.0,6.0],[9.0,-7.0,-8.0]])
-    self.W = 0.5*(self.B2 - self.B2.T)
+    self.sym_mandel = ra.random((6,6))
+    self.sym_ten = ms2ts(self.sym_mandel)
+    self.sym_99 = unroll_fourth(self.sym_ten)
+
+    self.skew_deriv_red = ra.random((6,3))
+    self.skew_deriv_ten = ws2ts(self.skew_deriv_red)
+    self.skew_deriv_99 = unroll_fourth(self.skew_deriv_ten)
+
+    self.S = np.array([[10.0,-20.0,15.0],[-20.0,60.0,5.0],[15.0,5.0,20.0]])
+    self.S_v = sym(self.S)
+
+  def test_mandel_convert(self):
+    self.assertTrue(np.allclose(nemlmath.mandel2full(self.sym_mandel), self.sym_99))
+    self.assertTrue(np.allclose(nemlmath.full2mandel(self.sym_99), self.sym_mandel))
+
+  def test_skew_convert(self):
+    self.assertTrue(np.allclose(nemlmath.skew2full(self.skew_deriv_red), self.skew_deriv_99))
+    self.assertTrue(np.allclose(nemlmath.full2skew(self.skew_deriv_99), self.skew_deriv_red))
+
+  def test_identities(self):
+    sym = unroll_fourth(0.5*(np.einsum('ik,jl', np.eye(3), np.eye(3)) + np.einsum('jk,il', np.eye(3), np.eye(3))))
+    skew = unroll_fourth(0.5*(np.einsum('ik,jl', np.eye(3), np.eye(3)) - np.einsum('jk,il', np.eye(3), np.eye(3)))) 
+
+    self.assertTrue(np.allclose(sym, nemlmath.idsym()))
+    self.assertTrue(np.allclose(skew, nemlmath.idskew()))
+
+  def test_outer_mat(self):
+    tensor = np.einsum('in,jm', self.S, np.eye(3)) + np.einsum('im,nj', np.eye(3), self.S) - np.einsum('mn,ij', np.eye(3), self.S)
+    matrix = unroll_fourth(tensor)
+    
+    direct = nemlmath.truesdell_tangent_outer(self.S_v)
+    self.assertTrue(np.allclose(matrix, direct))
+
+class TestLDUpdate(unittest.TestCase):
+  def setUp(self):
+    self.L = np.array([[0.1,-0.2,0.5],[1.1,-0.2,0.25],[0.3,-0.4,0.2]])
+    self.D = 0.5 * (self.L + self.L.T)
+    self.Dv = sym(self.D)
+    self.W = 0.5 * (self.L - self.L.T)
     self.Wv = skew(self.W)
-
-    self.E2 = 0.5*(self.B2 + self.B2.T)
-    self.E2v = sym(self.E2)
-
-    self.B3 = np.array([[0.1,0.5,0.2],[-0.25,0.6,0.4],[1.0,3.0,1.0]])
-    self.E3 = 0.5*(self.B3 + self.B3.T)
-
-  def test_my_understanding(self):
-    ten = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), self.W) - np.einsum('im,jn', self.W, np.eye(3))
-    iten = la.tensorinv(ten)
     
-    issym = np.einsum('ijkl,kl', iten, self.E2)
-    self.assertTrue(np.allclose(issym - issym.T, np.zeros((3,3))))
+    self.S_n = np.array([[10.0,-20.0,15.0],[-20.0,60.0,5.0],[15.0,5.0,20.0]])
+    self.S_n_v = sym(self.S_n)
 
-    # None of our existing matrix routines will work
-    # We will need a custom operator for the action of the inverse tensor on a Mandel vector
+    self.dS = np.array([[30.0,10.0,5.0],[10.0,-15.0,15.0],[5.0,15.0,-10.0]])
+    self.dS_v = sym(self.dS)
 
-    # How about for general matrices?
-    ten = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), self.B1) - np.einsum('im,jn', self.B1, np.eye(3))
-    iten = la.tensorinv(ten)
+  def test_setup_right(self):
+    self.assertTrue(np.allclose(self.S_n, self.S_n.T))
+    self.assertTrue(np.allclose(self.dS, self.dS.T))
+
+  def test_gives_sym(self):
+    """
+      Make sure the update actually gives a symmetric tensor
+    """
+    val = self.dS - np.einsum('ik,jk', self.S_n, self.L) - np.einsum('ik,kj', self.L, self.S_n) + np.trace(self.L
+        ) * self.S_n
+    self.assertTrue(np.allclose(val, val.T)) 
+
+  def test_update_theory(self):
+    """
+      Test to make sure my tensor math was correct on deriving the form of the update (tensor notation)
+    """
+    J = np.einsum('im,jn', np.eye(3), np.eye(3))*(1.0 + np.trace(self.L)) - np.einsum('im,jn', np.eye(3), self.L) - np.einsum('im,jn',
+        self.L, np.eye(3))
+    Jinv = la.tensorinv(J)
+    interm = self.dS + np.dot(self.S_n, self.L.T) + np.dot(self.L, self.S_n) - np.trace(self.L) * self.S_n
+    S_np1 = self.S_n + np.einsum('ijkl,kl', Jinv, interm)
     
-    issym = np.einsum('ijkl,kl', iten, self.E2)
-    self.assertFalse(np.allclose(issym - issym.T, np.zeros((3,3))))
+    dS_c = S_np1 - self.S_n
 
-    # So what about the full Lie derivative?  Maybe that extra tr term is needed?
+    verify = dS_c - np.dot(S_np1, self.L.T) - np.dot(self.L, S_np1) + np.trace(self.L) * S_np1
+    self.assertTrue(np.allclose(self.dS, verify))
 
-  def test_skew_update_formula(self):
-    # Check how I plan do to the update (long way)
-    W = self.W
-    dS_jau = self.E
-    Sn = self.E2
-
-    J = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), W) - np.einsum('im,jn', W, np.eye(3))
-    Jinv = la.tensorinv(J)
-
-    T1 = dS_jau - np.einsum('mk,kn', Sn, W) + np.einsum('mk,kn', W, Sn)
-
-    Snp1 = Sn + np.einsum('ijmn,mn', Jinv, T1)
-
-    dS1 = Snp1 - Sn
-
-    dS2 = dS_jau - np.einsum('ik,kj', Snp1, W) + np.einsum('ik,kj', W, Snp1)
-
-    self.assertTrue(np.allclose(dS1, dS2))
-
-  def test_inverse_formula(self):
+  def test_to_vector(self):
     """
-      Check the direct inverse formula
+      Make sure the C++ tensor -> Mandel works
     """
-    W = self.W
+    self.assertTrue(np.allclose(self.Dv, nemlmath.sym(self.D)))
 
-    J = np.einsum('im,jn', np.eye(3), np.eye(3)) + np.einsum('im,nj', np.eye(3), W) - np.einsum('im,jn', W, np.eye(3))
+  def test_to_tensor(self):
+    """
+      Make sure the C++ Mandel -> tensor works
+    """
+    self.assertTrue(np.allclose(self.D, nemlmath.usym(self.Dv)))
+
+  def test_rhs(self):
+    """
+      Make sure the Truesdell rhs is correct
+    """
+    interm = sym(self.dS + np.dot(self.S_n, self.L.T) + np.dot(self.L, self.S_n) - np.trace(self.L) * self.S_n)
+    outterm = truesdell_rhs(self.Dv, self.Wv, self.S_n_v, self.dS_v)
+    self.assertTrue(np.allclose(interm, outterm))
+
+  def test_matrix(self):
+    """
+      Make sure the Truesdell matrix is correct
+    """
+    J = np.einsum('im,jn', np.eye(3), np.eye(3))*(1.0 + np.trace(self.L)) - np.einsum('im,jn', np.eye(3), self.L) - np.einsum('im,jn',
+        self.L, np.eye(3))
+    Jm = unroll_fourth(J)
+    
+    j2 = truesdell_mat(self.Dv, self.Wv)
+
+    self.assertTrue(np.allclose(Jm, j2))
+
+  def test_implemented_update(self):
+    """
+      Test to make sure the vector update function will work
+    """
+    J = np.einsum('im,jn', np.eye(3), np.eye(3))*(1.0 + np.trace(self.L)) - np.einsum('im,jn', np.eye(3), self.L) - np.einsum('im,jn',
+        self.L, np.eye(3))
     Jinv = la.tensorinv(J)
+    interm = self.dS + np.dot(self.S_n, self.L.T) + np.dot(self.L, self.S_n) - np.trace(self.L) * self.S_n
+    S_np1 = self.S_n + np.einsum('ijkl,kl', Jinv, interm)
+    
+    S_np1_v = sym(S_np1)
 
-    print(Jinv)
-    self.assertTrue(False)
+    S_np1_2 = truesdell_update_sym(self.Dv, self.Wv, self.S_n_v, self.dS_v)
+
+    self.assertTrue(np.allclose(S_np1_v, S_np1_2))
 
 class TestAddSubtractNegate(unittest.TestCase):
   def setUp(self):
