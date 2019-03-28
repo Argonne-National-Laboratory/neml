@@ -12,7 +12,7 @@ These instructions assuming you are building in the source directory.
 To compile just the base library:
 
 ```
-apt-get install build-essential cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev
+apt-get install build-essential cmake libboost-dev libblas-dev liblapack-dev
 cmake .
 make
 ```
@@ -20,7 +20,7 @@ make
 To compile both the base library and the python bindings:
 
 ```
-apt-get install build-essential cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
+apt-get install build-essential cmake libboost-dev libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
 cmake -D WRAP_PYTHON=ON .
 make
 ```
@@ -36,7 +36,7 @@ nosetests
 For just the base library setup prerequisites
 
 ```
-brew install libxml++ boost cmake
+brew install boost cmake
 ```
 
 and then build the library
@@ -49,7 +49,7 @@ make
 For the library and the python bindings setup prerequisites
 
 ```
-brew install libxml++ boost cmake python@2
+brew install boost cmake python@2
 pip install nose numpy scipy nose matplotlib networkx
 ```
 
@@ -57,10 +57,4 @@ and then build the library
 ```
 cmake -D WRAP_PYTHON=ON .
 make 
-```
-
-Users have reported that if you use libxml++3 you may need to manually request 
-libxml2 as well and add the libxml2 pkgconfig path to the environment:
-```
-export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/opt/libxml2/lib/pkgconfig
 ```

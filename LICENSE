@@ -22,3 +22,6 @@ SOFTWARE.
 
 Refer to pybind11/LICENSE for the license of the pybind11 header library
 contained in the NEML release.
+
+Refer to rapidxml/license.txt for the license of the rapidxml header library
+contained in the NEML release.
