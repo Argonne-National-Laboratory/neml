@@ -5,13 +5,7 @@ Installing NEML
 ---------------
 
 Compiling NEML requires the NEML source, a C++ compiler, 
-the `Boost <https://www.boost.org/>`_ library,
-and `libxml++ <http://libxmlplusplus.sourceforge.net/>`_,
-which in turn requires 
-`glib <https://developer.gnome.org/glib/>`_, 
-`glibmm <https://github.com/GNOME/glibmm>`_, 
-`sigc++ <https://developer.gnome.org/libsigc++/stable/>`_,
-and `libxml2 <http://xmlsoft.org/>`_.
+and the `Boost <https://www.boost.org/>`_ library.
 Additionally, you will need `BLAS <http://www.netlib.org/blas/>`_ and 
 `LAPACK <http://www.netlib.org/lapack/>`_.
 
@@ -53,7 +47,7 @@ First install the prerequisites
 
 .. code-block:: console
 
-   apt-get install build-essential git cmake libxml++2.6-dev libboost-dev libblas-dev liblapack-dev 
+   apt-get install build-essential git cmake libboost-dev libblas-dev liblapack-dev 
 
 Clone the neml source code
 

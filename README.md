@@ -40,6 +40,11 @@ Documentation and tutorials are available [here](https://neml.readthedocs.io).
 
 The library is provided under an MIT license found in the
 [LICENSE](LICENSE) file.
+
 The NEML distribution contains a copy of
 the [pybind11](https://github.com/pybind/pybind11) header library, which
 has its own license contained in the pybind11 subdirectory.
+
+The NEML distribution contains a copy of
+the [rapidxml](http://rapidxml.sourceforge.net) header library, which
+has its own license contained in the rapidxml subdirectory.
