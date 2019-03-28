@@ -77,13 +77,14 @@ def ws2ts(C):
   Ct = np.zeros((3,3,3,3))
   for a in range(6):
     for b in range(3):
-      ind_a = itertools.permutations(mandel[a], r=2)
-      ind_b = itertools.permutations(skew_inds[b], r=2)
-      ma = mandel_mults[a]
-      mb = skew_mults[b]
-      indexes = tuple(ai+bi for ai, bi in itertools.product(ind_a, ind_b))
-      for ind in indexes:
-        Ct[ind] = C[a,b] / (ma*mb)
+      inds_a = mandel[a]
+      inds_b = skew_inds[b]
+      mult_a = mandel_mults[a]
+      mult_b = skew_mults[b]
+      for ord_a in ((0,1),(1,0)):
+        for ord_b, f in zip(((0,1),(1,0)), (1,-1)):
+          ind = tuple([inds_a[aa] for aa in ord_a] + [inds_b[bb] for bb in ord_b])
+          Ct[ind] = C[a,b] / (mult_a*mult_b) * f
 
   return Ct
 

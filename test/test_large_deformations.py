@@ -42,15 +42,52 @@ class CommonLD(object):
       B_num = differentiate(ufn_w, w_np1)
       
       print("A")
-      print(A_np1)
-      print(A_num)
+      print((A_np1-A_num)/A_num)
 
       print("B")
-      print(B_np1)
-      print(B_num)
+      print((B_np1-B_num)/B_num)
 
-      self.assertTrue(np.allclose(A_np1, A_num, rtol = 1.0e-3))
-      self.assertTrue(np.allclose(B_np1, B_num, rtol = 1.0e-3))
+      self.assertTrue(np.allclose(A_np1, A_num, rtol = 1.0e-2))
+      self.assertTrue(np.allclose(B_np1, B_num, rtol = 1.0e-2))
+
+  def test_tangent_proportional(self):
+    for dirs in self.directions:
+      ddir = dirs['d']
+      wdir = dirs['w']
+
+      t_n = 0.0
+      hist_n = self.model.init_store()
+      d_n = np.zeros((6,))
+      w_n = np.zeros((3,))
+      stress_n = np.zeros((6,))
+
+      for i in range(self.nsteps):
+        t_np1 = t_n + self.dt
+        d_np1 = d_n + ddir
+        w_np1 = w_n + wdir
+
+        stress_np1, hist_np1, A_np1, B_np1, u_np1, p_np1 = self.model.update_ld_inc(
+            d_np1, d_n, w_np1, w_n, self.T, self.T, t_np1, t_n, stress_n, hist_n,
+            0.0, 0.0)
+
+        ufn_d = lambda d: self.model.update_ld_inc(
+            d, d_n, w_np1, w_n, self.T, self.T, t_np1, t_n, stress_n, hist_n,
+            0.0, 0.0)[0]
+        ufn_w = lambda w: self.model.update_ld_inc(
+            d_np1, d_n, w, w_n, self.T, self.T, t_np1, t_n, stress_n, hist_n,
+            0.0, 0.0)[0]
+
+        A_num = differentiate(ufn_d, d_np1)
+        B_num = differentiate(ufn_w, w_np1)
+
+        self.assertTrue(np.allclose(A_num, A_np1, rtol = 1.0e-2))
+        self.assertTrue(np.allclose(B_num, B_np1, rtol = 1.0e-2))
+
+        t_n = t_np1
+        d_n = np.copy(d_np1)
+        w_n = np.copy(w_np1)
+        stress_n = np.copy(stress_np1)
+        hist_n = np.copy(hist_np1)
 
 
 class TestLinearElastic(CommonLD, unittest.TestCase):
@@ -70,5 +107,21 @@ class TestLinearElastic(CommonLD, unittest.TestCase):
           'w_n': np.zeros((3,)),
           'w_np1': np.array([-0.15,0.1,0.05]),
           'dt': 1.0,
+          'T': 300.0},
+        {'hist_n': np.array([]),
+          'stress_n': np.array([10.0,-5.0,30.0,-5.0,10.0,15.0]),
+          'd_n': np.zeros((6,)),
+          'd_np1': np.array([0.05,0.5,0.25,0.20,-0.2,0.25]),
+          'w_n': np.zeros((3,)),
+          'w_np1': np.array([-0.15,0.25,0.05]),
+          'dt': 1.0,
           'T': 300.0}
         ]
+
+    self.directions = [
+        {'d': np.array([0.1,-0.15,0.2,-0.05,0.15,0.25]),
+          'w': np.array([0.25,-0.15,0.1])}]
+
+    self.nsteps = 10
+    self.dt = 1.0
+    self.T = 300.0
