@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import models, elasticity
+from neml import models, elasticity, surfaces, hardening, ri_flow
 from common import *
 
 import unittest
@@ -99,6 +99,47 @@ class TestLinearElastic(CommonLD, unittest.TestCase):
         "youngs", self.nu, "poissons")
     self.model = models.SmallStrainElasticity(self.elastic)
     
+    self.conditions = [
+        {'hist_n': np.array([]),
+          'stress_n': np.zeros((6,)),
+          'd_n': np.zeros((6,)),
+          'd_np1': np.array([0.1,0.05,-0.025,0.15,0.2,-0.05]),
+          'w_n': np.zeros((3,)),
+          'w_np1': np.array([-0.15,0.1,0.05]),
+          'dt': 1.0,
+          'T': 300.0},
+        {'hist_n': np.array([]),
+          'stress_n': np.array([10.0,-5.0,30.0,-5.0,10.0,15.0]),
+          'd_n': np.zeros((6,)),
+          'd_np1': np.array([0.05,0.5,0.25,0.20,-0.2,0.25]),
+          'w_n': np.zeros((3,)),
+          'w_np1': np.array([-0.15,0.25,0.05]),
+          'dt': 1.0,
+          'T': 300.0}
+        ]
+
+    self.directions = [
+        {'d': np.array([0.1,-0.15,0.2,-0.05,0.15,0.25]),
+          'w': np.array([0.25,-0.15,0.1])}]
+
+    self.nsteps = 10
+    self.dt = 1.0
+    self.T = 300.0
+
+class TestSimplePlastic(CommonLD, unittest.TestCase):
+  def setUp(self):
+    self.E = 100000.0
+    self.nu = 0.29
+    self.sY = 100.0
+    self.H = 1200.0
+
+    elastic = elasticity.IsotropicLinearElasticModel(self.E,
+        "youngs", self.nu, "poissons")
+    surf = surfaces.IsoJ2()
+    hard = hardening.LinearIsotropicHardeningRule(self.sY, self.H)
+    flow = ri_flow.RateIndependentAssociativeFlow(surf, hard)
+    self.model = models.SmallStrainRateIndependentPlasticity(elastic, flow)
+
     self.conditions = [
         {'hist_n': np.array([]),
           'stress_n': np.zeros((6,)),
