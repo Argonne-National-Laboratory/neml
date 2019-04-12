@@ -24,6 +24,12 @@ class TestLDTangent(unittest.TestCase):
     self.S = np.array([[10.0,-20.0,15.0],[-20.0,60.0,5.0],[15.0,5.0,20.0]])
     self.S_v = sym(self.S)
 
+  def test_piece_back(self):
+    A = transform_fourth(self.sym_mandel, self.skew_deriv_red).reshape((3,3,3,3))
+    B = piece_together_fourth(self.sym_mandel, self.skew_deriv_red)
+
+    self.assertTrue(np.allclose(A, B))
+
   def test_mandel_convert(self):
     self.assertTrue(np.allclose(nemlmath.mandel2full(self.sym_mandel), self.sym_99))
     self.assertTrue(np.allclose(nemlmath.full2mandel(self.sym_99), self.sym_mandel))

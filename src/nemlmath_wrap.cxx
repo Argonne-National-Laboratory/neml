@@ -12,7 +12,27 @@ namespace neml {
 
 PYBIND11_MODULE(nemlmath, m) {
   m.doc() = "Various mathematical helper functions.";
- 
+  
+  m.def("transform_fourth",
+        [](py::array_t<double> D, py::array_t<double> W) -> py::array_t<double>
+        {
+          if ((D.request().ndim != 2) || (D.request().shape[0] != 6) ||
+              (D.request().shape[1] != 6)) {
+            throw LinalgError("Input D is not a 6x6!");
+          }
+          if ((W.request().ndim != 2) || (W.request().shape[0] != 6) ||
+              (W.request().shape[1] != 3)) {
+            throw LinalgError("Input W is not a 6x3!");
+          }
+
+          auto A = alloc_mat<double>(9,9);
+
+          transform_fourth(arr2ptr<double>(D), arr2ptr<double>(W), 
+                           arr2ptr<double>(A));
+
+          return A;
+
+        }, "Transform the symmetric and skew parts to a full tensor");
   m.def("idsym",
         []()->py::array_t<double>
         {

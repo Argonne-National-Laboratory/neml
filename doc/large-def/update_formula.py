@@ -74,6 +74,78 @@ def zero_tensor(shape):
   l = np.prod(shape)
   return MutableDenseNDimArray([0]*l, shape)
 
+def piece_together_fourth(Dp, Wp):
+  """
+    Take the skew and symmetric parts of a algorithmic tangent and piece them back together
+  """
+  sym_id = (object_einsum('ik,jl', eye(3), eye(3)) + object_einsum('jk,il', eye(3), eye(3)))/2
+  skew_id = (object_einsum('ik,jl', eye(3), eye(3)) - object_einsum('jk,il', eye(3), eye(3)))/2
+
+  D = sym_tensor_part(Dp)
+  W = skew_tensor_part(Wp)
+  res = zero_tensor((3,3,3,3))
+
+  for i in range(3):
+    for j in range(3):
+      for k in range(3):
+        for l in range(3):
+          for m in range(3):
+            for n in range(3):
+              res[i,j,m,n] += D[i,j,k,l] * sym_id[k,l,m,n] + W[i,j,k,l] * skew_id[k,l,m,n]
+
+  return res
+
+def sym_tensor_part(C):
+  """
+     Take a Mandel stiffness in my notation and convert it back to a full tensor
+  """
+  Ct = zero_tensor((3,3,3,3))
+  for a in range(6):
+    for b in range(6):
+      ind_a = itertools.permutations(mandel[a], r=2)
+      ind_b = itertools.permutations(mandel[b], r=2)
+      ma = mandel_mults[a]
+      mb = mandel_mults[b]
+      indexes = tuple(ai+bi for ai, bi in itertools.product(ind_a, ind_b))
+      for ind in indexes:
+        Ct[ind] = C[a,b] / ma*mb
+
+  for i in range(3):
+    for j in range(3):
+      for k in range(3):
+        for l in range(3):
+          if l < k:
+            Ct[i,j,k,l] = 0
+
+  return Ct
+
+def skew_tensor_part(C):
+  """
+    Take a skew stiffness in my notation and convert it back to a full tensor
+  """
+  Ct = zero_tensor((3,3,3,3))
+  for a in range(6):
+    for b in range(3):
+      inds_a = mandel[a]
+      inds_b = skew_inds[b]
+      mult_a = mandel_mults[a]
+      mult_b = skew_mults[b]
+      for ord_a in ((0,1),(1,0)):
+        for ord_b, f in zip(((0,1),(1,0)), (1,-1)):
+          ind = tuple([inds_a[aa] for aa in ord_a] + [inds_b[bb] for bb in ord_b])
+          Ct[ind] = C[a,b] *  mult_a*mult_b * f
+
+  for i in range(3):
+    for j in range(3):
+      for k in range(3):
+        for l in range(3):
+          if i != j:
+            Ct[i,j,k,l] /= 2
+          if l < k: 
+            Ct[i,j,k,l] = 0
+
+  return Ct
+
 def unroll_fourth(T):
   M = zeros(9,9)
 
@@ -254,10 +326,24 @@ def tangent():
       print(("\tM[%i] = " + str(matrix[i,j]) + ";") % (i*9+j))
   print("")
 
+def parts_to_whole():
+  sym_mat = Matrix([[symbols("D[%i]" % (i*6+j)) for j in range(6)] for i in range(6)])
+  skew_mat = Matrix([[symbols("W[%i]" % (i*3+j)) for j in range(3)] for i in range(6)])
+  
+  tensor = piece_together_fourth(sym_mat, skew_mat)
+  matrix = simplify(unroll_fourth(tensor))
+  print("Matrix")
+  for i in range(9):
+    for j in range(9):
+      print(("\tM[%i] = " + str(matrix[i,j]) + ";") % (i*9+j))
+  print("")
+
 if __name__ == "__main__":
   init_printing(use_unicode=True)
 
   #update()
-  tangent()
+  #tangent()
+
+  parts_to_whole()
 
 
