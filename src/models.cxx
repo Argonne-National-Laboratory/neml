@@ -1178,9 +1178,12 @@ int SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   u_n = 0.0;
   p_n = 0.0;
 
+  double * hist = (h_np1.empty() ? nullptr : &h_np1[0]);
+  double * hist_tss = (tss->h_n.empty() ? nullptr : &(tss->h_n[0]));
+
   ier = plastic_->update_sd(x, tss->ep_strain, tss->T_np1, tss->T_n,
                       tss->t_np1, tss->t_n, s_np1, tss->s_n,
-                      &h_np1[0], &(tss->h_n[0]), A_np1,
+                      hist, hist_tss, A_np1,
                       u_np1, u_n, p_np1, p_n);
   if (ier != 0) return ier;
 
