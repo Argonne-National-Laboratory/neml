@@ -13,13 +13,18 @@ previous time step, the strain, temperature, and time at both the previous
 and next time steps, and NEML provides the updated stresses, history, 
 and energies as output.
 
-A :doc:`interfaces/NEMLModel` object describes a complete constitutive model of this type.
-Currently, NEML provides only a single implementation of this abstract
-base class, a :doc:`interfaces/NEMLModel_sd` which provides a suitable interface for
-small strain kinematics where the user provides the small strain and 
-NEML returns the stress.
-The idea of having this abstract base class is that in the future NEML
-can be expanded to other types of large strain material model updates.
+NEML aims to provide a generic interface to external finite element software 
+through the  :doc:`interfaces/NEMLModel` class.
+This class then provides routines that provide access to the constitutive
+response for different types of requested stress updates.
+
+Subclasses of this class implement a certain type of stress update.
+For example, :doc:`interfaces/NEMLModel_sd` implements small strain
+stress updates natively.
+However, these subclasses also provide wrapper interfaces around this
+native stress update to accommodate requests for other stress updates.
+For example, the :doc:`interfaces/NEMLModel_sd` class provides an incremental
+large deformations stress update using an objective stress rate.
 
 .. toctree::
    :maxdepth: 5

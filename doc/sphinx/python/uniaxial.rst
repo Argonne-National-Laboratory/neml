@@ -41,10 +41,3 @@ tangent
 .. math::
    
    \mathbf{A} = \frac{\mathrm{d} \sigma}{\mathrm{d} \varepsilon}
-
-Class documentation
--------------------
-
-.. automodule:: neml.uniaxial
-   :members:
-   :show-inheritance:

@@ -4,30 +4,27 @@ NEMLModel_sd
 Overview
 --------
 
-The NEMLModel_sd object provides the interface:
+The NEMLModel_sd object natively implements the :ref:`small strain <strain-interfaces>` stress update interface.
+
+It accommodates the :ref:`large strain incremental <strain-interfaces>` stress update interface using the Treusdell objective stress rate of the form:
 
 .. math::
+   \dot{\bm{\sigma}}=\hat{\dot{\bm{\sigma}}}-\bm{\sigma}\cdot\bm{L}^{T}-\bm{L}\cdot\bm{\sigma}+\operatorname{tr}\left(\bm{L}\right)\bm{\sigma}
 
-   \bm{\sigma}_{n+1}, \bm{\alpha}_{n+1}, \bm{\mathfrak{A}}_{n+1}, u_{n+1}, p_{n+1} \leftarrow
-   \mathcal{M}\left( 
-   \bm{\varepsilon}_{n+1}, \bm{\varepsilon}_{n},
-   T_{n+1}, T_{n},
-   t_{n+1}, t_{n},
-   \bm{\sigma}_{n},
-   \bm{\alpha}_{n},
-   u_n, p_n
-   \right).
+where :math:`\bm{\sigma}` is the Cauchy stress and :math:`\hat{\dot{\bm{\sigma}}}` is the small strain stress rate implied by the small strain kinematics
+update interface.
+The update calculates the consistent tangents :math:`\mathbf{\mathfrak{A}}`
+:math:`\mathbf{\mathfrak{B}}` exactly and provides a helper routine
+to recombine these symmetric and skew parts into the full derivative
+with respect to the spatial velocity gradient.
 
-Here :math:`n` indicates values at the previous time step and :math:`n+1` values
-at the next time step.
-The quantities are stress (:math:`\bm{\sigma}`), strain (:math:`\bm{\varepsilon}`),
-the vector of history variables (:math:`\bm{\alpha}`), strain energy (:math:`u`)
-dissipated work (:math:`p`), temperature (:math:`T`), time (:math:`t`), and 
-the algorithmic tangent (:math:`\mathbf{\mathfrak{A}}`).
-For the small strain interface the appropriate algorithmic tangent is
-
-.. math::
-   \mathbf{\mathfrak{A}}_{n+1} = \frac{d \bm{\sigma}_{n+1}}{d \bm{\varepsilon}_{n+1}}.
+.. caution::
+   The current Treusdell objective integration does not advect the
+   material history variables.
+   This means the integration of material models with vector or tensor
+   history variables, such as backstresses, will be inaccurate for
+   situations requiring large rotations.
+   This limitation will be removed in future version of NEML.
 
 The following sections describe the basic material model implemented from
 this generic interfaces.
