@@ -100,7 +100,7 @@ class TestLinearElastic(CommonLD, unittest.TestCase):
     self.model = models.SmallStrainElasticity(self.elastic)
     
     self.conditions = [
-        {'hist_n': np.array([]),
+        {'hist_n': np.zeros((6,)),
           'stress_n': np.zeros((6,)),
           'd_n': np.zeros((6,)),
           'd_np1': np.array([0.1,0.05,-0.025,0.15,0.2,-0.05]),
@@ -108,7 +108,7 @@ class TestLinearElastic(CommonLD, unittest.TestCase):
           'w_np1': np.array([-0.15,0.1,0.05]),
           'dt': 1.0,
           'T': 300.0},
-        {'hist_n': np.array([]),
+        {'hist_n': np.zeros((6,)),
           'stress_n': np.array([10.0,-5.0,30.0,-5.0,10.0,15.0]),
           'd_n': np.zeros((6,)),
           'd_np1': np.array([0.05,0.5,0.25,0.20,-0.2,0.25]),
@@ -141,7 +141,7 @@ class TestSimplePlastic(CommonLD, unittest.TestCase):
     self.model = models.SmallStrainRateIndependentPlasticity(elastic, flow)
 
     self.conditions = [
-        {'hist_n': np.array([]),
+        {'hist_n': self.model.init_store(),
           'stress_n': np.zeros((6,)),
           'd_n': np.zeros((6,)),
           'd_np1': np.array([0.1,0.05,-0.025,0.15,0.2,-0.05]),
@@ -149,7 +149,7 @@ class TestSimplePlastic(CommonLD, unittest.TestCase):
           'w_np1': np.array([-0.15,0.1,0.05]),
           'dt': 1.0,
           'T': 300.0},
-        {'hist_n': np.array([]),
+        {'hist_n': self.model.init_store(),
           'stress_n': np.array([10.0,-5.0,30.0,-5.0,10.0,15.0]),
           'd_n': np.zeros((6,)),
           'd_np1': np.array([0.05,0.5,0.25,0.20,-0.2,0.25]),
