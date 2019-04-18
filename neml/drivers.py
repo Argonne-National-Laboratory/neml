@@ -828,7 +828,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
   if hold_time:
     if np.isscalar(hold_time):
       hold_time = [hold_time, hold_time]
-
+  
   # Setup results
   strain = [0.0]
   stress = [0.0]
@@ -856,7 +856,7 @@ def stress_cyclic(model, smax, R, srate, ncycles, T = 300.0, nsteps = 50,
       print("Cycle %i" % s)
     si = len(driver.strain_int)
     # Hold, if requested
-    if hold_time and (hold_time[0] > 0.0) and (s != 0):
+    if hold_time and (hold_time[0] > 0.0):
       ht = hold_time[0]
       dt = ht / n_hold
       for i in range(n_hold):
