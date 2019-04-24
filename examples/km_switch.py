@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 sys.path.append('..')
-from neml import solvers, interpolate, models, hardening, elasticity, visco_flow, general_flow, surfaces, drivers, calibrate, ri_flow
+from neml import solvers, interpolate, models, hardening, elasticity, visco_flow, general_flow, surfaces, drivers, ri_flow
 
 import matplotlib.pyplot as plt
 import numpy as np

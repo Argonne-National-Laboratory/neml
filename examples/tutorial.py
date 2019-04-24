@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from neml import solvers, models, elasticity, drivers, surfaces, hardening, visco_flow, general_flow, parse
 

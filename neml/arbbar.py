@@ -6,7 +6,7 @@ import warnings
 
 import scipy.optimize as opt
 
-import uniaxial
+from neml import uniaxial
 
 class BarModel(nx.MultiGraph):
   """

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import numpy as np
 import numpy.linalg as la
 import scipy.linalg as sla
@@ -7,7 +5,7 @@ import scipy.linalg.lapack as lapack
 from numpy.polynomial.legendre import leggauss as lgg
 import scipy.optimize as opt
 
-import nemlmath, arbbar
+from neml import nemlmath, arbbar
 
 from functools import partial
 

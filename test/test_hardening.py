@@ -211,7 +211,7 @@ class CommonNonAssociative(object):
     dfn = lambda x: self.model.h_time(s, x, self.T)
     dh_num = differentiate(dfn, a)
 
-    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(dh_model, dh_num, rtol = 1.0e-3, atol = 1.0e-4))
 
   def test_dh_ds_temp(self):
     s = self.gen_stress()
