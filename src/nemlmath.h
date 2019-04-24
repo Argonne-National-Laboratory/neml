@@ -5,6 +5,10 @@
 
 #define CINDEX(i,j,n) (j + i * n)
 
+// Note all this uses the notation:
+// symmetric: [E(0,0), E(1,1), E(2,2), sqrt(2) E(1,2), sqrt(2) E(0,2), sqrt(2) E(0,1)]
+// skew: [-W(1,2), W(0,2), -W(0,1)]
+
 // BLAS/lapack defs
 extern "C" {
   void dgetrf_(const int & m, const int & n, double* A, const int & lda, int* ipiv, int & info);
@@ -19,6 +23,47 @@ extern "C" {
 }
 
 namespace neml {
+
+const double idsym[81] = {1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0};
+const double idskew[81] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+
+/// Convert the symmetric and skew parts into a complete fourth order
+int transform_fourth(const double * const D, const double * const W, double * const M);
+
+/// The outer product used in constructing the truesdell tangent
+int truesdell_tangent_outer(const double * const S, double * const M);
+
+/// Convert a 9x9 to a skew derivative matrix
+int full2skew(const double * const A, double * const M);
+
+/// Convert a skew derivative matrix to a 9x9
+int skew2full(const double * const M, double * const A);
+
+/// Convert a 9x9 to a mandel matrix
+int full2mandel(const double * const A, double * const M);
+
+/// Convert a mandel matrix to a full 9x9
+int mandel2full(const double * const M, double * const A);
+
+/// Convect a symmetric tensor with a Truesdell rate
+int truesdell_update_sym(const double * const D, const double * const W,
+                         const double * const Sn, const double * const So,
+                         double * const Snp1);
+
+/// Form the 9x9 matrix used in the update
+int truesdell_mat(const double * const D, const double * const W,
+                  double * const M);
+
+/// Form the RHS of the update, as a symmetric vector
+int truesdell_rhs(const double * const D, const double * const W,
+                  const double * const Sn, const double * const So,
+                  double * const St);
+
+/// Convert a full symmetric rank 2 to a Mandel vector
+int sym(const double * const A, double * const v);
+
+/// Convert a symmetric vector to a full matrix
+int usym(const double * const v, double * const A);
 
 /// Negate a vector in place
 int minus_vec(double * const a, int n);

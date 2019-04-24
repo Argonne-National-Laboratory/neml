@@ -38,7 +38,19 @@ class NEMLModel: public NEMLObject {
        double * const A_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
-  
+
+   /// Large strain incremental update
+   virtual int update_ld_inc(
+       const double * const d_np1, const double * const d_n,
+       const double * const w_np1, const double * const w_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       double * const s_np1, const double * const s_n,
+       double * const h_np1, const double * const h_n,
+       double * const A_np1, double * const B_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n) = 0;
+
    /// Number of internal variables that are true material history
    virtual size_t nhist() const = 0;
    /// Initialize the history variables
@@ -61,7 +73,8 @@ class NEMLModel_sd: public NEMLModel {
   public:
     /// All small strain models use small strain elasticity and CTE
     NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
-                 std::shared_ptr<Interpolate> alpha);
+                 std::shared_ptr<Interpolate> alpha,
+                 bool truesdell);
     virtual ~NEMLModel_sd();
 
    /// The small strain stress update interface
@@ -74,6 +87,18 @@ class NEMLModel_sd: public NEMLModel {
        double * const A_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
+
+   /// Large strain incremental update
+   virtual int update_ld_inc(
+       const double * const d_np1, const double * const d_n,
+       const double * const w_np1, const double * const w_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       double * const s_np1, const double * const s_n,
+       double * const h_np1, const double * const h_n,
+       double * const A_np1, double * const B_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
 
    /// Number of stored variables
    virtual size_t nstore() const;
@@ -102,11 +127,17 @@ class NEMLModel_sd: public NEMLModel {
    /// Used to override the linear elastic model to match another object's 
    virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
+  private:
+   int calc_tangent_(const double * const D, const double * const W, 
+                     const double * const C, const double * const S, 
+                     double * const A, double * const B);
+
   protected:
    std::shared_ptr<LinearElasticModel> elastic_;
 
   private:
    std::shared_ptr<Interpolate> alpha_;
+   bool truesdell_;
 
 };
 
@@ -116,7 +147,8 @@ class SmallStrainElasticity: public NEMLModel_sd {
  public:
   /// Parameters are the minimum: an elastic model and a thermal expansion 
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
-                        std::shared_ptr<Interpolate> alpha);
+                        std::shared_ptr<Interpolate> alpha,
+                        bool truesdell);
   
   /// Type for the object system
   static std::string type();
@@ -204,7 +236,8 @@ class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
                                std::shared_ptr<Interpolate> alpha,
                                double tol, int miter,
                                bool verbose,
-                               int max_divide);
+                               int max_divide,
+                               bool truesdell);
   
   /// Type for the object system
   static std::string type();
@@ -285,7 +318,7 @@ class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable
                                        std::shared_ptr<RateIndependentFlowRule> flow,
                                        std::shared_ptr<Interpolate> alpha,
                                        double tol, int miter, bool verbose,double kttol,
-                                       bool check_kt);
+                                       bool check_kt, bool truesdell);
 
   /// Type for the object system
   static std::string type();
@@ -357,7 +390,8 @@ class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
                              std::shared_ptr<CreepModel> creep,
                              std::shared_ptr<Interpolate> alpha,
                              double tol, int miter,
-                             bool verbose, double sf);
+                             bool verbose, double sf,
+                             bool truesdell);
 
   /// Type for the object system
   static std::string type();
@@ -427,7 +461,8 @@ class GeneralIntegrator: public NEMLModel_sd, public Solvable {
                     std::shared_ptr<GeneralFlowRule> rule,
                     std::shared_ptr<Interpolate> alpha,
                     double tol, int miter,
-                    bool verbose, int max_divide);
+                    bool verbose, int max_divide,
+                    bool truesdell);
 
   /// Type for the object system
   static std::string type();
@@ -506,7 +541,8 @@ class KMRegimeModel: public NEMLModel_sd {
                 std::vector<std::shared_ptr<NEMLModel_sd>> models,
                 std::vector<double> gs, 
                 double kboltz, double b, double eps0,
-                std::shared_ptr<Interpolate> alpha);
+                std::shared_ptr<Interpolate> alpha,
+                bool truesdell);
 
   /// Type for the object system
   static std::string type();
