@@ -341,9 +341,8 @@ def parts_to_whole():
 if __name__ == "__main__":
   init_printing(use_unicode=True)
 
-  #update()
-  #tangent()
-
+  update()
+  tangent()
   parts_to_whole()
 
 
