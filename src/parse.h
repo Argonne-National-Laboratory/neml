@@ -50,6 +50,9 @@ bool get_bool(const rapidxml::xml_node<> * node);
 /// Extract a string from an xml node
 std::string get_string(const rapidxml::xml_node<> * node);
 
+/// Get all avialable model names
+void print_model_names(std::string fname);
+
 // Helpers
 /// Get a node with a given name
 const rapidxml::xml_node<> * get_child(const rapidxml::xml_node<> * node, std::string name);

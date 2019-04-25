@@ -10,7 +10,7 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
   doc.parse<0>(xmlFile.data());
 
   // Grab the root node
-  const rapidxml::xml_node<> * root = doc.first_node();
+  const rapidxml::xml_node<> * root = doc.first_node("materials");
 
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
@@ -36,7 +36,7 @@ std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname
   doc.parse<0>(xmlFile.data());
 
   // Grab the root node
-  const rapidxml::xml_node<> * root = doc.first_node();
+  const rapidxml::xml_node<> * root = doc.first_node("materials");
 
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
@@ -238,6 +238,19 @@ std::vector<double> split_string(std::string sval)
     value.push_back(std::stod(*it));
   }
   return value;
+}
+
+void print_model_names(std::string fname)
+{
+  rapidxml::file <> xmlFile(fname.c_str());
+  rapidxml::xml_document<> doc;
+  doc.parse<0>(xmlFile.data());
+
+  const rapidxml::xml_node<> * root = doc.first_node("materials");
+  for (rapidxml::xml_node<> * model_node = root->first_node(); model_node; model_node = model_node->next_sibling())
+	{
+    printf("\t%s (%s)\n", model_node->name(), model_node->first_attribute("type")->value());
+  }
 }
 
 } // namespace neml

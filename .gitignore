@@ -29,3 +29,5 @@ doc/doxygen/pdf
 doc/doxygen/latex
 CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
+build/
+.vscode

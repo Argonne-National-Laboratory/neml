@@ -1,0 +1,7 @@
+# these python packages are required for NEML's python test scripts
+# use: pip install -r requirements.txt
+numpy
+scipy
+matplotlib
+nose
+networkx

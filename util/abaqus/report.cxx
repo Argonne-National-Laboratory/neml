@@ -6,8 +6,12 @@
 
 int main(int argc, char ** argv) {
 
-  if (argc != 3) {
-    std::cout << "Need two command line arguments: file and model name." << std::endl;
+  if (argc == 2) {
+    std::cout << "Each model name (and its type) in " << argv[1] << " are:" << std::endl;
+    neml::print_model_names(argv[1]);
+    return 0;
+  } else if (argc != 3) {
+    std::cout << "Need two command line arguments: An XML filename and a model name from that file." << std::endl;
     return -1;
   }
 
