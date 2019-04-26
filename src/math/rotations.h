@@ -1,6 +1,8 @@
 #ifndef ROTATIONS_H
 #define ROTATIONS_H
 
+#include "tensors.h"
+
 #include <complex>
 #include <vector>
 #include <string>
@@ -142,6 +144,9 @@ class Orientation: public Quaternion {
 
   /// Power
   Orientation pow(double w) const;
+
+  /// Rotate various tensors
+  Vector apply(const Vector & a) const;
 
  private:
   void normalize_();

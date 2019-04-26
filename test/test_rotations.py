@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from neml.math import rotations
+from neml.math import rotations, tensors
 
 import unittest
 import numpy as np
@@ -146,3 +146,13 @@ class TestSpecialCaseConversion(unittest.TestCase, Conversion):
   def setUp(self):
     self.q = rotations.Orientation(0.0, 0.0, 10.0, angle_type = "degrees")
 
+class TestApplyThings(unittest.TestCase):
+  def setUp(self):
+    self.q = rotations.Orientation(30.0, 60.0, 80.0, angle_type = "degrees")
+    self.v = tensors.Vector(np.array([1.2,-2.0,3.0]))
+
+  def test_apply_vector(self):
+    rv = self.q.apply(self.v)
+    self.assertAlmostEqual(rv.norm(), self.v.norm())
+    rrv = self.q.inverse().apply(rv)
+    self.assertTrue(np.allclose(rrv.data, self.v.data))

@@ -133,6 +133,12 @@ double convert_angle(double a, std::string);
 /// Convert from radians
 double cast_angle(double a, std::string angles);
 
+#define RTOL 1.0E-5
+#define ATOL 1.0E-8
+
+/// This is only to be used for testing
+bool isclose(double a, double b);
+
 }
 
 #endif // NEMLMATH_H

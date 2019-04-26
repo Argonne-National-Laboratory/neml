@@ -591,6 +591,8 @@ PYBIND11_MODULE(nemlmath, m) {
   m.def("reduce_gcd", &reduce_gcd);
   m.def("convert_angle", &convert_angle);
   m.def("cast_angle", &cast_angle);
+  m.def("isclose", &isclose);
+
 }
 
 } // namespace neml

@@ -838,4 +838,9 @@ double cast_angle(double a, std::string angles)
   }
 }
 
+bool isclose(double a, double b)
+{
+  return fabs(a - b) <= (ATOL + RTOL * fabs(b));
+}
+
 } // namespace neml

@@ -699,6 +699,21 @@ Orientation operator/(const Orientation & lhs, const Orientation & rhs)
   return cpy;
 }
 
+Vector Orientation::apply(const Vector & a) const
+{
+  double qv[4];
+  qv[0] = 0.0;
+  qv[1] = a.data()[0];
+  qv[2] = a.data()[1];
+  qv[3] = a.data()[2];
+
+  Quaternion q(qv);
+  Quaternion base = static_cast<Quaternion>(*this);
+  Quaternion rv = base * q * base.conj();
+
+  return Vector(&rv.quat()[1]);
+}
+
 std::vector<Orientation> random_orientations(int n)
 {
   double u[3];

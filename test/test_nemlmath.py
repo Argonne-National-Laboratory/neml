@@ -333,3 +333,7 @@ class TestMisc(unittest.TestCase):
 
   def test_reduce_gcd(self):
     self.assertEqual(nemlmath.reduce_gcd([10,20,15]), [2,4,3])
+
+  def test_isclose(self):
+    self.assertTrue(nemlmath.isclose(1.0e10, 1.00001e10))
+    self.assertFalse(nemlmath.isclose(1.0e-7, 1.0e-8))

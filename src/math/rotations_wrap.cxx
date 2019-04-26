@@ -168,6 +168,8 @@ PYBIND11_MODULE(rotations, m) {
       .def("inverse", &Orientation::inverse, "Inverse")
       .def("pow", &Orientation::pow, "Exponentiation")
       .def("__pow__", &Orientation::pow, "Exponentiation with python sugar")
+
+      .def("apply", &Orientation::apply)
       
       .def(py::self *= py::self)
       .def(py::self * py::self)
