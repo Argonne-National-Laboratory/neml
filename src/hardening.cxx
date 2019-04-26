@@ -1,6 +1,6 @@
 #include "hardening.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 #include "nemlerror.h"
 
 #include <cmath>

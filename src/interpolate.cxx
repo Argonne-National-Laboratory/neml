@@ -1,6 +1,6 @@
 #include "interpolate.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 
 #include <math.h>
 #include <algorithm>

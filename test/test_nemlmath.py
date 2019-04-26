@@ -1,10 +1,10 @@
 import sys
 sys.path.append('..')
 
-from neml.nemlmath import *
+from neml.math.nemlmath import *
 from common import *
 
-from neml import nemlmath
+from neml.math import nemlmath
 
 import unittest
 import numpy as np

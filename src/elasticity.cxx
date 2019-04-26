@@ -1,6 +1,6 @@
 #include "elasticity.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 #include "nemlerror.h"
 
 #include <algorithm>
