@@ -2,6 +2,8 @@
 #define NEMLMATH_H
 
 #include <cstddef>
+#include <vector>
+#include <string>
 
 #define CINDEX(i,j,n) (j + i * n)
 
@@ -115,6 +117,21 @@ double condition(const double * const A, int n);
 
 /// Evaluate a polynomial with Horner's method, highest order term first
 double polyval(const double * const poly, const int n, double x);
+
+/// The greatest common divisor between two numbers
+int gcd(int a, int b);
+
+/// The greatest common divisor between a lot of numbers
+int common_gcd(std::vector<int> in);
+
+/// Divide a vector by the collective GCD
+std::vector<int> reduce_gcd(std::vector<int> in);
+
+/// Convert to radians
+double convert_angle(double a, std::string);
+
+/// Convert from radians
+double cast_angle(double a, std::string angles);
 
 }
 

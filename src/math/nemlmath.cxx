@@ -786,4 +786,56 @@ double polyval(const double * const poly, const int n, double x)
   return res;
 }
 
+int gcd(int a, int b)
+{
+  if (a == 0) return b;
+  return gcd(b % a, a);
+}
+
+int common_gcd(std::vector<int> in)
+{
+  int c = in[0];
+  for (int i = 1; i < in.size(); i++) {
+    c = gcd(c, in[i]);
+  }
+  return c;
+}
+
+std::vector<int> reduce_gcd(std::vector<int> in)
+{
+  std::vector<int> out(in);
+  int f = common_gcd(out);
+  for (int i=0; i<out.size(); i++) {
+    out[i] /= abs(f);
+  }
+
+  return out;
+}
+
+double convert_angle(double a, std::string angles)
+{
+  if (std::string("radians").compare(angles) == 0) {
+    return a;
+  }
+  else if (std::string("degrees").compare(angles) == 0) {
+    return a / 360.0 * 2.0 * M_PI;
+  }
+  else {
+    throw std::invalid_argument("Angle type must be radians or degrees.");
+  }
+}
+
+double cast_angle(double a, std::string angles)
+{
+  if (std::string("radians").compare(angles) == 0) {
+    return a;
+  }
+  else if (std::string("degrees").compare(angles) == 0) {
+    return a / (2.0 * M_PI) * 360.0;
+  }
+  else {
+    throw std::invalid_argument("Angle type must be radians or degrees.");
+  }
+}
+
 } // namespace neml

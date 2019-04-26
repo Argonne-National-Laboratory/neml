@@ -585,6 +585,12 @@ PYBIND11_MODULE(nemlmath, m) {
           return b;
 
          }, "Thin wrapper for DGTTRS");
+
+  m.def("gcd", &gcd);
+  m.def("common_gcd", &common_gcd);
+  m.def("reduce_gcd", &reduce_gcd);
+  m.def("convert_angle", &convert_angle);
+  m.def("cast_angle", &cast_angle);
 }
 
 } // namespace neml

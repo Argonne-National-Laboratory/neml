@@ -7,6 +7,7 @@
 #include "pybind11.h"
 #include "numpy.h"
 #include "stl.h"
+#include "operators.h"
 
 #include <vector>
 #include <algorithm>

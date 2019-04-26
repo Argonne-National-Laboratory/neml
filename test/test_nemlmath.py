@@ -303,3 +303,33 @@ class TestPoly(unittest.TestCase):
     npv = np.polyval(self.poly, self.x)
     mv  = polyval(self.poly, self.x)
     self.assertTrue(np.isclose(npv, mv))
+
+class TestMisc(unittest.TestCase):
+  def setUp(self):
+    self.a1_deg = 127.0
+    self.a1_rad = np.deg2rad(self.a1_deg)
+
+  def test_cast_angle(self):
+    self.assertAlmostEqual(
+        self.a1_deg, 
+        nemlmath.cast_angle(self.a1_rad, "degrees"))
+    self.assertAlmostEqual(
+        self.a1_rad,
+        nemlmath.cast_angle(self.a1_rad, "radians"))
+
+  def test_convert_angle(self):
+    self.assertAlmostEqual(
+        self.a1_rad,
+        nemlmath.convert_angle(self.a1_deg, "degrees"))
+    self.assertAlmostEqual(
+        self.a1_rad,
+        nemlmath.convert_angle(self.a1_rad, "radians"))
+
+  def test_gcd(self):
+    self.assertEqual(nemlmath.gcd(12,20), 4)
+
+  def test_common_gcd(self):
+    self.assertEqual(nemlmath.common_gcd([10,15,20]), 5)
+
+  def test_reduce_gcd(self):
+    self.assertEqual(nemlmath.reduce_gcd([10,20,15]), [2,4,3])
