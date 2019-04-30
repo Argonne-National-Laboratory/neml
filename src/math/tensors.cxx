@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <cmath>
 
 namespace neml {
 
@@ -47,6 +48,34 @@ Tensor & Tensor::operator=(const Tensor && rhs) {
   std::copy(rhs.data(), rhs.data() + rhs.n(), s_);
 
   return *this;
+}
+
+Tensor & Tensor::operator*=(double s) 
+{
+  for (size_t i=0; i<n_; i++) {
+    s_[i] *= s;
+  }
+
+  return *this;
+}
+
+Tensor & Tensor::operator/=(double s)
+{
+  return this->operator*=(1.0 / s);
+}
+
+bool operator==(const Tensor & a, const Tensor & b)
+{
+  if (a.n() != b.n()) return false;
+  for (size_t i = 0; i < a.n(); i++) {
+    if (not isclose(a.data()[i], b.data()[i])) return false;
+  }
+  return true;
+}
+
+bool operator!=(const Tensor & a, const Tensor & b)
+{
+  return not (a == b);
 }
 
 Vector::Vector() :
@@ -96,20 +125,6 @@ Vector Vector::opposite() const
 Vector Vector::operator-() const
 {
   return opposite();
-}
-
-Vector & Vector::operator*=(double s) 
-{
-  for (int i=0; i<3; i++) {
-    s_[i] *= s;
-  }
-
-  return *this;
-}
-
-Vector & Vector::operator/=(double s)
-{
-  return this->operator*=(1.0 / s);
 }
 
 Vector & Vector::operator+=(const Vector & other)
@@ -179,18 +194,6 @@ Vector operator-(const Vector & a, const Vector & b)
   Vector cpy(a);
   cpy -= b;
   return cpy;
-}
-
-bool operator==(const Vector & a, const Vector & b)
-{
-  return (isclose(a.data()[0], b.data()[0]) && 
-          isclose(a.data()[1], b.data()[1]) &&
-          isclose(a.data()[2], b.data()[2]));
-}
-
-bool operator!=(const Vector & a, const Vector & b)
-{
-  return not (a == b);
 }
 
 std::ostream & operator<<(std::ostream & os, const Vector & v)

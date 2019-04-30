@@ -16,6 +16,11 @@ PYBIND11_MODULE(tensors, m) {
   m.doc() = "Standard tensor properties";
 
   py::class_<Tensor, std::shared_ptr<Tensor>>(m, "Tensor")
+      .def(py::self *= double())
+      .def(py::self /= double())
+
+      .def(py::self == py::self)
+      .def(py::self != py::self)
       ;
 
   py::class_<Vector, Tensor, std::shared_ptr<Vector>>(m, "Vector")
@@ -53,11 +58,9 @@ PYBIND11_MODULE(tensors, m) {
       .def("opposite", &Vector::opposite)
       .def("__neg__", &Vector::opposite)
 
-      .def(py::self *= double())
       .def(double() * py::self)
       .def(py::self * double())
 
-      .def(py::self /= double())
       .def(py::self / double())
 
       .def(py::self += py::self)
@@ -65,9 +68,6 @@ PYBIND11_MODULE(tensors, m) {
 
       .def(py::self -= py::self)
       .def(py::self - py::self)
-
-      .def(py::self == py::self)
-      .def(py::self != py::self)
 
       .def("cross", &Vector::cross)
       .def("normalize", &Vector::normalize)

@@ -19,10 +19,17 @@ class Tensor {
   double * s() {return s_;};
   std::size_t n() const {return n_;};
 
+  Tensor & operator*=(double s);
+  Tensor & operator/=(double s);
+
  protected:
   double * s_;
   const std::size_t n_;
 };
+
+/// Dangerous but useful
+bool operator==(const Tensor & a, const Tensor & b);
+bool operator!=(const Tensor & a, const Tensor & b);
 
 class Vector: public Tensor {
  public:
@@ -36,9 +43,6 @@ class Vector: public Tensor {
   Vector opposite() const;
   Vector operator-() const;
 
-  Vector & operator*=(double s);
-  Vector & operator/=(double s);
-
   Vector & operator+=(const Vector & other);
   Vector & operator-=(const Vector & other);
 
@@ -50,15 +54,10 @@ class Vector: public Tensor {
 // Binary operators
 Vector operator*(double s, const Vector & v);
 Vector operator*(const Vector & v, double s);
-Vector operator/(double s, const Vector & v);
 Vector operator/(const Vector & v, double s);
 
 Vector operator+(const Vector & a, const Vector & b);
 Vector operator-(const Vector & a, const Vector & b);
-
-/// Dangerous but useful
-bool operator==(const Vector & a, const Vector & b);
-bool operator!=(const Vector & a, const Vector & b);
 
 /// io for vectors
 std::ostream & operator<<(std::ostream & os, const Vector & v);
