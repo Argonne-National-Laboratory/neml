@@ -21,6 +21,20 @@ Tensor::Tensor(const Tensor & other) :
   std::copy(other.data(), other.data() + other.n(), s_);
 }
 
+Tensor::Tensor(const std::vector<double> flat) : 
+  n_(flat.size())
+{
+  s_ = new double [n_];
+  std::copy(flat.begin(), flat.end(), s_);
+}
+
+Tensor::Tensor(const double * const flat, size_t n) :
+    n_(n)
+{
+  s_ = new double[n_];
+  std::copy(flat, flat + n_, s_);
+}
+
 Tensor::~Tensor()
 {
   delete [] s_;
@@ -64,6 +78,20 @@ Tensor & Tensor::operator/=(double s)
   return this->operator*=(1.0 / s);
 }
 
+void Tensor::add_(const Tensor & other)
+{
+  for (size_t i = 0; i < n_; i++) {
+    s_[i] += other.data()[i];
+  }
+}
+
+void Tensor::negate_()
+{
+  for (size_t i = 0; i < n_; i++) {
+    s_[i] = -s_[i];
+  }
+}
+
 bool operator==(const Tensor & a, const Tensor & b)
 {
   if (a.n() != b.n()) return false;
@@ -85,18 +113,49 @@ Vector::Vector() :
 }
 
 Vector::Vector(const std::vector<double> v) :
-    Tensor(3)
+    Tensor(v)
 {
   if (v.size() != 3) {
     throw std::invalid_argument("Input to vector must have size 3!");
   }
-  std::copy(v.begin(), v.end(), s_);
 }
 
 Vector::Vector(const double * const v) :
-    Tensor(3)
+    Tensor(v, 3)
 {
-  std::copy(v, v+3, s_);
+}
+
+Vector Vector::opposite() const
+{
+  Vector cpy(*this);
+  cpy.negate_();
+  return cpy;
+}
+
+Vector Vector::operator-() const
+{
+  return opposite();
+}
+
+Vector & Vector::operator+=(const Vector & other)
+{
+  add_(other);
+  return *this;
+}
+
+Vector & Vector::operator-=(const Vector & other)
+{
+  return this->operator+=(-other);
+}
+
+double & Vector::operator()(size_t i)
+{
+  return s_[i];
+}
+
+const double & Vector::operator()(size_t i) const
+{
+  return s_[i];
 }
 
 double Vector::dot(const Vector & rhs) const
@@ -108,37 +167,22 @@ double Vector::dot(const Vector & rhs) const
   return s;
 }
 
+RankTwo Vector::outer(const Vector & o) const
+{
+  RankTwo res;
+
+  for (size_t i=0; i<3; i++) {
+    for (size_t j=0; j<3; j++) {
+      res(i,j) = (*this)(i) * o(j);
+    }
+  }
+  
+  return res;
+}
+
 double Vector::norm() const
 {
   return sqrt(dot(*this));
-}
-
-Vector Vector::opposite() const
-{
-  double s[3];
-  for (int i=0; i<3; i++) {
-    s[i] = -s_[i];
-  }
-  return Vector(s);
-}
-
-Vector Vector::operator-() const
-{
-  return opposite();
-}
-
-Vector & Vector::operator+=(const Vector & other)
-{
-  for (int i=0; i<3; i++) {
-    s_[i] += other.data()[i];
-  }
-
-  return *this;
-}
-
-Vector & Vector::operator-=(const Vector & other)
-{
-  return this->operator+=(-other);
 }
 
 Vector Vector::cross(const Vector & other) const
@@ -203,5 +247,125 @@ std::ostream & operator<<(std::ostream & os, const Vector & v)
 
   return os;
 }
+
+Tensor outer(const Vector & a, const Vector & b)
+{
+  return a.outer(b);
+}
+
+RankTwo::RankTwo() :
+    Tensor(9)
+{
+  std::fill(s_, s_+9, 0.0);
+}
+
+RankTwo::RankTwo(const std::vector<double> v) :
+    Tensor(v)
+{
+  if (v.size() != 9) {
+    throw std::invalid_argument("Input to RankTwo must have size 9!");
+  }
+}
+
+RankTwo::RankTwo(const double * const v) :
+    Tensor(v, 9)
+{
+}
+
+RankTwo::RankTwo(const std::vector<const std::vector<double>> A) :
+    Tensor(9)
+{
+  if (A.size() != 3) {
+    throw std::invalid_argument("RankTwo must be initiated with a 3x3 array");
+  }
+  for (auto vi : A) {
+    if (vi.size() != 3) {
+      throw std::invalid_argument("RankTwo must be initiated with a 3x3 array");
+    }
+  }
+
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = 0; j < 3; j++) {
+      s_[i*3+j] = A[i][j];
+    }
+  }
+}
+
+RankTwo RankTwo::opposite() const
+{
+  RankTwo cpy(*this);
+  cpy.negate_();
+  return cpy;
+}
+
+RankTwo RankTwo::operator-() const
+{
+  return opposite();
+}
+
+RankTwo & RankTwo::operator+=(const RankTwo & other)
+{
+  add_(other);
+  return *this;
+}
+
+RankTwo & RankTwo::operator-=(const RankTwo & other)
+{
+  return this->operator+=(-other);
+}
+
+double & RankTwo::operator()(size_t i, size_t j)
+{
+  return s_[i*3+j];
+}
+
+const double & RankTwo::operator()(size_t i, size_t j) const
+{
+  return s_[i*3+j];
+}
+
+RankTwo operator*(double s, const RankTwo & v)
+{
+  RankTwo cpy(v);
+  cpy *= s;
+  return cpy;
+}
+
+RankTwo operator*(const RankTwo & v, double s)
+{
+  return operator*(s, v);
+}
+
+RankTwo operator/(const RankTwo & v, double s)
+{
+  RankTwo cpy(v);
+  cpy /= s;
+  return cpy;
+}
+
+RankTwo operator+(const RankTwo & a, const RankTwo & b)
+{
+  RankTwo cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+RankTwo operator-(const RankTwo & a, const RankTwo & b)
+{
+  RankTwo cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+std::ostream & operator<<(std::ostream & os, const RankTwo & v)
+{
+  const double * const d = v.data();
+  os << "[[" << d[0] << " " << d[1] << " " << d[2] << "]" << std::endl;
+  os << " [" << d[3] << " " << d[4] << " " << d[5] << "]" << std::endl;
+  os << " [" << d[6] << " " << d[7] << " " << d[8] << "]]" << std::endl;
+
+  return os;
+}
+
 
 } // namespace neml

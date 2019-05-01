@@ -80,3 +80,18 @@ class TestVector(unittest.TestCase):
   def test_inequality(self):
     self.assertFalse(self.va != self.va)
     self.assertTrue(self.va != self.vb)
+
+  def test_get(self):
+    for i in range(3):
+      self.assertTrue(np.isclose(self.va[i], self.a[i]))
+
+  def test_set(self):
+    for i in range(3):
+      self.va[i] = 2.0
+      self.a[i] = 2.0
+      self.assertTrue(np.isclose(self.va[i], self.a[i]))
+
+  def test_outer(self):
+    self.assertEqual(self.va.outer(self.vb), tensors.outer(self.va, self.vb))
+    self.assertEqual(tensors.RankTwo(np.outer(self.a, self.b)), 
+        tensors.outer(self.va, self.vb))
