@@ -324,6 +324,45 @@ const double & RankTwo::operator()(size_t i, size_t j) const
   return s_[i*3+j];
 }
 
+RankTwo RankTwo::dot(const RankTwo & other) const
+{
+  RankTwo res;
+
+  mat_mat(3, 3, 3, this->data(), other.data(), res.s());
+
+  return res;
+}
+
+Vector RankTwo::dot(const Vector & other) const
+{
+  Vector res;
+
+  mat_vec(this->data(), 3, other.data(), 3, res.s()); 
+
+  return res;
+}
+
+RankTwo RankTwo::inverse() const
+{
+  RankTwo res(*this);
+  invert_mat(res.s(), 3);
+
+  return res;
+}
+
+RankTwo RankTwo::transpose() const
+{
+  RankTwo res;
+
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = 0; j < 3; j++) {
+      res(j,i) = (*this)(i,j);
+    }
+  }
+
+  return res;
+}
+
 RankTwo operator*(double s, const RankTwo & v)
 {
   RankTwo cpy(v);
@@ -367,5 +406,19 @@ std::ostream & operator<<(std::ostream & os, const RankTwo & v)
   return os;
 }
 
+Vector operator*(const RankTwo & a, const Vector & b)
+{
+  return a.dot(b);
+}
+
+Vector operator*(const Vector & a, const RankTwo & b)
+{
+  return b.transpose().dot(a);
+}
+
+RankTwo operator*(const RankTwo & a, const RankTwo & b)
+{
+  return a.dot(b);
+}
 
 } // namespace neml

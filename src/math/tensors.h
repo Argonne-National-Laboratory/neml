@@ -97,6 +97,12 @@ class RankTwo: public Tensor {
 
   double & operator()(size_t i, size_t j);
   const double & operator()(size_t i, size_t j) const;
+
+  RankTwo dot(const RankTwo & other) const;
+  Vector dot(const Vector & other) const;
+
+  RankTwo inverse() const;
+  RankTwo transpose() const;
 };
 
 // Binary operators with scalars
@@ -107,6 +113,11 @@ RankTwo operator/(const RankTwo & v, double s);
 // Binary operators with vectors
 RankTwo operator+(const RankTwo & a, const RankTwo & b);
 RankTwo operator-(const RankTwo & a, const RankTwo & b);
+
+// Various forms of multiplication
+Vector operator*(const RankTwo & a, const Vector & b);
+Vector operator*(const Vector & a, const RankTwo & b);
+RankTwo operator*(const RankTwo & a, const RankTwo & b);
 
 /// io for tensors
 std::ostream & operator<<(std::ostream & os, const RankTwo & v);

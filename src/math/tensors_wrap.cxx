@@ -145,7 +145,35 @@ PYBIND11_MODULE(tensors, m) {
       .def(py::self -= py::self)
       .def(py::self - py::self)
 
+      .def("__getitem__", [](const RankTwo & M, std::tuple<size_t,size_t> ind) {
+           size_t i = std::get<0>(ind);
+           size_t j = std::get<1>(ind);
+           if ((i >= 3) || (j > 3)) throw py::index_error();
+           return M(i,j);
+      })
+
+      .def("__setitem__", [](RankTwo & M, std::tuple<size_t,size_t> ind, double val) {
+           size_t i = std::get<0>(ind);
+           size_t j = std::get<1>(ind);
+           if ((i >= 3) || (j > 3)) throw py::index_error();
+           M(i,j) = val;
+      })
+
       // End standard
+      .def("dot", [](const RankTwo & me, const Vector & other) -> Vector
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const RankTwo & me, const RankTwo & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+      .def(py::self * py::self)
+      .def(py::self * Vector())
+      .def(Vector() * py::self)
+
+      .def("inverse", &RankTwo::inverse)
+      .def("transpose", &RankTwo::transpose)
       ;
 
 } // PYBIND11_MODULE(tensors, m)
