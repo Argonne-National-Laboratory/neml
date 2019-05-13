@@ -183,4 +183,18 @@ class TestSymmetric(unittest.TestCase):
   def test_transpose(self):
     self.assertEqual(tensors.Symmetric(self.A.T), self.TA.transpose())
 
-# Test Symmetric x Tensor
+# Test various combinations of tensors
+class TestComboTensorProducts(unittest.TestCase):
+  def setUp(self):
+    self.S = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.S = 0.5*(self.S + self.S.T)
+    self.TS = tensors.Symmetric(self.S)
+    self.B = np.array([[10.2,-9.3,2.5],[0.1,3.1,2.8],[0.1,3.2,-6.1]])
+    self.TB = tensors.RankTwo(self.B)
+
+  def test_sym_general(self):
+    self.assertEqual(tensors.RankTwo(np.dot(self.S, self.B)), self.TS * self.TB)
+
+  def test_general_sym(self):
+    self.assertEqual(tensors.RankTwo(np.dot(self.B, self.S)), self.TB * self.TS)
+    
