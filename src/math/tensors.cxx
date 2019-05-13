@@ -297,6 +297,12 @@ RankTwo::RankTwo(const Symmetric & other) :
 
 }
 
+RankTwo::RankTwo(const Skew & other) :
+    RankTwo(other.to_full())
+{
+
+}
+
 RankTwo RankTwo::opposite() const
 {
   RankTwo cpy(*this);
@@ -332,6 +338,18 @@ RankTwo & RankTwo::operator-=(const Symmetric & other)
   return this->operator+=(-other);
 }
 
+RankTwo & RankTwo::operator+=(const Skew & other)
+{
+  // TODO: more efficient
+  *this += other.to_full();
+  return *this;
+}
+
+RankTwo & RankTwo::operator-=(const Skew & other)
+{
+  return this->operator+=(-other);
+}
+
 double & RankTwo::operator()(size_t i, size_t j)
 {
   return s_[i*3+j];
@@ -352,6 +370,12 @@ RankTwo RankTwo::dot(const RankTwo & other) const
 }
 
 RankTwo RankTwo::dot(const Symmetric & other) const
+{
+  // TODO: more efficient
+  return (*this).dot(other.to_full());
+}
+
+RankTwo RankTwo::dot(const Skew & other) const
 {
   // TODO: more efficient
   return (*this).dot(other.to_full());
@@ -443,8 +467,36 @@ RankTwo operator+(const Symmetric & a, const RankTwo & b)
 
 RankTwo operator-(const Symmetric & a, const RankTwo & b)
 {
+  RankTwo cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+RankTwo operator+(const RankTwo & a, const Skew & b)
+{
+  RankTwo cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+RankTwo operator-(const RankTwo & a, const Skew & b)
+{
+  RankTwo cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+RankTwo operator+(const Skew & a, const RankTwo & b)
+{
   RankTwo cpy(b);
-  cpy -= a;
+  cpy += a;
+  return cpy;
+}
+
+RankTwo operator-(const Skew & a, const RankTwo & b)
+{
+  RankTwo cpy(a);
+  cpy -= b;
   return cpy;
 }
 
@@ -479,6 +531,26 @@ RankTwo operator*(const RankTwo & a, const Symmetric & b)
 }
 
 RankTwo operator*(const Symmetric & a, const RankTwo & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const RankTwo & a, const Skew & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const Skew & a, const RankTwo & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const Skew & a, const Symmetric & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const Symmetric & a, const Skew & b)
 {
   return a.dot(b);
 }
@@ -586,6 +658,12 @@ RankTwo Symmetric::dot(const RankTwo & other) const
   return (*this).to_full().dot(other);
 }
 
+RankTwo Symmetric::dot(const Skew & other) const
+{
+  // TODO: more efficient
+  return (*this).to_full().dot(other);
+}
+
 Symmetric operator*(double s, const Symmetric & v)
 {
   Symmetric cpy(v);
@@ -640,5 +718,161 @@ std::ostream & operator<<(std::ostream & os, const Symmetric & v)
 
   return os;
 }
+
+Skew::Skew() :
+    Tensor(3)
+{
+  std::fill(s_, s_+3, 0.0);
+}
+
+Skew::Skew(const std::vector<double> v) :
+    Tensor(v)
+{
+  if (v.size() != 3) {
+    throw std::invalid_argument("Input to Skew must have size 3!");
+  }
+}
+
+Skew::Skew(const double * const v) :
+    Tensor(v, 3)
+{
+}
+
+Skew::Skew(const RankTwo & other) : 
+    Tensor(3)
+{
+  RankTwo skew = 0.5 * (other - other.transpose());
+  s_[0] = -skew(1,2);
+  s_[1] = skew(0,2);
+  s_[2] = -skew(0,1);
+}
+
+RankTwo Skew::to_full() const
+{
+  RankTwo res;
+
+  res(0,0) = 0;
+  res(1,1) = 0;
+  res(2,2) = 0;
+
+  res(0,1) = -s_[2];
+  res(0,2) = s_[1];
+
+  res(1,0) = s_[2];
+  res(1,2) = -s_[0];
+
+  res(2,0) = -s_[1];
+  res(2,1) = s_[0];
+
+  return res;
+}
+
+Skew Skew::opposite() const
+{
+  Skew cpy(*this);
+  cpy.negate_();
+  return cpy;
+}
+
+Skew Skew::operator-() const
+{
+  return opposite();
+}
+
+Skew & Skew::operator+=(const Skew & other)
+{
+  add_(other);
+  return *this;
+}
+
+Skew & Skew::operator-=(const Skew & other)
+{
+  return this->operator+=(-other);
+}
+
+Skew Skew::transpose() const
+{
+  return -Skew(*this);
+}
+
+Vector Skew::dot(const Vector & other) const
+{
+  // TODO: more efficient
+  return (*this).to_full().dot(other);
+}
+
+Skew Skew::dot(const Skew & other) const
+{
+  // TODO: more efficient
+  return Skew((*this).to_full().dot(other));
+}
+
+RankTwo Skew::dot(const RankTwo & other) const
+{
+  // TODO: more efficient
+  return (*this).to_full().dot(other);
+}
+
+RankTwo Skew::dot(const Symmetric & other) const
+{
+  // TODO: more efficient
+  return (*this).to_full().dot(other);
+}
+
+Skew operator*(double s, const Skew & v)
+{
+  Skew cpy(v);
+  cpy *= s;
+  return cpy;
+}
+
+Skew operator*(const Skew & v, double s)
+{
+  return operator*(s, v);
+}
+
+Skew operator/(const Skew & v, double s)
+{
+  Skew cpy(v);
+  cpy /= s;
+  return cpy;
+}
+
+Skew operator+(const Skew & a, const Skew & b)
+{
+  Skew cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+Skew operator-(const Skew & a, const Skew & b)
+{
+  Skew cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+Vector operator*(const Skew & a, const Vector & b)
+{
+  return a.dot(b);
+}
+
+Vector operator*(const Vector & a, const Skew & b)
+{
+  return b.transpose().dot(a);
+}
+
+Skew operator*(const Skew & a, const Skew & b)
+{
+  return a.dot(b);
+}
+
+std::ostream & operator<<(std::ostream & os, const Skew & v)
+{
+  os << v.to_full();
+
+  return os;
+}
+
 
 } // namespace neml

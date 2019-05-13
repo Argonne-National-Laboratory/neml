@@ -11,6 +11,7 @@ namespace neml {
 class Vector;
 class RankTwo;
 class Symmetric;
+class Skew;
 
 class Tensor {
  public:
@@ -93,6 +94,7 @@ class RankTwo: public Tensor {
   RankTwo(const std::vector<const std::vector<double>> A);
   /// Helper
   RankTwo(const Symmetric & other);
+  RankTwo(const Skew & other);
 
   RankTwo opposite() const;
   RankTwo operator-() const;
@@ -103,11 +105,15 @@ class RankTwo: public Tensor {
   RankTwo & operator+=(const Symmetric & other);
   RankTwo & operator-=(const Symmetric & other);
 
+  RankTwo & operator+=(const Skew & other);
+  RankTwo & operator-=(const Skew & other);
+
   double & operator()(size_t i, size_t j);
   const double & operator()(size_t i, size_t j) const;
 
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Symmetric & other) const;
+  RankTwo dot(const Skew & other) const;
   Vector dot(const Vector & other) const;
 
   RankTwo inverse() const;
@@ -126,6 +132,10 @@ RankTwo operator+(const RankTwo & a, const Symmetric & b);
 RankTwo operator-(const RankTwo & a, const Symmetric & b);
 RankTwo operator+(const Symmetric & a, const RankTwo & b);
 RankTwo operator-(const Symmetric & a, const RankTwo & b);
+RankTwo operator+(const RankTwo & a, const Skew & b);
+RankTwo operator-(const RankTwo & a, const Skew & b);
+RankTwo operator+(const Skew & a, const RankTwo & b);
+RankTwo operator-(const Skew & a, const RankTwo & b);
 
 // Various forms of multiplication
 Vector operator*(const RankTwo & a, const Vector & b);
@@ -133,6 +143,10 @@ Vector operator*(const Vector & a, const RankTwo & b);
 RankTwo operator*(const RankTwo & a, const RankTwo & b);
 RankTwo operator*(const RankTwo & a, const Symmetric & b);
 RankTwo operator*(const Symmetric & a, const RankTwo & b);
+RankTwo operator*(const RankTwo & a, const Skew & b);
+RankTwo operator*(const Skew & a, const RankTwo & b);
+RankTwo operator*(const Skew & a, const Symmetric & b);
+RankTwo operator*(const Symmetric & a, const Skew & b);
 
 /// io for RankTwo tensors
 std::ostream & operator<<(std::ostream & os, const RankTwo & v);
@@ -161,6 +175,7 @@ class Symmetric: public Tensor {
   Vector dot(const Vector & other) const;
   Symmetric dot(const Symmetric & other) const;
   RankTwo dot(const RankTwo & other) const;
+  RankTwo dot(const Skew & other) const;
 };
 
 // Binary operators with scalars
@@ -179,6 +194,48 @@ Symmetric operator*(const Symmetric & a, const Symmetric & b);
 
 /// io for symmetric tensors
 std::ostream & operator<<(std::ostream & os, const Symmetric & v);
+
+class Skew: public Tensor {
+ public:
+  Skew();
+  Skew(const std::vector<double> v);
+  Skew(const double * const v);
+  /// Skew a general tensor
+  Skew(const RankTwo & other);
+
+  RankTwo to_full() const;
+
+  Skew opposite() const;
+  Skew operator-() const;
+
+  Skew & operator+=(const Skew & other);
+  Skew & operator-=(const Skew & other);
+
+  Skew transpose() const;
+
+  // Various multiplication
+  Vector dot(const Vector & other) const;
+  Skew dot(const Skew & other) const;
+  RankTwo dot(const RankTwo & other) const;
+  RankTwo dot(const Symmetric & other) const;
+};
+
+// Binary operators with scalars
+Skew operator*(double s, const Skew & v);
+Skew operator*(const Skew & v, double s);
+Skew operator/(const Skew & v, double s);
+
+// Various forms of addition
+Skew operator+(const Skew & a, const Skew & b);
+Skew operator-(const Skew & a, const Skew & b);
+
+// Various forms of multiplication
+Vector operator*(const Skew & a, const Vector & b);
+Vector operator*(const Vector & a, const Skew & b);
+Skew operator*(const Skew & a, const Skew & b);
+
+/// io for symmetric tensors
+std::ostream & operator<<(std::ostream & os, const Skew & v);
 
 } // namespace neml
 
