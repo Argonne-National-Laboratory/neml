@@ -291,6 +291,12 @@ RankTwo::RankTwo(const std::vector<const std::vector<double>> A) :
   }
 }
 
+RankTwo::RankTwo(const Symmetric & other) :
+    RankTwo(other.to_full())
+{
+
+}
+
 RankTwo RankTwo::opposite() const
 {
   RankTwo cpy(*this);
@@ -314,6 +320,18 @@ RankTwo & RankTwo::operator-=(const RankTwo & other)
   return this->operator+=(-other);
 }
 
+RankTwo & RankTwo::operator+=(const Symmetric & other)
+{
+  // TODO: more efficient
+  *this += other.to_full();
+  return *this;
+}
+
+RankTwo & RankTwo::operator-=(const Symmetric & other)
+{
+  return this->operator+=(-other);
+}
+
 double & RankTwo::operator()(size_t i, size_t j)
 {
   return s_[i*3+j];
@@ -331,6 +349,12 @@ RankTwo RankTwo::dot(const RankTwo & other) const
   mat_mat(3, 3, 3, this->data(), other.data(), res.s());
 
   return res;
+}
+
+RankTwo RankTwo::dot(const Symmetric & other) const
+{
+  // TODO: more efficient
+  return (*this).dot(other.to_full());
 }
 
 Vector RankTwo::dot(const Vector & other) const
@@ -396,6 +420,34 @@ RankTwo operator-(const RankTwo & a, const RankTwo & b)
   return cpy;
 }
 
+RankTwo operator+(const RankTwo & a, const Symmetric & b)
+{
+  RankTwo cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+RankTwo operator-(const RankTwo & a, const Symmetric & b)
+{
+  RankTwo cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+RankTwo operator+(const Symmetric & a, const RankTwo & b)
+{
+  RankTwo cpy(b);
+  cpy += a;
+  return cpy;
+}
+
+RankTwo operator-(const Symmetric & a, const RankTwo & b)
+{
+  RankTwo cpy(b);
+  cpy -= a;
+  return cpy;
+}
+
 std::ostream & operator<<(std::ostream & os, const RankTwo & v)
 {
   const double * const d = v.data();
@@ -419,6 +471,174 @@ Vector operator*(const Vector & a, const RankTwo & b)
 RankTwo operator*(const RankTwo & a, const RankTwo & b)
 {
   return a.dot(b);
+}
+
+RankTwo operator*(const RankTwo & a, const Symmetric & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const Symmetric & a, const RankTwo & b)
+{
+  return a.dot(b);
+}
+
+Symmetric::Symmetric() :
+    Tensor(6)
+{
+  std::fill(s_, s_+6, 0.0);
+}
+
+Symmetric::Symmetric(const std::vector<double> v) :
+    Tensor(v)
+{
+  if (v.size() != 6) {
+    throw std::invalid_argument("Input to Symmetric must have size 6!");
+  }
+}
+
+Symmetric::Symmetric(const double * const v) :
+    Tensor(v, 6)
+{
+}
+
+Symmetric::Symmetric(const RankTwo & other) : 
+    Tensor(6)
+{
+  RankTwo sym = 0.5 * (other + other.transpose());
+  s_[0] = sym(0,0);
+  s_[1] = sym(1,1);
+  s_[2] = sym(2,2);
+  s_[3] = sym(1,2) * sqrt(2.0);
+  s_[4] = sym(0,2) * sqrt(2.0);
+  s_[5] = sym(0,1) * sqrt(2.0);
+}
+
+RankTwo Symmetric::to_full() const
+{
+  RankTwo res;
+
+  res(0,0) = s_[0];
+  res(1,1) = s_[1];
+  res(2,2) = s_[2];
+
+  res(1,2) = s_[3] / sqrt(2.0);
+  res(2,1) = s_[3] / sqrt(2.0);
+
+  res(0,2) = s_[4] / sqrt(2.0);
+  res(2,0) = s_[4] / sqrt(2.0);
+
+  res(0,1) = s_[5] / sqrt(2.0);
+  res(1,0) = s_[5] / sqrt(2.0);
+
+  return res;
+}
+
+Symmetric Symmetric::opposite() const
+{
+  Symmetric cpy(*this);
+  cpy.negate_();
+  return cpy;
+}
+
+Symmetric Symmetric::operator-() const
+{
+  return opposite();
+}
+
+Symmetric & Symmetric::operator+=(const Symmetric & other)
+{
+  add_(other);
+  return *this;
+}
+
+Symmetric & Symmetric::operator-=(const Symmetric & other)
+{
+  return this->operator+=(-other);
+}
+
+Symmetric Symmetric::inverse() const
+{
+  // TODO: more efficient
+  return Symmetric((this->to_full()).inverse());
+}
+
+Symmetric Symmetric::transpose() const
+{
+  return Symmetric(*this);
+}
+
+Vector Symmetric::dot(const Vector & other) const
+{
+  // TODO: more efficient
+  return (*this).to_full().dot(other);
+}
+
+Symmetric Symmetric::dot(const Symmetric & other) const
+{
+  // TODO: more efficient
+  return Symmetric((*this).to_full().dot(other));
+}
+
+RankTwo Symmetric::dot(const RankTwo & other) const
+{
+  // TODO: more efficient
+  return (*this).to_full().dot(other);
+}
+
+Symmetric operator*(double s, const Symmetric & v)
+{
+  Symmetric cpy(v);
+  cpy *= s;
+  return cpy;
+}
+
+Symmetric operator*(const Symmetric & v, double s)
+{
+  return operator*(s, v);
+}
+
+Symmetric operator/(const Symmetric & v, double s)
+{
+  Symmetric cpy(v);
+  cpy /= s;
+  return cpy;
+}
+
+Symmetric operator+(const Symmetric & a, const Symmetric & b)
+{
+  Symmetric cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+Symmetric operator-(const Symmetric & a, const Symmetric & b)
+{
+  Symmetric cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+Vector operator*(const Symmetric & a, const Vector & b)
+{
+  return a.dot(b);
+}
+
+Vector operator*(const Vector & a, const Symmetric & b)
+{
+  return b.transpose().dot(a);
+}
+
+Symmetric operator*(const Symmetric & a, const Symmetric & b)
+{
+  return a.dot(b);
+}
+
+std::ostream & operator<<(std::ostream & os, const Symmetric & v)
+{
+  os << v.to_full();
+
+  return os;
 }
 
 } // namespace neml

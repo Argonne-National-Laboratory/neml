@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <vector>
 #include <string>
+#include <cmath>
 
 #define CINDEX(i,j,n) (j + i * n)
 

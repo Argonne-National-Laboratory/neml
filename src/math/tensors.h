@@ -3,11 +3,14 @@
 
 #include <vector>
 #include <iostream>
+#include <map>
+#include <cmath>
 
 namespace neml {
 
 class Vector;
 class RankTwo;
+class Symmetric;
 
 class Tensor {
  public:
@@ -88,6 +91,8 @@ class RankTwo: public Tensor {
   RankTwo(const std::vector<double> v);
   RankTwo(const double * const v);
   RankTwo(const std::vector<const std::vector<double>> A);
+  /// Helper
+  RankTwo(const Symmetric & other);
 
   RankTwo opposite() const;
   RankTwo operator-() const;
@@ -95,10 +100,14 @@ class RankTwo: public Tensor {
   RankTwo & operator+=(const RankTwo & other);
   RankTwo & operator-=(const RankTwo & other);
 
+  RankTwo & operator+=(const Symmetric & other);
+  RankTwo & operator-=(const Symmetric & other);
+
   double & operator()(size_t i, size_t j);
   const double & operator()(size_t i, size_t j) const;
 
   RankTwo dot(const RankTwo & other) const;
+  RankTwo dot(const Symmetric & other) const;
   Vector dot(const Vector & other) const;
 
   RankTwo inverse() const;
@@ -110,17 +119,66 @@ RankTwo operator*(double s, const RankTwo & v);
 RankTwo operator*(const RankTwo & v, double s);
 RankTwo operator/(const RankTwo & v, double s);
 
-// Binary operators with vectors
+// Various forms of addition
 RankTwo operator+(const RankTwo & a, const RankTwo & b);
 RankTwo operator-(const RankTwo & a, const RankTwo & b);
+RankTwo operator+(const RankTwo & a, const Symmetric & b);
+RankTwo operator-(const RankTwo & a, const Symmetric & b);
+RankTwo operator+(const Symmetric & a, const RankTwo & b);
+RankTwo operator-(const Symmetric & a, const RankTwo & b);
 
 // Various forms of multiplication
 Vector operator*(const RankTwo & a, const Vector & b);
 Vector operator*(const Vector & a, const RankTwo & b);
 RankTwo operator*(const RankTwo & a, const RankTwo & b);
+RankTwo operator*(const RankTwo & a, const Symmetric & b);
+RankTwo operator*(const Symmetric & a, const RankTwo & b);
 
-/// io for tensors
+/// io for RankTwo tensors
 std::ostream & operator<<(std::ostream & os, const RankTwo & v);
+
+/// Symmetric Mandel rank 2 tensor
+class Symmetric: public Tensor {
+ public:
+  Symmetric();
+  Symmetric(const std::vector<double> v);
+  Symmetric(const double * const v);
+  /// I guess take them seriously and symmetrize it
+  Symmetric(const RankTwo & other);
+
+  RankTwo to_full() const;
+
+  Symmetric opposite() const;
+  Symmetric operator-() const;
+
+  Symmetric & operator+=(const Symmetric & other);
+  Symmetric & operator-=(const Symmetric & other);
+
+  Symmetric inverse() const;
+  Symmetric transpose() const;
+
+  // Various multiplications
+  Vector dot(const Vector & other) const;
+  Symmetric dot(const Symmetric & other) const;
+  RankTwo dot(const RankTwo & other) const;
+};
+
+// Binary operators with scalars
+Symmetric operator*(double s, const Symmetric & v);
+Symmetric operator*(const Symmetric & v, double s);
+Symmetric operator/(const Symmetric & v, double s);
+
+// Various forms of addition
+Symmetric operator+(const Symmetric & a, const Symmetric & b);
+Symmetric operator-(const Symmetric & a, const Symmetric & b);
+
+// Various forms of multiplication
+Vector operator*(const Symmetric & a, const Vector & b);
+Vector operator*(const Vector & a, const Symmetric & b);
+Symmetric operator*(const Symmetric & a, const Symmetric & b);
+
+/// io for symmetric tensors
+std::ostream & operator<<(std::ostream & os, const Symmetric & v);
 
 } // namespace neml
 
