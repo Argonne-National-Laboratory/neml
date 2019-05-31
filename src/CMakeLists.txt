@@ -17,7 +17,8 @@ add_library(neml SHARED
       cinterface.cxx
       interpolate.cxx
       creep.cxx
-      damage.cxx)
+      damage.cxx
+      history.cxx)
 add_subdirectory(math)
 target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 
@@ -39,5 +40,6 @@ if (WRAP_PYTHON)
       pybind(interpolate)
       pybind(creep)
       pybind(damage)
+      pybind(history)
 endif()
 

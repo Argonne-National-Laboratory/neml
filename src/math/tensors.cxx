@@ -11,12 +11,14 @@ namespace neml {
 Tensor::Tensor(std::size_t n) :
     n_(n)
 {
+  istore_ = true;
   s_ = new double [n_];
 }
 
 Tensor::Tensor(const Tensor & other) :
     n_(other.n())
 {
+  istore_ = true;
   s_ = new double [n_];
   std::copy(other.data(), other.data() + other.n(), s_);
 }
@@ -24,20 +26,23 @@ Tensor::Tensor(const Tensor & other) :
 Tensor::Tensor(const std::vector<double> flat) : 
   n_(flat.size())
 {
+  istore_ = true;
   s_ = new double [n_];
   std::copy(flat.begin(), flat.end(), s_);
 }
 
-Tensor::Tensor(const double * const flat, size_t n) :
+Tensor::Tensor(double * flat, size_t n) :
     n_(n)
 {
-  s_ = new double[n_];
-  std::copy(flat, flat + n_, s_);
+  istore_ = false;
+  s_ = flat;
 }
 
 Tensor::~Tensor()
 {
-  delete [] s_;
+  if (istore_) {
+    delete [] s_;
+  }
   s_ = nullptr;
 }
 
@@ -120,7 +125,7 @@ Vector::Vector(const std::vector<double> v) :
   }
 }
 
-Vector::Vector(const double * const v) :
+Vector::Vector(double * v) :
     Tensor(v, 3)
 {
 }
@@ -267,7 +272,7 @@ RankTwo::RankTwo(const std::vector<double> v) :
   }
 }
 
-RankTwo::RankTwo(const double * const v) :
+RankTwo::RankTwo(double * v) :
     Tensor(v, 9)
 {
 }
@@ -569,7 +574,7 @@ Symmetric::Symmetric(const std::vector<double> v) :
   }
 }
 
-Symmetric::Symmetric(const double * const v) :
+Symmetric::Symmetric(double * v) :
     Tensor(v, 6)
 {
 }
@@ -733,7 +738,7 @@ Skew::Skew(const std::vector<double> v) :
   }
 }
 
-Skew::Skew(const double * const v) :
+Skew::Skew(double * v) :
     Tensor(v, 3)
 {
 }

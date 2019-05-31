@@ -18,7 +18,7 @@ class Tensor {
   Tensor(std::size_t n);
   Tensor(const Tensor & other);
   Tensor(const std::vector<double> flat);
-  Tensor(const double * const flat, size_t n);
+  Tensor(double * flat, size_t n);
   virtual ~Tensor();
 
   Tensor & operator=(const Tensor & rhs);
@@ -41,6 +41,7 @@ class Tensor {
  protected:
   double * s_;
   const std::size_t n_;
+  bool istore_;
 };
 
 /// Dangerous but useful
@@ -51,7 +52,7 @@ class Vector: public Tensor {
  public:
   Vector();
   Vector(const std::vector<double> v);
-  Vector(const double * const v);
+  Vector(double * v);
 
   Vector opposite() const;
   Vector operator-() const;
@@ -90,7 +91,7 @@ class RankTwo: public Tensor {
  public:
   RankTwo();
   RankTwo(const std::vector<double> v);
-  RankTwo(const double * const v);
+  RankTwo(double * v);
   RankTwo(const std::vector<std::vector<double>> A);
   /// Helper
   RankTwo(const Symmetric & other);
@@ -156,7 +157,7 @@ class Symmetric: public Tensor {
  public:
   Symmetric();
   Symmetric(const std::vector<double> v);
-  Symmetric(const double * const v);
+  Symmetric(double * v);
   /// I guess take them seriously and symmetrize it
   Symmetric(const RankTwo & other);
 
@@ -199,7 +200,7 @@ class Skew: public Tensor {
  public:
   Skew();
   Skew(const std::vector<double> v);
-  Skew(const double * const v);
+  Skew(double * v);
   /// Skew a general tensor
   Skew(const RankTwo & other);
 

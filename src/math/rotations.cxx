@@ -711,7 +711,10 @@ Vector Orientation::apply(const Vector & a) const
   Quaternion base = static_cast<Quaternion>(*this);
   Quaternion rv = base * q * base.conj();
 
-  return Vector(&rv.quat()[1]);
+  Vector res;
+  std::copy(&rv.quat()[1], &rv.quat()[4], res.s());
+
+  return res;
 }
 
 std::vector<Orientation> random_orientations(int n)
