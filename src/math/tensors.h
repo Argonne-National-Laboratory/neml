@@ -91,7 +91,7 @@ class RankTwo: public Tensor {
   RankTwo();
   RankTwo(const std::vector<double> v);
   RankTwo(const double * const v);
-  RankTwo(const std::vector<const std::vector<double>> A);
+  RankTwo(const std::vector<std::vector<double>> A);
   /// Helper
   RankTwo(const Symmetric & other);
   RankTwo(const Skew & other);

@@ -91,7 +91,7 @@ PYBIND11_MODULE(tensors, m) {
 
   py::class_<RankTwo, Tensor, std::shared_ptr<RankTwo>>(m, "RankTwo")
       // Start standard
-      .def(py::init<const std::vector<const std::vector<double>>>(), py::arg("data"))
+      .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
 
       .def("__repr__",
            [](RankTwo & me) -> std::string
@@ -202,7 +202,7 @@ PYBIND11_MODULE(tensors, m) {
 
   py::class_<Symmetric, Tensor, std::shared_ptr<Symmetric>>(m, "Symmetric")
       // Start standard
-      .def(py::init<const std::vector<const std::vector<double>>>(), py::arg("data"))
+      .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
       .def(py::init<const RankTwo &>(), py::arg("full"))
 
       .def("__repr__",
@@ -290,7 +290,7 @@ PYBIND11_MODULE(tensors, m) {
 
   py::class_<Skew, Tensor, std::shared_ptr<Skew>>(m, "Skew")
       // Start standard
-      .def(py::init<const std::vector<const std::vector<double>>>(), py::arg("data"))
+      .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
       .def(py::init<const RankTwo &>(), py::arg("full"))
 
       .def("__repr__",

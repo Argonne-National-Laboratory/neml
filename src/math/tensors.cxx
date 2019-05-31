@@ -272,7 +272,7 @@ RankTwo::RankTwo(const double * const v) :
 {
 }
 
-RankTwo::RankTwo(const std::vector<const std::vector<double>> A) :
+RankTwo::RankTwo(const std::vector<std::vector<double>> A) :
     Tensor(9)
 {
   if (A.size() != 3) {

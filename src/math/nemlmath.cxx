@@ -795,7 +795,7 @@ int gcd(int a, int b)
 int common_gcd(std::vector<int> in)
 {
   int c = in[0];
-  for (int i = 1; i < in.size(); i++) {
+  for (size_t i = 1; i < in.size(); i++) {
     c = gcd(c, in[i]);
   }
   return c;
@@ -805,7 +805,7 @@ std::vector<int> reduce_gcd(std::vector<int> in)
 {
   std::vector<int> out(in);
   int f = common_gcd(out);
-  for (int i=0; i<out.size(); i++) {
+  for (size_t i=0; i<out.size(); i++) {
     out[i] /= abs(f);
   }
 
