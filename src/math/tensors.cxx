@@ -18,9 +18,15 @@ Tensor::Tensor(std::size_t n) :
 Tensor::Tensor(const Tensor & other) :
     n_(other.n())
 {
-  istore_ = true;
-  s_ = new double [n_];
-  std::copy(other.data(), other.data() + other.n(), s_);
+  if (other.istore()) {
+    istore_ = true;
+    s_ = new double [n_];
+    std::copy(other.data(), other.data() + other.n(), s_);
+  }
+  else {
+    istore_ = false;
+    s_ = const_cast<double*>(other.data());
+  }
 }
 
 Tensor::Tensor(const std::vector<double> flat) : 
@@ -52,9 +58,14 @@ Tensor & Tensor::operator=(const Tensor & rhs) {
         "Tensors in assignment operator do not have the same size");
   }
 
-  if (this != &rhs) {
+  if ((this != &rhs) and (istore_)) {
     std::copy(rhs.data(), rhs.data() + rhs.n(), s_);
   }
+  else if (not istore_)
+  {
+    s_ = const_cast<double*>(rhs.data());
+  }
+
   return *this;
 }
 
@@ -63,8 +74,13 @@ Tensor & Tensor::operator=(const Tensor && rhs) {
     throw std::invalid_argument(
         "Tensors in assignment operator do not have the same size");
   }
-
-  std::copy(rhs.data(), rhs.data() + rhs.n(), s_);
+  
+  if (istore_) {
+    std::copy(rhs.data(), rhs.data() + rhs.n(), s_);
+  }
+  else {
+    s_ = const_cast<double*>(rhs.data());
+  }
 
   return *this;
 }

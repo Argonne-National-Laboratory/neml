@@ -31,6 +31,8 @@ class Tensor {
   Tensor & operator*=(double s);
   Tensor & operator/=(double s);
 
+  bool istore() const {return istore_;};
+
  protected:
   /// Helper to add data
   void add_(const Tensor & other);
