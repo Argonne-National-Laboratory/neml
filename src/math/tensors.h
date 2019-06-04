@@ -21,8 +21,11 @@ class Tensor {
   Tensor(const std::vector<double> flat);
   Tensor(double * flat, size_t n);
   virtual ~Tensor();
-
+  
+  /// Move helper to release data
   void unown();
+  /// Do I own my own data?
+  bool istore() const {return istore_;};
 
   Tensor & operator=(const Tensor & rhs);
   Tensor & operator=(Tensor && rhs);
@@ -33,8 +36,6 @@ class Tensor {
 
   Tensor & operator*=(double s);
   Tensor & operator/=(double s);
-
-  bool istore() const {return istore_;};
 
  protected:
   /// Helper to add data

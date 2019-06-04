@@ -16,6 +16,7 @@ PYBIND11_MODULE(tensors, m) {
   m.doc() = "Standard tensor properties";
 
   py::class_<Tensor, std::shared_ptr<Tensor>>(m, "Tensor")
+      .def_property_readonly("istore", &Tensor::istore)
       .def_property_readonly("data",
            [](Tensor & me) -> py::array_t<double>
            {

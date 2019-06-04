@@ -9,25 +9,22 @@
 namespace neml {
 
 Tensor::Tensor(std::size_t n) :
-    n_(n)
+    n_(n), istore_(true)
 {
-  istore_ = true;
   s_ = new double [n_];
 }
 
 Tensor::Tensor(const Tensor & other) :
-    n_(other.n())
+    n_(other.n()), istore_(true)
 {
-  istore_ = true;
   s_ = new double [n_];
   std::copy(other.data(), other.data() + other.n(), s_);
 }
 
 Tensor::Tensor(Tensor && other) :
-    n_(other.n())
+    n_(other.n()), istore_(other.istore())
 {
   if (other.istore()) {
-    istore_ = true;
     s_ = new double[n_];
     std::copy(other.data(), other.data() + n_, s_);
   }
@@ -38,17 +35,15 @@ Tensor::Tensor(Tensor && other) :
 }
 
 Tensor::Tensor(const std::vector<double> flat) : 
-  n_(flat.size())
+  n_(flat.size()), istore_(true)
 {
-  istore_ = true;
   s_ = new double [n_];
   std::copy(flat.begin(), flat.end(), s_);
 }
 
 Tensor::Tensor(double * flat, size_t n) :
-    n_(n)
+    n_(n), istore_(false)
 {
-  istore_ = false;
   s_ = flat;
 }
 

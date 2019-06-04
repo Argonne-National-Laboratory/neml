@@ -11,15 +11,28 @@ namespace neml {
 PYBIND11_MODULE(history, m) {
   m.doc() = "Internal variable tracking system.";
 
-  py::class_<History, std::shared_ptr<History>>(m, "History")
+  py::class_<History, std::shared_ptr<History>>(m, "History",
+                                                py::buffer_protocol())
       .def(py::init<>())
       .def(py::init<bool>(), py::arg("store"))
+      .def_buffer(
+          [](History & m) -> py::buffer_info 
+          {
+            return py::buffer_info(
+                m.rawptr(),
+                sizeof(double),
+                py::format_descriptor<double>::format(),
+                1,
+                {m.size()},
+                {sizeof(double)});
+          })
       .def("set_data", 
            [](History & m, py::array_t<double> arr)
            {
             m.set_data(arr2ptr<double>(arr));
            }, "Set data as a numpy array")
       .def_property_readonly("size", &History::size)
+      .def_property_readonly("store", &History::store)
       .def("add_scalar", &History::add_scalar)
       .def("get_scalar", 
            [](History & m, std::string name) -> double
