@@ -1,14 +1,29 @@
 #include "history.h"
 
+#include <algorithm>
+
 namespace neml {
 
 History::History() :
-    size_(0)
+    size_(0), store_(true)
 {
+  storage_ = new double [0];
+}
+
+History::History(bool store) :
+    size_(0), store_(store)
+{
+  if (store) {
+    storage_ = new double [0];
+  }
 }
 
 History::~History()
 {
+  if (store_) {
+    delete [] storage_;
+  }
+  storage_ = nullptr;
 }
 
 void History::set_data(double * input)
@@ -24,7 +39,7 @@ size_t History::size() const
 void History::add_scalar(std::string name)
 {
   loc_.insert(std::pair<std::string,size_t>(name, size_));
-  size_ += 1;
+  resize_(1);
 }
 
 double & History::get_scalar(std::string name)
@@ -36,7 +51,7 @@ void History::add_array(std::string name, size_t sz)
 {
   loc_.insert(std::pair<std::string,size_t>(name, size_));
   array_size_.insert(std::pair<std::string,size_t>(name, sz));
-  size_ += sz;
+  resize_(sz);
 }
 
 size_t History::array_size(std::string name)
@@ -47,6 +62,17 @@ size_t History::array_size(std::string name)
 double * History::get_array(std::string name)
 {
   return &(storage_[loc_[name]]);
+}
+
+void History::resize_(size_t inc)
+{
+  if (store_) {
+    double * newstore = new double [size_+inc];
+    std::copy(storage_, storage_+size_, newstore);
+    delete [] storage_;
+    storage_ = newstore;
+  }
+  size_ += inc;
 }
 
 } // namespace neml

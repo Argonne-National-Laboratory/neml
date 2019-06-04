@@ -24,7 +24,10 @@ template <> constexpr size_t GetStorageSize<Vector>() {return 3;};
 class History {
  public:
   History();
+  History(bool store);
   virtual ~History();
+
+  double * rawptr() {return storage_;};
   
   void set_data(double * input);
   size_t size() const;
@@ -40,18 +43,22 @@ class History {
   void add_object(std::string name)
   {
     loc_.insert(std::pair<std::string,size_t>(name, size_));
-    size_ += GetStorageSize<T>();
     type_.insert(std::pair<std::string,StorageType>(name, GetStorageType<T>()));
+    resize_(GetStorageSize<T>());
   };
 
   template<typename T>
   T get_object(std::string name)
   {
-    return T(&(storage_[loc_[name]]));
+    return std::move(T(&(storage_[loc_[name]])));
   }
 
  private:
+  void resize_(size_t inc);
+
+ private:
   size_t size_;
+  bool store_;
   double * storage_;
 
   std::map<std::string,size_t> loc_;

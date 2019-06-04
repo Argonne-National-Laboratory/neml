@@ -13,12 +13,13 @@ PYBIND11_MODULE(history, m) {
 
   py::class_<History, std::shared_ptr<History>>(m, "History")
       .def(py::init<>())
+      .def(py::init<bool>(), py::arg("store"))
       .def("set_data", 
            [](History & m, py::array_t<double> arr)
            {
             m.set_data(arr2ptr<double>(arr));
            }, "Set data as a numpy array")
-      .def("size", &History::size)
+      .def_property_readonly("size", &History::size)
       .def("add_scalar", &History::add_scalar)
       .def("get_scalar", 
            [](History & m, std::string name) -> double
