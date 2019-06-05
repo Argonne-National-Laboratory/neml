@@ -32,13 +32,19 @@ Quaternion::Quaternion(double * v)
   quat_ = v;
 }
 
-Quaternion::Quaternion(const Quaternion & other)
+Quaternion::Quaternion(const Quaternion & other) :
+    store_(other.store())
 {
-  alloc_();
-  std::copy(other.quat(), other.quat()+4, quat_);
+  if (other.store()) {
+    alloc_();
+    std::copy(other.quat(), other.quat()+4, quat_);
+  }
+  else {
+    quat_ = const_cast<double*>(other.quat());
+  }
 }
 
-Quaternion::Quaternion(Quaternion && other) : 
+Quaternion::Quaternion(const Quaternion && other) : 
     store_(other.store())
 {
   if (store_) {
@@ -46,8 +52,7 @@ Quaternion::Quaternion(Quaternion && other) :
     std::copy(other.quat(), other.quat()+4, quat_);
   }
   else {
-    quat_ = other.data();
-    other.unown();
+    quat_ = const_cast<double*>(other.quat());
   }
 }
 
@@ -68,21 +73,11 @@ Quaternion & Quaternion::operator=(const Quaternion & rhs)
   return *this;
 }
 
-Quaternion & Quaternion::operator=(Quaternion && rhs)
+Quaternion & Quaternion::operator=(const Quaternion && rhs)
 {
-  if (store_) {
-    std::copy(rhs.quat(), rhs.quat()+4, quat_);
-  }
-  else {
-    quat_ = rhs.data();
-    rhs.unown();
-  }
-  return *this;
-}
+  std::copy(rhs.quat(), rhs.quat()+4, quat_);
 
-void Quaternion::unown()
-{
-  store_ = false;
+  return *this;
 }
 
 bool Quaternion::store() const 
@@ -506,30 +501,9 @@ Orientation::Orientation(const std::vector<double> v) :
   normalize_();
 }
 
-Orientation::Orientation(const Orientation & other)
-{
-  alloc_();
-  std::copy(other.quat(), other.quat()+4, quat_);
-  normalize_();
-}
-
 Orientation::Orientation(const Quaternion & other) :
     Quaternion(other)
 {
-  normalize_();
-}
-
-Orientation::Orientation(Orientation && other) 
-{
-  store_ = other.store();
-  if (store_) {
-    alloc_();
-    std::copy(other.quat(), other.quat()+4, quat_);
-  }
-  else {
-    quat_ = other.data();
-    other.unown();
-  }
   normalize_();
 }
 

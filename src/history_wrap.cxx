@@ -65,6 +65,11 @@ PYBIND11_MODULE(history, m) {
            {
             return m.get_object<Vector>(name);
            }, "Get a vector")
+      .def("set_vector",
+           [](History & m, std::string name, Vector v)
+           {
+            m.get_object<Vector>(name) = v;
+           }, "Set a vector")
    
       .def("add_ranktwo", 
            [](History & m, std::string name)
@@ -76,6 +81,11 @@ PYBIND11_MODULE(history, m) {
            {
             return m.get_object<RankTwo>(name);
            }, "Get a general tensor")
+      .def("set_ranktwo",
+           [](History & m, std::string name, RankTwo v)
+           {
+            m.get_object<RankTwo>(name) = v;
+           }, "Set a general tensor")
 
       .def("add_symmetric", 
            [](History & m, std::string name)
@@ -87,6 +97,11 @@ PYBIND11_MODULE(history, m) {
            {
             return m.get_object<Symmetric>(name);
            }, "Get a symmetric tensor")
+      .def("set_symmetric",
+           [](History & m, std::string name, Symmetric v)
+           {
+            m.get_object<Symmetric>(name) = v;
+           }, "Set a symmetric tensor")
 
       .def("add_skew", 
            [](History & m, std::string name)
@@ -98,6 +113,11 @@ PYBIND11_MODULE(history, m) {
            {
             return m.get_object<Skew>(name);
            }, "Get a skew tensor")
+      .def("set_skew",
+           [](History & m, std::string name, Skew v)
+           {
+            m.get_object<Skew>(name) = v;
+           }, "Set a skew")
 
       .def("add_orientation", 
            [](History & m, std::string name)
@@ -109,6 +129,11 @@ PYBIND11_MODULE(history, m) {
            {
             return m.get_object<Orientation>(name);
            }, "Get an orientation")
+      .def("set_orientation",
+           [](History & m, std::string name, Orientation v)
+           {
+            m.get_object<Orientation>(name) = v;
+           }, "Set an orientation")
       ;
 }
 

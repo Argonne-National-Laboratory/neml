@@ -17,13 +17,11 @@ class Tensor {
  public:
   Tensor(std::size_t n);
   Tensor(const Tensor & other);
-  Tensor(Tensor && other);
+  Tensor(const Tensor && other);
   Tensor(const std::vector<double> flat);
   Tensor(double * flat, size_t n);
   virtual ~Tensor();
   
-  /// Move helper to release data
-  void unown();
   /// Do I own my own data?
   bool istore() const {return istore_;};
 

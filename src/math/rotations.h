@@ -18,16 +18,14 @@ class Quaternion {
   Quaternion(const std::vector<double> v);
   Quaternion(double * v);
   Quaternion(const Quaternion & other);
-  Quaternion(Quaternion && other);
+  Quaternion(const Quaternion && other);
 
   virtual ~Quaternion();
   
   /// Copy
   Quaternion & operator=(const Quaternion & rhs);
   /// Move
-  Quaternion & operator=(Quaternion && rhs);
-  /// Helper to release ownership of data
-  void unown();
+  Quaternion & operator=(const Quaternion && rhs);
   /// Do you store your own data?
   bool store() const;
 
@@ -132,9 +130,7 @@ class Orientation: public Quaternion {
   Orientation();
   Orientation(double * v);
   Orientation(const std::vector<double> v);
-  Orientation(const Orientation & other);
   Orientation(const Quaternion & other);
-  Orientation(Orientation && other);
 
   // Various conversions
   void to_euler(double & a, double & b, double & c, 
