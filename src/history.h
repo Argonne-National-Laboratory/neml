@@ -2,6 +2,7 @@
 #define HISTORY_H
 
 #include "math/tensors.h"
+#include "math/rotations.h"
 
 #include <string>
 #include <map>
@@ -15,7 +16,8 @@ enum StorageType {
   TYPE_ARRAY     = 2,
   TYPE_RANKTWO   = 3,
   TYPE_SYMMETRIC = 4,
-  TYPE_SKEW      = 5
+  TYPE_SKEW      = 5,
+  TYPE_ROT       = 6
 };
 
 /// Black magic to map a type to the enum
@@ -24,6 +26,7 @@ template <> constexpr StorageType GetStorageType<Vector>() {return TYPE_VECTOR;}
 template <> constexpr StorageType GetStorageType<RankTwo>() {return TYPE_RANKTWO;};
 template <> constexpr StorageType GetStorageType<Symmetric>() {return TYPE_SYMMETRIC;};
 template <> constexpr StorageType GetStorageType<Skew>() {return TYPE_SKEW;};
+template <> constexpr StorageType GetStorageType<Orientation>() {return TYPE_ROT;};
 
 /// Black magic to map a type to the right size
 template <class T> constexpr size_t GetStorageSize();
@@ -31,6 +34,7 @@ template <> constexpr size_t GetStorageSize<Vector>() {return 3;};
 template <> constexpr size_t GetStorageSize<RankTwo>() {return 9;};
 template <> constexpr size_t GetStorageSize<Symmetric>() {return 6;};
 template <> constexpr size_t GetStorageSize<Skew>() {return 3;};
+template <> constexpr size_t GetStorageSize<Orientation>() {return 4;};
 
 class History {
  public:

@@ -13,6 +13,7 @@ namespace neml {
 
 Quaternion::Quaternion()
 {
+  alloc_();
   quat_[0] = 1.0;
   quat_[1] = 0.0;
   quat_[2] = 0.0;
@@ -21,17 +22,41 @@ Quaternion::Quaternion()
 
 Quaternion::Quaternion(const std::vector<double> v)
 {
+  alloc_();
   std::copy(&v[0], &v[4], quat_);
 }
 
-Quaternion::Quaternion(const double * const v)
+Quaternion::Quaternion(double * v)
 {
-  std::copy(v, v+4, quat_);
+  store_ = false;
+  quat_ = v;
 }
 
 Quaternion::Quaternion(const Quaternion & other)
 {
+  alloc_();
   std::copy(other.quat(), other.quat()+4, quat_);
+}
+
+Quaternion::Quaternion(Quaternion && other) : 
+    store_(other.store())
+{
+  if (store_) {
+    alloc_();
+    std::copy(other.quat(), other.quat()+4, quat_);
+  }
+  else {
+    quat_ = other.data();
+    other.unown();
+  }
+}
+
+Quaternion::~Quaternion()
+{
+  if (store_) {
+    delete [] quat_;
+  }
+  quat_ = nullptr;
 }
 
 Quaternion & Quaternion::operator=(const Quaternion & rhs)
@@ -43,11 +68,26 @@ Quaternion & Quaternion::operator=(const Quaternion & rhs)
   return *this;
 }
 
-Quaternion & Quaternion::operator=(const Quaternion && rhs)
+Quaternion & Quaternion::operator=(Quaternion && rhs)
 {
-  // Move
-  std::copy(rhs.quat(), rhs.quat()+4, quat_);
+  if (store_) {
+    std::copy(rhs.quat(), rhs.quat()+4, quat_);
+  }
+  else {
+    quat_ = rhs.data();
+    rhs.unown();
+  }
   return *this;
+}
+
+void Quaternion::unown()
+{
+  store_ = false;
+}
+
+bool Quaternion::store() const 
+{
+  return store_;
 }
 
 const double * Quaternion::quat() const 
@@ -280,14 +320,22 @@ void Quaternion::smultiply_(double s)
   }
 }
 
-// Unit quaternion stuff
-
-Orientation Orientation::createVector(const double * const v)
+void Quaternion::alloc_()
 {
-  return Orientation(v);
+  store_ = true;
+  quat_ = new double[4];
 }
 
+// Unit quaternion stuff
+
 Orientation Orientation::createRodrigues(const double * const r)
+{
+  Orientation q;
+  q.setRodrigues(r);
+  return q;
+}
+
+void Orientation::setRodrigues(const double * const r)
 {
   double nr = 0.0;
   for (int i=0; i<3; i++) {
@@ -296,16 +344,20 @@ Orientation Orientation::createRodrigues(const double * const r)
 
   double f = 1.0 / (sqrt(1.0 + nr));
   
-  double q[4];
-  q[0] = f;
-  q[1] = r[0] * f;
-  q[2] = r[1] * f;
-  q[3] = r[2] * f;
-
-  return Orientation(q);
+  quat_[0] = f;
+  quat_[1] = r[0] * f;
+  quat_[2] = r[1] * f;
+  quat_[3] = r[2] * f;
 }
 
 Orientation Orientation::createMatrix(const double * const M)
+{
+  Orientation q;
+  q.setMatrix(M);
+  return q;
+}
+
+void Orientation::setMatrix(const double * const M)
 {
   double tr = 0.0;
   for (int i=0; i<3; i++) {
@@ -341,33 +393,45 @@ Orientation Orientation::createMatrix(const double * const M)
     y = (M[CINDEX(1,2,3)] + M[CINDEX(2,1,3)]) / S;
     z = 0.25 * S;
   }
-  
-  double q[4];
-  q[0] = s;
-  q[1] = x;
-  q[2] = y;
-  q[3] = z;
 
-  return Orientation(q);
+  quat_[0] = s;
+  quat_[1] = x;
+  quat_[2] = y;
+  quat_[3] = z;
 }
 
 Orientation Orientation::createAxisAngle(const double * const n, double a, 
                                          std::string angles)
 {
-  a = convert_angle(a, angles);
-  double q[4];
-  q[0] = cos(a/2.0);
-  double s = sin(a/2.0);
-  q[1] = s * n[0];
-  q[2] = s * n[1];
-  q[3] = s * n[2];
+  Orientation q;
+  q.setAxisAngle(n, a, angles);
+  return q;
+}
 
-  return Orientation(q);
+void Orientation::setAxisAngle(const double * const n, double a, 
+                               std::string angles)
+{
+  a = convert_angle(a, angles);
+  
+  quat_[0] = cos(a/2.0);
+  double s = sin(a/2.0);
+  quat_[1] = s * n[0];
+  quat_[2] = s * n[1];
+  quat_[3] = s * n[2];
 }
 
 Orientation Orientation::createEulerAngles(double a, double b, double c,
                                            std::string angles, 
                                            std::string convention)
+{
+  Orientation q;
+  q.setEulerAngles(a, b, c, angles, convention);
+  return q;
+}
+
+void Orientation::setEulerAngles(double a, double b, double c,
+                                 std::string angles, 
+                                 std::string convention)
 {
   a = convert_angle(a, angles);
   b = convert_angle(b, angles);
@@ -378,40 +442,50 @@ Orientation Orientation::createEulerAngles(double a, double b, double c,
   double M[9];
   kocks_to_matrix_(na, nb, nc, M);
 
-  return Orientation::createMatrix(M);
+  setMatrix(M);
+}
+
+Orientation Orientation::createHopf(double alpha, double beta, double gamma,
+                                    std::string angles)
+{
+  Orientation q;
+  q.setHopf(alpha, beta, gamma, angles);
+  return q;
 }
 
 // alpha in [0,2pi], beta in [0,pi] (sphere), gamma in [0,2pi] (circle)
-Orientation Orientation::createHopf(double alpha, double beta, double gamma,
-                                    std::string angles)
+void Orientation::setHopf(double alpha, double beta, double gamma,
+                          std::string angles)
 {
   alpha = convert_angle(alpha, angles);
   beta = convert_angle(beta, angles);
   gamma = convert_angle(gamma, angles);
 
-  double q[4];
-  q[0] = cos(beta / 2.0) * cos(gamma / 2.0);
-  q[1] = cos(beta / 2.0) * sin(gamma / 2.0);
-  q[2] = sin(beta / 2.0) * cos(alpha + gamma / 2.0);
-  q[3] = sin(beta / 2.0) * sin(alpha + gamma / 2.0);
-
-  return Orientation(q);
+  quat_[0] = cos(beta / 2.0) * cos(gamma / 2.0);
+  quat_[1] = cos(beta / 2.0) * sin(gamma / 2.0);
+  quat_[2] = sin(beta / 2.0) * cos(alpha + gamma / 2.0);
+  quat_[3] = sin(beta / 2.0) * sin(alpha + gamma / 2.0);
 }
 
 Orientation Orientation::createHyperspherical(double a1, double a2, double a3,
                                               std::string angles)
 {
+  Orientation q;
+  q.setHyperspherical(a1, a2, a3, angles);
+  return q;
+}
+
+void Orientation::setHyperspherical(double a1, double a2, double a3,
+                                    std::string angles)
+{
   a1 = convert_angle(a1, angles);
   a2 = convert_angle(a2, angles);
   a3 = convert_angle(a3, angles);
-
-  double q[4];
-  q[0] = cos(a1);
-  q[1] = sin(a1)*cos(a2);
-  q[2] = sin(a1)*sin(a2)*cos(a3);
-  q[3] = sin(a1)*sin(a2)*sin(a3);
-
-  return Orientation(q);
+  
+  quat_[0] = cos(a1);
+  quat_[1] = sin(a1)*cos(a2);
+  quat_[2] = sin(a1)*sin(a2)*cos(a3);
+  quat_[3] = sin(a1)*sin(a2)*sin(a3);
 }
 
 Orientation::Orientation() :
@@ -420,7 +494,7 @@ Orientation::Orientation() :
 
 }
 
-Orientation::Orientation(const double * const v) :
+Orientation::Orientation(double * v) :
     Quaternion(v)
 {
   normalize_();
@@ -432,15 +506,30 @@ Orientation::Orientation(const std::vector<double> v) :
   normalize_();
 }
 
-Orientation::Orientation(const Orientation & other) :
-    Quaternion(other.quat())
+Orientation::Orientation(const Orientation & other)
 {
+  alloc_();
+  std::copy(other.quat(), other.quat()+4, quat_);
   normalize_();
 }
 
 Orientation::Orientation(const Quaternion & other) :
-    Quaternion(other.quat())
+    Quaternion(other)
 {
+  normalize_();
+}
+
+Orientation::Orientation(Orientation && other) 
+{
+  store_ = other.store();
+  if (store_) {
+    alloc_();
+    std::copy(other.quat(), other.quat()+4, quat_);
+  }
+  else {
+    quat_ = other.data();
+    other.unown();
+  }
   normalize_();
 }
 
