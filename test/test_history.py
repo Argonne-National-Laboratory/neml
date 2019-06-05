@@ -124,3 +124,26 @@ class TestActuallyStores(unittest.TestCase):
     self.assertTrue(
         np.allclose(self.orientation.quat, self.hist2.get_orientation("orientation").quat))
 
+class TestCopy(unittest.TestCase):
+  def setUp(self):
+    self.scalar = 2.5
+
+    self.hist = history.History()
+    self.hist.add_scalar("a")
+    self.storage = np.zeros((self.hist.size,))
+    self.hist.set_scalar("a", self.scalar)
+
+  def should_change(self):
+    self.storage[0] = 3.0
+    self.assertTrue(np.isclose(self.hist.get_scalar("a"), 3.0))
+
+  def should_not_change(self):
+    newhist = self.hist.deepcopy()
+    self.storage[0] = 3.0
+    self.assertFalse(np.isclose(newhist.get_scalar("a"), self.hist.get_scalar("a")))
+
+    self.hist.set_scalar("a", 4.0)
+    self.assertFalse(np.isclose(newhist.get_scalar("a"), self.hist.get_scalar("a")))
+
+    self.assertTrue(np.isclose(self.hist.get_scalar("a"), 4.0))
+    self.assertTrue(np.isclose(newhist.get_scalar("a"), self.scalar))

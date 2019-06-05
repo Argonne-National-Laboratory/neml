@@ -20,13 +20,19 @@ History::History(bool store) :
 }
 
 History::History(const History & other) :
-    size_(other.size()), store_(true)
+    size_(other.size()), store_(other.store())
 {
-  storage_ = new double [size_];
-  std::copy(other.rawptr(), other.rawptr() + size_, storage_);
+  if (store_) {
+    storage_ = new double [size_];
+    std::copy(other.rawptr(), other.rawptr() + size_, storage_);
+  }
+  else {
+    storage_ = const_cast<double*>(other.rawptr());
+  }
+  copy_maps_(other);
 }
 
-History::History(History && other) :
+History::History(const History && other) :
     size_(other.size()), store_(other.store())
 {
   if (store_) {
@@ -34,9 +40,9 @@ History::History(History && other) :
     std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   }
   else {
-    storage_ = other.rawptr();
-    other.unown();
+    storage_ = const_cast<double*>(other.rawptr());
   }
+  copy_maps_(other);
 }
 
 History::~History()
@@ -58,30 +64,36 @@ History & History::operator=(const History & other)
     std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   }
 
+  copy_maps_(other);
+
   return *this;
 }
 
-History & History::operator=(History && other)
+History & History::operator=(const History && other)
 {
   if (size_ != other.size()) {
     throw std::invalid_argument(
         "History objects in assignment operator do not have the same size");
   }
 
-  if (other.store()) {
-    std::copy(other.rawptr(), other.rawptr() + size_, storage_);
-  }
-  else {
-    storage_ = other.rawptr();
-    other.unown();
-  }
+  std::copy(other.rawptr(), other.rawptr() + size_, storage_);
+  
+  copy_maps_(other);
 
   return *this;
 }
 
-void History::unown()
+History History::deepcopy() const
 {
-  store_ = false;
+  History nhist;
+  nhist.resize(size_);
+  std::copy(storage_, storage_+size_, nhist.rawptr());
+
+  nhist.get_loc().insert(loc_.begin(), loc_.end());
+  nhist.get_array_size().insert(array_size_.begin(), array_size_.end());
+  nhist.get_type().insert(type_.begin(), type_.end());
+
+  return nhist;
 }
 
 void History::set_data(double * input)
@@ -99,7 +111,7 @@ void History::add_scalar(std::string name)
   error_if_exists_(name);
   loc_.insert(std::pair<std::string,size_t>(name, size_));
   type_.insert(std::pair<std::string,StorageType>(name, TYPE_SCALAR));
-  resize_(1);
+  resize(1);
 }
 
 double & History::get_scalar(std::string name)
@@ -115,7 +127,7 @@ void History::add_array(std::string name, size_t sz)
   loc_.insert(std::pair<std::string,size_t>(name, size_));
   array_size_.insert(std::pair<std::string,size_t>(name, sz));
   type_.insert(std::pair<std::string,StorageType>(name, TYPE_ARRAY));
-  resize_(sz);
+  resize(sz);
 }
 
 size_t History::array_size(std::string name)
@@ -131,7 +143,7 @@ double * History::get_array(std::string name)
   return &(storage_[loc_[name]]);
 }
 
-void History::resize_(size_t inc)
+void History::resize(size_t inc)
 {
   if (store_) {
     double * newstore = new double [size_+inc];
@@ -140,6 +152,13 @@ void History::resize_(size_t inc)
     storage_ = newstore;
   }
   size_ += inc;
+}
+
+void History::copy_maps_(const History & other)
+{
+  loc_.insert(other.get_loc().begin(), other.get_loc().end());
+  array_size_.insert(other.get_array_size().begin(), other.get_array_size().end());
+  type_.insert(other.get_type().begin(), other.get_type().end());
 }
 
 void History::error_if_exists_(std::string name)

@@ -41,15 +41,16 @@ class History {
   History();
   History(bool store);
   History(const History & other);
-  History(History && other);
+  History(const History && other);
   virtual ~History();
 
   /// Copy constructor
   History & operator=(const History & other);
-  History & operator=(History && other);
+  History & operator=(const History && other);
 
-  /// Release ownership of data
-  void unown();
+  /// Explicit deepcopy
+  History deepcopy() const;
+
   /// Do I own my own data?
   bool store() const {return store_;};
   /// Raw data pointer (const)
@@ -73,16 +74,18 @@ class History {
   size_t array_size(std::string name);
   /// Return a pointer to the array
   double * get_array(std::string name);
-
+  
+  /// Add a generic object
   template<typename T>
   void add_object(std::string name)
   {
     error_if_exists_(name);
     loc_.insert(std::pair<std::string,size_t>(name, size_));
     type_.insert(std::pair<std::string,StorageType>(name, GetStorageType<T>()));
-    resize_(GetStorageSize<T>());
+    resize(GetStorageSize<T>());
   };
-
+  
+  /// Get a generic object
   template<typename T>
   T get_object(std::string name)
   {
@@ -91,8 +94,22 @@ class History {
     return std::move(T(&(storage_[loc_[name]])));
   }
 
+  /// Getters
+  const std::map<std::string,size_t> & get_loc() const {return loc_;};
+  const std::map<std::string,size_t> & get_array_size() const {return array_size_;};
+  const std::map<std::string,StorageType> & get_type() const {return type_;};
+
+  std::map<std::string,size_t> & get_loc() {return loc_;};
+  std::map<std::string,size_t> & get_array_size() {return array_size_;};
+  std::map<std::string,StorageType> & get_type() {return type_;};
+
+  /// Resize method
+  void resize(size_t inc);
+
+ protected:
+  void copy_maps_(const History & other);
+
  private:
-  void resize_(size_t inc);
   void error_if_exists_(std::string name);
   void error_if_not_exists_(std::string name);
   void error_if_wrong_type_(std::string name, StorageType type);
