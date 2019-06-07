@@ -893,5 +893,145 @@ std::ostream & operator<<(std::ostream & os, const Skew & v)
   return os;
 }
 
+/* Start SymSym Tensor */
+SymSym::SymSym() :
+    Tensor(36)
+{
+  std::fill(s_, s_+36, 0.0);
+}
+
+SymSym::SymSym(const std::vector<double> v) :
+    Tensor(v)
+{
+  if (v.size() != 36) {
+    throw std::invalid_argument("Input to SymSym must have size 36!");
+  }
+}
+
+SymSym::SymSym(const std::vector<std::vector<double>> A) :
+    Tensor(36)
+{
+  if (A.size() != 6) {
+    throw std::invalid_argument("SymSym must be initiated with a 6x6 array!");
+  }
+  for (auto vi : A) {
+    if (vi.size() != 6) {
+      throw std::invalid_argument("SymSym must be initiated with a 6x6 array!");
+    }
+  }
+
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      s_[i*6+j] = A[i][j];
+    }
+  }
+}
+
+SymSym::SymSym(double * v) :
+    Tensor(v, 36)
+{
+
+}
+
+SymSym SymSym::opposite() const
+{
+  SymSym cpy(*this);
+  cpy.negate_();
+  return cpy;
+}
+
+SymSym SymSym::operator-() const
+{
+  return opposite();
+}
+
+SymSym & SymSym::operator+=(const SymSym & other)
+{
+  add_(other);
+  return *this;
+}
+
+SymSym & SymSym::operator-=(const SymSym & other)
+{
+  return this->operator+=(-other);
+}
+
+SymSym SymSym::dot(const SymSym & other) const
+{
+  SymSym res;
+
+  mat_mat(6, 6, 6, this->data(), other.data(), res.s());
+  
+  return res;
+}
+
+Symmetric SymSym::dot(const Symmetric & other) const
+{
+  Symmetric res;
+
+  mat_vec(this->data(), 6, other.data(), 6, res.s());
+
+  return res;
+}
+
+// Binary operators with scalars
+SymSym operator*(double s, const SymSym & v)
+{
+  SymSym cpy(v);
+  cpy *= s;
+  return cpy;
+}
+
+SymSym operator*(const SymSym & v, double s)
+{
+  return operator*(s, v);
+}
+
+SymSym operator/(const SymSym & v, double s)
+{
+  SymSym cpy(v);
+  cpy /= s;
+  return cpy;
+}
+
+// Various forms of addition
+SymSym operator+(const SymSym & a, const SymSym & b)
+{
+  SymSym cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+SymSym operator-(const SymSym & a, const SymSym & b)
+{
+  SymSym cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+// Various forms of multiplication
+SymSym operator*(const SymSym & a, const SymSym & b)
+{
+  return a.dot(b);
+}
+
+Symmetric operator*(const SymSym & a, const Symmetric & b)
+{
+  return a.dot(b);
+}
+
+/// io for SymSym tensors
+std::ostream & operator<<(std::ostream & os, const SymSym & v)
+{
+  const double * const d = v.data();
+  for (size_t i = 0; i<6; i++) {
+    os << "[";
+    for (size_t j = 0; j<6; j++) {
+      os << d[i*6+4] << " ";
+    }
+    os << "]" << std::endl;
+  }
+}
+
 
 } // namespace neml

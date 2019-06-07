@@ -376,7 +376,76 @@ PYBIND11_MODULE(tensors, m) {
       .def("transpose", &Skew::transpose)
       ;
 
+  py::class_<SymSym, Tensor, std::shared_ptr<SymSym>>(m, "SymSym")
+      // Start standard
+      .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
+      .def(py::init<const SymSym &>(), py::arg("full"))
 
+      .def("__repr__",
+           [](SymSym & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "SymSym(array([";
+              for (size_t i=0; i<6; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<6; j++) {
+                  ss << me.data()[i*6+j] << " ";
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]))";
+
+              return ss.str();
+           }, "python __repr__")
+
+      .def("__str__",
+           [](SymSym & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "[";
+              for (size_t i=0; i<6; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<6; j++) {
+                  ss << me.data()[i*6+j] << " ";
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]";
+
+              return ss.str();
+           }, "python __str__")
+
+      .def("opposite", &SymSym::opposite)
+      .def("__neg__", &SymSym::opposite)
+
+      .def(double() * py::self)
+      .def(py::self * double())
+
+      .def(py::self / double())
+
+      .def(py::self += py::self)
+      .def(py::self + py::self)
+
+      .def(py::self -= py::self)
+      .def(py::self - py::self)
+
+      // End standard
+      .def("dot", [](const SymSym & me, const SymSym & other) -> SymSym
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSym & me, const Symmetric & other) -> Symmetric
+           {
+            return me.dot(other);
+           })
+
+      .def(py::self * py::self)
+      .def(py::self * Symmetric())
+      ;
 
 } // PYBIND11_MODULE(tensors, m)
 

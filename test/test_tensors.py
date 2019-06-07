@@ -2,6 +2,8 @@
 
 from neml.math import tensors
 
+import common
+
 import unittest
 import numpy as np
 import numpy.linalg as la
@@ -285,4 +287,55 @@ class TestComboTensorAdd(unittest.TestCase):
 
   def test_sub_general_skew(self):
     self.assertEqual(tensors.RankTwo(self.G - self.W), self.TG - self.TW)
+
+class TestSymSym(unittest.TestCase):
+  def setUp(self):
+    self.SS1 = np.array([
+      [ 5.99159801, -2.24342348,  0.26667281, -0.95466199,  3.98931478, -0.10846981],
+      [ 1.86468226, -4.32391908, -7.82738638, -7.45008989,  5.89874777, 0.45820648],
+      [-5.92565398,  2.4862829 , -6.02112389,  6.75455965,  4.65183463, 9.96900579],
+      [ 0.60378883, -3.72189328, -7.63388446, -5.76559403, -0.3119789 , -1.1527258 ],
+      [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
+      [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
+    self.TSS1 = tensors.SymSym(self.SS1)
+
+    self.SS2 = np.array([
+      [-3.83767383, -8.63726504, -4.52095938,  9.35252323,  2.12800902, 3.26478511],
+      [ 0.41705962,  3.95885105, -4.21676978,  4.12817198,  7.38839962, 5.79308578],
+      [ 6.09635931,  2.31981366, -4.40237946, -5.51856189,  5.63572381, -5.55192385],
+      [-0.97547288, -6.35708101, -4.35087656, -2.56567326,  4.32627031, 5.99408963],
+      [ 6.30359707,  5.72926973,  2.47121354, -7.26333416, -5.08412215, -9.21872687],
+      [-6.10780884,  1.01881487, -1.93491321,  6.13272186, -8.8721007, -2.97045116]])
+    self.TSS2 = tensors.SymSym(self.SS2)
+
+    self.S = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.S = 0.5*(self.S + self.S.T)
+    self.TS = tensors.Symmetric(self.S)
+
+    self.scalar = 5.2
+
+  def test_add(self):
+    self.assertEqual(tensors.SymSym(self.SS1 + self.SS2), self.TSS2 + self.TSS1)
+    self.assertEqual(tensors.SymSym(self.SS1 - self.SS2), self.TSS1 - self.TSS2)
+
+  def test_equality(self):
+    self.assertEqual(self.TSS1, self.TSS1)
+
+  def test_inequality(self):
+    self.assertNotEqual(self.TSS1, self.TSS2)
+
+  def test_negate(self):
+    self.assertEqual(tensors.SymSym(-self.SS1), -self.TSS1)
+
+  def test_scalar_mult(self):
+    self.assertEqual(tensors.SymSym(self.scalar * self.SS1), self.scalar * self.TSS1)
+    self.assertEqual(tensors.SymSym(self.scalar * self.SS2), self.TSS2 * self.scalar)
+    self.assertEqual(tensors.SymSym(self.SS1 / self.scalar), self.TSS1 / self.scalar)
+
+  def test_product_sym_sym(self):
+    self.assertEqual(tensors.SymSym(np.dot(self.SS1, self.SS2)), self.TSS1 * self.TSS2)
+
+  def test_product_sym(self):
+    self.assertEqual(tensors.Symmetric(common.usym(np.dot(self.SS1, common.sym(self.S)))), self.TSS1 * self.TS)
+
 

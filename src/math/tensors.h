@@ -239,8 +239,42 @@ Vector operator*(const Skew & a, const Vector & b);
 Vector operator*(const Vector & a, const Skew & b);
 Skew operator*(const Skew & a, const Skew & b);
 
-/// io for symmetric tensors
+/// io for skew tensors
 std::ostream & operator<<(std::ostream & os, const Skew & v);
+
+class SymSym: public Tensor {
+ public:
+  SymSym();
+  SymSym(const std::vector<double> v);
+  SymSym(const std::vector<std::vector<double>> A);
+  SymSym(double * v);
+
+  SymSym opposite() const;
+  SymSym operator-() const;
+
+  SymSym & operator+=(const SymSym & other);
+  SymSym & operator-=(const SymSym & other);
+
+  // Various multiplication
+  SymSym dot(const SymSym & other) const;
+  Symmetric dot(const Symmetric & other) const;
+};
+
+// Binary operators with scalars
+SymSym operator*(double s, const SymSym & v);
+SymSym operator*(const SymSym & v, double s);
+SymSym operator/(const SymSym & v, double s);
+
+// Various forms of addition
+SymSym operator+(const SymSym & a, const SymSym & b);
+SymSym operator-(const SymSym & a, const SymSym & b);
+
+// Various forms of multiplication
+SymSym operator*(const SymSym & a, const SymSym & b);
+Symmetric operator*(const SymSym & a, const Symmetric & b);
+
+/// io for SymSym tensors
+std::ostream & operator<<(std::ostream & os, const SymSym & v);
 
 } // namespace neml
 
