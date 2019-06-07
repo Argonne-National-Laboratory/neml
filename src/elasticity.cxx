@@ -8,6 +8,20 @@
 
 namespace neml {
 
+SymSym LinearElasticModel::C(double T) const
+{
+  SymSym res;
+  C(T, res.s());
+  return res;
+}
+
+SymSym LinearElasticModel::S(double T) const
+{
+  SymSym res;
+  S(T, res.s());
+  return res;
+}
+
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
       std::shared_ptr<Interpolate> m1,
       std::string m1_type,

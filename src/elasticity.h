@@ -3,6 +3,7 @@
 
 #include "objects.h"
 #include "interpolate.h"
+#include "math/tensors.h"
 
 #include <memory>
 #include <vector>
@@ -19,6 +20,12 @@ class LinearElasticModel: public NEMLObject {
   virtual int C(double T, double * const Cv) const = 0;
   /// The compliance tensor, in Mandel notation
   virtual int S(double T, double * const Sv) const = 0;
+
+  /// The stiffness tensor in a tensor object
+  SymSym C(double T) const;
+
+  /// The compliance tensor in a tensor object
+  SymSym S(double T) const;
   
   /// The Young's modulus
   virtual double E(double T) const = 0;

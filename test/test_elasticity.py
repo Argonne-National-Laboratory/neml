@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 from neml import elasticity, interpolate
+from neml.math import tensors
 import unittest
 
 from common import *
@@ -20,6 +21,16 @@ class CommonElasticity(object):
   def test_S2C(self):
     S = self.model.S(self.T)
     self.assertTrue(np.allclose(self.model.C(self.T), la.inv(S)))
+
+  def test_tensor_C(self):
+    CT = self.model.C_tensor(self.T)
+    C = self.model.C(self.T)
+    self.assertEqual(CT, tensors.SymSym(C))
+
+  def test_tensor_S(self):
+    ST = self.model.S_tensor(self.T)
+    S = self.model.S(self.T)
+    self.assertEqual(ST, tensors.SymSym(S))
 
 class TestIsotropicConstantModel(CommonElasticity, unittest.TestCase):
   def setUp(self):

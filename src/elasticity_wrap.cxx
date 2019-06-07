@@ -33,6 +33,18 @@ PYBIND11_MODULE(elasticity, m) {
             py_error(ier);
             return S;
            }, "Return compliance elasticity matrix.")
+      .def("C_tensor",
+           [](const LinearElasticModel & m, double T) -> SymSym
+           {
+            return m.C(T);
+           }, "Return stiffness elasticity tensor.")
+
+      .def("S_tensor",
+           [](const LinearElasticModel & m, double T) -> SymSym
+           {
+            return m.S(T);
+           }, "Return compliance elasticity tensor.")
+
       .def("E", &LinearElasticModel::E, "Young's modulus as a function of temperature.")
       .def("nu", &LinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
       .def("G", &LinearElasticModel::G, "Shear modulus as a function of temperature.")
