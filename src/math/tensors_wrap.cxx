@@ -204,7 +204,6 @@ PYBIND11_MODULE(tensors, m) {
   py::class_<Symmetric, Tensor, std::shared_ptr<Symmetric>>(m, "Symmetric")
       // Start standard
       .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
-      .def(py::init<const RankTwo &>(), py::arg("full"))
 
       .def("__repr__",
            [](Symmetric & me) -> std::string
@@ -292,7 +291,6 @@ PYBIND11_MODULE(tensors, m) {
   py::class_<Skew, Tensor, std::shared_ptr<Skew>>(m, "Skew")
       // Start standard
       .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
-      .def(py::init<const RankTwo &>(), py::arg("full"))
 
       .def("__repr__",
            [](Skew & me) -> std::string
@@ -376,10 +374,109 @@ PYBIND11_MODULE(tensors, m) {
       .def("transpose", &Skew::transpose)
       ;
 
+  py::class_<RankFour, Tensor, std::shared_ptr<RankFour>>(m, "RankFour")
+      // Start standard
+      .def(py::init<const std::vector<std::vector<std::vector<std::vector<double>>>>>(), py::arg("data"))
+
+      .def("__repr__",
+           [](RankFour & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "SymSym(array([";
+              for (size_t i=0; i<9; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<9; j++) {
+                  ss << me.data()[i*9+j] << " ";
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]))";
+
+              return ss.str();
+           }, "python __repr__")
+
+      .def("__str__",
+           [](RankFour & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "[";
+              for (size_t i=0; i<9; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<9; j++) {
+                  ss << me.data()[i*9+j] << " ";
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]";
+
+              return ss.str();
+           }, "python __str__")
+
+      .def("opposite", &RankFour::opposite)
+      .def("__neg__", &RankFour::opposite)
+
+      .def(double() * py::self)
+      .def(py::self * double())
+
+      .def(py::self / double())
+
+      .def(py::self += py::self)
+      .def(py::self + py::self)
+
+      .def(py::self -= py::self)
+      .def(py::self - py::self)
+
+      // End standard
+      .def("to_sym", &RankFour::to_sym)
+
+      .def("__getitem__", [](const RankFour & M, std::tuple<size_t,size_t,size_t,size_t> ind) {
+           size_t i = std::get<0>(ind);
+           size_t j = std::get<1>(ind);
+           size_t k = std::get<2>(ind);
+           size_t l = std::get<3>(ind);
+           if ((i >= 3) || (j > 3) || (k>3) || (l>3)) throw py::index_error();
+           return M(i,j,k,l);
+      })
+
+      .def("__setitem__", [](RankFour & M, std::tuple<size_t,size_t,size_t,size_t> ind, double val) {
+           size_t i = std::get<0>(ind);
+           size_t j = std::get<1>(ind);
+           size_t k = std::get<2>(ind);
+           size_t l = std::get<3>(ind);
+           if ((i >= 3) || (j > 3) || (k>3) || (l>3)) throw py::index_error();
+           M(i,j,k,l) = val;
+      })
+            
+      .def("dot", [](const RankFour & me, const RankFour & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const RankFour & me, const RankTwo & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const RankFour & me, const Symmetric & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const RankFour & me, const Skew & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+
+      .def(py::self * py::self)
+      .def(py::self * RankTwo())
+      .def(py::self * Symmetric())
+      .def(py::self * Skew())
+      ;
+
   py::class_<SymSym, Tensor, std::shared_ptr<SymSym>>(m, "SymSym")
       // Start standard
       .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
-      .def(py::init<const SymSym &>(), py::arg("full"))
 
       .def("__repr__",
            [](SymSym & me) -> std::string
@@ -434,6 +531,8 @@ PYBIND11_MODULE(tensors, m) {
       .def(py::self - py::self)
 
       // End standard
+      .def("to_full", &SymSym::to_full)
+
       .def("dot", [](const SymSym & me, const SymSym & other) -> SymSym
            {
             return me.dot(other);

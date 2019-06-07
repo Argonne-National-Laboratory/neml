@@ -893,6 +893,199 @@ std::ostream & operator<<(std::ostream & os, const Skew & v)
   return os;
 }
 
+/* Start RankFour Tensor */
+RankFour::RankFour() :
+    Tensor(81)
+{
+  std::fill(s_, s_+81, 0.0);
+}
+
+RankFour::RankFour(const std::vector<double> v) :
+    Tensor(v)
+{
+  if (v.size() != 81) {
+    throw std::invalid_argument("Input to RankFour must have size 81!");
+  }
+}
+
+RankFour::RankFour(const std::vector<std::vector<std::vector<std::vector<double>>>> A) :
+    Tensor(81)
+{
+  if (A.size() != 3) {
+    throw std::invalid_argument("RankFour must be initiated with a 3x3x3x3 array!");
+  }
+  for (auto vi : A) {
+    if (vi.size() != 3) {
+      throw std::invalid_argument("RankFour must be initiated with a 6x6 array!");
+    }
+    for (auto vj : vi) {
+      if (vj.size() != 3) {
+        throw std::invalid_argument("RankFour must be initiated with a 6x6 array!");
+      }
+      for (auto vk : vj) {
+        if (vk.size() != 3) {
+          throw std::invalid_argument("RankFour must be initiated with a 6x6 array!");
+        }
+      }
+    }
+  }
+
+  for (size_t i = 0; i < 3; i++) {
+    for (size_t j = 0; j < 3; j++) {
+      for (size_t k = 0; k < 3; k++) {
+        for (size_t l = 0; l < 3; l++) {
+          s_[27*i+9*j+3*k+l] = A[i][j][k][l];
+        }
+      }
+    }
+  }
+}
+
+RankFour::RankFour(double * v) :
+    Tensor(v, 81)
+{
+
+}
+
+RankFour RankFour::opposite() const
+{
+  RankFour cpy(*this);
+  cpy.negate_();
+  return cpy;
+}
+
+RankFour RankFour::operator-() const
+{
+  return opposite();
+}
+
+RankFour & RankFour::operator+=(const RankFour & other)
+{
+  add_(other);
+  return *this;
+}
+
+RankFour & RankFour::operator-=(const RankFour & other)
+{
+  return this->operator+=(-other);
+}
+
+double & RankFour::operator()(size_t i, size_t j, size_t k, size_t l)
+{
+  return s_[i*27+j*9+k*3+l];
+}
+
+const double & RankFour::operator()(size_t i, size_t j, size_t k, size_t l) const
+{
+  return s_[i*27+j*9+k*3+l];
+}
+
+SymSym RankFour::to_sym() const
+{
+  SymSym res;
+  
+  full2mandel(s_, res.s());
+
+  return res;
+}
+
+RankFour RankFour::dot(const RankFour & other) const
+{
+  RankFour res;
+
+  mat_mat(9, 9, 9, this->data(), other.data(), res.s());
+  
+  return res;
+}
+
+RankTwo RankFour::dot(const RankTwo & other) const
+{
+  RankTwo res;
+
+  mat_vec(this->data(), 9, other.data(), 9, res.s());
+
+  return res;
+}
+
+RankTwo RankFour::dot(const Symmetric & other) const
+{
+  return dot(other.to_full());
+}
+
+RankTwo RankFour::dot(const Skew & other) const
+{
+  return dot(other.to_full());
+}
+
+// Binary operators with scalars
+RankFour operator*(double s, const RankFour & v)
+{
+  RankFour cpy(v);
+  cpy *= s;
+  return cpy;
+}
+
+RankFour operator*(const RankFour & v, double s)
+{
+  return operator*(s, v);
+}
+
+RankFour operator/(const RankFour & v, double s)
+{
+  RankFour cpy(v);
+  cpy /= s;
+  return cpy;
+}
+
+// Various forms of addition
+RankFour operator+(const RankFour & a, const RankFour & b)
+{
+  RankFour cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+RankFour operator-(const RankFour & a, const RankFour & b)
+{
+  RankFour cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+// Various forms of multiplication
+RankFour operator*(const RankFour & a, const RankFour & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const RankFour & a, const RankTwo & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const RankFour & a, const Symmetric & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const RankFour & a, const Skew & b)
+{
+  return a.dot(b);
+}
+
+/// io for RankFour tensors
+std::ostream & operator<<(std::ostream & os, const RankFour & v)
+{
+  const double * const d = v.data();
+  for (size_t i = 0; i<9; i++) {
+    os << "[";
+    for (size_t j = 0; j<9; j++) {
+      os << d[i*9+4] << " ";
+    }
+    os << "]" << std::endl;
+  }
+}
+
 /* Start SymSym Tensor */
 SymSym::SymSym() :
     Tensor(36)
@@ -954,6 +1147,15 @@ SymSym & SymSym::operator+=(const SymSym & other)
 SymSym & SymSym::operator-=(const SymSym & other)
 {
   return this->operator+=(-other);
+}
+
+RankFour SymSym::to_full() const
+{
+  RankFour res;
+
+  mandel2full(data(), res.s());
+
+  return res;
 }
 
 SymSym SymSym::dot(const SymSym & other) const

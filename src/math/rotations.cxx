@@ -568,6 +568,13 @@ void Orientation::to_matrix(double * const M) const
   M[8] = 1-2*v1s-2*v2s;
 }
 
+RankTwo Orientation::to_tensor() const
+{
+  RankTwo res;
+  to_matrix(res.s());
+  return res;
+}
+
 void Orientation::to_rodrigues(double * const v) const
 {
   double f;
@@ -778,6 +785,57 @@ Vector Orientation::apply(const Vector & a) const
   std::copy(&rv.quat()[1], &rv.quat()[4], res.s());
 
   return res;
+}
+
+RankTwo Orientation::apply(const RankTwo & a) const
+{
+  RankTwo Q = to_tensor();
+  return Q * (a * Q.transpose());
+}
+
+Symmetric Orientation::apply(const Symmetric & a) const
+{
+ // TODO: make more efficient
+  return Symmetric(apply(a.to_full()));
+}
+
+Skew Orientation::apply(const Skew & a) const
+{
+  // TODO: make more efficient
+  return Skew(apply(a.to_full()));
+}
+
+RankFour Orientation::apply(const RankFour & a) const
+{
+  // TODO: make more efficient
+  RankTwo Q = to_tensor();
+  
+  RankFour res;
+  for (size_t i = 0; i<3; i++) {
+    for (size_t j = 0; j<3; j++) {
+      for (size_t k = 0; k<3; k++) {
+        for (size_t l = 0; l<3; l++) {
+          for (size_t m = 0; m<3; m++) {
+            for (size_t n = 0; n<3; n++) {
+              for (size_t o = 0; o<3; o++) {
+                for (size_t p = 0; p<3; p++) {
+                  res(i,j,k,l) += Q(i,m) * Q(j,n) * Q(k,o) * Q(l,p) * a(m,n,o,p);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return res;
+}
+
+SymSym Orientation::apply(const SymSym & a) const
+{
+  // TODO: make more efficient
+  RankFour full = apply(a.to_full());
+  return full.to_sym();
 }
 
 std::vector<Orientation> random_orientations(int n)

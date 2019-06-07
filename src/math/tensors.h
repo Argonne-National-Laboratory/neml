@@ -8,10 +8,13 @@
 
 namespace neml {
 
+// Forward declarations
 class Vector;
 class RankTwo;
 class Symmetric;
 class Skew;
+class RankFour;
+class SymSym;
 
 class Tensor {
  public:
@@ -242,6 +245,49 @@ Skew operator*(const Skew & a, const Skew & b);
 /// io for skew tensors
 std::ostream & operator<<(std::ostream & os, const Skew & v);
 
+class RankFour: public Tensor {
+ public:
+  RankFour();
+  RankFour(const std::vector<double> v);
+  RankFour(const std::vector<std::vector<std::vector<std::vector<double>>>> A);
+  RankFour(double * v);
+
+  RankFour opposite() const;
+  RankFour operator-() const;
+
+  RankFour & operator+=(const RankFour & other);
+  RankFour & operator-=(const RankFour & other);
+
+  double & operator()(size_t i, size_t j, size_t k, size_t l);
+  const double & operator()(size_t i, size_t j, size_t k, size_t l) const;
+
+  SymSym to_sym() const;
+
+  // Various multiplications
+  RankFour dot(const RankFour & other) const;
+  RankTwo dot(const RankTwo & other) const;
+  RankTwo dot(const Symmetric & other) const;
+  RankTwo dot(const Skew & other) const;
+};
+
+// Binary operators with scalars
+RankFour operator*(double s, const RankFour & v);
+RankFour operator*(const RankFour & v, double s);
+RankFour operator/(const RankFour & v, double s);
+
+// Various forms of addition
+RankFour operator+(const RankFour & a, const RankFour & b);
+RankFour operator-(const RankFour & a, const RankFour & b);
+
+// Various forms of multiplication
+RankFour operator*(const RankFour & a, const RankFour & b);
+RankTwo operator*(const RankFour & a, const RankTwo & b);
+RankTwo operator*(const RankFour & a, const Symmetric & b);
+RankTwo operator*(const RankFour & a, const Skew & b);
+
+/// io for SymSym tensors
+std::ostream & operator<<(std::ostream & os, const RankFour & v);
+
 class SymSym: public Tensor {
  public:
   SymSym();
@@ -254,6 +300,8 @@ class SymSym: public Tensor {
 
   SymSym & operator+=(const SymSym & other);
   SymSym & operator-=(const SymSym & other);
+
+  RankFour to_full() const;
 
   // Various multiplication
   SymSym dot(const SymSym & other) const;

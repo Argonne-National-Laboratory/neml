@@ -134,6 +134,7 @@ PYBIND11_MODULE(rotations, m) {
             std::copy(M, M+9, p);
             return Mn;
            }, "Convert to a rotation matrix")
+      .def("to_tensor", &Orientation::to_tensor)
       .def("to_rodrigues",
            [](Orientation & me) -> py::array_t<double>
            {
@@ -168,8 +169,12 @@ PYBIND11_MODULE(rotations, m) {
       .def("inverse", &Orientation::inverse, "Inverse")
       .def("pow", &Orientation::pow, "Exponentiation")
       .def("__pow__", &Orientation::pow, "Exponentiation with python sugar")
-
-      .def("apply", &Orientation::apply)
+      
+      .def("apply", 
+           [](Orientation & me, Vector & v) -> Vector
+           {
+            return me.apply(v);
+           }, "Apply to a vector")
       
       .def(py::self *= py::self)
       .def(py::self * py::self)

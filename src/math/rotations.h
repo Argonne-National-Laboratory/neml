@@ -139,6 +139,7 @@ class Orientation: public Quaternion {
   void to_axis_angle(double * const n, double & a,
                      std::string angles = "radians") const;
   void to_matrix(double * const M) const;
+  RankTwo to_tensor() const;
   void to_rodrigues(double * const v) const;
   void to_hopf(double & alpha, double & beta, double & gamma,
                std::string angles = "radians") const;
@@ -166,6 +167,11 @@ class Orientation: public Quaternion {
 
   /// Rotate various tensors
   Vector apply(const Vector & a) const;
+  RankTwo apply(const RankTwo & a) const;
+  Symmetric apply(const Symmetric & a) const;
+  Skew apply(const Skew & a) const;
+  RankFour apply(const RankFour & a) const;
+  SymSym apply(const SymSym & a) const;
 
  private:
   void normalize_();
