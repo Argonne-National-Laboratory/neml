@@ -37,20 +37,12 @@ PYBIND11_MODULE(elasticity, m) {
       .def("nu", &LinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
       .def("G", &LinearElasticModel::G, "Shear modulus as a function of temperature.")
       .def("K", &LinearElasticModel::K, "Bulk modulus as a function of temperature.")
-      .def_property_readonly("valid", &LinearElasticModel::valid, "Good or dummy model.")
       ;
 
   py::class_<IsotropicLinearElasticModel, LinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<IsotropicLinearElasticModel>(args, kwargs, {"m1", "m1_type", "m2", "m2_type"});
-        }))
-      ;
-  
-  py::class_<BlankElasticModel, LinearElasticModel, std::shared_ptr<BlankElasticModel>>(m, "BlankElasticModel")
-      .def(py::init([](py::args args, py::kwargs kwargs)
-        {
-          return create_object_python<BlankElasticModel>(args, kwargs, {});
         }))
       ;
 }

@@ -174,11 +174,3 @@ class TestCompoundMaterials(unittest.TestCase):
     model.set_elastic_model(self.elastic2)
 
     self.very_close(model, self.emodel2)
-
-class TestBlankModel(unittest.TestCase):
-  def test_dont_use(self):
-    model = elasticity.BlankElasticModel()
-    with self.assertRaises(RuntimeError):
-      model.C(0)
-    with self.assertRaises(RuntimeError):
-      model.S(0)

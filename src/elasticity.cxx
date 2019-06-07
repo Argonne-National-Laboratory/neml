@@ -8,11 +8,6 @@
 
 namespace neml {
 
-bool LinearElasticModel::valid() const
-{
-  return false;
-}
-
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
       std::shared_ptr<Interpolate> m1,
       std::string m1_type,
@@ -160,11 +155,6 @@ int IsotropicLinearElasticModel::S_calc_(double G, double K, double * const Sv) 
   return 0;
 }
 
-bool IsotropicLinearElasticModel::valid() const
-{
-  return true;
-}
-
 void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) const
 {
   double m1 = m1_->value(T);
@@ -221,58 +211,6 @@ void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) cons
   else {
     throw std::invalid_argument("Unknown combination of elastic properties");
   }
-}
-
-BlankElasticModel::BlankElasticModel()
-{
-
-}
-
-std::string BlankElasticModel::type()
-{
-  return "BlankElasticModel";
-}
-
-ParameterSet BlankElasticModel::parameters()
-{
-  ParameterSet pset(BlankElasticModel::type());
-
-  return pset;
-}
-
-std::unique_ptr<NEMLObject> BlankElasticModel::initialize(ParameterSet & params)
-{
-  return neml::make_unique<BlankElasticModel>(); 
-}
-
-int BlankElasticModel::C(double T, double * const Cv) const
-{
-  return DUMMY_ELASTIC;
-}
-
-int BlankElasticModel::S(double T, double * const Sv) const
-{
-  return DUMMY_ELASTIC;
-}
-
-double BlankElasticModel::E(double T) const
-{
-  return 0;
-}
-
-double BlankElasticModel::nu(double T) const
-{
-  return 0;
-}
-
-double BlankElasticModel::G(double T) const
-{
-  return 0;
-}
-
-double BlankElasticModel::K(double T) const
-{
-  return 0;
 }
 
 } // namespace neml
