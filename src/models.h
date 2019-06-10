@@ -68,6 +68,46 @@ class NEMLModel: public NEMLObject {
    virtual double shear(double T) const = 0;
 };
 
+/// Large deformation incremental update model
+class NEMLModel_ldi: public NEMLModel {
+  public:
+    NEMLModel_ldi();
+    virtual ~NEMLModel_ldi();
+
+   /// The small strain stress update interface
+   virtual int update_sd(
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       double * const s_np1, const double * const s_n,
+       double * const h_np1, const double * const h_n,
+       double * const A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
+
+   /// Large strain incremental update
+   virtual int update_ld_inc(
+       const double * const d_np1, const double * const d_n,
+       const double * const w_np1, const double * const w_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       double * const s_np1, const double * const s_n,
+       double * const h_np1, const double * const h_n,
+       double * const A_np1, double * const B_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n) = 0;
+
+   /// Number of stored variables
+   virtual size_t nstore() const;
+   /// Initialize stored variables
+   virtual int init_store(double * const store) const;
+
+   /// Number of stored variables that are true material history
+   virtual size_t nhist() const = 0;
+   /// Initialize the stored history
+   virtual int init_hist(double * const hist) const = 0;
+};
+
 /// Small deformation stress update
 class NEMLModel_sd: public NEMLModel {
   public:

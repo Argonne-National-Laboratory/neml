@@ -1,0 +1,191 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+CP model working document
+\end_layout
+
+\begin_layout Section
+Kinematics
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{F}=\boldsymbol{F}^{e}\boldsymbol{F}^{p}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\dot{\boldsymbol{F}}=\dot{\boldsymbol{F}}^{e}\boldsymbol{F}^{p}+\boldsymbol{F}^{e}\dot{\boldsymbol{F}}^{p}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\boldsymbol{l}=\dot{\boldsymbol{F}}\boldsymbol{F}^{-1}=\dot{\boldsymbol{F}}^{e}\boldsymbol{F}^{e-1}+\boldsymbol{F}^{e}\dot{\boldsymbol{F}}^{p}\boldsymbol{F}^{p-1}\boldsymbol{F}^{e-1}
+\]
+
+\end_inset
+
+Keep things general and let 
+\begin_inset Formula 
+\begin{equation}
+\dot{\boldsymbol{F}}^{p}\boldsymbol{F}^{p-1}=\bar{\boldsymbol{l}}_{p}
+\end{equation}
+
+\end_inset
+
+be a general model of the stress, history, and lattice.
+\end_layout
+
+\begin_layout Standard
+Follow the rest through though by assuming
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{F}^{e}=\left(\boldsymbol{I}+\bm{\varepsilon}\right)\boldsymbol{R}^{e}
+\end{equation}
+
+\end_inset
+
+with 
+\begin_inset Formula $\bm{\varepsilon}$
+\end_inset
+
+ small so that
+\begin_inset Formula 
+\begin{equation}
+\left(\boldsymbol{I}+\bm{\varepsilon}\right)^{-1}\approx\boldsymbol{I}-\bm{\varepsilon}.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Then
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{l}=\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\Omega}^{e}-\bm{\Omega}^{e}\bm{\varepsilon}+\bm{\varepsilon}\bm{\Omega}^{e}-\bm{\varepsilon}\bm{\Omega}^{e}\bm{\varepsilon}+\boldsymbol{l}_{p}-\boldsymbol{l}_{p}\bm{\varepsilon}+\bm{\varepsilon}\boldsymbol{l}_{p}-\bm{\varepsilon}\boldsymbol{l}_{p}\bm{\varepsilon}
+\end{equation}
+
+\end_inset
+
+labeling
+\begin_inset Formula 
+\begin{equation}
+\bm{\Omega}^{e}=\dot{\boldsymbol{R}}^{e}\boldsymbol{R}^{eT}
+\end{equation}
+
+\end_inset
+
+and
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{l}_{p}=\boldsymbol{R}^{e}\bar{\boldsymbol{l}}_{p}\boldsymbol{R}^{eT}
+\end{equation}
+
+\end_inset
+
+which is a slight abuse of notation but only by the elastic stretch.
+ 
+\end_layout
+
+\begin_layout Standard
+Make the executive decision to drop terms that are quadratic in 
+\begin_inset Formula $\bm{\varepsilon}$
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{l}=\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\Omega}^{e}-\bm{\Omega}^{e}\bm{\varepsilon}+\bm{\varepsilon}\bm{\Omega}^{e}+\boldsymbol{l}_{p}-\boldsymbol{l}_{p}\bm{\varepsilon}+\bm{\varepsilon}\boldsymbol{l}_{p}
+\end{equation}
+
+\end_inset
+
+Now separate the symmetric and skew parts
+\end_layout
+
+\end_body
+\end_document
