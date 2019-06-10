@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from neml.math import rotations, tensors
+from common import ms2ts
 
 import unittest
 import numpy as np
@@ -149,10 +150,90 @@ class TestSpecialCaseConversion(unittest.TestCase, Conversion):
 class TestApplyThings(unittest.TestCase):
   def setUp(self):
     self.q = rotations.Orientation(30.0, 60.0, 80.0, angle_type = "degrees")
-    self.v = tensors.Vector(np.array([1.2,-2.0,3.0]))
+    self.Q = self.q.to_matrix()
+    self.v = np.array([1.2,-2.0,3.0])
+    self.Tv = tensors.Vector(self.v)
+
+    self.A = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.TA = tensors.RankTwo(self.A)
+
+    self.S = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.S = 0.5*(self.S + self.S.T)
+    self.TS = tensors.Symmetric(self.S)
+
+    self.W = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.W = 0.5*(self.W - self.W.T)
+    self.TW = tensors.Skew(self.W)
+
+    self.R1 = np.array([[[[ 7.09627147,  9.22330744, -1.36602973],
+             [-7.86118175, -1.6342633 , -5.75516189],
+             [ 2.61734248,  6.40678382,  3.37981603]],
+            [[ 5.65100254, -7.88797059,  7.31396665],
+             [-6.35471595,  5.67698069, -8.18795178],
+             [ 9.10447016,  8.91183436, -6.65254333]],
+            [[ 3.20429862,  2.99308849,  4.0035241 ],
+             [-4.02440197, -4.39975872, -4.33542791],
+             [ 9.36746226, -2.91156335,  4.51572032]]],
+           [[[-9.23675199,  8.63546962,  6.83448027],
+             [ 4.35044123,  2.24508666,  9.80054664],
+             [ 0.30835223, -4.05208575,  5.68966326]],
+            [[ 6.40300092, -8.25998136,  5.63566553],
+             [-5.02801101,  5.64005224, -7.39586166],
+             [ 5.90893633,  6.02074669,  1.37112738]],
+            [[-2.68485216, -4.67660156,  3.52618441],
+             [-2.52484812, -0.08561168,  3.39072868],
+             [ 9.11295675,  2.63102786, -4.82285415]]],
+           [[[ 8.31973154,  4.76081593,  4.38377207],
+             [ 6.22896742, -3.83995097,  5.37501029],
+             [-0.16770967,  7.9453854 , -4.95548491]],
+            [[-5.67884611, -8.44970885, -7.42037867],
+             [-5.19908193, -7.87006493,  1.65949787],
+             [-3.25934672,  6.27340198,  5.98643056]],
+            [[-4.20166968, -2.38276224,  3.04551936],
+             [ 3.68445989, -5.84357996,  3.61183543],
+             [ 1.54886677,  3.3659842 ,  6.43067337]]]])
+    self.TR1 = tensors.RankFour(self.R1)
+
+    self.SS1 = np.array([
+      [ 5.99159801, -2.24342348,  0.26667281, -0.95466199,  3.98931478, -0.10846981],
+      [ 1.86468226, -4.32391908, -7.82738638, -7.45008989,  5.89874777, 0.45820648],
+      [-5.92565398,  2.4862829 , -6.02112389,  6.75455965,  4.65183463, 9.96900579],
+      [ 0.60378883, -3.72189328, -7.63388446, -5.76559403, -0.3119789 , -1.1527258 ],
+      [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
+      [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
+    self.SSS1 = ms2ts(self.SS1)
+    self.TSS1 = tensors.SymSym(self.SS1)
 
   def test_apply_vector(self):
-    rv = self.q.apply(self.v)
-    self.assertAlmostEqual(rv.norm(), self.v.norm())
+    rv = self.q.apply(self.Tv)
+    self.assertAlmostEqual(rv.norm(), self.Tv.norm())
     rrv = self.q.inverse().apply(rv)
     self.assertTrue(np.allclose(rrv.data, self.v.data))
+
+    self.assertEqual(self.q.apply(self.Tv), tensors.Vector(np.dot(self.Q, self.v)))
+  
+  def test_apply_ranktwo(self):
+    self.assertEqual(self.q.apply(self.TA), 
+        tensors.RankTwo(np.dot(self.Q, np.dot(self.A, self.Q.T))))
+
+  def test_apply_symmetric(self):
+    self.assertEqual(self.q.apply(self.TS),
+        tensors.Symmetric(np.dot(self.Q, np.dot(self.S, self.Q.T))))
+
+  def test_apply_skew(self):
+    self.assertEqual(self.q.apply(self.TW),
+        tensors.Skew(np.dot(self.Q, np.dot(self.W, self.Q.T))))
+
+  @staticmethod
+  def rotate_fourth(T, Q):
+    return np.einsum('ip,jq,pqrs,kr,ls', Q, Q, T, Q, Q)
+
+  def test_apply_rankfour(self):
+    self.assertEqual(self.q.apply(self.TR1), 
+        tensors.RankFour(TestApplyThings.rotate_fourth(self.R1, self.Q)))
+
+  def test_apply_symsym(self):
+    self.assertEqual(self.q.apply(self.TSS1),
+        tensors.RankFour(TestApplyThings.rotate_fourth(self.SSS1, self.Q)
+          ).to_sym())
+

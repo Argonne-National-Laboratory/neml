@@ -175,6 +175,31 @@ PYBIND11_MODULE(rotations, m) {
            {
             return me.apply(v);
            }, "Apply to a vector")
+      .def("apply", 
+           [](Orientation & me, RankTwo & v) -> RankTwo
+           {
+            return me.apply(v);
+           }, "Apply to a RankTwo")
+      .def("apply", 
+           [](Orientation & me, Symmetric & v) -> Symmetric
+           {
+            return me.apply(v);
+           }, "Apply to a Symmetric")
+      .def("apply", 
+           [](Orientation & me, Skew & v) -> Skew
+           {
+            return me.apply(v);
+           }, "Apply to a Skew")
+      .def("apply", 
+           [](Orientation & me, RankFour & v) -> RankFour
+           {
+            return me.apply(v);
+           }, "Apply to a RankFour")
+      .def("apply", 
+           [](Orientation & me, SymSym & v) -> SymSym
+           {
+            return me.apply(v);
+           }, "Apply to a SymSym")
       
       .def(py::self *= py::self)
       .def(py::self * py::self)
