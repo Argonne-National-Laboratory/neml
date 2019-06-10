@@ -20,6 +20,7 @@ add_library(neml SHARED
       damage.cxx
       history.cxx)
 add_subdirectory(math)
+add_subdirectory(cp)
 target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
 
 

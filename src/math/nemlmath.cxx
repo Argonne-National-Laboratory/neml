@@ -838,6 +838,33 @@ double cast_angle(double a, std::string angles)
   }
 }
 
+void qmult_vec(const double * const As, const double * const B, 
+               size_t n, double * const Cs)
+{
+  double Bs[16];
+  Bs[0] = B[0];
+  Bs[4] = -B[1];
+  Bs[8] = -B[2];
+  Bs[12] = -B[3];
+
+  Bs[1] = B[1];
+  Bs[5] = B[0];
+  Bs[9] = B[3];
+  Bs[13] = -B[2];
+
+  Bs[2] = B[2];
+  Bs[6] = -B[3];
+  Bs[10] = B[0];
+  Bs[14] = B[1];
+
+  Bs[3] = B[3];
+  Bs[7] = B[2];
+  Bs[11] = -B[1];
+  Bs[15] = B[0];
+
+  dgemm_("N", "N", 4, n, 4, 1.0, Bs, 4, As, 4, 0.0, Cs, 4);
+}
+
 bool isclose(double a, double b)
 {
   return fabs(a - b) <= (ATOL + RTOL * fabs(b));

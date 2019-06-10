@@ -134,6 +134,10 @@ double convert_angle(double a, std::string);
 /// Convert from radians
 double cast_angle(double a, std::string angles);
 
+/// Vectorized quaternion multiplication
+void qmult_vec(const double * const As, const double * const B, 
+               size_t n, double * const C);
+
 #define RTOL 1.0E-5
 #define ATOL 1.0E-8
 
