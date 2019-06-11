@@ -185,6 +185,47 @@ Make the executive decision to drop terms that are quadratic in
 \end_inset
 
 Now separate the symmetric and skew parts
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{d}=\frac{1}{2}\left(\boldsymbol{l}+\boldsymbol{l}^{T}\right)=\dot{\bm{\varepsilon}}+\boldsymbol{d}_{p}+\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)-\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}-\frac{1}{2}\left(\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\varepsilon}\dot{\bm{\varepsilon}}\right)\label{eq:sym}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{w}=\frac{1}{2}\left(\boldsymbol{l}-\boldsymbol{l}^{T}\right)=\bm{\Omega}^{e}+\boldsymbol{w}_{p}+\bm{\varepsilon}\boldsymbol{d}_{p}-\boldsymbol{d}_{p}\bm{\varepsilon}+\frac{1}{2}\left(\bm{\varepsilon}\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}\bm{\varepsilon}\right)\label{eq:skew}
+\end{equation}
+
+\end_inset
+
+Now you all see why I hate the 
+\begin_inset Formula $\dot{\bm{\varepsilon}}\bm{\varepsilon}$
+\end_inset
+
+ terms.
+ Everything is so pretty without them.
+\end_layout
+
+\begin_layout Standard
+Reorganize Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:sym"
+
+\end_inset
+
+ and apply the hypoelastic hypothesis
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{C}:\dot{\bm{\varepsilon}}=\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)+\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}+\frac{1}{2}\left(\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\varepsilon}\dot{\bm{\varepsilon}}\right)\right]
+\end{equation}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
