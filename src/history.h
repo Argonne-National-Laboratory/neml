@@ -22,19 +22,19 @@ enum StorageType {
 
 /// Black magic to map a type to the enum
 template <class T> constexpr StorageType GetStorageType();
-template <> constexpr StorageType GetStorageType<Vector>() {return TYPE_VECTOR;};
-template <> constexpr StorageType GetStorageType<RankTwo>() {return TYPE_RANKTWO;};
-template <> constexpr StorageType GetStorageType<Symmetric>() {return TYPE_SYMMETRIC;};
-template <> constexpr StorageType GetStorageType<Skew>() {return TYPE_SKEW;};
-template <> constexpr StorageType GetStorageType<Orientation>() {return TYPE_ROT;};
+template <> constexpr StorageType GetStorageType<Vector>() {return TYPE_VECTOR;}
+template <> constexpr StorageType GetStorageType<RankTwo>() {return TYPE_RANKTWO;}
+template <> constexpr StorageType GetStorageType<Symmetric>() {return TYPE_SYMMETRIC;}
+template <> constexpr StorageType GetStorageType<Skew>() {return TYPE_SKEW;}
+template <> constexpr StorageType GetStorageType<Orientation>() {return TYPE_ROT;}
 
 /// Black magic to map a type to the right size
 template <class T> constexpr size_t GetStorageSize();
-template <> constexpr size_t GetStorageSize<Vector>() {return 3;};
-template <> constexpr size_t GetStorageSize<RankTwo>() {return 9;};
-template <> constexpr size_t GetStorageSize<Symmetric>() {return 6;};
-template <> constexpr size_t GetStorageSize<Skew>() {return 3;};
-template <> constexpr size_t GetStorageSize<Orientation>() {return 4;};
+template <> constexpr size_t GetStorageSize<Vector>() {return 3;}
+template <> constexpr size_t GetStorageSize<RankTwo>() {return 9;}
+template <> constexpr size_t GetStorageSize<Symmetric>() {return 6;}
+template <> constexpr size_t GetStorageSize<Skew>() {return 3;}
+template <> constexpr size_t GetStorageSize<Orientation>() {return 4;}
 
 class History {
  public:
@@ -83,7 +83,7 @@ class History {
     loc_.insert(std::pair<std::string,size_t>(name, size_));
     type_.insert(std::pair<std::string,StorageType>(name, GetStorageType<T>()));
     resize(GetStorageSize<T>());
-  };
+  }
   
   /// Get a generic object
   template<typename T>

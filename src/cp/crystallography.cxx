@@ -221,7 +221,7 @@ void SymmetryGroup::opdist_(const double * const q1,
 
   delete [] qs;
 
-  for (int i=0; i<nops(); i++) {
+  for (size_t i=0; i<nops(); i++) {
     res[i] = acos(fabs(res[i]));
   }
 }

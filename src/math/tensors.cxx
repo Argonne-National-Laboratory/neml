@@ -1084,6 +1084,8 @@ std::ostream & operator<<(std::ostream & os, const RankFour & v)
     }
     os << "]" << std::endl;
   }
+
+  return os;
 }
 
 /* Start SymSym Tensor */
@@ -1233,6 +1235,8 @@ std::ostream & operator<<(std::ostream & os, const SymSym & v)
     }
     os << "]" << std::endl;
   }
+
+  return os;
 }
 
 
