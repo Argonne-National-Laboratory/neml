@@ -413,6 +413,7 @@ class TestSymSym(unittest.TestCase):
       [ 0.60378883, -3.72189328, -7.63388446, -5.76559403, -0.3119789 , -1.1527258 ],
       [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
       [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
+    self.SS1_full = common.ms2ts(self.SS1)
     self.TSS1 = tensors.SymSym(self.SS1)
 
     self.SS2 = np.array([
@@ -429,6 +430,17 @@ class TestSymSym(unittest.TestCase):
     self.TS = tensors.Symmetric(self.S)
 
     self.scalar = 5.2
+
+    self.G = np.array([[ 9.50640677,  1.79084726, -2.8877036 ],
+       [-1.63159958,  2.52866904, -8.71585042],
+       [ 5.01859685, -8.7324075 , -0.42919134]])
+    self.TG = tensors.RankTwo(self.G)
+
+    self.W = np.array([[-9.36416517,  2.95527444,  8.70983194],
+           [-1.54693052,  8.7905658 , -5.10895168],
+           [-8.52740468, -0.7741642 ,  2.89544992]])
+    self.W = 0.5 * (self.W - self.W.T)
+    self.TW = tensors.Skew(self.W)
 
   def test_to_full(self):
     full_np = common.ms2ts(self.SS1)
@@ -464,5 +476,12 @@ class TestSymSym(unittest.TestCase):
 
   def test_product_symmetric(self):
     self.assertEqual(tensors.Symmetric(common.usym(np.dot(self.SS1, common.sym(self.S)))), self.TSS1 * self.TS)
+
+  def test_product_general(self):
+    self.assertEqual(tensors.RankTwo(np.einsum('ijkl,kl', self.SS1_full, self.G)), self.TSS1 * self.TG)
+
+  def test_product_skew(self):
+    self.assertEqual(tensors.RankTwo(np.einsum('ijkl,kl', self.SS1_full, self.W)), self.TSS1 * self.TW)
+
 
 

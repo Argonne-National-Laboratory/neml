@@ -1160,6 +1160,11 @@ RankFour SymSym::to_full() const
   return res;
 }
 
+RankFour SymSym::dot(const RankFour & other) const
+{
+  return this->to_full() * other;
+}
+
 SymSym SymSym::dot(const SymSym & other) const
 {
   SymSym res;
@@ -1167,6 +1172,16 @@ SymSym SymSym::dot(const SymSym & other) const
   mat_mat(6, 6, 6, this->data(), other.data(), res.s());
   
   return res;
+}
+
+RankTwo SymSym::dot(const RankTwo & other) const
+{
+  return this->to_full() * other;
+}
+
+RankTwo SymSym::dot(const Skew & other) const
+{
+  return this->to_full() * other;
 }
 
 Symmetric SymSym::dot(const Symmetric & other) const
@@ -1214,7 +1229,22 @@ SymSym operator-(const SymSym & a, const SymSym & b)
 }
 
 // Various forms of multiplication
+RankFour operator*(const SymSym & a, const RankFour & b)
+{
+  return a.dot(b);
+}
+
 SymSym operator*(const SymSym & a, const SymSym & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const SymSym & a, const RankTwo & b)
+{
+  return a.dot(b);
+}
+
+RankTwo operator*(const SymSym &a, const Skew & b)
 {
   return a.dot(b);
 }

@@ -544,6 +544,9 @@ PYBIND11_MODULE(tensors, m) {
 
       .def(py::self * py::self)
       .def(py::self * Symmetric())
+      .def(py::self * RankFour())
+      .def(py::self * RankTwo())
+      .def(py::self * Skew())
       ;
 
 } // PYBIND11_MODULE(tensors, m)

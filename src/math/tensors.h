@@ -304,8 +304,12 @@ class SymSym: public Tensor {
   RankFour to_full() const;
 
   // Various multiplication
+  RankFour dot(const RankFour & other) const;
   SymSym dot(const SymSym & other) const;
+  RankTwo dot(const RankTwo & other) const;
+  RankTwo dot(const Skew & other) const;
   Symmetric dot(const Symmetric & other) const;
+
 };
 
 // Binary operators with scalars
@@ -318,7 +322,11 @@ SymSym operator+(const SymSym & a, const SymSym & b);
 SymSym operator-(const SymSym & a, const SymSym & b);
 
 // Various forms of multiplication
+RankFour operator*(const SymSym & a, const RankFour & b);
 SymSym operator*(const SymSym & a, const SymSym & b);
+
+RankTwo operator*(const SymSym & a, const RankTwo & b);
+RankTwo operator*(const SymSym & a, const Skew & b);
 Symmetric operator*(const SymSym & a, const Symmetric & b);
 
 /// io for SymSym tensors

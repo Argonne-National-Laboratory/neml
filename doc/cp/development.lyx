@@ -206,6 +206,24 @@ Now you all see why I hate the
 
  terms.
  Everything is so pretty without them.
+ In fact I hate them so much I am going to drop them despite all of you
+ for now and consider putting them back in later
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{d}=\frac{1}{2}\left(\boldsymbol{l}+\boldsymbol{l}^{T}\right)=\dot{\bm{\varepsilon}}+\boldsymbol{d}_{p}+\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)-\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}\label{eq:sym-1}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{w}=\frac{1}{2}\left(\boldsymbol{l}-\boldsymbol{l}^{T}\right)=\bm{\Omega}^{e}+\boldsymbol{w}_{p}+\bm{\varepsilon}\boldsymbol{d}_{p}-\boldsymbol{d}_{p}\bm{\varepsilon}\label{eq:skew-1}
+\end{equation}
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -220,7 +238,15 @@ reference "eq:sym"
  and apply the hypoelastic hypothesis
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{C}:\dot{\bm{\varepsilon}}=\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)+\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}+\frac{1}{2}\left(\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\varepsilon}\dot{\bm{\varepsilon}}\right)\right]
+\boldsymbol{C}:\dot{\bm{\varepsilon}}=\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)+\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}\right]
+\end{equation}
+
+\end_inset
+
+It's nice to cast this in terms of the stress
+\begin_inset Formula 
+\begin{equation}
+\dot{\bm{\sigma}}=\boldsymbol{C}:\left(\boldsymbol{d}-\boldsymbol{d}_{p}\right)-\bm{\sigma}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)+\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\sigma}
 \end{equation}
 
 \end_inset
