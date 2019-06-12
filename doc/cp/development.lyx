@@ -235,24 +235,125 @@ reference "eq:sym"
 
 \end_inset
 
- and apply the hypoelastic hypothesis
+ and apply the hypoelastic hypothesis and let 
+\begin_inset Formula 
+\[
+\bm{\Omega}^{\star}=\bm{\Omega}^{e}+\boldsymbol{w}_{p}
+\]
+
+\end_inset
+
+
 \begin_inset Formula 
 \begin{equation}
-\boldsymbol{C}:\dot{\bm{\varepsilon}}=\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)+\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}\right]
+\boldsymbol{C}:\dot{\bm{\varepsilon}}=\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\bm{\varepsilon}\bm{\Omega}^{\star}+\bm{\Omega}^{\star}\bm{\varepsilon}\right]
 \end{equation}
+
+\end_inset
+
+State in terms of stresses
+\begin_inset Formula 
+\[
+\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\boldsymbol{S}:\boldsymbol{\sigma}\cdot\bm{\Omega}^{\star}+\bm{\Omega}^{\star}\cdot\boldsymbol{S}:\boldsymbol{\sigma}\right]
+\]
 
 \end_inset
 
 where 
-\begin_inset Formula $\boldsymbol{C}$
+\begin_inset Formula $\boldsymbol{S}$
 \end_inset
 
- is the elasticity tensor in the current configuration.
- It's nice to cast this in terms of the stress
+ is the elastic compliance, again in the current configuration.
+\end_layout
+
+\begin_layout Standard
+The total residual equation will then be
 \begin_inset Formula 
-\begin{equation}
-\dot{\bm{\sigma}}=\boldsymbol{C}:\left(\boldsymbol{d}-\boldsymbol{d}_{p}\right)-\bm{\sigma}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)+\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\sigma}
-\end{equation}
+\[
+\boldsymbol{R}=\left[\begin{array}{c}
+\boldsymbol{R}_{1}\\
+\boldsymbol{R}_{2}
+\end{array}\right]=\left[\begin{array}{c}
+\boldsymbol{\sigma}_{n+1}-\bm{\sigma}_{n}-\dot{\bm{\sigma}}\Delta t\\
+\boldsymbol{h}_{n+1}-\mathbf{h}_{n}-\dot{\boldsymbol{h}}\Delta t
+\end{array}\right]=\boldsymbol{0}
+\]
+
+\end_inset
+
+for the set of history variables and corresponding evolution equations 
+\begin_inset Formula $\boldsymbol{h}$
+\end_inset
+
+.
+ We will require some Jacobian terms.
+\end_layout
+
+\begin_layout Standard
+The model for 
+\begin_inset Formula $\boldsymbol{l}_{p}$
+\end_inset
+
+ is 
+\begin_inset Formula 
+\[
+\bar{\boldsymbol{l}}_{p}=\sum_{i=1}^{n_{slip}}\dot{\gamma}_{i}\left(\bar{\bm{d}}_{i}\otimes\bar{\boldsymbol{n}}_{i}\right)
+\]
+
+\end_inset
+
+ for some 
+\begin_inset Formula $\dot{\gamma}_{i}$
+\end_inset
+
+.
+ Note we can write
+\begin_inset Formula 
+\[
+\bm{l}_{p}=\sum_{i=1}^{n_{slip}}\dot{\gamma}_{i}\left(\bm{d}_{i}\otimes\boldsymbol{n}_{i}\right)
+\]
+
+\end_inset
+
+by rotating the slip normal and directions forward.
+ Typically 
+\begin_inset Formula 
+\[
+\dot{\gamma}_{i}=\dot{\gamma}_{i}^{\left(0\right)}\frac{\tau_{i}}{\bar{\tau}_{i}}\left|\frac{\tau_{i}}{\bar{\tau}_{i}}\right|^{n-1}
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula 
+\[
+\tau_{i}=\bm{\sigma}:\left(\bm{d}_{i}\otimes\boldsymbol{n}_{i}\right)
+\]
+
+\end_inset
+
+where the symmetric part of 
+\begin_inset Formula $\bm{d}_{i}\otimes\boldsymbol{n}_{i}$
+\end_inset
+
+ would suffice.
+\end_layout
+
+\begin_layout Standard
+The slip system strength model varies greatly model to model, but let's
+ start with the absolute easiest
+\begin_inset Formula 
+\[
+\bar{\tau}_{i}=\bar{\tau}
+\]
+
+\end_inset
+
+with 
+\begin_inset Formula 
+\[
+\dot{\bar{\tau}}=\delta\left(\tau_{sat}-\bar{\tau}\right)\sum\left|\dot{\gamma}_{i}\right|
+\]
 
 \end_inset
 
