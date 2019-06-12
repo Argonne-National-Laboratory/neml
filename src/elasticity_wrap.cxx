@@ -71,6 +71,13 @@ PYBIND11_MODULE(elasticity, m) {
       .def("nu", &IsotropicLinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
       .def("K", &IsotropicLinearElasticModel::K, "Bulk modulus as a function of temperature.")
       ;
+
+  py::class_<CubicLinearElasticModel, LinearElasticModel, std::shared_ptr<CubicLinearElasticModel>>(m, "CubicLinearElasticModel")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<CubicLinearElasticModel>(args, kwargs, {"m1", "m2", "m3", "method"});
+        }))
+  ;
 }
 
 }

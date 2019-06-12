@@ -242,4 +242,98 @@ void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) cons
   }
 }
 
+CubicLinearElasticModel::CubicLinearElasticModel(
+    std::shared_ptr<Interpolate> m1,
+    std::shared_ptr<Interpolate> m2,
+    std::shared_ptr<Interpolate> m3,
+    std::string method) :
+      M1_(m1), M2_(m2), M3_(m3), method_(method)
+{
+  if ((method != "moduli") and (method != "components")) {
+    throw std::invalid_argument("Unknown initialization method " + method);
+  }
+}
+
+std::string CubicLinearElasticModel::type()
+{
+  return "CubicLinearElasticModel";
+}
+
+ParameterSet CubicLinearElasticModel::parameters()
+{
+  ParameterSet pset(CubicLinearElasticModel::type());
+
+  pset.add_parameter<NEMLObject>("m1");
+  pset.add_parameter<NEMLObject>("m2");
+  pset.add_parameter<NEMLObject>("m3");
+  pset.add_parameter<std::string>("method");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> CubicLinearElasticModel::initialize(ParameterSet & params)
+{
+  return neml::make_unique<CubicLinearElasticModel>(
+      params.get_object_parameter<Interpolate>("m1"),
+      params.get_object_parameter<Interpolate>("m2"),
+      params.get_object_parameter<Interpolate>("m3"),
+      params.get_parameter<std::string>("method")
+      ); 
+}
+
+int CubicLinearElasticModel::C(double T, double * const Cv) const
+{
+  double C1, C2, C3;
+  get_components_(T, C1, C2, C3);
+
+  std::fill(Cv, Cv+36, 0.0);
+
+  Cv[0] = C1;
+  Cv[1] = C2;
+  Cv[2] = C2;
+
+  Cv[6] = C2;
+  Cv[7] = C1;
+  Cv[8] = C2;
+
+  Cv[12] = C2;
+  Cv[13] = C2;
+  Cv[14] = C1;
+
+  Cv[21] = C3;
+  Cv[28] = C3;
+  Cv[35] = C3;
+
+  return 0;
+}
+
+int CubicLinearElasticModel::S(double T, double * const Sv) const
+{
+  C(T, Sv);
+  return invert_mat(Sv, 6);
+}
+
+void CubicLinearElasticModel::get_components_(double T, 
+                                              double & C1, double & C2,
+                                              double & C3) const
+{
+  if (method_ == "moduli") {
+    double E = M1_->value(T);
+    double nu = M2_->value(T);
+    double mu = M3_->value(T);
+
+    C1 = E/((1+nu)*(1-2*nu)) * (1-nu);
+    C2 = E/((1+nu)*(1-2*nu)) * nu;
+    C3 = 2.0 * mu;
+  }
+  else if (method_ == "components") {
+    C1 = M1_->value(T);
+    C2 = M2_->value(T);
+    C3 = M3_->value(T);
+  }
+  else {
+    throw std::invalid_argument("Invalid method in class internal!");
+  }
+}
+
 } // namespace neml

@@ -83,6 +83,36 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
 
 static Register<IsotropicLinearElasticModel> regIsotropicLinearElasticModel;
 
+class CubicLinearElasticModel: public LinearElasticModel {
+ public:
+  CubicLinearElasticModel(std::shared_ptr<Interpolate> m1,
+                          std::shared_ptr<Interpolate> m2,
+                          std::shared_ptr<Interpolate> m3,
+                          std::string method);
+
+  /// The string type for the object system
+  static std::string type();
+  /// Setup default parameters for the object system
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Initialize from a parameter set
+  static ParameterSet parameters();
+  
+  /// Implement the stiffness tensor
+  virtual int C(double T, double * const Cv) const;
+  /// Implement the compliance tensor
+  virtual int S(double T, double * const Sv) const;
+
+ private:
+  void get_components_(double T, double & C1, double & C2, double & C3) const;
+
+
+ private:
+  std::shared_ptr<Interpolate> M1_, M2_, M3_;
+  std::string method_;
+};
+
+static Register<CubicLinearElasticModel> regCubicLinearElasticModel;
+
 } // namespace neml
 
 
