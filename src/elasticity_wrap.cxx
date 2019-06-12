@@ -44,11 +44,22 @@ PYBIND11_MODULE(elasticity, m) {
            {
             return m.S(T);
            }, "Return compliance elasticity tensor.")
+      .def("C_tensor",
+           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
+           {
+            return m.C(T, Q);
+           }, "Return rotated stiffness elasticity tensor.")
 
-      .def("E", &LinearElasticModel::E, "Young's modulus as a function of temperature.")
-      .def("nu", &LinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
-      .def("G", &LinearElasticModel::G, "Shear modulus as a function of temperature.")
-      .def("K", &LinearElasticModel::K, "Bulk modulus as a function of temperature.")
+      .def("S_tensor",
+           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
+           {
+            return m.S(T, Q);
+           }, "Return rotated compliance elasticity tensor.")
+      .def("G", (double (LinearElasticModel::*)(double) const) &LinearElasticModel::G)
+      .def("G", (double (LinearElasticModel::*)(double, const Orientation &,
+                                                const Vector &, const Vector &)
+                 const)
+           &LinearElasticModel::G)
       ;
 
   py::class_<IsotropicLinearElasticModel, LinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel")
@@ -56,6 +67,9 @@ PYBIND11_MODULE(elasticity, m) {
         {
           return create_object_python<IsotropicLinearElasticModel>(args, kwargs, {"m1", "m1_type", "m2", "m2_type"});
         }))
+      .def("E", &IsotropicLinearElasticModel::E, "Young's modulus as a function of temperature.")
+      .def("nu", &IsotropicLinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
+      .def("K", &IsotropicLinearElasticModel::K, "Bulk modulus as a function of temperature.")
       ;
 }
 

@@ -4,6 +4,7 @@
 #include "objects.h"
 #include "interpolate.h"
 #include "math/tensors.h"
+#include "math/rotations.h"
 
 #include <memory>
 #include <vector>
@@ -23,18 +24,19 @@ class LinearElasticModel: public NEMLObject {
 
   /// The stiffness tensor in a tensor object
   SymSym C(double T) const;
-
   /// The compliance tensor in a tensor object
   SymSym S(double T) const;
   
-  /// The Young's modulus
-  virtual double E(double T) const = 0;
-  /// Poisson's ratio
-  virtual double nu(double T) const = 0;
-  /// The shear modulus
-  virtual double G(double T) const = 0;
-  /// The bulk modulus
-  virtual double K(double T) const = 0;
+  /// The rotated stiffness tensor in a tensor object
+  SymSym C(double T, const Orientation & Q) const;
+  /// The rotated compliance tensor in a tensor object
+  SymSym S(double T, const Orientation & Q) const;
+
+  /// An effective shear modulus
+  virtual double G(double T) const;
+  virtual double G(double T, const Orientation & Q, const Vector & b,
+                   const Vector & n) const;
+
 };
 
 /// Isotropic shear modulus generating properties from shear and bulk models
@@ -58,13 +60,11 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
   virtual int C(double T, double * const Cv) const;
   /// Implement the compliance tensor
   virtual int S(double T, double * const Sv) const;
-  
+
   /// The Young's modulus
   virtual double E(double T) const;
   /// Poisson's ratio
   virtual double nu(double T) const;
-  /// The shear modulus
-  virtual double G(double T) const;
   /// The bulk modulus
   virtual double K(double T) const;
   

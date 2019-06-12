@@ -62,10 +62,6 @@ class NEMLModel: public NEMLObject {
    virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
-   /// Model effective bulk modulus
-   virtual double bulk(double T) const = 0;
-   /// Model effective shear modulus
-   virtual double shear(double T) const = 0;
 };
 
 /// Large deformation incremental update model
@@ -159,10 +155,6 @@ class NEMLModel_sd: public NEMLModel {
    virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const;
-   /// Return the model elastic bulk modulus
-   virtual double bulk(double T) const;
-   /// Return the model elastic shear modulus
-   virtual double shear(double T) const;
 
    /// Used to override the linear elastic model to match another object's 
    virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);

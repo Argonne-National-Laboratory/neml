@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 from neml import elasticity, interpolate
-from neml.math import tensors
+from neml.math import tensors, rotations
 import unittest
 
 from common import *
@@ -38,6 +38,9 @@ class TestIsotropicConstantModel(CommonElasticity, unittest.TestCase):
     self.K = 64000.0
     self.T = 325.0
 
+    self.Q = rotations.Orientation(31.0, 59.0, 80.0, angle_type = "degrees",
+        convention = "bunge")
+
     self.model = elasticity.IsotropicLinearElasticModel(self.mu, 
         "shear", self.K, "bulk")
 
@@ -50,6 +53,11 @@ class TestIsotropicConstantModel(CommonElasticity, unittest.TestCase):
     self.assertTrue(np.isclose(S[0,1], -nu/E))
     self.assertTrue(np.isclose(S[3,3], (1+nu)/E))
 
+  def test_rotated(self):
+    no = self.model.C_tensor(self.T)
+    yes = self.model.C_tensor(self.T, self.Q)
+
+    self.assertEqual(no,yes)
 
 class TestEquivalentDefinitions(unittest.TestCase):
   def setUp(self):

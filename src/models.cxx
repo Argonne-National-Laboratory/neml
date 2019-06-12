@@ -99,16 +99,6 @@ int NEMLModel_sd::elastic_strains(const double * const s_np1,
   return mat_vec(S, 6, s_np1, 6, e_np1);
 }
 
-double NEMLModel_sd::bulk(double T) const
-{
-  return elastic_->K(T);
-}
-
-double NEMLModel_sd::shear(double T) const
-{
-  return elastic_->G(T);
-}
-
 int NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;

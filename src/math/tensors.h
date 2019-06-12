@@ -91,7 +91,7 @@ Vector operator-(const Vector & a, const Vector & b);
 std::ostream & operator<<(std::ostream & os, const Vector & v);
 
 // Produces tensors
-Tensor outer(const Vector & a, const Vector & b);
+RankTwo outer(const Vector & a, const Vector & b);
 
 /// Full Rank 2 tensor
 class RankTwo: public Tensor {
@@ -126,6 +126,10 @@ class RankTwo: public Tensor {
 
   RankTwo inverse() const;
   RankTwo transpose() const;
+
+  double contract(const RankTwo & other) const;
+  double contract(const Symmetric & other) const;
+  double contract(const Skew & other) const;
 };
 
 // Binary operators with scalars
@@ -184,6 +188,10 @@ class Symmetric: public Tensor {
   Symmetric dot(const Symmetric & other) const;
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Skew & other) const;
+
+  double contract(const RankTwo & other) const;
+  double contract(const Symmetric & other) const;
+  double contract(const Skew & other) const;
 };
 
 // Binary operators with scalars
@@ -226,6 +234,10 @@ class Skew: public Tensor {
   Skew dot(const Skew & other) const;
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Symmetric & other) const;
+
+  double contract(const RankTwo & other) const;
+  double contract(const Symmetric & other) const;
+  double contract(const Skew & other) const;
 };
 
 // Binary operators with scalars
@@ -302,6 +314,9 @@ class SymSym: public Tensor {
   SymSym & operator-=(const SymSym & other);
 
   RankFour to_full() const;
+
+  double & operator()(size_t i, size_t j);
+  const double & operator()(size_t i, size_t j) const;
 
   // Various multiplication
   RankFour dot(const RankFour & other) const;

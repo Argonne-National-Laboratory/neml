@@ -22,6 +22,29 @@ SymSym LinearElasticModel::S(double T) const
   return res;
 }
 
+SymSym LinearElasticModel::C(double T, const Orientation & Q) const
+{
+  return Q.apply(C(T));
+}
+
+SymSym LinearElasticModel::S(double T, const Orientation & Q) const
+{
+  return Q.apply(S(T));
+}
+
+double LinearElasticModel::G(double T) const
+{
+  return G(T, Orientation::createEulerAngles(0,0,0), 
+           Vector({1,0,0}), Vector({0,1,0}));
+}
+
+double LinearElasticModel::G(double T, const Orientation & Q, const Vector & b,
+                             const Vector & n) const
+{
+  RankTwo dir = outer(b,n)/(b.norm() * n.norm());
+  return dir.contract(C(T,Q).dot(dir));
+}
+
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
       std::shared_ptr<Interpolate> m1,
       std::string m1_type,
@@ -97,14 +120,6 @@ double IsotropicLinearElasticModel::nu(double T) const
   get_GK_(T, G, K);
 
   return (3.0 * K - 2.0 * G) / (2.0 * (3.0 * K + G));
-}
-
-double IsotropicLinearElasticModel::G(double T) const
-{
-  double G, K;
-  get_GK_(T, G, K);
-
-  return G;
 }
 
 double IsotropicLinearElasticModel::K(double T) const

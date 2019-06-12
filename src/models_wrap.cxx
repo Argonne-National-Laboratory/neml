@@ -80,8 +80,6 @@ PYBIND11_MODULE(models, m) {
             return e_np1;
 
            }, "Calculate the elastic strains.")
-      .def("bulk", &NEMLModel::bulk)
-      .def("shear", &NEMLModel::shear)
       ;
 
   py::class_<NEMLModel_sd, NEMLModel, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd")

@@ -189,6 +189,14 @@ PYBIND11_MODULE(tensors, m) {
            {
             return me.dot(other);
            })
+
+      .def("contract", (double (RankTwo::*)(const RankTwo &) const) 
+           &RankTwo::contract)
+      .def("contract", (double (RankTwo::*)(const Symmetric &) const) 
+           &RankTwo::contract)
+      .def("contract", (double (RankTwo::*)(const Skew &) const) 
+           &RankTwo::contract)
+
       .def(py::self * py::self)
       .def(py::self * Vector())
       .def(Vector() * py::self)
@@ -278,6 +286,14 @@ PYBIND11_MODULE(tensors, m) {
            {
             return me.dot(other);
            })
+
+      .def("contract", (double (Symmetric::*)(const RankTwo &) const) 
+           &Symmetric::contract)
+      .def("contract", (double (Symmetric::*)(const Symmetric &) const) 
+           &Symmetric::contract)
+      .def("contract", (double (Symmetric::*)(const Skew &) const) 
+           &Symmetric::contract)
+
       .def(py::self * py::self)
       .def(py::self * Vector())
       .def(Vector() * py::self)
@@ -365,6 +381,14 @@ PYBIND11_MODULE(tensors, m) {
            {
             return me.dot(other);
            })
+
+      .def("contract", (double (Skew::*)(const RankTwo &) const) 
+           &Skew::contract)
+      .def("contract", (double (Skew::*)(const Symmetric &) const) 
+           &Skew::contract)
+      .def("contract", (double (Skew::*)(const Skew &) const) 
+           &Skew::contract)
+
       .def(py::self * py::self)
       .def(py::self * Vector())
       .def(Vector() * py::self)

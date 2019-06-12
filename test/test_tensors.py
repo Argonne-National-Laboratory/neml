@@ -98,7 +98,7 @@ class TestVector(unittest.TestCase):
     self.assertEqual(tensors.RankTwo(np.outer(self.a, self.b)), 
         tensors.outer(self.va, self.vb))
 
-class TestTensor(unittest.TestCase):
+class TestRankTwo(unittest.TestCase):
   def setUp(self):
     self.A = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
     self.TA = tensors.RankTwo(self.A)
@@ -252,6 +252,51 @@ class TestComboTensorMultiply(unittest.TestCase):
   
   def test_sym_skew(self):
     self.assertEqual(tensors.RankTwo(np.dot(self.S, self.W)), self.TS * self.TW)
+
+  def test_contract_general_sym(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.G, self.S),
+      self.TG.contract(self.TS)))
+
+  def test_contract_sym_general(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.G, self.S),
+      self.TS.contract(self.TG)))
+
+  def test_contract_general_skew(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.G, self.W),
+      self.TG.contract(self.TW)))
+
+  def test_contract_skew_general(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.G, self.W),
+      self.TW.contract(self.TG)))
+
+  def test_contract_skew_sym(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.W, self.S),
+      self.TW.contract(self.TS)))
+
+  def test_contract_sym_skew(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.W, self.S),
+      self.TS.contract(self.TW)))
+
+  def test_contract_general_general(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.G, self.G),
+      self.TG.contract(self.TG)))
+
+  def test_contract_sym_sym(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.S, self.S),
+      self.TS.contract(self.TS)))
+
+  def test_contract_skew_skew(self):
+    self.assertTrue(np.isclose(
+      np.einsum('ij,ij', self.W, self.W),
+      self.TW.contract(self.TW)))
    
 class TestComboTensorAdd(unittest.TestCase):
   def setUp(self):

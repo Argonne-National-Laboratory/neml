@@ -267,7 +267,7 @@ std::ostream & operator<<(std::ostream & os, const Vector & v)
   return os;
 }
 
-Tensor outer(const Vector & a, const Vector & b)
+RankTwo outer(const Vector & a, const Vector & b)
 {
   return a.outer(b);
 }
@@ -428,6 +428,23 @@ RankTwo RankTwo::transpose() const
   }
 
   return res;
+}
+
+double RankTwo::contract(const RankTwo & other) const
+{
+  double sum = 0.0;
+  for (int i=0; i<9; i++) sum += s_[i] * other.data()[i];
+  return sum;
+}
+
+double RankTwo::contract(const Skew & other) const
+{
+  return this->contract(other.to_full());
+}
+
+double RankTwo::contract(const Symmetric & other) const
+{
+  return this->contract(other.to_full());
 }
 
 RankTwo operator*(double s, const RankTwo & v)
@@ -683,6 +700,23 @@ RankTwo Symmetric::dot(const Skew & other) const
   return (*this).to_full().dot(other);
 }
 
+double Symmetric::contract(const RankTwo & other) const
+{
+  return other.contract(this->to_full());
+}
+
+double Symmetric::contract(const Skew & other) const
+{
+  return other.contract(this->to_full());
+}
+
+double Symmetric::contract(const Symmetric & other) const
+{
+  double sum = 0.0;
+  for (size_t i = 0; i<6; i++) sum += s_[i] * other.data()[i];
+  return sum;
+}
+
 Symmetric operator*(double s, const Symmetric & v)
 {
   Symmetric cpy(v);
@@ -838,6 +872,21 @@ RankTwo Skew::dot(const Symmetric & other) const
   return (*this).to_full().dot(other);
 }
 
+double Skew::contract(const RankTwo & other) const
+{
+  return other.contract(this->to_full());
+}
+
+double Skew::contract(const Skew & other) const
+{
+  return this->to_full().contract(other.to_full());
+}
+
+double Skew::contract(const Symmetric & other) const
+{
+  return this->contract(other.to_full());
+}
+
 Skew operator*(double s, const Skew & v)
 {
   Skew cpy(v);
@@ -987,6 +1036,16 @@ SymSym RankFour::to_sym() const
   full2mandel(s_, res.s());
 
   return res;
+}
+
+double & SymSym::operator()(size_t i, size_t j)
+{
+  return s_[i*6+j];
+}
+
+const double & SymSym::operator()(size_t i, size_t j) const
+{
+  return s_[i*6+j];
 }
 
 RankFour RankFour::dot(const RankFour & other) const

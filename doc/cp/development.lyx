@@ -243,7 +243,12 @@ reference "eq:sym"
 
 \end_inset
 
-It's nice to cast this in terms of the stress
+where 
+\begin_inset Formula $\boldsymbol{C}$
+\end_inset
+
+ is the elasticity tensor in the current configuration.
+ It's nice to cast this in terms of the stress
 \begin_inset Formula 
 \begin{equation}
 \dot{\bm{\sigma}}=\boldsymbol{C}:\left(\boldsymbol{d}-\boldsymbol{d}_{p}\right)-\bm{\sigma}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)+\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\sigma}
