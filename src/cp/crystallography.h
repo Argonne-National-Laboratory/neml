@@ -1,6 +1,8 @@
 #ifndef CRYSTALLOGRAPHY_H
 #define CRYSTALLOGRAPHY_H
 
+#include "../objects.h"
+
 #include "../math/rotations.h"
 #include "../math/tensors.h"
 
@@ -16,11 +18,18 @@ extern const std::vector<Orientation> cubic;
 
 std::vector<Orientation> symmetry_rotations(std::string sclass);
 
-class SymmetryGroup {
+class SymmetryGroup: public NEMLObject {
  public:
   SymmetryGroup(std::string sclass);
   virtual ~SymmetryGroup();
-  
+ 
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
   /// Quaternion symmetry operators
   const std::vector<Orientation> & ops() const;
 
@@ -44,10 +53,11 @@ class SymmetryGroup {
  private:
   const std::vector<Orientation> ops_;
   std::vector<double> raw_;
-
 };
 
-class Lattice {
+static Register<SymmetryGroup> regSymmetryGroup;
+
+class Lattice: public NEMLObject {
  public:
   Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry);
   virtual ~Lattice();
@@ -89,7 +99,16 @@ class Lattice {
 class CubicLattice: public Lattice {
  public:
   CubicLattice(double a);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
 };
+
+static Register<CubicLattice> regCubicLattice;
 
 } // namespace neml
 

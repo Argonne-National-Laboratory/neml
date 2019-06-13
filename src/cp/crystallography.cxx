@@ -147,6 +147,26 @@ SymmetryGroup::~SymmetryGroup()
 
 }
 
+std::string SymmetryGroup::type()
+{
+  return "SymmetryGroup";
+}
+
+ParameterSet SymmetryGroup::parameters()
+{
+  ParameterSet pset(SymmetryGroup::type());
+
+  pset.add_parameter<std::string>("sclass");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> SymmetryGroup::initialize(ParameterSet & params)
+{
+  return neml::make_unique<SymmetryGroup>(
+      params.get_parameter<std::string>("sclass")); 
+}
+
 const std::vector<Orientation> & SymmetryGroup::ops() const
 {
   return ops_;
@@ -349,6 +369,26 @@ CubicLattice::CubicLattice(double a) :
             std::make_shared<SymmetryGroup>("432"))
 {
 
+}
+
+std::string CubicLattice::type()
+{
+  return "CubicLattice";
+}
+
+ParameterSet CubicLattice::parameters()
+{
+  ParameterSet pset(CubicLattice::type());
+
+  pset.add_parameter<double>("a");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
+{
+  return neml::make_unique<CubicLattice>(
+      params.get_parameter<double>("a")); 
 }
 
 } // namespace neml

@@ -14,8 +14,11 @@ PYBIND11_MODULE(crystallography, m) {
   m.def("symmetry_rotations", &symmetry_rotations);
 
   py::class_<SymmetryGroup, std::shared_ptr<SymmetryGroup>>(m, "SymmetryGroup")
-      .def(py::init<std::string>(),
-           py::arg("name"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<SymmetryGroup>(
+                          args, kwargs, {"sclass"});
+                    }))
       .def_property_readonly("ops", &SymmetryGroup::ops)
       .def("misorientation", &SymmetryGroup::misorientation)
       .def("distance", &SymmetryGroup::distance)
@@ -56,7 +59,11 @@ PYBIND11_MODULE(crystallography, m) {
       ;
 
   py::class_<CubicLattice, Lattice, std::shared_ptr<CubicLattice>>(m, "CubicLattice")
-      .def(py::init<double>(), py::arg("a"))
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<CubicLattice>(
+                          args, kwargs, {"a"});
+                    }))
       ;
 
 } // PYBIND11_MODULE(crystallography, m)
