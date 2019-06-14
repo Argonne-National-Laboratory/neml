@@ -3,6 +3,8 @@
 from neml.math import tensors, rotations
 from neml.cp import crystallography
 
+from common import differentiate
+
 import unittest
 import numpy as np
 import numpy.linalg as la
@@ -241,17 +243,61 @@ class LTests(object):
     
     self.assertTrue(np.allclose(np.eye(3), test))
 
-class TestCubic(unittest.TestCase, LTests):
+class ShearTests(object):
+  def test_M(self):
+    for i in range(self.lattice.ngroup):
+      for j in range(self.lattice.nslip(i)):
+        self.assertEqual(
+            tensors.Symmetric(
+              np.dot(self.QM,np.dot(np.outer(self.lattice.slip_directions[i][j].data,
+                self.lattice.slip_planes[i][j].data), self.QM.T))),
+              self.lattice.M(i,j,self.Q))
+
+  def test_W(self):
+    for i in range(self.lattice.ngroup):
+      for j in range(self.lattice.nslip(i)):
+        self.assertEqual(
+            tensors.Skew(
+              np.dot(self.QM,np.dot(np.outer(self.lattice.slip_directions[i][j].data,
+                self.lattice.slip_planes[i][j].data), self.QM.T))),
+              self.lattice.N(i,j,self.Q))
+
+  def test_shear(self):
+    for i in range(self.lattice.ngroup):
+      for j in range(self.lattice.nslip(i)):
+        self.assertTrue(np.isclose(
+            np.einsum('ij,ij',
+              np.dot(self.QM,np.dot(np.outer(self.lattice.slip_directions[i][j].data,
+                self.lattice.slip_planes[i][j].data), self.QM.T)), self.S),
+              self.lattice.shear(i,j,self.Q,self.ST)))
+
+  def test_dshear(self):
+    for i in range(self.lattice.ngroup):
+      for j in range(self.lattice.nslip(i)):
+        rs = lambda S: np.einsum('ij,ij',
+              np.dot(self.QM,np.dot(np.outer(self.lattice.slip_directions[i][j].data,
+                self.lattice.slip_planes[i][j].data), self.QM.T)), S)
+        num = tensors.Symmetric(differentiate(rs, self.S)[0])
+
+class TestCubicFCC(unittest.TestCase, LTests, ShearTests):
   def setUp(self):
     self.a = 1.3
     self.lattice = crystallography.CubicLattice(self.a)
 
-  def test_fcc(self):
+    self.S = np.array([[20.0,-15.0,12.0],[-15.0,-40.0,5.0],[12.0,5.0,60.0]])
+    self.ST = tensors.Symmetric(self.S)
+    self.Q = rotations.Orientation(30.0,43.0,10.0, angle_type = "degrees")
+    self.QM = self.Q.to_matrix()
+
     self.lattice.add_slip_system([1,1,0],[1,1,1])
 
+  def test_fcc(self):
     self.assertEqual(len(self.lattice.burgers_vectors[0]), 12)
     self.assertEqual(len(self.lattice.slip_directions[0]), 12)
     self.assertEqual(len(self.lattice.slip_planes[0]), 12)
+
+    self.assertEqual(self.lattice.ngroup, 1)
+    self.assertEqual(self.lattice.nslip(0), 12)
 
     for d,n in zip(self.lattice.slip_directions[0], self.lattice.slip_planes[0]):
       self.assertAlmostEqual(d.norm(), 1.0)
@@ -261,14 +307,30 @@ class TestCubic(unittest.TestCase, LTests):
     for b in self.lattice.burgers_vectors[0]:
       self.assertAlmostEqual(b.norm(), np.sqrt(2.0) * self.a)
 
-  def test_bcc(self):
+
+class TestCubicBCC(unittest.TestCase, LTests, ShearTests):
+  def setUp(self):
+    self.a = 1.3
+    self.lattice = crystallography.CubicLattice(self.a)
+
+    self.S = np.array([[20.0,-15.0,12.0],[-15.0,-40.0,5.0],[12.0,5.0,60.0]])
+    self.ST = tensors.Symmetric(self.S)
+    self.Q = rotations.Orientation(30.0,43.0,10.0, angle_type = "degrees")
+    self.QM = self.Q.to_matrix()
+
     self.lattice.add_slip_system([1,1,1],[1,1,0])
     self.lattice.add_slip_system([1,1,1],[1,2,3])
     self.lattice.add_slip_system([1,1,1],[1,1,2])
-    
+
+  def test_bcc(self):
     self.assertEqual(len(self.lattice.slip_directions[0]), 12)
     self.assertEqual(len(self.lattice.slip_directions[1]), 24)
     self.assertEqual(len(self.lattice.slip_directions[2]), 12)
+
+    self.assertEqual(self.lattice.ngroup, 3)
+    self.assertEqual(self.lattice.nslip(0), 12)
+    self.assertEqual(self.lattice.nslip(1), 24)
+    self.assertEqual(self.lattice.nslip(2), 12)
 
     for dg,ng,bg in zip(self.lattice.slip_directions, self.lattice.slip_planes,
         self.lattice.burgers_vectors):
@@ -279,3 +341,5 @@ class TestCubic(unittest.TestCase, LTests):
 
       for b in bg:
         self.assertAlmostEqual(b.norm(), np.sqrt(3.0) * self.a)
+
+

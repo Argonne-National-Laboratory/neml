@@ -81,6 +81,17 @@ class Lattice: public NEMLObject {
 
   void add_slip_system(std::vector<int> d, std::vector<int> p);
 
+  size_t ngroup() const;
+  size_t nslip(size_t g) const;
+
+  Symmetric M(size_t g, size_t i, const Orientation & Q) const;
+  Skew N(size_t g, size_t i, const Orientation & Q) const;
+
+  double shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
+               stress) const;
+  Symmetric d_shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
+                    stress) const;
+
   const std::shared_ptr<SymmetryGroup> symmetry();
 
  private:

@@ -345,6 +345,40 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
   }
 }
 
+size_t Lattice::ngroup() const
+{
+  return slip_planes_.size();
+}
+
+size_t Lattice::nslip(size_t g) const
+{
+  return slip_planes_[g].size();
+}
+
+Symmetric Lattice::M(size_t g, size_t i, const Orientation & Q) const
+{
+  return Q.apply(Symmetric(outer(slip_directions_[g][i], 
+                                 slip_planes_[g][i])));
+}
+
+Skew Lattice::N(size_t g, size_t i, const Orientation & Q) const
+{
+  return Q.apply(Skew(outer(slip_directions_[g][i],
+                            slip_planes_[g][i])));
+}
+
+double Lattice::shear(size_t g, size_t i, const Orientation & Q, 
+                      const Symmetric & stress) const
+{
+  return M(g,i,Q).contract(stress);
+}
+
+Symmetric Lattice::d_shear(size_t g, size_t i, const Orientation & Q, 
+                           const Symmetric & stress) const
+{
+  return M(g, i, Q);
+}
+
 const std::shared_ptr<SymmetryGroup> Lattice::symmetry()
 {
   return symmetry_;

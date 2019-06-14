@@ -56,6 +56,12 @@ PYBIND11_MODULE(crystallography, m) {
       .def("equivalent_vectors_bidirectional", &Lattice::equivalent_vectors_bidirectional)
 
       .def("add_slip_system", &Lattice::add_slip_system)
+      .def_property_readonly("ngroup", &Lattice::ngroup)
+      .def("nslip", &Lattice::nslip)
+      .def("M", &Lattice::M)
+      .def("N", &Lattice::N)
+      .def("shear", &Lattice::shear)
+      .def("d_shear", &Lattice::d_shear)
       ;
 
   py::class_<CubicLattice, Lattice, std::shared_ptr<CubicLattice>>(m, "CubicLattice")
