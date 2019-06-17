@@ -67,6 +67,7 @@ class History {
   void add_scalar(std::string name);
   /// Get a scalar parameter
   double & get_scalar(std::string name);
+  const double & get_scalar(std::string name) const;
   
   /// Add an arbitrary-sized array
   void add_array(std::string name, size_t sz);
@@ -74,6 +75,7 @@ class History {
   size_t array_size(std::string name);
   /// Return a pointer to the array
   double * get_array(std::string name);
+  const double * get_array(std::string name) const;
   
   /// Add a generic object
   template<typename T>
@@ -87,11 +89,11 @@ class History {
   
   /// Get a generic object
   template<typename T>
-  T get_object(std::string name)
+  T get_object(std::string name) const
   {
     error_if_not_exists_(name);
     error_if_wrong_type_(name, GetStorageType<T>());
-    return std::move(T(&(storage_[loc_[name]])));
+    return std::move(T(&(storage_[loc_.at(name)])));
   }
 
   /// Getters
@@ -110,9 +112,9 @@ class History {
   void copy_maps_(const History & other);
 
  private:
-  void error_if_exists_(std::string name);
-  void error_if_not_exists_(std::string name);
-  void error_if_wrong_type_(std::string name, StorageType type);
+  void error_if_exists_(std::string name) const;
+  void error_if_not_exists_(std::string name) const;
+  void error_if_wrong_type_(std::string name, StorageType type) const;
 
  private:
   size_t size_;

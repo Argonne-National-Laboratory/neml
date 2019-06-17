@@ -248,7 +248,7 @@ void SymmetryGroup::opdist_(const double * const q1,
 
 Lattice::Lattice(Vector a1, Vector a2, Vector a3,
                  std::shared_ptr<SymmetryGroup> symmetry) :
-    a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry)
+    a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry), offsets_({0})
 {
   make_reciprocal_lattice_();
 }
@@ -342,6 +342,7 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
     burgers_vectors_.push_back(burgers);
     slip_directions_.push_back(directions);
     slip_planes_.push_back(normals);
+    offsets_.push_back(offsets_.back() + burgers.size());
   }
 }
 
@@ -353,6 +354,11 @@ size_t Lattice::ngroup() const
 size_t Lattice::nslip(size_t g) const
 {
   return slip_planes_[g].size();
+}
+
+size_t Lattice::flat(size_t g, size_t i) const
+{
+  return offsets_[g] + i;
 }
 
 Symmetric Lattice::M(size_t g, size_t i, const Orientation & Q) const

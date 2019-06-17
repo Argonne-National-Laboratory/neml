@@ -121,6 +121,13 @@ double & History::get_scalar(std::string name)
   return storage_[loc_[name]]; 
 }
 
+const double & History::get_scalar(std::string name) const
+{
+  error_if_not_exists_(name);
+  error_if_wrong_type_(name, TYPE_SCALAR);
+  return storage_[loc_.at(name)]; 
+}
+
 void History::add_array(std::string name, size_t sz)
 {
   error_if_exists_(name);
@@ -143,6 +150,13 @@ double * History::get_array(std::string name)
   return &(storage_[loc_[name]]);
 }
 
+const double * History::get_array(std::string name) const
+{
+  error_if_not_exists_(name);
+  error_if_wrong_type_(name, TYPE_ARRAY);
+  return &(storage_[loc_.at(name)]);
+}
+
 void History::resize(size_t inc)
 {
   if (store_) {
@@ -161,7 +175,7 @@ void History::copy_maps_(const History & other)
   type_.insert(other.get_type().begin(), other.get_type().end());
 }
 
-void History::error_if_exists_(std::string name)
+void History::error_if_exists_(std::string name) const
 {
   if (loc_.count(name) != 0) {
     std::stringstream ss;
@@ -170,7 +184,7 @@ void History::error_if_exists_(std::string name)
   }
 }
 
-void History::error_if_not_exists_(std::string name)
+void History::error_if_not_exists_(std::string name) const
 {
   if (loc_.count(name) != 1) {
     std::stringstream ss;
@@ -179,9 +193,9 @@ void History::error_if_not_exists_(std::string name)
   }
 }
 
-void History::error_if_wrong_type_(std::string name, StorageType type)
+void History::error_if_wrong_type_(std::string name, StorageType type) const
 {
-  if (type != type_[name]) {
+  if (type != type_.at(name)) {
     std::stringstream ss;
     ss << name << " is not of the type requested." << std::endl;
     throw std::runtime_error(ss.str());

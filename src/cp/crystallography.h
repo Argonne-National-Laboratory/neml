@@ -83,6 +83,7 @@ class Lattice: public NEMLObject {
 
   size_t ngroup() const;
   size_t nslip(size_t g) const;
+  size_t flat(size_t g, size_t i) const;
 
   Symmetric M(size_t g, size_t i, const Orientation & Q) const;
   Skew N(size_t g, size_t i, const Orientation & Q) const;
@@ -105,6 +106,8 @@ class Lattice: public NEMLObject {
   std::vector<std::vector<Vector>> burgers_vectors_;
   std::vector<std::vector<Vector>> slip_directions_;
   std::vector<std::vector<Vector>> slip_planes_;
+
+  std::vector<size_t> offsets_;
 };
 
 class CubicLattice: public Lattice {
