@@ -168,6 +168,13 @@ void History::resize(size_t inc)
   size_ += inc;
 }
 
+void History::scalar_multiply(double scalar)
+{
+  for (size_t i = 0; i < size_; i++) {
+    storage_[i] *= scalar; 
+  }
+}
+
 void History::copy_maps_(const History & other)
 {
   loc_.insert(other.get_loc().begin(), other.get_loc().end());

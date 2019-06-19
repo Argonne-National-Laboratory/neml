@@ -108,6 +108,9 @@ class History {
   /// Resize method
   void resize(size_t inc);
 
+  /// Multiply everything by a scalar
+  void scalar_multiply(double scalar);
+
  protected:
   void copy_maps_(const History & other);
 
