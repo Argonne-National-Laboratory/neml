@@ -6,6 +6,7 @@
 
 #include "../objects.h"
 #include "../history.h"
+#include "../interpolate.h"
 
 #include "../math/tensors.h"
 #include "../math/rotations.h"
@@ -102,17 +103,17 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
   virtual double init_strength() const = 0;
 
   /// Scalar evolution law
-  virtual double hist_rate(const Symmetric & stress, const Orientation & Q, double strength,
+  virtual double hist_rate(const Symmetric & stress, const Orientation & Q,
                            const History & history,
                            const Lattice & L, double T, const SlipRule & R) const = 0;
   /// Derivative of scalar law wrt stress
   virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q, 
-                                         double strength, const History & history,
+                                         const History & history,
                                          const Lattice & L, double T,
                                          const SlipRule & R) const = 0;
   /// Derivative of scalar law wrt the scalar
   virtual double d_hist_rate_d_strength(const Symmetric & stress, const Orientation & Q, 
-                                        double strength, const History & history,
+                                        const History & history,
                                         const Lattice & L, double T,
                                         const SlipRule & R) const = 0;
 };
@@ -122,15 +123,15 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
 {
  public:
   /// Scalar evolution law
-  virtual double hist_rate(const Symmetric & stress, const Orientation & Q, double strength,
+  virtual double hist_rate(const Symmetric & stress, const Orientation & Q,
                            const History & history, const Lattice & L, double T, const SlipRule & R) const;
   /// Derivative of scalar law wrt stress
   virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q, 
-                                         double strength, const History & history, const Lattice & L, double T,
+                                         const History & history, const Lattice & L, double T,
                                          const SlipRule & R) const;
   /// Derivative of scalar law wrt the scalar
   virtual double d_hist_rate_d_strength(const Symmetric & stress, const Orientation & Q, 
-                                        double strength, const History & history, const Lattice & L, double T,
+                                        const History & history, const Lattice & L, double T,
                                         const SlipRule & R) const;
 
   /// Prefactor
@@ -141,6 +142,41 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
  private:
   double sum_slip_(const Symmetric & stress, const Orientation & Q, const History & history,
                    const Lattice & L, double T, const SlipRule & R) const;
+  Symmetric d_sum_slip_d_stress_(const Symmetric & stress, const Orientation & Q, 
+                                 const History & history, const Lattice & L, double T,
+                                 const SlipRule & R) const;
+  double d_sum_slip_d_strength_(const Symmetric & stress, const Orientation & Q, 
+                                const History & history, const Lattice & L, double T,
+                                const SlipRule & R) const;
+};
+
+/// Everyone's favorite Voce model
+class VoceSlipHardening: public PlasticSlipHardening
+{
+ public:
+  VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
+                    std::shared_ptr<Interpolate> b,
+                    std::shared_ptr<Interpolate> tau_0);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Setup the scalar
+  virtual double init_strength() const;
+
+  /// Prefactor
+  virtual double hist_factor(double strength, const Lattice & L, double T) const;
+  /// Derivative of the prefactor
+  virtual double d_hist_factor(double strength, const Lattice & L, double T) const;
+
+ private:
+  std::shared_ptr<Interpolate> tau_sat_;
+  std::shared_ptr<Interpolate> b_;
+  std::shared_ptr<Interpolate> tau_0_;
 };
 
 }
