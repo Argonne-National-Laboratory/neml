@@ -179,6 +179,8 @@ class VoceSlipHardening: public PlasticSlipHardening
   std::shared_ptr<Interpolate> tau_0_;
 };
 
+static Register<VoceSlipHardening> regVoceSlipHardening;
+
 }
 
 #endif // SLIPHARDEN_H

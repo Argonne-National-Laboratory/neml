@@ -116,6 +116,8 @@ class PowerLawSlipRule: public SlipStrengthSlipRule
   std::shared_ptr<Interpolate> n_;
 };
 
+static Register<PowerLawSlipRule> regPowerLawSlipRule;
+
 } // namespace neml
 
 #endif // SLIPRULES_H
