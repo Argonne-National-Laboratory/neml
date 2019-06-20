@@ -134,6 +134,7 @@ PYBIND11_MODULE(history, m) {
            {
             m.get_object<Orientation>(name) = v;
            }, "Set an orientation")
+        .def("scalar_multiply", &History::scalar_multiply)
       ;
 }
 

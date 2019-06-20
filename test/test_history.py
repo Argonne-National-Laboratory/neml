@@ -147,3 +147,48 @@ class TestCopy(unittest.TestCase):
 
     self.assertTrue(np.isclose(self.hist.get_scalar("a"), 4.0))
     self.assertTrue(np.isclose(newhist.get_scalar("a"), self.scalar))
+
+class TestVectorMath(unittest.TestCase):
+  def setUp(self):
+    self.scalar = 2.5
+    self.vector = tensors.Vector(np.array([1.0,2.0,3.0]))
+    self.ranktwo = tensors.RankTwo(np.array([
+      [1.0,2.0,3.0],
+      [4.0,5.0,6.0],
+      [7.0,8.0,9.0]]))
+    self.symmetric = tensors.Symmetric(np.eye(3))
+    q = np.array([[1.0,2.0,3.0],[3.0,4.0,5.0],[6.0,7.0,8.0]])
+    q = 0.5 * (q - q.T)
+    self.skew = tensors.Skew(q)
+
+    self.hist = history.History()
+    self.add_all(self.hist)
+    self.set_all(self.hist)
+
+  def add_all(self, hist):
+    hist.add_scalar("scalar")
+    hist.add_vector("vector")
+    hist.add_ranktwo("ranktwo")
+    hist.add_symmetric("symmetric")
+    hist.add_skew("skew")
+
+  def set_all(self, hist):
+    hist.set_scalar("scalar", self.scalar)
+    hist.set_vector("vector", self.vector)
+    hist.set_ranktwo("ranktwo", self.ranktwo)
+    hist.set_symmetric("symmetric", self.symmetric)
+    hist.set_skew("skew", self.skew)
+  
+  def test_add_all(self):
+    mult = 2.2
+    self.hist.scalar_multiply(mult)
+    self.assertTrue(np.isclose(self.hist.get_scalar("scalar"), 
+      mult * self.scalar))
+    self.assertEqual(self.hist.get_vector("vector"),
+        mult * self.vector)
+    self.assertEqual(self.hist.get_ranktwo("ranktwo"),
+        mult * self.ranktwo)
+    self.assertEqual(self.hist.get_symmetric("symmetric"),
+        mult * self.symmetric)
+    self.assertEqual(self.hist.get_skew("skew"),
+        mult * self.skew)
