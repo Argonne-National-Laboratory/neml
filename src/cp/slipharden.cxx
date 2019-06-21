@@ -127,7 +127,7 @@ Symmetric PlasticSlipHardening::d_sum_slip_d_stress_(
   Symmetric ds;
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
-      g = R.slip(g, i, stress, Q, history, L, T);
+      double dg = R.slip(g, i, stress, Q, history, L, T);
       ds += copysign(1.0, g) * R.d_slip_d_s(g, i, stress, Q, history, L, T);
     }
   }
@@ -147,7 +147,7 @@ double PlasticSlipHardening::d_sum_slip_d_strength_(
       ddg += copysign(1.0, dg) * res.get_scalar("strength");
     }
   }
-
+  
   return ddg;
 }
 

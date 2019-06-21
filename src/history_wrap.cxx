@@ -26,11 +26,17 @@ PYBIND11_MODULE(history, m) {
                 {m.size()},
                 {sizeof(double)});
           })
+      .def("deepcopy", &History::deepcopy)
       .def("set_data", 
            [](History & m, py::array_t<double> arr)
            {
             m.set_data(arr2ptr<double>(arr));
            }, "Set data as a numpy array")
+      .def("copy_data",
+           [](History & m, py::array_t<double> arr)
+           {
+            m.copy_data(arr2ptr<double>(arr));
+           }, "Copy data in from an array")
       .def_property_readonly("size", &History::size)
       .def_property_readonly("store", &History::store)
       .def("add_scalar", &History::add_scalar)

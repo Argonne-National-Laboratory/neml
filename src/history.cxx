@@ -101,6 +101,11 @@ void History::set_data(double * input)
   storage_ = input;
 }
 
+void History::copy_data(const double * const input)
+{
+  std::copy(input, input+size(), storage_);
+}
+
 size_t History::size() const 
 {
   return size_;

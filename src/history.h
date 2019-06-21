@@ -60,6 +60,8 @@ class History {
   
   /// Set storage to some external pointer
   void set_data(double * input);
+  /// Copy data from some external pointer
+  void copy_data(const double * const input);
   /// Size of storage required
   size_t size() const;
   
