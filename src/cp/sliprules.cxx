@@ -94,16 +94,16 @@ std::unique_ptr<NEMLObject> PowerLawSlipRule::initialize(
     ParameterSet & params)
 {
   return neml::make_unique<PowerLawSlipRule>(
-      params.get_object_parameter<SlipHardening>("hardening"),
+      params.get_object_parameter<SlipHardening>("resistance"),
       params.get_object_parameter<Interpolate>("gamma0"),
       params.get_object_parameter<Interpolate>("n"));
 }
 
 ParameterSet PowerLawSlipRule::parameters()
 {
-  ParameterSet pset;
+  ParameterSet pset(PowerLawSlipRule::type());
   
-  pset.add_parameter<NEMLObject>("hardening");
+  pset.add_parameter<NEMLObject>("resistance");
   pset.add_parameter<NEMLObject>("gamma0");
   pset.add_parameter<NEMLObject>("n");
 

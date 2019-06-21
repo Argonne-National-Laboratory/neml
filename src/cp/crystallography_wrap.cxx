@@ -13,7 +13,7 @@ PYBIND11_MODULE(crystallography, m) {
   
   m.def("symmetry_rotations", &symmetry_rotations);
 
-  py::class_<SymmetryGroup, std::shared_ptr<SymmetryGroup>>(m, "SymmetryGroup")
+  py::class_<SymmetryGroup, NEMLObject, std::shared_ptr<SymmetryGroup>>(m, "SymmetryGroup")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return create_object_python<SymmetryGroup>(
@@ -34,7 +34,7 @@ PYBIND11_MODULE(crystallography, m) {
            })
       ;
 
-  py::class_<Lattice, std::shared_ptr<Lattice>>(m, "Lattice")
+  py::class_<Lattice, NEMLObject, std::shared_ptr<Lattice>>(m, "Lattice")
       .def(py::init<Vector, Vector, Vector, std::shared_ptr<SymmetryGroup>>(),
            py::arg("a1"), py::arg("a2"), py::arg("a3"), py::arg("symmetry"))
       .def_property_readonly("a1", &Lattice::a1)

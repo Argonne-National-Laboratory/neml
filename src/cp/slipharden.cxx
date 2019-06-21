@@ -175,7 +175,7 @@ std::unique_ptr<NEMLObject> VoceSlipHardening::initialize(
 
 ParameterSet VoceSlipHardening::parameters()
 {
-  ParameterSet pset;
+  ParameterSet pset(VoceSlipHardening::type());
   
   pset.add_parameter<NEMLObject>("tau_sat");
   pset.add_parameter<NEMLObject>("b");
@@ -192,7 +192,7 @@ double VoceSlipHardening::init_strength() const
 double VoceSlipHardening::hist_factor(double strength, const Lattice & L, double T) const
 {
   double tau_sat = tau_sat_->value(T);
-  double b = tau_sat_->value(T);
+  double b = b_->value(T);
   double tau_0 = tau_0_->value(T);
 
   return b * (tau_sat - strength) + tau_0;
@@ -200,7 +200,7 @@ double VoceSlipHardening::hist_factor(double strength, const Lattice & L, double
 
 double VoceSlipHardening::d_hist_factor(double strength, const Lattice & L, double T) const
 {
-  double b = tau_sat_->value(T);
+  double b = b_->value(T);
 
   return -b;
 }

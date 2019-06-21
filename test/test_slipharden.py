@@ -2,7 +2,7 @@
 
 from neml import history, interpolate
 from neml.math import tensors, rotations
-from neml.cp import crystallography, slipharden
+from neml.cp import crystallography, slipharden, sliprules
 
 from common import differentiate
 
@@ -10,6 +10,8 @@ import unittest
 import numpy as np
 import numpy.linalg as la
 
+class CommonPlasticSlipHardening():
+  pass
 
 class TestVoceHardening(unittest.TestCase):
   def setUp(self):
@@ -31,9 +33,20 @@ class TestVoceHardening(unittest.TestCase):
     self.b = 2.5
 
     self.model = slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0)
+    
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
   
   def test_factor(self):
     self.assertTrue(np.isclose(
       self.model.hist_factor(self.strength, self.L, self.T),
       self.b * (self.tau_sat - self.strength) + self.tau0))
+
+  def test_d_factor(self):
+    nd = differentiate(lambda s: self.model.hist_factor(s, self.L, self.T), 
+        self.strength)
+    d = self.model.d_hist_factor(self.strength, self.L, self.T)
+
+    self.assertTrue(np.isclose(nd, d))
 
