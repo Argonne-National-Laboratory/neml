@@ -11,17 +11,49 @@ import unittest
 import numpy as np
 import numpy.linalg as la
 
-class CommonPlasticSlipHardening():
-  def sum_slip(self):
-    return sum(np.abs(self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, 
-      self.T)) for g in range(self.L.ngroup) for i in range(self.L.nslip(g)))
+class CommonSlipHardening():
+  def test_d_hist_d_stress(self):
+    d = np.array(self.model.d_hist_d_s(self.S, self.Q, self.H, self.L, self.T, self.sliprule))
+    nd = diff_history_symmetric(lambda s: self.model.hist(s, self.Q, self.H, self.L, self.T,
+      self.sliprule), self.S)
+    self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
-  def test_hist_rate(self):
-    ss = self.sum_slip()
+  def test_d_hist_d_hist(self):
+    d = np.array(self.model.d_hist_d_h(self.S, self.Q, self.H, self.L, self.T, self.sliprule))
+    nd = diff_history_history(lambda h: self.model.hist(self.S, self.Q, h, self.L, self.T,
+      self.sliprule), self.H)
+    
+    print(d)
+    print(nd)
+    self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
-    self.assertTrue(np.isclose(self.model.hist_rate(self.S, self.Q, self.H,
-      self.L, self.T, self.sliprule), self.model.hist_factor(self.H.get_scalar("strength"), 
-        self.L, self.T) * ss))
+  def test_d_hist_to_tau_d_hist(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h), self.H)
+        d = self.model.d_hist_to_tau(g, i, self.H)
+        self.assertTrue(np.allclose(np.array(nd), np.array(d)))
+
+class CommonSlipSingleHardening():
+  def test_d_hist_map(self):
+    nd = diff_history_scalar(lambda h: self.model.hist_map(h), self.H)
+    H = self.model.d_hist_map(self.H)
+    self.assertTrue(np.allclose(np.array(H), np.array(nd)))
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        self.assertTrue(np.isclose(self.strength, 
+          self.model.hist_to_tau(g, i, self.H)))
+
+class CommonSlipSingleStrengthHardening():
+  def test_hist_map(self):
+    self.assertTrue(np.isclose(self.model.hist_map(self.H), self.strength))
+
+  def test_hist(self):
+    h = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule)
+    self.assertTrue(np.isclose(h.get_scalar("strength"), self.model.hist_rate(
+      self.S, self.Q, self.H, self.L, self.T, self.sliprule)))
 
   def test_d_hist_rate_d_stress(self):
     dfn = lambda s: self.model.hist_rate(s, self.Q, self.H,
@@ -34,12 +66,36 @@ class CommonPlasticSlipHardening():
   def test_d_hist_rate_d_hist(self):
     dfn = lambda h: self.model.hist_rate(self.S, self.Q, h, 
         self.L, self.T, self.sliprule)
-    nd = diff_scalar_history(dfn, self.H)
+    nd = diff_history_scalar(dfn, self.H)
     
     d = self.model.d_hist_rate_d_strength(self.S, self.Q, self.H, self.L,
         self.T, self.sliprule)
     
-class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening):
+    print(d)
+    print(nd.get_scalar("strength"))
+    self.assertTrue(np.isclose(d, nd.get_scalar("strength")))
+
+class CommonPlasticSlipHardening():
+  def sum_slip(self):
+    return sum(np.abs(self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, 
+      self.T)) for g in range(self.L.ngroup) for i in range(self.L.nslip(g)))
+
+  def test_hist_rate(self):
+    ss = self.sum_slip()
+
+    self.assertTrue(np.isclose(self.model.hist_rate(self.S, self.Q, self.H,
+      self.L, self.T, self.sliprule), self.model.hist_factor(self.H.get_scalar("strength"), 
+        self.L, self.T) * ss))
+
+  def test_d_factor(self):
+    nd = differentiate(lambda s: self.model.hist_factor(s, self.L, self.T), 
+        self.strength)
+    d = self.model.d_hist_factor(self.strength, self.L, self.T)
+
+    self.assertTrue(np.isclose(nd, d))
+    
+class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening, 
+    CommonSlipSingleStrengthHardening, CommonSlipSingleHardening, CommonSlipHardening):
   def setUp(self):
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
@@ -76,11 +132,4 @@ class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening):
     self.assertTrue(np.isclose(
       self.model.hist_factor(self.strength, self.L, self.T),
       self.b * (self.tau_sat - self.strength) + self.tau0))
-
-  def test_d_factor(self):
-    nd = differentiate(lambda s: self.model.hist_factor(s, self.L, self.T), 
-        self.strength)
-    d = self.model.d_hist_factor(self.strength, self.L, self.T)
-
-    self.assertTrue(np.isclose(nd, d))
 

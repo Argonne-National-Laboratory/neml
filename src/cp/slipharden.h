@@ -139,15 +139,6 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
   /// Derivative of the prefactor
   virtual double d_hist_factor(double strength, const Lattice & L, double T) const = 0;
 
- private:
-  double sum_slip_(const Symmetric & stress, const Orientation & Q, const History & history,
-                   const Lattice & L, double T, const SlipRule & R) const;
-  Symmetric d_sum_slip_d_stress_(const Symmetric & stress, const Orientation & Q, 
-                                 const History & history, const Lattice & L, double T,
-                                 const SlipRule & R) const;
-  double d_sum_slip_d_strength_(const Symmetric & stress, const Orientation & Q, 
-                                const History & history, const Lattice & L, double T,
-                                const SlipRule & R) const;
 };
 
 /// Everyone's favorite Voce model

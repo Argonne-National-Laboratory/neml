@@ -184,7 +184,7 @@ double PowerLawSlipRule::d_sslip_dstrength(size_t g, size_t i, double tau,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  return -g0 * n * tau * pow(fabs(tau / strength), n-1.0); 
+  return -n * g0 * tau * pow(fabs(tau), n -1.0) / pow(strength, n + 1.0); 
 }
 
 } // namespace neml
