@@ -20,6 +20,9 @@ PYBIND11_MODULE(sliprules, m) {
       .def("hist_rate", &SlipRule::hist_rate)
       .def("d_hist_rate_d_stress", &SlipRule::d_hist_rate_d_stress)
       .def("d_hist_rate_d_hist", &SlipRule::d_hist_rate_d_hist)
+      .def("sum_slip", &SlipRule::sum_slip)
+      .def("d_sum_slip_d_stress", &SlipRule::d_sum_slip_d_stress)
+      .def("d_sum_slip_d_hist", &SlipRule::d_sum_slip_d_hist)
       ;
 
   py::class_<SlipStrengthSlipRule, SlipRule,

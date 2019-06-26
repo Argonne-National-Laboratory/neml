@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <exception>
 
 namespace neml {
 
@@ -178,6 +179,17 @@ void History::scalar_multiply(double scalar)
   for (size_t i = 0; i < size_; i++) {
     storage_[i] *= scalar; 
   }
+}
+
+History & History::operator+=(const History & other)
+{
+  if (size() != other.size()) {
+    throw std::runtime_error("Histories to be added do not have the same size!");
+  }
+  for (size_t i = 0; i < size_; i++) {
+    storage_[i] += other.rawptr()[i];
+  }
+  return *this;
 }
 
 void History::copy_maps_(const History & other)

@@ -2,6 +2,56 @@
 
 namespace neml {
 
+double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q, 
+                          const History & history, const Lattice & L, 
+                          double T) const
+{
+  double dg = 0.0;
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      dg += fabs(slip(g, i, stress, Q, history, L, T));
+    }
+  }
+
+  return dg;
+}
+
+Symmetric SlipRule::d_sum_slip_d_stress(const Symmetric & stress, 
+                                        const Orientation & Q, 
+                                        const History & history,
+                                        const Lattice & L, double T) const
+{
+  Symmetric ds;
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      double dg = slip(g, i, stress, Q, history, L, T);
+      ds += copysign(1.0, dg) * d_slip_d_s(g, i, stress, Q, history, L, T);
+    }
+  }
+
+  return ds;
+}
+
+History SlipRule::d_sum_slip_d_hist(const Symmetric & stress,
+                                    const Orientation & Q, 
+                                    const History & history, const Lattice & L,
+                                    double T) const
+{
+  History res = history.deepcopy();
+  res.scalar_multiply(0.0);
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      double dg = slip(g, i, stress, Q, history, L, T);
+      double sgn = copysign(1.0, dg);
+      History temp = d_slip_d_h(g, i, stress, Q,  history, L, T);
+      temp.scalar_multiply(sgn);
+      res += temp;
+    }
+  }
+
+  return res;
+}
+
 SlipStrengthSlipRule::SlipStrengthSlipRule(
     std::shared_ptr<SlipHardening> strength) :
       strength_(strength)

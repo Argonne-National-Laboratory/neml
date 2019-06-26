@@ -47,6 +47,13 @@ class SlipRule: public NEMLObject
                       const Orientation & Q, const History & history,
                       const Lattice & L, double T) const = 0;
 
+  // Useful helpers
+  double sum_slip(const Symmetric & stress, const Orientation & Q, 
+                  const History & history, const Lattice & L, double T) const;
+  Symmetric d_sum_slip_d_stress(const Symmetric & stress, const Orientation & Q, 
+                  const History & history, const Lattice & L, double T) const;
+  History d_sum_slip_d_hist(const Symmetric & stress, const Orientation & Q, 
+                  const History & history, const Lattice & L, double T) const;
 };
 
 /// All slip rules that give the system response proportional to some strength

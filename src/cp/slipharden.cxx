@@ -82,7 +82,7 @@ double PlasticSlipHardening::hist_rate(
     const History & history, const Lattice & L, double T, const SlipRule & R) const
 {
   double strength = history.get_scalar("strength");
-  return hist_factor(strength, L, T) * sum_slip_(stress, Q, history, L, T, R); 
+  return hist_factor(strength, L, T) * R.sum_slip(stress, Q, history, L, T);
 }
 
 Symmetric PlasticSlipHardening::d_hist_rate_d_stress(
@@ -91,8 +91,8 @@ Symmetric PlasticSlipHardening::d_hist_rate_d_stress(
     const SlipRule & R) const
 {
   double strength = history.get_scalar("strength");
-  return hist_factor(strength, L, T) * d_sum_slip_d_stress_(stress, Q,
-                                                            history, L, T, R);
+  return hist_factor(strength, L, T) * R.d_sum_slip_d_stress(stress, Q,
+                                                            history, L, T);
 }
 
 double PlasticSlipHardening::d_hist_rate_d_strength(
@@ -101,54 +101,10 @@ double PlasticSlipHardening::d_hist_rate_d_strength(
     const SlipRule & R) const
 {
   double strength = history.get_scalar("strength");
-  return d_hist_factor(strength, L, T) * sum_slip_(stress, Q, history, L, T, R) 
-      + hist_factor(strength, L, T) * d_sum_slip_d_strength_(stress, Q, history, 
-                                                             L, T, R);
-}
-
-double PlasticSlipHardening::sum_slip_(
-    const Symmetric & stress, const Orientation & Q, const History & history,
-    const Lattice & L, double T, const SlipRule & R) const
-{
-  double dg = 0.0;
-  for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t i = 0; i < L.nslip(g); i++) {
-      dg += R.slip(g, i, stress, Q, history, L, T);
-    }
-  }
-
-  return dg;
-}
-
-Symmetric PlasticSlipHardening::d_sum_slip_d_stress_(
-    const Symmetric & stress, const Orientation & Q, const History & history,
-    const Lattice & L, double T, const SlipRule & R) const
-{
-  Symmetric ds;
-  for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t i = 0; i < L.nslip(g); i++) {
-      double dg = R.slip(g, i, stress, Q, history, L, T);
-      ds += copysign(1.0, g) * R.d_slip_d_s(g, i, stress, Q, history, L, T);
-    }
-  }
-
-  return ds;
-}
-
-double PlasticSlipHardening::d_sum_slip_d_strength_(
-    const Symmetric & stress, const Orientation & Q, const History & history,
-    const Lattice & L, double T, const SlipRule & R) const
-{
-  double ddg = 0.0;
-  for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t i = 0; i < L.nslip(g); i++) {
-      double dg = R.slip(g, i, stress, Q, history, L, T);
-      History res = R.d_slip_d_h(g, i, stress, Q, history, L, T);
-      ddg += copysign(1.0, dg) * res.get_scalar("strength");
-    }
-  }
-  
-  return ddg;
+  History dhist = R.d_sum_slip_d_hist(stress, Q, history, L, T);
+  double dstrength = dhist.get_scalar("strength");
+  return d_hist_factor(strength, L, T) * R.sum_slip(stress, Q, history, L, T) 
+      + hist_factor(strength, L, T) * dstrength;
 }
 
 VoceSlipHardening::VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,

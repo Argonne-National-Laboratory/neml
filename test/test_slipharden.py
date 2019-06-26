@@ -13,8 +13,8 @@ import numpy.linalg as la
 
 class CommonPlasticSlipHardening():
   def sum_slip(self):
-    return sum(self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, 
-      self.T) for g in range(self.L.ngroup) for i in range(self.L.nslip(g)))
+    return sum(np.abs(self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, 
+      self.T)) for g in range(self.L.ngroup) for i in range(self.L.nslip(g)))
 
   def test_hist_rate(self):
     ss = self.sum_slip()
@@ -39,10 +39,6 @@ class CommonPlasticSlipHardening():
     d = self.model.d_hist_rate_d_strength(self.S, self.Q, self.H, self.L,
         self.T, self.sliprule)
     
-    print(np.array(d))
-    print(np.array(nd))
-    self.assertTrue(False)
-
 class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening):
   def setUp(self):
     self.L = crystallography.CubicLattice(1.0)

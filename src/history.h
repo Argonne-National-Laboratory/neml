@@ -113,6 +113,9 @@ class History {
   /// Multiply everything by a scalar
   void scalar_multiply(double scalar);
 
+  /// Add another history to this one
+  History & operator+=(const History & other);
+
  protected:
   void copy_maps_(const History & other);
 
