@@ -6,6 +6,17 @@
 
 namespace neml {
 
+template<>
+struct History::item_return<double>{ typedef double & type;};
+
+template<>
+History::item_return<double>::type History::get_object<double>(std::string name) const
+{
+  error_if_not_exists_(name);
+  error_if_wrong_type_(name, GetStorageType<double>());
+  return storage_[loc_.at(name)];
+}
+
 History::History() :
     size_(0), store_(true)
 {
@@ -91,7 +102,6 @@ History History::deepcopy() const
   std::copy(storage_, storage_+size_, nhist.rawptr());
 
   nhist.get_loc().insert(loc_.begin(), loc_.end());
-  nhist.get_array_size().insert(array_size_.begin(), array_size_.end());
   nhist.get_type().insert(type_.begin(), type_.end());
 
   return nhist;
@@ -110,57 +120,6 @@ void History::copy_data(const double * const input)
 size_t History::size() const 
 {
   return size_;
-}
-
-void History::add_scalar(std::string name)
-{
-  error_if_exists_(name);
-  loc_.insert(std::pair<std::string,size_t>(name, size_));
-  type_.insert(std::pair<std::string,StorageType>(name, TYPE_SCALAR));
-  resize(1);
-}
-
-double & History::get_scalar(std::string name)
-{
-  error_if_not_exists_(name);
-  error_if_wrong_type_(name, TYPE_SCALAR);
-  return storage_[loc_[name]]; 
-}
-
-const double & History::get_scalar(std::string name) const
-{
-  error_if_not_exists_(name);
-  error_if_wrong_type_(name, TYPE_SCALAR);
-  return storage_[loc_.at(name)]; 
-}
-
-void History::add_array(std::string name, size_t sz)
-{
-  error_if_exists_(name);
-  loc_.insert(std::pair<std::string,size_t>(name, size_));
-  array_size_.insert(std::pair<std::string,size_t>(name, sz));
-  type_.insert(std::pair<std::string,StorageType>(name, TYPE_ARRAY));
-  resize(sz);
-}
-
-size_t History::array_size(std::string name)
-{
-  error_if_not_exists_(name);
-  return array_size_[name];
-}
-
-double * History::get_array(std::string name)
-{
-  error_if_not_exists_(name);
-  error_if_wrong_type_(name, TYPE_ARRAY);
-  return &(storage_[loc_[name]]);
-}
-
-const double * History::get_array(std::string name) const
-{
-  error_if_not_exists_(name);
-  error_if_wrong_type_(name, TYPE_ARRAY);
-  return &(storage_[loc_.at(name)]);
 }
 
 void History::resize(size_t inc)
@@ -195,7 +154,6 @@ History & History::operator+=(const History & other)
 void History::copy_maps_(const History & other)
 {
   loc_.insert(other.get_loc().begin(), other.get_loc().end());
-  array_size_.insert(other.get_array_size().begin(), other.get_array_size().end());
   type_.insert(other.get_type().begin(), other.get_type().end());
 }
 

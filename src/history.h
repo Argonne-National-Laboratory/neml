@@ -27,6 +27,7 @@ template <> constexpr StorageType GetStorageType<RankTwo>() {return TYPE_RANKTWO
 template <> constexpr StorageType GetStorageType<Symmetric>() {return TYPE_SYMMETRIC;}
 template <> constexpr StorageType GetStorageType<Skew>() {return TYPE_SKEW;}
 template <> constexpr StorageType GetStorageType<Orientation>() {return TYPE_ROT;}
+template <> constexpr StorageType GetStorageType<double>() {return TYPE_SCALAR;}
 
 /// Black magic to map a type to the right size
 template <class T> constexpr size_t GetStorageSize();
@@ -35,6 +36,7 @@ template <> constexpr size_t GetStorageSize<RankTwo>() {return 9;}
 template <> constexpr size_t GetStorageSize<Symmetric>() {return 6;}
 template <> constexpr size_t GetStorageSize<Skew>() {return 3;}
 template <> constexpr size_t GetStorageSize<Orientation>() {return 4;}
+template <> constexpr size_t GetStorageSize<double>() {return 1;}
 
 class History {
  public:
@@ -65,20 +67,6 @@ class History {
   /// Size of storage required
   size_t size() const;
   
-  /// Add a scalar parameter
-  void add_scalar(std::string name);
-  /// Get a scalar parameter
-  double & get_scalar(std::string name);
-  const double & get_scalar(std::string name) const;
-  
-  /// Add an arbitrary-sized array
-  void add_array(std::string name, size_t sz);
-  /// Return the size of an array
-  size_t array_size(std::string name);
-  /// Return a pointer to the array
-  double * get_array(std::string name);
-  const double * get_array(std::string name) const;
-  
   /// Add a generic object
   template<typename T>
   void add_object(std::string name)
@@ -88,23 +76,23 @@ class History {
     type_.insert(std::pair<std::string,StorageType>(name, GetStorageType<T>()));
     resize(GetStorageSize<T>());
   }
-  
-  /// Get a generic object
-  template<typename T>
-  T get_object(std::string name) const
+ 
+  template<class T>
+  struct item_return{ typedef T type; };
+
+  template<class T>
+  typename item_return<T>::type get_object(std::string name) const
   {
     error_if_not_exists_(name);
     error_if_wrong_type_(name, GetStorageType<T>());
-    return std::move(T(&(storage_[loc_.at(name)])));
+    return T(&(storage_[loc_.at(name)]));
   }
 
   /// Getters
   const std::map<std::string,size_t> & get_loc() const {return loc_;};
-  const std::map<std::string,size_t> & get_array_size() const {return array_size_;};
   const std::map<std::string,StorageType> & get_type() const {return type_;};
 
   std::map<std::string,size_t> & get_loc() {return loc_;};
-  std::map<std::string,size_t> & get_array_size() {return array_size_;};
   std::map<std::string,StorageType> & get_type() {return type_;};
 
   /// Resize method
@@ -130,7 +118,6 @@ class History {
   double * storage_;
 
   std::map<std::string,size_t> loc_;
-  std::map<std::string,size_t> array_size_;
   std::map<std::string,StorageType> type_;
 
 };

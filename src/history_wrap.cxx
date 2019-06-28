@@ -39,28 +39,21 @@ PYBIND11_MODULE(history, m) {
            }, "Copy data in from an array")
       .def_property_readonly("size", &History::size)
       .def_property_readonly("store", &History::store)
-      .def("add_scalar", &History::add_scalar)
+      .def("add_scalar", 
+           [](History & m, std::string name
+              {
+                m.add_object<double>(name);
+              }, "Add a scalar")
       .def("get_scalar", 
            [](History & m, std::string name) -> double
            {
-            return m.get_scalar(name);
+            return m.get_object<double>(name);
            }, "Get a scalar")
       .def("set_scalar",
            [](History & m, std::string name, double value)
            {
-            m.get_scalar(name) = value;
+            m.get_object<double>(name) = value;
            }, "Set a scalar")
-      .def("add_array", &History::add_array)
-      .def("array_size", &History::array_size)
-      .def("get_array", 
-           [](History & m, std::string name) -> py::array_t<double>
-           {
-            auto capsule = py::capsule(m.get_array(name), [](void *v) {;});
-            return py::array_t<double>(m.array_size(name),
-                                       m.get_array(name),
-                                       capsule);
-           }, "Get a numpy array")
-
       .def("add_vector", 
            [](History & m, std::string name)
            {
@@ -76,7 +69,6 @@ PYBIND11_MODULE(history, m) {
            {
             m.get_object<Vector>(name) = v;
            }, "Set a vector")
-   
       .def("add_ranktwo", 
            [](History & m, std::string name)
            {
@@ -108,7 +100,6 @@ PYBIND11_MODULE(history, m) {
            {
             m.get_object<Symmetric>(name) = v;
            }, "Set a symmetric tensor")
-
       .def("add_skew", 
            [](History & m, std::string name)
            {
@@ -124,7 +115,6 @@ PYBIND11_MODULE(history, m) {
            {
             m.get_object<Skew>(name) = v;
            }, "Set a skew")
-
       .def("add_orientation", 
            [](History & m, std::string name)
            {
