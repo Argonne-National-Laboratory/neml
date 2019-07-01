@@ -13,11 +13,10 @@ namespace neml {
 enum StorageType {
   TYPE_VECTOR    = 0,
   TYPE_SCALAR    = 1,
-  TYPE_ARRAY     = 2,
-  TYPE_RANKTWO   = 3,
-  TYPE_SYMMETRIC = 4,
-  TYPE_SKEW      = 5,
-  TYPE_ROT       = 6
+  TYPE_RANKTWO   = 2,
+  TYPE_SYMMETRIC = 3,
+  TYPE_SKEW      = 4,
+  TYPE_ROT       = 5
 };
 
 /// Black magic to map a type to the enum
@@ -29,14 +28,28 @@ template <> constexpr StorageType GetStorageType<Skew>() {return TYPE_SKEW;}
 template <> constexpr StorageType GetStorageType<Orientation>() {return TYPE_ROT;}
 template <> constexpr StorageType GetStorageType<double>() {return TYPE_SCALAR;}
 
+/// Storage size
+const std::map<StorageType,size_t> storage_size = 
+  { {TYPE_VECTOR,    3},
+    {TYPE_SCALAR,    1},
+    {TYPE_RANKTWO,   9},
+    {TYPE_SYMMETRIC, 6},
+    {TYPE_SKEW,      3},
+    {TYPE_ROT,       4} };
+
 /// Black magic to map a type to the right size
-template <class T> constexpr size_t GetStorageSize();
-template <> constexpr size_t GetStorageSize<Vector>() {return 3;}
-template <> constexpr size_t GetStorageSize<RankTwo>() {return 9;}
-template <> constexpr size_t GetStorageSize<Symmetric>() {return 6;}
-template <> constexpr size_t GetStorageSize<Skew>() {return 3;}
-template <> constexpr size_t GetStorageSize<Orientation>() {return 4;}
-template <> constexpr size_t GetStorageSize<double>() {return 1;}
+template <class T> size_t GetStorageSize() {return storage_size.at(GetStorageType<T>());};
+
+/// Map between a type and its derivative
+const std::map<StorageType,const std::map<StorageType,StorageType>> derivative_type =
+  { {TYPE_SCALAR,
+      {{TYPE_SCALAR,    TYPE_SCALAR},
+       {TYPE_VECTOR,    TYPE_VECTOR},
+       {TYPE_RANKTWO,   TYPE_RANKTWO},
+       {TYPE_SYMMETRIC, TYPE_SYMMETRIC},
+       {TYPE_SKEW,      TYPE_SKEW},
+       {TYPE_ROT,       TYPE_ROT}}}
+  };
 
 class History {
  public:
@@ -71,11 +84,11 @@ class History {
   template<typename T>
   void add(std::string name)
   {
-    error_if_exists_(name);
-    loc_.insert(std::pair<std::string,size_t>(name, size_));
-    type_.insert(std::pair<std::string,StorageType>(name, GetStorageType<T>()));
-    resize(GetStorageSize<T>());
+    add(name, GetStorageType<T>(), GetStorageSize<T>());
   }
+
+  /// Add known object
+  void add(std::string name, StorageType type, size_t size);
  
   template<class T>
   struct item_return{ typedef T type; };
@@ -91,9 +104,11 @@ class History {
   /// Getters
   const std::map<std::string,size_t> & get_loc() const {return loc_;};
   const std::map<std::string,StorageType> & get_type() const {return type_;};
+  const std::vector<std::string> & get_order() const {return order_;};
 
   std::map<std::string,size_t> & get_loc() {return loc_;};
   std::map<std::string,StorageType> & get_type() {return type_;};
+  std::vector<std::string> & get_order() {return order_;};
 
   /// Resize method
   void resize(size_t inc);
@@ -103,9 +118,34 @@ class History {
 
   /// Add another history to this one
   History & operator+=(const History & other);
+  
+  /// Make a blank copy
+  History copy_blank(std::vector<std::string> exclude = {}) const;
+  
+  /// Copy over the order maps
+  void copy_maps(const History & other);
 
- protected:
-  void copy_maps_(const History & other);
+  /// Make zero
+  void zero();
+
+  /// Make a History appropriate to hold the derivatives of the indicated items
+  template<class T>
+  History derivative() const
+  {
+    History deriv;
+
+    StorageType dtype = GetStorageType<T>();
+
+    for (auto item : order_) {
+      StorageType ctype = type_.at(item);
+      StorageType ntype = derivative_type.at(ctype).at(dtype); 
+      deriv.add(item, ntype, storage_size.at(ntype));
+    }
+
+    deriv.zero();
+
+    return deriv;
+  }
 
  private:
   void error_if_exists_(std::string name) const;
@@ -119,17 +159,39 @@ class History {
 
   std::map<std::string,size_t> loc_;
   std::map<std::string,StorageType> type_;
+  std::vector<std::string> order_;
 };
 
 template<>
 struct History::item_return<double>{ typedef double & type;};
 
+/// Special case for a double
 template<>
 inline History::item_return<double>::type History::get<double>(std::string name) const
 {
   error_if_not_exists_(name);
   error_if_wrong_type_(name, GetStorageType<double>());
   return storage_[loc_.at(name)];
+}
+
+/// Special case for self derivative
+template<>
+inline History History::derivative<History>() const
+{
+  History deriv;
+
+  for (auto i1 : order_) {
+    StorageType i1_type = type_.at(i1);
+    for (auto i2 : order_) {
+      StorageType i2_type = type_.at(i2);
+      StorageType ntype = derivative_type.at(i1_type).at(i2_type);
+      deriv.add(i1+"_"+i2, ntype, storage_size.at(ntype));
+    }
+  }
+
+  deriv.zero();
+
+  return deriv;
 }
 
 } // namespace neml

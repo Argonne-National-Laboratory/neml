@@ -29,8 +29,7 @@ History SlipSingleStrengthHardening::hist(
     const Orientation & Q, const History & history,
     const Lattice & L, double T, const SlipRule & R) const
 {
-  History res;
-  res.add<double>("strength");
+  History res = history.copy_blank();
   res.get<double>("strength") = hist_rate(stress, Q, history, L, T, R);
 
   return res;
@@ -42,8 +41,7 @@ History SlipSingleStrengthHardening::d_hist_d_s(
     const Lattice & L, double T,
     const SlipRule & R) const
 {
-  History res;
-  res.add<Symmetric>("strength");
+  History res = history.derivative<Symmetric>();
   res.get<Symmetric>("strength") = d_hist_rate_d_stress(stress,
                                                                Q, 
                                                                history,L, T, R);
@@ -57,8 +55,7 @@ History SlipSingleStrengthHardening::d_hist_d_h(
     const Lattice & L, 
     double T, const SlipRule & R) const
 {
-  History res;
-  res.add<double>("strength_strength");
+  History res = history.derivative<History>();
   res.get<double>("strength_strength") = d_hist_rate_d_strength(
       stress, Q, history, L, T, R);
   return res;
@@ -71,8 +68,7 @@ double SlipSingleStrengthHardening::hist_map(const History & history) const
 
 History SlipSingleStrengthHardening::d_hist_map(const History & history) const
 {
-  History res;
-  res.add<double>("strength");
+  History res = history.derivative<double>();
   res.get<double>("strength") = 1.0;
   return res;
 }

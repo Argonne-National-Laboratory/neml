@@ -37,8 +37,7 @@ History SlipRule::d_sum_slip_d_hist(const Symmetric & stress,
                                     const History & history, const Lattice & L,
                                     double T) const
 {
-  History res = history.deepcopy();
-  res.scalar_multiply(0.0);
+  History res = history.copy_blank();
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
       double dg = slip(g, i, stress, Q, history, L, T);

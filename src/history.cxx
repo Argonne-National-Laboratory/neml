@@ -30,7 +30,7 @@ History::History(const History & other) :
   else {
     storage_ = const_cast<double*>(other.rawptr());
   }
-  copy_maps_(other);
+  copy_maps(other);
 }
 
 History::History(const History && other) :
@@ -43,7 +43,7 @@ History::History(const History && other) :
   else {
     storage_ = const_cast<double*>(other.rawptr());
   }
-  copy_maps_(other);
+  copy_maps(other);
 }
 
 History::~History()
@@ -65,7 +65,7 @@ History & History::operator=(const History & other)
     std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   }
 
-  copy_maps_(other);
+  copy_maps(other);
 
   return *this;
 }
@@ -79,7 +79,7 @@ History & History::operator=(const History && other)
 
   std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   
-  copy_maps_(other);
+  copy_maps(other);
 
   return *this;
 }
@@ -89,9 +89,7 @@ History History::deepcopy() const
   History nhist;
   nhist.resize(size_);
   std::copy(storage_, storage_+size_, nhist.rawptr());
-
-  nhist.get_loc().insert(loc_.begin(), loc_.end());
-  nhist.get_type().insert(type_.begin(), type_.end());
+  nhist.copy_maps(*this);
 
   return nhist;
 }
@@ -109,6 +107,15 @@ void History::copy_data(const double * const input)
 size_t History::size() const 
 {
   return size_;
+}
+
+void History::add(std::string name, StorageType type, size_t size)
+{
+  error_if_exists_(name);
+  order_.push_back(name);
+  loc_.insert(std::pair<std::string,size_t>(name, size_));
+  type_.insert(std::pair<std::string,StorageType>(name, type));
+  resize(size);
 }
 
 void History::resize(size_t inc)
@@ -140,10 +147,28 @@ History & History::operator+=(const History & other)
   return *this;
 }
 
-void History::copy_maps_(const History & other)
+History History::copy_blank(std::vector<std::string> exclude) const
+{
+  History copy;
+
+  for (auto item : order_) {
+    if (std::find(exclude.begin(), exclude.end(), item) != exclude.end())
+    {
+      continue;
+    }
+    copy.add(item, type_.at(item), storage_size.at(type_.at(item)));
+  }
+
+  copy.zero();
+
+  return copy;
+}
+
+void History::copy_maps(const History & other)
 {
   loc_.insert(other.get_loc().begin(), other.get_loc().end());
   type_.insert(other.get_type().begin(), other.get_type().end());
+  order_.assign(other.get_order().begin(), other.get_order().end());
 }
 
 void History::error_if_exists_(std::string name) const
@@ -171,6 +196,11 @@ void History::error_if_wrong_type_(std::string name, StorageType type) const
     ss << name << " is not of the type requested." << std::endl;
     throw std::runtime_error(ss.str());
   }
+}
+
+void History::zero()
+{
+  std::fill(storage_, storage_+size_, 0.0);
 }
 
 } // namespace neml
