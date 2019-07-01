@@ -7,6 +7,7 @@ from numpy.polynomial.legendre import leggauss
 
 import numpy.random as ra
 
+from neml import uniaxial
 from neml.nlsolvers import MaximumIterations, MaximumSubdivisions, newton, scalar_newton
 
 class Driver(object):
@@ -1124,6 +1125,114 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       'stress': np.copy(stress), 'rtime': np.copy(rtime[:-1]),
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1]),
       'tstrain': np.copy(strain[ri:-1]), 'failed': failed}
+
+def thermomechanical_test(model, Tstart, T1, T2, Trate, e1, e2, ncycles,
+    nsteps = 50, sdir = np.array([1,0,0,0,0,0]), verbose = False):
+  """
+    Standard ASTM thermomechanical test
+
+    Parameters:
+      model:        material model
+      Tstart:       starting, stress-free temperature
+      T1            first temperature point
+      T2            second temperature point
+      e1            first strain point
+      e2            second strain point
+      ncycles       number of cycles to run
+
+    Optional:
+      nsteps        number of steps per half cycle
+      sdir          stress direction
+      verbose       report numerical details
+  """
+  # Setup
+  driver = uniaxial.UniaxialModel(model, verbose = verbose)
+  
+  # Setup results
+  time = [0.0]
+  strain = [0.0]
+  mech_strain = [0.0]
+  stress = [0.0]
+  temp = [Tstart]
+  cycles = []
+  smax = []
+  smin = []
+  history = [driver.init_store()]
+
+  # First half cycle
+  if verbose:
+    print("First half cycle")
+
+  dt = np.abs(T1 - Tstart) / Trate
+  dT = (T1 - Tstart) / nsteps
+  dE = (e1 - 0.0) / nsteps
+  dt /= nsteps
+
+  for i in range(nsteps):
+    s_np1, h_np1, A_np1, u_np1, p_np1, emech_np1 = driver.update_thermal(
+        strain[-1] + dE, strain[-1], temp[-1] + dT,
+        temp[-1], time[-1] + dt, time[-1], stress[-1], history[-1], 0.0, 0.0)
+
+    time.append(time[-1]+dt)
+    strain.append(strain[-1] + dE)
+    mech_strain.append(emech_np1)
+    stress.append(s_np1)
+    temp.append(temp[-1] + dT)
+    history.append(h_np1)
+
+  # Begin cycling
+  for s in range(ncycles):
+    si = len(strain)
+
+    if verbose:
+      print("Cycle %i" % s)
+
+    dt = np.abs(T2 - T1) / Trate
+    dT = (T2 - T1) / nsteps
+    dE = (e2 - e1) / nsteps
+    dt /= nsteps
+
+    for i in range(nsteps):
+      s_np1, h_np1, A_np1, u_np1, p_np1, emech_np1 = driver.update_thermal(
+          strain[-1] + dE, strain[-1], temp[-1] + dT,
+          temp[-1], time[-1] + dt, time[-1], stress[-1], history[-1], 0.0, 0.0)
+
+      time.append(time[-1]+dt)
+      strain.append(strain[-1] + dE)
+      mech_strain.append(emech_np1)
+      stress.append(s_np1)
+      temp.append(temp[-1] + dT)
+      history.append(h_np1)
+
+    dt = np.abs(T1 - T2) / Trate
+    dT = (T1 - T2) / nsteps
+    dE = (e1 - e2) / nsteps
+    dt /= nsteps
+
+    for i in range(nsteps):
+      s_np1, h_np1, A_np1, u_np1, p_np1, emech_np1 = driver.update_thermal(
+          strain[-1] + dE, strain[-1], temp[-1] + dT,
+          temp[-1], time[-1] + dt, time[-1], stress[-1], history[-1], 0.0, 0.0)
+
+      time.append(time[-1]+dt)
+      strain.append(strain[-1] + dE)
+      mech_strain.append(emech_np1)
+      stress.append(s_np1)
+      temp.append(temp[-1] + dT)
+      history.append(h_np1)
+
+    # Calculate
+    cycles.append(s)
+    smax.append(max(stress[si:]))
+    smin.append(min(stress[si:]))
+
+  # Setup and return
+  return {"strain": np.array(strain), "stress": np.array(stress),
+      "cycles": np.array(cycles, dtype = int), "max": np.array(smax),
+      "min": np.array(smin), "time": np.array(time),
+      "mech_strain": np.array(mech_strain),
+      "temperature": np.array(temp)}
+
 
 def thermomechanical_strain_raw(model, time, temperature, strain, 
     sdir = np.array([1,0,0,0,0,0.0]), verbose = False, substep = 1):

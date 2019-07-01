@@ -26,18 +26,20 @@ class UniaxialModel(object):
     self.atol = atol
     self.miter = miter
 
+    self.noffset = 6
+
   @property
   def nstore():
     """
       Number of variables required to support the material update
     """
-    return self.model.nstore + 5
+    return self.model.nstore + self.noffset
 
   def init_store(self):
     """
       Initialize the variables required to support the material update
     """
-    return np.concatenate((np.zeros((5,)), self.model.init_store()))
+    return np.concatenate((np.zeros((self.noffset,)), self.model.init_store()))
 
   @property
   def nhist():
@@ -68,6 +70,37 @@ class UniaxialModel(object):
     s_vec = self.ss2sv(s)
     return self.model.elastic_strains(s_vec, T, h)[0]
 
+  def update_thermal(self, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n,
+      h_n, u_n, p_n):
+    """
+      Material update function accounting for thermal strain
+      
+      Parameters:
+        e_np1:       next strain
+        e_n:         previous strain
+        T_np1:       next temperature
+        T_n:         previous temperature
+        t_np1:       next time
+        t_n:         previous time
+        s_n:         previous stress
+        h_n:         previous history
+        u_n:         previous energy
+        p_n:         previous dissipation
+    """
+    a_np1 = self.alpha(T_np1)
+    a_n = self.alpha(T_n)
+    dT = T_np1 - T_n
+
+    therm_n = h_n[5]
+    therm_np1 = therm_n + dT * (a_np1 + a_n) / 2.0
+
+    s_np1, h_np1, A_np1, u_np1, p_np1 = self.update(e_np1 - therm_np1, 
+        e_n - therm_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n)
+
+    h_np1[5] = therm_np1
+
+    return s_np1, h_np1, A_np1, u_np1, p_np1, e_np1 - therm_np1
+
   def update(self, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n):
     """
       Material update function
@@ -86,7 +119,7 @@ class UniaxialModel(object):
     """
     e_n_vec = self.es2ev(e_n, h_n)
     s_n_vec = self.ss2sv(s_n)
-    h_n_vec = h_n[5:]
+    h_n_vec = h_n[self.noffset:]
     
     def RJ(x):
       e_np1_vec = self.es2ev(e_np1, x)
