@@ -69,7 +69,7 @@ class History {
   
   /// Add a generic object
   template<typename T>
-  void add_object(std::string name)
+  void add(std::string name)
   {
     error_if_exists_(name);
     loc_.insert(std::pair<std::string,size_t>(name, size_));
@@ -81,7 +81,7 @@ class History {
   struct item_return{ typedef T type; };
 
   template<class T>
-  typename item_return<T>::type get_object(std::string name) const
+  typename item_return<T>::type get(std::string name) const
   {
     error_if_not_exists_(name);
     error_if_wrong_type_(name, GetStorageType<T>());
@@ -119,8 +119,18 @@ class History {
 
   std::map<std::string,size_t> loc_;
   std::map<std::string,StorageType> type_;
-
 };
+
+template<>
+struct History::item_return<double>{ typedef double & type;};
+
+template<>
+inline History::item_return<double>::type History::get<double>(std::string name) const
+{
+  error_if_not_exists_(name);
+  error_if_wrong_type_(name, GetStorageType<double>());
+  return storage_[loc_.at(name)];
+}
 
 } // namespace neml
 

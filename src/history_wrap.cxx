@@ -40,95 +40,95 @@ PYBIND11_MODULE(history, m) {
       .def_property_readonly("size", &History::size)
       .def_property_readonly("store", &History::store)
       .def("add_scalar", 
-           [](History & m, std::string name
+           [](History & m, std::string name)
               {
-                m.add_object<double>(name);
+                m.add<double>(name);
               }, "Add a scalar")
       .def("get_scalar", 
            [](History & m, std::string name) -> double
            {
-            return m.get_object<double>(name);
+            return m.get<double>(name);
            }, "Get a scalar")
       .def("set_scalar",
            [](History & m, std::string name, double value)
            {
-            m.get_object<double>(name) = value;
+            m.get<double>(name) = value;
            }, "Set a scalar")
       .def("add_vector", 
            [](History & m, std::string name)
            {
-            m.add_object<Vector>(name);
+            m.add<Vector>(name);
            }, "Add a vector")
       .def("get_vector",
            [](History & m, std::string name) -> Vector
            {
-            return m.get_object<Vector>(name);
+            return m.get<Vector>(name);
            }, "Get a vector")
       .def("set_vector",
            [](History & m, std::string name, Vector v)
            {
-            m.get_object<Vector>(name) = v;
+            m.get<Vector>(name) = v;
            }, "Set a vector")
       .def("add_ranktwo", 
            [](History & m, std::string name)
            {
-            m.add_object<RankTwo>(name);
+            m.add<RankTwo>(name);
            }, "Add a vector")
       .def("get_ranktwo",
            [](History & m, std::string name) -> RankTwo
            {
-            return m.get_object<RankTwo>(name);
+            return m.get<RankTwo>(name);
            }, "Get a general tensor")
       .def("set_ranktwo",
            [](History & m, std::string name, RankTwo v)
            {
-            m.get_object<RankTwo>(name) = v;
+            m.get<RankTwo>(name) = v;
            }, "Set a general tensor")
 
       .def("add_symmetric", 
            [](History & m, std::string name)
            {
-            m.add_object<Symmetric>(name);
+            m.add<Symmetric>(name);
            }, "Add a vector")
       .def("get_symmetric",
            [](History & m, std::string name) -> Symmetric
            {
-            return m.get_object<Symmetric>(name);
+            return m.get<Symmetric>(name);
            }, "Get a symmetric tensor")
       .def("set_symmetric",
            [](History & m, std::string name, Symmetric v)
            {
-            m.get_object<Symmetric>(name) = v;
+            m.get<Symmetric>(name) = v;
            }, "Set a symmetric tensor")
       .def("add_skew", 
            [](History & m, std::string name)
            {
-            m.add_object<Skew>(name);
+            m.add<Skew>(name);
            }, "Add a skew")
       .def("get_skew",
            [](History & m, std::string name) -> Skew
            {
-            return m.get_object<Skew>(name);
+            return m.get<Skew>(name);
            }, "Get a skew tensor")
       .def("set_skew",
            [](History & m, std::string name, Skew v)
            {
-            m.get_object<Skew>(name) = v;
+            m.get<Skew>(name) = v;
            }, "Set a skew")
       .def("add_orientation", 
            [](History & m, std::string name)
            {
-            m.add_object<Orientation>(name);
+            m.add<Orientation>(name);
            }, "Add an orientation")
       .def("get_orientation",
            [](History & m, std::string name) -> Orientation
            {
-            return m.get_object<Orientation>(name);
+            return m.get<Orientation>(name);
            }, "Get an orientation")
       .def("set_orientation",
            [](History & m, std::string name, Orientation v)
            {
-            m.get_object<Orientation>(name) = v;
+            m.get<Orientation>(name) = v;
            }, "Set an orientation")
         .def("scalar_multiply", &History::scalar_multiply)
         .def(py::self += py::self)

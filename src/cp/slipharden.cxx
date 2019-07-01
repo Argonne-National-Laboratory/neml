@@ -16,12 +16,12 @@ History SlipSingleHardening::d_hist_to_tau(
 
 void SlipSingleStrengthHardening::populate_history(History & history) const
 {
-  history.add_object<double>("strength");
+  history.add<double>("strength");
 }
 
 void SlipSingleStrengthHardening::init_history(History & history) const
 {
-  history.get_object<double>("strength") = init_strength();
+  history.get<double>("strength") = init_strength();
 }
 
 History SlipSingleStrengthHardening::hist(
@@ -30,8 +30,8 @@ History SlipSingleStrengthHardening::hist(
     const Lattice & L, double T, const SlipRule & R) const
 {
   History res;
-  res.add_object<double>("strength");
-  res.get_object<double>("strength") = hist_rate(stress, Q, history, L, T, R);
+  res.add<double>("strength");
+  res.get<double>("strength") = hist_rate(stress, Q, history, L, T, R);
 
   return res;
 }
@@ -43,8 +43,8 @@ History SlipSingleStrengthHardening::d_hist_d_s(
     const SlipRule & R) const
 {
   History res;
-  res.add_object<Symmetric>("strength");
-  res.get_object<Symmetric>("strength") = d_hist_rate_d_stress(stress,
+  res.add<Symmetric>("strength");
+  res.get<Symmetric>("strength") = d_hist_rate_d_stress(stress,
                                                                Q, 
                                                                history,L, T, R);
   return res;
@@ -58,22 +58,22 @@ History SlipSingleStrengthHardening::d_hist_d_h(
     double T, const SlipRule & R) const
 {
   History res;
-  res.add_object<double>("strength_strength");
-  res.get_object<double>("strength_strength") = d_hist_rate_d_strength(
+  res.add<double>("strength_strength");
+  res.get<double>("strength_strength") = d_hist_rate_d_strength(
       stress, Q, history, L, T, R);
   return res;
 }
 
 double SlipSingleStrengthHardening::hist_map(const History & history) const
 {
-  return history.get_object<double>("strength");
+  return history.get<double>("strength");
 }
 
 History SlipSingleStrengthHardening::d_hist_map(const History & history) const
 {
   History res;
-  res.add_object<double>("strength");
-  res.get_object<double>("strength") = 1.0;
+  res.add<double>("strength");
+  res.get<double>("strength") = 1.0;
   return res;
 }
 
@@ -81,7 +81,7 @@ double PlasticSlipHardening::hist_rate(
     const Symmetric & stress, const Orientation & Q,
     const History & history, const Lattice & L, double T, const SlipRule & R) const
 {
-  double strength = history.get_object<double>("strength");
+  double strength = history.get<double>("strength");
   return hist_factor(strength, L, T) * R.sum_slip(stress, Q, history, L, T);
 }
 
@@ -90,7 +90,7 @@ Symmetric PlasticSlipHardening::d_hist_rate_d_stress(
     const History & history, const Lattice & L, double T,
     const SlipRule & R) const
 {
-  double strength = history.get_object<double>("strength");
+  double strength = history.get<double>("strength");
   return hist_factor(strength, L, T) * R.d_sum_slip_d_stress(stress, Q,
                                                             history, L, T);
 }
@@ -100,9 +100,9 @@ double PlasticSlipHardening::d_hist_rate_d_strength(
     const History & history, const Lattice & L, double T,
     const SlipRule & R) const
 {
-  double strength = history.get_object<double>("strength");
+  double strength = history.get<double>("strength");
   History dhist = R.d_sum_slip_d_hist(stress, Q, history, L, T);
-  double dstrength = dhist.get_object<double>("strength");
+  double dstrength = dhist.get<double>("strength");
   return d_hist_factor(strength, L, T) * R.sum_slip(stress, Q, history, L, T) 
       + hist_factor(strength, L, T) * dstrength;
 }

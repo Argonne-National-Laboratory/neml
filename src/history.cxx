@@ -6,17 +6,6 @@
 
 namespace neml {
 
-template<>
-struct History::item_return<double>{ typedef double & type;};
-
-template<>
-History::item_return<double>::type History::get_object<double>(std::string name) const
-{
-  error_if_not_exists_(name);
-  error_if_wrong_type_(name, GetStorageType<double>());
-  return storage_[loc_.at(name)];
-}
-
 History::History() :
     size_(0), store_(true)
 {
