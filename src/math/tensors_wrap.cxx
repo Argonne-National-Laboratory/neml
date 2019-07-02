@@ -458,6 +458,7 @@ PYBIND11_MODULE(tensors, m) {
 
       // End standard
       .def("to_sym", &RankFour::to_sym)
+      .def("to_symskew", &RankFour::to_symskew)
 
       .def("__getitem__", [](const RankFour & M, std::tuple<size_t,size_t,size_t,size_t> ind) {
            size_t i = std::get<0>(ind);
@@ -481,6 +482,15 @@ PYBIND11_MODULE(tensors, m) {
            {
             return me.dot(other);
            })
+      .def("dot", [](const RankFour & me, const SymSym & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const RankFour & me, const SymSkew & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+
       .def("dot", [](const RankFour & me, const RankTwo & other) -> RankTwo
            {
             return me.dot(other);
@@ -495,6 +505,9 @@ PYBIND11_MODULE(tensors, m) {
            })
 
       .def(py::self * py::self)
+      .def(py::self * SymSym())
+      .def(py::self * SymSkew())
+
       .def(py::self * RankTwo())
       .def(py::self * Symmetric())
       .def(py::self * Skew())
@@ -563,17 +576,131 @@ PYBIND11_MODULE(tensors, m) {
            {
             return me.dot(other);
            })
+      .def("dot", [](const SymSym & me, const RankFour & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSym & me, const SymSkew & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+        
       .def("dot", [](const SymSym & me, const Symmetric & other) -> Symmetric
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSym & me, const RankTwo & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSym & me, const Skew & other) -> RankTwo
            {
             return me.dot(other);
            })
 
       .def(py::self * py::self)
-      .def(py::self * Symmetric())
       .def(py::self * RankFour())
+      .def(py::self * SymSkew())
+      
+      .def(py::self * Symmetric())
       .def(py::self * RankTwo())
       .def(py::self * Skew())
       ;
+
+  py::class_<SymSkew, Tensor, std::shared_ptr<SymSkew>>(m, "SymSkew")
+      // Start standard
+      .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))
+
+      .def("__repr__",
+           [](SymSkew & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "SymSym(array([";
+              for (size_t i=0; i<6; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<3; j++) {
+                  ss << me.data()[i*3+j] << " ";
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]))";
+
+              return ss.str();
+           }, "python __repr__")
+
+      .def("__str__",
+           [](SymSkew & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "[";
+              for (size_t i=0; i<6; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<3; j++) {
+                  ss << me.data()[i*3+j] << " ";
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]";
+
+              return ss.str();
+           }, "python __str__")
+
+      .def("opposite", &SymSkew::opposite)
+      .def("__neg__", &SymSkew::opposite)
+
+      .def(double() * py::self)
+      .def(py::self * double())
+
+      .def(py::self / double())
+
+      .def(py::self += py::self)
+      .def(py::self + py::self)
+
+      .def(py::self -= py::self)
+      .def(py::self - py::self)
+
+      // End standard
+      .def("to_full", &SymSkew::to_full)
+
+      .def("dot", [](const SymSkew & me, const RankFour & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSkew & me, const SymSkew & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSkew & me, const SymSym & other) -> RankFour
+           {
+            return me.dot(other);
+           })
+
+      .def("dot", [](const SymSkew & me, const RankTwo & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSkew & me, const Symmetric & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+      .def("dot", [](const SymSkew & me, const Skew & other) -> RankTwo
+           {
+            return me.dot(other);
+           })
+
+      .def(py::self * py::self)
+      .def(py::self * SymSym())
+      .def(py::self * RankFour())
+
+      .def(py::self * RankTwo())
+      .def(py::self * Symmetric())
+      .def(py::self * Skew())
+      ;
+
 
 } // PYBIND11_MODULE(tensors, m)
 

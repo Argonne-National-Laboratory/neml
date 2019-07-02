@@ -11,6 +11,7 @@
 
 namespace neml {
 
+/// A kinematic model supplying D_p and W_p
 class KinematicModel: public NEMLObject {
  public:
   virtual Symmetric d_p(const Symmetric & stress, const Symmetric & d,
