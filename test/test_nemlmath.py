@@ -21,6 +21,10 @@ class TestLDTangent(unittest.TestCase):
     self.skew_deriv_ten = ws2ts(self.skew_deriv_red)
     self.skew_deriv_99 = unroll_fourth(self.skew_deriv_ten)
 
+    self.wws_deriv_red = ra.random((3,6))
+    self.wws_deriv_ten = wws2ts(self.wws_deriv_red)
+    self.wws_deriv_99 = unroll_fourth(self.wws_deriv_ten)
+
     self.S = np.array([[10.0,-20.0,15.0],[-20.0,60.0,5.0],[15.0,5.0,20.0]])
     self.S_v = sym(self.S)
 
@@ -37,6 +41,10 @@ class TestLDTangent(unittest.TestCase):
   def test_skew_convert(self):
     self.assertTrue(np.allclose(nemlmath.skew2full(self.skew_deriv_red), self.skew_deriv_99))
     self.assertTrue(np.allclose(nemlmath.full2skew(self.skew_deriv_99), self.skew_deriv_red))
+
+  def test_wws_convert(self):
+    self.assertTrue(np.allclose(nemlmath.wws2full(self.wws_deriv_red), self.wws_deriv_99))
+    self.assertTrue(np.allclose(nemlmath.full2wws(self.wws_deriv_99), self.wws_deriv_red))
 
   def test_identities(self):
     sym = unroll_fourth(0.5*(np.einsum('ik,jl', np.eye(3), np.eye(3)) + np.einsum('jk,il', np.eye(3), np.eye(3))))

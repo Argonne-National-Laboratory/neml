@@ -1,12 +1,11 @@
-#ifndef KINEMATICS_H
-#define KINEMATICS_H
+#ifndef INELASTICITY_H
+#define INELASTICITY_H
 
 #include "crystallography.h"
 #include "sliprules.h"
 
 #include "../objects.h"
 #include "../history.h"
-#include "../elasticity.h"
 
 #include "../math/rotations.h"
 #include "../math/tensors.h"
@@ -51,6 +50,16 @@ class InelasticModel: public NEMLObject {
                    const History & history,
                    const Lattice & lattice,
                    double T) const = 0;
+  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+                                 const Orientation & Q,
+                                 const History & history,
+                                 const Lattice & lattice,
+                                 double T) const = 0;
+  virtual History d_w_p_d_history(const Symmetric & stress,
+                                  const Orientation & Q,
+                                  const History & history,
+                                  const Lattice & lattice,
+                                  double T) const = 0;
 };
 
 /// I don't know, maybe it might be useful
@@ -103,6 +112,16 @@ class NoInelasticity: public InelasticModel {
                    const Orientation & Q,
                    const History & history,
                    const Lattice & lattice, double T) const;
+  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+                                 const Orientation & Q,
+                                 const History & history,
+                                 const Lattice & lattice,
+                                 double T) const;
+  virtual History d_w_p_d_history(const Symmetric & stress,
+                                  const Orientation & Q,
+                                  const History & history,
+                                  const Lattice & lattice,
+                                  double T) const;
 };
 
 static Register<NoInelasticity> regNoInelasticity;
@@ -152,6 +171,16 @@ class AsaroInelasticity: public InelasticModel {
                    const Orientation & Q,
                    const History & history,
                    const Lattice & lattice, double T) const;
+  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+                                 const Orientation & Q,
+                                 const History & history,
+                                 const Lattice & lattice,
+                                 double T) const;
+  virtual History d_w_p_d_history(const Symmetric & stress,
+                                  const Orientation & Q,
+                                  const History & history,
+                                  const Lattice & lattice,
+                                  double T) const;
 
  private:
   std::shared_ptr<SlipRule> rule_;
@@ -161,4 +190,4 @@ static Register<AsaroInelasticity> regAsaroInelasticity;
 
 } // namespace neml
 
-#endif // KINEMATICS_H
+#endif // INELASTICITY_H

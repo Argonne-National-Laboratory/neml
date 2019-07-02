@@ -23,7 +23,20 @@ class CommonInelastic(object):
         self.H)
     d = np.array(self.model.d_d_p_d_history(self.S, self.Q, self.H, self.L, self.T))
     
-    self.assertTrue(np.allclose(nd.reshape(d.shape), d))
+    self.assertTrue(np.allclose(d.T.reshape(nd.shape), nd))
+
+  def test_w_p_d_stress(self):
+    nd = diff_skew_symmetric(lambda s: self.model.w_p(s, self.Q, self.H, self.L, self.T), 
+      self.S)
+    d = self.model.d_w_p_d_stress(self.S, self.Q, self.H, self.L, self.T)
+    self.assertEqual(nd, d)
+
+  def test_w_p_d_history(self):
+    nd = diff_skew_history(lambda h: self.model.w_p(self.S, self.Q, h, self.L, self.T),
+        self.H)
+    d = np.array(self.model.d_w_p_d_history(self.S, self.Q, self.H, self.L, self.T))
+
+    self.assertTrue(np.allclose(d.T.reshape(nd.shape), nd))
 
   def test_d_hist_rate_d_stress(self):
     nd = diff_history_symmetric(lambda s: self.model.history_rate(s, self.Q, self.H, self.L, self.T),

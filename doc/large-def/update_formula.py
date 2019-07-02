@@ -238,6 +238,37 @@ def ts2ws(C):
 
   return Cv
 
+def wws2ts(C):
+  """
+    Convert a skew notation stiffness matrix to a full stiffness tensor.
+  """
+  Ct = zero_tensor((3,3,3,3))
+  for a in range(3):
+    for b in range(6):
+      inds_a = skew_inds[a]
+      inds_b = mandel[b]
+      mult_a = skew_mults[a]
+      mult_b = mandel_mults[b]
+      for ord_a, f in zip(((0,1),(1,0)),(1,-1)):
+        for ord_b in ((0,1),(1,0)):
+          ind = tuple([inds_a[aa] for aa in ord_a] + [inds_b[bb] for bb in ord_b])
+          Ct[ind] = C[a,b] / (mult_a * mult_b) * f
+
+  return Ct
+
+def ts2wws(C):
+  """
+    Convert a stiffness tensor into a skew notation stiffness matrix
+  """
+  Cv = zeros(3,6)
+  for i in range(3):
+    for j in range(6):
+      ma = skew_mults[i]
+      mb = mandel_mults[j]
+      Cv[i,j] = C[skew_inds[i] + mandel[j]] * ma * mb
+
+  return Cv
+
 def trace(X):
   return (X[0,0] + X[1,1] + X[2,2])
 
@@ -288,10 +319,15 @@ def tangent():
   skew_ten = ws2ts(skew_mat)
   skew_full = unroll_fourth(skew_ten)
 
+  wws_mat = Matrix([[symbols("M[%i]" % (i*6+j)) for j in range(6)] for i in range(3)])
+  wws_ten = wws2ts(wws_mat)
+  wws_full = unroll_fourth(wws_ten)
+
   A_mat = Matrix([[symbols("A[%i]" % (i*9+j)) for j in range(9)] for i in range(9)])
   A_ten = reroll_fourth(A_mat)
   A_mandel = ts2ms(A_ten)
   A_skew = ts2ws(A_ten)
+  A_wws = ts2wws(A_ten)
 
   print("Mandel->9x9")
   for i in range(9):
@@ -309,11 +345,21 @@ def tangent():
     for j in range(9):
       print(("\tA[%i] = " + str(skew_full[i,j]) + ";") % (i*9+j))
   print("")
-  
   print("9x9->Skew")
   for i in range(6):
     for j in range(3):
       print(("\tM[%i] = " + str(A_skew[i,j]) + ";") % (i*3+j))
+  print("")
+
+  print("WWS->9x9")
+  for i in range(9):
+    for j in range(9):
+      print(("\tA[%i] = " + str(wws_full[i,j]) + ";") % (i*9+j))
+  print("")
+  print("9x9->WWS")
+  for i in range(3):
+    for j in range(6):
+      print(("\tM[%i] = " + str(A_wws[i,j]) + ";") % (i*6+j))
   print("")
 
   S0, S1, S2, S3, S4, S5 = symbols("S[0] S[1] S[2] S[3] S[4] S[5]")
@@ -341,8 +387,8 @@ def parts_to_whole():
 if __name__ == "__main__":
   init_printing(use_unicode=True)
 
-  update()
+  #update()
   tangent()
-  parts_to_whole()
+  #parts_to_whole()
 
 

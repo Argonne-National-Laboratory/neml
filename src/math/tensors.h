@@ -16,6 +16,7 @@ class Skew;
 class RankFour;
 class SymSym;
 class SymSkew;
+class SkewSym;
 
 class Tensor {
  public:
@@ -276,11 +277,13 @@ class RankFour: public Tensor {
 
   SymSym to_sym() const;
   SymSkew to_symskew() const;
+  SkewSym to_skewsym() const;
 
   // Various multiplications
   RankFour dot(const RankFour & other) const;
   RankFour dot(const SymSym & other) const;
   RankFour dot(const SymSkew & other) const;
+  RankFour dot(const SkewSym & other) const;
 
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Symmetric & other) const;
@@ -300,6 +303,7 @@ RankFour operator-(const RankFour & a, const RankFour & b);
 RankFour operator*(const RankFour & a, const RankFour & b);
 RankFour operator*(const RankFour & a, const SymSym & b);
 RankFour operator*(const RankFour & a, const SymSkew & b);
+RankFour operator*(const RankFour & a, const SkewSym & b);
 
 RankTwo operator*(const RankFour & a, const RankTwo & b);
 RankTwo operator*(const RankFour & a, const Symmetric & b);
@@ -330,6 +334,7 @@ class SymSym: public Tensor {
   RankFour dot(const RankFour & other) const;
   SymSym dot(const SymSym & other) const;
   RankFour dot(const SymSkew & other) const;
+  RankFour dot(const SkewSym & other) const;
 
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Skew & other) const;
@@ -349,6 +354,7 @@ SymSym operator-(const SymSym & a, const SymSym & b);
 RankFour operator*(const SymSym & a, const RankFour & b);
 SymSym operator*(const SymSym & a, const SymSym & b);
 RankFour operator*(const SymSym & a, const SymSkew & b);
+RankFour operator*(const SymSym & a, const SkewSym & b);
 
 RankTwo operator*(const SymSym & a, const RankTwo & b);
 RankTwo operator*(const SymSym & a, const Skew & b);
@@ -382,6 +388,7 @@ class SymSkew: public Tensor {
   RankFour dot(const RankFour & other) const;
   RankFour dot(const SymSym & other) const;
   RankFour dot(const SymSkew & other) const;
+  RankFour dot(const SkewSym & other) const;
 
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Skew & other) const;
@@ -401,6 +408,7 @@ SymSkew operator-(const SymSkew & a, const SymSkew & b);
 RankFour operator*(const SymSkew & a, const RankFour & b);
 RankFour operator*(const SymSkew & a, const SymSym & b);
 RankFour operator*(const SymSkew & a, const SymSkew & b);
+RankFour operator*(const SymSkew & a, const SkewSym & b);
 
 RankTwo operator*(const SymSkew & a, const RankTwo & b);
 RankTwo operator*(const SymSkew & a, const Skew & b);
@@ -409,6 +417,59 @@ RankTwo operator*(const SymSkew & a, const Symmetric & b);
 /// io for SymSkew tensors
 std::ostream & operator<<(std::ostream & os, const SymSkew & v);
 
+class SkewSym: public Tensor {
+ public:
+  SkewSym();
+  SkewSym(const std::vector<double> v);
+  SkewSym(const std::vector<std::vector<double>> A);
+  SkewSym(double * v);
+
+  SkewSym opposite() const;
+  SkewSym operator-() const;
+
+  SkewSym & operator+=(const SkewSym & other);
+  SkewSym & operator-=(const SkewSym & other);
+
+  RankFour to_full() const;
+
+  double & operator()(size_t i, size_t j);
+  const double & operator()(size_t i, size_t j) const;
+
+  // Various multiplication
+  RankFour dot(const RankFour & other) const;
+  RankFour dot(const SymSym & other) const;
+  RankFour dot(const SkewSym & other) const;
+  RankFour dot(const SymSkew & other) const;
+
+  RankTwo dot(const RankTwo & other) const;
+  RankTwo dot(const Skew & other) const;
+  RankTwo dot(const Symmetric & other) const;
+};
+
+// Binary operators with scalars
+SkewSym operator*(double s, const SkewSym & v);
+SkewSym operator*(const SkewSym & v, double s);
+SkewSym operator/(const SkewSym & v, double s);
+
+// Various forms of addition
+SkewSym operator+(const SkewSym & a, const SkewSym & b);
+SkewSym operator-(const SkewSym & a, const SkewSym & b);
+
+// Various forms of multiplication
+RankFour operator*(const SkewSym & a, const RankFour & b);
+RankFour operator*(const SkewSym & a, const SymSym & b);
+RankFour operator*(const SkewSym & a, const SkewSym & b);
+RankFour operator*(const SkewSym & a, const SymSkew & b);
+
+RankTwo operator*(const SkewSym & a, const RankTwo & b);
+RankTwo operator*(const SkewSym & a, const Skew & b);
+RankTwo operator*(const SkewSym & a, const Symmetric & b);
+
+// ij kl
+SkewSym douter(const Skew & a, const Symmetric & b);
+
+/// io for SkewSym tensors
+std::ostream & operator<<(std::ostream & os, const SkewSym & v);
 
 } // namespace neml
 

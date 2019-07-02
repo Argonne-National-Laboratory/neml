@@ -95,6 +95,36 @@ PYBIND11_MODULE(nemlmath, m) {
           return A;
         }, "Convert a skew-stored tensor to a 9x9");
 
+  m.def("full2wws",
+        [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+          if ((A.request().shape[0] != 9) or (A.request().shape[1] != 9)) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+
+          auto M = alloc_mat<double>(3,6);
+          full2wws(arr2ptr<double>(A), arr2ptr<double>(M));
+
+          return M;
+        }, "Convert a 9x9 to a ws matrix");
+  
+  m.def("wws2full",
+        [](py::array_t<double, py::array::c_style> M) -> py::array_t<double>
+        {
+          if ((M.request().ndim != 2) || (M.request().shape[0] != 3) 
+              || (M.request().shape[1] != 6)) {
+            throw LinalgError("Input must be a 3x6 matrix!");
+          }
+
+          auto A = alloc_mat<double>(9,9);
+          wws2full(arr2ptr<double>(M), arr2ptr<double>(A));
+
+          return A;
+        }, "Convert a ws to a full 9x9");
+
   m.def("full2mandel",
         [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
         {

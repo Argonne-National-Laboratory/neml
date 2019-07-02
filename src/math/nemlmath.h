@@ -42,6 +42,12 @@ int full2skew(const double * const A, double * const M);
 /// Convert a skew derivative matrix to a 9x9
 int skew2full(const double * const M, double * const A);
 
+/// Convert a 9x9 into a ws matrix
+int full2wws(const double * const A, double * const M);
+
+/// Convert a 3x6 ws matrix into a 9x9
+int wws2full(const double * const M, double * const A);
+
 /// Convert a 9x9 to a mandel matrix
 int full2mandel(const double * const A, double * const M);
 
