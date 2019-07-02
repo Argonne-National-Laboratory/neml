@@ -27,6 +27,11 @@ def diff_symmetric_symmetric(fn, s0):
 
   return tensors.SymSym(differentiate(dfn, s0.data))
 
+def diff_symmetric_skew(fn, w0):
+  dfn = lambda w: fn(tensors.Skew(uskew(w))).data
+
+  return tensors.SymSkew(differentiate(dfn, w0.data))
+
 def diff_symmetric_history(fn, h0):
   vec = np.copy(np.array(h0))
 
@@ -65,6 +70,11 @@ def diff_history_symmetric(fn, s0):
   res = differentiate(dfn, s0.data)
 
   return res
+
+def diff_history_skew(fn, w0):
+  dfn = lambda w: np.array(fn(tensors.Skew(uskew(w))))
+
+  return differentiate(dfn, w0.data)
 
 def diff_history_history(fn, h0):
   vec = np.copy(np.array(h0))

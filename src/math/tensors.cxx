@@ -1828,4 +1828,22 @@ std::ostream & operator<<(std::ostream & os, const SkewSym & v)
   return os;
 }
 
+SymSym SymSymSkew_SkewSymSym(const SymSym & S, const Skew & W)
+{
+  SymSym res;
+  
+  SymSymSkewmSkewSymSym(S.data(), W.data(), res.s());
+
+  return res;
+}
+
+SymSym SymSkewSym_SkewSymSym(const SkewSym & S, const Symmetric & D)
+{
+  SymSym res;
+
+  SymSkewSymmSkewSymSym(D.data(), S.data(), res.s());
+
+  return res;
+}
+
 } // namespace neml

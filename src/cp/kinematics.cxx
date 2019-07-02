@@ -83,6 +83,21 @@ SymSym StandardKinematicModel::d_stress_rate_d_stress(
     const History & history, const Lattice & lattice,
     double T) const
 {
+  SymSym C = emodel_->C(T, Q);
+  SymSym S = emodel_->S(T, Q);
+
+  Symmetric e = S.dot(stress);
+
+  Skew O_s = espin_ + imodel_->w_p(stress, Q, history, lattice, T);
+
+  SymSym D1 = imodel_->d_d_p_d_stress(stress, Q, history, lattice, T);
+  SymSym D2 = SymSymSkew_SkewSymSym(S, O_s);
+
+  SkewSym DW = imodel_->d_w_p_d_stress(stress, Q, history, lattice, T);
+
+  SymSym D3 = SymSkewSym_SkewSymSym(DW, e);
+
+  return -C * (D1 + D2 + D3);
 
 }
 
@@ -92,7 +107,7 @@ SymSym StandardKinematicModel::d_stress_rate_d_d(
     const History & history, const Lattice & lattice,
     double T) const
 {
-
+  return emodel_->C(T, Q);
 }
 
 SymSkew StandardKinematicModel::d_stress_rate_d_w(
@@ -101,7 +116,7 @@ SymSkew StandardKinematicModel::d_stress_rate_d_w(
     const History & history, const Lattice & lattice,
     double T) const
 {
-
+  return SymSkew();
 }
 
 History StandardKinematicModel::d_stress_rate_d_history(
@@ -128,7 +143,7 @@ History StandardKinematicModel::d_history_rate_d_stress(
     const History & history, const Lattice & lattice,
     double T) const
 {
-
+  return imodel_->d_history_rate_d_stress(stress, Q, history, lattice, T);
 }
 
 History StandardKinematicModel::d_history_rate_d_d(
@@ -137,7 +152,7 @@ History StandardKinematicModel::d_history_rate_d_d(
     const History & history, const Lattice & lattice,
     double T) const
 {
-
+  return history.derivative<Symmetric>();
 }
 
 History StandardKinematicModel::d_history_rate_d_w(
@@ -146,7 +161,7 @@ History StandardKinematicModel::d_history_rate_d_w(
     const History & history, const Lattice & lattice,
     double T) const
 {
-
+  return history.derivative<Skew>();
 }
 
 History StandardKinematicModel::d_history_rate_d_history(
@@ -155,7 +170,7 @@ History StandardKinematicModel::d_history_rate_d_history(
     const History & history, const Lattice & lattice,
     double T) const
 {
-
+  return imodel_->d_history_rate_d_history(stress, Q, history, lattice, T);
 }
 
 Skew StandardKinematicModel::spin(

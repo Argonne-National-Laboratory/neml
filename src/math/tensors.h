@@ -471,6 +471,14 @@ SkewSym douter(const Skew & a, const Symmetric & b);
 /// io for SkewSym tensors
 std::ostream & operator<<(std::ostream & os, const SkewSym & v);
 
+
+// Helper CP methods
+/// Skmab*Wml - Wkm*Smlab
+SymSym SymSymSkew_SkewSymSym(const SymSym & S, const Skew & W);
+
+/// Dkm*Smlab - Skmab*Dml
+SymSym SymSkewSym_SkewSymSym(const SkewSym & S, const Symmetric & D);
+
 } // namespace neml
 
 #endif

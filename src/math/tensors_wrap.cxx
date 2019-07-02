@@ -824,6 +824,8 @@ PYBIND11_MODULE(tensors, m) {
         {
           return douter(a, b);
         });
+  m.def("SymSymSkew_SkewSymSym", &SymSymSkew_SkewSymSym);
+  m.def("SymSkewSym_SkewSymSym", &SymSkewSym_SkewSymSym);
 
 } // PYBIND11_MODULE(tensors, m)
 

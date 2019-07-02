@@ -30,6 +30,12 @@ namespace neml {
 const double idsym[81] = {1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0};
 const double idskew[81] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
+/// Specialty crystal plasticity operator: M_kmab*W_ml - W_km*M_mlab
+int SymSymSkewmSkewSymSym(const double * const M, const double * const W, double * const SS);
+
+/// Specialty crystal plasticity operator: D_km * M_mlab - M_kmab D_ml
+int SymSkewSymmSkewSymSym(const double * const D, const double * const M, double * const SS);
+
 /// Convert the symmetric and skew parts into a complete fourth order
 int transform_fourth(const double * const D, const double * const W, double * const M);
 

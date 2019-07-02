@@ -896,3 +896,50 @@ class TestSkewSym(unittest.TestCase):
 
   def test_douter(self):
     self.assertEqual(tensors.SkewSym(common.ts2wws(np.einsum('ij,kl', self.W, self.S))), tensors.douter(self.TW, self.TS))
+
+class TestCPSpeciality(unittest.TestCase):
+  def setUp(self):
+    self.SS = np.array([
+      [ 5.99159801, -2.24342348,  0.26667281, -0.95466199,  3.98931478, -0.10846981],
+      [ 1.86468226, -4.32391908, -7.82738638, -7.45008989,  5.89874777, 0.45820648],
+      [-5.92565398,  2.4862829 , -6.02112389,  6.75455965,  4.65183463, 9.96900579],
+      [ 0.60378883, -3.72189328, -7.63388446, -5.76559403, -0.3119789 , -1.1527258 ],
+      [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
+      [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
+    self.SS_full = common.ms2ts(self.SS)
+    self.TSS = tensors.SymSym(self.SS)
+
+    self.W = np.array([[-9.36416517,  2.95527444,  8.70983194],
+           [-1.54693052,  8.7905658 , -5.10895168],
+           [-8.52740468, -0.7741642 ,  2.89544992]])
+    self.W = 0.5 * (self.W - self.W.T)
+    self.TW = tensors.Skew(self.W)
+
+    self.S = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.S = 0.5*(self.S + self.S.T)
+    self.TS = tensors.Symmetric(self.S)
+
+    self.WS = np.array([
+      [-8.3567359 , -5.39728818, -8.00844442, -8.33365112, -0.97903364, -8.23943149],
+      [-6.97125417,  4.34802055,  7.06281056, -1.57511617,  7.83359933, -9.37625432],
+      [-6.0799489 , -6.0309543 ,  3.68575895,  8.84296976,  6.55799427, -9.22029379]])
+    self.WS_full = common.wws2ts(self.WS)
+    self.TWS = tensors.SkewSym(self.WS)
+
+  def test_symsymskew_skewsymsym(self):
+    A1 = tensors.SymSymSkew_SkewSymSym(self.TSS, self.TW)
+
+    A2_ten = np.einsum('kmst,ml', self.SS_full, self.W) - np.einsum('km,mlst',
+        self.W, self.SS_full)
+    A2 = tensors.SymSym(common.ts2ms(A2_ten))
+
+    self.assertEqual(A1, A2)
+
+  def test_symskewsym_skewsymsym(self):
+    A1 = tensors.SymSkewSym_SkewSymSym(self.TWS, self.TS)
+
+    A2_ten = np.einsum('km,mlst', self.S, self.WS_full) - np.einsum('kmst,ml',
+        self.WS_full, self.S)
+    A2 = tensors.SymSym(common.ts2ms(A2_ten))
+
+    self.assertEqual(A1, A2)

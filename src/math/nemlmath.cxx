@@ -8,6 +8,90 @@
 
 namespace neml {
 
+int SymSymSkewmSkewSymSym(const double * const M, const double * const W, double * const SS)
+{
+	SS[0] = sqrt(2)*(-M[24]*W[1] + M[30]*W[2]);
+	SS[1] = sqrt(2)*(-M[25]*W[1] + M[31]*W[2]);
+	SS[2] = sqrt(2)*(-M[26]*W[1] + M[32]*W[2]);
+	SS[3] = sqrt(2)*(-M[27]*W[1] + M[33]*W[2]);
+	SS[4] = sqrt(2)*(-M[28]*W[1] + M[34]*W[2]);
+	SS[5] = sqrt(2)*(-M[29]*W[1] + M[35]*W[2]);
+	SS[6] = sqrt(2)*(M[18]*W[0] - M[30]*W[2]);
+	SS[7] = sqrt(2)*(M[19]*W[0] - M[31]*W[2]);
+	SS[8] = sqrt(2)*(M[20]*W[0] - M[32]*W[2]);
+	SS[9] = sqrt(2)*(M[21]*W[0] - M[33]*W[2]);
+	SS[10] = sqrt(2)*(M[22]*W[0] - M[34]*W[2]);
+	SS[11] = sqrt(2)*(M[23]*W[0] - M[35]*W[2]);
+	SS[12] = sqrt(2)*(-M[18]*W[0] + M[24]*W[1]);
+	SS[13] = sqrt(2)*(-M[19]*W[0] + M[25]*W[1]);
+	SS[14] = sqrt(2)*(-M[20]*W[0] + M[26]*W[1]);
+	SS[15] = sqrt(2)*(-M[21]*W[0] + M[27]*W[1]);
+	SS[16] = sqrt(2)*(-M[22]*W[0] + M[28]*W[1]);
+	SS[17] = sqrt(2)*(-M[23]*W[0] + M[29]*W[1]);
+	SS[18] = sqrt(2)*M[12]*W[0] - M[24]*W[2] + M[30]*W[1] - sqrt(2)*M[6]*W[0];
+	SS[19] = sqrt(2)*M[13]*W[0] - M[25]*W[2] + M[31]*W[1] - sqrt(2)*M[7]*W[0];
+	SS[20] = sqrt(2)*M[14]*W[0] - M[26]*W[2] + M[32]*W[1] - sqrt(2)*M[8]*W[0];
+	SS[21] = sqrt(2)*M[15]*W[0] - M[27]*W[2] + M[33]*W[1] - sqrt(2)*M[9]*W[0];
+	SS[22] = -sqrt(2)*M[10]*W[0] + sqrt(2)*M[16]*W[0] - M[28]*W[2] + M[34]*W[1];
+	SS[23] = -sqrt(2)*M[11]*W[0] + sqrt(2)*M[17]*W[0] - M[29]*W[2] + M[35]*W[1];
+	SS[24] = sqrt(2)*M[0]*W[1] - sqrt(2)*M[12]*W[1] + M[18]*W[2] - M[30]*W[0];
+	SS[25] = -sqrt(2)*M[13]*W[1] + M[19]*W[2] + sqrt(2)*M[1]*W[1] - M[31]*W[0];
+	SS[26] = -sqrt(2)*M[14]*W[1] + M[20]*W[2] + sqrt(2)*M[2]*W[1] - M[32]*W[0];
+	SS[27] = -sqrt(2)*M[15]*W[1] + M[21]*W[2] - M[33]*W[0] + sqrt(2)*M[3]*W[1];
+	SS[28] = -sqrt(2)*M[16]*W[1] + M[22]*W[2] - M[34]*W[0] + sqrt(2)*M[4]*W[1];
+	SS[29] = -sqrt(2)*M[17]*W[1] + M[23]*W[2] - M[35]*W[0] + sqrt(2)*M[5]*W[1];
+	SS[30] = -sqrt(2)*M[0]*W[2] - M[18]*W[1] + M[24]*W[0] + sqrt(2)*M[6]*W[2];
+	SS[31] = -M[19]*W[1] - sqrt(2)*M[1]*W[2] + M[25]*W[0] + sqrt(2)*M[7]*W[2];
+	SS[32] = -M[20]*W[1] + M[26]*W[0] - sqrt(2)*M[2]*W[2] + sqrt(2)*M[8]*W[2];
+	SS[33] = -M[21]*W[1] + M[27]*W[0] - sqrt(2)*M[3]*W[2] + sqrt(2)*M[9]*W[2];
+	SS[34] = sqrt(2)*M[10]*W[2] - M[22]*W[1] + M[28]*W[0] - sqrt(2)*M[4]*W[2];
+	SS[35] = sqrt(2)*M[11]*W[2] - M[23]*W[1] + M[29]*W[0] - sqrt(2)*M[5]*W[2];
+ 
+  return 0;
+}
+
+int SymSkewSymmSkewSymSym(const double * const D, const double * const M, double * const SS)
+{
+	SS[0] = sqrt(2)*(-D[4]*M[6] + D[5]*M[12]);
+	SS[1] = sqrt(2)*(-D[4]*M[7] + D[5]*M[13]);
+	SS[2] = sqrt(2)*(-D[4]*M[8] + D[5]*M[14]);
+	SS[3] = sqrt(2)*(-D[4]*M[9] + D[5]*M[15]);
+	SS[4] = sqrt(2)*(-D[4]*M[10] + D[5]*M[16]);
+	SS[5] = sqrt(2)*(-D[4]*M[11] + D[5]*M[17]);
+	SS[6] = sqrt(2)*(D[3]*M[0] - D[5]*M[12]);
+	SS[7] = sqrt(2)*(D[3]*M[1] - D[5]*M[13]);
+	SS[8] = sqrt(2)*(D[3]*M[2] - D[5]*M[14]);
+	SS[9] = sqrt(2)*(D[3]*M[3] - D[5]*M[15]);
+	SS[10] = sqrt(2)*(D[3]*M[4] - D[5]*M[16]);
+	SS[11] = sqrt(2)*(D[3]*M[5] - D[5]*M[17]);
+	SS[12] = sqrt(2)*(-D[3]*M[0] + D[4]*M[6]);
+	SS[13] = sqrt(2)*(-D[3]*M[1] + D[4]*M[7]);
+	SS[14] = sqrt(2)*(-D[3]*M[2] + D[4]*M[8]);
+	SS[15] = sqrt(2)*(-D[3]*M[3] + D[4]*M[9]);
+	SS[16] = sqrt(2)*(-D[3]*M[4] + D[4]*M[10]);
+	SS[17] = sqrt(2)*(-D[3]*M[5] + D[4]*M[11]);
+	SS[18] = -sqrt(2)*D[1]*M[0] + sqrt(2)*D[2]*M[0] - D[4]*M[12] + D[5]*M[6];
+	SS[19] = -sqrt(2)*D[1]*M[1] + sqrt(2)*D[2]*M[1] - D[4]*M[13] + D[5]*M[7];
+	SS[20] = -sqrt(2)*D[1]*M[2] + sqrt(2)*D[2]*M[2] - D[4]*M[14] + D[5]*M[8];
+	SS[21] = -sqrt(2)*D[1]*M[3] + sqrt(2)*D[2]*M[3] - D[4]*M[15] + D[5]*M[9];
+	SS[22] = -sqrt(2)*D[1]*M[4] + sqrt(2)*D[2]*M[4] - D[4]*M[16] + D[5]*M[10];
+	SS[23] = -sqrt(2)*D[1]*M[5] + sqrt(2)*D[2]*M[5] - D[4]*M[17] + D[5]*M[11];
+	SS[24] = sqrt(2)*D[0]*M[6] - sqrt(2)*D[2]*M[6] + D[3]*M[12] - D[5]*M[0];
+	SS[25] = sqrt(2)*D[0]*M[7] - sqrt(2)*D[2]*M[7] + D[3]*M[13] - D[5]*M[1];
+	SS[26] = sqrt(2)*D[0]*M[8] - sqrt(2)*D[2]*M[8] + D[3]*M[14] - D[5]*M[2];
+	SS[27] = sqrt(2)*D[0]*M[9] - sqrt(2)*D[2]*M[9] + D[3]*M[15] - D[5]*M[3];
+	SS[28] = sqrt(2)*D[0]*M[10] - sqrt(2)*D[2]*M[10] + D[3]*M[16] - D[5]*M[4];
+	SS[29] = sqrt(2)*D[0]*M[11] - sqrt(2)*D[2]*M[11] + D[3]*M[17] - D[5]*M[5];
+	SS[30] = -sqrt(2)*D[0]*M[12] + sqrt(2)*D[1]*M[12] - D[3]*M[6] + D[4]*M[0];
+	SS[31] = -sqrt(2)*D[0]*M[13] + sqrt(2)*D[1]*M[13] - D[3]*M[7] + D[4]*M[1];
+	SS[32] = -sqrt(2)*D[0]*M[14] + sqrt(2)*D[1]*M[14] - D[3]*M[8] + D[4]*M[2];
+	SS[33] = -sqrt(2)*D[0]*M[15] + sqrt(2)*D[1]*M[15] - D[3]*M[9] + D[4]*M[3];
+	SS[34] = -sqrt(2)*D[0]*M[16] + sqrt(2)*D[1]*M[16] - D[3]*M[10] + D[4]*M[4];
+	SS[35] = -sqrt(2)*D[0]*M[17] + sqrt(2)*D[1]*M[17] - D[3]*M[11] + D[4]*M[5];
+
+  return 0;
+}
+
 int transform_fourth(const double * const D, const double * const W, double * const M)
 {
 	M[0] = D[0];

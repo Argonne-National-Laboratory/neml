@@ -11,7 +11,68 @@ import unittest
 import numpy as np
 import numpy.linalg as la
 
-class TestStandardKinematics(unittest.TestCase):
+class CommonKinematics(object):
+  def test_d_stress_rate_d_stress(self):
+    nd = diff_symmetric_symmetric(lambda s: self.model.stress_rate(s, 
+      self.d, self.w, self.Q, self.H, self.L, self.T), self.S)
+
+    d = self.model.d_stress_rate_d_stress(self.S, self.d, self.w, self.Q, 
+        self.H, self.L, self.T)
+
+    self.assertEqual(d, nd)
+
+  def test_d_stress_rate_d_d(self):
+    nd = diff_symmetric_symmetric(lambda d: self.model.stress_rate(self.S, 
+      d, self.w, self.Q, self.H, self.L, self.T), self.d)
+    d = self.model.d_stress_rate_d_d(self.S, self.d, self.w, self.Q, self.H, self.L,
+        self.T)
+
+    self.assertEqual(nd, d)
+
+  def test_d_stress_rate_d_w(self):
+    nd = diff_symmetric_skew(lambda w: self.model.stress_rate(self.S, self.d,
+      w, self.Q, self.H, self.L, self.T), self.w)
+    d = self.model.d_stress_rate_d_w(self.S, self.d, self.w, self.Q, self.H,
+        self.L, self.T)
+
+    self.assertEqual(nd, d)
+
+  def test_d_stress_rate_d_history(self):
+    pass
+
+  def test_d_history_rate_d_stress(self):
+    nd = diff_history_symmetric(lambda s: self.model.history_rate(s, self.d,
+      self.w, self.Q, self.H, self.L, self.T), self.S)
+    d = np.array(self.model.d_history_rate_d_stress(self.S, self.d, self.w,
+        self.Q, self.H, self.L, self.T))
+
+    self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
+
+  def test_d_history_rate_d_d(self):
+    nd = diff_history_symmetric(lambda d: self.model.history_rate(self.S, d,
+      self.w, self.Q, self.H, self.L, self.T), self.d)
+    d = np.array(self.model.d_history_rate_d_d(self.S, self.d, self.w, self.Q,
+        self.H, self.L, self.T))
+
+    self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
+
+  def test_d_history_rate_d_w(self):
+    nd = diff_history_skew(lambda w: self.model.history_rate(self.S, self.d,
+      w, self.Q, self.H, self.L, self.T), self.w)
+    d = np.array(self.model.d_history_rate_d_w(self.S, self.d, self.w, self.Q,
+      self.H, self.L, self.T))
+
+    self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
+
+  def test_d_history_rate_d_history(self):
+    nd = diff_history_history(lambda h: self.model.history_rate(self.S, self.d,
+      self.w, self.Q, h, self.L, self.T), self.H)
+    d = np.array(self.model.d_history_rate_d_history(self.S, self.d, self.w,
+      self.Q, self.H, self.L, self.T))
+
+    self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
+
+class TestStandardKinematics(unittest.TestCase, CommonKinematics):
   def setUp(self):
     self.strength = 35.0
     self.H = history.History()
