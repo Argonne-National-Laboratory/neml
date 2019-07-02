@@ -607,6 +607,8 @@ PYBIND11_MODULE(tensors, m) {
       .def(py::self * Skew())
       ;
 
+  m.def("douter", &douter);
+
   py::class_<SymSkew, Tensor, std::shared_ptr<SymSkew>>(m, "SymSkew")
       // Start standard
       .def(py::init<const std::vector<std::vector<double>>>(), py::arg("data"))

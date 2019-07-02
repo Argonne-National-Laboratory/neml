@@ -1352,6 +1352,18 @@ Symmetric operator*(const SymSym & a, const Symmetric & b)
   return a.dot(b);
 }
 
+SymSym douter(const Symmetric & a, const Symmetric & b)
+{
+  SymSym res;
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      res(i,j) = a.data()[i] * b.data()[j];
+    }
+  }
+
+  return res;
+}
+
 /// io for SymSym tensors
 std::ostream & operator<<(std::ostream & os, const SymSym & v)
 {

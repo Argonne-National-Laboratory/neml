@@ -110,6 +110,8 @@ class History {
   std::map<std::string,StorageType> & get_type() {return type_;};
   std::vector<std::string> & get_order() {return order_;};
 
+  const std::vector<std::string> & items() const {return get_order();};
+
   /// Resize method
   void resize(size_t inc);
 

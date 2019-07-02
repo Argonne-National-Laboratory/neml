@@ -7,6 +7,23 @@ from common import *
 from neml.math import tensors
 from neml import history
 
+def diff_symmetric_symmetric(fn, s0):
+  dfn = lambda s: fn(tensors.Symmetric(usym(s))).data
+
+  return tensors.SymSym(differentiate(dfn, s0.data))
+
+def diff_symmetric_history(fn, h0):
+  vec = np.copy(np.array(h0))
+
+  def dfn(x):
+    H = h0.deepcopy()
+    H.copy_data(x)
+    return fn(H).data
+
+  nd = differentiate(dfn, vec)
+
+  return nd
+
 def diff_scalar_symmetric(fn, S0):
   dfn = lambda s: fn(tensors.Symmetric(s))
   

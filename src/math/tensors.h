@@ -334,7 +334,6 @@ class SymSym: public Tensor {
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Skew & other) const;
   Symmetric dot(const Symmetric & other) const;
-
 };
 
 // Binary operators with scalars
@@ -354,6 +353,9 @@ RankFour operator*(const SymSym & a, const SymSkew & b);
 RankTwo operator*(const SymSym & a, const RankTwo & b);
 RankTwo operator*(const SymSym & a, const Skew & b);
 Symmetric operator*(const SymSym & a, const Symmetric & b);
+
+/// D1_ij D2_kl
+SymSym douter(const Symmetric & a, const Symmetric & b);
 
 /// io for SymSym tensors
 std::ostream & operator<<(std::ostream & os, const SymSym & v);

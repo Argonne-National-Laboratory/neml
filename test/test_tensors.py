@@ -539,6 +539,10 @@ class TestSymSym(unittest.TestCase):
     self.S = 0.5*(self.S + self.S.T)
     self.TS = tensors.Symmetric(self.S)
 
+    self.S2 = np.array([[10.2,-9.3,2.5],[0.1,3.1,2.8],[0.1,3.2,-6.1]])
+    self.S2 = 0.5*(self.S2 + self.S2.T)
+    self.TS2 = tensors.Symmetric(self.S2)
+
     self.scalar = 5.2
 
     self.G = np.array([[ 9.50640677,  1.79084726, -2.8877036 ],
@@ -598,6 +602,9 @@ class TestSymSym(unittest.TestCase):
 
   def test_product_skew(self):
     self.assertEqual(tensors.RankTwo(np.einsum('ijkl,kl', self.SS1_full, self.W)), self.TSS1 * self.TW)
+
+  def test_douter(self):
+    self.assertEqual(tensors.SymSym(common.ts2ms(np.einsum('ij,kl', self.S, self.S2))), tensors.douter(self.TS, self.TS2))
 
 class TestSymSkew(unittest.TestCase):
   def setUp(self):

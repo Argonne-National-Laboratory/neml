@@ -172,6 +172,22 @@ which is a slight abuse of notation but only by the elastic stretch.
 \end_layout
 
 \begin_layout Standard
+Note if we only maintain the current orientation 
+\begin_inset Formula $\boldsymbol{Q}=\boldsymbol{R}^{e}\boldsymbol{Q}_{0}$
+\end_inset
+
+ then
+\begin_inset Formula 
+\begin{equation}
+\dot{\boldsymbol{Q}}\boldsymbol{Q}^{T}=\dot{\boldsymbol{R}}^{e}\boldsymbol{Q}_{0}\boldsymbol{Q}_{0}^{T}\boldsymbol{R}^{eT}=\dot{\boldsymbol{R}}^{e}\boldsymbol{R}^{eT}=\bm{\Omega}^{e}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 Make the executive decision to drop terms that are quadratic in 
 \begin_inset Formula $\bm{\varepsilon}$
 \end_inset
@@ -352,12 +368,31 @@ The slip system strength model varies greatly model to model, but let's
 with 
 \begin_inset Formula 
 \[
-\dot{\bar{\tau}}=\delta\left(\tau_{sat}-\bar{\tau}\right)\sum\left|\dot{\gamma}_{i}\right|
+\dot{\bar{\tau}}=\delta\left(\tau_{sat}-\bar{\tau}\right)\sum\left|\dot{\gamma}_{i}\right|.
 \]
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+For the rotations rearrange 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:skew-1"
+
+\end_inset
+
+ to give
+\begin_inset Formula 
+\[
+\bm{\Omega}^{e}=\boldsymbol{w}-\boldsymbol{w}_{p}-\bm{\varepsilon}\boldsymbol{d}_{p}+\boldsymbol{d}_{p}\bm{\varepsilon}
+\]
+
+\end_inset
+
+which is the rate form we want.
 \end_layout
 
 \end_body
