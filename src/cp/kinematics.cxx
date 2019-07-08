@@ -204,4 +204,12 @@ Skew StandardKinematicModel::spin(
   return w - wp - net;
 }
 
+Symmetric StandardKinematicModel::elastic_strains(
+    const Symmetric & stress, const Orientation & Q,
+    const History & history, double T)
+{
+  SymSym S = emodel_->S(T,Q);
+  return S.dot(stress);
+}
+
 } // namespace neml

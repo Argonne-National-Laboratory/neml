@@ -167,7 +167,7 @@ int NEMLModel_ldi::update_sd(
    double & u_np1, double u_n,
    double & p_np1, double p_n)
 {
-  double W[3];
+  double W[3] = {0,0,0};
   double B[18];
   return update_ld_inc(e_np1, e_n, W, W, T_np1, T_n, t_np1, t_n,
                        s_np1, s_n, h_np1, h_n, A_np1, B, u_np1, u_n,

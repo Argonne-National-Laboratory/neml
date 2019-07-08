@@ -83,6 +83,11 @@ class KinematicModel: public NEMLObject {
       const Skew & w, const Orientation & Q,
       const History & history, const Lattice & lattice,
       double T) const = 0;
+
+  virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    const Orientation & Q,
+                                    const History & history,
+                                    double T) = 0;
 };
 
 /// My standard kinematic assumptions
@@ -166,6 +171,11 @@ class StandardKinematicModel: public KinematicModel {
       const Skew & w, const Orientation & Q,
       const History & history, const Lattice & lattice,
       double T) const;
+
+  virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    const Orientation & Q,
+                                    const History & history,
+                                    double T);
 
  private:
   std::shared_ptr<LinearElasticModel> emodel_;

@@ -31,6 +31,8 @@ PYBIND11_MODULE(kinematics, m) {
       .def("d_history_rate_d_history", &KinematicModel::d_history_rate_d_history)
 
       .def("spin", &KinematicModel::spin)
+
+      .def("elastic_strains", &KinematicModel::elastic_strains)
       ;
 
   py::class_<StandardKinematicModel, KinematicModel, std::shared_ptr<StandardKinematicModel>>(m, "StandardKinematicModel")

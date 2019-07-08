@@ -3,6 +3,8 @@
 
 #include "tensors.h"
 
+#include "../objects.h"
+
 #include <complex>
 #include <vector>
 #include <string>
@@ -89,8 +91,15 @@ Quaternion operator*(const Quaternion & lhs, const Quaternion & rhs);
 Quaternion operator/(const Quaternion & q, double s);
 Quaternion operator/(const Quaternion & lhs, const Quaternion & rhs);
 
-class Orientation: public Quaternion {
+class Orientation: public Quaternion, public NEMLObject {
  public:
+  /// Type for the object system
+  static std::string type();
+  /// Parameters for the object system
+  static ParameterSet parameters();
+  /// Setup from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
   // Creation functions
   /// Create from a Rodrigues vector
   static Orientation createRodrigues(const double * const r);
@@ -180,8 +189,9 @@ class Orientation: public Quaternion {
   static void from_kocks_(double a, double b, double c, double & oa, double & ob,
                           double & oc, std::string type);
   static void kocks_to_matrix_(double a, double b, double c, double * const M);
-  
 };
+
+static Register<Orientation> regOrientation;
 
 // Binary operators
 Orientation operator*(const Orientation & lhs, const Orientation & rhs);

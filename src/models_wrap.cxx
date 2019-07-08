@@ -87,6 +87,9 @@ PYBIND11_MODULE(models, m) {
       .def("set_elastic_model", &NEMLModel_sd::set_elastic_model)
       ;
 
+  py::class_<NEMLModel_ldi, NEMLModel, std::shared_ptr<NEMLModel_ldi>>(m, "NEMLModel_ldi")
+      ;
+
   py::class_<SmallStrainElasticity, NEMLModel_sd, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {

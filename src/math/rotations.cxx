@@ -323,6 +323,36 @@ void Quaternion::alloc_()
 
 // Unit quaternion stuff
 
+std::string Orientation::type()
+{
+  return "Orientation";
+}
+
+ParameterSet Orientation::parameters()
+{
+  ParameterSet pset(Orientation::type());
+
+  pset.add_parameter<std::vector<double>>("angles");
+  pset.add_optional_parameter<std::string>("angle_type", "radians");
+  pset.add_optional_parameter<std::string>("angle_convention", "kocks");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> Orientation::initialize(ParameterSet & params)
+{
+  std::vector<double> angles = params.get_parameter<std::vector<double>>("angles");
+  if (angles.size() != 3) {
+    throw std::runtime_error("Orientation parameter angles must be length three!");
+  }
+
+  return std::unique_ptr<Orientation>(new Orientation(
+          Orientation::createEulerAngles(angles[0], angles[1], angles[2],
+                                         params.get_parameter<std::string>("angle_type"),
+                                         params.get_parameter<std::string>("angle_convention"))
+          ));
+}
+
 Orientation Orientation::createRodrigues(const double * const r)
 {
   Orientation q;

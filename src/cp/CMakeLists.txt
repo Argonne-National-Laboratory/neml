@@ -5,7 +5,8 @@ target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/inelasticity.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/sliprules.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/slipharden.cxx
-      ${CMAKE_CURRENT_SOURCE_DIR}/kinematics.cxx)
+      ${CMAKE_CURRENT_SOURCE_DIR}/kinematics.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/singlecrystal.cxx)
 
 if (WRAP_PYTHON)
       set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/cp)
@@ -14,4 +15,5 @@ if (WRAP_PYTHON)
       pybind(sliprules)
       pybind(slipharden)
       pybind(kinematics)
+      pybind(singlecrystal)
 endif()
