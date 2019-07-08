@@ -125,7 +125,21 @@ History StandardKinematicModel::d_stress_rate_d_history(
     const History & history, const Lattice & lattice,
     double T) const
 {
+  History res = history.derivative<Symmetric>();
+  History dD = imodel_->d_d_p_d_history(stress, Q, history, lattice, T);
+  History dW = imodel_->d_w_p_d_history(stress, Q, history, lattice, T);
 
+  SymSym C = emodel_->C(T, Q);
+  SymSym S = emodel_->S(T, Q);
+
+  Symmetric e = S.dot(stress);
+
+  for (auto hvar : history.items()) {
+    res.get<Symmetric>(hvar) = -C * (
+        dD.get<Symmetric>(hvar) + Symmetric(e*dW.get<Skew>(hvar) - dW.get<Skew>(hvar) * e));
+  }
+
+  return res;
 }
 
 History StandardKinematicModel::history_rate(

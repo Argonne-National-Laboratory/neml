@@ -10,6 +10,7 @@ History::History() :
     size_(0), store_(true)
 {
   storage_ = new double [size_];
+  zero();
 }
 
 History::History(bool store) :
@@ -17,6 +18,7 @@ History::History(bool store) :
 {
   if (store) {
     storage_ = new double [size_];
+    zero();
   }
 }
 

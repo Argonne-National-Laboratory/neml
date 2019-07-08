@@ -38,7 +38,12 @@ class CommonKinematics(object):
     self.assertEqual(nd, d)
 
   def test_d_stress_rate_d_history(self):
-    pass
+    nd = diff_symmetric_history(lambda h: self.model.stress_rate(self.S, self.d,
+      self.w, self.Q, h, self.L, self.T), self.H)
+    d = self.model.d_stress_rate_d_history(self.S, self.d, self.w, self.Q, self.H,
+        self.L, self.T)
+
+    self.assertTrue(np.allclose(nd, np.array(d).reshape(nd.shape)))
 
   def test_d_history_rate_d_stress(self):
     nd = diff_history_symmetric(lambda s: self.model.history_rate(s, self.d,
