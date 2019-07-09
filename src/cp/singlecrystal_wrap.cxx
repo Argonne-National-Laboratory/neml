@@ -13,13 +13,19 @@ PYBIND11_MODULE(singlecrystal, m) {
 
   m.doc() = "Single crystal constitutive models";
 
-  py::class_<SingleCrystalModel, NEMLModel_ldi, std::shared_ptr<SingleCrystalModel>>(m, "SingleCrystalModel")
+  py::class_<SCTrialState, TrialState>(m, "SCTrialState")
+      .def(py::init<Symmetric&,Skew&,Symmetric&,History&,Orientation&,Lattice&,double,double>())
+      ;
+
+  py::class_<SingleCrystalModel, NEMLModel_ldi, Solvable, std::shared_ptr<SingleCrystalModel>>(m, "SingleCrystalModel")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return create_object_python<SingleCrystalModel>(args, 
                                                                       kwargs,
-                                                                      {"kinematics", "initial_rotation", "alpha"});
+                                                                      {"kinematics", "lattice"});
                     }))
+      .def("populate_history", &SingleCrystalModel::populate_history)
+      .def("init_history", &SingleCrystalModel::init_history)
     ;
 }
 

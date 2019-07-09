@@ -68,7 +68,7 @@ PYBIND11_MODULE(rotations, m) {
       .def(py::self / double())
       ;
 
-  py::class_<Orientation, Quaternion, std::shared_ptr<Orientation>>(m, "Orientation")
+  py::class_<Orientation, Quaternion, NEMLObject, std::shared_ptr<Orientation>>(m, "Orientation")
       .def(py::init<Quaternion&>(), "Copy from a quaternion object", py::arg("General quaternion"))
       .def(py::init(
            [](py::array_t<double> n, double a, std::string angles)

@@ -16,16 +16,29 @@ namespace neml {
 /// Store the trial state for the single crystal model
 class SCTrialState: public TrialState {
  public:
-
+  SCTrialState(Symmetric & d, Skew & w, Symmetric & S, History & H, Orientation & Q, Lattice & lattice, double T, double dt) : 
+      d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt)
+  {};
+  
+  Symmetric & d;
+  Skew & w;
+  Symmetric & S;
+  History & history;
+  Orientation & Q;
+  Lattice & lattice;
+  double T;
+  double dt;
 };
 
 /// Single crystal model integrator
 class SingleCrystalModel: public NEMLModel_ldi, public Solvable
 {
  public:
-  SingleCrystalModel(std::shared_ptr<KinematicModel> kinematics, 
+  SingleCrystalModel(std::shared_ptr<KinematicModel> kinematics,
+                     std::shared_ptr<Lattice> lattice,
                      std::shared_ptr<Orientation> initial_angle,
-                     std::shared_ptr<Interpolate> alpha);
+                     std::shared_ptr<Interpolate> alpha,
+                     double tol, int miter, bool verbose);
   virtual ~SingleCrystalModel();
 
   /// Type for the object system
@@ -34,6 +47,12 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   static ParameterSet parameters();
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  /// Setup blank history
+  void populate_history(History & history) const;
+
+  /// Actually initialize history
+  void init_history(History & history) const;
 
    virtual int update_ld_inc(
        const double * const d_np1, const double * const d_n,
@@ -63,9 +82,16 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
                  double * const J);
 
  private:
+  History gather_history_() const;
+
+ private:
   std::shared_ptr<KinematicModel> kinematics_;
+  std::shared_ptr<Lattice> lattice_;
   std::shared_ptr<Orientation> q0_;
   std::shared_ptr<Interpolate> alpha_;
+  double tol_;
+  int miter_;
+  bool verbose_;
 };
 
 static Register<SingleCrystalModel> regSingleCrystalModel;
