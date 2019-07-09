@@ -43,10 +43,8 @@ class CommonTangents(object):
       B_num = common.differentiate(lambda w: model.update_ld_inc(d_np1, d_n, w, w_n, self.T,
         self.T, t_np1, t_n, s_n, h_n, u_n, p_n)[0], w_np1)
       
-      print(B_np1)
-      print(B_num)
-
-      self.assertTrue(False)
+      # Again, why the loose tolerance?
+      self.assertTrue(np.allclose(B_np1, B_num, rtol = 1.0e-3, atol = 1.0e-3))
 
       s_n = np.copy(s_np1)
       h_n = np.copy(h_np1)

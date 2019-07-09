@@ -943,3 +943,11 @@ class TestCPSpeciality(unittest.TestCase):
     A2 = tensors.SymSym(common.ts2ms(A2_ten))
 
     self.assertEqual(A1, A2)
+
+  def test_special(self):
+    A1 = tensors.SpecialSymSymSym(self.TSS, self.TS)
+    A2_ten = np.einsum('ijkz,ky', self.SS_full, self.S) - np.einsum(
+        'ijyl,zl', self.SS_full, self.S)
+    A2 = tensors.SymSkew(common.ts2sww(A2_ten))
+
+    self.assertEqual(A1, A2)

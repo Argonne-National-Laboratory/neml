@@ -24,7 +24,6 @@ class CommonKinematics(object):
 
   def test_d_stress_rate_d_d(self):
     def dfn(d):
-      self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
       return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T)
 
     nd = diff_symmetric_symmetric(dfn, self.d)
@@ -35,31 +34,35 @@ class CommonKinematics(object):
 
   def test_d_stress_rate_d_w(self):
     def dfn(w):
-      self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
       return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T)
 
     nd = diff_symmetric_skew(dfn, self.w)
     d = self.model.d_stress_rate_d_w(self.S, self.d, self.w, self.Q, self.H,
         self.L, self.T)
    
-    Cfull = self.emodel.C_tensor(self.T, self.Q)
-    Sfull = self.emodel.S_tensor(self.T, self.Q)
+    self.assertTrue(np.allclose(nd.data, d.data))
 
-    e = Sfull * self.S
+  def test_d_stress_rate_d_d_decouple(self):
+    def dfn(d):
+      self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T)
 
-    def wee(w):
-      os = self.model.spin(self.S, self.d, tensors.Skew(common.uskew(w)), 
-          self.Q, self.H, self.L, self.T) + self.imodel.w_p(
-              self.S, self.Q, self.H, self.L, self.T)
+    nd = diff_symmetric_symmetric(dfn, self.d) - self.model.d_stress_rate_d_d(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
+    d = self.model.d_stress_rate_d_d_decouple(self.S, self.d, self.w, self.Q, self.H, self.L,
+        self.T)
 
-      net = tensors.Symmetric(e*os - os*e)
+    self.assertTrue(np.allclose(nd.data, d.data, atol = 1.0e-3))
 
-      return -(Cfull * net).data 
+  def test_d_stress_rate_d_w_decouple(self):
+    def dfn(w):
+      self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T)
 
-    print(differentiate(wee, self.w.data))
-    print(tensors.SpecialSymSymSym(Cfull, e))
-    
-    self.assertEqual(nd, d)
+    nd = diff_symmetric_skew(dfn, self.w) - self.model.d_stress_rate_d_w(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
+    d = self.model.d_stress_rate_d_w_decouple(self.S, self.d, self.w, self.Q, self.H,
+        self.L, self.T)
+
+    self.assertTrue(np.allclose(nd.data, d.data, rtol = 1.0e-3))
 
   def test_d_stress_rate_d_history(self):
     nd = diff_symmetric_history(lambda h: self.model.stress_rate(self.S, self.d,
@@ -90,6 +93,30 @@ class CommonKinematics(object):
       w, self.Q, self.H, self.L, self.T), self.w)
     d = np.array(self.model.d_history_rate_d_w(self.S, self.d, self.w, self.Q,
       self.H, self.L, self.T))
+
+    self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
+
+  def test_d_history_rate_d_d_decouple(self):
+    def dfn(d):
+      self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      return self.model.history_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+
+    nd = diff_history_symmetric(dfn, self.d) - self.model.d_history_rate_d_d(self.S, self.d, self.w,
+        self.Q, self.H, self.L, self.T)
+    d = np.array(self.model.d_history_rate_d_d_decouple(self.S, self.d, self.w, self.Q,
+        self.H, self.L, self.T))
+
+    self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
+  
+  def test_d_history_rate_d_w_decouple(self):
+    def dfn(w):
+      self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      return self.model.history_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+
+    nd = diff_history_skew(dfn, self.w) - self.model.d_history_rate_d_w(self.S, self.d, self.w,
+        self.Q, self.H, self.L, self.T)
+    d = np.array(self.model.d_history_rate_d_w_decouple(self.S, self.d, self.w, self.Q,
+        self.H, self.L, self.T))
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
 

@@ -193,6 +193,19 @@ def ts2wws(C):
 
   return Cv
 
+def ts2sww(C):
+  """
+    Convert a stiffness tensor into a d_sym_d_skew matrix
+  """
+  Cv = np.zeros((6,3))
+  for i in range(6):
+    for j in range(3):
+      ma = mandel_mults[i]
+      mb = skew_mults[j]
+      Cv[i,j] = C[mandel[i] + skew_inds[j]] * ma * mb
+
+  return Cv
+
 def sym(A):
   """
     Take a symmetric matrix to the Mandel convention vector.

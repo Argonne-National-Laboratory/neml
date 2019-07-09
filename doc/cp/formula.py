@@ -343,7 +343,7 @@ if __name__ == "__main__":
         for a in range(3):
           for b in range(3):
             R3[i,j,a,b] += sym_ten[i,j,k,b] * D[k,a]
-            R3[i,j,a,b] -= sym_ten[i,j,a,l] * D[b,l]
+            R3[i,j,a,b] -= sym_ten[i,j,a,k] * D[b,k]
   R3 = simplify(ts2wsw(R3))
 
   print("Third operator:")

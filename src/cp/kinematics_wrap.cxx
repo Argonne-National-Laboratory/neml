@@ -30,6 +30,12 @@ PYBIND11_MODULE(kinematics, m) {
       .def("d_history_rate_d_w", &KinematicModel::d_history_rate_d_w)
       .def("d_history_rate_d_history", &KinematicModel::d_history_rate_d_history)
 
+      .def("d_stress_rate_d_d_decouple", &KinematicModel::d_stress_rate_d_d_decouple)
+      .def("d_stress_rate_d_w_decouple", &KinematicModel::d_stress_rate_d_w_decouple)
+
+      .def("d_history_rate_d_d_decouple", &KinematicModel::d_history_rate_d_d_decouple)
+      .def("d_history_rate_d_w_decouple", &KinematicModel::d_history_rate_d_w_decouple)
+
       .def("spin", &KinematicModel::spin)
 
       .def("elastic_strains", &KinematicModel::elastic_strains)

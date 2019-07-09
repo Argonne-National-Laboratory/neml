@@ -78,6 +78,28 @@ class KinematicModel: public NEMLObject {
       const History & history, const Lattice & lattice,
       double T) const = 0;
 
+  virtual SymSym d_stress_rate_d_d_decouple(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, const Lattice & lattice,
+      double T);
+  virtual SymSkew d_stress_rate_d_w_decouple(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, const Lattice & lattice,
+      double T);
+
+  virtual History d_history_rate_d_d_decouple(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, const Lattice & lattice,
+      double T);
+  virtual History d_history_rate_d_w_decouple(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, const Lattice & lattice,
+      double T);
+
   virtual Skew spin(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
@@ -165,6 +187,12 @@ class StandardKinematicModel: public KinematicModel {
       const Skew & w, const Orientation & Q,
       const History & history, const Lattice & lattice,
       double T) const;
+
+  virtual SymSkew d_stress_rate_d_w_decouple(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, const Lattice & lattice,
+      double T);
 
   virtual Skew spin(
       const Symmetric & stress, const Symmetric & d,

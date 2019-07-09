@@ -119,7 +119,7 @@ int SingleCrystalModel::update_ld_inc(
 
   // Decouple the updates
   kinematics_->decouple(S_n, D, W, Q_n, H_n, *lattice_, T_np1);
-
+  
   // Set the trial state
   SCTrialState trial(D, W, S_n, H_n, Q_n, *lattice_, T_np1, dt);
 
@@ -353,9 +353,15 @@ void SingleCrystalModel::calc_tangents_(double * const x, SCTrialState * ts,
   // Do D
   // Get the extra matrices
   SymSym sd = kinematics_->d_stress_rate_d_d(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T);
+                                             H, ts->lattice, ts->T) 
+      + kinematics_->d_stress_rate_d_d_decouple(S, ts->d, ts->w,
+                                                ts->Q, H,
+                                                ts->lattice, ts->T);
   History hd = kinematics_->d_history_rate_d_d(S, ts->d, ts->w, ts->Q, 
                                              H, ts->lattice, ts->T);
+  hd += kinematics_->d_history_rate_d_d_decouple(S, ts->d, ts->w,
+                                                ts->Q, H,
+                                                ts->lattice, ts->T);
 
   // Sadly need one more intermediate
   double * I1 = new double[36];
@@ -372,8 +378,15 @@ void SingleCrystalModel::calc_tangents_(double * const x, SCTrialState * ts,
   // Do W
   SymSkew sw = kinematics_->d_stress_rate_d_w(S, ts->d, ts->w, ts->Q, 
                                              H, ts->lattice, ts->T);
+  sw += kinematics_->d_stress_rate_d_w_decouple(S, ts->d, ts->w,
+                                                ts->Q, H,
+                                                ts->lattice, ts->T);
+
   History hw = kinematics_->d_history_rate_d_w(S, ts->d, ts->w, ts->Q, 
                                              H, ts->lattice, ts->T);
+  hw += kinematics_->d_history_rate_d_w_decouple(S, ts->d, ts->w,
+                                                 ts->Q, H,
+                                                 ts->lattice, ts->T);
 
   // Sadly need one more intermediate
   double * I2 = new double[18];

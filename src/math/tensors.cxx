@@ -1418,7 +1418,6 @@ std::ostream & operator<<(std::ostream & os, const SymSym & v)
 SymSkew::SymSkew() :
     Tensor(18)
 {
-  std::fill(s_, s_+18, 0.0);
 }
 
 SymSkew::SymSkew(const std::vector<double> v) :
@@ -1610,7 +1609,7 @@ std::ostream & operator<<(std::ostream & os, const SymSkew & v)
   for (size_t i = 0; i<6; i++) {
     os << "[";
     for (size_t j = 0; j<3; j++) {
-      os << d[i*6+j] << " ";
+      os << d[i*3+j] << " ";
     }
     os << "]" << std::endl;
   }
