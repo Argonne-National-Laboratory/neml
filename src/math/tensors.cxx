@@ -12,6 +12,7 @@ Tensor::Tensor(std::size_t n) :
     n_(n), istore_(true)
 {
   s_ = new double [n_];
+  std::fill(s_, s_+n_, 0.0);
 }
 
 Tensor::Tensor(const Tensor & other) :
@@ -70,6 +71,11 @@ Tensor & Tensor::operator=(const Tensor & rhs) {
   }
 
   return *this;
+}
+
+void Tensor::copy_data(const double * const indata)
+{
+  std::copy(indata, indata + n_, s_);
 }
 
 Tensor & Tensor::operator=(Tensor && rhs) {
@@ -1842,6 +1848,15 @@ SymSym SymSkewSym_SkewSymSym(const SkewSym & S, const Symmetric & D)
   SymSym res;
 
   SymSkewSymmSkewSymSym(D.data(), S.data(), res.s());
+
+  return res;
+}
+
+SymSkew SpecialSymSymSym(const SymSym & S, const Symmetric & D)
+{
+  SymSkew res;
+
+  SpecialSymSymSym(D.data(), S.data(), res.s());
 
   return res;
 }

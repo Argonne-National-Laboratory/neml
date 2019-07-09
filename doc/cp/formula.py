@@ -269,6 +269,19 @@ def ts2wws(C):
 
   return Cv
 
+def ts2wsw(C):
+  """
+    Convert a stiffness tensor into a skew thing
+  """
+  Cv = zeros(6,3)
+  for i in range(6):
+    for j in range(3):
+      ma = mandel_mults[i]
+      mb = skew_mults[j]
+      Cv[i,j] = C[mandel[i] + skew_inds[j]] * ma * mb
+
+  return Cv
+
 def trace(X):
   return (X[0,0] + X[1,1] + X[2,2])
 
@@ -320,4 +333,21 @@ if __name__ == "__main__":
   for i in range(6):
     for j in range(6):
       print(("\tSS[%i] = " + str(R2[i,j]) + ";") % (i*6+j))
+  print("")
+
+
+  R3 = zero_tensor((3,3,3,3))
+  for i in range(3):
+    for j in range(3):
+      for k in range(3):
+        for a in range(3):
+          for b in range(3):
+            R3[i,j,a,b] += sym_ten[i,j,k,b] * D[k,a]
+            R3[i,j,a,b] -= sym_ten[i,j,a,l] * D[b,l]
+  R3 = simplify(ts2wsw(R3))
+
+  print("Third operator:")
+  for i in range(6):
+    for j in range(3):
+      print(("\tSW[%i] = " + str(R3[i,j]) + ";") % (i*3+j))
   print("")

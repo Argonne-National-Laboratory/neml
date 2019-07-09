@@ -37,6 +37,8 @@ class Tensor {
   double * s() {return s_;};
   std::size_t n() const {return n_;};
 
+  void copy_data(const double * const indata);
+
   Tensor & operator*=(double s);
   Tensor & operator/=(double s);
 
@@ -478,6 +480,9 @@ SymSym SymSymSkew_SkewSymSym(const SymSym & S, const Skew & W);
 
 /// Dkm*Smlab - Skmab*Dml
 SymSym SymSkewSym_SkewSymSym(const SkewSym & S, const Symmetric & D);
+
+/// Specialty operator for Skew part C_ijkb e_ka - C_ijal e_bl
+SymSkew SpecialSymSymSym(const SymSym & S, const Symmetric & D);
 
 } // namespace neml
 

@@ -36,6 +36,9 @@ int SymSymSkewmSkewSymSym(const double * const M, const double * const W, double
 /// Specialty crystal plasticity operator: D_km * M_mlab - M_kmab D_ml
 int SymSkewSymmSkewSymSym(const double * const D, const double * const M, double * const SS);
 
+/// Specialty operator for the skew part of the tangent: C_ijkb * e_ka - C_ijal * e_bl
+int SpecialSymSymSym(const double * const D, const double * const M, double * const SW);
+
 /// Convert the symmetric and skew parts into a complete fourth order
 int transform_fourth(const double * const D, const double * const W, double * const M);
 

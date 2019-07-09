@@ -627,7 +627,7 @@ PYBIND11_MODULE(tensors, m) {
            {
               std::ostringstream ss;
 
-              ss << "SymSym(array([";
+              ss << "SymSkew(array([";
               for (size_t i=0; i<6; i++) {
                 ss << "[";
 
@@ -826,6 +826,7 @@ PYBIND11_MODULE(tensors, m) {
         });
   m.def("SymSymSkew_SkewSymSym", &SymSymSkew_SkewSymSym);
   m.def("SymSkewSym_SkewSymSym", &SymSkewSym_SkewSymSym);
+  m.def("SpecialSymSymSym", &SpecialSymSymSym);
 
 } // PYBIND11_MODULE(tensors, m)
 

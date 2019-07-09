@@ -38,6 +38,7 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
                      std::shared_ptr<Lattice> lattice,
                      std::shared_ptr<Orientation> initial_angle,
                      std::shared_ptr<Interpolate> alpha,
+                     bool update_rotation,
                      double tol, int miter, bool verbose);
   virtual ~SingleCrystalModel();
 
@@ -83,12 +84,15 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
  private:
   History gather_history_() const;
+  void calc_tangents_(double * const x, SCTrialState * ts, double * const A,
+                      double * const B);
 
  private:
   std::shared_ptr<KinematicModel> kinematics_;
   std::shared_ptr<Lattice> lattice_;
   std::shared_ptr<Orientation> q0_;
   std::shared_ptr<Interpolate> alpha_;
+  bool update_rotation_;
   double tol_;
   int miter_;
   bool verbose_;

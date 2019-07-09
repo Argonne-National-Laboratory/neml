@@ -226,7 +226,7 @@ History History::split(std::vector<std::string> sep)
   History sub(false);
 
   // Move the maps
-  for (size_t j = i; j < size(); j++) {
+  for (size_t j = i; j < order_.size(); j++) {
     sub.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
   }
 

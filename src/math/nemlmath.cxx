@@ -92,6 +92,30 @@ int SymSkewSymmSkewSymSym(const double * const D, const double * const M, double
   return 0;
 }
 
+int SpecialSymSymSym(const double * const D, const double * const M, double * const SW)
+{
+  SW[0] = -sqrt(2)*D[1]*M[3]/2 + 3*sqrt(2)*D[2]*M[3]/2 - sqrt(2)*D[3]*M[2]/2 - D[5]*M[4]/2;
+  SW[1] = sqrt(2)*D[0]*M[4]/2 - 3*sqrt(2)*D[2]*M[4]/2 + sqrt(2)*D[4]*M[2]/2 + D[5]*M[3]/2;
+  SW[2] = -sqrt(2)*D[0]*M[5]/2 + 3*D[3]*M[4]/2 - D[4]*M[3]/2 - sqrt(2)*D[5]*M[1]/2;
+  SW[3] = -sqrt(2)*D[1]*M[9]/2 + 3*sqrt(2)*D[2]*M[9]/2 - sqrt(2)*D[3]*M[8]/2 - D[5]*M[10]/2;
+  SW[4] = sqrt(2)*D[0]*M[10]/2 - 3*sqrt(2)*D[2]*M[10]/2 + sqrt(2)*D[4]*M[8]/2 + D[5]*M[9]/2;
+  SW[5] = -sqrt(2)*D[0]*M[11]/2 + 3*D[3]*M[10]/2 - D[4]*M[9]/2 - sqrt(2)*D[5]*M[7]/2;
+  SW[6] = -sqrt(2)*D[1]*M[15]/2 + 3*sqrt(2)*D[2]*M[15]/2 - sqrt(2)*D[3]*M[14]/2 - D[5]*M[16]/2;
+  SW[7] = sqrt(2)*D[0]*M[16]/2 - 3*sqrt(2)*D[2]*M[16]/2 + sqrt(2)*D[4]*M[14]/2 + D[5]*M[15]/2;
+  SW[8] = -sqrt(2)*D[0]*M[17]/2 + 3*D[3]*M[16]/2 - D[4]*M[15]/2 - sqrt(2)*D[5]*M[13]/2;
+  SW[9] = sqrt(2)*(-2*D[1]*M[21] + 6*D[2]*M[21] - 2*D[3]*M[20] - sqrt(2)*D[5]*M[22])/4;
+  SW[10] = sqrt(2)*(2*D[0]*M[22] - 6*D[2]*M[22] + 2*D[4]*M[20] + sqrt(2)*D[5]*M[21])/4;
+  SW[11] = -sqrt(2)*D[0]*M[23]/2 + 3*D[3]*M[22]/2 - D[4]*M[21]/2 - sqrt(2)*D[5]*M[19]/2;
+  SW[12] = sqrt(2)*(-2*D[1]*M[27] + 6*D[2]*M[27] - 2*D[3]*M[26] - sqrt(2)*D[5]*M[28])/4;
+  SW[13] = sqrt(2)*(2*D[0]*M[28] - 6*D[2]*M[28] + 2*D[4]*M[26] + sqrt(2)*D[5]*M[27])/4;
+  SW[14] = -sqrt(2)*D[0]*M[29]/2 + 3*D[3]*M[28]/2 - D[4]*M[27]/2 - sqrt(2)*D[5]*M[25]/2;
+  SW[15] = sqrt(2)*(-2*D[1]*M[33] + 6*D[2]*M[33] - 2*D[3]*M[32] - sqrt(2)*D[5]*M[34])/4;
+  SW[16] = sqrt(2)*(2*D[0]*M[34] - 6*D[2]*M[34] + 2*D[4]*M[32] + sqrt(2)*D[5]*M[33])/4;
+  SW[17] = -sqrt(2)*D[0]*M[35]/2 + 3*D[3]*M[34]/2 - D[4]*M[33]/2 - sqrt(2)*D[5]*M[31]/2;
+
+  return 0;
+}
+
 int transform_fourth(const double * const D, const double * const W, double * const M)
 {
 	M[0] = D[0];

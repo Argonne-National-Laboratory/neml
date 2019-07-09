@@ -4,6 +4,7 @@ from neml import history, interpolate, elasticity
 from neml.math import tensors, rotations
 from neml.cp import crystallography, slipharden, sliprules, inelasticity, kinematics
 
+import common
 from common import differentiate
 from nicediff import *
 
@@ -22,19 +23,42 @@ class CommonKinematics(object):
     self.assertEqual(d, nd)
 
   def test_d_stress_rate_d_d(self):
-    nd = diff_symmetric_symmetric(lambda d: self.model.stress_rate(self.S, 
-      d, self.w, self.Q, self.H, self.L, self.T), self.d)
+    def dfn(d):
+      self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+
+    nd = diff_symmetric_symmetric(dfn, self.d)
     d = self.model.d_stress_rate_d_d(self.S, self.d, self.w, self.Q, self.H, self.L,
         self.T)
 
     self.assertEqual(nd, d)
 
   def test_d_stress_rate_d_w(self):
-    nd = diff_symmetric_skew(lambda w: self.model.stress_rate(self.S, self.d,
-      w, self.Q, self.H, self.L, self.T), self.w)
+    def dfn(w):
+      self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+
+    nd = diff_symmetric_skew(dfn, self.w)
     d = self.model.d_stress_rate_d_w(self.S, self.d, self.w, self.Q, self.H,
         self.L, self.T)
+   
+    Cfull = self.emodel.C_tensor(self.T, self.Q)
+    Sfull = self.emodel.S_tensor(self.T, self.Q)
 
+    e = Sfull * self.S
+
+    def wee(w):
+      os = self.model.spin(self.S, self.d, tensors.Skew(common.uskew(w)), 
+          self.Q, self.H, self.L, self.T) + self.imodel.w_p(
+              self.S, self.Q, self.H, self.L, self.T)
+
+      net = tensors.Symmetric(e*os - os*e)
+
+      return -(Cfull * net).data 
+
+    print(differentiate(wee, self.w.data))
+    print(tensors.SpecialSymSymSym(Cfull, e))
+    
     self.assertEqual(nd, d)
 
   def test_d_stress_rate_d_history(self):

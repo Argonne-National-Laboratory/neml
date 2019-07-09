@@ -83,6 +83,10 @@ CP model working document
 Kinematics
 \end_layout
 
+\begin_layout Subsection
+General organization
+\end_layout
+
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
@@ -269,9 +273,9 @@ reference "eq:sym"
 
 State in terms of stresses
 \begin_inset Formula 
-\[
+\begin{equation}
 \dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\boldsymbol{S}:\boldsymbol{\sigma}\cdot\bm{\Omega}^{\star}+\bm{\Omega}^{\star}\cdot\boldsymbol{S}:\boldsymbol{\sigma}\right]
-\]
+\end{equation}
 
 \end_inset
 
@@ -285,7 +289,7 @@ where
 \begin_layout Standard
 The total residual equation will then be
 \begin_inset Formula 
-\[
+\begin{equation}
 \boldsymbol{R}=\left[\begin{array}{c}
 \boldsymbol{R}_{1}\\
 \boldsymbol{R}_{2}
@@ -293,7 +297,7 @@ The total residual equation will then be
 \boldsymbol{\sigma}_{n+1}-\bm{\sigma}_{n}-\dot{\bm{\sigma}}\Delta t\\
 \boldsymbol{h}_{n+1}-\mathbf{h}_{n}-\dot{\boldsymbol{h}}\Delta t
 \end{array}\right]=\boldsymbol{0}
-\]
+\end{equation}
 
 \end_inset
 
@@ -305,6 +309,80 @@ for the set of history variables and corresponding evolution equations
  We will require some Jacobian terms.
 \end_layout
 
+\begin_layout Subsection
+Tangents
+\end_layout
+
+\begin_layout Standard
+And now we want the tangent, as always.
+ In the usual way:
+\begin_inset Formula 
+\begin{alignat}{2}
+d\mathbf{R}_{1} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\sigma}}:d\bm{\sigma}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{h}}:d\bm{h}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{d}}:d\bm{d}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{w}}:d\bm{w}\\
+d\mathbf{R}_{2} & = & \frac{\partial\mathbf{R}_{2}}{\partial\bm{\sigma}}:d\bm{\sigma}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{h}}:d\bm{h}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{d}}:d\bm{d}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{w}}:d\bm{w}
+\end{alignat}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So for 
+\begin_inset Formula $d\bm{d}$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{alignat}{2}
+\mathbf{0} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\sigma}}:\frac{d\bm{\sigma}}{d\bm{d}}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{h}}:\frac{d\bm{h}}{d\bm{d}}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{d}}\\
+\mathbf{0} & = & \frac{\partial\mathbf{R}_{2}}{\partial\bm{\sigma}}:\frac{d\bm{\sigma}}{d\bm{d}}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{h}}:\frac{d\bm{h}}{d\bm{d}}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{d}}
+\end{alignat}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{alignat}{2}
+\mathbf{0} & = & \mathbf{J}_{11}:\mathbf{A}+\mathbf{J}_{12}:\frac{d\bm{h}}{d\bm{d}}-\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{d}}\Delta t\\
+\mathbf{0} & = & \mathbf{J}_{21}:\mathbf{A}+\mathbf{J}_{22}:\frac{d\bm{h}}{d\bm{d}}-\frac{\partial\dot{\bm{h}}}{\partial\bm{d}}\Delta t
+\end{alignat}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\mathbf{A}=\left(\mathbf{J}_{11}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\mathbf{J}_{21}\right)^{-1}:\left(\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{d}}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\frac{\partial\dot{\bm{h}}}{\partial\bm{d}}\right)\Delta t
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $d\bm{w}$
+\end_inset
+
+ is exactly analogous 
+\begin_inset Formula 
+\begin{equation}
+\mathbf{B}=\left(\mathbf{J}_{11}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\mathbf{J}_{21}\right)^{-1}:\left(\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{w}}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\frac{\partial\dot{\bm{h}}}{\partial\bm{w}}\right)\Delta t
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Specific models
+\end_layout
+
 \begin_layout Standard
 The model for 
 \begin_inset Formula $\boldsymbol{l}_{p}$
@@ -312,9 +390,9 @@ The model for
 
  is 
 \begin_inset Formula 
-\[
+\begin{equation}
 \bar{\boldsymbol{l}}_{p}=\sum_{i=1}^{n_{slip}}\dot{\gamma}_{i}\left(\bar{\bm{d}}_{i}\otimes\bar{\boldsymbol{n}}_{i}\right)
-\]
+\end{equation}
 
 \end_inset
 
@@ -325,26 +403,26 @@ The model for
 .
  Note we can write
 \begin_inset Formula 
-\[
+\begin{equation}
 \bm{l}_{p}=\sum_{i=1}^{n_{slip}}\dot{\gamma}_{i}\left(\bm{d}_{i}\otimes\boldsymbol{n}_{i}\right)
-\]
+\end{equation}
 
 \end_inset
 
 by rotating the slip normal and directions forward.
  Typically 
 \begin_inset Formula 
-\[
+\begin{equation}
 \dot{\gamma}_{i}=\dot{\gamma}_{i}^{\left(0\right)}\frac{\tau_{i}}{\bar{\tau}_{i}}\left|\frac{\tau_{i}}{\bar{\tau}_{i}}\right|^{n-1}
-\]
+\end{equation}
 
 \end_inset
 
 where 
 \begin_inset Formula 
-\[
+\begin{equation}
 \tau_{i}=\bm{\sigma}:\left(\bm{d}_{i}\otimes\boldsymbol{n}_{i}\right)
-\]
+\end{equation}
 
 \end_inset
 
@@ -359,17 +437,17 @@ where the symmetric part of
 The slip system strength model varies greatly model to model, but let's
  start with the absolute easiest
 \begin_inset Formula 
-\[
+\begin{equation}
 \bar{\tau}_{i}=\bar{\tau}
-\]
+\end{equation}
 
 \end_inset
 
 with 
 \begin_inset Formula 
-\[
+\begin{equation}
 \dot{\bar{\tau}}=\delta\left(\tau_{sat}-\bar{\tau}\right)\sum\left|\dot{\gamma}_{i}\right|.
-\]
+\end{equation}
 
 \end_inset
 
@@ -386,9 +464,9 @@ reference "eq:skew-1"
 
  to give
 \begin_inset Formula 
-\[
+\begin{equation}
 \bm{\Omega}^{e}=\boldsymbol{w}-\boldsymbol{w}_{p}-\bm{\varepsilon}\boldsymbol{d}_{p}+\boldsymbol{d}_{p}\bm{\varepsilon}
-\]
+\end{equation}
 
 \end_inset
 

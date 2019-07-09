@@ -9,10 +9,63 @@ import numpy as np
 
 import common
 
-class CommonSolver(object):
-  pass
+class CommonTangents(object):
+  def test_no_rots(self):
+    self.drive(self.model_no_rot)
 
-class TestSingleCrystal(unittest.TestCase, CommonSolver):
+  def test_rots(self):
+    pass
+
+  def drive(self, model):
+    d_n = np.zeros((6,))
+    w_n = np.zeros((3,))
+    s_n = np.zeros((6,))
+    h_n = model.init_store()
+    t_n = 0.0
+    u_n = 0.0
+    p_n = 0.0
+
+    for i in range(self.nsteps):
+      t_np1 = t_n + self.dt
+      d_np1 = d_n + self.Ddir * self.dt
+      w_np1 = w_n + self.Wdir * self.dt
+
+      s_np1, h_np1, A_np1, B_np1, u_np1, p_np1 = model.update_ld_inc(
+          d_np1, d_n, w_np1, w_n, self.T, self.T, t_np1, t_n, s_n, h_n,
+          u_n, p_n)
+      
+      A_num = common.differentiate(lambda d: model.update_ld_inc(d, d_n, w_np1, w_n, self.T,
+        self.T, t_np1, t_n, s_n, h_n, u_n, p_n)[0], d_np1)
+      
+      # This is somewhat iffy
+      self.assertTrue(np.allclose(A_np1, A_num, rtol = 1.0e-3, atol = 1.0e-3))
+
+      B_num = common.differentiate(lambda w: model.update_ld_inc(d_np1, d_n, w, w_n, self.T,
+        self.T, t_np1, t_n, s_n, h_n, u_n, p_n)[0], w_np1)
+      
+      print(B_np1)
+      print(B_num)
+
+      self.assertTrue(False)
+
+      s_n = np.copy(s_np1)
+      h_n = np.copy(h_np1)
+      d_n = np.copy(d_np1)
+      w_n = np.copy(w_np1)
+      t_n = t_np1
+      u_n = u_np1
+      p_n = p_np1
+
+class CommonSolver(object):
+  def test_jacobian(self):
+    fn = lambda x: self.model.RJ(x, self.ts)[0]
+    Jn = common.differentiate(fn, self.x)
+    
+    R, J = self.model.RJ(self.x, self.ts)
+    
+    self.assertTrue(np.allclose(J, Jn, rtol = 1.0e-4))
+
+class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
   def setUp(self):
     self.tau0 = 10.0
     self.tau_sat = 50.0
@@ -40,7 +93,10 @@ class TestSingleCrystal(unittest.TestCase, CommonSolver):
 
     self.kmodel = kinematics.StandardKinematicModel(self.emodel, self.imodel)
 
-    self.model = singlecrystal.SingleCrystalModel(self.kmodel, self.L, initial_rotation = self.Q)
+    self.model = singlecrystal.SingleCrystalModel(self.kmodel, self.L, 
+        initial_rotation = self.Q)
+    self.model_no_rot = singlecrystal.SingleCrystalModel(self.kmodel, self.L,
+        initial_rotation = self.Q, update_rotation = False)
 
     self.T = 300.0
     self.stress_n = np.array([120.0,-60.0,170.0,35.0,80.0,-90.0])
@@ -76,6 +132,11 @@ class TestSingleCrystal(unittest.TestCase, CommonSolver):
     self.x = np.zeros((self.model.nparams,))
     self.x[:6] = self.stress_np1
     self.x[6] = self.strength_np1
+
+    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003]) / self.dt
+    self.Wdir = np.array([0.02,-0.03,0.01]) / self.dt
+
+    self.nsteps = 10
 
   def test_nhist(self):
     self.assertEqual(self.model.nstore, 5)
