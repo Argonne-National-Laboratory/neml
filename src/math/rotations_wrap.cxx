@@ -13,6 +13,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(rotations, m) {
+  py::module::import("neml.objects");
+
   m.doc() = "Orientation representations and related routines";
 
   py::class_<Quaternion, std::shared_ptr<Quaternion>>(m, "Quaternion")
@@ -209,6 +211,8 @@ PYBIND11_MODULE(rotations, m) {
       ;
   
   m.def("random_orientations", &random_orientations);
+  m.def("wexp", &wexp);
+  m.def("wlog", &wlog);
 } // PYBIND11_MODULE(cpfmwk, m)
 
 } // namespace cpfmwk

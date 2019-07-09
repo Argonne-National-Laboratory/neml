@@ -86,6 +86,7 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   History gather_history_() const;
   void calc_tangents_(double * const x, SCTrialState * ts, double * const A,
                       double * const B);
+  Orientation update_rot_(Symmetric & S_np1, History & H_np1, SCTrialState * ts);
 
  private:
   std::shared_ptr<KinematicModel> kinematics_;

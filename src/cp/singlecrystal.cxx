@@ -138,7 +138,7 @@ int SingleCrystalModel::update_ld_inc(
   
   // Calculate the new rotation
   if (update_rotation_) {
-
+    HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
   }
 
   // Rotate through the tangents?
@@ -402,6 +402,12 @@ void SingleCrystalModel::calc_tangents_(double * const x, SCTrialState * ts,
 
   delete [] M1;
   delete [] M2;
+}
+
+Orientation SingleCrystalModel::update_rot_(Symmetric & S_np1, History & H_np1, SCTrialState * ts)
+{
+  Skew spin = kinematics_->spin(S_np1, ts->d, ts->w, ts->Q, H_np1, ts->lattice, ts->T);
+  return wexp(spin * ts->dt) * ts->Q;
 }
 
 } // namespace neml

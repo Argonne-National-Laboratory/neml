@@ -237,3 +237,39 @@ class TestApplyThings(unittest.TestCase):
         tensors.RankFour(TestApplyThings.rotate_fourth(self.SSS1, self.Q)
           ).to_sym())
 
+class TestExpIntegration(unittest.TestCase):
+  def setUp(self):
+    self.q = rotations.Orientation(30.0, 60.0, 80.0, angle_type = "degrees")
+
+    self.W = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.W = 0.5*(self.W - self.W.T)
+    self.TW = tensors.Skew(self.W)
+
+  def test_w2q(self):
+    self.assertEqual(self.TW, rotations.wlog(rotations.wexp(self.TW)))
+
+  def test_q2w(self):
+    self.assertTrue(np.allclose(self.q.quat,
+      rotations.wexp(rotations.wlog(self.q)).quat))
+
+  def test_correctly_integrates(self):
+    # So we are rotating about x where t is the rotation in radians
+    R = lambda t: np.array([[1.0,0,0],[0,np.cos(t),-np.sin(t)],[0,np.sin(t), np.cos(t)]])
+    q0 = rotations.Orientation(R(0.0))
+
+    spin = tensors.Skew(np.array([
+      [0,0,0],
+      [0,0,-1.0],
+      [0,1.0,0]]))
+    
+    nsteps = 1000 # Well it's not the most accurate integration
+    ang = np.pi/4.0
+
+    qf = rotations.Orientation(R(ang))
+    
+    q = q0
+    for i in range(nsteps):
+      q = rotations.wexp(spin * ang/nsteps) * q
+
+    self.assertTrue(np.allclose(q.quat, qf.quat))
+

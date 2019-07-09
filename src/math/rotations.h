@@ -202,6 +202,12 @@ Orientation operator/(const Orientation & lhs, const Orientation & rhs);
 //    from Shoemake, 1992
 std::vector<Orientation> random_orientations(int n);
 
+/// Exponential map of a skew tensor in my convention
+Orientation wexp(const Skew & w);
+
+/// Inverse exponential map of a quaternion to a skew tensor in my convention
+Skew wlog(const Orientation & q);
+
 } // namespace neml
 
 #endif // ROTATIONS_H

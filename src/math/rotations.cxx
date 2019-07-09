@@ -894,4 +894,27 @@ std::vector<Orientation> random_orientations(int n)
   return result;
 }
 
+Orientation wexp(const Skew & w)
+{
+  const double * wv = w.data();
+  double x = norm2_vec(wv, 3);
+  if (x == 0.0) {
+    return Orientation();
+  }
+  double f = sin(x/2.0)/x;
+  return Orientation({cos(x/2.0), f * wv[0], f * wv[1], f * wv[2]});
+}
+
+Skew wlog(const Orientation & q)
+{
+  Skew res;
+  double s = q.quat()[0];
+  const double * v = &q.quat()[1];
+
+  std::copy(v, v+3, res.s());
+  double f = 2.0 * acos(s / q.norm()) / norm2_vec(v, 3);
+
+  return f * res;
+}
+
 } // namespace cpfmwk
