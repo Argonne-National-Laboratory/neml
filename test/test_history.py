@@ -192,3 +192,25 @@ class TestVectorMath(unittest.TestCase):
         mult * self.symmetric)
     self.assertEqual(self.hist.get_skew("skew"),
         mult * self.skew)
+
+class TestSplit(unittest.TestCase):
+  def setUp(self):
+    self.hist = history.History()
+    self.hist.add_scalar("a")
+    self.hist.set_scalar("a", 1.0)
+    self.hist.add_scalar("b")
+    self.hist.set_scalar("b", 2.0)
+    self.hist.add_scalar("c")
+    self.hist.set_scalar("c", 3.0)
+    self.hist.add_scalar("d")
+    self.hist.set_scalar("d", 4.0)
+
+  def test_good_split(self):
+    nhist = self.hist.split(["a", "b"])
+    self.assertEqual(nhist.size, 2)
+    self.assertTrue(np.allclose(np.array([3.0,4.0]), np.array(nhist)))
+    self.assertEqual(nhist.items, ["c", "d"])
+
+  def test_bad_split(self):
+    with self.assertRaises(RuntimeError):
+      nhist = self.hist.split(["b", "c"])

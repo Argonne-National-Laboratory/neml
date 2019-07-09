@@ -39,6 +39,7 @@ PYBIND11_MODULE(history, m) {
            }, "Copy data in from an array")
       .def_property_readonly("size", &History::size)
       .def_property_readonly("store", &History::store)
+      .def_property_readonly("items", &History::items)
       .def("add_scalar", 
            [](History & m, std::string name)
               {
@@ -132,6 +133,8 @@ PYBIND11_MODULE(history, m) {
            }, "Set an orientation")
         .def("scalar_multiply", &History::scalar_multiply)
         .def(py::self += py::self)
+        .def("zero", &History::zero)
+        .def("split", &History::split)
       ;
 }
 

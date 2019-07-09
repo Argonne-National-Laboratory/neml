@@ -111,6 +111,14 @@ size_t History::size() const
   return size_;
 }
 
+void History::make_store()
+{
+  if (store_) return;
+
+  store_ = true;
+  storage_ = new double [size_];
+}
+
 void History::add(std::string name, StorageType type, size_t size)
 {
   error_if_exists_(name);
@@ -203,6 +211,35 @@ void History::error_if_wrong_type_(std::string name, StorageType type) const
 void History::zero()
 {
   std::fill(storage_, storage_+size_, 0.0);
+}
+
+History History::split(std::vector<std::string> sep)
+{
+  // Check to see if the groups are contiguous and get the offset
+  size_t i;
+  for (i = 0; i < sep.size(); i++) {
+    if (sep[i] != order_[i]) {
+      throw std::runtime_error("History items to separate out must be contiguous!");
+    }
+  }
+
+  History sub(false);
+
+  // Move the maps
+  for (size_t j = i; j < size(); j++) {
+    sub.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
+  }
+
+  // Either copy or just split, depending on if we own data
+  if (store_) {
+    sub.make_store();
+    sub.copy_data(&storage_[i]);
+  }
+  else {
+    sub.set_data(&storage_[i]);
+  }
+  
+  return sub;
 }
 
 } // namespace neml

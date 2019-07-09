@@ -79,6 +79,9 @@ class History {
   void copy_data(const double * const input);
   /// Size of storage required
   size_t size() const;
+
+  /// Convert to store
+  void make_store();
   
   /// Add a generic object
   template<typename T>
@@ -148,6 +151,9 @@ class History {
 
     return deriv;
   }
+
+  /// Split a history into a subgroup
+  History split(std::vector<std::string> sep);
 
  private:
   void error_if_exists_(std::string name) const;
