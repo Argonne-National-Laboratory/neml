@@ -13,9 +13,6 @@ class CommonTangents(object):
   def test_no_rots(self):
     self.drive(self.model_no_rot)
 
-  #def test_rots(self):
-  #  self.drive(self.model)
-
   def drive(self, model):
     d_n = np.zeros((6,))
     w_n = np.zeros((3,))
@@ -37,8 +34,6 @@ class CommonTangents(object):
       A_num = common.differentiate(lambda d: model.update_ld_inc(d, d_n, w_np1, w_n, self.T,
         self.T, t_np1, t_n, s_n, h_n, u_n, p_n)[0], d_np1)
 
-      print(A_np1,A_num)
-      
       # This is somewhat iffy
       self.assertTrue(np.allclose(A_np1, A_num, rtol = 1.0e-3, atol = 1.0e-3))
 

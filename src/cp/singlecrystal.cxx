@@ -136,13 +136,11 @@ int SingleCrystalModel::update_ld_inc(
   // Calculate the tangents
   calc_tangents_(x, &trial, A_np1, B_np1);
   
-  // Calculate the new rotation
+  // Calculate the new rotation, if requested
   if (update_rotation_) {
     HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
   }
 
-  // Rotate through the tangents?
-  
   // Calculate the new energy
 
   return 0;
