@@ -140,10 +140,10 @@ int SingleCrystalModel::update_ld_inc(
   if (update_rotation_) {
     HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
   }
-
+  
   // Calculate the new energy
   u_np1 = u_n + calc_energy_inc_(D_np1, D_n, S_np1, S_n);
-
+  
   // Calculate the new dissipation
   p_np1 = p_n + calc_work_inc_(D_np1, D_n, S_np1, S_n, T_np1, T_n, 
                                HF_np1.get<Orientation>("rotation"), Q_n,

@@ -23,15 +23,10 @@ History::History(bool store) :
 }
 
 History::History(const History & other) :
-    size_(other.size()), store_(other.store())
+    size_(other.size()), store_(true)
 {
-  if (store_) {
-    storage_ = new double [size_];
-    std::copy(other.rawptr(), other.rawptr() + size_, storage_);
-  }
-  else {
-    storage_ = const_cast<double*>(other.rawptr());
-  }
+  storage_ = new double [size_];
+  std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   copy_maps(other);
 }
 

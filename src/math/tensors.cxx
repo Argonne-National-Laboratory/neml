@@ -16,15 +16,10 @@ Tensor::Tensor(std::size_t n) :
 }
 
 Tensor::Tensor(const Tensor & other) :
-    n_(other.n()), istore_(other.istore())
+    n_(other.n()), istore_(true)
 {
-  if (other.istore()) {
-    s_ = new double[n_];
-    std::copy(other.data(), other.data() + n_, s_);
-  }
-  else {
-    s_ = const_cast<double*>(other.data());
-  }
+  s_ = new double[n_];
+  std::copy(other.data(), other.data() + n_, s_);
 }
 
 Tensor::Tensor(const Tensor && other) :
