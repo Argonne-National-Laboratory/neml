@@ -14,10 +14,10 @@ namespace neml {
 Quaternion::Quaternion()
 {
   alloc_();
-  quat_[0] = 1.0;
+  quat_[0] = 0.0;
   quat_[1] = 0.0;
   quat_[2] = 0.0;
-  quat_[3] = 0.0;
+  quat_[3] = 1.0;
 }
 
 Quaternion::Quaternion(const std::vector<double> v)
@@ -319,6 +319,18 @@ void Quaternion::alloc_()
 {
   store_ = true;
   quat_ = new double[4];
+}
+
+std::ostream & operator<<(std::ostream & os, const Quaternion & q)
+{
+  const double * const qv = q.quat();
+  os << "[";
+  for (size_t i = 0; i < 4; i++) {
+    os << qv[i] << " ";
+  }
+  os << "]";
+
+  return os;
 }
 
 // Unit quaternion stuff

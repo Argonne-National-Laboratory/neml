@@ -81,7 +81,6 @@ class Quaternion {
 
   double * quat_;
   bool store_;
-
 };
 
 // Binary operators
@@ -90,6 +89,9 @@ Quaternion operator*(const Quaternion & q, double s);
 Quaternion operator*(const Quaternion & lhs, const Quaternion & rhs);
 Quaternion operator/(const Quaternion & q, double s);
 Quaternion operator/(const Quaternion & lhs, const Quaternion & rhs);
+
+/// C++ stream output for quaternions
+std::ostream & operator<<(std::ostream & os, const Quaternion & q);
 
 class Orientation: public Quaternion, public NEMLObject {
  public:
