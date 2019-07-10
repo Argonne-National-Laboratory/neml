@@ -21,7 +21,7 @@ add_library(neml SHARED
       history.cxx)
 add_subdirectory(math)
 add_subdirectory(cp)
-target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES})
+target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
 
 
 ### python bindings in neml ###
