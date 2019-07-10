@@ -101,17 +101,29 @@ class TestLDUpdate(unittest.TestCase):
     verify = dS_c - np.dot(S_np1, self.L.T) - np.dot(self.L, S_np1) + np.trace(self.L) * S_np1
     self.assertTrue(np.allclose(self.dS, verify))
 
-  def test_to_vector(self):
+  def test_sym_to_vector(self):
     """
       Make sure the C++ tensor -> Mandel works
     """
     self.assertTrue(np.allclose(self.Dv, nemlmath.sym(self.D)))
 
-  def test_to_tensor(self):
+  def test_sym_to_tensor(self):
     """
       Make sure the C++ Mandel -> tensor works
     """
     self.assertTrue(np.allclose(self.D, nemlmath.usym(self.Dv)))
+
+  def test_skew_to_vector(self):
+    """
+      Test C++ tensor -> skew
+    """
+    self.assertTrue(np.allclose(self.Wv, nemlmath.skew(self.W)))
+
+  def test_skew_to_tensor(self):
+    """
+      Test C++ vector -> tensor
+    """
+    self.assertTrue(np.allclose(self.W, nemlmath.uskew(self.Wv)))
 
   def test_rhs(self):
     """

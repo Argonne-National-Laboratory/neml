@@ -791,6 +791,29 @@ int usym(const double * const v, double * const A)
   return 0;
 }
 
+int skew(const double * const A, double * const v)
+{
+  v[0] = -A[5];
+  v[1] = A[2];
+  v[2] = -A[1];
+  return 0;
+}
+
+int uskew(const double * const v, double * const A)
+{
+  A[0] = 0;
+  A[1] = -v[2];
+  A[2] = v[1];
+  A[3] = v[2];
+  A[4] = 0;
+  A[5] = -v[0];
+  A[6] = -v[1];
+  A[7] = v[0];
+  A[8] = 0;
+
+  return 0;
+}
+
 int minus_vec(double * const a, int n)
 {
   for (int i=0; i<n; i++) {

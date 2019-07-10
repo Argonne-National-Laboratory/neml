@@ -253,6 +253,39 @@ PYBIND11_MODULE(nemlmath, m) {
           return M;
         }, "Convert a Mandel vector to a full tensor.");
 
+  m.def("skew",
+        [](py::array_t<double, py::array::c_style> M) -> py::array_t<double>
+        {
+          if (M.request().ndim != 2) {
+            throw LinalgError("Input must be a mtrix!");
+          }
+          if ((M.request().shape[0] != 3) || (M.request().shape[1] != 3)) {
+            throw LinalgError("Input must be size 3x3!");
+          }
+          auto v = alloc_vec<double>(3);
+
+          skew(arr2ptr<double>(M), arr2ptr<double>(v));
+
+          return v;
+
+        }, "Convert a full tensor to a skew vector.");
+
+  m.def("uskew",
+        [](py::array_t<double, py::array::c_style> v) -> py::array_t<double>
+        {
+          if (v.request().ndim != 1) {
+            throw LinalgError("Input must be a vector!");
+          }
+          if (v.request().shape[0] != 3) {
+            throw LinalgError("Input must be a length 3 vector!");
+          }
+          auto M = alloc_mat<double>(3, 3);
+
+          uskew(arr2ptr<double>(v), arr2ptr<double>(M));
+          
+          return M;
+        }, "Convert a skew vector to a full tensor.");
+
   m.def("minus_vec",
         [](py::array_t<double, py::array::c_style> a) -> py::array_t<double>
         {

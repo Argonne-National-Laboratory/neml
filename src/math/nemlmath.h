@@ -83,6 +83,12 @@ int sym(const double * const A, double * const v);
 /// Convert a symmetric vector to a full matrix
 int usym(const double * const v, double * const A);
 
+/// Convert a full skew rank 2 to a skew vector
+int skew(const double * const A, double * const v);
+
+/// Convert a skew vector to a full matrix
+int uskew(const double * const v, double * const A);
+
 /// Negate a vector in place
 int minus_vec(double * const a, int n);
 
