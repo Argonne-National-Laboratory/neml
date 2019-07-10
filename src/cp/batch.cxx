@@ -1,5 +1,9 @@
 #include "batch.h"
 
+#ifdef USE_OMP
+#include <omp.h>
+#endif
+
 namespace neml {
 
 int evaluate_crystal_batch(SingleCrystalModel & model, size_t n, 
@@ -21,7 +25,7 @@ int evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
   omp_set_num_threads(nthreads);
   #endif
   
-  #pragma OMP PARALLEL FOR
+#pragma OMP PARALLEL FOR
   for (size_t i=0; i<n; i++) {
     ier[i] = model.update_ld_inc(&d_np1[i*6], &d_n[i*6], &w_np1[i*3], &w_n[i*3],
                                  T_np1[i], T_n[i], t_np1, t_n, &s_np1[i*6],
