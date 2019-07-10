@@ -80,6 +80,7 @@ double PlasticSlipHardening::hist_rate(
     const History & history, const Lattice & L, double T, const SlipRule & R) const
 {
   double strength = history.get<double>("strength");
+  
   return hist_factor(strength, L, T) * R.sum_slip(stress, Q, history, L, T);
 }
 

@@ -228,10 +228,10 @@ History History::split(std::vector<std::string> sep)
   // Either copy or just split, depending on if we own data
   if (store_) {
     sub.make_store();
-    sub.copy_data(&storage_[i]);
+    sub.copy_data(&storage_[loc_.at(order_[i])]);
   }
   else {
-    sub.set_data(&storage_[i]);
+    sub.set_data(&storage_[loc_.at(order_[i])]);
   }
   
   return sub;

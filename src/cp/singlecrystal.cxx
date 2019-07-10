@@ -114,6 +114,7 @@ int SingleCrystalModel::update_ld_inc(
   // As the update is decoupled, split the histories into hardening/
   // orientation groups
   Orientation Q_n = HF_n.get<Orientation>("rotation");
+
   History H_np1 = HF_np1.split({"rotation"});
   History H_n = HF_n.split({"rotation"});
 
@@ -132,13 +133,16 @@ int SingleCrystalModel::update_ld_inc(
   // Dump the results
   S_np1.copy_data(x);
   H_np1.copy_data(&x[6]);
-
+  
   // Calculate the tangents
   calc_tangents_(x, &trial, A_np1, B_np1);
   
   // Calculate the new rotation, if requested
   if (update_rotation_) {
     HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
+  }
+  else {
+    HF_np1.get<Orientation>("rotation") = Q_n;
   }
   
   // Calculate the new energy

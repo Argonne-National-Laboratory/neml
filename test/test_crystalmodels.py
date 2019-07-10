@@ -26,22 +26,22 @@ class CommonTangents(object):
       t_np1 = t_n + self.dt
       d_np1 = d_n + self.Ddir * self.dt
       w_np1 = w_n + self.Wdir * self.dt
-
+      
       s_np1, h_np1, A_np1, B_np1, u_np1, p_np1 = model.update_ld_inc(
           d_np1, d_n, w_np1, w_n, self.T, self.T, t_np1, t_n, s_n, h_n,
           u_n, p_n)
-      
+
       A_num = common.differentiate(lambda d: model.update_ld_inc(d, d_n, w_np1, w_n, self.T,
         self.T, t_np1, t_n, s_n, h_n, u_n, p_n)[0], d_np1)
 
       # This is somewhat iffy
-      self.assertTrue(np.allclose(A_np1, A_num, rtol = 1.0e-3, atol = 1.0e-3))
+      self.assertTrue(np.allclose(A_np1, A_num, rtol = 1.0e-3))
 
       B_num = common.differentiate(lambda w: model.update_ld_inc(d_np1, d_n, w, w_n, self.T,
         self.T, t_np1, t_n, s_n, h_n, u_n, p_n)[0], w_np1)
-      
+
       # Again, why the loose tolerance?
-      self.assertTrue(np.allclose(B_np1, B_num, rtol = 1.0e-3, atol = 1.0e-3))
+      self.assertTrue(np.allclose(B_np1, B_num, rtol = 1.0e-3))
 
       s_n = np.copy(s_np1)
       h_n = np.copy(h_np1)
@@ -128,8 +128,8 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.x[:6] = self.stress_np1
     self.x[6] = self.strength_np1
 
-    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003]) / self.dt
-    self.Wdir = np.array([0.02,-0.03,0.01]) / self.dt
+    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003])
+    self.Wdir = np.array([0.02,-0.03,0.01])
 
     self.nsteps = 10
 

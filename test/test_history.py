@@ -131,13 +131,14 @@ class TestCopy(unittest.TestCase):
     self.hist = history.History()
     self.hist.add_scalar("a")
     self.storage = np.zeros((self.hist.size,))
+    self.hist.set_data(self.storage)
     self.hist.set_scalar("a", self.scalar)
 
-  def should_change(self):
+  def test_should_change(self):
     self.storage[0] = 3.0
     self.assertTrue(np.isclose(self.hist.get_scalar("a"), 3.0))
 
-  def should_not_change(self):
+  def test_should_not_change(self):
     newhist = self.hist.deepcopy()
     self.storage[0] = 3.0
     self.assertFalse(np.isclose(newhist.get_scalar("a"), self.hist.get_scalar("a")))
@@ -193,7 +194,24 @@ class TestVectorMath(unittest.TestCase):
     self.assertEqual(self.hist.get_skew("skew"),
         mult * self.skew)
 
-class TestSplit(unittest.TestCase):
+class TestCarefulStore(unittest.TestCase):
+  def setUp(self):
+    self.hist = history.History(False)
+    self.hist.add_scalar("a")
+    self.hist.add_scalar("b")
+    self.hist.add_scalar("c")
+    self.data = np.array([1.0,2.0,3.0])
+    self.hist.set_data(self.data)
+
+  def test_got_from_data(self):
+    self.assertEqual(self.data[0], self.hist.get_scalar("a"))
+
+  def test_set_data(self):
+    self.hist.set_scalar("a", 2.0)
+    self.assertEqual(self.hist.get_scalar("a"), 2.0)
+    self.assertEqual(self.data[0], 2.0)
+
+class TestSplitStore(unittest.TestCase):
   def setUp(self):
     self.hist = history.History()
     self.hist.add_scalar("a")
@@ -214,3 +232,20 @@ class TestSplit(unittest.TestCase):
   def test_bad_split(self):
     with self.assertRaises(RuntimeError):
       nhist = self.hist.split(["b", "c"])
+
+class TestSplitNoStore(unittest.TestCase):
+  def setUp(self):
+    self.hist = history.History(False)
+    self.hist.add_scalar("a")
+    self.hist.add_scalar("b")
+    self.hist.add_scalar("c")
+    self.data = np.array([1.0,2.0,3.0])
+    self.hist.set_data(self.data)
+
+  def test_affect(self):
+    nhist = self.hist.split(["a"])
+    self.assertEqual(nhist.get_scalar("b"), 2.0)
+    nhist.set_scalar("b", -2.0)
+    self.assertEqual(nhist.get_scalar("b"), -2.0)
+    self.assertEqual(nhist.get_scalar("b"), self.hist.get_scalar("b"))
+    self.assertEqual(self.data[1], -2.0)

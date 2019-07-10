@@ -38,7 +38,7 @@ const std::map<StorageType,size_t> storage_size =
     {TYPE_ROT,       4} };
 
 /// Black magic to map a type to the right size
-template <class T> size_t GetStorageSize() {return storage_size.at(GetStorageType<T>());};
+template <class T> size_t GetStorageSize() {return storage_size.at(GetStorageType<T>());}
 
 /// Map between a type and its derivative
 const std::map<StorageType,const std::map<StorageType,StorageType>> derivative_type =
