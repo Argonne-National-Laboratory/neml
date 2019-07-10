@@ -154,3 +154,22 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     Rtrue[6:] = np.array(self.H_np1) - np.array(self.H_n) - hrate * self.dt
 
     self.assertTrue(np.allclose(Rtrue, R))
+
+  def test_set_active(self):
+    q = rotations.Orientation(15.0,50.0,60.0, angle_type = "degrees")
+    h = self.model.init_store()
+
+    self.model.set_active_orientation(h, q)
+    self.assertTrue(np.allclose(q.quat, 
+      self.model.get_active_orientation(h).quat))
+
+  def test_set_passive(self):
+    q = rotations.Orientation(15.0,50.0,60.0, angle_type = "degrees")
+    h = self.model.init_store()
+
+    self.model.set_passive_orientation(h, q)
+    self.assertTrue(np.allclose(q.quat, 
+      self.model.get_passive_orientation(h).quat))
+
+    self.assertTrue(np.allclose(q.quat, 
+      self.model.get_active_orientation(h).inverse().quat))
