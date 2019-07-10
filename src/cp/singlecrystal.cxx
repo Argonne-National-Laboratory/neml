@@ -142,6 +142,12 @@ int SingleCrystalModel::update_ld_inc(
   }
 
   // Calculate the new energy
+  u_np1 = u_n + calc_energy_inc_(D_np1, D_n, S_np1, S_n);
+
+  // Calculate the new dissipation
+  p_np1 = p_n + calc_work_inc_(D_np1, D_n, S_np1, S_n, T_np1, T_n, 
+                               HF_np1.get<Orientation>("rotation"), Q_n,
+                               H_np1, H_n);
 
   return 0;
 }
@@ -402,10 +408,35 @@ void SingleCrystalModel::calc_tangents_(double * const x, SCTrialState * ts,
   delete [] M2;
 }
 
-Orientation SingleCrystalModel::update_rot_(Symmetric & S_np1, History & H_np1, SCTrialState * ts)
+Orientation SingleCrystalModel::update_rot_(Symmetric & S_np1, History & H_np1,
+                                            SCTrialState * ts) const
 {
   Skew spin = kinematics_->spin(S_np1, ts->d, ts->w, ts->Q, H_np1, ts->lattice, ts->T);
   return wexp(spin * ts->dt) * ts->Q;
+}
+
+double SingleCrystalModel::calc_energy_inc_(
+    const Symmetric & D_np1, const Symmetric & D_n, 
+    const Symmetric & S_np1, const Symmetric & S_n) const
+{
+  return (S_np1 - S_n).contract(D_np1 - D_n) / 2.0;
+}
+
+double SingleCrystalModel::calc_work_inc_(
+    const Symmetric & D_np1, const Symmetric & D_n,
+    const Symmetric & S_np1, const Symmetric & S_n,
+    double T_np1, double T_n, const Orientation & Q_np1,
+    const Orientation & Q_n, const History & H_np1, 
+    const History & H_n) const
+{
+  double dU = calc_energy_inc_(D_np1, D_n, S_np1, S_n);
+
+  Symmetric e_np1 = kinematics_->elastic_strains(S_np1, Q_np1, H_np1, T_np1);
+  Symmetric e_n = kinematics_->elastic_strains(S_n, Q_n, H_n, T_n);
+
+  double dE = (S_np1 - S_n).contract(e_np1 - e_n) / 2.0;
+
+  return dU - dE;
 }
 
 } // namespace neml
