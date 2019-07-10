@@ -82,6 +82,17 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
+  /// Getter/setter helpers
+  Orientation get_active_orientation(double * const hist) const;
+  Orientation get_active_orientation(const History & hist) const;
+  Orientation get_passive_orientation(double * const hist) const;
+  Orientation get_passive_orientation(const History & hist) const;
+
+  void set_active_orientation(double * const hist, const Orientation & q) const;
+  void set_active_orientation(History & hist, const Orientation & q) const;
+  void set_passive_orientation(double * const hist, const Orientation & q) const;
+  void set_passive_orientation(History & hist, const Orientation & q) const;
+
  private:
   History gather_history_() const;
   void calc_tangents_(double * const x, SCTrialState * ts, double * const A,

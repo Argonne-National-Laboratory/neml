@@ -273,6 +273,66 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
   return 0;
 }
 
+Orientation SingleCrystalModel::get_active_orientation(
+    double * const hist) const
+{
+  History h = gather_history_();
+  h.set_data(hist);
+
+  return get_active_orientation(h);
+}
+
+Orientation SingleCrystalModel::get_active_orientation(
+    const History & hist) const
+{
+  return hist.get<Orientation>("rotation");
+}
+
+Orientation SingleCrystalModel::get_passive_orientation(
+    double * const hist) const
+{
+  History h = gather_history_();
+  h.set_data(hist);
+
+  return get_passive_orientation(h);
+}
+
+Orientation SingleCrystalModel::get_passive_orientation(
+    const History & hist) const
+{
+  return get_active_orientation(hist).inverse();
+}
+
+void SingleCrystalModel::set_active_orientation(
+    double * const hist, const Orientation & q) const
+{
+  History h = gather_history_();
+  h.set_data(hist);
+
+  set_active_orientation(h, q);
+}
+
+void SingleCrystalModel::set_active_orientation(
+    History & hist, const Orientation & q) const
+{
+  hist.get<Orientation>("rotation") = q;
+}
+
+void SingleCrystalModel::set_passive_orientation(
+    double * const hist, const Orientation & q) const
+{
+  History h = gather_history_();
+  h.set_data(hist);
+
+  set_passive_orientation(h, q);
+}
+
+void SingleCrystalModel::set_passive_orientation(
+    History & hist, const Orientation & q) const
+{
+  hist.get<Orientation>("rotation") = q.inverse();
+}
+
 History SingleCrystalModel::gather_history_() const
 {
   History h(false);
