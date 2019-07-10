@@ -73,7 +73,7 @@ double SlipStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & stress,
                     const Lattice & L, double T) const
 {
   double tau = L.shear(g, i, Q, stress);
-  double tau_bar = strength_->hist_to_tau(g, i, history);
+  double tau_bar = strength_->hist_to_tau(g, i, history, T);
 
   return sslip(g, i, tau, tau_bar, T);
 }
@@ -84,7 +84,7 @@ Symmetric SlipStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmetric &
 {
   double tau = L.shear(g, i, Q, stress);  
   Symmetric dtau = L.d_shear(g, i, Q, stress);
-  double tau_bar = strength_->hist_to_tau(g, i, history);
+  double tau_bar = strength_->hist_to_tau(g, i, history, T);
 
   return d_sslip_dtau(g, i, tau, tau_bar, T) * dtau;
 }
@@ -95,11 +95,11 @@ History SlipStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetric & s
 {
   double tau = L.shear(g, i, Q, stress);  
   Symmetric dtau = L.d_shear(g, i, Q, stress);
-  double tau_bar = strength_->hist_to_tau(g, i, history);
+  double tau_bar = strength_->hist_to_tau(g, i, history, T);
 
   double dtb = d_sslip_dstrength(g, i, tau, tau_bar, T);
 
-  History deriv = strength_->d_hist_to_tau(g, i, history);
+  History deriv = strength_->d_hist_to_tau(g, i, history, T);
   deriv.scalar_multiply(dtb);
 
   return deriv;

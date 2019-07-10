@@ -36,6 +36,7 @@ PYBIND11_MODULE(slipharden, m) {
            &SlipSingleStrengthHardening::d_hist_rate_d_stress)
       .def("d_hist_rate_d_strength",
            &SlipSingleStrengthHardening::d_hist_rate_d_strength)
+      .def("static_strength", &SlipSingleStrengthHardening::static_strength)
       ;
 
   py::class_<PlasticSlipHardening, SlipSingleStrengthHardening,

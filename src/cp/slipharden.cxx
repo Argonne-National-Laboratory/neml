@@ -3,15 +3,15 @@
 namespace neml {
 
 double SlipSingleHardening::hist_to_tau(
-    size_t g, size_t i, const History & history) const
+    size_t g, size_t i, const History & history, double T) const
 {
-  return hist_map(history);
+  return hist_map(history, T);
 }
 
 History SlipSingleHardening::d_hist_to_tau(
-    size_t g, size_t i, const History & history) const
+    size_t g, size_t i, const History & history, double T) const
 {
-  return d_hist_map(history);
+  return d_hist_map(history, T);
 }
 
 void SlipSingleStrengthHardening::populate_history(History & history) const
@@ -61,12 +61,14 @@ History SlipSingleStrengthHardening::d_hist_d_h(
   return res;
 }
 
-double SlipSingleStrengthHardening::hist_map(const History & history) const
+double SlipSingleStrengthHardening::hist_map(const History & history, 
+                                             double T) const
 {
-  return history.get<double>("strength");
+  return history.get<double>("strength") + static_strength(T);
 }
 
-History SlipSingleStrengthHardening::d_hist_map(const History & history) const
+History SlipSingleStrengthHardening::d_hist_map(const History & history, 
+                                                double T) const
 {
   History res = history.derivative<double>();
   res.get<double>("strength") = 1.0;
@@ -141,13 +143,17 @@ double VoceSlipHardening::init_strength() const
   return 0.0;
 }
 
+double VoceSlipHardening::static_strength(double T) const
+{
+  return tau_0_->value(T);
+}
+
 double VoceSlipHardening::hist_factor(double strength, const Lattice & L, double T) const
 {
   double tau_sat = tau_sat_->value(T);
   double b = b_->value(T);
-  double tau_0 = tau_0_->value(T);
 
-  return b * (tau_sat - strength) + tau_0;
+  return b * (tau_sat - strength);
 }
 
 double VoceSlipHardening::d_hist_factor(double strength, const Lattice & L, double T) const

@@ -29,10 +29,12 @@ class SlipHardening: public NEMLObject
   virtual void init_history(History & history) const = 0;
   
   /// Map the set of history variables to the slip system hardening
-  virtual double hist_to_tau(size_t g, size_t i, const History & history) const = 0;
+  virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             double T) const = 0;
   /// Derivative of the map wrt to history
   virtual History
-      d_hist_to_tau(size_t g, size_t i, const History & history) const = 0;
+      d_hist_to_tau(size_t g, size_t i, const History & history, 
+                    double T) const = 0;
   
   /// The rate of the history
   virtual History hist(const Symmetric & stress, 
@@ -57,15 +59,17 @@ class SlipSingleHardening: public SlipHardening
 {
  public:
   /// Map the set of history variables to the slip system hardening
-  virtual double hist_to_tau(size_t g, size_t i, const History & history) const;
+  virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             double T) const;
   /// Derivative of the map wrt to history
   virtual History
-      d_hist_to_tau(size_t g, size_t i, const History & history) const;
+      d_hist_to_tau(size_t g, size_t i, const History & history, 
+                    double T) const;
 
   /// The scalar map
-  virtual double hist_map(const History & history) const = 0;
+  virtual double hist_map(const History & history, double T) const = 0;
   /// The derivative of the scalar map
-  virtual History d_hist_map(const History & history) const = 0;
+  virtual History d_hist_map(const History & history, double T) const = 0;
 };
 
 /// Slip strength rule where all systems evolve on a single scalar strength
@@ -95,9 +99,12 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
                  double T, const SlipRule & R) const;
 
   /// The scalar map
-  virtual double hist_map(const History & history) const;
+  virtual double hist_map(const History & history, double T) const;
   /// The derivative of the scalar map
-  virtual History d_hist_map(const History & history) const;
+  virtual History d_hist_map(const History & history, double T) const;
+
+  /// Static (not evolving) strength
+  virtual double static_strength(double T) const = 0;
   
   /// Setup the scalar
   virtual double init_strength() const = 0;
@@ -158,6 +165,9 @@ class VoceSlipHardening: public PlasticSlipHardening
 
   /// Setup the scalar
   virtual double init_strength() const;
+
+  /// Static strength
+  virtual double static_strength(double T) const;
 
   /// Prefactor
   virtual double hist_factor(double strength, const Lattice & L, double T) const;

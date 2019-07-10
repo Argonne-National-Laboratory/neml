@@ -57,7 +57,7 @@ class CommonSlipStrengthSlipRule(object):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         rs = self.L.shear(g, i, self.Q, self.S)
-        strength = self.H.get_scalar("strength")
+        strength = self.H.get_scalar("strength") + self.static
         self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T),
           self.model.sslip(g, i, rs, strength, self.T)))
 
@@ -105,6 +105,8 @@ class TestPowerLawSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlip
     self.b = 2.5
 
     self.strengthmodel = slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0)
+
+    self.static = self.tau0
     
     self.g0 = 1.0
     self.n = 3.0

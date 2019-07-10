@@ -30,25 +30,25 @@ class CommonSlipHardening():
   def test_d_hist_to_tau_d_hist(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h), self.H)
-        d = self.model.d_hist_to_tau(g, i, self.H)
+        nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.T), self.H)
+        d = self.model.d_hist_to_tau(g, i, self.H, self.T)
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
 
 class CommonSlipSingleHardening():
   def test_d_hist_map(self):
-    nd = diff_history_scalar(lambda h: self.model.hist_map(h), self.H)
-    H = self.model.d_hist_map(self.H)
+    nd = diff_history_scalar(lambda h: self.model.hist_map(h, self.T), self.H)
+    H = self.model.d_hist_map(self.H, self.T)
     self.assertTrue(np.allclose(np.array(H), np.array(nd)))
 
   def test_hist_to_tau(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        self.assertTrue(np.isclose(self.strength, 
-          self.model.hist_to_tau(g, i, self.H)))
+        self.assertTrue(np.isclose(self.strength + self.static, 
+          self.model.hist_to_tau(g, i, self.H, self.T)))
 
 class CommonSlipSingleStrengthHardening():
   def test_hist_map(self):
-    self.assertTrue(np.isclose(self.model.hist_map(self.H), self.strength))
+    self.assertTrue(np.isclose(self.model.hist_map(self.H, self.T), self.strength + self.static))
 
   def test_hist(self):
     h = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule)
@@ -116,6 +116,8 @@ class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening,
     self.tau_sat = 50.0
     self.b = 2.5
 
+    self.static = self.tau0
+
     self.model = slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0)
     
     self.g0 = 1.0
@@ -127,9 +129,12 @@ class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening,
     self.model.populate_history(H)
     self.model.init_history(H)
     self.assertTrue(np.isclose(H.get_scalar('strength'), 0.0))
+
+  def test_static_strength(self):
+    self.assertTrue(np.isclose(self.model.static_strength(self.T), self.tau0))
   
   def test_factor(self):
     self.assertTrue(np.isclose(
       self.model.hist_factor(self.strength, self.L, self.T),
-      self.b * (self.tau_sat - self.strength) + self.tau0))
+      self.b * (self.tau_sat - self.strength)))
 
