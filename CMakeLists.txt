@@ -63,6 +63,19 @@ if(APPLE)
 endif(APPLE)
 ######
 
+### Offer to use OMP for crystal system ###
+option(USE_OPENMP "Compile with OpenMP" ON)
+if (USE_OPENMP)
+      find_package(OpenMP)
+      if(NOT OPENMP_FOUND)
+            message(WARNING "OpenMP requested but the compiler does not support it!")
+      else()
+            add_definitions(-DUSE_OMP)
+            set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS})
+            set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
+      endif()
+endif()
+###
 
 ### DOCUMENTATION ###
 option(BUILD_DOCUMENTATION "Build documentation: manual and doxygen" OFF)

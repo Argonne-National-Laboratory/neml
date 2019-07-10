@@ -59,6 +59,22 @@ template<class T> py::array_t<T> alloc_mat(size_t m, size_t n)
   return arr;
 }
 
+// Allocate a new, zeroed matrix
+template<class T> py::array_t<T> alloc_3d(size_t m, size_t n, size_t o)
+{
+  auto arr = py::array(py::buffer_info(
+          nullptr,
+          sizeof(T),
+          py::format_descriptor<T>::value,
+          3,
+          {m, n, o},
+          {sizeof(T) * n * o, sizeof(T) * o, sizeof(T)}
+          ));
+  auto ptr = arr2ptr<T>(arr);
+  std::fill(ptr, ptr + m * n * o, 0);
+  return arr;
+}
+
 /// Map a python object into a parameter from a set
 void assign_python_parameter(ParameterSet & pset, std::string name, 
                              py::object value)

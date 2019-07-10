@@ -23,7 +23,8 @@ typedef enum Error {
   CREEP_PLASTICITY = -12,
   UNKNOWN_ERROR = -13,
   INCOMPATIBLE_KM = -14,
-  DUMMY_ELASTIC = -15
+  DUMMY_ELASTIC = -15,
+  INCOMPATIBLE_VECTORS = -16
 } Error;
 
 /// Translate an error code to an exception
