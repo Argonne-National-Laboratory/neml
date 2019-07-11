@@ -17,10 +17,10 @@ if __name__ == "__main__":
   
   nthreads = 4
 
-  L = np.array([[-0.5,0,0],[0,1.0,0],[0,0,-0.5]])
+  L = np.array([[0,0,0],[0,1.0,0],[0,0,-1.0]])
   erate = 1.0e-4
   steps = 100
-  emax = 0.01
+  emax = 0.5
 
   E = 100000.0
   nu = 0.3
@@ -55,7 +55,7 @@ if __name__ == "__main__":
   for i in range(steps):
     pmodel.deformation_step(L, dt, nthreads = nthreads)
     e.append(e[-1] + erate * dt)
-    s.append(pmodel.s[1])
+    s.append(pmodel.s[2])
   
   plt.figure()
   plt.plot(e,s)
