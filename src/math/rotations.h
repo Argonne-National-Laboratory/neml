@@ -14,13 +14,20 @@
 namespace neml {
 
 /// A generic quaternion, stored as [s v1 v2 v3]
-class Quaternion {
+class Quaternion: public NEMLObject {
  public:
   Quaternion();
   Quaternion(const std::vector<double> v);
   Quaternion(double * v);
   Quaternion(const Quaternion & other);
   Quaternion(const Quaternion && other);
+
+  /// Type for the object system
+  static std::string type();
+  /// Parameters for the object system
+  static ParameterSet parameters();
+  /// Setup from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual ~Quaternion();
   
@@ -83,6 +90,8 @@ class Quaternion {
   bool store_;
 };
 
+static Register<Quaternion> regQuat;
+
 // Binary operators
 Quaternion operator*(double s, const Quaternion & q);
 Quaternion operator*(const Quaternion & q, double s);
@@ -93,7 +102,7 @@ Quaternion operator/(const Quaternion & lhs, const Quaternion & rhs);
 /// C++ stream output for quaternions
 std::ostream & operator<<(std::ostream & os, const Quaternion & q);
 
-class Orientation: public Quaternion, public NEMLObject {
+class Orientation: public Quaternion {
  public:
   /// Type for the object system
   static std::string type();

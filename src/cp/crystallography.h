@@ -59,7 +59,8 @@ static Register<SymmetryGroup> regSymmetryGroup;
 
 class Lattice: public NEMLObject {
  public:
-  Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry);
+  Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry,
+          list_systems isystems = {});
   virtual ~Lattice();
 
   const Vector & a1() {return a1_;};
@@ -112,7 +113,7 @@ class Lattice: public NEMLObject {
 
 class CubicLattice: public Lattice {
  public:
-  CubicLattice(double a);
+  CubicLattice(double a, list_systems isystems = {});
 
   /// String type for the object system
   static std::string type();

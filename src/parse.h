@@ -50,6 +50,9 @@ bool get_bool(const rapidxml::xml_node<> * node);
 /// Extract a string from an xml node
 std::string get_string(const rapidxml::xml_node<> * node);
 
+/// Extract a slip system from an xml node
+list_systems get_slip(const rapidxml::xml_node<> * node);
+
 // Helpers
 /// Get a node with a given name
 const rapidxml::xml_node<> * get_child(const rapidxml::xml_node<> * node, std::string name);
@@ -59,6 +62,9 @@ std::string get_type_of_node(const rapidxml::xml_node<> * node);
 
 /// Helper to split strings
 std::vector<double> split_string(std::string sval);
+
+/// Lame we can't do this with templates
+std::vector<int> split_string_int(std::string sval);
 
 // Exceptions
 /// If a node is not found

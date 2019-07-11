@@ -247,10 +247,15 @@ void SymmetryGroup::opdist_(const double * const q1,
 }
 
 Lattice::Lattice(Vector a1, Vector a2, Vector a3,
-                 std::shared_ptr<SymmetryGroup> symmetry) :
+                 std::shared_ptr<SymmetryGroup> symmetry,
+                 list_systems isystems) :
     a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry), offsets_({0})
 {
   make_reciprocal_lattice_();
+
+  for (auto system : isystems) {
+    add_slip_system(system.first, system.second);
+  }
 }
 
 Lattice::~Lattice()
@@ -404,9 +409,10 @@ void Lattice::assert_miller_(std::vector<int> m)
   }
 }
 
-CubicLattice::CubicLattice(double a) :
+CubicLattice::CubicLattice(double a, 
+                           list_systems isystems) :
     Lattice(Vector({a,0,0}),Vector({0,a,0}),Vector({0,0,a}), 
-            std::make_shared<SymmetryGroup>("432"))
+            std::make_shared<SymmetryGroup>("432"), isystems)
 {
 
 }
@@ -421,6 +427,7 @@ ParameterSet CubicLattice::parameters()
   ParameterSet pset(CubicLattice::type());
 
   pset.add_parameter<double>("a");
+  pset.add_optional_parameter<list_systems>("slip_systems", {});
 
   return pset;
 }
