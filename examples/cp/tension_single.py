@@ -12,11 +12,6 @@ from neml import elasticity
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  # Everyone's favorite FCC rolling example!
-  N = 1
-  
-  nthreads = 5
-
   L = np.array([[-0.5,0,0],[0,1.0,0],[0,0,-0.5]])
   erate = 1.0e-4
   steps = 100
@@ -35,7 +30,6 @@ if __name__ == "__main__":
   # Setup
   L *= erate
   dt = emax / steps / erate
-  orientations = rotations.random_orientations(N)
 
   d = nemlmath.sym(0.5*(L+L.T))
   w = nemlmath.skew(0.5*(L-L.T))

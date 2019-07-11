@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
   # Everyone's favorite FCC rolling example!
-  N = 1
+  N = 100
   
-  nthreads = 5
+  nthreads = 4
 
   L = np.array([[-0.5,0,0],[0,1.0,0],[0,0,-0.5]])
   erate = 1.0e-4
@@ -25,9 +25,9 @@ if __name__ == "__main__":
   E = 100000.0
   nu = 0.3
 
-  t0 = 200000.0
-  ts = 500.0
-  b = 1.0
+  t0 = 50.0
+  ts = 50.0
+  b = 100.0
 
   g0 = 1.0
   n = 12.0
@@ -46,7 +46,7 @@ if __name__ == "__main__":
   lattice = crystallography.CubicLattice(1.0)
   lattice.add_slip_system([1,1,0],[1,1,1])
 
-  model = singlecrystal.SingleCrystalModel(kmodel, lattice, verbose = True)
+  model = singlecrystal.SingleCrystalModel(kmodel, lattice)
 
   pmodel = polycrystal.TaylorModel(model, orientations)
   

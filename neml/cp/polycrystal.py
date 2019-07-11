@@ -68,6 +68,7 @@ class PolycrystalModel(object):
     self.u_n = np.copy(self.u_np1)
     self.p_n = np.copy(self.p_np1)
     self.T_n = np.copy(self.T_np1)
+    self.h_n = np.copy(self.h_np1)
 
   def orientation(self, i):
     """

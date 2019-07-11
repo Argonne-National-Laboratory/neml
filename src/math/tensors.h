@@ -22,7 +22,7 @@ class Tensor {
  public:
   Tensor(std::size_t n);
   Tensor(const Tensor & other);
-  Tensor(const Tensor && other);
+  Tensor(Tensor && other);
   Tensor(const std::vector<double> flat);
   Tensor(double * flat, size_t n);
   virtual ~Tensor();
