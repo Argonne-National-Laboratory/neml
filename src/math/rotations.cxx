@@ -525,6 +525,34 @@ void Orientation::setHyperspherical(double a1, double a2, double a3,
   quat_[3] = sin(a1)*sin(a2)*sin(a3);
 }
 
+Orientation Orientation::createVectors(const Vector & x, const Vector & y)
+{
+  Orientation q;
+  q.setVectors(x,y);
+  return q;
+}
+
+void Orientation::setVectors(const Vector & x, const Vector & y)
+{
+  if (fabs(x.dot(y)) > 1.0e-16) {
+    throw std::runtime_error("Input vectors are not orthonormal!");
+  }
+  Vector z = x.cross(y);
+  double M[9];
+  
+  M[0] = x(0);
+  M[1] = y(0);
+  M[2] = z(0);
+  M[3] = x(1);
+  M[4] = y(1);
+  M[5] = z(1);
+  M[6] = x(2);
+  M[7] = y(2);
+  M[8] = z(2);
+
+  setMatrix(M);
+}
+
 Orientation::Orientation() :
     Quaternion()
 {

@@ -136,6 +136,10 @@ class Orientation: public Quaternion, public NEMLObject {
                                           std::string angles = "radians");
   void setHyperspherical(double a1, double a2, double a3, 
                          std::string angles = "radians");
+
+  /// Create from two vectors
+  static Orientation createVectors(const Vector & x, const Vector & y);
+  void setVectors(const Vector & x, const Vector & y);
   
   // Actual constructors
   Orientation();

@@ -273,3 +273,18 @@ class TestExpIntegration(unittest.TestCase):
 
     self.assertTrue(np.allclose(q.quat, qf.quat))
 
+class TestFromVectors(unittest.TestCase):
+  def setUp(self):
+    self.x = tensors.Vector([0.0,0.0,1.0])
+    self.y = tensors.Vector([1.0,0.0,0.0])
+    self.q = rotations.Orientation(self.x,self.y)
+
+  def test_sends_correctly(self):
+    x0 = tensors.Vector([1.0,0,0])
+    y0 = tensors.Vector([0.0,1.0,0.0])
+
+    xp = self.q.apply(x0)
+    self.assertEqual(self.x, xp)
+
+    yp = self.q.apply(y0)
+    self.assertEqual(self.y, yp)

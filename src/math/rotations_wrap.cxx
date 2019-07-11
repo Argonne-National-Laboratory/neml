@@ -107,7 +107,11 @@ PYBIND11_MODULE(rotations, m) {
             }
            }), "Initialize from angles of various types",
            py::arg("a"), py::arg("b"), py::arg("c"), py::arg("angle_type") = "radians", py::arg("convention") = "kocks")
-
+      .def(py::init(
+              [](Vector & x, Vector & y)
+              {
+                return new Orientation(Orientation::createVectors(x,y));
+              }), "Initialize from two orthogonal vectors.")
       .def("to_euler",
            [](Orientation & me, std::string angles, std::string convention) -> std::tuple<double, double, double>
            {

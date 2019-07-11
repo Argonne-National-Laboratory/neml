@@ -5,7 +5,7 @@ sys.path.append('../..')
 
 import numpy as np
 
-from neml.cp import polycrystal, crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal
+from neml.cp import polycrystal, crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal, polefigures
 from neml.math import rotations, tensors
 from neml import elasticity
 
@@ -13,21 +13,21 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
   # Everyone's favorite FCC rolling example!
-  N = 100
+  N = 300
   
-  nthreads = 4
+  nthreads = 10
 
   L = np.array([[0,0,0],[0,1.0,0],[0,0,-1.0]])
   erate = 1.0e-4
-  steps = 100
+  steps = 500
   emax = 0.5
 
   E = 100000.0
   nu = 0.3
 
-  t0 = 50.0
-  ts = 50.0
-  b = 100.0
+  t0 = 30.0
+  ts = 10.0
+  b = 1.0
 
   g0 = 1.0
   n = 12.0
@@ -36,15 +36,15 @@ if __name__ == "__main__":
   L *= erate
   dt = emax / steps / erate
   orientations = rotations.random_orientations(N)
-  
+ 
+  lattice = crystallography.CubicLattice(1.0)
+  lattice.add_slip_system([1,1,0],[1,1,1])
+
   strengthmodel = slipharden.VoceSlipHardening(ts, b, t0)
   slipmodel = sliprules.PowerLawSlipRule(strengthmodel, g0, n)
   imodel = inelasticity.AsaroInelasticity(slipmodel)
   emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
   kmodel = kinematics.StandardKinematicModel(emodel, imodel)
-
-  lattice = crystallography.CubicLattice(1.0)
-  lattice.add_slip_system([1,1,0],[1,1,1])
 
   model = singlecrystal.SingleCrystalModel(kmodel, lattice)
 
@@ -53,10 +53,15 @@ if __name__ == "__main__":
   e = [0.0]
   s = [0.0]
   for i in range(steps):
+    print(i)
     pmodel.deformation_step(L, dt, nthreads = nthreads)
     e.append(e[-1] + erate * dt)
     s.append(pmodel.s[2])
   
-  plt.figure()
-  plt.plot(e,s)
+  polefigures.pole_figure_discrete(orientations,[1,1,1],lattice)
   plt.show()
+
+  polefigures.pole_figure_discrete(pmodel.orientations,[1,1,1],lattice)
+  plt.show()
+
+

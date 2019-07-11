@@ -77,7 +77,7 @@ class PolycrystalModel(object):
       Parameters:
         i       crystal number
     """
-    return self.model.get_passive_orientation(self.model, self.h_n[i])
+    return self.model.get_passive_orientation(self.h_n[i])
 
   @property
   def orientations(self):
