@@ -150,8 +150,6 @@ class ParameterSet {
   template<typename T>
   void add_optional_parameter(std::string name, param_type value)
   {
-    std::cout << name << std::endl;
-
     add_parameter<T>(name);
     assign_parameter(name, value);
   }

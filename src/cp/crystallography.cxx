@@ -435,7 +435,8 @@ ParameterSet CubicLattice::parameters()
 std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
 {
   return neml::make_unique<CubicLattice>(
-      params.get_parameter<double>("a")); 
+      params.get_parameter<double>("a"),
+      params.get_parameter<list_systems>("slip_systems")); 
 }
 
 } // namespace neml

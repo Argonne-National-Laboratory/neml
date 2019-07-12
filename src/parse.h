@@ -66,6 +66,9 @@ std::vector<double> split_string(std::string sval);
 /// Lame we can't do this with templates
 std::vector<int> split_string_int(std::string sval);
 
+/// Helper to strip strings
+std::string & strip(std::string & s);
+
 // Exceptions
 /// If a node is not found
 class NodeNotFound: public std::exception {

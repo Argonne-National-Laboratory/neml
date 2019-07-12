@@ -83,11 +83,75 @@
     type = ComputeNEMLStrain
     large_kinematics = true
   [../]
-  [./stress]
+  [./stress1]
     type = ComputeNEMLStressUpdate
     database = "test.xml"
-    model = "elastic_model"
+    model = "grain_1"
     large_kinematics = true
+    block = 1
+  [../]
+  [./stress2]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_2"
+    large_kinematics = true
+    block = 2
+  [../]
+  [./stress3]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_3"
+    large_kinematics = true
+    block = 3
+  [../]
+  [./stress4]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_4"
+    large_kinematics = true
+    block = 4
+  [../]
+  [./stress5]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_5"
+    large_kinematics = true
+    block = 5
+  [../]
+  [./stress6]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_6"
+    large_kinematics = true
+    block = 6
+  [../]
+  [./stress7]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_7"
+    large_kinematics = true
+    block = 7
+  [../]
+  [./stress8]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_8"
+    large_kinematics = true
+    block = 8
+  [../]
+  [./stress9]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_9"
+    large_kinematics = true
+    block = 9
+  [../]
+  [./stress10]
+    type = ComputeNEMLStressUpdate
+    database = "test.xml"
+    model = "grain_10"
+    large_kinematics = true
+    block = 10
   [../]
 []
 
@@ -110,7 +174,7 @@
   nl_rel_tol = 1e-8
 
   end_time = 100.0
-  dtmin = 1.0
+  dtmin = 0.1
   dt = 1.0
 []
 

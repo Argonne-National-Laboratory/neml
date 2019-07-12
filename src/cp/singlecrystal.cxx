@@ -184,6 +184,7 @@ int SingleCrystalModel::elastic_strains(
   stress.copy_data(s_np1);
 
   History h = gather_history_();
+  h.make_store();
   h.copy_data(h_np1);
   
   Symmetric estrain = kinematics_->elastic_strains(stress, 

@@ -134,6 +134,7 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
         break;
       case TYPE_SLIP:
         pset.assign_parameter(name, get_slip(child));
+        break;
       default:
         throw std::runtime_error("Unrecognized object type!");
         break;
@@ -227,22 +228,18 @@ list_systems get_slip( const rapidxml::xml_node<> * node)
   // Separate by newlines
   while(std::getline(ss, to,'\n')) {
     // Delete blank characters at front and back of string
-    std::cout << "START" << std::endl;
-
-    to.erase(to.begin(), std::find_if(to.begin(), to.end(),
-                                      [](char c) { return !std::isspace<char>(c, std::locale::classic());}));
-    to.erase(to.begin(), std::find_if(to.begin(), to.end(),
-                                      [](char c) { return !std::isspace<char>(c, std::locale::classic());}));
-
-    std::cout << to << std::endl;
+    strip(to);
 
     // Skip blanks
     if (to == "") continue;
 
     // Split by semicolon
     std::string dir = to.substr(0, to.find(";"));
-    std::string nor = to.substr(to.find(";"));
+    strip(dir);
+    std::string nor = to.substr(to.find(";")+1);
+    strip(nor);
     
+    // Make into vectors
     auto d = split_string_int(dir);
     auto n = split_string_int(nor);
     
@@ -292,6 +289,16 @@ std::vector<int> split_string_int(std::string sval)
     value.push_back(std::stoi(*it));
   }
   return value;
+}
+
+std::string & strip(std::string & s)
+{
+  auto noblank = [](char c) { return !std::isspace<char>(c, std::locale::classic());}; 
+
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), noblank));
+  s.erase(std::find_if(s.rbegin(), s.rend(), noblank).base(), s.end());
+  
+  return s;
 }
 
 } // namespace neml
