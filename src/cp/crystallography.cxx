@@ -427,7 +427,8 @@ ParameterSet CubicLattice::parameters()
   ParameterSet pset(CubicLattice::type());
 
   pset.add_parameter<double>("a");
-  pset.add_optional_parameter<list_systems>("slip_systems", {});
+  pset.add_optional_parameter<list_systems>("slip_systems", 
+                                            list_systems());
 
   return pset;
 }
