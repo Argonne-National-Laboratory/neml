@@ -16,16 +16,17 @@ namespace neml {
 /// Store the trial state for the single crystal model
 class SCTrialState: public TrialState {
  public:
-  SCTrialState(Symmetric & d, Skew & w, Symmetric & S, History & H, Orientation & Q, Lattice & lattice, double T, double dt) : 
+  SCTrialState(const Symmetric & d, const Skew & w, const Symmetric & S, const
+               History & H, const Orientation & Q, const Lattice & lattice, double T, double dt) : 
       d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt)
   {};
   
-  Symmetric & d;
-  Skew & w;
-  Symmetric & S;
-  History & history;
-  Orientation & Q;
-  Lattice & lattice;
+  const Symmetric & d;
+  const Skew & w;
+  const Symmetric & S;
+  const History & history;
+  const Orientation & Q;
+  const Lattice & lattice;
   double T;
   double dt;
 };
@@ -94,7 +95,10 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   void set_passive_orientation(History & hist, const Orientation & q) const;
 
  private:
-  History gather_history_() const;
+  History gather_history_(double * data) const;
+  History gather_history_(const double * data) const;
+  History gather_blank_history_() const;
+
   void calc_tangents_(double * const x, SCTrialState * ts, double * const A,
                       double * const B);
   Orientation update_rot_(Symmetric & S_np1, History & H_np1, SCTrialState * ts) const;

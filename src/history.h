@@ -57,6 +57,10 @@ class History {
   History(bool store);
   History(const History & other);
   History(const History && other);
+  /// Dangerous constructor, only use if you know what you're doing
+  History(double * data);
+  /// Dangerous constructor, only use if you know what you're doing
+  History(const double * data);
   virtual ~History();
 
   /// Copy constructor
@@ -153,7 +157,7 @@ class History {
   }
 
   /// Split a history into a subgroup
-  History split(std::vector<std::string> sep);
+  History split(std::vector<std::string> sep) const;
 
  private:
   void error_if_exists_(std::string name) const;

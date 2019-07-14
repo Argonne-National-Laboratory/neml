@@ -43,6 +43,18 @@ History::History(const History && other) :
   copy_maps(other);
 }
 
+History::History(double * data) :
+    size_(0), store_(false)
+{
+  storage_ = data;
+}
+
+History::History(const double * data) :
+    size_(0), store_(false)
+{
+  storage_ = const_cast<double*>(data);
+}
+
 History::~History()
 {
   if (store_) {
@@ -208,7 +220,7 @@ void History::zero()
   std::fill(storage_, storage_+size_, 0.0);
 }
 
-History History::split(std::vector<std::string> sep)
+History History::split(std::vector<std::string> sep) const
 {
   // Check to see if the groups are contiguous and get the offset
   size_t i;

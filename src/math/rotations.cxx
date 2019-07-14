@@ -383,8 +383,8 @@ std::unique_ptr<NEMLObject> Orientation::initialize(ParameterSet & params)
   }
   
   return std::unique_ptr<Orientation>(new Orientation(
-          std::move(Orientation::createEulerAngles(angles[0], angles[1], angles[2],
-                                         params.get_parameter<std::string>("angle_type")))
+          Orientation::createEulerAngles(angles[0], angles[1], angles[2],
+                                         params.get_parameter<std::string>("angle_type"))
           ));
 }
 

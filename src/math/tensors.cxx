@@ -47,6 +47,12 @@ Tensor::Tensor(double * flat, size_t n) :
   s_ = flat;
 }
 
+Tensor::Tensor(const double * flat, size_t n) :
+    n_(n), istore_(false)
+{
+  s_ = const_cast<double*>(flat);
+}
+
 Tensor::~Tensor()
 {
   if (istore_) {
@@ -147,6 +153,11 @@ Vector::Vector(const std::vector<double> v) :
 
 Vector::Vector(double * v) :
     Tensor(v, 3)
+{
+}
+
+Vector::Vector(const double * v) :
+    Tensor(v,3)
 {
 }
 
@@ -293,6 +304,11 @@ RankTwo::RankTwo(const std::vector<double> v) :
 }
 
 RankTwo::RankTwo(double * v) :
+    Tensor(v, 9)
+{
+}
+
+RankTwo::RankTwo(const double * v) :
     Tensor(v, 9)
 {
 }
@@ -616,6 +632,12 @@ Symmetric::Symmetric(double * v) :
 {
 }
 
+Symmetric::Symmetric(const double * v) :
+    Tensor(v, 6)
+{
+
+}
+
 Symmetric::Symmetric(const RankTwo & other) : 
     Tensor(6)
 {
@@ -793,6 +815,11 @@ Skew::Skew(const std::vector<double> v) :
 }
 
 Skew::Skew(double * v) :
+    Tensor(v, 3)
+{
+}
+
+Skew::Skew(const double * v) :
     Tensor(v, 3)
 {
 }
@@ -997,6 +1024,11 @@ RankFour::RankFour(const std::vector<std::vector<std::vector<std::vector<double>
 }
 
 RankFour::RankFour(double * v) :
+    Tensor(v, 81)
+{
+}
+
+RankFour::RankFour(const double * v) :
     Tensor(v, 81)
 {
 
@@ -1238,7 +1270,11 @@ SymSym::SymSym(const std::vector<std::vector<double>> A) :
 SymSym::SymSym(double * v) :
     Tensor(v, 36)
 {
+}
 
+SymSym::SymSym(const double * v) :
+    Tensor(v, 36)
+{
 }
 
 SymSym SymSym::opposite() const
@@ -1450,7 +1486,11 @@ SymSkew::SymSkew(const std::vector<std::vector<double>> A) :
 SymSkew::SymSkew(double * v) :
     Tensor(v, 18)
 {
+}
 
+SymSkew::SymSkew(const double * v) :
+    Tensor(v, 18)
+{
 }
 
 SymSkew SymSkew::opposite() const
@@ -1654,7 +1694,11 @@ SkewSym::SkewSym(const std::vector<std::vector<double>> A) :
 SkewSym::SkewSym(double * v) :
     Tensor(v, 18)
 {
+}
 
+SkewSym::SkewSym(const double * v) :
+    Tensor(v, 18)
+{
 }
 
 SkewSym SkewSym::opposite() const

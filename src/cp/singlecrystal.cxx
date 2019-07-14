@@ -80,18 +80,13 @@ int SingleCrystalModel::update_ld_inc(
    double & p_np1, double p_n)
 {
   // Setup everything in the appropriate wrappers
-  Symmetric D_np1;
-  D_np1.copy_data(d_np1);
-  Skew W_np1;
-  W_np1.copy_data(w_np1);
-
-  Symmetric D_n;
-  D_n.copy_data(d_n);
-  Skew W_n;
-  W_n.copy_data(w_n);
+  const Symmetric D_np1(d_np1);
+  const Skew W_np1(w_np1);
+  const Symmetric D_n(d_n);
+  const Skew W_n(w_n);
 
   double dt = t_np1 - t_n;
-
+  
   // This is why I shouldn't do that this way
   Symmetric D;
   Skew W;
@@ -101,15 +96,10 @@ int SingleCrystalModel::update_ld_inc(
   }
 
   Symmetric S_np1(s_np1);
+  const Symmetric S_n(s_n);
 
-  Symmetric S_n;
-  S_n.copy_data(s_n);
-
-  History HF_np1 = gather_history_();
-  HF_np1.set_data(h_np1);
-
-  History HF_n = HF_np1.copy_blank();
-  HF_n.copy_data(h_n);
+  History HF_np1 = gather_history_(h_np1);
+  const History HF_n = gather_history_(h_n);
 
   // As the update is decoupled, split the histories into hardening/
   // orientation groups
@@ -158,14 +148,13 @@ int SingleCrystalModel::update_ld_inc(
 
 size_t SingleCrystalModel::nhist() const
 {
-  History h = gather_history_();
+  const History h = gather_blank_history_();
   return h.size();
 }
 
 int SingleCrystalModel::init_hist(double * const hist) const
 {
-  History h = gather_history_();
-  h.set_data(hist);
+  History h = gather_history_(hist);
   init_history(h);
   return 0;
 }
@@ -180,12 +169,9 @@ int SingleCrystalModel::elastic_strains(
     double T_np1, const double * const h_np1,
     double * const e_np1) const
 {
-  Symmetric stress;
-  stress.copy_data(s_np1);
+  Symmetric stress(s_np1);
 
-  History h = gather_history_();
-  h.make_store();
-  h.copy_data(h_np1);
+  const History h = gather_history_(h_np1);
   
   Symmetric estrain = kinematics_->elastic_strains(stress, 
                                                    h.get<Orientation>("rotation"), 
@@ -216,8 +202,7 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
   SCTrialState * ats = static_cast<SCTrialState*>(ts);
 
   // Make nice objects
-  Symmetric S;
-  S.copy_data(x);
+  Symmetric S (x);
   History H = ats->history.copy_blank();
   H.copy_data(&x[6]);
 
@@ -281,8 +266,7 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
 Orientation SingleCrystalModel::get_active_orientation(
     double * const hist) const
 {
-  History h = gather_history_();
-  h.set_data(hist);
+  History h = gather_history_(hist);
 
   return get_active_orientation(h);
 }
@@ -296,8 +280,7 @@ Orientation SingleCrystalModel::get_active_orientation(
 Orientation SingleCrystalModel::get_passive_orientation(
     double * const hist) const
 {
-  History h = gather_history_();
-  h.set_data(hist);
+  History h = gather_history_(hist);
 
   return get_passive_orientation(h);
 }
@@ -311,8 +294,7 @@ Orientation SingleCrystalModel::get_passive_orientation(
 void SingleCrystalModel::set_active_orientation(
     double * const hist, const Orientation & q) const
 {
-  History h = gather_history_();
-  h.set_data(hist);
+  History h = gather_history_(hist);
 
   set_active_orientation(h, q);
 }
@@ -326,8 +308,7 @@ void SingleCrystalModel::set_active_orientation(
 void SingleCrystalModel::set_passive_orientation(
     double * const hist, const Orientation & q) const
 {
-  History h = gather_history_();
-  h.set_data(hist);
+  History h = gather_history_(hist);
 
   set_passive_orientation(h, q);
 }
@@ -338,7 +319,22 @@ void SingleCrystalModel::set_passive_orientation(
   hist.get<Orientation>("rotation") = q.inverse();
 }
 
-History SingleCrystalModel::gather_history_() const
+History SingleCrystalModel::gather_history_(double * data) const
+{
+  History h(false);
+  populate_history(h);
+  h.set_data(data);
+  return h;
+}
+
+History SingleCrystalModel::gather_history_(const double * data) const
+{
+  History h(data);
+  populate_history(h);
+  return h;
+}
+
+History SingleCrystalModel::gather_blank_history_() const
 {
   History h(false);
   populate_history(h);
@@ -349,8 +345,7 @@ void SingleCrystalModel::calc_tangents_(double * const x, SCTrialState * ts,
                                         double * const A, double * const B)
 {
   // Get nice stress and history 
-  Symmetric S;
-  S.copy_data(x);
+  Symmetric S(x);
   History H = ts->history.copy_blank();
   H.copy_data(&x[6]);
   

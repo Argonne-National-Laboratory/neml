@@ -25,6 +25,7 @@ class Tensor {
   Tensor(Tensor && other);
   Tensor(const std::vector<double> flat);
   Tensor(double * flat, size_t n);
+  Tensor(const double * flat, size_t n);
   virtual ~Tensor();
   
   /// Do I own my own data?
@@ -64,6 +65,7 @@ class Vector: public Tensor {
   Vector();
   Vector(const std::vector<double> v);
   Vector(double * v);
+  Vector(const double * v);
 
   Vector opposite() const;
   Vector operator-() const;
@@ -103,6 +105,7 @@ class RankTwo: public Tensor {
   RankTwo();
   RankTwo(const std::vector<double> v);
   RankTwo(double * v);
+  RankTwo(const double * v);
   RankTwo(const std::vector<std::vector<double>> A);
   /// Helper
   RankTwo(const Symmetric & other);
@@ -173,6 +176,7 @@ class Symmetric: public Tensor {
   Symmetric();
   Symmetric(const std::vector<double> v);
   Symmetric(double * v);
+  Symmetric(const double * v);
   /// I guess take them seriously and symmetrize it
   Symmetric(const RankTwo & other);
 
@@ -220,6 +224,7 @@ class Skew: public Tensor {
   Skew();
   Skew(const std::vector<double> v);
   Skew(double * v);
+  Skew(const double * v);
   /// Skew a general tensor
   Skew(const RankTwo & other);
 
@@ -267,6 +272,7 @@ class RankFour: public Tensor {
   RankFour(const std::vector<double> v);
   RankFour(const std::vector<std::vector<std::vector<std::vector<double>>>> A);
   RankFour(double * v);
+  RankFour(const double * v);
 
   RankFour opposite() const;
   RankFour operator-() const;
@@ -320,6 +326,7 @@ class SymSym: public Tensor {
   SymSym(const std::vector<double> v);
   SymSym(const std::vector<std::vector<double>> A);
   SymSym(double * v);
+  SymSym(const double * v);
 
   SymSym opposite() const;
   SymSym operator-() const;
@@ -374,6 +381,7 @@ class SymSkew: public Tensor {
   SymSkew(const std::vector<double> v);
   SymSkew(const std::vector<std::vector<double>> A);
   SymSkew(double * v);
+  SymSkew(const double * v);
 
   SymSkew opposite() const;
   SymSkew operator-() const;
@@ -425,6 +433,7 @@ class SkewSym: public Tensor {
   SkewSym(const std::vector<double> v);
   SkewSym(const std::vector<std::vector<double>> A);
   SkewSym(double * v);
+  SkewSym(const double * v);
 
   SkewSym opposite() const;
   SkewSym operator-() const;
