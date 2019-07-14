@@ -21,12 +21,12 @@ class SCTrialState: public TrialState {
       d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt)
   {};
   
-  const Symmetric & d;
-  const Skew & w;
-  const Symmetric & S;
-  const History & history;
-  const Orientation & Q;
-  const Lattice & lattice;
+  Symmetric d;
+  Skew w;
+  Symmetric S;
+  History history;
+  Orientation Q;
+  Lattice lattice;
   double T;
   double dt;
 };
@@ -40,7 +40,8 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
                      std::shared_ptr<Orientation> initial_angle,
                      std::shared_ptr<Interpolate> alpha,
                      bool update_rotation,
-                     double tol, int miter, bool verbose);
+                     double tol, int miter, bool verbose,
+                     int max_divide);
   virtual ~SingleCrystalModel();
 
   /// Type for the object system
@@ -99,8 +100,8 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   History gather_history_(const double * data) const;
   History gather_blank_history_() const;
 
-  void calc_tangents_(double * const x, SCTrialState * ts, double * const A,
-                      double * const B);
+  void calc_tangents_(Symmetric & S, History & H,
+                      SCTrialState * ts, double * const A, double * const B);
   Orientation update_rot_(Symmetric & S_np1, History & H_np1, SCTrialState * ts) const;
   double calc_energy_inc_(const Symmetric & D_np1, const Symmetric & D_n,
                           const Symmetric & S_np1, const Symmetric & S_n) const;
@@ -109,6 +110,8 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
                         double T_np1, double T_n, const Orientation & Q_np1,
                         const Orientation & Q_n, const History & H_np1,
                         const History & H_n) const;
+
+  int solve_substep_(SCTrialState * ts, Symmetric & stress, History & hist);
 
  private:
   std::shared_ptr<KinematicModel> kinematics_;
@@ -119,6 +122,7 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   double tol_;
   int miter_;
   bool verbose_;
+  int max_divide_;
 };
 
 static Register<SingleCrystalModel> regSingleCrystalModel;

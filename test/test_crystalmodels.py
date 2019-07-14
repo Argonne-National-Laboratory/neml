@@ -91,7 +91,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.model = singlecrystal.SingleCrystalModel(self.kmodel, self.L, 
         initial_rotation = self.Q)
     self.model_no_rot = singlecrystal.SingleCrystalModel(self.kmodel, self.L,
-        initial_rotation = self.Q, update_rotation = False)
+        initial_rotation = self.Q, update_rotation = False, verbose = False)
 
     self.T = 300.0
     self.stress_n = np.array([120.0,-60.0,170.0,35.0,80.0,-90.0])
@@ -128,8 +128,8 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.x[:6] = self.stress_np1
     self.x[6] = self.strength_np1
 
-    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003])
-    self.Wdir = np.array([0.02,-0.03,0.01])
+    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003]) / 5.0
+    self.Wdir = np.array([0.02,-0.03,0.01]) / 5.0
 
     self.nsteps = 10
 

@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 if __name__ == "__main__":
   L = np.array([[-0.5,0,0],[0,1.0,0],[0,0,-0.5]])
   erate = 1.0e-4
-  steps = 100
-  emax = 0.01
+  steps = 25
+  emax = 0.5
 
   E = 100000.0
   nu = 0.3
@@ -82,5 +82,6 @@ if __name__ == "__main__":
     u_n = u_np1
     p_n = p_np1
   
+  print(s[-1])
   plt.plot(e, s)
   plt.show()

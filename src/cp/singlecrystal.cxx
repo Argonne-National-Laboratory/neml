@@ -7,10 +7,11 @@ SingleCrystalModel::SingleCrystalModel(
     std::shared_ptr<Lattice> lattice,
     std::shared_ptr<Orientation> initial_angle,
     std::shared_ptr<Interpolate> alpha,
-    bool update_rotation, double tol, int miter, bool verbose) :
+    bool update_rotation, double tol, int miter, bool verbose, 
+    int max_divide) :
       kinematics_(kinematics), lattice_(lattice), q0_(initial_angle), alpha_(alpha),
       update_rotation_(update_rotation), tol_(tol), miter_(miter),
-      verbose_(verbose)
+      verbose_(verbose), max_divide_(max_divide)
 {
 
 }
@@ -37,8 +38,9 @@ ParameterSet SingleCrystalModel::parameters()
                                           std::make_shared<ConstantInterpolate>(0.0));
   pset.add_optional_parameter<bool>("update_rotation", true);
   pset.add_optional_parameter<double>("tol", 1.0e-6);
-  pset.add_optional_parameter<int>("miter", 100);
+  pset.add_optional_parameter<int>("miter", 20);
   pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<int>("max_divide", 4);
 
   return pset;
 }
@@ -53,7 +55,8 @@ std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params
       params.get_parameter<bool>("update_rotation"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"));
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<int>("max_divide"));
 }
 
 void SingleCrystalModel::populate_history(History & history) const
@@ -107,25 +110,73 @@ int SingleCrystalModel::update_ld_inc(
 
   History H_np1 = HF_np1.split({"rotation"});
   History H_n = HF_n.split({"rotation"});
-
-  // Decouple the updates
-  kinematics_->decouple(S_n, D, W, Q_n, H_n, *lattice_, T_np1);
   
-  // Set the trial state
-  SCTrialState trial(D, W, S_n, H_n, Q_n, *lattice_, T_np1, dt);
+  /* Begin adaptive stepping */
+  double dT = T_np1 - T_n;
+  int progress = 0;
+  int cur_int_inc = pow(2, max_divide_);
+  int target = cur_int_inc;
+  int subdiv = 0;
 
-  // Solve the update
-  std::vector<double> xv(nparams());
-  double * x = &xv[0];
-  int ier = solve(this, x, &trial, tol_, miter_, verbose_);
-  if (ier != 0) return ier;
-
-  // Dump the results
-  S_np1.copy_data(x);
-  H_np1.copy_data(&x[6]);
+  // Use S_np1 and H_np1 to iterate
+  S_np1.copy_data(S_n.data());
+  H_np1.copy_data(H_n.rawptr());
   
+  while (progress < target) {
+    double step = 1.0 / pow(2, subdiv);
+
+    // Set the trial state
+    SCTrialState trial(D, W,
+                       S_np1, H_np1, // Yes, really
+                       Q_n, *lattice_,
+                       T_n + dT * step, dt * step);
+
+    // Decouple the updates
+    kinematics_->decouple(trial.S, trial.d, trial.w, trial.Q, trial.history,
+                          trial.lattice, trial.T);
+    
+    // Solve the update
+    int ier = solve_substep_(&trial, S_np1, H_np1);
+
+    if (ier != 0) {
+      subdiv++;
+      cur_int_inc /= 2;
+
+      if (verbose_) {
+        std::cout << "Taking adaptive substep" << std::endl;
+        std::cout << "Current progress " << progress << " out of " << target <<
+            std::endl;
+        std::cout << "New step fraction " << cur_int_inc << " out of "
+            << target << std::endl;
+      }
+
+      if (subdiv >= max_divide_) {
+        if (verbose_) {
+          std::cout << "Adaptive substepping failed!" << std::endl;
+        }
+        return ier;
+      }
+    }
+    else {
+      progress += cur_int_inc;
+      if (verbose_) {
+        std::cout << "Adaptive substep succeeded" << std::endl;
+        std::cout << "Current progress " << progress << " out of " << target <<
+            std::endl;
+      }
+    }
+  }
+  /* End adaptive stepping */
+
   // Calculate the tangents
-  calc_tangents_(x, &trial, A_np1, B_np1);
+  // Reset trial state so we get tangent over whole step
+  // For adaptive stepping this is an approximation
+  SCTrialState trial(D, W,
+                     S_n, H_n,
+                     Q_n, *lattice_,
+                     T_np1, dt);
+  // Actually go for the tangent
+  calc_tangents_(S_np1, H_np1, &trial, A_np1, B_np1);
   
   // Calculate the new rotation, if requested
   if (update_rotation_) {
@@ -341,14 +392,16 @@ History SingleCrystalModel::gather_blank_history_() const
   return h;
 }
 
-void SingleCrystalModel::calc_tangents_(double * const x, SCTrialState * ts,
+void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
+                                        SCTrialState * ts,
                                         double * const A, double * const B)
 {
-  // Get nice stress and history 
-  Symmetric S(x);
-  History H = ts->history.copy_blank();
-  H.copy_data(&x[6]);
-  
+  // Resetup x
+  std::vector<double> xv(nparams());
+  double * x = &xv[0];
+  std::copy(S.s(),S.s()+6,x);
+  std::copy(H.rawptr(), H.rawptr()+H.size(),&x[6]);
+
   // Get the jacobian contributions
   double * R = new double[nparams()];
   double * J = new double[nparams()*nparams()];
@@ -497,6 +550,24 @@ double SingleCrystalModel::calc_work_inc_(
   double dE = (S_np1 - S_n).contract(e_np1 - e_n) / 2.0;
 
   return dU - dE;
+}
+
+int SingleCrystalModel::solve_substep_(SCTrialState * ts,
+                                       Symmetric & stress,
+                                       History & hist)
+{
+  std::vector<double> xv(nparams());
+  double * x = &xv[0];
+  int ier = solve(this, x, ts, tol_, miter_, verbose_);
+
+  // Only dump into new stress and hist if we pass
+  if (ier != 0) return ier;
+
+  // Dump the results
+  stress.copy_data(x);
+  hist.copy_data(&x[6]);
+
+  return ier;
 }
 
 } // namespace neml
