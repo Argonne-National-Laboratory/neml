@@ -37,7 +37,8 @@ class TestBatch(unittest.TestCase):
 
     self.kmodel = kinematics.StandardKinematicModel(self.emodel, self.imodel)
 
-    self.model = singlecrystal.SingleCrystalModel(self.kmodel, self.L)
+    self.model = singlecrystal.SingleCrystalModel(self.kmodel, self.L, 
+        miter = 120)
 
     self.orientations = rotations.random_orientations(self.N)
 
