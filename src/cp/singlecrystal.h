@@ -17,8 +17,11 @@ namespace neml {
 class SCTrialState: public TrialState {
  public:
   SCTrialState(const Symmetric & d, const Skew & w, const Symmetric & S, const
-               History & H, const Orientation & Q, const Lattice & lattice, double T, double dt) : 
-      d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt)
+               History & H, const Orientation & Q, const Lattice & lattice,
+               double T, double dt,
+               const Symmetric & s_guess, const History & h_guess) : 
+      d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt),
+      s_guess(s_guess), h_guess(h_guess)
   {};
   
   Symmetric d;
@@ -29,6 +32,8 @@ class SCTrialState: public TrialState {
   Lattice lattice;
   double T;
   double dt;
+  Symmetric s_guess;
+  History h_guess;
 };
 
 /// Single crystal model integrator

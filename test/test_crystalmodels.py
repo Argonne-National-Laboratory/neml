@@ -122,14 +122,15 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
 
     self.dt = 2.0
 
-    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt)
+    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
+        self.S_n, self.H_n)
 
     self.x = np.zeros((self.model.nparams,))
     self.x[:6] = self.stress_np1
     self.x[6] = self.strength_np1
 
-    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003]) / 5.0
-    self.Wdir = np.array([0.02,-0.03,0.01]) / 5.0
+    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003]) * 2
+    self.Wdir = np.array([0.02,-0.03,0.01]) * 2
 
     self.nsteps = 10
 

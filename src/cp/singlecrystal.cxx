@@ -38,9 +38,9 @@ ParameterSet SingleCrystalModel::parameters()
                                           std::make_shared<ConstantInterpolate>(0.0));
   pset.add_optional_parameter<bool>("update_rotation", true);
   pset.add_optional_parameter<double>("tol", 1.0e-6);
-  pset.add_optional_parameter<int>("miter", 20);
+  pset.add_optional_parameter<int>("miter", 30);
   pset.add_optional_parameter<bool>("verbose", false);
-  pset.add_optional_parameter<int>("max_divide", 4);
+  pset.add_optional_parameter<int>("max_divide", 6);
 
   return pset;
 }
@@ -129,7 +129,8 @@ int SingleCrystalModel::update_ld_inc(
     SCTrialState trial(D, W,
                        S_np1, H_np1, // Yes, really
                        Q_n, *lattice_,
-                       T_n + dT * step, dt * step);
+                       T_n + dT * step, dt * step,
+                       S_np1, H_np1);
 
     // Decouple the updates
     kinematics_->decouple(trial.S, trial.d, trial.w, trial.Q, trial.history,
@@ -164,28 +165,25 @@ int SingleCrystalModel::update_ld_inc(
         std::cout << "Current progress " << progress << " out of " << target <<
             std::endl;
       }
+      
+      // Calc tangent if we're going to be done
+      if (progress == target) {
+        // Tangent
+        calc_tangents_(S_np1, H_np1, &trial, A_np1, B_np1);
+
+        // Calculate the new rotation, if requested
+        if (update_rotation_) {
+          HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
+        }
+        else {
+          HF_np1.get<Orientation>("rotation") = Q_n;
+        }
+      }
+
     }
   }
   /* End adaptive stepping */
 
-  // Calculate the tangents
-  // Reset trial state so we get tangent over whole step
-  // For adaptive stepping this is an approximation
-  SCTrialState trial(D, W,
-                     S_n, H_n,
-                     Q_n, *lattice_,
-                     T_np1, dt);
-  // Actually go for the tangent
-  calc_tangents_(S_np1, H_np1, &trial, A_np1, B_np1);
-  
-  // Calculate the new rotation, if requested
-  if (update_rotation_) {
-    HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
-  }
-  else {
-    HF_np1.get<Orientation>("rotation") = Q_n;
-  }
-  
   // Calculate the new energy
   u_np1 = u_n + calc_energy_inc_(D_np1, D_n, S_np1, S_n);
   
@@ -241,8 +239,8 @@ size_t SingleCrystalModel::nparams() const
 int SingleCrystalModel::init_x(double * const x, TrialState * ts)
 {
   SCTrialState * ats = static_cast<SCTrialState*>(ts);
-  std::copy(ats->S.data(), ats->S.data()+6, x);
-  std::copy(ats->history.rawptr(), ats->history.rawptr()+ats->history.size(), &x[6]);
+  std::copy(ats->s_guess.data(), ats->s_guess.data()+6, x);
+  std::copy(ats->h_guess.rawptr(), ats->h_guess.rawptr()+ats->history.size(), &x[6]);
   return 0;
 }
 

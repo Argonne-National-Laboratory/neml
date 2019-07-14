@@ -14,7 +14,7 @@ PYBIND11_MODULE(singlecrystal, m) {
   m.doc() = "Single crystal constitutive models";
 
   py::class_<SCTrialState, TrialState>(m, "SCTrialState")
-      .def(py::init<Symmetric&,Skew&,Symmetric&,History&,Orientation&,Lattice&,double,double>())
+      .def(py::init<Symmetric&,Skew&,Symmetric&,History&,Orientation&,Lattice&,double,double,Symmetric&,History&>())
       ;
 
   py::class_<SingleCrystalModel, NEMLModel_ldi, Solvable, std::shared_ptr<SingleCrystalModel>>(m, "SingleCrystalModel")
