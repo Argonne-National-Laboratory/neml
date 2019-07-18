@@ -91,6 +91,10 @@ void StandardKinematicModel::decouple(
 {
   // Lag the rotational update
   espin_ = spin(stress, d, w, Q, history, lattice, T);
+  
+  // Lag the associated expensive quantities
+  C_ = emodel_->C(T, Q);
+  S_ = emodel_->S(T, Q);
 }
 
 Symmetric StandardKinematicModel::stress_rate(
@@ -99,10 +103,7 @@ Symmetric StandardKinematicModel::stress_rate(
     const History & history, Lattice & lattice,
     double T) const
 {
-  SymSym C = emodel_->C(T, Q);
-  SymSym S = emodel_->S(T, Q);
-
-  Symmetric e = S.dot(stress);
+  Symmetric e = S_.dot(stress);
 
   Skew O_s = espin_ + imodel_->w_p(stress, Q, history, lattice, T);
 
@@ -110,7 +111,7 @@ Symmetric StandardKinematicModel::stress_rate(
 
   Symmetric net = Symmetric(e*O_s - O_s*e);
 
-  return C.dot(d - dp - net);
+  return C_.dot(d - dp - net);
 }
 
 SymSym StandardKinematicModel::d_stress_rate_d_stress(
@@ -119,22 +120,18 @@ SymSym StandardKinematicModel::d_stress_rate_d_stress(
     const History & history, Lattice & lattice,
     double T) const
 {
-  SymSym C = emodel_->C(T, Q);
-  SymSym S = emodel_->S(T, Q);
-
-  Symmetric e = S.dot(stress);
+  Symmetric e = S_.dot(stress);
 
   Skew O_s = espin_ + imodel_->w_p(stress, Q, history, lattice, T);
 
   SymSym D1 = imodel_->d_d_p_d_stress(stress, Q, history, lattice, T);
-  SymSym D2 = SymSymSkew_SkewSymSym(S, O_s);
+  SymSym D2 = SymSymSkew_SkewSymSym(S_, O_s);
 
   SkewSym DW = imodel_->d_w_p_d_stress(stress, Q, history, lattice, T);
 
   SymSym D3 = SymSkewSym_SkewSymSym(DW, e);
 
-  return -C * (D1 + D2 + D3);
-
+  return -C_ * (D1 + D2 + D3);
 }
 
 SymSym StandardKinematicModel::d_stress_rate_d_d(
@@ -143,7 +140,7 @@ SymSym StandardKinematicModel::d_stress_rate_d_d(
     const History & history, Lattice & lattice,
     double T) const
 {
-  return emodel_->C(T, Q);
+  return C_;
 }
 
 SymSkew StandardKinematicModel::d_stress_rate_d_w(
@@ -165,13 +162,10 @@ History StandardKinematicModel::d_stress_rate_d_history(
   History dD = imodel_->d_d_p_d_history(stress, Q, history, lattice, T);
   History dW = imodel_->d_w_p_d_history(stress, Q, history, lattice, T);
 
-  SymSym C = emodel_->C(T, Q);
-  SymSym S = emodel_->S(T, Q);
-
-  Symmetric e = S.dot(stress);
+  Symmetric e = S_.dot(stress);
 
   for (auto hvar : history.items()) {
-    res.get<Symmetric>(hvar) = -C * (
+    res.get<Symmetric>(hvar) = -C_ * (
         dD.get<Symmetric>(hvar) + Symmetric(e*dW.get<Skew>(hvar) - dW.get<Skew>(hvar) * e));
   }
 
@@ -229,13 +223,9 @@ SymSkew StandardKinematicModel::d_stress_rate_d_w_decouple(
     const History & history, Lattice & lattice,
     double T)
 {
-  // This comes from the delayed spin term
-  SymSym C = emodel_->C(T, Q);
-  SymSym S = emodel_->S(T, Q);
-
-  Symmetric e = S.dot(stress);
+  Symmetric e = S_.dot(stress);
   
-  return -2.0 * SpecialSymSymSym(C, e);
+  return -2.0 * SpecialSymSymSym(C_, e);
 }
 
 Skew StandardKinematicModel::spin(

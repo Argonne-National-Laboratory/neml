@@ -210,6 +210,8 @@ class StandardKinematicModel: public KinematicModel {
   std::shared_ptr<InelasticModel> imodel_;
 
   Skew espin_;
+
+  SymSym C_, S_;
 };
 
 static Register<StandardKinematicModel> regStandardKinematicModel;
