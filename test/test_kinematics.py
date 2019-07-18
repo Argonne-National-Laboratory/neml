@@ -15,116 +15,119 @@ import numpy.linalg as la
 class CommonKinematics(object):
   def test_d_stress_rate_d_stress(self):
     nd = diff_symmetric_symmetric(lambda s: self.model.stress_rate(s, 
-      self.d, self.w, self.Q, self.H, self.L, self.T), self.S)
+      self.d, self.w, self.Q, self.H, self.L, self.T, self.fixed), self.S)
 
     d = self.model.d_stress_rate_d_stress(self.S, self.d, self.w, self.Q, 
-        self.H, self.L, self.T)
+        self.H, self.L, self.T, self.fixed)
 
     self.assertEqual(d, nd)
 
   def test_d_stress_rate_d_d(self):
     def dfn(d):
-      return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T, 
+          self.fixed)
 
     nd = diff_symmetric_symmetric(dfn, self.d)
     d = self.model.d_stress_rate_d_d(self.S, self.d, self.w, self.Q, self.H, self.L,
-        self.T)
+        self.T, self.fixed)
 
     self.assertEqual(nd, d)
 
   def test_d_stress_rate_d_w(self):
     def dfn(w):
-      return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T, self.fixed)
 
     nd = diff_symmetric_skew(dfn, self.w)
     d = self.model.d_stress_rate_d_w(self.S, self.d, self.w, self.Q, self.H,
-        self.L, self.T)
+        self.L, self.T, self.fixed)
    
     self.assertTrue(np.allclose(nd.data, d.data))
 
   def test_d_stress_rate_d_d_decouple(self):
     def dfn(d):
-      self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
-      return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T, fixed)
 
-    nd = diff_symmetric_symmetric(dfn, self.d) - self.model.d_stress_rate_d_d(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
+    nd = diff_symmetric_symmetric(dfn, self.d) - self.model.d_stress_rate_d_d(self.S, self.d, 
+        self.w, self.Q, self.H, self.L, self.T, self.fixed)
     d = self.model.d_stress_rate_d_d_decouple(self.S, self.d, self.w, self.Q, self.H, self.L,
-        self.T)
+        self.T, self.fixed)
 
     self.assertTrue(np.allclose(nd.data, d.data, atol = 1.0e-3))
 
   def test_d_stress_rate_d_w_decouple(self):
     def dfn(w):
-      self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
-      return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T, fixed)
 
-    nd = diff_symmetric_skew(dfn, self.w) - self.model.d_stress_rate_d_w(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
+    nd = diff_symmetric_skew(dfn, self.w) - self.model.d_stress_rate_d_w(self.S, self.d,
+        self.w, self.Q, self.H, self.L, self.T, self.fixed)
     d = self.model.d_stress_rate_d_w_decouple(self.S, self.d, self.w, self.Q, self.H,
-        self.L, self.T)
+        self.L, self.T, self.fixed)
 
     self.assertTrue(np.allclose(nd.data, d.data, rtol = 1.0e-3))
 
   def test_d_stress_rate_d_history(self):
     nd = diff_symmetric_history(lambda h: self.model.stress_rate(self.S, self.d,
-      self.w, self.Q, h, self.L, self.T), self.H)
+      self.w, self.Q, h, self.L, self.T, self.fixed), self.H)
     d = self.model.d_stress_rate_d_history(self.S, self.d, self.w, self.Q, self.H,
-        self.L, self.T)
+        self.L, self.T, self.fixed)
 
     self.assertTrue(np.allclose(nd, np.array(d).reshape(nd.shape)))
 
   def test_d_history_rate_d_stress(self):
     nd = diff_history_symmetric(lambda s: self.model.history_rate(s, self.d,
-      self.w, self.Q, self.H, self.L, self.T), self.S)
+      self.w, self.Q, self.H, self.L, self.T, self.fixed), self.S)
     d = np.array(self.model.d_history_rate_d_stress(self.S, self.d, self.w,
-        self.Q, self.H, self.L, self.T))
+        self.Q, self.H, self.L, self.T, self.fixed))
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
 
   def test_d_history_rate_d_d(self):
     nd = diff_history_symmetric(lambda d: self.model.history_rate(self.S, d,
-      self.w, self.Q, self.H, self.L, self.T), self.d)
+      self.w, self.Q, self.H, self.L, self.T, self.fixed), self.d)
     d = np.array(self.model.d_history_rate_d_d(self.S, self.d, self.w, self.Q,
-        self.H, self.L, self.T))
+        self.H, self.L, self.T,self.fixed))
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
 
   def test_d_history_rate_d_w(self):
     nd = diff_history_skew(lambda w: self.model.history_rate(self.S, self.d,
-      w, self.Q, self.H, self.L, self.T), self.w)
+      w, self.Q, self.H, self.L, self.T, self.fixed), self.w)
     d = np.array(self.model.d_history_rate_d_w(self.S, self.d, self.w, self.Q,
-      self.H, self.L, self.T))
+      self.H, self.L, self.T, self.fixed))
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
 
   def test_d_history_rate_d_d_decouple(self):
     def dfn(d):
-      self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
-      return self.model.history_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      return self.model.history_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T, fixed)
 
     nd = diff_history_symmetric(dfn, self.d) - self.model.d_history_rate_d_d(self.S, self.d, self.w,
-        self.Q, self.H, self.L, self.T)
+        self.Q, self.H, self.L, self.T, self.fixed)
     d = np.array(self.model.d_history_rate_d_d_decouple(self.S, self.d, self.w, self.Q,
-        self.H, self.L, self.T))
+        self.H, self.L, self.T, self.fixed))
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
   
   def test_d_history_rate_d_w_decouple(self):
     def dfn(w):
-      self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
-      return self.model.history_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      return self.model.history_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T, fixed)
 
     nd = diff_history_skew(dfn, self.w) - self.model.d_history_rate_d_w(self.S, self.d, self.w,
-        self.Q, self.H, self.L, self.T)
+        self.Q, self.H, self.L, self.T, self.fixed)
     d = np.array(self.model.d_history_rate_d_w_decouple(self.S, self.d, self.w, self.Q,
-        self.H, self.L, self.T))
+        self.H, self.L, self.T, self.fixed))
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
 
   def test_d_history_rate_d_history(self):
     nd = diff_history_history(lambda h: self.model.history_rate(self.S, self.d,
-      self.w, self.Q, h, self.L, self.T), self.H)
+      self.w, self.Q, h, self.L, self.T, self.fixed), self.H)
     d = np.array(self.model.d_history_rate_d_history(self.S, self.d, self.w,
-      self.Q, self.H, self.L, self.T))
+      self.Q, self.H, self.L, self.T, self.fixed))
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
 
@@ -180,7 +183,7 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
     self.fspin = self.model.spin(self.S, self.d, self.w, self.Q, self.H,
         self.L, self.T)
 
-    self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
+    self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
 
   def test_setup_history(self):
     H1 = history.History()
@@ -213,13 +216,13 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
         np.einsum('ijkl,kl', Cfull, d - dp - np.dot(e, O) + np.dot(O, e)))
     
     sdot2 = self.model.stress_rate(self.S, self.d, self.w, self.Q, self.H,
-        self.L, self.T)
+        self.L, self.T, self.fixed)
 
     self.assertEqual(sdot1, sdot2)
 
   def test_hist_rate(self):
     H1 = self.model.history_rate(self.S, self.d, self.w,
-        self.Q, self.H, self.L, self.T)
+        self.Q, self.H, self.L, self.T, self.fixed)
     H2 = self.imodel.history_rate(self.S, self.Q, self.H, self.L, self.T)
 
     self.assertTrue(np.allclose(np.array(H1), np.array(H2)))

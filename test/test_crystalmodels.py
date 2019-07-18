@@ -122,8 +122,10 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
 
     self.dt = 2.0
 
+    self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, self.H_n, self.L, self.T)
+
     self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
-        self.S_n, self.H_n)
+        self.S_n, self.H_n, self.fixed)
 
     self.x = np.zeros((self.model.nparams,))
     self.x[:6] = self.stress_np1
@@ -147,9 +149,9 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     R, J = self.model.RJ(self.x, self.ts)
 
     Rtrue = np.zeros((self.model.nparams,))
-    srate = self.kmodel.stress_rate(self.S_np1, self.D, self.W, self.Q, self.H_np1, self.L, self.T)
+    srate = self.kmodel.stress_rate(self.S_np1, self.D, self.W, self.Q, self.H_np1, self.L, self.T, self.fixed)
 
-    hrate = np.array(self.kmodel.history_rate(self.S_np1, self.D, self.W, self.Q, self.H_np1, self.L, self.T))
+    hrate = np.array(self.kmodel.history_rate(self.S_np1, self.D, self.W, self.Q, self.H_np1, self.L, self.T, self.fixed))
 
     Rtrue[:6] = self.stress_np1 - self.stress_n - srate.data * self.dt
     Rtrue[6:] = np.array(self.H_np1) - np.array(self.H_n) - hrate * self.dt
