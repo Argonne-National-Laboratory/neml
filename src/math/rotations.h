@@ -73,6 +73,9 @@ class Quaternion: public NEMLObject {
   /// Dot product, useful for various distances
   double dot(const Quaternion & other) const;
 
+  /// Hash function for quick comparisons
+  size_t hash() const;
+
  protected:
   void alloc_();
 

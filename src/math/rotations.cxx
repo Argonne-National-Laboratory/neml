@@ -9,6 +9,8 @@
 #include <random>
 #include <chrono>
 
+#include "boost/container_hash/hash.hpp"
+
 namespace neml {
 
 Quaternion::Quaternion()
@@ -219,6 +221,17 @@ double Quaternion::dot(const Quaternion & other) const
     s += quat()[i] * other.quat()[i];
   }
   return s;
+}
+
+size_t Quaternion::hash() const
+{
+  size_t key = 0;
+  
+  for (size_t i = 0; i<4; i++) {
+    boost::hash_combine<double>(key, quat_[i]);
+  }
+
+  return key;
 }
 
 Quaternion operator*(double s, const Quaternion & q)

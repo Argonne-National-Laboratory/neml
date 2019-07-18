@@ -57,6 +57,7 @@ PYBIND11_MODULE(rotations, m) {
       .def("pow", &Quaternion::pow, "Exponentiation")
       .def("__pow__", &Quaternion::pow, "Exponentiation with python sugar")
       .def("dot", &Quaternion::dot, "Cartesian dot product")
+      .def_property_readonly("hash", &Quaternion::hash, "Hash for comparison")
 
       .def(py::self *= py::self)
       .def(py::self *= double())

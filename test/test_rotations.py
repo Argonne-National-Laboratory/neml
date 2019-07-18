@@ -74,6 +74,21 @@ class ScalarMath(object):
     self.assertTrue(np.allclose(self.a * self.s, (self.s * self.A).quat))
     self.assertTrue(np.allclose(self.a * self.s, (self.A * self.s).quat))
 
+class TestHash(unittest.TestCase):
+  def setUp(self):
+    self.Q1 = rotations.Quaternion(np.array([1.0,-2.1,3.21,4.0]))
+    self.Q2 = rotations.Quaternion(np.array([5.0,-2.1,3.21,4.0]))
+    self.Q3 = rotations.Quaternion(np.array([1.0000001,-2.1,3.21,4.0]))
+    self.Q4 = rotations.Quaternion(np.array([4.0,-2.1,3.21,1.0]))
+
+  def test_same(self):
+    self.assertEqual(self.Q1.hash, self.Q1.hash)
+
+  def test_not_same(self):
+    self.assertNotEqual(self.Q1.hash, self.Q2.hash)
+    self.assertNotEqual(self.Q1.hash, self.Q3.hash)
+    self.assertNotEqual(self.Q1.hash, self.Q4.hash)
+
 class TestBasicMathQuaternion(unittest.TestCase, BasicMath, ScalarMath):
   def setUp(self):
     self.a = np.array([2.0,-4.0,5.0,1.0])
