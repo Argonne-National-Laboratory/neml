@@ -9,7 +9,7 @@
 #include <random>
 #include <chrono>
 
-#include "boost/container_hash/hash.hpp"
+#include "boost/functional/hash.hpp"
 
 namespace neml {
 
