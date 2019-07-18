@@ -17,7 +17,7 @@ PYBIND11_MODULE(elasticity, m) {
 
   py::class_<LinearElasticModel, NEMLObject, std::shared_ptr<LinearElasticModel>>(m, "LinearElasticModel")
       .def("C",
-           [](const LinearElasticModel & m, double T) -> py::array_t<double>
+           [](LinearElasticModel & m, double T) -> py::array_t<double>
            {
             auto C = alloc_mat<double>(6,6);
             int ier = m.C(T, arr2ptr<double>(C));
@@ -26,7 +26,7 @@ PYBIND11_MODULE(elasticity, m) {
            }, "Return stiffness elasticity matrix.")
 
       .def("S",
-           [](const LinearElasticModel & m, double T) -> py::array_t<double>
+           [](LinearElasticModel & m, double T) -> py::array_t<double>
            {
             auto S = alloc_mat<double>(6,6);
             int ier = m.S(T, arr2ptr<double>(S));
@@ -34,31 +34,30 @@ PYBIND11_MODULE(elasticity, m) {
             return S;
            }, "Return compliance elasticity matrix.")
       .def("C_tensor",
-           [](const LinearElasticModel & m, double T) -> SymSym
+           [](LinearElasticModel & m, double T) -> SymSym
            {
             return m.C(T);
            }, "Return stiffness elasticity tensor.")
 
       .def("S_tensor",
-           [](const LinearElasticModel & m, double T) -> SymSym
+           [](LinearElasticModel & m, double T) -> SymSym
            {
             return m.S(T);
            }, "Return compliance elasticity tensor.")
       .def("C_tensor",
-           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
+           [](LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
            {
             return m.C(T, Q);
            }, "Return rotated stiffness elasticity tensor.")
 
       .def("S_tensor",
-           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
+           [](LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
            {
             return m.S(T, Q);
            }, "Return rotated compliance elasticity tensor.")
-      .def("G", (double (LinearElasticModel::*)(double) const) &LinearElasticModel::G)
+      .def("G", (double (LinearElasticModel::*)(double)) &LinearElasticModel::G)
       .def("G", (double (LinearElasticModel::*)(double, const Orientation &,
-                                                const Vector &, const Vector &)
-                 const)
+                                                const Vector &, const Vector &))
            &LinearElasticModel::G)
       ;
 

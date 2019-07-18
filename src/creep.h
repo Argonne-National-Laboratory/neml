@@ -94,7 +94,7 @@ class RegionKMCreep: public ScalarCreepRule {
   const std::vector<double> A_;
   const std::vector<double> B_;
   const double kboltz_, b_, eps0_, b3_;
-  const std::shared_ptr<LinearElasticModel> emodel_;
+  std::shared_ptr<LinearElasticModel> emodel_;
 };
 
 static Register<RegionKMCreep> regRegionKMCreep;
@@ -174,7 +174,7 @@ class MukherjeeCreep: public ScalarCreepRule {
   double R() const;
 
  private:
-  const std::shared_ptr<const LinearElasticModel> emodel_;
+  std::shared_ptr<LinearElasticModel> emodel_;
   const double A_, n_, D0_, Q_, b_, k_, R_;
 };
 

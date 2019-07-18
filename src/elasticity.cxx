@@ -6,43 +6,67 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "boost/functional/hash.hpp"
+
 namespace neml {
 
-SymSym LinearElasticModel::C(double T) const
+LinearElasticModel::LinearElasticModel() :
+    setup_(false)
+{
+
+}
+
+SymSym LinearElasticModel::C(double T)
 {
   SymSym res;
   C(T, res.s());
   return res;
 }
 
-SymSym LinearElasticModel::S(double T) const
+SymSym LinearElasticModel::S(double T)
 {
   SymSym res;
   S(T, res.s());
   return res;
 }
 
-SymSym LinearElasticModel::C(double T, const Orientation & Q) const
+SymSym LinearElasticModel::C(double T, const Orientation & Q)
 {
-  return Q.apply(C(T));
+  cache_orientation_(T, Q);
+  return C_;
 }
 
-SymSym LinearElasticModel::S(double T, const Orientation & Q) const
+SymSym LinearElasticModel::S(double T, const Orientation & Q)
 {
-  return Q.apply(S(T));
+  cache_orientation_(T, Q);
+  return S_;
 }
 
-double LinearElasticModel::G(double T) const
+double LinearElasticModel::G(double T)
 {
   return G(T, Orientation::createEulerAngles(0,0,0), 
            Vector({1,0,0}), Vector({0,1,0}));
 }
 
 double LinearElasticModel::G(double T, const Orientation & Q, const Vector & b,
-                             const Vector & n) const
+                             const Vector & n)
 {
   RankTwo dir = outer(b,n)/(b.norm() * n.norm());
   return dir.contract(C(T,Q).dot(dir));
+}
+
+void LinearElasticModel::cache_orientation_(double T, const Orientation & Q)
+{
+  size_t net_hash = Q.hash();
+  boost::hash_combine<double>(net_hash, T);
+
+  if (setup_ and (net_hash == hash_)) return;
+  
+  setup_ = true;
+  hash_ = net_hash;
+
+  C_ = Q.apply(C(T));
+  S_ = Q.apply(S(T));
 }
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
@@ -50,6 +74,7 @@ IsotropicLinearElasticModel::IsotropicLinearElasticModel(
       std::string m1_type,
       std::shared_ptr<Interpolate> m2,
       std::string m2_type) :
+    LinearElasticModel(), 
     m1_(m1), m2_(m2), m1_type_(m1_type), m2_type_(m2_type)
 {
   if (m1_type_ == m2_type) {
@@ -90,7 +115,7 @@ std::unique_ptr<NEMLObject> IsotropicLinearElasticModel::initialize(ParameterSet
       ); 
 }
 
-int IsotropicLinearElasticModel::C(double T, double * const Cv) const
+int IsotropicLinearElasticModel::C(double T, double * const Cv)
 {
   double G, K;
   get_GK_(T, G, K);
@@ -98,7 +123,7 @@ int IsotropicLinearElasticModel::C(double T, double * const Cv) const
   return C_calc_(G, K, Cv);
 }
 
-int IsotropicLinearElasticModel::S(double T, double * const Sv) const
+int IsotropicLinearElasticModel::S(double T, double * const Sv)
 {
   double G, K;
   get_GK_(T, G, K);
@@ -247,6 +272,7 @@ CubicLinearElasticModel::CubicLinearElasticModel(
     std::shared_ptr<Interpolate> m2,
     std::shared_ptr<Interpolate> m3,
     std::string method) :
+      LinearElasticModel(), 
       M1_(m1), M2_(m2), M3_(m3), method_(method)
 {
   if ((method != "moduli") and (method != "components")) {
@@ -281,7 +307,7 @@ std::unique_ptr<NEMLObject> CubicLinearElasticModel::initialize(ParameterSet & p
       ); 
 }
 
-int CubicLinearElasticModel::C(double T, double * const Cv) const
+int CubicLinearElasticModel::C(double T, double * const Cv)
 {
   double C1, C2, C3;
   get_components_(T, C1, C2, C3);
@@ -307,7 +333,7 @@ int CubicLinearElasticModel::C(double T, double * const Cv) const
   return 0;
 }
 
-int CubicLinearElasticModel::S(double T, double * const Sv) const
+int CubicLinearElasticModel::S(double T, double * const Sv)
 {
   C(T, Sv);
   return invert_mat(Sv, 6);
