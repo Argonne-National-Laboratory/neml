@@ -5,7 +5,7 @@ namespace neml {
 SymSym KinematicModel::d_stress_rate_d_d_decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T)
 {
   return SymSym();
@@ -14,7 +14,7 @@ SymSym KinematicModel::d_stress_rate_d_d_decouple(
 SymSkew KinematicModel::d_stress_rate_d_w_decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T)
 {
   return SymSkew();
@@ -23,7 +23,7 @@ SymSkew KinematicModel::d_stress_rate_d_w_decouple(
 History KinematicModel::d_history_rate_d_d_decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T)
 {
   return history.derivative<Symmetric>();;
@@ -32,7 +32,7 @@ History KinematicModel::d_history_rate_d_d_decouple(
 History KinematicModel::d_history_rate_d_w_decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T)
 {
   return history.derivative<Skew>();
@@ -86,7 +86,7 @@ void StandardKinematicModel::init_history(History & history) const
 void StandardKinematicModel::decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T)
 {
   // Lag the rotational update
@@ -96,7 +96,7 @@ void StandardKinematicModel::decouple(
 Symmetric StandardKinematicModel::stress_rate(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   SymSym C = emodel_->C(T, Q);
@@ -116,7 +116,7 @@ Symmetric StandardKinematicModel::stress_rate(
 SymSym StandardKinematicModel::d_stress_rate_d_stress(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   SymSym C = emodel_->C(T, Q);
@@ -140,7 +140,7 @@ SymSym StandardKinematicModel::d_stress_rate_d_stress(
 SymSym StandardKinematicModel::d_stress_rate_d_d(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   return emodel_->C(T, Q);
@@ -149,7 +149,7 @@ SymSym StandardKinematicModel::d_stress_rate_d_d(
 SymSkew StandardKinematicModel::d_stress_rate_d_w(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   return SymSkew();
@@ -158,7 +158,7 @@ SymSkew StandardKinematicModel::d_stress_rate_d_w(
 History StandardKinematicModel::d_stress_rate_d_history(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   History res = history.derivative<Symmetric>();
@@ -181,7 +181,7 @@ History StandardKinematicModel::d_stress_rate_d_history(
 History StandardKinematicModel::history_rate(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   return imodel_->history_rate(stress, Q, history, lattice, T);
@@ -190,7 +190,7 @@ History StandardKinematicModel::history_rate(
 History StandardKinematicModel::d_history_rate_d_stress(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   return imodel_->d_history_rate_d_stress(stress, Q, history, lattice, T);
@@ -199,7 +199,7 @@ History StandardKinematicModel::d_history_rate_d_stress(
 History StandardKinematicModel::d_history_rate_d_d(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   return history.derivative<Symmetric>();
@@ -208,7 +208,7 @@ History StandardKinematicModel::d_history_rate_d_d(
 History StandardKinematicModel::d_history_rate_d_w(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   return history.derivative<Skew>();
@@ -217,7 +217,7 @@ History StandardKinematicModel::d_history_rate_d_w(
 History StandardKinematicModel::d_history_rate_d_history(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   return imodel_->d_history_rate_d_history(stress, Q, history, lattice, T);
@@ -226,7 +226,7 @@ History StandardKinematicModel::d_history_rate_d_history(
 SymSkew StandardKinematicModel::d_stress_rate_d_w_decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T)
 {
   // This comes from the delayed spin term
@@ -241,7 +241,7 @@ SymSkew StandardKinematicModel::d_stress_rate_d_w_decouple(
 Skew StandardKinematicModel::spin(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
-    const History & history, const Lattice & lattice,
+    const History & history, Lattice & lattice,
     double T) const
 {
   SymSym S = emodel_->S(T, Q);

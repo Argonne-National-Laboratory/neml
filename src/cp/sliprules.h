@@ -28,32 +28,32 @@ class SlipRule: public NEMLObject
 
   virtual double slip(size_t g, size_t i, const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const = 0;
+                      Lattice & L, double T) const = 0;
   virtual Symmetric d_slip_d_s(size_t g, size_t i, const Symmetric & stress, 
                                const Orientation & Q, const History & history,
-                               const Lattice & L, double T) const = 0;
+                               Lattice & L, double T) const = 0;
   virtual History
       d_slip_d_h(size_t g, size_t i, const Symmetric & stress, 
                  const Orientation & Q, const History & history,
-                 const Lattice & L, double T) const = 0;
+                 Lattice & L, double T) const = 0;
 
   virtual History hist_rate(const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const = 0;
+                      Lattice & L, double T) const = 0;
   virtual History d_hist_rate_d_stress(const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const = 0;
+                      Lattice & L, double T) const = 0;
   virtual History d_hist_rate_d_hist(const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const = 0;
+                      Lattice & L, double T) const = 0;
 
   // Useful helpers
   double sum_slip(const Symmetric & stress, const Orientation & Q, 
-                  const History & history, const Lattice & L, double T) const;
+                  const History & history, Lattice & L, double T) const;
   Symmetric d_sum_slip_d_stress(const Symmetric & stress, const Orientation & Q, 
-                  const History & history, const Lattice & L, double T) const;
+                  const History & history, Lattice & L, double T) const;
   History d_sum_slip_d_hist(const Symmetric & stress, const Orientation & Q, 
-                  const History & history, const Lattice & L, double T) const;
+                  const History & history, Lattice & L, double T) const;
 };
 
 /// All slip rules that give the system response proportional to some strength
@@ -67,24 +67,24 @@ class SlipStrengthSlipRule: public SlipRule
 
   virtual double slip(size_t g, size_t i, const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const;
+                      Lattice & L, double T) const;
   virtual Symmetric d_slip_d_s(size_t g, size_t i, const Symmetric & stress, 
                                const Orientation & Q, const History & history,
-                               const Lattice & L, double T) const;
+                               Lattice & L, double T) const;
   virtual History
       d_slip_d_h(size_t g, size_t i, const Symmetric & stress, 
                  const Orientation & Q, const History & history,
-                 const Lattice & L, double T) const;
+                 Lattice & L, double T) const;
 
   virtual History hist_rate(const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const;
+                      Lattice & L, double T) const;
   virtual History d_hist_rate_d_stress(const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const;
+                      Lattice & L, double T) const;
   virtual History d_hist_rate_d_hist(const Symmetric & stress, 
                       const Orientation & Q, const History & history,
-                      const Lattice & L, double T) const;
+                      Lattice & L, double T) const;
 
   virtual double sslip(size_t g, size_t i, double tau, double strength, 
                        double T) const = 0;

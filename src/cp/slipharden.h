@@ -39,18 +39,18 @@ class SlipHardening: public NEMLObject
   /// The rate of the history
   virtual History hist(const Symmetric & stress, 
                      const Orientation & Q, const History & history,
-                     const Lattice & L, double T, const SlipRule & R) const = 0;
+                     Lattice & L, double T, const SlipRule & R) const = 0;
   /// Derivative of the history wrt stress
   virtual History d_hist_d_s(const Symmetric & stress, 
                              const Orientation & Q, const History & history,
-                             const Lattice & L, double T,
+                             Lattice & L, double T,
                              const SlipRule & R) const = 0;
   /// Derivative of the history wrt the history
   virtual History
       d_hist_d_h(const Symmetric & stress, 
                  const Orientation & Q,
                  const History & history,
-                 const Lattice & L, 
+                 Lattice & L, 
                  double T, const SlipRule & R) const = 0;
 };
 
@@ -84,18 +84,18 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
   /// The rate of the history
   virtual History hist(const Symmetric & stress, 
                      const Orientation & Q, const History & history,
-                     const Lattice & L, double T, const SlipRule & R) const;
+                     Lattice & L, double T, const SlipRule & R) const;
   /// Derivative of the history wrt stress
   virtual History d_hist_d_s(const Symmetric & stress, 
                              const Orientation & Q, const History & history,
-                             const Lattice & L, double T,
+                             Lattice & L, double T,
                              const SlipRule & R) const;
   /// Derivative of the history wrt the history
   virtual History
       d_hist_d_h(const Symmetric & stress, 
                  const Orientation & Q,
                  const History & history,
-                 const Lattice & L, 
+                 Lattice & L, 
                  double T, const SlipRule & R) const;
 
   /// The scalar map
@@ -112,16 +112,16 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
   /// Scalar evolution law
   virtual double hist_rate(const Symmetric & stress, const Orientation & Q,
                            const History & history,
-                           const Lattice & L, double T, const SlipRule & R) const = 0;
+                           Lattice & L, double T, const SlipRule & R) const = 0;
   /// Derivative of scalar law wrt stress
   virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q, 
                                          const History & history,
-                                         const Lattice & L, double T,
+                                         Lattice & L, double T,
                                          const SlipRule & R) const = 0;
   /// Derivative of scalar law wrt the scalar
   virtual double d_hist_rate_d_strength(const Symmetric & stress, const Orientation & Q, 
                                         const History & history,
-                                        const Lattice & L, double T,
+                                        Lattice & L, double T,
                                         const SlipRule & R) const = 0;
 };
 
@@ -131,20 +131,20 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
  public:
   /// Scalar evolution law
   virtual double hist_rate(const Symmetric & stress, const Orientation & Q,
-                           const History & history, const Lattice & L, double T, const SlipRule & R) const;
+                           const History & history, Lattice & L, double T, const SlipRule & R) const;
   /// Derivative of scalar law wrt stress
   virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q, 
-                                         const History & history, const Lattice & L, double T,
+                                         const History & history, Lattice & L, double T,
                                          const SlipRule & R) const;
   /// Derivative of scalar law wrt the scalar
   virtual double d_hist_rate_d_strength(const Symmetric & stress, const Orientation & Q, 
-                                        const History & history, const Lattice & L, double T,
+                                        const History & history, Lattice & L, double T,
                                         const SlipRule & R) const;
 
   /// Prefactor
-  virtual double hist_factor(double strength, const Lattice & L, double T) const = 0;
+  virtual double hist_factor(double strength, Lattice & L, double T) const = 0;
   /// Derivative of the prefactor
-  virtual double d_hist_factor(double strength, const Lattice & L, double T) const = 0;
+  virtual double d_hist_factor(double strength, Lattice & L, double T) const = 0;
 
 };
 
@@ -170,9 +170,9 @@ class VoceSlipHardening: public PlasticSlipHardening
   virtual double static_strength(double T) const;
 
   /// Prefactor
-  virtual double hist_factor(double strength, const Lattice & L, double T) const;
+  virtual double hist_factor(double strength, Lattice & L, double T) const;
   /// Derivative of the prefactor
-  virtual double d_hist_factor(double strength, const Lattice & L, double T) const;
+  virtual double d_hist_factor(double strength, Lattice & L, double T) const;
 
  private:
   std::shared_ptr<Interpolate> tau_sat_;

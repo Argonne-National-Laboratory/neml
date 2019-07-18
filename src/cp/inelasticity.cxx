@@ -41,7 +41,7 @@ void NoInelasticity::init_history(History & history) const
 
 Symmetric NoInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
                               const History & history,
-                              const Lattice & lattice, double T) const
+                              Lattice & lattice, double T) const
 {
   return Symmetric();
 }
@@ -49,7 +49,7 @@ Symmetric NoInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
 SymSym NoInelasticity::d_d_p_d_stress(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
-    const Lattice & lattice, double T) const
+    Lattice & lattice, double T) const
 {
   return SymSym();
 }
@@ -57,7 +57,7 @@ SymSym NoInelasticity::d_d_p_d_stress(
 History NoInelasticity::d_d_p_d_history(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
-    const Lattice & lattice, double T) const
+    Lattice & lattice, double T) const
 {
   return History();
 }
@@ -65,7 +65,7 @@ History NoInelasticity::d_d_p_d_history(
 History NoInelasticity::history_rate(const Symmetric & stress, 
                                      const Orientation & Q,
                                      const History & history,
-                                     const Lattice & lattice, double T) const
+                                     Lattice & lattice, double T) const
 {
   return History();
 }
@@ -73,7 +73,7 @@ History NoInelasticity::history_rate(const Symmetric & stress,
 History NoInelasticity::d_history_rate_d_stress(const Symmetric & stress, 
                                                 const Orientation & Q,
                                                 const History & history,
-                                                const Lattice & lattice, double T) const
+                                                Lattice & lattice, double T) const
 {
   return History();
 }
@@ -81,14 +81,14 @@ History NoInelasticity::d_history_rate_d_stress(const Symmetric & stress,
 History NoInelasticity::d_history_rate_d_history(const Symmetric & stress,
                                                const Orientation & Q,
                                                const History & history,
-                                               const Lattice & lattice, double T) const
+                                               Lattice & lattice, double T) const
 {
   return History();
 }
 
 Skew NoInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
                          const History & history,
-                         const Lattice & lattice, double T) const
+                         Lattice & lattice, double T) const
 {
   return Skew();
 }
@@ -96,7 +96,7 @@ Skew NoInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
 SkewSym NoInelasticity::d_w_p_d_stress(const Symmetric & stress, 
                                        const Orientation & Q,
                                        const History & history,
-                                       const Lattice & lattice, double T) const
+                                       Lattice & lattice, double T) const
 {
   return SkewSym();
 }
@@ -104,7 +104,7 @@ SkewSym NoInelasticity::d_w_p_d_stress(const Symmetric & stress,
 History NoInelasticity::d_w_p_d_history(const Symmetric & stress,
                                         const Orientation & Q,
                                         const History & history,
-                                        const Lattice & lattice, double T) const
+                                        Lattice & lattice, double T) const
 {
   return History();
 }
@@ -153,7 +153,7 @@ void AsaroInelasticity::init_history(History & history) const
 
 Symmetric AsaroInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
                               const History & history,
-                              const Lattice & lattice, double T) const
+                              Lattice & lattice, double T) const
 {
   Symmetric d;
   for (size_t g = 0; g < lattice.ngroup(); g++) {
@@ -169,7 +169,7 @@ Symmetric AsaroInelasticity::d_p(const Symmetric & stress, const Orientation & Q
 SymSym AsaroInelasticity::d_d_p_d_stress(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
-    const Lattice & lattice, double T) const
+    Lattice & lattice, double T) const
 {
   SymSym ds;
 
@@ -186,7 +186,7 @@ SymSym AsaroInelasticity::d_d_p_d_stress(
 History AsaroInelasticity::d_d_p_d_history(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
-    const Lattice & lattice, double T) const
+    Lattice & lattice, double T) const
 {
   History h = history.derivative<Symmetric>();
 
@@ -206,7 +206,7 @@ History AsaroInelasticity::d_d_p_d_history(
 History AsaroInelasticity::history_rate(const Symmetric & stress, 
                                      const Orientation & Q,
                                      const History & history,
-                                     const Lattice & lattice, double T) const
+                                     Lattice & lattice, double T) const
 {
   return rule_->hist_rate(stress, Q, history, lattice, T);
 }
@@ -214,7 +214,7 @@ History AsaroInelasticity::history_rate(const Symmetric & stress,
 History AsaroInelasticity::d_history_rate_d_stress(const Symmetric & stress, 
                                                 const Orientation & Q,
                                                 const History & history,
-                                                const Lattice & lattice, double T) const
+                                                Lattice & lattice, double T) const
 {
   return rule_->d_hist_rate_d_stress(stress, Q, history, lattice, T);
 }
@@ -222,14 +222,14 @@ History AsaroInelasticity::d_history_rate_d_stress(const Symmetric & stress,
 History AsaroInelasticity::d_history_rate_d_history(const Symmetric & stress,
                                                const Orientation & Q,
                                                const History & history,
-                                               const Lattice & lattice, double T) const
+                                               Lattice & lattice, double T) const
 {
   return rule_->d_hist_rate_d_hist(stress, Q, history, lattice, T);
 }
 
 Skew AsaroInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
                          const History & history,
-                         const Lattice & lattice, double T) const
+                         Lattice & lattice, double T) const
 {
   Skew w;
   for (size_t g = 0; g < lattice.ngroup(); g++) {
@@ -245,7 +245,7 @@ Skew AsaroInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
 SkewSym AsaroInelasticity::d_w_p_d_stress(const Symmetric & stress, 
                                        const Orientation & Q,
                                        const History & history,
-                                       const Lattice & lattice, double T) const
+                                       Lattice & lattice, double T) const
 {
   SkewSym ds;
 
@@ -262,7 +262,7 @@ SkewSym AsaroInelasticity::d_w_p_d_stress(const Symmetric & stress,
 History AsaroInelasticity::d_w_p_d_history(const Symmetric & stress,
                                         const Orientation & Q,
                                         const History & history,
-                                        const Lattice & lattice, double T) const
+                                        Lattice & lattice, double T) const
 {
   History h = history.derivative<Skew>();
 

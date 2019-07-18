@@ -27,7 +27,7 @@ void SlipSingleStrengthHardening::init_history(History & history) const
 History SlipSingleStrengthHardening::hist(
     const Symmetric & stress, 
     const Orientation & Q, const History & history,
-    const Lattice & L, double T, const SlipRule & R) const
+    Lattice & L, double T, const SlipRule & R) const
 {
   History res = history.copy_blank();
   res.get<double>("strength") = hist_rate(stress, Q, history, L, T, R);
@@ -38,7 +38,7 @@ History SlipSingleStrengthHardening::hist(
 History SlipSingleStrengthHardening::d_hist_d_s(
     const Symmetric & stress, 
     const Orientation & Q, const History & history,
-    const Lattice & L, double T,
+    Lattice & L, double T,
     const SlipRule & R) const
 {
   History res = history.derivative<Symmetric>();
@@ -52,7 +52,7 @@ History SlipSingleStrengthHardening::d_hist_d_h(
     const Symmetric & stress, 
     const Orientation & Q,
     const History & history,
-    const Lattice & L, 
+    Lattice & L, 
     double T, const SlipRule & R) const
 {
   History res = history.derivative<History>();
@@ -77,7 +77,7 @@ History SlipSingleStrengthHardening::d_hist_map(const History & history,
 
 double PlasticSlipHardening::hist_rate(
     const Symmetric & stress, const Orientation & Q,
-    const History & history, const Lattice & L, double T, const SlipRule & R) const
+    const History & history, Lattice & L, double T, const SlipRule & R) const
 {
   double strength = history.get<double>("strength");
   
@@ -86,7 +86,7 @@ double PlasticSlipHardening::hist_rate(
 
 Symmetric PlasticSlipHardening::d_hist_rate_d_stress(
     const Symmetric & stress, const Orientation & Q, 
-    const History & history, const Lattice & L, double T,
+    const History & history, Lattice & L, double T,
     const SlipRule & R) const
 {
   double strength = history.get<double>("strength");
@@ -96,7 +96,7 @@ Symmetric PlasticSlipHardening::d_hist_rate_d_stress(
 
 double PlasticSlipHardening::d_hist_rate_d_strength(
     const Symmetric & stress, const Orientation & Q, 
-    const History & history, const Lattice & L, double T,
+    const History & history, Lattice & L, double T,
     const SlipRule & R) const
 {
   double strength = history.get<double>("strength");
@@ -149,7 +149,7 @@ double VoceSlipHardening::static_strength(double T) const
   return tau_0_->value(T);
 }
 
-double VoceSlipHardening::hist_factor(double strength, const Lattice & L, double T) const
+double VoceSlipHardening::hist_factor(double strength, Lattice & L, double T) const
 {
   double tau_sat = tau_sat_->value(T);
   double b = b_->value(T);
@@ -157,7 +157,7 @@ double VoceSlipHardening::hist_factor(double strength, const Lattice & L, double
   return b * (tau_sat - strength);
 }
 
-double VoceSlipHardening::d_hist_factor(double strength, const Lattice & L, double T) const
+double VoceSlipHardening::d_hist_factor(double strength, Lattice & L, double T) const
 {
   double b = b_->value(T);
 

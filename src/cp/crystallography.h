@@ -86,19 +86,21 @@ class Lattice: public NEMLObject {
   size_t nslip(size_t g) const;
   size_t flat(size_t g, size_t i) const;
 
-  Symmetric M(size_t g, size_t i, const Orientation & Q) const;
-  Skew N(size_t g, size_t i, const Orientation & Q) const;
+  Symmetric M(size_t g, size_t i, const Orientation & Q);
+  Skew N(size_t g, size_t i, const Orientation & Q);
 
   double shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
-               stress) const;
+               stress);
   Symmetric d_shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
-                    stress) const;
+                    stress);
 
   const std::shared_ptr<SymmetryGroup> symmetry();
 
  private:
   void make_reciprocal_lattice_();
   static void assert_miller_(std::vector<int> m);
+  
+  void cache_rot_(const Orientation & Q);
 
  private:
   Vector a1_, a2_, a3_, b1_, b2_, b3_;
@@ -109,6 +111,12 @@ class Lattice: public NEMLObject {
   std::vector<std::vector<Vector>> slip_planes_;
 
   std::vector<size_t> offsets_;
+
+  // Used for caching common asks
+  bool setup_;
+  size_t hash_;
+  std::vector<std::vector<Symmetric>> Ms_;
+  std::vector<std::vector<Skew>> Ns_;
 };
 
 class CubicLattice: public Lattice {

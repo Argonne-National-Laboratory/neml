@@ -249,7 +249,8 @@ void SymmetryGroup::opdist_(const double * const q1,
 Lattice::Lattice(Vector a1, Vector a2, Vector a3,
                  std::shared_ptr<SymmetryGroup> symmetry,
                  list_systems isystems) :
-    a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry), offsets_({0})
+    a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry), offsets_({0}),
+    setup_(false)
 {
   make_reciprocal_lattice_();
 
@@ -366,26 +367,28 @@ size_t Lattice::flat(size_t g, size_t i) const
   return offsets_[g] + i;
 }
 
-Symmetric Lattice::M(size_t g, size_t i, const Orientation & Q) const
+Symmetric Lattice::M(size_t g, size_t i, const Orientation & Q)
 {
+  cache_rot_(Q);
+  return Ms_[g][i];
   return Q.apply(Symmetric(outer(slip_directions_[g][i], 
                                  slip_planes_[g][i])));
 }
 
-Skew Lattice::N(size_t g, size_t i, const Orientation & Q) const
+Skew Lattice::N(size_t g, size_t i, const Orientation & Q)
 {
-  return Q.apply(Skew(outer(slip_directions_[g][i],
-                            slip_planes_[g][i])));
+  cache_rot_(Q);
+  return Ns_[g][i];
 }
 
 double Lattice::shear(size_t g, size_t i, const Orientation & Q, 
-                      const Symmetric & stress) const
+                      const Symmetric & stress)
 {
   return M(g,i,Q).contract(stress);
 }
 
 Symmetric Lattice::d_shear(size_t g, size_t i, const Orientation & Q, 
-                           const Symmetric & stress) const
+                           const Symmetric & stress)
 {
   return M(g, i, Q);
 }
@@ -406,6 +409,27 @@ void Lattice::assert_miller_(std::vector<int> m)
 {
   if (m.size() != 3)   {
     throw std::invalid_argument("Miller indices must have length 3");
+  }
+}
+
+void Lattice::cache_rot_(const Orientation & Q)
+{
+  if (setup_ and (hash_ == Q.hash())) return;
+
+  setup_ = true;
+  hash_ = Q.hash();
+
+  Ms_.resize(ngroup());
+  Ns_.resize(ngroup());
+  for (size_t g = 0; g < ngroup(); g++) {
+    Ms_[g].resize(nslip(g));
+    Ns_[g].resize(nslip(g));
+    for (size_t i = 0; i < nslip(g); i++) {
+      Ms_[g][i] = Q.apply(Symmetric(outer(slip_directions_[g][i], 
+                                          slip_planes_[g][i]))); 
+      Ns_[g][i] = Q.apply(Skew(outer(slip_directions_[g][i], 
+                                     slip_planes_[g][i]))); 
+    }
   }
 }
 

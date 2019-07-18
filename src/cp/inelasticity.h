@@ -22,43 +22,43 @@ class InelasticModel: public NEMLObject {
 
   virtual Symmetric d_p(const Symmetric & stress, const Orientation & Q,
                         const History & history, 
-                        const Lattice & lattice, double T) const = 0;
+                        Lattice & lattice, double T) const = 0;
   virtual SymSym d_d_p_d_stress(const Symmetric & stress, const Orientation & Q,
                                 const History & history,
-                                const Lattice & lattice, double T) const = 0;
+                                Lattice & lattice, double T) const = 0;
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  const Lattice & lattice, double T) const = 0;
+                                  Lattice & lattice, double T) const = 0;
 
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               const Lattice & lattice, double T) const = 0;
+                               Lattice & lattice, double T) const = 0;
   virtual History d_history_rate_d_stress(const Symmetric & stress, 
                                           const Orientation & Q,
                                           const History & history,
-                                          const Lattice & lattice,
+                                          Lattice & lattice,
                                           double T) const = 0;
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
-                                         const Lattice & lattice,
+                                         Lattice & lattice,
                                          double T) const = 0;
 
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
-                   const Lattice & lattice,
+                   Lattice & lattice,
                    double T) const = 0;
   virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
-                                 const Lattice & lattice,
+                                 Lattice & lattice,
                                  double T) const = 0;
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  const Lattice & lattice,
+                                  Lattice & lattice,
                                   double T) const = 0;
 };
 
@@ -81,46 +81,46 @@ class NoInelasticity: public InelasticModel {
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
                         const History & history,
-                        const Lattice & lattice,
+                        Lattice & lattice,
                         double T) const;
   virtual SymSym d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
-                                const Lattice & lattice,
+                                Lattice & lattice,
                                 double T) const;
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  const Lattice & lattice,
+                                  Lattice & lattice,
                                   double T) const;
 
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               const Lattice & lattice, double T) const;
+                               Lattice & lattice, double T) const;
   virtual History d_history_rate_d_stress(const Symmetric & stress, 
                                           const Orientation & Q,
                                           const History & history,
-                                          const Lattice & lattice,
+                                          Lattice & lattice,
                                           double T) const;
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
-                                         const Lattice & lattice,
+                                         Lattice & lattice,
                                          double T) const;
 
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
-                   const Lattice & lattice, double T) const;
+                   Lattice & lattice, double T) const;
   virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
-                                 const Lattice & lattice,
+                                 Lattice & lattice,
                                  double T) const;
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  const Lattice & lattice,
+                                  Lattice & lattice,
                                   double T) const;
 };
 
@@ -145,41 +145,41 @@ class AsaroInelasticity: public InelasticModel {
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
                         const History & history,
-                        const Lattice & lattice, double T) const;
+                        Lattice & lattice, double T) const;
   virtual SymSym d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
-                                const Lattice & lattice, double T) const;
+                                Lattice & lattice, double T) const;
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  const Lattice & lattice, double T) const;
+                                  Lattice & lattice, double T) const;
 
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               const Lattice & lattice, double T) const;
+                               Lattice & lattice, double T) const;
   virtual History d_history_rate_d_stress(const Symmetric & stress, 
                                           const Orientation & Q,
                                           const History & history,
-                                          const Lattice & lattice, double T) const;
+                                          Lattice & lattice, double T) const;
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
-                                         const Lattice & lattice, double T) const;
+                                         Lattice & lattice, double T) const;
 
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
-                   const Lattice & lattice, double T) const;
+                   Lattice & lattice, double T) const;
   virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
-                                 const Lattice & lattice,
+                                 Lattice & lattice,
                                  double T) const;
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  const Lattice & lattice,
+                                  Lattice & lattice,
                                   double T) const;
 
  private:
