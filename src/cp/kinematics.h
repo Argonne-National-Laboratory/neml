@@ -20,7 +20,7 @@ class KinematicModel: public NEMLObject {
   virtual void init_history(History & history) const = 0;
   
   /// Hook to allow user to decouple parts of the update
-  virtual void decouple(
+  virtual History decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
@@ -30,75 +30,75 @@ class KinematicModel: public NEMLObject {
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual SymSym d_stress_rate_d_stress(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual SymSym d_stress_rate_d_d(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual SymSkew d_stress_rate_d_w(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual History d_stress_rate_d_history(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
 
   virtual History history_rate(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual History d_history_rate_d_stress(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual History d_history_rate_d_d(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual History d_history_rate_d_w(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
   virtual History d_history_rate_d_history(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
 
   virtual SymSym d_stress_rate_d_d_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T);
+      double T, const History & fixed);
   virtual SymSkew d_stress_rate_d_w_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T);
+      double T, const History & fixed);
 
   virtual History d_history_rate_d_d_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T);
+      double T, const History & fixed);
   virtual History d_history_rate_d_w_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T);
+      double T, const History & fixed);
 
   virtual Skew spin(
       const Symmetric & stress, const Symmetric & d,
@@ -130,7 +130,7 @@ class StandardKinematicModel: public KinematicModel {
   virtual void init_history(History & history) const;
 
   /// Hook to allow user to decouple parts of the update
-  virtual void decouple(
+  virtual History decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
@@ -140,60 +140,59 @@ class StandardKinematicModel: public KinematicModel {
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual SymSym d_stress_rate_d_stress(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual SymSym d_stress_rate_d_d(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual SymSkew d_stress_rate_d_w(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual History d_stress_rate_d_history(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
 
   virtual History history_rate(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual History d_history_rate_d_stress(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual History d_history_rate_d_d(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual History d_history_rate_d_w(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
   virtual History d_history_rate_d_history(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
 
   virtual SymSkew d_stress_rate_d_w_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T);
-
+      double T, const History & fixed);
   virtual Skew spin(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
@@ -208,10 +207,6 @@ class StandardKinematicModel: public KinematicModel {
  private:
   std::shared_ptr<LinearElasticModel> emodel_;
   std::shared_ptr<InelasticModel> imodel_;
-
-  Skew espin_;
-
-  SymSym C_, S_;
 };
 
 static Register<StandardKinematicModel> regStandardKinematicModel;

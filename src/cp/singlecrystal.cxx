@@ -125,17 +125,17 @@ int SingleCrystalModel::update_ld_inc(
   while (progress < target) {
     double step = 1.0 / pow(2, subdiv);
 
+    // Decouple the updates
+    History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, *lattice_,
+                                          T_n + dT * step);
+
     // Set the trial state
     SCTrialState trial(D, W,
                        S_np1, H_np1, // Yes, really
                        Q_n, *lattice_,
                        T_n + dT * step, dt * step,
-                       S_np1, H_np1);
+                       S_np1, H_np1, fixed);
 
-    // Decouple the updates
-    kinematics_->decouple(trial.S, trial.d, trial.w, trial.Q, trial.history,
-                          trial.lattice, trial.T);
-    
     // Solve the update
     int ier = solve_substep_(&trial, S_np1, H_np1);
 
@@ -255,11 +255,15 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
   History H = ats->history.copy_blank();
   H.copy_data(&x[6]);
 
+  History & fixed = ats->fixed;
+
   // Get actual residual components
   Symmetric stress_res = S - ats->S - kinematics_->stress_rate(S, ats->d, ats->w, ats->Q,
-                                                   H, ats->lattice, ats->T) * ats->dt;
+                                                   H, ats->lattice, ats->T,
+                                                   fixed) * ats->dt;
   History history_rate = kinematics_->history_rate(S, ats->d, ats->w, ats->Q,
-                                                   H, ats->lattice, ats->T);
+                                                   H, ats->lattice, ats->T,
+                                                   fixed);
   
   // Stick in residual
   std::copy(stress_res.data(), stress_res.data()+6, R);
@@ -269,14 +273,18 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
 
   // Get all the Jacobian contributions
   SymSym dSdS = kinematics_->d_stress_rate_d_stress(S, ats->d, ats->w, ats->Q,
-                                                    H, ats->lattice, ats->T);
+                                                    H, ats->lattice, ats->T,
+                                                    fixed);
   History dSdH = kinematics_->d_stress_rate_d_history(S, ats->d, ats->w, ats->Q,
-                                                      H, ats->lattice, ats->T);
+                                                      H, ats->lattice, ats->T,
+                                                      fixed);
 
   History dHdS = kinematics_->d_history_rate_d_stress(S, ats->d, ats->w, ats->Q,
-                                                      H, ats->lattice, ats->T);
+                                                      H, ats->lattice, ats->T,
+                                                      fixed);
   History dHdH = kinematics_->d_history_rate_d_history(S, ats->d, ats->w, ats->Q,
-                                                       H, ats->lattice, ats->T);
+                                                       H, ats->lattice, ats->T,
+                                                       fixed);
 
   size_t nh = nparams() - 6;
 
@@ -466,17 +474,18 @@ void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
   delete [] J22;
   
   // Do D
+  History & fixed = ts->fixed;
   // Get the extra matrices
   SymSym sd = kinematics_->d_stress_rate_d_d(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T) 
+                                             H, ts->lattice, ts->T, fixed) 
       + kinematics_->d_stress_rate_d_d_decouple(S, ts->d, ts->w,
                                                 ts->Q, H,
-                                                ts->lattice, ts->T);
+                                                ts->lattice, ts->T, fixed);
   History hd = kinematics_->d_history_rate_d_d(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T);
+                                             H, ts->lattice, ts->T, fixed);
   hd += kinematics_->d_history_rate_d_d_decouple(S, ts->d, ts->w,
                                                 ts->Q, H,
-                                                ts->lattice, ts->T);
+                                                ts->lattice, ts->T, fixed);
 
   // Sadly need one more intermediate
   double * I1 = new double[36];
@@ -492,16 +501,16 @@ void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
 
   // Do W
   SymSkew sw = kinematics_->d_stress_rate_d_w(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T);
+                                             H, ts->lattice, ts->T, fixed);
   sw += kinematics_->d_stress_rate_d_w_decouple(S, ts->d, ts->w,
                                                 ts->Q, H,
-                                                ts->lattice, ts->T);
+                                                ts->lattice, ts->T, fixed);
 
   History hw = kinematics_->d_history_rate_d_w(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T);
+                                             H, ts->lattice, ts->T, fixed);
   hw += kinematics_->d_history_rate_d_w_decouple(S, ts->d, ts->w,
                                                  ts->Q, H,
-                                                 ts->lattice, ts->T);
+                                                 ts->lattice, ts->T, fixed);
 
   // Sadly need one more intermediate
   double * I2 = new double[18];

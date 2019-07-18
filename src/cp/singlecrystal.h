@@ -19,9 +19,10 @@ class SCTrialState: public TrialState {
   SCTrialState(const Symmetric & d, const Skew & w, const Symmetric & S, const
                History & H, const Orientation & Q, const Lattice & lattice,
                double T, double dt,
-               const Symmetric & s_guess, const History & h_guess) : 
+               const Symmetric & s_guess, const History & h_guess,
+               const History & fixed) : 
       d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt),
-      s_guess(s_guess), h_guess(h_guess)
+      s_guess(s_guess), h_guess(h_guess), fixed(fixed)
   {};
   
   Symmetric d;
@@ -34,6 +35,7 @@ class SCTrialState: public TrialState {
   double dt;
   Symmetric s_guess;
   History h_guess;
+  History fixed;
 };
 
 /// Single crystal model integrator

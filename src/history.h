@@ -16,7 +16,8 @@ enum StorageType {
   TYPE_RANKTWO   = 2,
   TYPE_SYMMETRIC = 3,
   TYPE_SKEW      = 4,
-  TYPE_ROT       = 5
+  TYPE_ROT       = 5,
+  TYPE_SYMSYM    = 6
 };
 
 /// Black magic to map a type to the enum
@@ -27,6 +28,7 @@ template <> constexpr StorageType GetStorageType<Symmetric>() {return TYPE_SYMME
 template <> constexpr StorageType GetStorageType<Skew>() {return TYPE_SKEW;}
 template <> constexpr StorageType GetStorageType<Orientation>() {return TYPE_ROT;}
 template <> constexpr StorageType GetStorageType<double>() {return TYPE_SCALAR;}
+template <> constexpr StorageType GetStorageType<SymSym>() {return TYPE_SYMSYM;}
 
 /// Storage size
 const std::map<StorageType,size_t> storage_size = 
@@ -35,7 +37,8 @@ const std::map<StorageType,size_t> storage_size =
     {TYPE_RANKTWO,   9},
     {TYPE_SYMMETRIC, 6},
     {TYPE_SKEW,      3},
-    {TYPE_ROT,       4} };
+    {TYPE_ROT,       4},
+    {TYPE_SYMSYM,    36} };
 
 /// Black magic to map a type to the right size
 template <class T> size_t GetStorageSize() {return storage_size.at(GetStorageType<T>());}
