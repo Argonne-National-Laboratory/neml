@@ -104,6 +104,10 @@ int SingleCrystalModel::update_ld_inc(
   History HF_np1 = gather_history_(h_np1);
   const History HF_n = gather_history_(h_n);
 
+  // There is a subtle race condition if you don't copy the lattice
+  // because that object now caches data
+  Lattice local_lattice = Lattice(*lattice_);
+
   // As the update is decoupled, split the histories into hardening/
   // orientation groups
   Orientation Q_n = HF_n.get<Orientation>("rotation");
@@ -126,13 +130,13 @@ int SingleCrystalModel::update_ld_inc(
     double step = 1.0 / pow(2, subdiv);
 
     // Decouple the updates
-    History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, *lattice_,
-                                          T_n + dT * step);
+    History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
+                                          local_lattice, T_n + dT * step);
 
     // Set the trial state
     SCTrialState trial(D, W,
                        S_np1, H_np1, // Yes, really
-                       Q_n, *lattice_,
+                       Q_n, local_lattice,
                        T_n + dT * step, dt * step,
                        S_np1, H_np1, fixed);
 
