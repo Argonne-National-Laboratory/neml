@@ -901,19 +901,38 @@ RankTwo Orientation::apply(const RankTwo & a) const
 
 Symmetric Orientation::apply(const Symmetric & a) const
 {
- // TODO: make more efficient
+  Symmetric res;
+  double * rd = res.s();
+  const double * q = quat_;
+  const double * d = a.data();
+
+  double sq_two = sqrt(2.0);
+  rd[0] = (-1 + 2*q[2]*q[2] + 2*q[3]*q[3])*(-1 + 2*q[2]*q[2] + 2*q[3]*q[3])*d[0] + 2*(2*q[1]*q[1]*(q[2]*q[2]*d[1] + q[3]*q[3]*d[2] + sq_two*q[2]*q[3]*d[3]) + q[1]*(2*q[0]*(2*q[2]*q[3]*(-d[1] + d[2]) + sq_two*q[2]*q[2]*d[3] - sq_two*q[3]*q[3]*d[3]) - sq_two*(-1 + 2*q[2]*q[2] + 2*q[3]*q[3])*(q[3]*d[4] + q[2]*d[5])) + q[0]*(2*q[0]*(q[3]*q[3]*d[1] + q[2]*q[2]*d[2] - sq_two*q[2]*q[3]*d[3]) - sq_two*(-1 + 2*q[2]*q[2] + 2*q[3]*q[3])*(q[2]*d[4] - q[3]*d[5])));
+  rd[1] = (q[0]*q[1] - q[2]*q[3])*(4*(q[0]*q[1] - q[2]*q[3])*d[2] - sq_two*(d[3] - 2*q[1]*q[1]*d[3] - 2*q[3]*q[3]*d[3] + 2*q[1]*q[2]*d[4] + 2*q[0]*q[3]*d[4])) + (1 - 2*q[1]*q[1] - 2*q[3]*q[3])* ((1 - 2*q[1]*q[1] - 2*q[3]*q[3])*d[1] + sq_two*(-(q[0]*q[1]*d[3]) + q[2]*q[3]*d[3] + q[1]*q[2]*d[5] + q[0]*q[3]*d[5])) + (q[1]*q[2] + q[0]*q[3])*(4*(q[1]*q[2] + q[0]*q[3])*d[0] + sq_two*(d[5] - 2*(q[0]*q[1]*d[4] - q[2]*q[3]*d[4] + (q[1]*q[1] + q[3]*q[3])*d[5])));
+  rd[2] = (1 - 2*q[1]*q[1] - 2*q[2]*q[2])* ((1 - 2*q[1]*q[1] - 2*q[2]*q[2])*d[2] + sq_two*(q[0]*q[1]*d[3] + q[2]*q[3]*d[3] - q[0]*q[2]*d[4] + q[1]*q[3]*d[4])) + (q[0]*q[1] + q[2]*q[3])*(4*(q[0]*q[1] + q[2]*q[3])*d[1] + sq_two*(d[3] - 2*q[1]*q[1]*d[3] - 2*q[2]*q[2]*d[3] - 2*q[0]*q[2]*d[5] + 2*q[1]*q[3]*d[5])) + (q[0]*q[2] - q[1]*q[3])*(4*(q[0]*q[2] - q[1]*q[3])*d[0] - sq_two*(d[4] - 2*q[1]*q[1]*d[4] - 2*q[2]*q[2]*d[4] + 2*q[0]*q[1]*d[5] + 2*q[2]*q[3]*d[5]));
+  rd[3] = sq_two*(2*(-(q[0]*q[1]) + q[2]*q[3])* ((1 - 2*q[1]*q[1] - 2*q[2]*q[2])*d[2] + sq_two*(q[0]*q[1]*d[3] + q[2]*q[3]*d[3] - q[0]*q[2]*d[4] + q[1]*q[3]*d[4])) + ((-1 + 2*q[1]*q[1] + 2*q[3]*q[3])* (-4*(q[0]*q[1] + q[2]*q[3])*d[1] + sq_two*((-1 + 2*q[1]*q[1] + 2*q[2]*q[2])*d[3] + 2*(q[0]*q[2] - q[1]*q[3])*d[5]))) /2.0 + 2*(q[1]*q[2] + q[0]*q[3])* (-2*q[0]*q[2]*d[0] + 2*q[1]*q[3]*d[0] + d[4]/sq_two + sq_two*(-((q[1]*q[1] + q[2]*q[2])*d[4]) + (q[0]*q[1] + q[2]*q[3])*d[5])));
+  rd[4] = sq_two*(2*(q[0]*q[2] + q[1]*q[3])* ((1 - 2*q[1]*q[1] - 2*q[2]*q[2])*d[2] + sq_two*(q[0]*q[1]*d[3] + q[2]*q[3]*d[3] - q[0]*q[2]*d[4] + q[1]*q[3]*d[4])) + 2*(q[1]*q[2] - q[0]*q[3])*(2*(q[0]*q[1] + q[2]*q[3])*d[1] + (d[3] - 2*q[1]*q[1]*d[3] - 2*q[2]*q[2]*d[3] - 2*q[0]*q[2]*d[5] + 2*q[1]*q[3]*d[5])/sq_two ) + ((-1 + 2*q[2]*q[2] + 2*q[3]*q[3])* (4*(q[0]*q[2] - q[1]*q[3])*d[0] + sq_two*((-1 + 2*q[1]*q[1] + 2*q[2]*q[2])*d[4] - 2*(q[0]*q[1] + q[2]*q[3])*d[5]))) /2.0);
+  rd[5] = sq_two*(2*(q[0]*q[2] + q[1]*q[3])* (-2*q[0]*q[1]*d[2] + 2*q[2]*q[3]*d[2] + d[3]/sq_two + sq_two*(-((q[1]*q[1] + q[3]*q[3])*d[3]) + (q[1]*q[2] + q[0]*q[3])*d[4])) + 2*(q[1]*q[2] - q[0]*q[3])*((1 - 2*q[1]*q[1] - 2*q[3]*q[3])*d[1] + sq_two*(-(q[0]*q[1]*d[3]) + q[2]*q[3]*d[3] + q[1]*q[2]*d[5] + q[0]*q[3]*d[5])) + ((-1 + 2*q[2]*q[2] + 2*q[3]*q[3])* (-4*(q[1]*q[2] + q[0]*q[3])*d[0] + sq_two*(2*q[0]*q[1]*d[4] - 2*q[2]*q[3]*d[4] + (-1 + 2*q[1]*q[1] + 2*q[3]*q[3])*d[5])))/2.0);
+
   return Symmetric(apply(a.to_full()));
 }
 
 Skew Orientation::apply(const Skew & a) const
 {
-  // TODO: make more efficient
-  return Skew(apply(a.to_full()));
+  Skew res;
+  double * rw = res.s();
+  const double * q = quat_;
+  const double * w = a.data();
+
+  rw[0] = -((1 - 2*std::pow(q[2],2) - 2*std::pow(q[3],2) + 4*std::pow(q[1],2)*(-1 + std::pow(q[0],2) + std::pow(q[1],2) + std::pow(q[2],2) + std::pow(q[3],2)))*-w[0] + 2*q[0]*(q[3]*w[1] + q[2]*-w[2]) - 2*q[1]*(-1 + 2*std::pow(q[0],2) + 2*std::pow(q[2],2) + 2*std::pow(q[3],2))* (q[2]*w[1] - q[3]*-w[2]) + std::pow(q[1],3)*(-4*q[2]*w[1] + 4*q[3]*-w[2]));
+  rw[1] = (-4*(q[0]*q[2] + q[1]*q[3])*(q[0]*q[1]*-w[0] + q[2]*q[3]*-w[0] - q[0]*q[2]*w[1] + q[1]*q[3]*w[1]) - 2*(q[1]*q[2] - q[0]*q[3])*((-1 + 2*std::pow(q[1],2) + 2*std::pow(q[2],2))*-w[0] - 2*q[0]*q[2]*-w[2] + 2*q[1]*q[3]*-w[2]) + (1 - 2*std::pow(q[2],2) - 2*std::pow(q[3],2))* (w[1] - 2*std::pow(q[1],2)*w[1] - 2*std::pow(q[2],2)*w[1] + 2*q[0]*q[1]*-w[2] + 2*q[2]*q[3]*-w[2]));
+  rw[2] = -(-2*q[0]*(q[2]*-w[0] + q[1]*w[1]) + 4*std::pow(q[0],2)*q[3]*(q[1]*-w[0] - q[2]*w[1] + q[3]*-w[2]) + (-1 + 2*std::pow(q[1],2) + 2*std::pow(q[2],2) + 2*std::pow(q[3],2))* (w[2] + 2*q[3]*(q[1]*-w[0] - q[2]*w[1] + q[3]*-w[2])));
+
+  return res;
 }
 
 RankFour Orientation::apply(const RankFour & a) const
 {
-  // TODO: make more efficient
   RankTwo Q = to_tensor();
   
   RankFour res;
@@ -939,9 +958,19 @@ RankFour Orientation::apply(const RankFour & a) const
 
 SymSym Orientation::apply(const SymSym & a) const
 {
-  // TODO: make more efficient
-  RankFour full = apply(a.to_full());
-  return full.to_sym();
+  SymSym res;
+  
+  double M[9];
+  to_matrix(M);
+
+  const double f1 = 1.0;
+  const double f2 = sqrt(2.0);
+  const double f3 = sqrt(2.0);
+  double R[36] = {f1*M[0]*M[0],f1*M[1]*M[1],f1*M[2]*M[2],f3*M[1]*M[2],f3*M[2]*M[0],f3*M[0]*M[1],f1*M[3]*M[3],f1*M[4]*M[4],f1*M[5]*M[5],f3*M[4]*M[5],f3*M[5]*M[3],f3*M[3]*M[4],f1*M[6]*M[6],f1*M[7]*M[7],f1*M[8]*M[8],f3*M[7]*M[8],f3*M[8]*M[6],f3*M[6]*M[7],f2*M[3]*M[6],f2*M[4]*M[7],f2*M[5]*M[8],(M[4]*M[8]+M[5]*M[7]),(M[5]*M[6]+M[3]*M[8]),(M[3]*M[7]+M[4]*M[6]),f2*M[6]*M[0],f2*M[7]*M[1],f2*M[8]*M[2],(M[7]*M[2]+M[8]*M[1]),(M[8]*M[0]+M[6]*M[2]),(M[6]*M[1]+M[7]*M[0]),f2*M[0]*M[3],f2*M[1]*M[4],f2*M[2]*M[5],(M[1]*M[5]+M[2]*M[4]),(M[2]*M[3]+M[0]*M[5]),(M[0]*M[4]+M[1]*M[3])};
+
+  rotate_matrix(6, 6, R, a.data(), res.s());
+
+  return res;
 }
 
 std::vector<Orientation> random_orientations(int n)
