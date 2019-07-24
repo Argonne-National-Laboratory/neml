@@ -13,14 +13,14 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
   # Everyone's favorite FCC rolling example!
-  N = 100
+  N = 200
   
-  nthreads = 10
+  nthreads = 4
 
   L = np.array([[0,0,0],[0,1.0,0],[0,0,-1.0]])
   erate = 1.0e-4
   steps = 100
-  emax = 0.5
+  emax = 1.0
 
   E = 100000.0
   nu = 0.3
