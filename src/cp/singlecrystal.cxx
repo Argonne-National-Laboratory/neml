@@ -11,9 +11,9 @@ SingleCrystalModel::SingleCrystalModel(
     int max_divide) :
       kinematics_(kinematics), lattice_(lattice), q0_(initial_angle), alpha_(alpha),
       update_rotation_(update_rotation), tol_(tol), miter_(miter),
-      verbose_(verbose), max_divide_(max_divide)
+      verbose_(verbose), max_divide_(max_divide), stored_hist_(false)
 {
-
+  populate_history(stored_hist_);
 }
 
 SingleCrystalModel::~SingleCrystalModel()
@@ -382,24 +382,21 @@ void SingleCrystalModel::set_passive_orientation(
 
 History SingleCrystalModel::gather_history_(double * data) const
 {
-  History h(false);
-  populate_history(h);
+  History h = gather_blank_history_();
   h.set_data(data);
   return h;
 }
 
 History SingleCrystalModel::gather_history_(const double * data) const
 {
-  History h(data);
-  populate_history(h);
+  History h = gather_blank_history_();
+  h.set_data(const_cast<double*>(data));
   return h;
 }
 
 History SingleCrystalModel::gather_blank_history_() const
 {
-  History h(false);
-  populate_history(h);
-  return h;
+  return stored_hist_;
 }
 
 void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,

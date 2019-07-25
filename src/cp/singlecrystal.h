@@ -130,6 +130,8 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   int miter_;
   bool verbose_;
   int max_divide_;
+
+  History stored_hist_;
 };
 
 static Register<SingleCrystalModel> regSingleCrystalModel;
