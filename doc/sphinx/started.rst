@@ -12,7 +12,7 @@ Additionally, you will need `BLAS <http://www.netlib.org/blas/>`_ and
 Testing NEML and running the examples described here also requires
 compiling the Python bindings.
 This has the additional requirements of a 
-`Python <https://www.python.org/>`_ installation, including the
+`Python <https://www.python.org/>`_ 3.x installation, including the
 development headers, 
 the `pybind11 <https://github.com/pybind/pybind11>`_ library (which is included in the NEML
 source), and the 
@@ -83,7 +83,7 @@ to those mentioned above:
 
 .. code-block:: console
 
-   apt-get install python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
+   apt-get install python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose
 
 Configure with CMake to setup the python bindings:
 
