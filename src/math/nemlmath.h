@@ -165,6 +165,9 @@ void qmult_vec(const double * const As, const double * const B,
 /// This is only to be used for testing
 bool isclose(double a, double b);
 
+/// Perform A * B * A.T
+int rotate_matrix(int m, int n, const double * const A,
+                  const double * const B, double * C);
 }
 
 #endif // NEMLMATH_H

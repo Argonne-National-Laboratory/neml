@@ -1112,4 +1112,22 @@ bool isclose(double a, double b)
   return fabs(a - b) <= (ATOL + RTOL * fabs(b));
 }
 
+int rotate_matrix(int m, int n, const double * const A,
+                  const double * const B, double * C)
+{
+  double * temp = new double[m*n];
+  
+  // A_mn
+  // B_nn
+  // temp_nm = B_nn * A.T_nm
+  // C_mm = A_mn * temp_nm
+
+  dgemm_("T", "N", m, n, n, 1.0, A, n, B, n, 0.0, temp, m);
+  dgemm_("N", "N", m, m, n, 1.0, temp, m, A, n, 0.0, C, m);
+
+  delete [] temp;
+
+  return 0;
+}
+
 } // namespace neml

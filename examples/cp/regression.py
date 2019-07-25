@@ -15,7 +15,7 @@ if __name__ == "__main__":
   # Everyone's favorite FCC rolling example!
   N = 10
   
-  nthreads = 10
+  nthreads = 4
 
   L = np.array([[-0.5,0,0],[0,-0.5,0],[0,0,1.0]])
   erate = 1.0e-4

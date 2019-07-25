@@ -253,6 +253,18 @@ class TestMatMat(unittest.TestCase):
   def test_matmat(self):
     self.assertTrue(np.allclose(np.dot(self.A, self.B), mat_mat(self.A, self.B)))
 
+class TestRotateMat(unittest.TestCase):
+  def setUp(self):
+    self.m = 6
+    self.n = 6
+    self.A = ra.random((self.m,self.n))
+    self.B = ra.random((self.n,self.n))
+
+  def test_rotate(self):
+    C = nemlmath.rotate_matrix(self.A, self.B)
+    C2 = np.dot(self.A, np.dot(self.B, self.A.T))
+    self.assertTrue(np.allclose(C,C2))
+
 class TestInvert(unittest.TestCase):
   def setUp(self):
     self.n = 10
@@ -357,3 +369,5 @@ class TestMisc(unittest.TestCase):
   def test_isclose(self):
     self.assertTrue(nemlmath.isclose(1.0e10, 1.00001e10))
     self.assertFalse(nemlmath.isclose(1.0e-7, 1.0e-8))
+
+

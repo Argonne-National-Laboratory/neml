@@ -655,7 +655,26 @@ PYBIND11_MODULE(nemlmath, m) {
   m.def("convert_angle", &convert_angle);
   m.def("cast_angle", &cast_angle);
   m.def("isclose", &isclose);
+  m.def("rotate_matrix",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double,
+           py::array::c_style> B) -> py::array_t<double>
+        {
+          int m = A.request().shape[0];
+          int n = A.request().shape[1];
 
+          if ((A.request().ndim != 2) || (B.request().ndim != 2)) {
+            throw LinalgError("A and B must be matrices!");
+          }
+          if ((n != B.request().shape[0]) || (n != B.request().shape[1])) {
+            throw LinalgError("A and B must be conformal!");
+          }
+
+          auto C = alloc_mat<double>(m,m);
+          
+          rotate_matrix(m, n, arr2ptr<double>(A), arr2ptr<double>(B), arr2ptr<double>(C));
+
+          return C; 
+        }, "A * B * A.T");
 }
 
 } // namespace neml
