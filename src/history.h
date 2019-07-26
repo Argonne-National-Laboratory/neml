@@ -130,6 +130,9 @@ class History {
 
   /// Add another history to this one
   History & operator+=(const History & other);
+
+  /// Combine another history object through a union
+  History & add_union(const History & other);
   
   /// Make a blank copy
   History copy_blank(std::vector<std::string> exclude = {}) const;

@@ -84,6 +84,20 @@ History & History::operator=(const History & other)
   return *this;
 }
 
+History & History::add_union(const History & other)
+{
+  for (auto & var : other.get_order()) {
+    StorageType type = other.get_type().at(var);
+    size_t size = storage_size.at(type);
+    size_t loco = other.get_loc().at(var);
+    add(var, type, size);
+    size_t locn = loc_.at(var);
+    std::copy(other.rawptr()+loco, other.rawptr()+loco+size, storage_+locn);
+  }
+
+  return *this;
+}
+
 History & History::operator=(const History && other)
 {
   if (size_ != other.size()) {

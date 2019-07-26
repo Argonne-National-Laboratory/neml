@@ -179,3 +179,63 @@ class TestPowerLaw(unittest.TestCase, CommonInelastic):
     h2 = self.model.history_rate(self.S, self.Q, self.H, self.L, self.T)
 
     self.assertTrue(np.allclose(np.array(h1), np.array(h2)))
+
+class TestCombinedInelasticity(unittest.TestCase, CommonInelastic):
+  def setUp(self):
+    self.A = 1.0e-5
+    self.n = 3.1
+
+    self.model1 = inelasticity.PowerLaw(self.A, self.n)
+
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+
+    self.T = 300.0
+
+    self.strength = 35.0
+    self.H = history.History()
+    self.H.add_scalar("strength")
+    self.H.set_scalar("strength", self.strength)
+
+    self.tau0 = 10.0
+    self.tau_sat = 50.0
+    self.b = 2.5
+
+    self.strengthmodel = slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0)
+    
+    self.g0 = 1.0
+    self.n = 3.0
+    self.slipmodel = sliprules.PowerLawSlipRule(self.strengthmodel, self.g0, self.n)
+
+    self.model2 = inelasticity.AsaroInelasticity(self.slipmodel)
+
+    self.model = inelasticity.CombinedInelasticity([self.model1, self.model2])
+
+  def test_d_p(self):
+    dp1 = self.model1.d_p(self.S, self.Q, self.H, self.L, self.T)
+    dp2 = self.model2.d_p(self.S, self.Q, self.H, self.L, self.T)
+    dp = self.model.d_p(self.S, self.Q, self.H, self.L, self.T)
+    self.assertEqual(dp1+dp2,dp)
+
+  def test_w_p(self):
+    wp1 = self.model1.w_p(self.S, self.Q, self.H, self.L, self.T)
+    wp2 = self.model2.w_p(self.S, self.Q, self.H, self.L, self.T)
+    wp = self.model.w_p(self.S, self.Q, self.H, self.L, self.T)
+    self.assertEqual(wp1+wp2,wp)
+
+  def test_hist_rate(self):
+    h1 = self.model1.history_rate(self.S, self.Q, self.H, self.L, self.T)
+    h2 = self.model2.history_rate(self.S, self.Q, self.H, self.L, self.T)
+    h = self.model.history_rate(self.S, self.Q, self.H, self.L, self.T)
+
+    h3 = history.History()
+    h3.add_union(h1)
+    h3.add_union(h2)
+
+    self.assertTrue(np.allclose(np.array(h), np.array(h3)))

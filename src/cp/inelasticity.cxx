@@ -330,6 +330,10 @@ Symmetric PowerLaw::d_p(const Symmetric & stress, const Orientation & Q,
   double A = A_->value(T);
   double n = n_->value(T);
 
+  if (seq < std::numeric_limits<double>::epsilon()) {
+    return Symmetric();
+  }
+
   return A * pow(seq, n-1.0) * stress.dev();
 }
 
@@ -341,6 +345,10 @@ SymSym PowerLaw::d_d_p_d_stress(
   double seq = seq_(stress);
   double A = A_->value(T);
   double n = n_->value(T);
+
+  if (seq < std::numeric_limits<double>::epsilon()) {
+    seq = std::numeric_limits<double>::epsilon();
+  }
 
   Symmetric dir = stress.dev() / seq;
   
@@ -409,6 +417,161 @@ History PowerLaw::d_w_p_d_history(const Symmetric & stress,
 double PowerLaw::seq_(const Symmetric & stress) const
 {
   return sqrt(3.0/2.0) * stress.dev().norm();
+}
+
+CombinedInelasticity::CombinedInelasticity(
+    std::vector<std::shared_ptr<InelasticModel>> models) :
+      models_(models)
+{
+
+}
+
+CombinedInelasticity::~CombinedInelasticity()
+{
+
+}
+
+std::string CombinedInelasticity::type()
+{
+  return "CombinedInelasticity";
+}
+
+ParameterSet CombinedInelasticity::parameters()
+{
+  ParameterSet pset(CombinedInelasticity::type());
+
+  pset.add_parameter<std::vector<NEMLObject>>("models");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> CombinedInelasticity::initialize(ParameterSet & params)
+{
+  return neml::make_unique<CombinedInelasticity>(
+      params.get_object_parameter_vector<InelasticModel>("models")
+      ); 
+}
+
+void CombinedInelasticity::populate_history(History & history) const
+{
+  for (auto model : models_) {
+    model->populate_history(history);
+  }
+  return;
+}
+
+void CombinedInelasticity::init_history(History & history) const
+{
+  for (auto model : models_) {
+    model->init_history(history);
+  }
+  return;
+}
+
+Symmetric CombinedInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
+                              const History & history,
+                              Lattice & lattice, double T) const
+{
+  Symmetric sum;
+  for (auto model : models_) {
+    sum += model->d_p(stress, Q, history, lattice, T);
+  }
+  return sum;
+}
+
+SymSym CombinedInelasticity::d_d_p_d_stress(
+    const Symmetric & stress, const Orientation & Q,
+    const History & history,
+    Lattice & lattice, double T) const
+{
+  SymSym sum;
+  for (auto model : models_) {
+    sum += model->d_d_p_d_stress(stress, Q, history, lattice, T);
+  }
+  return sum;
+}
+
+History CombinedInelasticity::d_d_p_d_history(
+    const Symmetric & stress, const Orientation & Q,
+    const History & history,
+    Lattice & lattice, double T) const
+{
+  History hist;
+  for (auto model : models_) {
+    hist.add_union(model->d_d_p_d_history(stress, Q, history, lattice, T));
+  }
+  return hist;
+}
+
+History CombinedInelasticity::history_rate(const Symmetric & stress, 
+                                     const Orientation & Q,
+                                     const History & history,
+                                     Lattice & lattice, double T) const
+{
+  History hist;
+  for (auto model : models_) {
+    hist.add_union(model->history_rate(stress, Q, history, lattice, T));
+  }
+  return hist;
+}
+
+History CombinedInelasticity::d_history_rate_d_stress(const Symmetric & stress, 
+                                                const Orientation & Q,
+                                                const History & history,
+                                                Lattice & lattice, double T) const
+{
+  History hist;
+  for (auto model : models_) {
+    hist.add_union(model->d_history_rate_d_stress(stress, Q, history, lattice, T));
+  }
+  return hist;
+}
+
+History CombinedInelasticity::d_history_rate_d_history(const Symmetric & stress,
+                                               const Orientation & Q,
+                                               const History & history,
+                                               Lattice & lattice, double T) const
+{
+  History hist;
+  for (auto model : models_) {
+    hist.add_union(model->d_history_rate_d_history(stress, Q, history, lattice, T));
+  }
+  return hist;
+}
+
+Skew CombinedInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
+                         const History & history,
+                         Lattice & lattice, double T) const
+{
+  Skew sum;
+  for (auto model : models_) {
+    sum += model->w_p(stress, Q, history, lattice, T);
+  }
+  return sum;
+}
+
+SkewSym CombinedInelasticity::d_w_p_d_stress(const Symmetric & stress, 
+                                       const Orientation & Q,
+                                       const History & history,
+                                       Lattice & lattice, double T) const
+{
+  SkewSym sum;
+  for (auto model : models_) {
+    sum += model->d_w_p_d_stress(stress, Q, history, lattice, T);
+  }
+  return sum;
+}
+
+History CombinedInelasticity::d_w_p_d_history(const Symmetric & stress,
+                                        const Orientation & Q,
+                                        const History & history,
+                                        Lattice & lattice, double T) const
+{
+  History hist;
+  for (auto model : models_) {
+    hist.add_union(model->d_w_p_d_history(stress, Q, history, lattice, T));
+  }
+  return hist;
 }
 
 } // namespace neml

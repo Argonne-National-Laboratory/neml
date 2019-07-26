@@ -224,3 +224,25 @@ class TestSplitNoStore(unittest.TestCase):
     self.assertEqual(nhist.get_scalar("b"), -2.0)
     self.assertEqual(nhist.get_scalar("b"), self.hist.get_scalar("b"))
     self.assertEqual(self.data[1], -2.0)
+
+class TestUnion(unittest.TestCase):
+  def setUp(self):
+    self.scalar1 = 2.0
+    self.scalar2 = 3.0
+    self.vector1 = tensors.Vector(np.array([1.0,2.0,3.0]))
+
+    self.hist1 = history.History()
+    self.hist1.add_scalar("a")
+    self.hist1.set_scalar("a", self.scalar1)
+    self.hist1.add_vector("b")
+    self.hist1.set_vector("b", self.vector1) 
+
+    self.hist2 = history.History()
+    self.hist2.add_scalar("c")
+    self.hist2.set_scalar("c", self.scalar2)
+
+  def test_union(self):
+    hist = self.hist2.add_union(self.hist1)
+    self.assertTrue(np.isclose(hist.get_scalar("a"), self.scalar1))
+    self.assertTrue(np.isclose(hist.get_scalar("c"), self.scalar2))
+    self.assertEqual(hist.get_vector("b"), self.vector1)

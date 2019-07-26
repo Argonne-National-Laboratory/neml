@@ -52,6 +52,14 @@ PYBIND11_MODULE(inelasticity, m) {
                     }))
       ;
 
+  py::class_<CombinedInelasticity, InelasticModel, std::shared_ptr<CombinedInelasticity>>(m, "CombinedInelasticity")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return
+                      create_object_python<CombinedInelasticity>(args, kwargs, {"models"});
+                    }))
+      ;
+
 } // PYBIND11_MODULE
 
 } // namespace neml

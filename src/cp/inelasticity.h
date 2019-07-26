@@ -259,6 +259,73 @@ class PowerLaw: public InelasticModel {
 
 static Register<PowerLaw> regPowerLaw;
 
+/// I don't know, maybe it might be useful
+class CombinedInelasticity: public InelasticModel {
+ public:
+  CombinedInelasticity(std::vector<std::shared_ptr<InelasticModel>> models);
+  virtual ~CombinedInelasticity();
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  virtual void populate_history(History & history) const;
+  virtual void init_history(History & history) const;
+
+  virtual Symmetric d_p(const Symmetric & stress,
+                        const Orientation & Q,
+                        const History & history,
+                        Lattice & lattice,
+                        double T) const;
+  virtual SymSym d_d_p_d_stress(const Symmetric & stress,
+                                const Orientation & Q,
+                                const History & history,
+                                Lattice & lattice,
+                                double T) const;
+  virtual History d_d_p_d_history(const Symmetric & stress,
+                                  const Orientation & Q,
+                                  const History & history,
+                                  Lattice & lattice,
+                                  double T) const;
+
+  virtual History history_rate(const Symmetric & stress, const Orientation & Q,
+                               const History & history,
+                               Lattice & lattice, double T) const;
+  virtual History d_history_rate_d_stress(const Symmetric & stress, 
+                                          const Orientation & Q,
+                                          const History & history,
+                                          Lattice & lattice,
+                                          double T) const;
+  virtual History d_history_rate_d_history(const Symmetric & stress,
+                                         const Orientation & Q,
+                                         const History & history,
+                                         Lattice & lattice,
+                                         double T) const;
+
+  virtual Skew w_p(const Symmetric & stress,
+                   const Orientation & Q,
+                   const History & history,
+                   Lattice & lattice, double T) const;
+  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+                                 const Orientation & Q,
+                                 const History & history,
+                                 Lattice & lattice,
+                                 double T) const;
+  virtual History d_w_p_d_history(const Symmetric & stress,
+                                  const Orientation & Q,
+                                  const History & history,
+                                  Lattice & lattice,
+                                  double T) const;
+
+ private:
+  std::vector<std::shared_ptr<InelasticModel>> models_;
+};
+
+static Register<CombinedInelasticity> regCombinedInelasticity;
+
 } // namespace neml
 
 #endif // INELASTICITY_H

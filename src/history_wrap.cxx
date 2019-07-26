@@ -135,6 +135,7 @@ PYBIND11_MODULE(history, m) {
         .def(py::self += py::self)
         .def("zero", &History::zero)
         .def("split", &History::split)
+        .def("add_union", &History::add_union)
       ;
 }
 
