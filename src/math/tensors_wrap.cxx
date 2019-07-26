@@ -416,7 +416,7 @@ PYBIND11_MODULE(tensors, m) {
            {
               std::ostringstream ss;
 
-              ss << "SymSym(array([";
+              ss << "RankFour(array([";
               for (size_t i=0; i<9; i++) {
                 ss << "[";
 
@@ -623,6 +623,9 @@ PYBIND11_MODULE(tensors, m) {
       .def(py::self * Symmetric())
       .def(py::self * RankTwo())
       .def(py::self * Skew())
+
+      .def_static("id", &SymSym::id)
+      .def_static("id_dev", &SymSym::id_dev)
       ;
 
   py::class_<SymSkew, Tensor, std::shared_ptr<SymSkew>>(m, "SymSkew")

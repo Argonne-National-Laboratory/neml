@@ -279,4 +279,136 @@ History AsaroInelasticity::d_w_p_d_history(const Symmetric & stress,
   return h;
 }
 
+PowerLaw::PowerLaw(std::shared_ptr<Interpolate> A, 
+                   std::shared_ptr<Interpolate> n) :
+    A_(A), n_(n)
+{
+
+}
+
+PowerLaw::~PowerLaw()
+{
+
+}
+
+std::string PowerLaw::type()
+{
+  return "PowerLaw";
+}
+
+ParameterSet PowerLaw::parameters()
+{
+  ParameterSet pset(PowerLaw::type());
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("n");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PowerLaw::initialize(ParameterSet & params)
+{
+  return neml::make_unique<PowerLaw>(
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("n")); 
+}
+
+void PowerLaw::populate_history(History & history) const
+{
+  return;
+}
+
+void PowerLaw::init_history(History & history) const
+{
+  return;
+}
+
+Symmetric PowerLaw::d_p(const Symmetric & stress, const Orientation & Q,
+                              const History & history,
+                              Lattice & lattice, double T) const
+{
+  double seq = seq_(stress);
+  double A = A_->value(T);
+  double n = n_->value(T);
+
+  return A * pow(seq, n-1.0) * stress.dev();
+}
+
+SymSym PowerLaw::d_d_p_d_stress(
+    const Symmetric & stress, const Orientation & Q,
+    const History & history,
+    Lattice & lattice, double T) const
+{
+  double seq = seq_(stress);
+  double A = A_->value(T);
+  double n = n_->value(T);
+
+  Symmetric dir = stress.dev() / seq;
+  
+  double rate = A * pow(seq, n);
+  double drate = A * n * pow(seq, n-1.0);
+
+  return SymSym::id_dev().dot(3.0/2.0 * (drate - rate / seq) * douter(dir,dir) + 
+                             SymSym::id() * rate / seq);
+}
+
+History PowerLaw::d_d_p_d_history(
+    const Symmetric & stress, const Orientation & Q,
+    const History & history,
+    Lattice & lattice, double T) const
+{
+  return History();
+}
+
+History PowerLaw::history_rate(const Symmetric & stress, 
+                                     const Orientation & Q,
+                                     const History & history,
+                                     Lattice & lattice, double T) const
+{
+  return History();
+}
+
+History PowerLaw::d_history_rate_d_stress(const Symmetric & stress, 
+                                                const Orientation & Q,
+                                                const History & history,
+                                                Lattice & lattice, double T) const
+{
+  return History();
+}
+
+History PowerLaw::d_history_rate_d_history(const Symmetric & stress,
+                                               const Orientation & Q,
+                                               const History & history,
+                                               Lattice & lattice, double T) const
+{
+  return History();
+}
+
+Skew PowerLaw::w_p(const Symmetric & stress, const Orientation & Q,
+                         const History & history,
+                         Lattice & lattice, double T) const
+{
+  return Skew();
+}
+
+SkewSym PowerLaw::d_w_p_d_stress(const Symmetric & stress, 
+                                       const Orientation & Q,
+                                       const History & history,
+                                       Lattice & lattice, double T) const
+{
+  return SkewSym();
+}
+
+History PowerLaw::d_w_p_d_history(const Symmetric & stress,
+                                        const Orientation & Q,
+                                        const History & history,
+                                        Lattice & lattice, double T) const
+{
+  return History();
+}
+
+double PowerLaw::seq_(const Symmetric & stress) const
+{
+  return sqrt(3.0/2.0) * stress.dev().norm();
+}
+
 } // namespace neml

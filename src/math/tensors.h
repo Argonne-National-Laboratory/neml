@@ -356,6 +356,26 @@ class SymSym: public Tensor {
   RankTwo dot(const RankTwo & other) const;
   RankTwo dot(const Skew & other) const;
   Symmetric dot(const Symmetric & other) const;
+
+  static SymSym id() {return SymSym(std::vector<std::vector<double>>({
+              {1.0,0.0,0.0,0.0,0.0,0.0},
+              {0.0,1.0,0.0,0.0,0.0,0.0},
+              {0.0,0.0,1.0,0.0,0.0,0.0},
+              {0.0,0.0,0.0,1.0,0.0,0.0},
+              {0.0,0.0,0.0,0.0,1.0,0.0},
+              {0.0,0.0,0.0,0.0,0.0,1.0}
+              }
+              ));};
+  static SymSym id_dev() {return 
+    SymSym(std::vector<std::vector<double>>({
+              {1.0-1.0/3.0,-1.0/3.0,-1.0/3.0,0.0,0.0,0.0},
+              {-1.0/3.0,1.0-1.0/3.0,-1.0/3.0,0.0,0.0,0.0},
+              {-1.0/3.0,-1.0/3.0,1.0-1.0/3.0,0.0,0.0,0.0},
+              {0.0,0.0,0.0,1.0,0.0,0.0},
+              {0.0,0.0,0.0,0.0,1.0,0.0},
+              {0.0,0.0,0.0,0.0,0.0,1.0}
+              }
+              ));};
 };
 
 // Binary operators with scalars

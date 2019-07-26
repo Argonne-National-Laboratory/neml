@@ -44,6 +44,14 @@ PYBIND11_MODULE(inelasticity, m) {
                     }))
       ;
 
+  py::class_<PowerLaw, InelasticModel, std::shared_ptr<PowerLaw>>(m, "PowerLaw")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return
+                      create_object_python<PowerLaw>(args, kwargs, {"A", "n"});
+                    }))
+      ;
+
 } // PYBIND11_MODULE
 
 } // namespace neml

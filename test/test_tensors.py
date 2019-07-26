@@ -642,6 +642,16 @@ class TestSymSym(unittest.TestCase):
   def test_douter(self):
     self.assertEqual(tensors.SymSym(common.ts2ms(np.einsum('ij,kl', self.S, self.S2))), tensors.douter(self.TS, self.TS2))
 
+  def test_id(self):
+    id_t = tensors.SymSym(np.eye(6))
+    self.assertEqual(id_t, tensors.SymSym.id())
+
+  def test_id_dev(self):
+    ot = np.zeros((6,6))
+    ot[:3,:3] = 1.0/3.0
+    id_t = tensors.SymSym(np.eye(6) - ot)
+    self.assertEqual(id_t, tensors.SymSym.id_dev())
+
 class TestSymSkew(unittest.TestCase):
   def setUp(self):
     self.SW1 = np.array([

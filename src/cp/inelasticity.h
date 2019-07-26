@@ -188,6 +188,77 @@ class AsaroInelasticity: public InelasticModel {
 
 static Register<AsaroInelasticity> regAsaroInelasticity;
 
+/// Typically combined with slip system models to represent diffusion
+class PowerLaw: public InelasticModel {
+ public:
+  PowerLaw(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
+  virtual ~PowerLaw();
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  virtual void populate_history(History & history) const;
+  virtual void init_history(History & history) const;
+
+  virtual Symmetric d_p(const Symmetric & stress,
+                        const Orientation & Q,
+                        const History & history,
+                        Lattice & lattice,
+                        double T) const;
+  virtual SymSym d_d_p_d_stress(const Symmetric & stress,
+                                const Orientation & Q,
+                                const History & history,
+                                Lattice & lattice,
+                                double T) const;
+  virtual History d_d_p_d_history(const Symmetric & stress,
+                                  const Orientation & Q,
+                                  const History & history,
+                                  Lattice & lattice,
+                                  double T) const;
+
+  virtual History history_rate(const Symmetric & stress, const Orientation & Q,
+                               const History & history,
+                               Lattice & lattice, double T) const;
+  virtual History d_history_rate_d_stress(const Symmetric & stress, 
+                                          const Orientation & Q,
+                                          const History & history,
+                                          Lattice & lattice,
+                                          double T) const;
+  virtual History d_history_rate_d_history(const Symmetric & stress,
+                                         const Orientation & Q,
+                                         const History & history,
+                                         Lattice & lattice,
+                                         double T) const;
+
+  virtual Skew w_p(const Symmetric & stress,
+                   const Orientation & Q,
+                   const History & history,
+                   Lattice & lattice, double T) const;
+  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+                                 const Orientation & Q,
+                                 const History & history,
+                                 Lattice & lattice,
+                                 double T) const;
+  virtual History d_w_p_d_history(const Symmetric & stress,
+                                  const Orientation & Q,
+                                  const History & history,
+                                  Lattice & lattice,
+                                  double T) const;
+
+ private:
+  double seq_(const Symmetric & stress) const;
+
+ private:
+  std::shared_ptr<Interpolate> A_;
+  std::shared_ptr<Interpolate> n_;
+};
+
+static Register<PowerLaw> regPowerLaw;
+
 } // namespace neml
 
 #endif // INELASTICITY_H

@@ -136,3 +136,46 @@ class TestAsaroInelasticity(unittest.TestCase, CommonInelastic):
     h2 = self.model.history_rate(self.S, self.Q, self.H, self.L, self.T)
 
     self.assertTrue(np.allclose(np.array(h1), np.array(h2)))
+
+class TestPowerLaw(unittest.TestCase, CommonInelastic):
+  def setUp(self):
+    self.A = 1.0e-2
+    self.n = 3.1
+
+    self.model = inelasticity.PowerLaw(self.A, self.n)
+
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+
+    self.T = 300.0
+
+    self.H = history.History()
+
+  def test_seq(self):
+    seq1 = np.sqrt(3.0/2.0) * self.S.dev().norm()
+    seq2 = np.sqrt(3.0/2.0 * self.S.dev().contract(self.S.dev()))
+    self.assertTrue(np.isclose(seq1, seq2))
+
+  def test_d_p(self):
+    seq = np.sqrt(3.0/2.0) * self.S.dev().norm()
+
+    Dp1 = self.A*seq**self.n * self.S.dev() / seq
+    Dp2 = self.model.d_p(self.S, self.Q, self.H, self.L, self.T)
+
+    self.assertEqual(Dp1, Dp2)
+
+  def test_w_p(self):
+    self.assertEqual(tensors.Skew(np.zeros((3,3))),
+        self.model.w_p(self.S, self.Q, self.H, self.L, self.T))
+
+  def test_hist_rate(self):
+    h1 = history.History()
+    h2 = self.model.history_rate(self.S, self.Q, self.H, self.L, self.T)
+
+    self.assertTrue(np.allclose(np.array(h1), np.array(h2)))
