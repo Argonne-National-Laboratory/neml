@@ -207,6 +207,7 @@ PYBIND11_MODULE(tensors, m) {
 
       .def("inverse", &RankTwo::inverse)
       .def("transpose", &RankTwo::transpose)
+      .def("norm", &RankTwo::norm)
       ;
 
   py::class_<Symmetric, Tensor, std::shared_ptr<Symmetric>>(m, "Symmetric")
@@ -308,6 +309,7 @@ PYBIND11_MODULE(tensors, m) {
 
       .def("inverse", &Symmetric::inverse)
       .def("transpose", &Symmetric::transpose)
+      .def("norm", &Symmetric::norm)
       ;
 
   py::class_<Skew, Tensor, std::shared_ptr<Skew>>(m, "Skew")

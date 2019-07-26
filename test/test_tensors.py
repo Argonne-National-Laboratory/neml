@@ -110,6 +110,9 @@ class TestRankTwo(unittest.TestCase):
 
     self.s = 2.1
 
+  def test_norm(self):
+    self.assertTrue(np.isclose(self.TA.norm(), np.sqrt(np.sum(self.A*self.A))))
+
   def test_equality(self):
     self.assertEqual(self.TA, self.TA)
 
@@ -157,6 +160,9 @@ class TestSymmetric(unittest.TestCase):
     self.va = tensors.Vector(self.a)
 
     self.s = 2.1
+
+  def test_norm(self):
+    self.assertTrue(np.isclose(self.TA.norm(), np.sqrt(np.sum(self.A*self.A))))
 
   def test_equality(self):
     self.assertEqual(self.TA, self.TA)

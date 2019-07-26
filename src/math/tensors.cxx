@@ -452,6 +452,11 @@ RankTwo RankTwo::transpose() const
   return res;
 }
 
+double RankTwo::norm() const
+{
+  return sqrt(this->contract(*this));
+}
+
 double RankTwo::contract(const RankTwo & other) const
 {
   double sum = 0.0;
@@ -712,6 +717,12 @@ double Symmetric::trace() const
 Symmetric Symmetric::skew() const
 {
   return Symmetric(*this) - trace()/3 * Symmetric::id();
+}
+
+double Symmetric::norm() const
+{
+  // TODO: more efficient
+  return this->to_full().norm();
 }
 
 Vector Symmetric::dot(const Vector & other) const

@@ -134,6 +134,8 @@ class RankTwo: public Tensor {
   RankTwo inverse() const;
   RankTwo transpose() const;
 
+  double norm() const;
+
   double contract(const RankTwo & other) const;
   double contract(const Symmetric & other) const;
   double contract(const Skew & other) const;
@@ -195,6 +197,7 @@ class Symmetric: public Tensor {
 
   double trace() const;
   Symmetric skew() const;
+  double norm() const;
 
   // Various multiplications
   Vector dot(const Vector & other) const;
