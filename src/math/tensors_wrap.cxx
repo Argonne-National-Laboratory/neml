@@ -275,7 +275,7 @@ PYBIND11_MODULE(tensors, m) {
       
       .def_static("id", &Symmetric::id)
       .def("trace", &Symmetric::trace)
-      .def("skew", &Symmetric::skew)
+      .def("dev", &Symmetric::dev)
 
       .def("dot", [](const Symmetric & me, const Vector & other) -> Vector
            {

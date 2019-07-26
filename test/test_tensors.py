@@ -197,8 +197,8 @@ class TestSymmetric(unittest.TestCase):
   def test_trace(self):
     self.assertTrue(np.isclose(self.TA.trace(), np.trace(self.A)))
 
-  def test_skew(self):
-    self.assertTrue(self.TA.skew(), tensors.Symmetric(
+  def test_dev(self):
+    self.assertTrue(self.TA.dev(), tensors.Symmetric(
       self.A - np.trace(self.A)/3.0 * np.eye(3)))
 
 class TestSkew(unittest.TestCase):

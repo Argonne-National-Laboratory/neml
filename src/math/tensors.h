@@ -196,7 +196,7 @@ class Symmetric: public Tensor {
   Symmetric transpose() const;
 
   double trace() const;
-  Symmetric skew() const;
+  Symmetric dev() const;
   double norm() const;
 
   // Various multiplications
