@@ -185,6 +185,16 @@ class TestSymmetric(unittest.TestCase):
   def test_transpose(self):
     self.assertEqual(tensors.Symmetric(self.A.T), self.TA.transpose())
 
+  def test_id(self):
+    self.assertEqual(tensors.Symmetric.id(), tensors.Symmetric(np.eye(3)))
+
+  def test_trace(self):
+    self.assertTrue(np.isclose(self.TA.trace(), np.trace(self.A)))
+
+  def test_skew(self):
+    self.assertTrue(self.TA.skew(), tensors.Symmetric(
+      self.A - np.trace(self.A)/3.0 * np.eye(3)))
+
 class TestSkew(unittest.TestCase):
   def setUp(self):
     self.A = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])

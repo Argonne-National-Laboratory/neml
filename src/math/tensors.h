@@ -187,9 +187,14 @@ class Symmetric: public Tensor {
 
   Symmetric & operator+=(const Symmetric & other);
   Symmetric & operator-=(const Symmetric & other);
-
+  
+  static Symmetric id() { return
+    Symmetric(std::vector<double>({1,1,1,0,0,0}));};
   Symmetric inverse() const;
   Symmetric transpose() const;
+
+  double trace() const;
+  Symmetric skew() const;
 
   // Various multiplications
   Vector dot(const Vector & other) const;

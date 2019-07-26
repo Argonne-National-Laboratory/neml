@@ -271,6 +271,11 @@ PYBIND11_MODULE(tensors, m) {
       .def(py::self - py::self)
 
       // End standard
+      
+      .def_static("id", &Symmetric::id)
+      .def("trace", &Symmetric::trace)
+      .def("skew", &Symmetric::skew)
+
       .def("dot", [](const Symmetric & me, const Vector & other) -> Vector
            {
             return me.dot(other);

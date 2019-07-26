@@ -704,6 +704,16 @@ Symmetric Symmetric::transpose() const
   return Symmetric(*this);
 }
 
+double Symmetric::trace() const
+{
+  return s_[0] + s_[1] + s_[2];
+}
+
+Symmetric Symmetric::skew() const
+{
+  return Symmetric(*this) - trace()/3 * Symmetric::id();
+}
+
 Vector Symmetric::dot(const Vector & other) const
 {
   // TODO: more efficient
