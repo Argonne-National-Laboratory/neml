@@ -49,7 +49,7 @@ if __name__ == "__main__":
   model = singlecrystal.SingleCrystalModel(kmodel, lattice)
 
   pmodel = polycrystal.TaylorModel(model, orientations)
-  
+ 
   e = [0.0]
   s = [0.0]
   for i in range(steps):
@@ -59,9 +59,17 @@ if __name__ == "__main__":
     s.append(pmodel.s[2])
   
   polefigures.pole_figure_discrete(orientations,[1,1,1],lattice)
+  plt.title("Initial, <111>")
   plt.show()
 
   polefigures.pole_figure_discrete(pmodel.orientations,[1,1,1],lattice)
+  plt.title("Final, <111>")
   plt.show()
 
+  polefigures.pole_figure_discrete(orientations,[1,0,0],lattice)
+  plt.title("Initial, <100>")
+  plt.show()
 
+  polefigures.pole_figure_discrete(pmodel.orientations,[1,0,0],lattice)
+  plt.title("Final, <100>")
+  plt.show()

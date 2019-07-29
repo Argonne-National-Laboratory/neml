@@ -56,7 +56,7 @@ def pole_figure_discrete(orientations, pole, lattice,
 
   # Apply sample symmetric
   eq_poles = [op.apply(p) for p in eq_poles for op in sample_symmetry]
-
+  
   # Get the points on the sphere
   pts = [srot.apply(o.inverse().apply(pp)) for pp in eq_poles for o in orientations]
 
@@ -84,4 +84,8 @@ def pole_figure_discrete(orientations, pole, lattice,
   plt.ylim([0,1])
   ax.grid(False)
   ax.get_yaxis().set_visible(False)
+  if len(axis_labels) == 2:
+    plt.xticks([0,np.pi/2], axis_labels)
+  else:
+    ax.get_xaxis().set_visible(False)
   ax.xaxis.set_minor_locator(plt.NullLocator())
