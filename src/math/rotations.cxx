@@ -973,6 +973,13 @@ SymSym Orientation::apply(const SymSym & a) const
   return res;
 }
 
+double Orientation::distance(const Orientation & other) const
+{ 
+  double d = fabs(this->dot(other));
+  if (d>1.0) d = 1.0;
+  return acos(d);
+}
+
 std::vector<Orientation> random_orientations(int n)
 {
   double u[3];
@@ -1020,6 +1027,11 @@ Skew wlog(const Orientation & q)
   double f = 2.0 * acos(s / q.norm()) / norm2_vec(v, 3);
 
   return f * res;
+}
+
+double distance(const Orientation & q1, const Orientation & q2)
+{
+  return q1.distance(q2);
 }
 
 } // namespace cpfmwk

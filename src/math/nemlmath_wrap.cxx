@@ -551,16 +551,14 @@ PYBIND11_MODULE(nemlmath, m) {
           return condition(arr2ptr<double>(A), A.request().shape[1]);
         }, "Calculate the approximate condition number of A.");
 
-   m.def("polyval",
-        [](py::array_t<double, py::array::c_style> poly, double x) -> double
-        {
-          if (poly.request().ndim != 1) {
-            throw LinalgError("poly is not a vector!");
-          }
+   m.def("polyval", &polyval,
+         "Evaluate a polynomial at x, highest order term first.");
 
-          return polyval(arr2ptr<double>(poly), poly.request().shape[0], x);
+   m.def("poly_from_roots", &poly_from_roots, 
+         "Setup a polynomial from roots");
 
-        }, "Evaluate a polynomial at x, highest order term first.");
+   m.def("differentiate_poly", &differentiate_poly, 
+         "Differentiate a polynomial", py::arg("poly"), py::arg("n") = 1);
 
    m.def("dgttrf",
          [](py::array_t<double, py::array::c_style> DL, py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> DU) ->
@@ -675,6 +673,8 @@ PYBIND11_MODULE(nemlmath, m) {
 
           return C; 
         }, "A * B * A.T");
+  m.def("fact", &fact);
+  m.def("factorial", &factorial);
 }
 
 } // namespace neml

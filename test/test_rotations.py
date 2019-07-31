@@ -303,3 +303,11 @@ class TestFromVectors(unittest.TestCase):
 
     yp = self.q.apply(y0)
     self.assertEqual(self.y, yp)
+
+class TestDistance(unittest.TestCase):
+  def setUp(self):
+    self.q = rotations.Orientation(30.0, 60.0, 80.0, angle_type = "degrees")
+
+  def test_same_zero(self):
+    self.assertTrue(np.isclose(self.q.distance(self.q), 0))
+    self.assertTrue(np.isclose(rotations.distance(self.q,self.q), 0))

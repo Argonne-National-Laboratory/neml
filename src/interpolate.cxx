@@ -27,11 +27,7 @@ bool Interpolate::valid() const
 PolynomialInterpolate::PolynomialInterpolate(const std::vector<double> coefs) :
     Interpolate(), coefs_(coefs)
 {
-  int n = coefs_.size();
-  deriv_.resize(n - 1);
-  for (int i = 0; i < n - 1; i++) {
-    deriv_[i] = coefs_[i] * ((double) (n - 1 - i));
-  }
+  deriv_ = differentiate_poly(coefs_);
 }
 
 std::string PolynomialInterpolate::type()
@@ -57,12 +53,12 @@ std::unique_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & par
 
 double PolynomialInterpolate::value(double x) const
 {
-  return polyval(&coefs_[0], coefs_.size(), x);
+  return polyval(coefs_, x);
 }
 
 double PolynomialInterpolate::derivative(double x) const
 {
-  return polyval(&deriv_[0], deriv_.size(), x);
+  return polyval(deriv_, x);
 }
 
 

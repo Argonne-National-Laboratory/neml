@@ -138,7 +138,14 @@ int solve_mat(const double * const A, int n, double * const x);
 double condition(const double * const A, int n);
 
 /// Evaluate a polynomial with Horner's method, highest order term first
-double polyval(const double * const poly, const int n, double x);
+double polyval(const std::vector<double> & poly, double x);
+
+/// Construct a polynomial with the given roots
+std::vector<double> poly_from_roots(const std::vector<double> & roots);
+
+/// Get the derivative of a polynomial
+std::vector<double> differentiate_poly(const std::vector<double> & poly,
+                                       int n = 1);
 
 /// The greatest common divisor between two numbers
 int gcd(int a, int b);
@@ -168,6 +175,13 @@ bool isclose(double a, double b);
 /// Perform A * B * A.T
 int rotate_matrix(int m, int n, const double * const A,
                   const double * const B, double * C);
+
+/// Factorial
+int fact(int n);
+
+/// Factorial as a double + cacheing
+double factorial(int n);
+
 }
 
 #endif // NEMLMATH_H

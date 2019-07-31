@@ -7,7 +7,9 @@ target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/slipharden.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/kinematics.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/singlecrystal.cxx
-      ${CMAKE_CURRENT_SOURCE_DIR}/batch.cxx)
+      ${CMAKE_CURRENT_SOURCE_DIR}/batch.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/harmonics.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/sphere.cxx)
 
 if (WRAP_PYTHON)
       set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/cp)
@@ -18,4 +20,5 @@ if (WRAP_PYTHON)
       pybind(kinematics)
       pybind(singlecrystal)
       pybind(batch)
+      pybind(harmonics)
 endif()

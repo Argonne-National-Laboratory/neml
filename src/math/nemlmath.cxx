@@ -1019,12 +1019,60 @@ double condition(const double * const A, int n)
   return 1.0 / rcond;
 }
 
-double polyval(const double * const poly, const int n, double x)
+double polyval(const std::vector<double> & poly, double x)
 {
+  int n = poly.size();
   double res = poly[0];
   for (int i=1; i < n; i++) {
     res = res * x + poly[i];
   }
+  return res;
+}
+
+std::vector<double> poly_from_roots(const std::vector<double> & roots)
+{
+  std::vector<double> poly(1);
+  poly[0] = 1.0;
+
+  for (auto r = roots.begin(); r != roots.end(); ++r) {
+    auto pprime = std::vector<double>(poly);
+    poly.resize(poly.size()+1);
+    for (int i=poly.size()-1; i > 0; i--) {
+      poly[i] = poly[i-1];
+    }
+    poly[0] = 0.0;
+
+    for (size_t i=0; i < pprime.size(); i++) {
+      pprime[i] *= *r;
+    }
+
+    for (size_t i=0; i<(poly.size()-1); i++) {
+      poly[i] -= pprime[i];
+    }
+  }
+
+  std::reverse(poly.begin(), poly.end());
+
+  return poly;
+}
+
+std::vector<double> differentiate_poly(const std::vector<double> & poly, int n)
+{
+  auto res = std::vector<double>(poly);
+  int cs = poly.size();
+  for (int i = 0; i < n; i++) {
+    if ((cs - 1) == 0) {
+      return {0.0};
+    }
+    
+    cs -= 1;
+    for (int i=0; i<cs; i++) {
+      res[i] = res[i] * (double) (cs - i);
+    }
+  }
+
+  res.resize(cs);
+
   return res;
 }
 
@@ -1128,6 +1176,16 @@ int rotate_matrix(int m, int n, const double * const A,
   delete [] temp;
 
   return 0;
+}
+
+int fact(int n)
+{
+  return (n == 1 || n == 0) ? 1 : fact(n - 1) * n;
+}
+
+double factorial(int n)
+{
+  return (double) fact(n);
 }
 
 } // namespace neml

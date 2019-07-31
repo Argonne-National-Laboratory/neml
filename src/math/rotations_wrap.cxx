@@ -213,11 +213,14 @@ PYBIND11_MODULE(rotations, m) {
       
       .def(py::self /= py::self)
       .def(py::self / py::self)
+
+      .def("distance", &Orientation::distance)
       ;
   
   m.def("random_orientations", &random_orientations);
   m.def("wexp", &wexp);
   m.def("wlog", &wlog);
+  m.def("distance", &distance);
 } // PYBIND11_MODULE(cpfmwk, m)
 
 } // namespace cpfmwk

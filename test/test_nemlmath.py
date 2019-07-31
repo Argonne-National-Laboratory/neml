@@ -336,6 +336,25 @@ class TestPoly(unittest.TestCase):
     mv  = polyval(self.poly, self.x)
     self.assertTrue(np.isclose(npv, mv))
 
+  def test_derivs(self):
+    for n in range(5):
+      p1 = np.polyder(self.poly, m = n)
+      p2 = differentiate_poly(self.poly, n)
+      self.assertTrue(np.allclose(p1,p2))
+
+  def test_problem_case(self):
+    p = np.array([-1.,  0.,  1.])
+    for n in range(4):
+      p1 = np.polyder(p, m = n)
+      p2 = differentiate_poly(p, n)
+      self.assertTrue(np.allclose(p1,p2))
+
+  def test_poly_from_roots(self):
+    p1 = np.polynomial.polynomial.polyfromroots(self.poly)[::-1]
+    p2 = poly_from_roots(self.poly)
+
+    self.assertTrue(np.allclose(p1,p2))
+
 class TestMisc(unittest.TestCase):
   def setUp(self):
     self.a1_deg = 127.0
@@ -370,4 +389,7 @@ class TestMisc(unittest.TestCase):
     self.assertTrue(nemlmath.isclose(1.0e10, 1.00001e10))
     self.assertFalse(nemlmath.isclose(1.0e-7, 1.0e-8))
 
-
+class TestVariousFactorial(unittest.TestCase):
+  def test_factorial(self):
+    for i in range(10):
+      self.assertTrue(np.isclose(np.math.factorial(i), factorial(i)))
