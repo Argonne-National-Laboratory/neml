@@ -22,6 +22,22 @@ class ODF(object):
   def pdf2mrd(self):
     return 8 * np.pi**2.0
 
+  def pole_density(self, pt, pole, n = 10):
+    """
+      Integrate the pole density for a given point
+
+      Parameters:
+        pt          point on the upper hemisphere, as a vector
+        pole        pole *as a cartesian vector*
+
+      Optional:
+        n           number of integration points to use
+    """
+    ts = np.linspace(0,2*np.pi,n,endpoint = False)
+
+    return sum(self.value(rotations.rotate_to_family(pole, pt, t)) for 
+        t in ts) / (2.0 * np.pi) / len(ts)
+
 class HarmonicsODF(ODF):
   """
     Orientation distribution function based on the generalized spherical
@@ -41,10 +57,16 @@ class HarmonicsODF(ODF):
     return len(self.p)
 
   def value(self, pt):
+    """
+      Evaluate the ODF at a pt
+
+      Parameters:
+        pt      points in SO(3)
+    """
     return np.real(sum(harmonics.harmonic_SO3(n,i,j,pt) * self.p[it] for 
         it,(n,i,j) in enumerate(hiter(self.order))))
 
-  def project(self, pts, wts = None, method = 'nnls'):
+  def project(self, pts, wts = None, method = 'series'):
     """
       Project discrete points onto the harmonics
 
@@ -89,6 +111,10 @@ class HarmonicsODF(ODF):
   def project_ls(self, pts, wts):
     """
       Project using least squares.
+
+      Parameters:
+        pts     discrete points, as quaternions
+        wts     weights
     """
     A = np.array([[harmonics.harmonic_SO3(n,i,j,pt) for n,i,j in 
       hiter(self.order)] for pt in pts])
@@ -102,6 +128,10 @@ class HarmonicsODF(ODF):
   def project_nnls(self, pts, wts):
     """
       Project using nonnegative least squares
+
+      Parameters:
+        pts     discrete points, as quaternions
+        wts     weights
     """
     Ap = np.array([[harmonics.harmonic_SO3(n,i,j,pt) for n,i,j in 
       hiter(self.order)] for pt in pts])
@@ -115,13 +145,5 @@ class HarmonicsODF(ODF):
     v = sum(self.value(pt) * wt for wt,pt in zip(qwts,qpts))
     self.p /= v
 
-  def pole_figure_harmonics(self, poles):
-    """
-      Return the coefficients for the spherical harmonics for the given
-      poles up to the degree of the 
+    print(self.p)
 
-      Parameters
-        pole        poles in a nx3 array as real vectors in the right 
-                    coordinates
-    """
-    pass

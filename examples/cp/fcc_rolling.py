@@ -5,7 +5,7 @@ sys.path.append('../..')
 
 import numpy as np
 
-from neml.cp import polycrystal, crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal, polefigures
+from neml.cp import polycrystal, crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal, polefigures, odf
 from neml.math import rotations, tensors
 from neml import elasticity
 
@@ -57,6 +57,14 @@ if __name__ == "__main__":
     pmodel.deformation_step(L, dt, nthreads = nthreads)
     e.append(e[-1] + erate * dt)
     s.append(pmodel.s[2])
+  
+  """
+  hdf = odf.HarmonicsODF(5)
+  hdf.project(pmodel.orientations, method = 'series')
+  polefigures.pole_figure_odf(hdf, [1,1,1], lattice)
+  plt.title("Final, <111>")
+  plt.show()
+  """
   
   polefigures.pole_figure_discrete(orientations,[1,1,1],lattice)
   plt.title("Initial, <111>")
