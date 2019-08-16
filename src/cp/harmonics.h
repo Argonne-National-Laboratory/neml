@@ -8,6 +8,12 @@
 
 namespace neml {
 
+/// Number of harmonics of a given order
+size_t nharm_order(size_t n);
+
+/// Total number of harmonics up to a given order
+size_t nharm_total(size_t n);
+
 /// Generalized spherical harmonic n <= i <= n, -n <= j <= n
 std::complex<double> harmonic_SO3(int n, int i, int j, const Orientation & pt);
 
@@ -24,6 +30,9 @@ void quadrature_S2(size_t n, std::vector<double> & theta,
 /// Quadrature rule for SO(3)
 void quadrature_SO3(size_t n, std::vector<Orientation> & pts, 
                     std::vector<double> & wts);
+
+/// Surface measure for SO(3)
+double ds(const Orientation & a);
 
 } // namespace neml
 

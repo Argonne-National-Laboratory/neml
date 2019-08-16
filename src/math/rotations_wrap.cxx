@@ -221,6 +221,8 @@ PYBIND11_MODULE(rotations, m) {
   m.def("wexp", &wexp);
   m.def("wlog", &wlog);
   m.def("distance", &distance);
+  m.def("rotate_to", &rotate_to);
+  m.def("rotate_to_family", &rotate_to_family);
 } // PYBIND11_MODULE(cpfmwk, m)
 
 } // namespace cpfmwk

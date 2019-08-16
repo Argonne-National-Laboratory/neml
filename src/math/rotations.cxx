@@ -1034,4 +1034,29 @@ double distance(const Orientation & q1, const Orientation & q2)
   return q1.distance(q2);
 }
 
+Orientation rotate_to(const Vector & a, const Vector & b)
+{
+  // Check that they are normalized
+  Vector aa = a / a.norm();
+  Vector bb = b / b.norm();
+
+  // Get the axis
+  Vector axis = aa.cross(bb);
+
+  // Get the angle
+  double angle = acos(aa.dot(bb));
+
+  // Return the rotation
+  return Orientation::createAxisAngle(axis.s(), angle);
+}
+
+Orientation rotate_to_family(const Vector & a, const Vector & b, double ang)
+{
+  Orientation base = rotate_to(a,b);
+
+  Orientation null = Orientation::createAxisAngle(b.data(), ang);
+
+  return null * base;
+}
+
 } // namespace cpfmwk

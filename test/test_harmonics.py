@@ -23,6 +23,26 @@ class TestHarmonics(unittest.TestCase):
             P2 = harmonics.P_SO3(n, i, j, x)
             self.assertAlmostEqual(P2, P1)
 
+class TestMetrics(unittest.TestCase):
+  def setUp(self):
+    self.A = rotations.Orientation(30.0, 60.0, 80.0, 
+        angle_type = "degrees", convention = "bunge")
+
+  def test_distance(self):
+    self.assertTrue(np.isclose(self.A.distance(self.A),0.0))
+
+  def test_ds(self):
+    alpha = np.pi/3*2.5
+    beta = np.pi/5*1.1
+    gamma = np.pi*0.64
+
+    q = rotations.Orientation(alpha, beta, gamma, convention = "hopf")
+
+    self.assertAlmostEqual(
+        np.sin(beta), np.sin(q.to_hopf()[1]))
+    self.assertAlmostEqual(
+        np.sin(beta), harmonics.ds(q))
+
 def pder(l,m,n):
   """
     The derivative in the Legendre polynomials

@@ -6,6 +6,22 @@ const std::complex<double> I{0.0,1.0};
 
 namespace neml {
 
+size_t nharm_order(size_t n)
+{
+  return (2*n+1)*(2*n+1);
+}
+
+size_t nharm_total(size_t n)
+{
+  size_t total = 0;
+
+  for (size_t i=0; i<=n; i++) {
+    total += nharm_order(i);
+  }
+
+  return total;
+}
+
 std::complex<double> harmonic_SO3(int n, int i, int j, const Orientation & pt)
 {
   double phi1, Phi, phi2;
@@ -109,6 +125,16 @@ void quadrature_SO3(size_t n, std::vector<Orientation> & pts,
   size_t npts = pts.size();
   wts.resize(npts);
   std::fill(wts.begin(), wts.end(), (8.0 * M_PI * M_PI) / ((double) npts));
+}
+
+double ds(const Orientation & a)
+{
+  double x1 = a.quat()[0];
+  double x2 = a.quat()[1];
+  double x3 = a.quat()[2];
+  double x4 = a.quat()[3];
+
+  return sqrt(x1*x1+x2*x2)*sqrt(x3*x3+x4*x4) * 2.0; // They allege a / 8.0 here which strikes me as odd...
 }
 
 } // namespace neml

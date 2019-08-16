@@ -11,6 +11,8 @@ namespace neml {
 PYBIND11_MODULE(harmonics, m) {
   m.doc() = "Functions for computing spherical harmonics.";
   
+  m.def("nharm_order", &nharm_order);
+  m.def("nharm_total", &nharm_total);
   m.def("harmonic_SO3", &harmonic_SO3);
   m.def("P_SO3", &P_SO3);
   m.def("quadrature_S1", 
@@ -37,6 +39,7 @@ PYBIND11_MODULE(harmonics, m) {
           quadrature_SO3(n, pts, wts);
           return std::make_tuple(pts, wts);
         }, "Quadrature over SO(3)");
+  m.def("ds", &ds);
 } // PYBIND11_MODULE
 
 } // namespace neml

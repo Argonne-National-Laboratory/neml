@@ -311,3 +311,15 @@ class TestDistance(unittest.TestCase):
   def test_same_zero(self):
     self.assertTrue(np.isclose(self.q.distance(self.q), 0))
     self.assertTrue(np.isclose(rotations.distance(self.q,self.q), 0))
+
+class TestOrientVectors(unittest.TestCase):
+  def setUp(self):
+    self.v1 = tensors.Vector([1.0,2,3])
+    self.v1.normalize()
+    self.v2 = tensors.Vector([-3.0,6,7])
+    self.v2.normalize()
+
+  def test_single_orient(self):
+    q = rotations.rotate_to(self.v1,self.v2)
+    v3 = q.apply(self.v1)
+    self.assertEqual(self.v2,v3)
