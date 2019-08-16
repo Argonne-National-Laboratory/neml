@@ -1041,7 +1041,7 @@ Orientation rotate_to(const Vector & a, const Vector & b)
   Vector bb = b / b.norm();
 
   // Get the axis
-  Vector axis = aa.cross(bb);
+  Vector axis = aa.cross(bb).normalize();
 
   // Get the angle
   double angle = acos(aa.dot(bb));

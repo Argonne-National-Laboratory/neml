@@ -314,12 +314,19 @@ class TestDistance(unittest.TestCase):
 
 class TestOrientVectors(unittest.TestCase):
   def setUp(self):
-    self.v1 = tensors.Vector([1.0,2,3])
+    self.v1 = tensors.Vector([1.0,4,2])
     self.v1.normalize()
-    self.v2 = tensors.Vector([-3.0,6,7])
+    self.v2 = tensors.Vector([2,1,-6])
     self.v2.normalize()
 
   def test_single_orient(self):
-    q = rotations.rotate_to(self.v1,self.v2)
+    q = rotations.rotate_to(self.v1, self.v2)
     v3 = q.apply(self.v1)
-    self.assertEqual(self.v2,v3)
+    self.assertEqual(self.v2, v3)
+
+  def test_family_orient(self):
+    for a in np.linspace(0,2*np.pi):
+      q = rotations.rotate_to_family(self.v1, self.v2, a)
+      v3 = q.apply(self.v1)
+      self.assertEqual(self.v2,v3)
+
