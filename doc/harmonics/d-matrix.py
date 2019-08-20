@@ -38,10 +38,81 @@ def P(t, l, m, n):
 def P_alt(t, l, m, n):
   return Wigner_D_element(0,t,0,l,m,n) / ((-1.0)**(l-m) * (1.0j)**(n-m))
 
+def W_all(t, lmax, eps = np.finfo(float).eps / 2):
+  """
+    Compute all the Wigner d matrices up to order l 
+  """
+  pass
+
+def W_comp_all(t, lmax):
+  """
+    Actual calculation function for 0 < t < pi/2
+  """
+  # Get the g values
+  g = [np.zeros((l+1,)) for l in range(lmax+1)]
+  g[0][0] = 1.0
+  for l in range(1,lmax+1):
+    g[l][0] = np.sqrt(float(2*l-1)/(2*l)) * g[l-1][0]
+    for m in range(1,l+1):
+      g[l][m] = np.sqrt(float(l-m+1)/(l+m)) * g[l][m-1]
+  
+  zos = lambda i, l: i + l
+  vals = [np.zeros((2*i+1,2*i+1), dtype = complex) for i in range(lmax+1)]
+  
+  # Precalc some cosines and sines
+  c = np.cos(t)
+  s = np.sin(t)
+
+  # n = l with (28)
+  for l in range(0,lmax+1):
+    for m in range(0,l+1):
+      vals[l][zos(m,l),zos(l,l)] = (-1)**(l+m) * g[l][m] * (1.0+c)**m * s**(l-m)
+
+  # m = l with (26)
+  for l in range(0,lmax+1):
+    for n in range(l,-l,-1):
+      vals[l][zos(l,l),zos(n-1,l)] = (l+n)/np.sqrt(float(l*(l+1)-n*(n-1))) * s / (1+c) * vals[l][zos(l,l),zos(n,l)]
+  
+  # Remainder of positive m (25)
+  for l in range(0,lmax+1):
+    for m in range(l-1, -1, -1):
+      for n in range(l, -l, -1):
+        vals[l][zos(m,l),zos(n-1,l)] = np.sqrt(float(l*(l+1)-m*(m+1))/(l*(l+1)-n*(n-1))) * vals[l][zos(m+1,l),zos(n,l)
+            ] + float(m+n)/np.sqrt(float(l*(l+1)-n*(n-1))) * s / (1+c) * vals[l][zos(m,l),zos(n,l)]
+
+  # Fill in the negative m (27)
+  for l in range(0,lmax+1):
+    for m in range(-l,0):
+      for n in range(-l,l+1):
+        vals[l][zos(m,l),zos(n,l)] = (-1)**(m+n) * vals[l][zos(-m,l),zos(-n,l)]
+
+  # Adjust?
+  """
+  for l in range(0,lmax+1):
+    for m in range(-l,l+1):
+      for n in range(-l,l+1):
+        vals[l][zos(m,l),zos(l,l)] /= ((-1)**(l-m) * (1j)**(n-m))
+  """
+
+  return vals
+
 if __name__ == "__main__":
   mv = 3
   t = np.pi/3
 
+  d1 = W_comp_all(t, mv)
+  d2 = [np.zeros((2*i+1,2*i+1), dtype = complex) for i in range(mv+1)] 
+
+  for l in range(mv+1):
+    for m in range(-l,l+1):
+      for n in range(-l,l+1):
+        d2[l][m,n] = P(t,l,m,n)
+
+  for l in range(mv+1):
+    print(d1[l])
+    print(d2[l])
+
+  """
   for l in range(mv+1):
     for m in range(-l,l+1):
       for n in range(-l,l+1):
@@ -49,3 +120,4 @@ if __name__ == "__main__":
         print(P(t, l, m, n), P_alt(t,l,m,n))
         if np.abs(P(t,l,m,n) - P_alt(t,l,m,n)) > 1.0e-15:
           raise Exception()
+  """
