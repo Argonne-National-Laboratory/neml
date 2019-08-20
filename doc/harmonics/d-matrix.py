@@ -36,7 +36,7 @@ def P(t, l, m, n):
   return P_x(np.cos(t), l, m, n)
 
 def P_alt(t, l, m, n):
-  return Wigner_D_element(0,t,0,l,m,n) * (1j)**m * (1j)**n
+  return Wigner_D_element(0,t,0,l,m,n) / ((-1.0)**(l-m) * (1.0j)**(n-m))
 
 if __name__ == "__main__":
   mv = 3
@@ -47,3 +47,5 @@ if __name__ == "__main__":
       for n in range(-l,l+1):
         print(l,m,n)
         print(P(t, l, m, n), P_alt(t,l,m,n))
+        if np.abs(P(t,l,m,n) - P_alt(t,l,m,n)) > 1.0e-15:
+          raise Exception()
