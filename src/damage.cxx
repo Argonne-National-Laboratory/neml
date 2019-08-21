@@ -459,7 +459,7 @@ int ClassicalCreepDamageModel_sd::damage(
 
   double se = this->se(s_np1);
   double dt = t_np1 - t_n;
-  
+
   *dd = d_n + pow(se / A, xi) * pow(1.0 - d_np1, -phi) * dt;
 
   return 0;
@@ -534,6 +534,196 @@ double ClassicalCreepDamageModel_sd::se(const double * const s) const
   return sqrt((pow(s[0]-s[1], 2.0) + pow(s[1] - s[2], 2.0) + 
                pow(s[2] - s[0], 2.0) + 3.0 * (pow(s[3], 2.0) + pow(s[4], 2.0) + 
                                               pow(s[5], 2.0))) / 2.0);
+}
+
+VonMisesEffectiveStress::VonMisesEffectiveStress()
+{
+
+}
+
+std::string VonMisesEffectiveStress::type()
+{
+  return "VonMisesEffectiveStress";
+}
+
+ParameterSet VonMisesEffectiveStress::parameters()
+{
+  ParameterSet pset(VonMisesEffectiveStress::type());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> VonMisesEffectiveStress::initialize(ParameterSet & params)
+{
+  return neml::make_unique<VonMisesEffectiveStress>();
+}
+
+int VonMisesEffectiveStress::effective(const double * const s, double & eff) const
+{
+  eff = sqrt((pow(s[0]-s[1], 2.0) + pow(s[1] - s[2], 2.0) 
+              + pow(s[2] - s[0], 2.0) 
+              + 3.0 * (pow(s[3], 2.0) + pow(s[4], 2.0) + pow(s[5], 2.0))) / 2.0);
+
+  return 0;
+}
+
+int VonMisesEffectiveStress::deffective(const double * const s, double * const deff) const
+{
+  std::copy(s,s+6,deff);
+  double mean = (s[0] + s[1] + s[2]) / 3.0;
+  for (int i=0; i<3; i++) deff[i] -= mean;
+  double se;
+  effective(s, se);
+  
+  if (se == 0) return 0;
+
+  for (int i=0; i<6; i++) deff[i] *= 3.0/2.0 / se;
+
+  return 0;
+}
+
+ModularCreepDamageModel_sd::ModularCreepDamageModel_sd(
+    std::shared_ptr<LinearElasticModel> elastic,
+    std::shared_ptr<Interpolate> A,
+    std::shared_ptr<Interpolate> xi,
+    std::shared_ptr<Interpolate> phi,
+    std::shared_ptr<EffectiveStress> estress,
+    std::shared_ptr<NEMLModel_sd> base,
+    std::shared_ptr<Interpolate> alpha,
+    double tol, int miter,
+    bool verbose, bool truesdell) :
+      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose, truesdell),
+      A_(A), xi_(xi), phi_(phi), estress_(estress)
+{
+
+
+}
+
+std::string ModularCreepDamageModel_sd::type()
+{
+  return "ModularCreepDamageModel_sd";
+}
+
+ParameterSet ModularCreepDamageModel_sd::parameters()
+{
+  ParameterSet pset(ModularCreepDamageModel_sd::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("xi");
+  pset.add_parameter<NEMLObject>("phi");
+  pset.add_parameter<NEMLObject>("estress");
+  pset.add_parameter<NEMLObject>("base");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<bool>("truesdell", true);
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ModularCreepDamageModel_sd::initialize(ParameterSet & params)
+{
+  return neml::make_unique<ModularCreepDamageModel_sd>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("xi"),
+      params.get_object_parameter<Interpolate>("phi"),
+      params.get_object_parameter<EffectiveStress>("estress"),
+      params.get_object_parameter<NEMLModel_sd>("base"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("truesdell")
+      ); 
+}
+
+int ModularCreepDamageModel_sd::damage(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double xi = xi_->value(T_np1);
+  double A = A_->value(T_np1);
+  double phi = phi_->value(T_np1);
+
+  double se;
+  estress_->effective(s_np1, se);
+  double dt = t_np1 - t_n;
+
+  *dd = d_n + pow(se / A, xi) * pow(1.0 - d_np1, xi-phi) * dt;
+
+  return 0;
+}
+
+int ModularCreepDamageModel_sd::ddamage_dd(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double xi = xi_->value(T_np1);
+  double A = A_->value(T_np1);
+  double phi = phi_->value(T_np1);
+
+  double se;
+  estress_->effective(s_np1, se);
+  double dt = t_np1 - t_n;
+
+  *dd = pow(se / A, xi) * (phi-xi) * pow(1.0 - d_np1, xi-phi - 1.0) * dt;
+
+  return 0;
+}
+
+int ModularCreepDamageModel_sd::ddamage_de(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  std::fill(dd, dd+6, 0.0);
+
+  return 0;
+}
+
+int ModularCreepDamageModel_sd::ddamage_ds(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double xi = xi_->value(T_np1);
+  double A = A_->value(T_np1);
+  double phi = phi_->value(T_np1);
+
+  double se;
+  estress_->effective(s_np1, se);
+  double dt = t_np1 - t_n;
+
+  if (se == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
+
+  double scalar = pow(se / A, xi - 1.0) * xi / A * pow(1.0 - d_np1, xi-phi) * dt;
+  
+  estress_->deffective(s_np1, dd);
+  for (int i=0; i<6; i++) dd[i] *= scalar;
+  
+  return 0;
 }
 
 NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(

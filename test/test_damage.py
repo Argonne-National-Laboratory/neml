@@ -232,6 +232,93 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
     self.ttarget = 10.0
 
+class CommonEffectiveStress(object):
+  def test_derivative(self):
+    nd = differentiate(self.es.effective, self.stress)
+    d = self.es.deffective(self.stress)
+    self.assertTrue(np.allclose(nd, d))
+
+class TestVonMisesEffectiveStress(unittest.TestCase, CommonEffectiveStress):
+  def setUp(self):
+    self.es = damage.VonMisesEffectiveStress()
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+
+  def test_definition(self):
+    S = usym(self.stress)
+    D = S - np.trace(S) * np.eye(3) / 3.0
+    se = np.sqrt(3.0/2 * np.sum(D*D))
+    self.assertTrue(np.isclose(se, self.es.effective(self.stress)))
+
+class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
+  def complete(self):
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+    self.H = 1000.0
+
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    kin = hardening.LinearKinematicHardeningRule(self.H)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+        flow)
+
+    self.xi = 0.478
+    self.phi = 1.914
+    self.A = 10000000.0
+
+    self.model = damage.ModularCreepDamageModel_sd(
+        self.elastic, 
+        self.A, self.xi, self.phi,
+        self.effective_model(),
+        self.bmodel)
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+    self.T = 100.0
+
+    self.s_np1 = self.stress
+    self.s_n = np.array([-25,150,250,-25,-100,25])
+
+    self.d_np1 = 0.5
+    self.d_n = 0.4
+
+    self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15])
+    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13])
+
+    self.T_np1 = self.T
+    self.T_n = 90.0
+
+    self.t_np1 = 1.0
+    self.t_n = 0.0
+
+    self.u_n = 0.0
+    self.p_n = 0.0
+  
+    # This is a rather boring baseline history state to probe, but I can't
+    # think of a better way to get a "generic" history from a generic model
+    self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
+    self.x_trial = np.array([50,-25,150,-150,190,100.0] + [0.41])
+
+    self.nsteps = 10
+    self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
+    self.ttarget = 10.0
+
+class TestModularVonMises(unittest.TestCase, BaseModularDamage):
+  def setUp(self):
+    self.complete()
+
+  def effective_model(self):
+    return damage.VonMisesEffectiveStress()
+
 class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel, 
     CommonScalarDamageModel, CommonDamagedModel):
   def setUp(self):
