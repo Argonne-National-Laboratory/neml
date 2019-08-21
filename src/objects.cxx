@@ -87,7 +87,7 @@ ParameterSet Factory::provide_parameters(std::string type)
 std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
 {
   if (not params.fully_assigned()) {
-    throw UndefinedParameters(params);
+    throw UndefinedParameters(params.type(), params.unassigned_parameters());
   }
   
   try {
@@ -101,7 +101,7 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
 std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
 {
   if (not params.fully_assigned()) {
-    throw UndefinedParameters(params);
+    throw UndefinedParameters(params.type(), params.unassigned_parameters());
   }
 
   try {
