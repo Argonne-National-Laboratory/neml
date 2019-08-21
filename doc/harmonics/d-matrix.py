@@ -56,7 +56,8 @@ def W_comp_all(t, lmax):
     for m in range(1,l+1):
       g[l][m] = np.sqrt(float(l-m+1)/(l+m)) * g[l][m-1]
   
-  zos = lambda i, l: i + l
+  zos1 = lambda i, l: i + l
+  zos2 = lambda i, l: i + l
   vals = [np.zeros((2*i+1,2*i+1), dtype = complex) for i in range(lmax+1)]
   
   # Precalc some cosines and sines
@@ -66,25 +67,25 @@ def W_comp_all(t, lmax):
   # n = l with (28)
   for l in range(0,lmax+1):
     for m in range(0,l+1):
-      vals[l][zos(m,l),zos(l,l)] = (-1)**(l+m) * g[l][m] * (1.0+c)**m * s**(l-m)
+      vals[l][zos1(m,l),zos2(l,l)] = (-1)**(l+m) * g[l][m] * (1.0+c)**m * s**(l-m)
 
   # m = l with (26)
   for l in range(0,lmax+1):
     for n in range(l,-l,-1):
-      vals[l][zos(l,l),zos(n-1,l)] = (l+n)/np.sqrt(float(l*(l+1)-n*(n-1))) * s / (1+c) * vals[l][zos(l,l),zos(n,l)]
+      vals[l][zos1(l,l),zos2(n-1,l)] = (l+n)/np.sqrt(float(l*(l+1)-n*(n-1))) * s / (1+c) * vals[l][zos1(l,l),zos2(n,l)]
   
   # Remainder of positive m (25)
   for l in range(0,lmax+1):
     for m in range(l-1, -1, -1):
       for n in range(l, -l, -1):
-        vals[l][zos(m,l),zos(n-1,l)] = np.sqrt(float(l*(l+1)-m*(m+1))/(l*(l+1)-n*(n-1))) * vals[l][zos(m+1,l),zos(n,l)
-            ] + float(m+n)/np.sqrt(float(l*(l+1)-n*(n-1))) * s / (1+c) * vals[l][zos(m,l),zos(n,l)]
+        vals[l][zos1(m,l),zos2(n-1,l)] = np.sqrt(float(l*(l+1)-m*(m+1))/(l*(l+1)-n*(n-1))) * vals[l][zos1(m+1,l),zos2(n,l)
+            ] + float(m+n)/np.sqrt(float(l*(l+1)-n*(n-1))) * s / (1+c) * vals[l][zos1(m,l),zos2(n,l)]
 
   # Fill in the negative m (27)
   for l in range(0,lmax+1):
     for m in range(-l,0):
       for n in range(-l,l+1):
-        vals[l][zos(m,l),zos(n,l)] = (-1)**(m+n) * vals[l][zos(-m,l),zos(-n,l)]
+        vals[l][zos1(m,l),zos2(n,l)] = (-1)**(m+n) * vals[l][zos1(-m,l),zos2(-n,l)]
 
   # Adjust?
   """
