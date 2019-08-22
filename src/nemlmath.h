@@ -20,6 +20,7 @@ extern "C" {
   void dgecon_(const char * norm, const int & n, double * A, const int & lda, const double & anrom, double & rcond, double * work, int * lwork, int & info);
   void dgttrf_(const int & N, double * DL, double * D, double * DU, double * DU2, int * IPIV, int & INFO);
   void dgttrs_(const char * TRANS, const int & N, const int & NRHS, double * DL, double * D, double * DU, double * DU2, int * IPIV, double * B, const int & LDB, int & info);
+  void dsyev_(const char * JOBZ, const char * UPLO, const int & N, double * A, const int & LDA, double * W, double * WORK, const int & LWORK, const int & INFO);
 }
 
 namespace neml {
@@ -115,6 +116,12 @@ double condition(const double * const A, int n);
 
 /// Evaluate a polynomial with Horner's method, highest order term first
 double polyval(const double * const poly, const int n, double x);
+
+/// Get the eigenvalues of a symmetric 3x3 matrix in Mandel notation
+int eigenvalues_sym(const double * const s, double * values);
+
+/// Get the eigenvectors of a symmetric 3x3 matrix (row major)
+int eigenvectors_sym(const double * const s, double * vectors);
 
 }
 

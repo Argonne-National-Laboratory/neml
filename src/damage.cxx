@@ -582,6 +582,61 @@ int VonMisesEffectiveStress::deffective(const double * const s, double * const d
   return 0;
 }
 
+MaxPrincipalEffectiveStress::MaxPrincipalEffectiveStress()
+{
+
+}
+
+std::string MaxPrincipalEffectiveStress::type()
+{
+  return "MaxPrincipalEffectiveStress";
+}
+
+ParameterSet MaxPrincipalEffectiveStress::parameters()
+{
+  ParameterSet pset(MaxPrincipalEffectiveStress::type());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> MaxPrincipalEffectiveStress::initialize(ParameterSet & params)
+{
+  return neml::make_unique<MaxPrincipalEffectiveStress>();
+}
+
+int MaxPrincipalEffectiveStress::effective(const double * const s, double & eff) const
+{
+  double vals[3];
+
+  int ier = eigenvalues_sym(s, vals);
+  eff = vals[2];
+
+  return ier;
+}
+
+int MaxPrincipalEffectiveStress::deffective(const double * const s, double * const deff) const
+{
+  double vectors[9];
+  int ier = eigenvectors_sym(s, vectors);
+  double * v = &(vectors[6]);
+
+  double full[9];
+  double nf = 0.0;
+  for (int i=0; i<3; i++) {
+    nf += v[i] * v[i];
+    for (int j=0; j<3; j++) {
+      full[CINDEX(i,j,3)] = v[i]*v[j];
+    }
+  }
+  for (int i=0; i<9; i++) {
+    full[i] /= nf;
+  }
+
+  sym(full, deff);
+
+  return ier;
+}
+
 ModularCreepDamageModel_sd::ModularCreepDamageModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<Interpolate> A,

@@ -303,3 +303,21 @@ class TestPoly(unittest.TestCase):
     npv = np.polyval(self.poly, self.x)
     mv  = polyval(self.poly, self.x)
     self.assertTrue(np.isclose(npv, mv))
+
+class TestEigenstuff(unittest.TestCase):
+  def setUp(self):
+    self.S = np.array([50.0,-25.0,100.0,30.0,-180.0,90.0])
+
+  def test_eigenvalues_sym(self):
+    vals = eigenvalues_sym(self.S)
+    tvs = la.eigvalsh(usym(self.S))
+    
+    self.assertTrue(np.allclose(np.array(vals), np.array(tvs)))
+
+  def test_eigenvectors_sym(self):
+    vecs = eigenvectors_sym(self.S)
+    tvals, tvecs = la.eigh(usym(self.S))
+    tvecs = tvecs.T
+ 
+    for nv, mv in zip(tvecs,vecs):
+      self.assertTrue(np.allclose(nv,mv) or np.allclose(nv,-mv))

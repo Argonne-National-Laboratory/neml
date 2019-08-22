@@ -290,6 +290,25 @@ class VonMisesEffectiveStress: public EffectiveStress
 
 static Register<VonMisesEffectiveStress> regVonMisesEffectiveStress;
 
+/// Maximum principal stress
+class MaxPrincipalEffectiveStress: public EffectiveStress
+{
+ public:
+  MaxPrincipalEffectiveStress();
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+};
+
+static Register<MaxPrincipalEffectiveStress> regMaxPrincipalEffectiveStress;
+
 /// Modular version of Hayhurst-Leckie-Rabotnov-Kachanov damage
 //    This model differs from the above in two ways
 //      1) You can change the effective stress measure
