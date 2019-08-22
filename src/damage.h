@@ -69,7 +69,8 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
                             double tol, int miter,
-                            bool verbose, bool truesdell);
+                            bool verbose, bool truesdell,
+                            bool ekill, double dkill, double sfact);
   
   /// Stress update using the scalar damage model
   virtual int update_sd(
@@ -141,6 +142,9 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
   double tol_;
   int miter_;
   bool verbose_;
+  bool ekill_;
+  double dkill_;
+  double sfact_;
 };
 
 /// Stack multiple scalar damage models together
@@ -350,7 +354,9 @@ class ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
                             double tol, int miter,
-                            bool verbose, bool truesdell);
+                            bool verbose, bool truesdell, 
+                            bool ekill, double dkill,
+                            double sfact);
   
   /// String type for the object system
   static std::string type();
