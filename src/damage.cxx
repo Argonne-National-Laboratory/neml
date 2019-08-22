@@ -611,13 +611,23 @@ int MaxPrincipalEffectiveStress::effective(const double * const s, double & eff)
   int ier = eigenvalues_sym(s, vals);
   eff = vals[2];
 
+  if (eff < 0.0) eff = 0.0;
+
   return ier;
 }
 
 int MaxPrincipalEffectiveStress::deffective(const double * const s, double * const deff) const
 {
   double vectors[9];
-  int ier = eigenvectors_sym(s, vectors);
+  double values[3];
+  int ier = eigenvalues_sym(s, values);
+
+  if (values[2] < 0.0) {
+    std::fill(deff, deff+6, 0.0);
+    return 0.0;
+  }
+
+  ier = eigenvectors_sym(s, vectors);
   double * v = &(vectors[6]);
 
   double full[9];
@@ -628,8 +638,11 @@ int MaxPrincipalEffectiveStress::deffective(const double * const s, double * con
       full[CINDEX(i,j,3)] = v[i]*v[j];
     }
   }
-  for (int i=0; i<9; i++) {
-    full[i] /= nf;
+
+  if (nf != 0) {
+    for (int i=0; i<9; i++) {
+      full[i] /= nf;
+    }
   }
 
   sym(full, deff);
@@ -773,7 +786,7 @@ int ModularCreepDamageModel_sd::damage(
   double se;
   estress_->effective(s_np1, se);
   double dt = t_np1 - t_n;
-
+  
   *dd = d_n + pow(se / A, xi) * pow(1.0 - d_np1, xi-phi) * dt;
 
   return 0;
