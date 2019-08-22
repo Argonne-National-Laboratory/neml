@@ -637,6 +637,67 @@ int MaxPrincipalEffectiveStress::deffective(const double * const s, double * con
   return ier;
 }
 
+
+MaxSeveralEffectiveStress::MaxSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures) :
+    measures_(measures)
+{
+
+}
+
+std::string MaxSeveralEffectiveStress::type()
+{
+  return "MaxSeveralEffectiveStress";
+}
+
+ParameterSet MaxSeveralEffectiveStress::parameters()
+{
+  ParameterSet pset(MaxSeveralEffectiveStress::type());
+
+  pset.add_parameter<std::vector<NEMLObject>>("measures");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> MaxSeveralEffectiveStress::initialize(ParameterSet & params)
+{
+  return neml::make_unique<MaxSeveralEffectiveStress>(
+      params.get_object_parameter_vector<EffectiveStress>("measures"));
+}
+
+int MaxSeveralEffectiveStress::effective(const double * const s, double & eff) const
+{
+  size_t ind;
+  select_(s, ind, eff);
+  return 0;
+}
+
+int MaxSeveralEffectiveStress::deffective(const double * const s, double * const deff) const
+{
+  size_t ind;
+  double eff;
+  select_(s, ind, eff);
+
+  measures_[ind]->deffective(s, deff);
+
+  return 0;
+}
+
+void MaxSeveralEffectiveStress::select_(const double * const s, size_t & ind, double & value) const
+{
+  value = -std::numeric_limits<double>::infinity();
+  ind = -1;
+
+  double vi;
+
+  for (size_t i = 0; i<measures_.size(); i++) {
+    measures_[i]->effective(s, vi);
+    if (vi > value) {
+      value = vi;
+      ind = i;
+    }
+  }
+}
+
 ModularCreepDamageModel_sd::ModularCreepDamageModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<Interpolate> A,

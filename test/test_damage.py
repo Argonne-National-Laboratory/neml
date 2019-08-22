@@ -262,6 +262,24 @@ class TestMaxPrincipalEffectiveStress(unittest.TestCase, CommonEffectiveStress):
     se = np.max(vals)
     self.assertTrue(np.isclose(se, self.es.effective(self.stress)))
 
+class TestMaxSeveralEffectiveStress(unittest.TestCase, CommonEffectiveStress):
+  def setUp(self):
+    self.es = damage.MaxSeveralEffectiveStress([
+      damage.VonMisesEffectiveStress(),
+      damage.MaxPrincipalEffectiveStress()])
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+
+  def test_definition(self):
+    S = usym(self.stress)
+    vals = la.eigvalsh(S)
+    se1 = np.max(vals)
+
+    D = S - np.trace(S) * np.eye(3) / 3.0
+    se2 = np.sqrt(3.0/2 * np.sum(D*D))
+
+    self.assertTrue(np.isclose(max(se1,se2), self.es.effective(self.stress)))
+
 class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
   def complete(self):
     self.E = 92000.0
@@ -337,6 +355,15 @@ class TestModularMaxPrincipal(unittest.TestCase, BaseModularDamage):
 
   def effective_model(self):
     return damage.MaxPrincipalEffectiveStress()
+
+class TestModularMaxSeveral(unittest.TestCase, BaseModularDamage):
+  def setUp(self):
+    self.complete()
+
+  def effective_model(self):
+    return damage.MaxSeveralEffectiveStress([
+      damage.VonMisesEffectiveStress(),
+      damage.MaxPrincipalEffectiveStress()])
 
 class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel, 
     CommonScalarDamageModel, CommonDamagedModel):

@@ -145,6 +145,13 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
+  py::class_<MaxSeveralEffectiveStress, EffectiveStress, std::shared_ptr<MaxSeveralEffectiveStress>>(m, "MaxSeveralEffectiveStress")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MaxSeveralEffectiveStress>(args, kwargs, {"measures"});
+        }))
+      ;
+
   py::class_<ModularCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ModularCreepDamageModel_sd>>(m, "ModularCreepDamageModel_sd")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
