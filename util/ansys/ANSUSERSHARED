@@ -1,0 +1,318 @@
+#!/bin/sh
+
+##====================================================================##
+## INITIALIZE
+DEFAULT=192
+archive="userlib.a"
+sharedlib="libansuser.so libneml.so"
+MACH="Intel LINX64 Linux"
+log="ansusershared.log"
+
+##====================================================================##
+## Determine if this script can be run on this Platform
+pgm=$( basename $0 )
+i=$( uname -m )
+if [ "${i}" != 'x86_64' ]; then
+   printf "\n Error: This %s script can not be run on this %s platform \n\n" "${pgm}" "${i}"
+   exit 1
+fi
+
+##====================================================================##
+## Functions
+failureC () {
+   printf "\n FAILURE COMPILING $i \n"
+   printf " An Error occurred while compiling a user routine. \n"
+   printf " Please check the source syntax and rerun ANSUSERSHARED. \n"
+   printf " Exiting the ANSUSERSHARED procedure . . . \n\n"
+   cat ${log}
+   exit 1
+}
+
+failureL () {
+   printf "\n There has been a link failure while linking ${sharedlib}. \n\n"
+   sleep 3
+   cat ${log}
+   printf "\n\n"
+   exit 1
+}
+
+##====================================================================##
+## set default vectorization
+vectlvl="-axCORE-AVX512,CORE-AVX2"
+
+##====================================================================##
+## get command arguments
+silent="NO"
+while [ $# -gt 0 ]
+do
+   iop=$( echo $1 | tr [:upper:] [:lower:] )
+   shift
+   case ${iop} in
+   -s | -silent | --silent)
+      silent="YES"
+      ;;
+   -r | -revision | --revision)
+      revn_in=$1
+      shift
+      ;;
+   -l | --log)
+      log_file=$1
+      shift
+      ;;
+   esac
+done
+revn=${revn_in:=${DEFAULT}}
+(( a1=${revn}/10 ))
+(( a2=${revn}-(${a1}*10) ))
+revn_rl="$a1.$a2"           ## should be xx.x rev number
+unset a1 a2
+log=${log_file:=${log}}
+
+##====================================================================##
+## Attempt to locate anssh.ini...
+work_dir=$( pwd )
+call_dir=${0%%/${pgm}}   ## this strips off the program name leaving PATH
+anssh_loc=''
+
+## is ANS_PATH environment variable set?
+if [ ! -z "${ANS_PATH}" ]; then
+   cd ${ANS_PATH}/bin >& /dev/null
+   if [ $? -ne 0 ]; then
+      printf "\n Unable to find the Ansys${revn} install directory in the \n"
+      printf " \"${ANS_PATH}\" path that you have set in the environment \n"
+      printf " variable \"ANS_PATH\".   Please correct the setting \n"
+      printf " of the environment variable \"ANS_PATH\" to point to \n"
+      printf " your Ansys${revn} installation \n\n"
+      printf " An \"echo \$ANS_PATH/bin/anssh.ini\" at your terminal should \n"
+      printf " list the \"anssh.ini\" file and not produce a file not \n"
+      printf " found error. \n\n"
+      exit 1
+   fi
+   anssh_loc=$( pwd )
+fi
+
+## local copy of anssh.ini ?
+if [ "${anssh_loc}" = '' ]; then
+   if [ -e ${work_dir}/anssh.ini ]; then
+      anssh_loc=${work_dir}
+   fi
+fi
+
+## check two levels up from ANSUSERSHARED location
+if [ "${anssh_loc}" = '' ]; then
+   cd ${call_dir}
+   if [ -e ../../bin/anssh.ini ]; then
+      cd ../../bin
+      anssh_loc=$( pwd )
+   fi
+fi
+
+## see if anssh.ini is installed in default location
+if [ "${anssh_loc}" = '' ]; then
+   if [ -e "/ansys_inc/v${revn}/ansys/bin/anssh.ini" ]; then
+      cd /ansys_inc/v${revn}/ansys/bin
+      anssh_loc=$( pwd )
+   fi
+fi
+
+## Can't find anssh.ini in usual places
+if [ "${anssh_loc}" = '' ]; then
+   printf "\n Unable to find the Ansys${revn} environment file: anssh.ini \n"
+   printf " Please set the environment variable \"ANS_PATH\" to point to \n"
+   printf " your Ansys${revn} install location \n\n"
+   printf " Example: export ANS_PATH=/ansys_inc/v${revn}/ansys (for sh/bash shell) \n"
+   printf " Example: setenv ANS_PATH /ansys_inc/v${revn}/ansys (for csh/tcsh shell) \n"
+   exit 1
+fi
+
+if [ "${silent}" = 'NO' ]; then
+   printf "\n Self located anssh.ini in ${anssh_loc} \n\n"
+   sleep 3
+fi
+source ${anssh_loc}/anssh.ini
+
+SYSDIR="${ANSYS_SYSDIR}"   ## platform name (ie linx64)
+path="${ANSYS_DIR}/customize/user"
+ipath="${ANSYS_DIR}/customize/include"
+
+##====================================================================##
+## attempt to find Intel compilers
+if [ ! -z "${ANS_COMPILER_PATH}" ]; then
+   compiler_path=${ANS_COMPILER_PATH}
+else
+   compiler_path=$( which ifort 2>/dev/null )
+   if [ $? -ne 0 ]; then
+      printf "\n Unable to locate the intel compilers. Either add compiler \n"
+      printf " PATH to your \$PATH environment setting or set the environment \n"
+      printf " variable \"ANS_COMPILER_PATH\" to point to your installed Intel \n"
+      printf " ifort compiler location \n\n"
+      exit 1
+   fi
+fi
+compiler_path=${compiler_path%%/ifort}   ## strips off ifort leaving PATH
+
+## test
+${compiler_path}/ifort -V >& /dev/null
+if [ $? -ne 0 ]; then
+   printf "\n The specified path for the Intel compilers is incorrect. \n"
+   printf " Either correct your \$PATH environment variable or set/correct \n"
+   printf " the setting of environment variable \"ANS_COMPILER_PATH\". \n\n"
+   printf " %s \n\n" "${compiler_path}/ifort"
+   exit 1
+fi
+
+##====================================================================##
+## Intel x86_64
+F90="${compiler_path}/ifort -nofor_main -w -c -fpp -qopenmp -fpic -O2 -ftz ${vectlvl}  \
+-vec-report=0 -qopt-report=0 -mcmodel=medium \
+-module ./ -DLINX64_SYS -DLINUXEM64T_SYS -DFORTRAN -DOPENMP \
+-DCADOE_SOLVER -I./ -I${ipath}"
+   
+CC="${compiler_path}/icc -w -c -qopenmp -Qoption,cpp,--c99 -fpic -O2 \
+-vec-report=0 -qopt-report=0 -mcmodel=medium \
+-DLINX64_SYS -DLINUXEM64T_SYS -DNOSTDCALL -DARGTRAIL -DMKL_AVAILABLE \
+-D_MIC ${vectlvl} -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++11 \
+-DCADOE_SOLVER -I./ -I${ipath}"
+      
+CPP="${compiler_path}/icpc -w -c -qopenmp -wd47 -wd1224 -fpic -O2 \
+-vec-report=0 -qopt-report=0 -pthread -mcmodel=medium \
+-DLINUXEM64T_SYS -DARGTRAIL -DMKL_AVAILABLE -DCADOE_SOLVER \
+-D_MIC ${vectlvl} -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++11 \
+-I./ -I${ipath}"
+
+flink="${compiler_path}/ifort -nofor_main -shared -Xlinker -relax -Xlinker \
+--whole-archive ${archive} -Xlinker --no-whole-archive \
+-o ${sharedlib} -Xlinker -soname=${sharedlib}"
+
+##====================================================================##
+## Display script description
+cd ${work_dir}
+printf "\n %s \n" "$( date )"                                                  > ${log}
+printf "\n ============================================================= \n\n" >>${log}
+printf " This is the ANSYS ${revn_rl} ANSUSERSHARED script.  It is used \n"    >>${log}
+printf " to build a shared library of User Programmable Features. \n\n"        >>${log}
+printf " ... ${MACH} version \n\n"                                             >>${log}
+printf " NOTE: The user subroutine source files must reside in your \n"        >>${log}
+printf "       local directory and be of the form - *.F, *.c, or *.cpp \n"     >>${log}
+printf "\n Compilers to use: \n"                                               >>${log}
+printf " F90: ${compiler_path}/ifort \n"                                       >>${log}
+printf " C:   ${compiler_path}/icc \n"                                         >>${log}
+printf " C++: ${compiler_path}/icpc \n\n"                                      >>${log}
+files=$( ls *.F *.c *.cpp 2>/dev/null )
+printf " Files to compile: "                                                   >>${log}
+for i in ${files}
+do
+   printf " %s" "${i}"                                                         >>${log}
+done
+printf "\n\n ============================================================= \n"   >>${log}
+if [ "${silent}" = 'NO' ]; then
+   clear
+   cat ${log}
+fi
+
+while [ 1 ]
+do
+   if [ "${silent}" = 'NO' ]; then
+      printf "\n Do you want to continue? (y/n) "
+      read ans
+      ans=$(echo ${ans} | tr [:upper:] [:lower:])
+   else
+      ans='yes'
+   fi
+
+   case "${ans}" in
+      n | no )
+      exit 1
+      ;;
+      y | yes )
+      break
+      ;;
+      * )
+      printf " Please answer y or n \n"
+      ;;
+   esac
+done
+
+##====================================================================##
+printf " Compiler warnings/errors: \n" >>${log}
+## Fortran files
+files=$( eval ls *.F 2>/dev/null )
+for i in ${files}
+do
+   if [ "${silent}" = 'NO' ]; then
+      printf " Compiling ${i} \n"
+   fi
+   ${F90} ${i} 1>>${log} 2>&1
+   (( $? )) && failureC
+done
+
+## C files
+files=$( eval ls *.c 2>/dev/null )
+for i in ${files}
+do
+   if [ "${silent}" = 'NO' ]; then
+      printf " Compiling ${i} \n"
+   fi
+   ${CC} ${i} 1>>${log} 2>&1
+   (( $? )) && failureC
+done
+
+## C++ files
+files=$( eval ls *.cpp 2>/dev/null )
+for i in ${files}
+do
+   if [ "${silent}" = 'NO' ]; then
+      printf " Compiling ${i} \n"
+   fi
+   ${CPP} ${i} 1>>${log} 2>&1
+   (( $? )) && failureC
+done
+sleep 3
+
+##====================================================================##
+## Compilation complete.  Make Shared Library
+while [ 1 ]
+do
+   if [ "${silent}" = 'NO' ]; then
+      printf "\n Compilation done. Do you want to link shared library? (y/n): "
+      read ans
+      ans=$(echo ${ans} | tr [:upper:] [:lower:])
+   else
+      ans='yes'
+   fi
+
+   case "${ans}" in
+      n | no )
+      exit 1
+      ;;
+      y | yes )
+      break
+      ;;
+      * )
+      printf " Please answer y or n \n"
+      ;;
+   esac
+done
+
+
+##====================================================================##
+if [ "${silent}" = 'NO' ]; then
+   printf "\n Creating shared library - please wait \n"
+   sleep 2
+fi
+
+# Remove any old copies of userlib.a
+rm -f ${archive} >& /dev/null
+
+printf "\n ============================================================= \n"   >>${log}
+printf " Linker warnings/errors: \n" >>${log}
+ar -qc ${archive} *.o
+${flink} 1>>${log} 2>&1
+(( $? )) && failureL
+
+if [ "$silent" = 'NO' ]; then
+   printf "\n User shared library successfully built. \n"
+   printf " Set environment variable \"ANS_USER_PATH\" to: %s \n" "$(pwd)"
+   printf " Then run ansys${revn} to use your newly generated user shared library. \n\n"
+fi
+exit 0
