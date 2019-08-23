@@ -27,3 +27,4 @@ References
 
 .. [HL1977] Hayhurst, D. R. and F. A. Leckie. "Constutitive equations for creep rupture," `Acta Metallurgica,` 25(9): pp. 1059-1070, 1977.
 
+.. [H1985] Huddleston, R. "An improved multiaxial creep-rupture strength criterion," `Journal of Pressure Vessel Technology,` 107(Nov): pp. 421-429, 1985.

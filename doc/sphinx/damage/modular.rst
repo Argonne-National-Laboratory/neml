@@ -1,5 +1,5 @@
-Classical creep damage
-======================
+Modular creep damage
+====================
 
 Overview
 --------
@@ -9,9 +9,14 @@ The damage update is given by
 
 .. math::
    \omega_{n+1} = \omega_{n} + \left(\frac{\sigma_{eff}}{A}\right)^\xi 
-      \left(1 - \omega_{n+1}\right)^{-\phi} \Delta t_{n+1}
+      \left(1 - \omega_{n+1}\right)^{\xi-\phi} \Delta t_{n+1}
 
-   \sigma_{eff} = \sqrt{\frac{3}{2} \operatorname{dev}\left(\bm{\sigma}\right):\operatorname{dev}\left(\bm{\sigma}\right)}.
+where :math:`\sigma_{eff}` is modular, defined by a :ref:`effective-stress` object.
+
+This class has the option for element extinction, useful in FEA simulations of damage.  If the ``ekill`` option is set to true once the material point reaches a damage threshold of ``dkill`` the constitutive response will be replaced by a linear elastic response with an elastic stiffness of :math:`\mathbf{\mathfrak{C}}/f` where the factor :math:`f` is given by the parameter ``sfact``.
+
+.. toctree::
+   effective/effective
 
 Parameters
 ----------
@@ -24,15 +29,19 @@ Parameters
    ``A``, :cpp:class:`neml::Interpolate`, Parameter, No
    ``xi``, :cpp:class:`neml::Interpolate`, Stress exponent, No
    ``phi``, :cpp:class:`neml::Interpolate`, Damage exponent, No
+   ``estress``,:cpp:class:`neml::EffectiveStress`, Effective stress, No
    ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
    ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
    ``tol``, :c:type:`double`, Solver tolerance, ``1.0e-8``
    ``miter``, :c:type:`int`, Maximum solver iterations, ``50``
    ``verbose``, :c:type:`bool`, Verbosity flag, ``false``
+   ``ekill``, :c:type:`bool`, Trigger element death, ``false``
+   ``dkill``, :c:type:`double`, Critical damage threshold, ``0.5``
+   ``sfact``, :c:type:`double`, Stiffness factor for dead element, ``100000``
 
 Class description
 -----------------
 
-.. doxygenclass:: neml::ClassicalCreepDamageModel_sd
+.. doxygenclass:: neml::ModularCreepDamageModel_sd
    :members:
    :undoc-members:
