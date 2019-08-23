@@ -521,6 +521,18 @@ PYBIND11_MODULE(nemlmath, m) {
            return V;
          }, "Eigenvectors of a symmetric matrix.");
 
+   m.def("I1",
+         [](py::array_t<double, py::array::c_style> s) -> double
+         {
+           return I1(arr2ptr<double>(s));
+         }, "First principal invariant.");
+
+   m.def("I2",
+         [](py::array_t<double, py::array::c_style> s) -> double
+         {
+          return I2(arr2ptr<double>(s));
+         }, "Second principal invariant.");
+
    m.def("dgttrf",
          [](py::array_t<double, py::array::c_style> DL, py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> DU) ->
          std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, py::array_t<double>, py::array_t<int>>

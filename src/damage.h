@@ -294,6 +294,28 @@ class VonMisesEffectiveStress: public EffectiveStress
 
 static Register<VonMisesEffectiveStress> regVonMisesEffectiveStress;
 
+/// Huddleston stress
+class HuddlestonEffectiveStress: public EffectiveStress
+{
+ public:
+  HuddlestonEffectiveStress(double b);
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+
+ private:
+  double b_;
+};
+
+static Register<HuddlestonEffectiveStress> regHuddlestonEffectiveStress;
+
 /// Maximum principal stress
 class MaxPrincipalEffectiveStress: public EffectiveStress
 {

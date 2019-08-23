@@ -123,6 +123,12 @@ int eigenvalues_sym(const double * const s, double * values);
 /// Get the eigenvectors of a symmetric 3x3 matrix (row major)
 int eigenvectors_sym(const double * const s, double * vectors);
 
+/// First principal invariant
+double I1(const double * const s);
+
+/// Second principal invariant
+double I2(const double * const s);
+
 }
 
 #endif // NEMLMATH_H

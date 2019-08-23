@@ -594,6 +594,98 @@ int VonMisesEffectiveStress::deffective(const double * const s, double * const d
   return 0;
 }
 
+HuddlestonEffectiveStress::HuddlestonEffectiveStress(double b) :
+    b_(b)
+{
+
+}
+
+std::string HuddlestonEffectiveStress::type()
+{
+  return "HuddlestonEffectiveStress";
+}
+
+ParameterSet HuddlestonEffectiveStress::parameters()
+{
+  ParameterSet pset(HuddlestonEffectiveStress::type());
+
+  pset.add_parameter<double>("b");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> HuddlestonEffectiveStress::initialize(ParameterSet & params)
+{
+  return neml::make_unique<HuddlestonEffectiveStress>(
+      params.get_parameter<double>("b")
+      );
+}
+
+int HuddlestonEffectiveStress::effective(const double * const s, double & eff) const
+{
+  double sd[6];
+  std::copy(s, s+6, sd);
+  dev_vec(sd);
+
+  double I1v = I1(s);
+  double I2v = I2(s);
+  double I2pv = I2(sd);
+  
+  double se = sqrt(-3.0 * I2pv);
+  double ss = sqrt(-3.0 * I2pv + I2v);
+
+  eff = se * exp(b_*(I1v / ss - 1.0));
+
+  return 0;
+}
+
+int HuddlestonEffectiveStress::deffective(const double * const s, double * const deff) const
+{
+  // Useful common factors
+  double sd[6];
+  std::copy(s, s+6, sd);
+  dev_vec(sd);
+
+  if (norm2_vec(s, 6) == 0.0) {
+    std::fill(deff, deff+6, 0.0);
+    return 0;
+  }
+
+  double I1v = I1(s);
+  double I2v = I2(s);
+  double I2pv = I2(sd);
+  
+  double se = sqrt(-3.0 * I2pv);
+  double ss = sqrt(-3.0 * I2pv + I2v);
+
+  double eff = se * exp(b_*(I1v / ss - 1.0));
+  
+  std::fill(deff, deff+6, 0.0);
+
+  // I1 term
+  double t1 = b_ * eff / sqrt(I2v - 3.0 * I2pv);
+  for (int i=0; i<3; i++) {
+    deff[i] += t1;
+  }
+
+  // I2 term
+  double t2 = -b_ * eff * I1v / (2.0 * pow(I2v - 3.0 * I2pv, 3.0/2.0));
+  for (int i=0; i<3; i++) {
+    deff[i] += t2 * I1v;
+  }
+  for (int i=0; i<6; i++) {
+    deff[i] -= t2 * s[i];
+  }
+
+  // I2p term
+  double t3 = 0.5 * eff * (3.0*b_*I1v/pow(I2v - 3.0*I2pv, 3.0/2.0) + 1.0 / I2pv);
+  for (int i=0; i<6; i++) {
+    deff[i] -= t3 * sd[i];
+  }
+
+  return 0;
+}
+
 MaxPrincipalEffectiveStress::MaxPrincipalEffectiveStress()
 {
 

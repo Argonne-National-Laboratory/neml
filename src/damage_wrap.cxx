@@ -138,6 +138,14 @@ PYBIND11_MODULE(damage, m) {
           return create_object_python<VonMisesEffectiveStress>(args, kwargs, {});
         }))
       ;
+
+  py::class_<HuddlestonEffectiveStress, EffectiveStress, std::shared_ptr<HuddlestonEffectiveStress>>(m, "HuddlestonEffectiveStress")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<HuddlestonEffectiveStress>(args, kwargs, {"b"});
+        }))
+      ;
+
   py::class_<MaxPrincipalEffectiveStress, EffectiveStress, std::shared_ptr<MaxPrincipalEffectiveStress>>(m, "MaxPrincipalEffectiveStress")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
