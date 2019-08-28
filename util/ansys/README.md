@@ -6,15 +6,23 @@ Most of the files are needed to compile are contained in this repository. The fo
 
 #### Install on Linux
 
-clone the into working directory
+clone the into local working directory
 
 ```bash
-git clone https://ghe.kairospower.com/hsu/kp-neml.git
+git clone https://github.com/khhsu0724/neml.git
+git fetch
+git checkout ansys_integration
+```
+
+Upload the file to NIMIBX (or execute the following commands if the user is not on NIMBIX)
+
+```bash
 cd kp-neml
-export ANS_USER_PATH=/home/nimbix/Desktop/data/kp-neml/util/ansys
+export ANS_USER_PATH=/home/nimbix/data/kp-neml/util/ansys
 # Set working directory
 cd util/ansys
 ```
+
 launch Ansys APDL graphic interface
 
 ```bash
@@ -29,7 +37,7 @@ launch Ansys APDL graphic interface on NIMBIX
 
 #### Calling NEML library using APDL script
 
-An example of the of a uniaxial tensile test is given in kp-neml/util/ansys/inelastic.inp. This extension uses usermat.F provided by Ansys to call NEML library. The desired material should be put in **umat.xml** with **ansys** tag. There are some example materials provided in umat.xml. To call the material in APDL, use the following syntax in /PREP7 block:
+An example of the a uniaxial tensile test is given in **kp-neml/util/ansys/inelastic.inp**. This extension uses usermat.F provided by Ansys to call NEML library. The desired material should be put in **umat.xml** with **ansys** tag. There are some example materials provided in umat.xml. To call the material in APDL, use the following syntax in /PREP7 block:
 	
 ```
 TB, USER, 1, 0,
