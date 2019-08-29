@@ -4,7 +4,7 @@ Modular creep damage
 Overview
 --------
 
-This object implements the classical Hayhurst-Leckie-Rabotnov-Kachanov creep damage model [HL1977]_.
+This object implements the classical Hayhurst-Leckie-Rabotnov-Kachanov creep damage model [HL1977]_.  Specifically, it exactly replicates Eq. 2.6 in that paper, so that the implementation exactly replicates the analytic expressions in Eq. 2.5.
 The damage update is given by 
 
 .. math::
