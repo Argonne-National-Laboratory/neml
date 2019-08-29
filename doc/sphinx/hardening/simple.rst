@@ -11,7 +11,7 @@ that feeds into the yield surface.
 These models implement the interface
 
 .. math::
-   \mathbf{q}, \frac{\partial \mathbf{q}}{\bm{\alpha}} 
+   \mathbf{q}, \frac{\partial \mathbf{q}}{\partial \bm{\alpha}} 
    \leftarrow \mathcal{H}\left( \bm{\alpha}, T \right)
 
 where :math:`\bm{\alpha}` are the actual "strain-like" history variables
