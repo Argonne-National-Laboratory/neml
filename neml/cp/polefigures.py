@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 limit_lambert_equal_area = np.sqrt(2)
 limit_stereographic = 1.0
 
+triangle_limits = {"cubic": (0,0)}
+
 def project_stereographic(v):
   """
     Stereographic projection of the given vector into a numpy array
@@ -136,77 +138,186 @@ def pol2cart(R, T):
 
   return X, Y
 
-def pole_figure_odf(odf, pole, lattice, 
-    projection = "stereographic", 
+def inverse_pole_figure_discrete(orientations, direction, lattice,  
+    reduce_figure = False, color = False,
     sample_symmetry = crystallography.symmetry_rotations("222"),
-    x = tensors.Vector([1.0,0,0]), y = tensors.Vector([0,1.0,0]),
-    axis_labels = ["X", "Y"],
-    nr = 10, nt = 40, normalization = "PDF"):
+    x = [1,0,0], y = [0,1,0], axis_labels = None):
   """
-    Plot a pole figure given a ODF
+    Plot an inverse pole figure given a collection of discrete points.
 
     Parameters:
       orientations      list of orientations
-      pole              pole as a integer list
+      direction         sample direction
       lattice           crystal lattice class, including crystal symmetry
 
     Optional:
-      projection        which projection to use
+      reduce_figure     reduce to some fundamental region.  Options include:
+                          False         don't do it
+                          "cubic"       cubic convention
+                          [v1,v2,v3]    list of crystallographic points
+                                        defining the triangle
+      color             color points based on the provided triangle
       sample_symmetry   what sample symmetry to apply to the pole figure,
                         defaults to orthorhombic
-      x                 x direction for plot, defaults to [1,0,0]
-      y                 y direction for plot, defaults to [0,1,0]
+      x                 crystallographic x direction for plot, defaults to [1,0,0]
+      y                 crystallographic y direction for plot, defaults to [0,1,0]
       axis_labels       axis labels to include on the figure
-      nr                number of radial points for the grid
-      nt                number of circumferential points for the grid
-      normalization     PDF = probability, MRD = multiples of random dist
   """
-  # Get the rotation from the standard coordinates to the given x and y
-  srot = rotations.Orientation(x,y)
-  
-  # Get all equivalent poles
-  p = lattice.miller2cart_direction(pole)
-  eq_poles = lattice.equivalent_vectors(p)
-  eq_poles = [pp.normalize() for pp in eq_poles]
+  pts = np.vstack(tuple(project_ipf(q, lattice, direction, 
+    sample_symmetry = sample_symmetry, x = x, y = y) for q in orientations))
 
-  # Apply sample symmetric
-  eq_poles = [op.apply(p) for p in eq_poles for op in sample_symmetry]
+  if reduce_figure:
+    if reduce_figure == "cubic":
+      vs = (np.array([0,0,1.0]), np.array([1.0,0,1]), np.array([1.0,1,1]))
+    elif len(reduce_figure) == 3:
+      vs = reduce_figure
+    else:
+      raise ValueError("Unknown reduction type %s!" % reduce_figure)
+    
+    pts = reduce_points_triangle(pts, v0 = vs[0], v1=vs[1], v2=vs[2])
 
-  # Setup the projections
-  if projection == "stereographic":
-    pop = inverse_project_stereographic
-    lim = limit_stereographic
-  elif projection == "lambert":
-    pop = inverse_project_lambert_equal_area
-    lim = limit_lambert_equal_area
-  else:
-    raise ValueError("Unknown projection %s" % projection)
+  pop = project_stereographic
+  lim = limit_stereographic
 
-  # Get the grid in polar
-  R, T = np.meshgrid(np.linspace(0,lim,nr),np.linspace(0,2.0*np.pi,nt))
-
-  # Grid in cartesian
-  X, Y = pol2cart(R,T)
-
-  vals = np.zeros(X.shape)
-  for ind in np.ndindex(X.shape):
-    vec = pop(np.array([X[ind],Y[ind]]))
-    # Need to think about the rotation srot
-    vals[ind] = sum(odf.pole_density(srot.apply(vec), p) for p in eq_poles) / len(eq_poles)
-    print(vals[ind])
-
-  # Plot
-  ax = plt.subplot(111, projection='polar')
-  CS = ax.contourf(T, R, vals, cmap = plt.cm.Greys)
-  cbar = plt.gcf().colorbar(CS)
-  cbar.ax.set_ylabel(normalization)
+  cpoints = np.array([pop(v) for v in pts])
 
   # Make the graph nice
-  plt.ylim([0,lim])
-  ax.grid(False)
-  ax.get_yaxis().set_visible(False)
-  if len(axis_labels) == 2:
-    plt.xticks([0,np.pi/2], axis_labels)
+  if reduce_figure:
+    ax = plt.subplot(111)
+    if color:
+      rgb = ipf_color(pts, v0 = vs[0], v1 = vs[1], v2=vs[2]) 
+      ax.scatter(cpoints[:,0], cpoints[:,1], c=rgb, s = 10.0)
+    else:
+      ax.scatter(cpoints[:,0], cpoints[:,1], c='k', s = 10.0) 
+    ax.axis('off')
   else:
-    ax.get_xaxis().set_visible(False)
-  ax.xaxis.set_minor_locator(plt.NullLocator())
+    polar = np.array([cart2pol(v) for v in cpoints])
+    ax = plt.subplot(111, projection='polar')
+    ax.scatter(polar[:,0], polar[:,1], c='k', s=10.0)
+    plt.ylim([0,lim])
+    ax.grid(False)
+    ax.get_xaxis().set_visible(False)    
+    ax.get_yaxis().set_visible(False)
+    ax.xaxis.set_minor_locator(plt.NullLocator())
+
+
+def project_ipf(q, lattice, direction, 
+    sample_symmetry = crystallography.symmetry_rotations("222"), 
+    x = [1,0,0], y = [0,1,0]):
+  """
+    Project a single sample direction onto a crystal
+
+    Parameters:
+      q                 lattice orientation
+      lattice           lattice object describing the crystal system
+      direction         sample direction 
+    
+    Optional:
+      sample_symmetry   sample symmetry operators
+      x                 x direction (crystallographic) of the projection
+      y                 y direction (crystallographic) of the projection
+  """
+  xv = lattice.miller2cart_direction(x).normalize()
+  yv = lattice.miller2cart_direction(y).normalize()
+
+  if not np.isclose(xv.dot(yv),0.0):
+    raise ValueError("Lattice directions are not orthogonal!")
+
+  zv = xv.cross(yv)
+  
+  trans = rotations.Orientation(np.vstack((xv.data,yv.data,zv.data)))
+  
+  d = tensors.Vector(direction).normalize()
+
+  pts = []
+  for srot in sample_symmetry:
+    # Sample directions
+    spt = srot.apply(d)
+    
+    # Crystal coordinates
+    cpt = q.apply(spt)
+
+    # Lattice symmetry
+    for op in lattice.symmetry.ops:
+      cppt = op.apply(cpt)
+
+      # Into the right coordinates
+      fpt = trans.apply(cppt)
+
+      pts.append(fpt.data)
+  
+  # By convention just keep the points in the upper hemisphere
+  pts = np.array(pts)
+  pts = pts[pts[:,2]>0]
+  
+  return pts
+
+def reduce_points_triangle(pts, v0 = np.array([0,0,1.0]), 
+    v1 = np.array([1.0,0,1]), v2 = np.array([1.0,1,1])):
+  """
+    Reduce points to a standard stereographic triangle
+
+    Default vectors give you the cubic triangle
+
+    Parameters:
+      pts       projected points
+
+    Optional:
+      v1        1st vector
+      v2        2nd vector
+      v3        3rd vector
+  """
+  v0 /= la.norm(v0)
+  v1 /= la.norm(v1)
+  v2 /= la.norm(v2)
+
+  n0 = np.cross(v0, v1)
+  n1 = np.cross(v1, v2)
+  n2 = np.cross(v2, v0)
+
+  npts = []
+  for pt in pts:
+    if np.dot(pt, n0) >= 0 and np.dot(pt, n1) >= 0 and np.dot(pt, n2) >= 0:
+      npts.append(pt)
+
+  return np.array(npts)
+
+def ipf_color(pts, v0 = np.array([0,0,1.0]), 
+    v1 = np.array([1.0,0,1]), v2 = np.array([1.0,1,1])):
+  """
+    Color ipf points based on the provided triangle
+
+    Assumes the points already fall inside the appropriate triangle
+
+    Parameters:
+      pts       list of points
+
+    Optional:
+      v0        point on triangle
+      v1        point on triangle
+      v2        point on triangle
+  """
+  v0 /= la.norm(v0)
+  v1 /= la.norm(v1)
+  v2 /= la.norm(v2)
+
+  vs = [v0, v1, v2]
+
+  colors = np.zeros((len(pts),3))
+
+  for i,pt in enumerate(pts):
+    for j in range(3):
+      colors[i,j] = np.dot(vs[j], pt)
+
+  for i in range(3):
+    mf = 1.0
+    for j in range(3):
+      t = np.dot(vs[i], vs[j])
+      if t < mf:
+        mf = t
+    
+    colors[:,i] -= mf
+    colors[:,i] /= (1.0 - mf)
+
+  return colors
+
