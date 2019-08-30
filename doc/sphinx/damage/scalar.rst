@@ -32,6 +32,7 @@ Implementations
 
 .. toctree::
    classical
+   modular
    standard
 
 Class description

@@ -113,6 +113,64 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
+  py::class_<EffectiveStress, NEMLObject, std::shared_ptr<EffectiveStress>>(m, "EffectiveStress")
+      .def("effective",
+           [](EffectiveStress & m, py::array_t<double, py::array::c_style> s) -> double
+           {
+            double res;
+            int ier = m.effective(arr2ptr<double>(s), res);
+            py_error(ier);
+            return res;
+           }, "The effective stress measure.")
+      .def("deffective",
+           [](EffectiveStress & m, py::array_t<double, py::array::c_style> s) -> py::array_t<double>
+           {
+            auto res = alloc_vec<double>(6);
+            int ier = m.deffective(arr2ptr<double>(s), arr2ptr<double>(res));
+            py_error(ier);
+            return res;
+           }, "The derivative of the effective stress measure wrt stress.")
+      ;
+
+  py::class_<VonMisesEffectiveStress, EffectiveStress, std::shared_ptr<VonMisesEffectiveStress>>(m, "VonMisesEffectiveStress")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<VonMisesEffectiveStress>(args, kwargs, {});
+        }))
+      ;
+
+  py::class_<HuddlestonEffectiveStress, EffectiveStress, std::shared_ptr<HuddlestonEffectiveStress>>(m, "HuddlestonEffectiveStress")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<HuddlestonEffectiveStress>(args, kwargs, {"b"});
+        }))
+      ;
+
+  py::class_<MaxPrincipalEffectiveStress, EffectiveStress, std::shared_ptr<MaxPrincipalEffectiveStress>>(m, "MaxPrincipalEffectiveStress")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MaxPrincipalEffectiveStress>(args, kwargs, {});
+        }))
+      ;
+
+  py::class_<MaxSeveralEffectiveStress, EffectiveStress, std::shared_ptr<MaxSeveralEffectiveStress>>(m, "MaxSeveralEffectiveStress")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MaxSeveralEffectiveStress>(args, kwargs, {"measures"});
+        }))
+      ;
+
+  py::class_<ModularCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ModularCreepDamageModel_sd>>(m, "ModularCreepDamageModel_sd")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ModularCreepDamageModel_sd>(args, kwargs,
+                                                                    {"elastic",
+                                                                    "A", "xi",
+                                                                    "phi", "estress", 
+                                                                    "base"});
+        }))
+      ;
+
   py::class_<NEMLStandardScalarDamagedModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd")
       .def("f",
            [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double

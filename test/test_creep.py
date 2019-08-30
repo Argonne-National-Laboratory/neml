@@ -70,6 +70,27 @@ class TestPowerLawCreep(unittest.TestCase, CommonScalarCreep):
     g_calc = self.A * self.s ** (self.n)
     self.assertTrue(np.isclose(g_direct, g_calc))
 
+class TestBlackburnSinhCreep(unittest.TestCase, CommonScalarCreep):
+  def setUp(self):
+    self.A = 1.0e-6
+    self.beta = -2.0e-2
+    self.n = 5.0
+    self.Q = 67000.0
+    self.R = 1.987
+
+    self.model = creep.BlackburnSinhCreep(self.A, self.beta, self.n, 
+        self.Q, self.R) 
+
+    self.T = 300.0
+    self.e = 0.1
+    self.s = 150.0
+    self.t = 10.0
+
+  def test_g(self):
+    g_direct = self.model.g(self.s, self.e, self.t, self.T)
+    g_calc = self.A * np.sinh(self.beta*self.s/self.n)**self.n * np.exp(-self.Q/(self.R*self.T))
+    self.assertTrue(np.isclose(g_direct, g_calc))
+
 class TestRegionKMCreep(unittest.TestCase, CommonScalarCreep):
   def setUp(self):
     self.b = 2.019 * 1.0e-7

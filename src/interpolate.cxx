@@ -150,6 +150,82 @@ double PiecewiseLinearInterpolate::derivative(double x) const
   }
 }
 
+GenericPiecewiseInterpolate::GenericPiecewiseInterpolate(
+    std::vector<double> points,
+    std::vector<std::shared_ptr<Interpolate>> functions) :
+      Interpolate(), points_(points), functions_(functions)
+{
+  // Check if sorted
+  if (not std::is_sorted(points.begin(), points.end())) {
+    valid_ = false; 
+  }
+
+  if (points.size() != (functions.size()+1)) {
+    valid_ = false;
+  }
+}
+
+std::string GenericPiecewiseInterpolate::type()
+{
+  return "GenericPiecewiseInterpolate";
+}
+
+ParameterSet GenericPiecewiseInterpolate::parameters()
+{
+  ParameterSet pset(GenericPiecewiseInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("points");
+  pset.add_parameter<std::vector<NEMLObject>>("functions");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> GenericPiecewiseInterpolate::initialize(ParameterSet & params)
+{
+  return neml::make_unique<GenericPiecewiseInterpolate>(
+      params.get_parameter<std::vector<double>>("points"),
+      params.get_object_parameter_vector<Interpolate>("functions")
+      ); 
+}
+
+double GenericPiecewiseInterpolate::value(double x) const
+{
+  if (x <= points_.front()) {
+    return functions_[0]->value(x);
+  }
+  else if (x >= points_.back()) {
+    return functions_.back()->value(x);
+  }
+  else {
+    auto it = points_.begin();
+    for (; it != points_.end(); ++it) {
+      if (x <= *it) break;
+    }
+    size_t ind = std::distance(points_.begin(), it);
+
+    return functions_[ind]->value(x);
+  }
+}
+
+double GenericPiecewiseInterpolate::derivative(double x) const
+{
+  if (x <= points_.front()) {
+    return functions_[0]->derivative(x);
+  }
+  else if (x >= points_.back()) {
+    return functions_.back()->derivative(x);
+  }
+  else {
+    auto it = points_.begin();
+    for (; it != points_.end(); ++it) {
+      if (x <= *it) break;
+    }
+    size_t ind = std::distance(points_.begin(), it);
+
+    return functions_[ind]->derivative(x);
+  }
+}
+
 PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
     const std::vector<double> points,
     const std::vector<double> values) :
@@ -274,6 +350,45 @@ double ConstantInterpolate::value(double x) const
 double ConstantInterpolate::derivative(double x) const
 {
   return 0.0;
+}
+
+ExpInterpolate::ExpInterpolate(double A, double B) :
+    Interpolate(), A_(A), B_(B)
+{
+
+}
+
+std::string ExpInterpolate::type()
+{
+  return "ExpInterpolate";
+}
+
+ParameterSet ExpInterpolate::parameters()
+{
+  ParameterSet pset(ExpInterpolate::type());
+
+  pset.add_parameter<double>("A");
+  pset.add_parameter<double>("B");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ExpInterpolate::initialize(ParameterSet & params)
+{
+  return neml::make_unique<ExpInterpolate>(
+      params.get_parameter<double>("A"),
+      params.get_parameter<double>("B")
+      ); 
+}
+
+double ExpInterpolate::value(double x) const
+{
+  return A_*exp(B_/x);
+}
+
+double ExpInterpolate::derivative(double x) const
+{
+  return -A_ * B_ * exp(B_ / x) / (x*x);
 }
 
 MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :

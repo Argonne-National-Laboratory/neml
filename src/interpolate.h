@@ -50,6 +50,29 @@ class PolynomialInterpolate : public Interpolate {
 
 static Register<PolynomialInterpolate> regPolynomialInterpolate;
 
+/// Generic piecewise interpolation
+class GenericPiecewiseInterpolate: public Interpolate {
+ public:
+  GenericPiecewiseInterpolate(std::vector<double> points,
+                              std::vector<std::shared_ptr<Interpolate>> functions);
+
+  /// Type for the object system
+  static std::string type();
+  /// Create parameters for the object system
+  static ParameterSet parameters();
+  /// Create object from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual double value(double x) const;
+  virtual double derivative(double x) const;
+
+ private:
+  const std::vector<double> points_;
+  const std::vector<std::shared_ptr<Interpolate>> functions_;
+};
+
+static Register<GenericPiecewiseInterpolate> regGenericPiecewiseInterpolate;
+
 /// Piecewise linear interpolation
 class PiecewiseLinearInterpolate: public Interpolate {
  public:
@@ -120,6 +143,28 @@ class ConstantInterpolate : public Interpolate {
 };
 
 static Register<ConstantInterpolate> regConstantInterpolate;
+
+/// A*exp(B/x)
+class ExpInterpolate : public Interpolate {
+ public:
+  /// The parameter is the constant value!
+  ExpInterpolate(double A, double B);
+
+  /// Type for the object system
+  static std::string type();
+  /// Create parameters for the object system
+  static ParameterSet parameters();
+  /// Create object from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual double value(double x) const;
+  virtual double derivative(double x) const;
+
+ private:
+  const double A_, B_;
+};
+
+static Register<ExpInterpolate> regExpInterpolate;
 
 /// The MTS shear modulus function proposed in the original paper
 class MTSShearInterpolate : public Interpolate {

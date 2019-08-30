@@ -455,6 +455,72 @@ int GenericCreep::dg_de(double seq, double eeq, double t, double T, double & dg)
   return 0;
 }
 
+// Implementation of Blackburn sinh model
+BlackburnSinhCreep::BlackburnSinhCreep(std::shared_ptr<Interpolate> A,
+                                       std::shared_ptr<Interpolate> beta, 
+                                       std::shared_ptr<Interpolate> n,
+                                       double Q, double R) :
+    A_(A), beta_(beta), n_(n), Q_(Q), R_(R)
+{
+
+}
+
+std::string BlackburnSinhCreep::type()
+{
+  return "BlackburnSinhCreep";
+}
+
+ParameterSet BlackburnSinhCreep::parameters()
+{
+  ParameterSet pset(BlackburnSinhCreep::type());
+
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("beta");
+  pset.add_parameter<NEMLObject>("n");
+  pset.add_parameter<double>("Q");
+  pset.add_parameter<double>("R");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> BlackburnSinhCreep::initialize(ParameterSet & params)
+{
+  return neml::make_unique<BlackburnSinhCreep>(
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("beta"),
+      params.get_object_parameter<Interpolate>("n"),
+      params.get_parameter<double>("Q"),
+      params.get_parameter<double>("R")
+      ); 
+}
+
+
+int BlackburnSinhCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  double A = A_->value(T);
+  double B = beta_->value(T);
+  double n = n_->value(T);
+  g = A * pow(sinh(B*seq/n),n) * exp(-Q_/(R_*T));
+  return 0;
+}
+
+int BlackburnSinhCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  double A = A_->value(T);
+  double B = beta_->value(T);
+  double n = n_->value(T);
+
+  dg = A * B * exp(-Q_/(R_*T)) * cosh(B*seq/n) * pow(sinh(B*seq/n),n-1.0);
+  return 0;
+}
+
+int BlackburnSinhCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
+
 // Setup for solve
 CreepModel::CreepModel(double tol, int miter, bool verbose) :
     tol_(tol), miter_(miter), verbose_(verbose)
