@@ -31,3 +31,7 @@ if __name__ == "__main__":
   polefigures.inverse_pole_figure_discrete(orientations, d, lattice, 
       reduce_figure = "cubic", color = True, axis_labels = ["100","110","111"])
   plt.show()
+
+  plt.figure()
+  polefigures.ipf_color_chart(axis_labels = ["100", "110", "111"])
+  plt.show()

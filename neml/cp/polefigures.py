@@ -4,7 +4,7 @@ from neml.cp import crystallography
 import numpy as np
 import numpy.linalg as la
 
-from matplotlib.collections import LineCollection
+from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
 
 limit_lambert_equal_area = np.sqrt(2)
@@ -213,7 +213,6 @@ def inverse_pole_figure_discrete(orientations, direction, lattice,
     ax.get_yaxis().set_visible(False)
     ax.xaxis.set_minor_locator(plt.NullLocator())
 
-
 def project_ipf(q, lattice, direction, 
     sample_symmetry = crystallography.symmetry_rotations("222"), 
     x = [1,0,0], y = [0,1,0]):
@@ -334,3 +333,58 @@ def ipf_color(pts, v0 = np.array([0,0,1.0]),
 
   return colors
 
+def ipf_color_chart(v0 = np.array([0,0,1.0]), 
+    v1 = np.array([1.0,0,1]), v2 = np.array([1.0,1,1]), 
+    axis_labels = None, ngrid = 50, nline = 100):
+  """
+    Make a color chart for the IPF coloring used here
+
+    Optional:
+      v0            point on triangle
+      v1            point on triangle
+      v2            point on triangle
+      axis_labels   labels to draw on triangle
+      ngrid         number of grid points to use
+      nline         number of line points to sue
+  """
+  vs = [v0,v1,v2]
+
+  pop = project_stereographic
+  lim = limit_stereographic
+  def ipop(x):
+    x1 = inverse_project_stereographic(x).data
+    if x1[2] < 0:
+      x1[2] *= -1
+    return x1
+
+  ax = plt.subplot(111)
+  ax.axis('off')
+  if axis_labels:
+    plt.text(0.12,0.11,axis_labels[0], transform = plt.gcf().transFigure)
+    plt.text(0.86,0.11,axis_labels[1], transform = plt.gcf().transFigure)
+    plt.text(0.74,0.90,axis_labels[2], transform = plt.gcf().transFigure)
+
+  pts = np.array([pop(v0/la.norm(v0)), pop(v1/la.norm(v1)), pop(v2/la.norm(v2))])
+  xrang = np.linspace(np.min(pts[:,0]), np.max(pts[:,0]), ngrid)
+  yrang = np.linspace(np.min(pts[:,1]), np.max(pts[:,1]), ngrid)
+
+  X, Y = np.meshgrid(xrang,yrang)
+  colors = np.zeros(X.shape+(3,))
+  for ind in np.ndindex(X.shape):
+    colors[ind] = ipf_color([ipop([X[ind],Y[ind]])], v0 = v0, v1 = v1, v2 = v2)[0]
+  
+  im = plt.imshow(colors, extent = [xrang[0], xrang[-1], yrang[0], yrang[-1]], 
+      origin = 'lower')
+  
+  net_pts = []
+  for i,j in ((0,1),(1,2),(2,0)):
+    vi = vs[i]
+    vj = vs[j]
+    fs = np.linspace(0,1,nline)
+    pts = np.array([pop(((1-f)*vi+(f)*vj)/la.norm((1-f)*vi+(f)*vj)) for f in fs])
+    net_pts.extend(list(pts[:-1]))
+
+  net_pts = np.array(net_pts)
+  pat = Polygon(net_pts, closed = True, edgecolor='k', fc = None, fill = False) 
+  ax.add_artist(pat)
+  im.set_clip_path(pat)
