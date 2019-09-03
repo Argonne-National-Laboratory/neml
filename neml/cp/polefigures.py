@@ -4,6 +4,7 @@ from neml.cp import crystallography
 import numpy as np
 import numpy.linalg as la
 
+from matplotlib.collections import LineCollection
 import matplotlib.pyplot as plt
 
 limit_lambert_equal_area = np.sqrt(2)
@@ -141,7 +142,7 @@ def pol2cart(R, T):
 def inverse_pole_figure_discrete(orientations, direction, lattice,  
     reduce_figure = False, color = False,
     sample_symmetry = crystallography.symmetry_rotations("222"),
-    x = [1,0,0], y = [0,1,0], axis_labels = None):
+    x = [1,0,0], y = [0,1,0], axis_labels = None, nline = 100):
   """
     Plot an inverse pole figure given a collection of discrete points.
 
@@ -162,6 +163,7 @@ def inverse_pole_figure_discrete(orientations, direction, lattice,
       x                 crystallographic x direction for plot, defaults to [1,0,0]
       y                 crystallographic y direction for plot, defaults to [0,1,0]
       axis_labels       axis labels to include on the figure
+      nline             number of discrete points to use in plotting lines on the triangle
   """
   pts = np.vstack(tuple(project_ipf(q, lattice, direction, 
     sample_symmetry = sample_symmetry, x = x, y = y) for q in orientations))
@@ -190,6 +192,17 @@ def inverse_pole_figure_discrete(orientations, direction, lattice,
     else:
       ax.scatter(cpoints[:,0], cpoints[:,1], c='k', s = 10.0) 
     ax.axis('off')
+    if axis_labels:
+      plt.text(0.1,0.11,axis_labels[0], transform = plt.gcf().transFigure)
+      plt.text(0.86,0.11,axis_labels[1], transform = plt.gcf().transFigure)
+      plt.text(0.74,0.88,axis_labels[2], transform = plt.gcf().transFigure)
+    
+    for i,j in ((0,1),(1,2),(2,0)):
+      v1 = vs[i]
+      v2 = vs[j]
+      fs = np.linspace(0,1,nline)
+      pts = np.array([pop((f*v1+(1-f)*v2)/la.norm(f*v1+(1-f)*v2)) for f in fs])
+      plt.plot(pts[:,0], pts[:,1], color = 'k')
   else:
     polar = np.array([cart2pol(v) for v in cpoints])
     ax = plt.subplot(111, projection='polar')

@@ -24,10 +24,10 @@ if __name__ == "__main__":
 
   plt.figure()
   polefigures.inverse_pole_figure_discrete(orientations, d, lattice, 
-      reduce_figure = "cubic")
+      reduce_figure = "cubic", axis_labels = ["100","110","111"])
   plt.show()
 
   plt.figure()
   polefigures.inverse_pole_figure_discrete(orientations, d, lattice, 
-      reduce_figure = "cubic", color = True)
+      reduce_figure = "cubic", color = True, axis_labels = ["100","110","111"])
   plt.show()
