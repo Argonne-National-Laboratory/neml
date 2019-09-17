@@ -84,7 +84,15 @@ PYBIND11_MODULE(rotations, m) {
            {
             auto info = arr.request();
             if (info.ndim == 1) {
-              return new Orientation(Orientation::createRodrigues(arr2ptr<double>(arr)));
+              if (info.shape[0] == 3) {
+                return new Orientation(Orientation::createRodrigues(arr2ptr<double>(arr)));
+              }
+              else if (info.shape[0] == 4) {
+                return new Orientation(arr2ptr<double>(arr));
+              }
+              else {
+                throw std::runtime_error("Initializing a quaternion from a vector requires a length 3 or 4 array");
+              }
             }
             else if (info.ndim == 2) {
               return new Orientation(Orientation::createMatrix(arr2ptr<double>(arr)));
