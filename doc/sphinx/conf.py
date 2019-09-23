@@ -28,7 +28,7 @@ if on_rtd:
 # -- Project information -----------------------------------------------------
 
 project = u'NEML'
-copyright = u'2018, UChicago Argonne, LLC'
+copyright = u'2019, UChicago Argonne, LLC'
 author = u'Argonne National Laboratory'
 
 # The short X.Y version
