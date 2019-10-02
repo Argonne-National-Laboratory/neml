@@ -42,6 +42,14 @@ PYBIND11_MODULE(interpolate, m) {
         }))
       ;
 
+  py::class_<GenericPiecewiseInterpolate, Interpolate, std::shared_ptr<GenericPiecewiseInterpolate>>(m, "GenericPiecewiseInterpolate")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<GenericPiecewiseInterpolate>(args, kwargs,
+                                                                  {"points", "functions"});
+        }))
+      ;
+
   py::class_<PiecewiseLogLinearInterpolate, Interpolate, std::shared_ptr<PiecewiseLogLinearInterpolate>>(m, "PiecewiseLogLinearInterpolate")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
@@ -54,6 +62,13 @@ PYBIND11_MODULE(interpolate, m) {
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<ConstantInterpolate>(args, kwargs, {"v"});
+        }))
+      ;
+
+  py::class_<ExpInterpolate, Interpolate, std::shared_ptr<ExpInterpolate>>(m, "ExpInterpolate")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ExpInterpolate>(args, kwargs, {"A","B"});
         }))
       ;
 

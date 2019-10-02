@@ -23,6 +23,7 @@ extern "C" {
   void dgecon_(const char * norm, const int & n, double * A, const int & lda, const double & anrom, double & rcond, double * work, int * lwork, int & info);
   void dgttrf_(const int & N, double * DL, double * D, double * DU, double * DU2, int * IPIV, int & INFO);
   void dgttrs_(const char * TRANS, const int & N, const int & NRHS, double * DL, double * D, double * DU, double * DU2, int * IPIV, double * B, const int & LDB, int & info);
+  void dsyev_(const char * JOBZ, const char * UPLO, const int & N, double * A, const int & LDA, double * W, double * WORK, const int & LWORK, const int & INFO);
 }
 
 namespace neml {
@@ -181,6 +182,18 @@ int fact(int n);
 
 /// Factorial as a double + cacheing
 double factorial(int n);
+
+/// Get the eigenvalues of a symmetric 3x3 matrix in Mandel notation
+int eigenvalues_sym(const double * const s, double * values);
+
+/// Get the eigenvectors of a symmetric 3x3 matrix (row major)
+int eigenvectors_sym(const double * const s, double * vectors);
+
+/// First principal invariant
+double I1(const double * const s);
+
+/// Second principal invariant
+double I2(const double * const s);
 
 }
 

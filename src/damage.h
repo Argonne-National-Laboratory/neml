@@ -69,7 +69,8 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
                             double tol, int miter,
-                            bool verbose, bool truesdell);
+                            bool verbose, bool truesdell,
+                            bool ekill, double dkill, double sfact);
   
   /// Stress update using the scalar damage model
   virtual int update_sd(
@@ -141,6 +142,9 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
   double tol_;
   int miter_;
   bool verbose_;
+  bool ekill_;
+  double dkill_;
+  double sfact_;
 };
 
 /// Stack multiple scalar damage models together
@@ -263,6 +267,187 @@ class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
 };
 
 static Register<ClassicalCreepDamageModel_sd> regClassicalCreepDamageModel_sd;
+
+/// Base class of modular effective stresses used by ModularCreepDamageModel_sd
+class EffectiveStress: public NEMLObject {
+ public:
+  virtual int effective(const double * const s, double & eff) const = 0;
+  virtual int deffective(const double * const s, double * const deff) const = 0;
+};
+
+/// von Mises stress
+class VonMisesEffectiveStress: public EffectiveStress
+{
+ public:
+  VonMisesEffectiveStress();
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+};
+
+static Register<VonMisesEffectiveStress> regVonMisesEffectiveStress;
+
+/// Huddleston stress
+class HuddlestonEffectiveStress: public EffectiveStress
+{
+ public:
+  HuddlestonEffectiveStress(double b);
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+
+ private:
+  double b_;
+};
+
+static Register<HuddlestonEffectiveStress> regHuddlestonEffectiveStress;
+
+/// Maximum principal stress
+class MaxPrincipalEffectiveStress: public EffectiveStress
+{
+ public:
+  MaxPrincipalEffectiveStress();
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+};
+
+static Register<MaxPrincipalEffectiveStress> regMaxPrincipalEffectiveStress;
+
+/// Maximum of several effective stress measures
+class MaxSeveralEffectiveStress: public EffectiveStress
+{
+ public:
+  MaxSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures);
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+
+ private:
+  void select_(const double * const s, size_t & ind, double & value) const;
+
+ private:
+  std::vector<std::shared_ptr<EffectiveStress>> measures_;
+};
+
+static Register<MaxSeveralEffectiveStress> regMaxSeveralEffectiveStress;
+
+/// Weighted some of several effective stresses
+class SumSeveralEffectiveStress: public EffectiveStress
+{
+ public:
+  SumSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures,
+                            std::vector<double> weights);
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+
+ private:
+  std::vector<std::shared_ptr<EffectiveStress>> measures_;
+  std::vector<double> weights_;
+};
+
+static Register<SumSeveralEffectiveStress> regSumSeveralEffectiveStress;
+
+/// Modular version of Hayhurst-Leckie-Rabotnov-Kachanov damage
+//    This model differs from the above in two ways
+//      1) You can change the effective stress measure
+//      2) There is an extra (1-w)^xi term in the formulation to make the
+//         results match the old analytic solutions
+class ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+ public:
+  ModularCreepDamageModel_sd(
+                            std::shared_ptr<LinearElasticModel> elastic,
+                            std::shared_ptr<Interpolate> A,
+                            std::shared_ptr<Interpolate> xi,
+                            std::shared_ptr<Interpolate> phi,
+                            std::shared_ptr<EffectiveStress> estress,
+                            std::shared_ptr<NEMLModel_sd> base,
+                            std::shared_ptr<Interpolate> alpha,
+                            double tol, int miter,
+                            bool verbose, bool truesdell, 
+                            bool ekill, double dkill,
+                            double sfact);
+  
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  
+  /// The damage function d_np1 = d_n + (se / A)**xi * (1-d_np1)**xi * (1 - d_np1)**(-phi) * dt
+  virtual int damage(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt damage
+  virtual int ddamage_dd(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt strain
+  virtual int ddamage_de(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt stress
+  virtual int ddamage_ds(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+
+ protected:
+  std::shared_ptr<Interpolate> A_;
+  std::shared_ptr<Interpolate> xi_;
+  std::shared_ptr<Interpolate> phi_;
+  std::shared_ptr<EffectiveStress> estress_;
+};
+
+static Register<ModularCreepDamageModel_sd> regModularCreepDamageModel_sd;
 
 /// A standard damage model where the damage rate goes as the plastic strain
 class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {

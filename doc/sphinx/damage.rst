@@ -28,7 +28,7 @@ The interface is then
 
 which is identical to the interface for the 
 :doc:`base small strain material models <interfaces/NEMLModel_sd>`, 
-expect now with the addition of some dependence on the 
+except now with the addition of some dependence on the 
 damage variables :math:`\bm{\omega}`.
 
 Implementations

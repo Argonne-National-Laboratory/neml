@@ -197,6 +197,13 @@ PYBIND11_MODULE(creep, m) {
           return create_object_python<GenericCreep>(args, kwargs, {"cfn"});
         }))
       ;
+
+  py::class_<BlackburnSinhCreep, ScalarCreepRule, std::shared_ptr<BlackburnSinhCreep>>(m, "BlackburnSinhCreep")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<BlackburnSinhCreep>(args, kwargs, {"A", "beta", "n", "Q", "R"});
+        }))
+    ;
 } // MODULE(creep, m)
 
 } // namespace neml

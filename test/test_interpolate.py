@@ -59,6 +59,22 @@ class TestPiecewiseLinearInterpolate(unittest.TestCase, BaseInterpolate):
     ys2[xs > self.validx[-1]] = self.points[-1]
     self.assertTrue(np.allclose(ys1, ys2))
 
+class TestGenericPiecewiseInterpolate(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.xs = [1.0,5.0]
+    self.cvs = [-1.0,5.0,-2.0]
+    self.fns = [interpolate.ConstantInterpolate(cv) for cv in self.cvs]
+
+    self.interpolate = interpolate.GenericPiecewiseInterpolate(self.xs,
+        self.fns)
+
+    self.x = 4.0
+
+  def test_interpolate(self):
+    self.assertTrue(np.isclose(self.interpolate.value(0.0), self.cvs[0]))
+    self.assertTrue(np.isclose(self.interpolate.value(4.0), self.cvs[1]))
+    self.assertTrue(np.isclose(self.interpolate.value(10.0), self.cvs[2]))
+
 class TestPiecewiseLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.validx = [-10.0, -2.0, 1.0, 2.0, 5.0, 15.0]
@@ -106,6 +122,17 @@ class TestConstantInterpolate(unittest.TestCase, BaseInterpolate):
 
   def test_interpolate(self):
     self.assertTrue(np.isclose(self.v, self.interpolate(self.x)))
+
+class TestExpInterpolate(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.A = 1.2
+    self.B = 5.1
+    self.interpolate = interpolate.ExpInterpolate(self.A, self.B)
+    self.x = 0.5
+
+  def test_interpolate(self):
+    self.assertTrue(np.isclose(self.A * np.exp(self.B/self.x),
+      self.interpolate(self.x)))
 
 class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):

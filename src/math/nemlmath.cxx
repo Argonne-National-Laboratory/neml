@@ -1189,4 +1189,51 @@ double factorial(int n)
   return (double) fact(n);
 }
 
+int eigenvalues_sym(const double * const s, double * values)
+{
+  double F[9];
+  usym(s, F);
+  
+  int swork = 15;
+  double work[15];
+  int info;
+
+  dsyev_("N", "U", 3, F, 3, values, work, swork, info);
+
+  return info;
+}
+
+int eigenvectors_sym(const double * const s, double * vectors)
+{
+  usym(s, vectors);
+
+  int swork = 15;
+  double work[15];
+  int info;
+  double values[3];
+
+  dsyev_("V", "U", 3, vectors, 3, values, work, swork, info);
+
+  return info;
+}
+
+double I1(const double * const s)
+{
+  return s[0] + s[1] + s[2];
+}
+
+double I2(const double * const s)
+{
+  double F[9];
+  usym(s, F);
+  double tr1 = F[0] + F[4] + F[8];
+
+  double F2[9];
+  mat_mat(3, 3, 3, F, F, F2);
+
+  double tr2 = F2[0] + F2[4] + F2[8];
+
+  return 0.5 * (tr1*tr1 - tr2);
+}
+
 } // namespace neml

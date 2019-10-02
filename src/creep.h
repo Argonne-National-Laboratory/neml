@@ -206,6 +206,36 @@ class GenericCreep: public ScalarCreepRule {
 
 static Register<GenericCreep> regGenericCreep;
 
+/// Sinh type model used in the Blackburn models for creep in 316 and 304 SS
+class BlackburnSinhCreep: public ScalarCreepRule {
+ public:
+  /// Parameters: prefector A and exponent n
+  BlackburnSinhCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> beta,
+                     std::shared_ptr<Interpolate> n, double Q, double R);
+  
+  /// String type for the object system
+  static std::string type();
+  /// Setup from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+  
+  /// rate
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  /// Derivative of rate wrt effective stress
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg)
+      const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
+      const;
+
+ private:
+  const std::shared_ptr<const Interpolate> A_, beta_, n_;
+  const double Q_, R_;
+};
+
+static Register<BlackburnSinhCreep> regBlackburnSinhCreep;
+
 /// Creep trial state
 class CreepModelTrialState : public TrialState {
  public:

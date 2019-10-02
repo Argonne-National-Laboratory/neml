@@ -560,6 +560,40 @@ PYBIND11_MODULE(nemlmath, m) {
    m.def("differentiate_poly", &differentiate_poly, 
          "Differentiate a polynomial", py::arg("poly"), py::arg("n") = 1);
 
+   m.def("eigenvalues_sym",
+         [](py::array_t<double, py::array::c_style> s) -> std::tuple<double, double, double>
+         {
+           double vals[3];
+
+           int ier = eigenvalues_sym(arr2ptr<double>(s), vals);
+           py_error(ier);
+
+           return std::make_tuple(vals[0],vals[1],vals[2]);
+         }, "Eigenvalues of a symmetric matrix.");
+
+   m.def("eigenvectors_sym",
+         [](py::array_t<double, py::array::c_style> s) -> py::array_t<double>
+         {
+           auto V = alloc_mat<double>(3,3);
+           
+           int ier = eigenvectors_sym(arr2ptr<double>(s), arr2ptr<double>(V));
+           py_error(ier);
+
+           return V;
+         }, "Eigenvectors of a symmetric matrix.");
+
+   m.def("I1",
+         [](py::array_t<double, py::array::c_style> s) -> double
+         {
+           return I1(arr2ptr<double>(s));
+         }, "First principal invariant.");
+
+   m.def("I2",
+         [](py::array_t<double, py::array::c_style> s) -> double
+         {
+          return I2(arr2ptr<double>(s));
+         }, "Second principal invariant.");
+
    m.def("dgttrf",
          [](py::array_t<double, py::array::c_style> DL, py::array_t<double, py::array::c_style> D, py::array_t<double, py::array::c_style> DU) ->
          std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, py::array_t<double>, py::array_t<int>>

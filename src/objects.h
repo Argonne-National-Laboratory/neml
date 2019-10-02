@@ -288,8 +288,8 @@ class Register {
 /// Error to throw if parameters are not completely defined
 class UndefinedParameters: public std::exception {
  public:
-  UndefinedParameters(ParameterSet & params) :
-      params_(params)
+  UndefinedParameters(std::string name, std::vector<std::string> unassigned) :
+      name_(name), unassigned_(unassigned)
   {
 
   };
@@ -297,18 +297,19 @@ class UndefinedParameters: public std::exception {
   const char* what() const throw()
   {
     std::stringstream ss;
+    
+    ss << "Parameter set for object " << name_ << " has undefined parameters:" << std::endl;
 
-    ss << "Parameter set has undefined parameters:" << std::endl;
-    auto ups = params_.unassigned_parameters();
-    for (auto it = ups.begin(); it != ups.end(); ++it) {
-      ss << *it << " ";
+    for (auto it = unassigned_.begin(); it != unassigned_.end(); ++it) {
+      ss << "\t" << *it << " ";
     }
 
     return ss.str().c_str();
   }
 
  private:
-  ParameterSet & params_;
+  std::string name_;
+  std::vector<std::string> unassigned_;
 };
 
 /// Error to throw if the class isn't registered

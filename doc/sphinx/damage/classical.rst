@@ -9,7 +9,7 @@ The damage update is given by
 
 .. math::
    \omega_{n+1} = \omega_{n} + \left(\frac{\sigma_{eff}}{A}\right)^\xi 
-      \left(1 - \omega_{n+1}\right)^-\phi \Delta t_{n+1}
+      \left(1 - \omega_{n+1}\right)^{-\phi} \Delta t_{n+1}
 
    \sigma_{eff} = \sqrt{\frac{3}{2} \operatorname{dev}\left(\bm{\sigma}\right):\operatorname{dev}\left(\bm{\sigma}\right)}.
 
