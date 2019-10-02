@@ -21,6 +21,7 @@ Implementations
    maxprincipal
    huddleston
    maxseveral
+   sumseveral
 
 Class description
 -----------------
