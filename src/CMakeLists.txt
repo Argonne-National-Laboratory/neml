@@ -1,5 +1,10 @@
 include(macros.cmake)
 
+# This works to turn off optimization on the large static data, but
+# keep in mind this is really appending -O0 to the compile flags, not
+# replacing the optimization options from the base CMake configuration
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/cp/sphere.cxx PROPERTIES COMPILE_FLAGS -O0)
+
 ### BASE LIBRARY IN LIB ###
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 add_library(neml SHARED 
