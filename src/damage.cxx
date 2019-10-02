@@ -815,6 +815,62 @@ void MaxSeveralEffectiveStress::select_(const double * const s, size_t & ind, do
   }
 }
 
+SumSeveralEffectiveStress::SumSeveralEffectiveStress(
+    std::vector<std::shared_ptr<EffectiveStress>> measures,
+    std::vector<double> weights) :
+      measures_(measures), weights_(weights)
+{
+  if (measures_.size() != weights_.size()) {
+    throw std::invalid_argument("Length of measures and weights must be the same");
+  }
+}
+
+std::string SumSeveralEffectiveStress::type()
+{
+  return "SumSeveralEffectiveStress";
+}
+
+ParameterSet SumSeveralEffectiveStress::parameters()
+{
+  ParameterSet pset(SumSeveralEffectiveStress::type());
+
+  pset.add_parameter<std::vector<NEMLObject>>("measures");
+  pset.add_parameter<std::vector<double>>("weights");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> SumSeveralEffectiveStress::initialize(ParameterSet & params)
+{
+  return neml::make_unique<SumSeveralEffectiveStress>(
+      params.get_object_parameter_vector<EffectiveStress>("measures"),
+      params.get_parameter<std::vector<double>>("weights"));
+}
+
+int SumSeveralEffectiveStress::effective(const double * const s, double & eff) const
+{
+  double val;
+  eff = 0.0;
+  for (size_t i = 0; i < measures_.size(); i++) {
+    measures_[i]->effective(s, val);
+    eff += weights_[i] * val;
+  }
+  return 0;
+}
+
+int SumSeveralEffectiveStress::deffective(const double * const s, double * const deff) const
+{
+  double val[6];
+  std::fill(deff, deff+6, 0.0);
+  for (size_t i = 0; i < measures_.size(); i++) {
+    measures_[i]->deffective(s, val);
+    for (size_t j = 0; j < 6; j++) {
+      deff[j] += weights_[i] * val[j];
+    }
+  }
+  return 0;
+}
+
 ModularCreepDamageModel_sd::ModularCreepDamageModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<Interpolate> A,
