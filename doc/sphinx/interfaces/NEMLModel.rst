@@ -57,6 +57,7 @@ Implementations
 .. toctree::
 
    NEMLModel_sd
+   NEMLModel_ldi
 
 Parameters
 ----------
