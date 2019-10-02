@@ -316,6 +316,21 @@ class TestMaxSeveralEffectiveStress(unittest.TestCase, CommonEffectiveStress):
 
     self.assertTrue(np.isclose(max(se1,se2), self.es.effective(self.stress)))
 
+class TestSumSeveralEffectiveStress(unittest.TestCase, CommonEffectiveStress):
+  def setUp(self):
+    self.stresses = [damage.VonMisesEffectiveStress(), 
+        damage.MaxPrincipalEffectiveStress()]
+    self.weights = [0.37, 1.0-0.37]
+    self.es = damage.SumSeveralEffectiveStress(self.stresses, self.weights)
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+
+  def test_definition(self):
+    base = sum(w * eff.effective(self.stress) for eff, w in zip(self.stresses,
+      self.weights))
+
+    self.assertTrue(np.isclose(base, self.es.effective(self.stress)))
+
 class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
   def complete(self):
     self.E = 92000.0
