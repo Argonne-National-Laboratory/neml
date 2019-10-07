@@ -70,7 +70,7 @@ class TestPowerLawCreep(unittest.TestCase, CommonScalarCreep):
     g_calc = self.A * self.s ** (self.n)
     self.assertTrue(np.isclose(g_direct, g_calc))
 
-class TestBlackburnSinhCreep(unittest.TestCase, CommonScalarCreep):
+class TestBlackburnMinimumCreep(unittest.TestCase, CommonScalarCreep):
   def setUp(self):
     self.A = 1.0e-6
     self.beta = -2.0e-2
@@ -78,8 +78,8 @@ class TestBlackburnSinhCreep(unittest.TestCase, CommonScalarCreep):
     self.Q = 67000.0
     self.R = 1.987
 
-    self.model = creep.BlackburnSinhCreep(self.A, self.beta, self.n, 
-        self.Q, self.R) 
+    self.model = creep.BlackburnMinimumCreep(self.A, self.n, self.beta,
+        self.R, self.Q) 
 
     self.T = 300.0
     self.e = 0.1
@@ -89,6 +89,26 @@ class TestBlackburnSinhCreep(unittest.TestCase, CommonScalarCreep):
   def test_g(self):
     g_direct = self.model.g(self.s, self.e, self.t, self.T)
     g_calc = self.A * np.sinh(self.beta*self.s/self.n)**self.n * np.exp(-self.Q/(self.R*self.T))
+    self.assertTrue(np.isclose(g_direct, g_calc))
+
+class TestSwindemanMinimumCreep(unittest.TestCase, CommonScalarCreep):
+  def setUp(self):
+    self.C = 2.25e20
+    self.n = 5.0
+    self.V = 0.038
+    self.Q = 77280.0
+
+    self.model = creep.SwindemanMinimumCreep(self.C, self.n, self.V,
+        self.Q) 
+
+    self.T = 600+273.15
+    self.e = 0.1
+    self.s = 150.0
+    self.t = 10.0
+
+  def test_g(self):
+    g_direct = self.model.g(self.s, self.e, self.t, self.T)
+    g_calc = self.C * self.s ** self.n * np.exp(self.V * self.s) * np.exp(-self.Q/self.T)
     self.assertTrue(np.isclose(g_direct, g_calc))
 
 class TestRegionKMCreep(unittest.TestCase, CommonScalarCreep):

@@ -88,6 +88,149 @@ double PowerLawCreep::n(double T) const
   return n_->value(T);
 }
 
+// Implementation of the Blackburn minimum creep rate equation
+BlackburnMinimumCreep::BlackburnMinimumCreep(
+    std::shared_ptr<Interpolate> A,
+    std::shared_ptr<Interpolate> n,
+    std::shared_ptr<Interpolate> beta,
+    double R, double Q) :
+      A_(A), n_(n), beta_(beta), R_(R), Q_(Q)
+{
+
+}
+
+std::string BlackburnMinimumCreep::type()
+{
+  return "BlackburnMinimumCreep";
+}
+
+ParameterSet BlackburnMinimumCreep::parameters()
+{
+  ParameterSet pset(BlackburnMinimumCreep::type());
+
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("n");
+  pset.add_parameter<NEMLObject>("beta");
+  pset.add_parameter<double>("R");
+  pset.add_parameter<double>("Q");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> BlackburnMinimumCreep::initialize(ParameterSet & params)
+{
+  return neml::make_unique<BlackburnMinimumCreep>(
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("n"),
+      params.get_object_parameter<Interpolate>("beta"),
+      params.get_parameter<double>("R"),
+      params.get_parameter<double>("Q")
+      ); 
+}
+
+
+int BlackburnMinimumCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  double A = A_->value(T);
+  double n = n_->value(T);
+  double beta = beta_->value(T);
+
+  g = A * pow(sinh(beta * seq / n), n) * exp(-Q_ / (R_ * T));
+
+  return 0;
+}
+
+int BlackburnMinimumCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  double A = A_->value(T);
+  double n = n_->value(T);
+  double beta = beta_->value(T);
+
+  dg = A * beta * exp(-Q_ / (R_ * T)) * cosh(beta * seq / n) * 
+      pow(sinh(beta * seq / n), n - 1.0);
+
+  return 0;
+}
+
+int BlackburnMinimumCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
+int BlackburnMinimumCreep::dg_dT(double seq, double eeq, double t, double T, double & dg) const
+{
+  double A = A_->value(T);
+  double n = n_->value(T);
+  double beta = beta_->value(T);
+
+  dg = A * pow(sinh(beta * seq / n), n) * exp(-Q_ / (R_ * T)) * Q_ / (R_ * T * T);
+  return 0;
+}
+
+// Implementation of the Swindeman minimum creep rate equation
+SwindemanMinimumCreep::SwindemanMinimumCreep(double C, double n, double V,
+                                             double Q) :
+      C_(C), n_(n), V_(V), Q_(Q)
+{
+
+}
+
+std::string SwindemanMinimumCreep::type()
+{
+  return "SwindemanMinimumCreep";
+}
+
+ParameterSet SwindemanMinimumCreep::parameters()
+{
+  ParameterSet pset(SwindemanMinimumCreep::type());
+
+  pset.add_parameter<double>("C");
+  pset.add_parameter<double>("n");
+  pset.add_parameter<double>("V");
+  pset.add_parameter<double>("Q");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> SwindemanMinimumCreep::initialize(ParameterSet & params)
+{
+  return neml::make_unique<SwindemanMinimumCreep>(
+      params.get_parameter<double>("C"),
+      params.get_parameter<double>("n"),
+      params.get_parameter<double>("V"),
+      params.get_parameter<double>("Q")
+      ); 
+}
+
+
+int SwindemanMinimumCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  g = C_ * pow(seq, n_) * exp(V_ * seq) * exp(-Q_/T);
+
+  return 0;
+}
+
+int SwindemanMinimumCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+
+  dg = C_ * exp(-Q_/T) * (n_ + seq * V_) * exp(seq * V_) * pow(seq, n_ - 1.0);
+
+  return 0;
+}
+
+int SwindemanMinimumCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
+int SwindemanMinimumCreep::dg_dT(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = C_ * pow(seq, n_) * exp(V_ * seq) * exp(-Q_/T) * Q_ / (T * T); 
+  return 0;
+}
+
 // Implementation of the mechanism switching model
 RegionKMCreep::RegionKMCreep(std::vector<double> cuts, std::vector<double> A, 
                              std::vector<double> B, double kboltz, double b,
@@ -454,72 +597,6 @@ int GenericCreep::dg_de(double seq, double eeq, double t, double T, double & dg)
   dg = 0.0;
   return 0;
 }
-
-// Implementation of Blackburn sinh model
-BlackburnSinhCreep::BlackburnSinhCreep(std::shared_ptr<Interpolate> A,
-                                       std::shared_ptr<Interpolate> beta, 
-                                       std::shared_ptr<Interpolate> n,
-                                       double Q, double R) :
-    A_(A), beta_(beta), n_(n), Q_(Q), R_(R)
-{
-
-}
-
-std::string BlackburnSinhCreep::type()
-{
-  return "BlackburnSinhCreep";
-}
-
-ParameterSet BlackburnSinhCreep::parameters()
-{
-  ParameterSet pset(BlackburnSinhCreep::type());
-
-  pset.add_parameter<NEMLObject>("A");
-  pset.add_parameter<NEMLObject>("beta");
-  pset.add_parameter<NEMLObject>("n");
-  pset.add_parameter<double>("Q");
-  pset.add_parameter<double>("R");
-
-  return pset;
-}
-
-std::unique_ptr<NEMLObject> BlackburnSinhCreep::initialize(ParameterSet & params)
-{
-  return neml::make_unique<BlackburnSinhCreep>(
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("beta"),
-      params.get_object_parameter<Interpolate>("n"),
-      params.get_parameter<double>("Q"),
-      params.get_parameter<double>("R")
-      ); 
-}
-
-
-int BlackburnSinhCreep::g(double seq, double eeq, double t, double T, double & g) const
-{
-  double A = A_->value(T);
-  double B = beta_->value(T);
-  double n = n_->value(T);
-  g = A * pow(sinh(B*seq/n),n) * exp(-Q_/(R_*T));
-  return 0;
-}
-
-int BlackburnSinhCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
-{
-  double A = A_->value(T);
-  double B = beta_->value(T);
-  double n = n_->value(T);
-
-  dg = A * B * exp(-Q_/(R_*T)) * cosh(B*seq/n) * pow(sinh(B*seq/n),n-1.0);
-  return 0;
-}
-
-int BlackburnSinhCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
-{
-  dg = 0.0;
-  return 0;
-}
-
 
 // Setup for solve
 CreepModel::CreepModel(double tol, int miter, bool verbose) :

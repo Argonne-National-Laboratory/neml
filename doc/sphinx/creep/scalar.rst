@@ -24,6 +24,8 @@ Implementations
    s_norton
    s_mukherjee
    s_generic
+   s_blackburn
+   s_swindeman
 
 Class description
 -----------------
