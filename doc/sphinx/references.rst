@@ -25,6 +25,10 @@ References
 
 .. [BMD1969] Bird, J. E., Mukherjee, A. K., and J. E. Dorn. "Correlations between high-temperature creep behavior and structure," In the proceedings of `The International Conference on Quantitive Relation Between Properties and Microstructure,` Haifa, Israel (1969).
 
-.. [HL1977] Hayhurst, D. R. and F. A. Leckie. "Constutitive equations for creep rupture," `Acta Metallurgica,` 25(9): pp. 1059-1070, 1977.
+.. [HL1977] Hayhurst, D. R. and F. A. Leckie. "Constutitive equations for creep rupture," `Acta Metallurgica,` 25(9): pp. 1059-1070 (1977).
 
-.. [H1985] Huddleston, R. "An improved multiaxial creep-rupture strength criterion," `Journal of Pressure Vessel Technology,` 107(Nov): pp. 421-429, 1985.
+.. [H1985] Huddleston, R. "An improved multiaxial creep-rupture strength criterion," `Journal of Pressure Vessel Technology,` 107(Nov): pp. 421-429 (1985).
+
+.. [B1972] Blackburn, L. "Isochronous Stress-Strain Curves for Austenitic Stainless Steels," In `The Generation of Isochronous Stress-Strain Curves,` ed. A. Shaefer, American Society of Mechanical Engineers, New York, NY: pp. 15-48 (1972).
+
+.. [S1999] Swindeman, R. "Construction of isochronous stress-strain curves for 9Cr-1Mo-V steel," `Advances in Life Prediction Methodology,` 391: pp. 95-100 (1999).
