@@ -32,3 +32,9 @@ References
 .. [B1972] Blackburn, L. "Isochronous Stress-Strain Curves for Austenitic Stainless Steels," In `The Generation of Isochronous Stress-Strain Curves,` ed. A. Shaefer, American Society of Mechanical Engineers, New York, NY: pp. 15-48 (1972).
 
 .. [S1999] Swindeman, R. "Construction of isochronous stress-strain curves for 9Cr-1Mo-V steel," `Advances in Life Prediction Methodology,` 391: pp. 95-100 (1999).
+
+.. [A1983] Asaro, R. "Micromechanics of crystals and polycrystals," `Advances in Applied Mechanics,` 25(C): pp. 1-115 (1983).
+
+.. [M2015] Messner, M. C., Beaudoin, A. and R. H. Dodds, Jr. "Consistent crystal plasticity kinematics and linearization for the implicit finite element method," `Engineering Computations,` 32(6): pp. 1526-1548 (2015).
+
+.. [L1969] Lee, E. H. "Elastic-plastic deformation at finite strains," `ASME Journal of Applied Mechanics,` 36: pp. 1-6 (1969).

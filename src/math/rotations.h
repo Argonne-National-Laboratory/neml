@@ -16,10 +16,15 @@ namespace neml {
 /// A generic quaternion, stored as [s v1 v2 v3]
 class Quaternion: public NEMLObject {
  public:
+  /// Default constructor (manage own memory)
   Quaternion();
+  /// Construct from vector (manage own memory)
   Quaternion(const std::vector<double> v);
+  /// Construct from raw pointer (don't manage memory)
   Quaternion(double * v);
+  /// Copy constructor
   Quaternion(const Quaternion & other);
+  /// Move constructor
   Quaternion(const Quaternion && other);
 
   /// Type for the object system
@@ -38,8 +43,9 @@ class Quaternion: public NEMLObject {
   /// Do you store your own data?
   bool store() const;
 
-  /// Raw quaternion
+  /// Raw quaternion as a const pointer
   const double * quat() const;
+  /// Raw quaternion as a nonconst pointer
   double * data();
 
   /// Quaternion norm
@@ -96,10 +102,15 @@ class Quaternion: public NEMLObject {
 static Register<Quaternion> regQuat;
 
 // Binary operators
+/// Scalar multiplication
 Quaternion operator*(double s, const Quaternion & q);
+/// Scalar multiplication
 Quaternion operator*(const Quaternion & q, double s);
+/// Composition
 Quaternion operator*(const Quaternion & lhs, const Quaternion & rhs);
+/// Scalar division
 Quaternion operator/(const Quaternion & q, double s);
+/// Scalar division
 Quaternion operator/(const Quaternion & lhs, const Quaternion & rhs);
 
 /// C++ stream output for quaternions
@@ -117,15 +128,18 @@ class Orientation: public Quaternion {
   // Creation functions
   /// Create from a Rodrigues vector
   static Orientation createRodrigues(const double * const r);
+  /// Set from an input Rodrigues vector
   void setRodrigues(const double * const r);
 
   /// Create from a rotation matrix
   static Orientation createMatrix(const double * const M);
+  /// Set from an input matrix
   void setMatrix(const double * const M);
 
   /// Create from an axis-angle representation
   static Orientation createAxisAngle(const double * const n, double a,
                                      std::string angles = "radians");
+  /// Set from an input axis/angle pair
   void setAxisAngle(const double * const n, double a, 
                     std::string angles = "radians");
 
@@ -133,6 +147,7 @@ class Orientation: public Quaternion {
   static Orientation createEulerAngles(double a, double b, double c, 
                                        std::string angles = "radians",
                                        std::string convention = "kocks");
+  /// Set from inputEuler angles
   void setEulerAngles(double a, double b, double c, 
                       std::string angles = "radians",
                       std::string convention = "kocks");
@@ -140,36 +155,50 @@ class Orientation: public Quaternion {
   /// Create from the Hopf coordinates
   static Orientation createHopf(double psi, double theta, double phi,
                                 std::string angles = "radians");
+  /// Set from input Hopf coordinates
   void setHopf(double psi, double theta, double phi, 
                std::string angles = "radians");
 
   /// Create from hyperspherical coordinates
   static Orientation createHyperspherical(double a1, double a2, double a3,
                                           std::string angles = "radians");
+  /// Set from input hyperspherical coordinates
   void setHyperspherical(double a1, double a2, double a3, 
                          std::string angles = "radians");
 
   /// Create from two vectors
   static Orientation createVectors(const Vector & x, const Vector & y);
+  /// Set from input two vectors
   void setVectors(const Vector & x, const Vector & y);
   
   // Actual constructors
+  /// Default constructor (defaults to identity, manage own memory)
   Orientation();
+  /// Raw pointer constructor (don't manage memory)
   Orientation(double * v);
+  /// vector<double> constructor (manage own memory)
   Orientation(const std::vector<double> v);
+  /// Copy constructor
   Orientation(const Quaternion & other);
 
   // Various conversions
+  /// Convert to Euler angles
   void to_euler(double & a, double & b, double & c, 
                 std::string angles = "radians",
                 std::string convention = "kocks") const;
+  /// Convert to an axis/angle pair
   void to_axis_angle(double * const n, double & a,
                      std::string angles = "radians") const;
+  /// Convert to a rotation matrix
   void to_matrix(double * const M) const;
+  /// Convert to a rank 2 tensor
   RankTwo to_tensor() const;
+  /// Convert to a Rodrigues vector
   void to_rodrigues(double * const v) const;
+  /// Convert to Hopf coordinates
   void to_hopf(double & alpha, double & beta, double & gamma,
                std::string angles = "radians") const;
+  /// Convert to hyperspherical coordinates
   void to_hyperspherical(double & a1, double & a2, double & a3, 
                          std::string angles = "radians") const;
 
@@ -192,12 +221,17 @@ class Orientation: public Quaternion {
   /// Power
   Orientation pow(double w) const;
 
-  /// Rotate various tensors
+  /// Rotate a Vector
   Vector apply(const Vector & a) const;
+  /// Rotate a Rank2
   RankTwo apply(const RankTwo & a) const;
+  /// Rotate a Symmetric tensor
   Symmetric apply(const Symmetric & a) const;
+  /// Rotate a Skew tensor
   Skew apply(const Skew & a) const;
+  /// Rotate a RankFour tensor
   RankFour apply(const RankFour & a) const;
+  /// Rotate a SymSym rank four tensor
   SymSym apply(const SymSym & a) const;
 
   /// Geodesic distance
@@ -215,7 +249,9 @@ class Orientation: public Quaternion {
 static Register<Orientation> regOrientation;
 
 // Binary operators
+/// Compose two rotations
 Orientation operator*(const Orientation & lhs, const Orientation & rhs);
+/// Compose a rotation with the inverse of a rotation
 Orientation operator/(const Orientation & lhs, const Orientation & rhs);
 
 /// Generate n random orientations

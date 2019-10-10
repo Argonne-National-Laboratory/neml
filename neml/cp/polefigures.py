@@ -15,12 +15,18 @@ triangle_limits = {"cubic": (0,0)}
 def project_stereographic(v):
   """
     Stereographic projection of the given vector into a numpy array
+
+    Parameters:
+      v:        input vector
   """
   return np.array([v[0]/(1.0+v[2]), v[1]/(1.0+v[2])])
 
 def project_lambert_equal_area(v):
   """
     Lambert equal area projection of the given vector into a numpy array
+
+    Parameters:
+      v:        input vector
   """
   return np.array([np.sqrt(2/(1+v[2]))*v[0]/np.sqrt(2),
     np.sqrt(2/(1+v[2]))*v[0]/np.sqrt(2)])
@@ -30,9 +36,7 @@ def inverse_project_stereographic(pt):
     Inverse stereographic projection
 
     Parameters:
-      pt            point, as numpy array
-
-    Returns a vector
+      pt:            point, as numpy array
   """
   X = pt[0]
   Y = pt[1]
@@ -44,9 +48,7 @@ def inverse_project_lambert_equal_area(pt):
     Inverse Lambert projections
 
     Parameters:
-      pt            point, as a numpy array
-
-    Returns a vector
+      pt:            point, as a numpy array
   """
   X = pt[0]
   Y = pt[1]
@@ -56,6 +58,9 @@ def inverse_project_lambert_equal_area(pt):
 def cart2pol(x):
   """
     Convert a cartesian point into polar coordinates
+
+    Parameters:
+      x:        point to convert to polar
   """
   return np.array([np.arctan2(x[1], x[0]), la.norm(x)])
 
@@ -68,17 +73,17 @@ def pole_figure_discrete(orientations, pole, lattice,
     Plot a standard pole figure given a collection of discrete points.
 
     Parameters:
-      orientations      list of orientations
-      pole              pole as a integer list
-      lattice           crystal lattice class, including crystal symmetry
+      orientations:      list of orientations
+      pole:              pole as a integer list
+      lattice:           crystal lattice class, including crystal symmetry
 
-    Optional:
-      projection        which projection to use
-      sample_symmetry   what sample symmetry to apply to the pole figure,
-                        defaults to orthorhombic
-      x                 x direction for plot, defaults to [1,0,0]
-      y                 y direction for plot, defaults to [0,1,0]
-      axis_labels       axis labels to include on the figure
+    Keyword Args:
+      projection:        which projection to use
+      sample_symmetry:   what sample symmetry to apply to the pole figure,
+                         defaults to orthorhombic
+      x:                 x direction for plot, defaults to [1,0,0]
+      y:                 y direction for plot, defaults to [0,1,0]
+      axis_labels:       axis labels to include on the figure
   """
   # Get the rotation from the standard coordinates to the given x and y
   srot = rotations.Orientation(x,y)
@@ -131,8 +136,8 @@ def pol2cart(R, T):
     Convert polar coordinates to cartesian
 
     Parameters:
-      R         radii
-      T         angle, in radians
+      R:         radii
+      T:         angle, in radians
   """
   X = R * np.cos(T)
   Y = R * np.sin(T)
@@ -147,23 +152,23 @@ def inverse_pole_figure_discrete(orientations, direction, lattice,
     Plot an inverse pole figure given a collection of discrete points.
 
     Parameters:
-      orientations      list of orientations
-      direction         sample direction
-      lattice           crystal lattice class, including crystal symmetry
+      orientations:      list of orientations
+      direction:         sample direction
+      lattice:           crystal lattice class, including crystal symmetry
 
-    Optional:
-      reduce_figure     reduce to some fundamental region.  Options include:
-                          False         don't do it
-                          "cubic"       cubic convention
-                          [v1,v2,v3]    list of crystallographic points
-                                        defining the triangle
-      color             color points based on the provided triangle
-      sample_symmetry   what sample symmetry to apply to the pole figure,
-                        defaults to orthorhombic
-      x                 crystallographic x direction for plot, defaults to [1,0,0]
-      y                 crystallographic y direction for plot, defaults to [0,1,0]
-      axis_labels       axis labels to include on the figure
-      nline             number of discrete points to use in plotting lines on the triangle
+    Keyword Args:
+      reduce_figure:     reduce to some fundamental region.
+                         Options include
+                         False -- don't do it
+                         "cubic" -- cubic convention
+                         [v1,v2,v3] -- list of crystallographic points defining the triangle
+      color:             color points based on the provided triangle
+      sample_symmetry:   what sample symmetry to apply to the pole figure,
+                         defaults to orthorhombic
+      x:                 crystallographic x direction for plot, defaults to [1,0,0]
+      y:                 crystallographic y direction for plot, defaults to [0,1,0]
+      axis_labels:       axis labels to include on the figure
+      nline:             number of discrete points to use in plotting lines on the triangle
   """
   pts = np.vstack(tuple(project_ipf(q, lattice, direction, 
     sample_symmetry = sample_symmetry, x = x, y = y) for q in orientations))
@@ -220,14 +225,14 @@ def project_ipf(q, lattice, direction,
     Project a single sample direction onto a crystal
 
     Parameters:
-      q                 lattice orientation
-      lattice           lattice object describing the crystal system
-      direction         sample direction 
+      q:                 lattice orientation
+      lattice:           lattice object describing the crystal system
+      direction:         sample direction 
     
-    Optional:
-      sample_symmetry   sample symmetry operators
-      x                 x direction (crystallographic) of the projection
-      y                 y direction (crystallographic) of the projection
+    Keyword Args:
+      sample_symmetry:   sample symmetry operators
+      x:                 x direction (crystallographic) of the projection
+      y:                 y direction (crystallographic) of the projection
   """
   xv = lattice.miller2cart_direction(x).normalize()
   yv = lattice.miller2cart_direction(y).normalize()
@@ -272,12 +277,12 @@ def reduce_points_triangle(pts, v0 = np.array([0,0,1.0]),
     Default vectors give you the cubic triangle
 
     Parameters:
-      pts       projected points
+      pts:       projected points
 
-    Optional:
-      v1        1st vector
-      v2        2nd vector
-      v3        3rd vector
+    Keyword Args:
+      v1:        1st vector
+      v2:        2nd vector
+      v3:        3rd vector
   """
   v0 /= la.norm(v0)
   v1 /= la.norm(v1)
@@ -302,12 +307,12 @@ def ipf_color(pts, v0 = np.array([0,0,1.0]),
     Assumes the points already fall inside the appropriate triangle
 
     Parameters:
-      pts       list of points
+      pts:       list of points
 
-    Optional:
-      v0        point on triangle
-      v1        point on triangle
-      v2        point on triangle
+    Keyword Args:
+      v0:        point on triangle
+      v1:        point on triangle
+      v2:        point on triangle
   """
   v0 /= la.norm(v0)
   v1 /= la.norm(v1)
@@ -339,13 +344,13 @@ def ipf_color_chart(v0 = np.array([0,0,1.0]),
   """
     Make a color chart for the IPF coloring used here
 
-    Optional:
-      v0            point on triangle
-      v1            point on triangle
-      v2            point on triangle
-      axis_labels   labels to draw on triangle
-      ngrid         number of grid points to use
-      nline         number of line points to sue
+    Keyword Args:
+      v0:            point on triangle
+      v1:            point on triangle
+      v2:            point on triangle
+      axis_labels:   labels to draw on triangle
+      ngrid:         number of grid points to use
+      nline:         number of line points to use
   """
   vs = [v0,v1,v2]
 

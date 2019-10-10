@@ -152,6 +152,8 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
 class VoceSlipHardening: public PlasticSlipHardening
 {
  public:
+  /// Initialize with the saturated strength, the rate constant, and a constant
+  /// strength
   VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
                     std::shared_ptr<Interpolate> b,
                     std::shared_ptr<Interpolate> tau_0);

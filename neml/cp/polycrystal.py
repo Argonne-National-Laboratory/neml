@@ -21,6 +21,14 @@ class PolycrystalModel(object):
       4) Orientation 
   """
   def __init__(self, model, orientations, T0 = 300.0):
+    """
+      Parameters:
+        model:          crystal model
+        orientations:   list of crystal orientations
+
+      Keyword Args:
+        T0:             initial temperature
+    """
     self.model = model
     self.q0 = orientations
     self.T0 = T0
@@ -49,12 +57,12 @@ class PolycrystalModel(object):
       Take a deformation step
 
       Parameters:
-        L           spatial velocity gradient
-        dt          time increment
+        L:           spatial velocity gradient
+        dt:          time increment
 
-      Optional:
-        T           next temperature
-        nthreads    number of threads to use
+      Keyword Args:
+        T:           next temperature
+        nthreads:    number of threads to use
     """
     # Advance the macrostep
     self.t += dt
@@ -75,7 +83,7 @@ class PolycrystalModel(object):
       Get the orientation for the ith crystal
       
       Parameters:
-        i       crystal number
+        i:       crystal number
     """
     return self.model.get_passive_orientation(self.h_n[i])
 
@@ -89,14 +97,12 @@ class TaylorModel(PolycrystalModel):
   """
   def __init__(self, *args, **kwargs):
     """
-      Same as parent class
-
       Parameters:
-        model           single crystal model
-        orientations    initial PASSIVE orientations
+        model:           single crystal model
+        orientations:    initial PASSIVE orientations
 
-      Optional:
-        T0              initial temperature
+      Keyword Args:
+        T0:              initial temperature
     """
     super().__init__(*args, **kwargs)
 
@@ -108,12 +114,12 @@ class TaylorModel(PolycrystalModel):
       Store the microscale quantities in state n+1
 
       Parameters:
-        L           spatial velocity gradient
-        dt          time increment
-        T           temperature
+        L:           spatial velocity gradient
+        dt:          time increment
+        T:           temperature
 
-      Optional:
-        nthreads    number of threads in the update
+      Keyword Args:
+        nthreads:    number of threads in the update
     """
     d = nemlmath.sym(0.5*(L+L.T))
     w = nemlmath.skew(0.5*(L-L.T))
@@ -133,5 +139,3 @@ class TaylorModel(PolycrystalModel):
     T = nemlmath.transform_fourth(A_avg, B_avg)
 
     return L, np.mean(self.s_np1, axis = 0), T, np.mean(self.u_np1), np.mean(self.p_np1)
-
-

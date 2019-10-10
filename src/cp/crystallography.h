@@ -20,7 +20,9 @@ std::vector<Orientation> symmetry_rotations(std::string sclass);
 
 class SymmetryGroup: public NEMLObject {
  public:
+  /// Initialize with the Hermann-Mauguin notation as a string
   SymmetryGroup(std::string sclass);
+  /// Destructor
   virtual ~SymmetryGroup();
  
   /// String type for the object system
@@ -59,41 +61,68 @@ static Register<SymmetryGroup> regSymmetryGroup;
 
 class Lattice: public NEMLObject {
  public:
+  /// Initialize with the three lattice vectors, the symmetry group and
+  /// (optionally) a initial list of slip systems
   Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry,
           list_systems isystems = {});
+  /// Destructor
   virtual ~Lattice();
-
+  
+  /// First lattice vector
   const Vector & a1() {return a1_;};
+  /// Second lattice vector
   const Vector & a2() {return a2_;};
+  /// Third lattice vector
   const Vector & a3() {return a3_;};
+  /// First reciprocal vector
   const Vector & b1() {return b1_;};
+  /// Second reciprocal vector
   const Vector & b2() {return b2_;};
+  /// Third reciprocal vector
   const Vector & b3() {return b3_;};
-
+  
+  /// Return the list of burgers vectors
   const std::vector<std::vector<Vector>> & burgers_vectors() {return burgers_vectors_;};
+  /// Return the list of normalized slip directions
   const std::vector<std::vector<Vector>> & slip_directions() {return slip_directions_;};
+  /// Return the last of normalize slip normals
   const std::vector<std::vector<Vector>> & slip_planes() {return slip_planes_;};
   
+  /// Convert Miller directions to cartesian vectors
   Vector miller2cart_direction(std::vector<int> m);
+  /// Convert Miller planes to cartesian normal vectors
   Vector miller2cart_plane(std::vector<int> m);
-
+  
+  /// Find all sets of equivalent vectors (+/- different)
   std::vector<Vector> equivalent_vectors(Vector v);
+  /// Find all all sets of equivalent vectors (+/- the same)
   std::vector<Vector> equivalent_vectors_bidirectional(Vector v);
-
+  
+  /// Add a slip system given the Miller direction and plane
   void add_slip_system(std::vector<int> d, std::vector<int> p);
-
+  
+  /// Number of groups of slip systems
   size_t ngroup() const;
+  /// Number of slip systems in group g
   size_t nslip(size_t g) const;
+  /// Flat index of slip group g, system i
   size_t flat(size_t g, size_t i) const;
-
+  
+  /// Return the sym(d x n) tensor for group g, system i, rotated with Q
   Symmetric M(size_t g, size_t i, const Orientation & Q);
+  /// Return the skew(d x n) tensor for group g, system i, rotated with Q
   Skew N(size_t g, size_t i, const Orientation & Q);
-
+  
+  /// Calculate the resolved shear stress on group g, system i, rotated with Q
+  /// given the stress
   double shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
                stress);
+  /// Calculate the derivative of the resolved shear stress on group g, 
+  /// system i, rotated with Q, given the stress
   Symmetric d_shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
                     stress);
-
+  
+  /// Access the symmetry operations
   const std::shared_ptr<SymmetryGroup> symmetry();
 
  private:
@@ -121,6 +150,8 @@ class Lattice: public NEMLObject {
 
 class CubicLattice: public Lattice {
  public:
+  /// Specialized Lattice for cubic systems, initialize with the lattice
+  /// parameter
   CubicLattice(double a, list_systems isystems = {});
 
   /// String type for the object system

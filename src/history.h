@@ -20,7 +20,7 @@ enum StorageType {
   TYPE_SYMSYM    = 6
 };
 
-/// Black magic to map a type to the enum
+// Black magic to map a type to the enum
 template <class T> constexpr StorageType GetStorageType();
 template <> constexpr StorageType GetStorageType<Vector>() {return TYPE_VECTOR;}
 template <> constexpr StorageType GetStorageType<RankTwo>() {return TYPE_RANKTWO;}
@@ -56,18 +56,24 @@ const std::map<StorageType,const std::map<StorageType,StorageType>> derivative_t
 
 class History {
  public:
+  /// Default constructor (manage own memory)
   History();
+  /// Default constructor (option to not manage memory)
   History(bool store);
+  /// Copy constructor
   History(const History & other);
+  /// Move constructor
   History(const History && other);
   /// Dangerous constructor, only use if you know what you're doing
   History(double * data);
   /// Dangerous constructor, only use if you know what you're doing
   History(const double * data);
+  /// Destructor
   virtual ~History();
 
-  /// Copy constructor
+  /// Copy
   History & operator=(const History & other);
+  /// Move
   History & operator=(const History && other);
 
   /// Explicit deepcopy
@@ -99,10 +105,12 @@ class History {
 
   /// Add known object
   void add(std::string name, StorageType type, size_t size);
- 
+  
+  /// Helper for template magic
   template<class T>
   struct item_return{ typedef T type; };
-
+  
+  /// Get an item (provide with correct class)
   template<class T>
   typename item_return<T>::type get(std::string name) const
   {
@@ -111,15 +119,20 @@ class History {
     return T(&(storage_[loc_.at(name)]));
   }
 
-  /// Getters
+  /// Get the location map
   const std::map<std::string,size_t> & get_loc() const {return loc_;};
+  /// Get the type map
   const std::map<std::string,StorageType> & get_type() const {return type_;};
+  /// Get the name order
   const std::vector<std::string> & get_order() const {return order_;};
-
+  
+  /// Get the location map
   std::map<std::string,size_t> & get_loc() {return loc_;};
+  /// Get the type map
   std::map<std::string,StorageType> & get_type() {return type_;};
+  /// Get the order
   std::vector<std::string> & get_order() {return order_;};
-
+  
   const std::vector<std::string> & items() const {return get_order();};
 
   /// Resize method

@@ -42,6 +42,7 @@ class SCTrialState: public TrialState {
 class SingleCrystalModel: public NEMLModel_ldi, public Solvable
 {
  public:
+  /// Raw constructor
   SingleCrystalModel(std::shared_ptr<KinematicModel> kinematics,
                      std::shared_ptr<Lattice> lattice,
                      std::shared_ptr<Orientation> initial_angle,
@@ -49,6 +50,7 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
                      bool update_rotation,
                      double tol, int miter, bool verbose,
                      int max_divide);
+  /// Destructor
   virtual ~SingleCrystalModel();
 
   /// Type for the object system
@@ -63,8 +65,9 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
   /// Actually initialize history
   void init_history(History & history) const;
-
-   virtual int update_ld_inc(
+  
+  /// Large deformation incremental update
+  virtual int update_ld_inc(
        const double * const d_np1, const double * const d_n,
        const double * const w_np1, const double * const w_n,
        double T_np1, double T_n,
@@ -74,12 +77,17 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
        double * const A_np1, double * const B_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n);
+  
+  /// Number of stored history variables
+  virtual size_t nhist() const;
+  /// Initialize history raw pointer array
+  virtual int init_hist(double * const hist) const;
+  
+  /// Instantaneous CTE
+  virtual double alpha(double T) const;
 
-   virtual size_t nhist() const;
-   virtual int init_hist(double * const hist) const;
-
-   virtual double alpha(double T) const;
-   virtual int elastic_strains(const double * const s_np1,
+  /// Helper to calculate the elastic strain
+  virtual int elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const;
 
@@ -91,15 +99,22 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
   virtual int RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
-  /// Getter/setter helpers
+  /// Get the current orientation in the active convention (raw ptr history)
   Orientation get_active_orientation(double * const hist) const;
+  /// Get the current orientation in the active convention
   Orientation get_active_orientation(const History & hist) const;
+  /// Get the current orientation in the passive convention (raw ptr history)
   Orientation get_passive_orientation(double * const hist) const;
+  /// Get the current orientation in the passive convention
   Orientation get_passive_orientation(const History & hist) const;
-
+  
+  /// Set the current orientation given an active rotation (crystal to lab)
   void set_active_orientation(double * const hist, const Orientation & q) const;
+  /// Set the current orientation given an active rotation (crystal to lab)
   void set_active_orientation(History & hist, const Orientation & q) const;
+  /// Set the current orientation given a passive rotation (lab to crystal)
   void set_passive_orientation(double * const hist, const Orientation & q) const;
+  /// Set the current orientation given a passive rotation (lab to crystal)
   void set_passive_orientation(History & hist, const Orientation & q) const;
 
  private:

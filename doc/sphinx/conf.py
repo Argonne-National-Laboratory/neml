@@ -189,3 +189,6 @@ breathe_projects = {"neml": "../class-doc/xml"}
 breathe_default_project = "neml"
 
 # -- Options for napoleon ------------------------------------------------
+
+# -- Options for autodoc -------------------------------------------------
+autoclass_content = 'both'
