@@ -13,7 +13,7 @@ and the slip rate on each individual slip system where the slip rate is related 
 where :math:`\mathbf{d}_{g,i}` is the slip direction for group `g`, system `i` `in the current coordinates` and :math:`\mathbf{n}_{g,i}` is similarly the slip system normal.  The interface used is:
 
 .. math::
-   \dot{\gamma}_{g,i}, \frac{\partial \dot{\gamma}_{g,i}}{\partial \tau_{g,i}}, \frac{\partial \dot{\gamma}_{g,i}}{\partial \bar{\tau}_{g,i}} \leftarrow \mathcal{G}\left( \tau_{g,i}, \bar{\tau}, T \right)
+   \dot{\gamma}_{g,i}, \frac{\partial \dot{\gamma}_{g,i}}{\partial \tau_{g,i}}, \frac{\partial \dot{\gamma}_{g,i}}{\partial \bar{\tau}_{g,i}} \leftarrow \mathcal{G}\left( \tau_{g,i}, \bar{\tau}_{g,i}, T \right)
 
    \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, T \right)
 

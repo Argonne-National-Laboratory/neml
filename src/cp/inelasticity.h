@@ -226,10 +226,10 @@ static Register<AsaroInelasticity> regAsaroInelasticity;
 
 /// An isotropic power law creep model, 
 /// typically combined with slip system models to represent diffusion
-class PowerLaw: public InelasticModel {
+class PowerLawInelasticity: public InelasticModel {
  public:
-  PowerLaw(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
-  virtual ~PowerLaw();
+  PowerLawInelasticity(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
+  virtual ~PowerLawInelasticity();
 
   /// String type for the object system
   static std::string type();
@@ -305,7 +305,7 @@ class PowerLaw: public InelasticModel {
   std::shared_ptr<Interpolate> n_;
 };
 
-static Register<PowerLaw> regPowerLaw;
+static Register<PowerLawInelasticity> regPowerLawInelasticity;
 
 /// Metamodel that combines the rates of several individual InelasticModels
 // The model plastic deformation rates are summed, the model histories are

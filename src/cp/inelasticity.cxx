@@ -279,50 +279,50 @@ History AsaroInelasticity::d_w_p_d_history(const Symmetric & stress,
   return h;
 }
 
-PowerLaw::PowerLaw(std::shared_ptr<Interpolate> A, 
+PowerLawInelasticity::PowerLawInelasticity(std::shared_ptr<Interpolate> A, 
                    std::shared_ptr<Interpolate> n) :
     A_(A), n_(n)
 {
 
 }
 
-PowerLaw::~PowerLaw()
+PowerLawInelasticity::~PowerLawInelasticity()
 {
 
 }
 
-std::string PowerLaw::type()
+std::string PowerLawInelasticity::type()
 {
-  return "PowerLaw";
+  return "PowerLawInelasticity";
 }
 
-ParameterSet PowerLaw::parameters()
+ParameterSet PowerLawInelasticity::parameters()
 {
-  ParameterSet pset(PowerLaw::type());
+  ParameterSet pset(PowerLawInelasticity::type());
   pset.add_parameter<NEMLObject>("A");
   pset.add_parameter<NEMLObject>("n");
 
   return pset;
 }
 
-std::unique_ptr<NEMLObject> PowerLaw::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> PowerLawInelasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PowerLaw>(
+  return neml::make_unique<PowerLawInelasticity>(
       params.get_object_parameter<Interpolate>("A"),
       params.get_object_parameter<Interpolate>("n")); 
 }
 
-void PowerLaw::populate_history(History & history) const
+void PowerLawInelasticity::populate_history(History & history) const
 {
   return;
 }
 
-void PowerLaw::init_history(History & history) const
+void PowerLawInelasticity::init_history(History & history) const
 {
   return;
 }
 
-Symmetric PowerLaw::d_p(const Symmetric & stress, const Orientation & Q,
+Symmetric PowerLawInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
                               const History & history,
                               Lattice & lattice, double T) const
 {
@@ -337,7 +337,7 @@ Symmetric PowerLaw::d_p(const Symmetric & stress, const Orientation & Q,
   return A * pow(seq, n-1.0) * stress.dev();
 }
 
-SymSym PowerLaw::d_d_p_d_stress(
+SymSym PowerLawInelasticity::d_d_p_d_stress(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
     Lattice & lattice, double T) const
@@ -359,7 +359,7 @@ SymSym PowerLaw::d_d_p_d_stress(
                              SymSym::id() * rate / seq);
 }
 
-History PowerLaw::d_d_p_d_history(
+History PowerLawInelasticity::d_d_p_d_history(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
     Lattice & lattice, double T) const
@@ -367,7 +367,7 @@ History PowerLaw::d_d_p_d_history(
   return History();
 }
 
-History PowerLaw::history_rate(const Symmetric & stress, 
+History PowerLawInelasticity::history_rate(const Symmetric & stress, 
                                      const Orientation & Q,
                                      const History & history,
                                      Lattice & lattice, double T) const
@@ -375,7 +375,7 @@ History PowerLaw::history_rate(const Symmetric & stress,
   return History();
 }
 
-History PowerLaw::d_history_rate_d_stress(const Symmetric & stress, 
+History PowerLawInelasticity::d_history_rate_d_stress(const Symmetric & stress, 
                                                 const Orientation & Q,
                                                 const History & history,
                                                 Lattice & lattice, double T) const
@@ -383,7 +383,7 @@ History PowerLaw::d_history_rate_d_stress(const Symmetric & stress,
   return History();
 }
 
-History PowerLaw::d_history_rate_d_history(const Symmetric & stress,
+History PowerLawInelasticity::d_history_rate_d_history(const Symmetric & stress,
                                                const Orientation & Q,
                                                const History & history,
                                                Lattice & lattice, double T) const
@@ -391,14 +391,14 @@ History PowerLaw::d_history_rate_d_history(const Symmetric & stress,
   return History();
 }
 
-Skew PowerLaw::w_p(const Symmetric & stress, const Orientation & Q,
+Skew PowerLawInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
                          const History & history,
                          Lattice & lattice, double T) const
 {
   return Skew();
 }
 
-SkewSym PowerLaw::d_w_p_d_stress(const Symmetric & stress, 
+SkewSym PowerLawInelasticity::d_w_p_d_stress(const Symmetric & stress, 
                                        const Orientation & Q,
                                        const History & history,
                                        Lattice & lattice, double T) const
@@ -406,7 +406,7 @@ SkewSym PowerLaw::d_w_p_d_stress(const Symmetric & stress,
   return SkewSym();
 }
 
-History PowerLaw::d_w_p_d_history(const Symmetric & stress,
+History PowerLawInelasticity::d_w_p_d_history(const Symmetric & stress,
                                         const Orientation & Q,
                                         const History & history,
                                         Lattice & lattice, double T) const
@@ -414,7 +414,7 @@ History PowerLaw::d_w_p_d_history(const Symmetric & stress,
   return History();
 }
 
-double PowerLaw::seq_(const Symmetric & stress) const
+double PowerLawInelasticity::seq_(const Symmetric & stress) const
 {
   return sqrt(3.0/2.0) * stress.dev().norm();
 }

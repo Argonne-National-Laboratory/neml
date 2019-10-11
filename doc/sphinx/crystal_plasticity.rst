@@ -15,7 +15,7 @@ throughout the calculation.
 Fundamentally, crystal plasticity material models are treated no
 differently than any other macroscale plasticity model in NEML.
 They use the same :ref:`interface <NEMLModel>` as any other constitutive 
-model and are at heart simply a collection of ordinary differential
+model and are at heart just a collection of ordinary differential
 equations that provide update equations for the stress, given the strain, and
 some set of internal variables.  This means the user can 
 use the crystal plasticity materials models in a finite element solver
@@ -41,8 +41,10 @@ Crystal plasticity was originally developed to track the evolution of
 this orientation as the single crystal undergoes mechanical loading (either
 by itself or in conjugation with neighboring grains either in a homogenized
 or full-field model).
-The model developed here is sufficient for this task and NEML provides 
-simple polycrystal homogenization 
+The models implemented in this module are sufficient for this task, though
+the particular implementation is focused more on fully-resolved calculations,
+like the Crystal Plasticity Finite Element Method (CPFEM), where the stress
+update is equally important.
 
 .. _cp-formulation:
 
@@ -56,7 +58,7 @@ developed here were originally summarized in [M2015]_.
 Four frames of reference define the model kinematics: the initial crystal
 frame :math:`\Omega_c`, the reference frame :math:`\Omega_o`, the unloaded
 intermediate frame :math:`\Omega_l`, and the current frame :math:`\Omega`.
-The kinematic update defines how the material deformations from the 
+The kinematic update defines how the material deforms from the 
 reference frame at time zero to the current frame at the given time :math:`t`.
 
 .. image:: cp-frames.png
@@ -100,8 +102,7 @@ with :math:`\bm{\varepsilon} \ll \mathbf{I}` so that
 .. math::
    \left(\mathbf{I}+\bm{\varepsilon}\right)^{-1}\approx\mathbf{I}-\bm{\varepsilon}.
 
-The limited recoverable, elastic deformation available in single metal crystals justifies this assumption.  Elastic strains in metal alloys are often limited to less than 1% strain, making this approximation reasonable.
-
+The limited recoverable elastic deformation available in single metal crystals justifies this assumption.  
 Furthermore, neglect the elastic stretch in kinematic push forward/pull back operations, so that the translation from the intermediate to the current coordinates is given by the rotation :math:`\mathbf{R}^e`.
 
 Then the spatial velocity gradient expands to 
@@ -190,16 +191,14 @@ for the current crystal orientation:
 .. math::
    \bm{\Omega}^{e}=\dot{\mathbf{Q}}\mathbf{Q}^{T}=\mathbf{W}-\mathbf{W}^{p}-\bm{\varepsilon}\mathbf{D}^{p}+\mathbf{D}^{p}\bm{\varepsilon}.
 
-This equation can be integrated to update the crystal orientation.
-
-Fundamentally, the NEML single crystal model is defined by an implicit
+The NEML single crystal model is defined by an implicit
 integration of the deformation rate equation, defining the stress update,
 and an explicit integration of the vorticity equation, defining the updated
 crystal orientation.
 Both equations require the definition of the plastic deformation rate in the
 current frame of reference, :math:`\mathbf{L}^p`, to close the system of 
 equations.  Note the actual expressions decompose the plastic deformation
-rate into symmetric, :math:`\mathbf{D}^p`, and skew, :math:`\mathbf{W}^p`, parts.  A NEML crystal model is define by the constitutive definition of the 
+rate into symmetric, :math:`\mathbf{D}^p`, and skew, :math:`\mathbf{W}^p`, parts.  A NEML crystal model is defined by the constitutive model for the 
 plastic deformation rate as a function of the Cauchy stress, temperature,
 and some set of internal variables :math:`\mathbf{h}`.  The stress and 
 orientation update equations must be supplemented with the evolution
@@ -210,7 +209,7 @@ Mathematical operations
 -----------------------
 
 The preceding derivation shows that there are a lot of tensor operations
-used in the crystal plasticity stress update equation.  Currently,
+used in the crystal plasticity stress update.  Currently,
 the macroscale NEML material models use raw pointer arrays to represent
 vectors and tensors.  This would be unwieldy for the crystal plasticity
 models.  Instead, the crystal plasticity module uses C++ objects
@@ -239,7 +238,7 @@ output of a finite element simulation.
 
 The history object stores the variables and corresponding meta-information --
 the name of the variable and the type of object (scalar, vector, rotation, etc.).
-The history set object is described in a :ref:`seperate section <history>`.
+The history object is described in a :ref:`seperate section <history>`.
 
 As with the tensor object system, the history set object can either manage its own memory or work with externally-managed memory.  Again, this facilitate vectorization and avoids copying when the input program can provide the history of many material points in a large block array.
 

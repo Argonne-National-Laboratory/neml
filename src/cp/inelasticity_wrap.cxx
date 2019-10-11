@@ -44,11 +44,12 @@ PYBIND11_MODULE(inelasticity, m) {
                     }))
       ;
 
-  py::class_<PowerLaw, InelasticModel, std::shared_ptr<PowerLaw>>(m, "PowerLaw")
+  py::class_<PowerLawInelasticity, InelasticModel,
+      std::shared_ptr<PowerLawInelasticity>>(m, "PowerLawInelasticity")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return
-                      create_object_python<PowerLaw>(args, kwargs, {"A", "n"});
+                      create_object_python<PowerLawInelasticity>(args, kwargs, {"A", "n"});
                     }))
       ;
 

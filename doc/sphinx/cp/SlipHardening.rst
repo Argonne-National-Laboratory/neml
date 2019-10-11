@@ -6,7 +6,7 @@ Overview
 
 These objects provide the slip system strength required to complete
 the constitutive description when using a SlipStrengthSlipRule.
-The implementation assumes that the slip system strengths is a function only
+The implementation assumes that the slip system strengths are functions only
 of the set of history variables and temperature.
 Additionally, these objects provide the definition of the history evolution rate equations and, ultimately, the definition of the model internal variables.
 

@@ -137,12 +137,12 @@ class TestAsaroInelasticity(unittest.TestCase, CommonInelastic):
 
     self.assertTrue(np.allclose(np.array(h1), np.array(h2)))
 
-class TestPowerLaw(unittest.TestCase, CommonInelastic):
+class TestPowerLawInelasticity(unittest.TestCase, CommonInelastic):
   def setUp(self):
     self.A = 1.0e-2
     self.n = 3.1
 
-    self.model = inelasticity.PowerLaw(self.A, self.n)
+    self.model = inelasticity.PowerLawInelasticity(self.A, self.n)
 
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
@@ -185,7 +185,7 @@ class TestCombinedInelasticity(unittest.TestCase, CommonInelastic):
     self.A = 1.0e-5
     self.n = 3.1
 
-    self.model1 = inelasticity.PowerLaw(self.A, self.n)
+    self.model1 = inelasticity.PowerLawInelasticity(self.A, self.n)
 
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])

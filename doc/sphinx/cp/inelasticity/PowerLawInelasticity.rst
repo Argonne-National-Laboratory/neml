@@ -1,5 +1,5 @@
-PowerLaw
-========
+PowerLawInelasticity
+====================
 
 Overview
 --------
@@ -8,7 +8,7 @@ This class implements isotropic power-law perfect viscoplasticity with the
 form:
 
 .. math::
-   \mathbf{D}^p = A \sigma_{eq}^{(n-1)} \mathbf{s}
+   \mathbf{D}^p = A \sigma_{eq}^{n-1} \mathbf{s}
 
    \mathbf{W}^p = \mathbf{0}
 
@@ -37,5 +37,5 @@ Parameters
 Class description
 -----------------
 
-.. doxygenclass:: neml::PowerLaw
+.. doxygenclass:: neml::PowerLawInelasticity
    :members:
