@@ -6,7 +6,7 @@ Overview
 
 This object degenerates the general SlipHardening model so that all
 slip groups and systems share the same scalar slip system strength.
-This actual internal variables remain generic.
+The actual internal variables remain generic.
 
 This produces the interface
 
