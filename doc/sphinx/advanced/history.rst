@@ -40,6 +40,10 @@ Currently, the class is configured to store and return objects of the following 
 Internally, all of these classes are stored in a single flat array.  
 The system can either manage its own memory (freeing it on deletion of the
 object) or accept a pointer to externally managed memory.
+For example, a finite element analysis program can pass in the material
+model history as a large array in memory and NEML can `wrap` that memory
+using the History class and give descriptive access to each variable `without`
+copying the underlying data.
 This allows for seamlessly converting a flat array containing the model
 internal variables into an instance of the History class without copying.
 It also allows the calling program to block the internal variables of

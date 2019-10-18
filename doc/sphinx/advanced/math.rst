@@ -5,7 +5,7 @@ Mathematical helpers
 
 NEML contains many helper functions to do tensor operations on 
 Mandel-notation representations of tensors stored as pointers as well as common linear algebra
-operations like solve systems of equations and invert matrices.
+operations like solving systems of equations and inverting matrices.
 These helpers are fairly self documenting.
 The interfaces are shown below.
 

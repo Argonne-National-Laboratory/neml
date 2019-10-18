@@ -1,17 +1,17 @@
 Tensors
 =======
 
-The tensor objects provide a method for easily manage scalar, vector, and
+The tensor objects provide a method for easily managing scalar, vector, and
 tensor mathematical operations.
 The classes maintain a representation of the tensor type and provide
 common mathematical operations, both single tensors operations and 
 binary operations between various types of tensors.
 
-The classes are structured with either maintain their own memory or to
+The classes are structured to either maintain their own memory or to
 use externally managed memory.  The latter mode is useful in finite element
 calculations where the calling program can present a large collection of material points in a blocked array.  If this type of memory management can be used it reduces copying when NEML models are called from external program and allows optimizing compilers to attempt vectorization.
 
-The objects are set up to be transparent as to the type of memory model use to store the data.  Generally, initializing an object with a raw pointer sets the objects to external memory management.  This means that when the object is deleted the memory is not deallocated.  Initializing an object with either a default (no parameter) constructor or a STL container sets the classes to manage their own memory and hence the memory will be freed when the object is deleted.
+The objects are set up to be transparent as to the type of memory model used to store the data.  Generally, initializing an object with a raw pointer sets the objects to external memory management.  This means that when the object is deleted the memory is not deallocated.  Initializing an object with either a default (no parameter) constructor or a STL container sets the classes to manage their own memory and hence the memory will be freed when the object is deleted.
 
 All the tensor classes derive from a common base class (see below).  NEML implements the following tensor types:
 
