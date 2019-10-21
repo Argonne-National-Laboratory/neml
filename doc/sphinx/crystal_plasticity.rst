@@ -256,7 +256,7 @@ To help with developing and debugging models, NEML provides python implementatio
 Implementation
 --------------
 
-NEML crystal models are implemented as a subclass of the :ref:`large deformation incremental <NEMLModel_ldi>` interface.  In addition to the basic stress, history, and orientation updates the class also provides methods for getting the current crystal orientation (in active or passive convention), useful for output, and similar methods for setting or resetting the crystal orientation, useful either for bulk input of crystal orientations from a separate file for CPFEM calculations or for interfacing with models which cause crystal to reorientate, for example twinning or recrystallization models.
+NEML crystal models are implemented as a subclass of the :ref:`large deformation incremental <NEMLModel_ldi>` interface.  In addition to the basic stress, history, and orientation updates the class also provides methods for getting the current crystal orientation (in active or passive convention), useful for output, and similar methods for setting or resetting the crystal orientation, useful either for bulk input of crystal orientations from a separate file for CPFEM calculations or for interfacing with models which cause crystal to reorient, for example twinning or recrystallization models.
 
 The implementation uses a coupled, Euler implicit integration of the stress and internal variable rate equations.  
 After the model successfully updates these quantities it then uses a separate Euler explicit exponential integration of the elastic spin to update the crystal orientation.  The exponential integrator ensures the orientation remains in the special orthogonal group.

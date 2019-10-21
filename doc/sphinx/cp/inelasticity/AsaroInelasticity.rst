@@ -13,7 +13,7 @@ each individual slip direction and plane:
    \mathbf{L}^p = \sum_{g=1}^{n_{group}}\sum_{i=1}^{n_{slip}}\dot{\gamma}_{g,i}\left(\mathbf{d}_{g,i}\otimes\mathbf{n}_{g,i}\right)
 
 where :math:`\mathbf{d}_{g,i}` are the slip directions and :math:`\mathbf{n}_{g,i}` are
-the slip normals `in the current coordinates`.
+the slip normals `in the current frame` :math:`\Omega`.
 :math:`\mathbf{D}^p` and :math:`\mathbf{W}^p` are the symmetric and skew parts
 of this definition.
 
