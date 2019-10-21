@@ -27,6 +27,11 @@ PYBIND11_MODULE(slipharden, m) {
       .def("d_hist_map", &SlipSingleHardening::d_hist_map)
       ;
 
+  py::class_<SumSlipSingleStrengthHardening, SlipSingleHardening,
+      std::shared_ptr<SumSlipSingleStrengthHardening>>(m,
+                                                       "SumSlipSingleStrengthHardening")
+      ;
+
   py::class_<SlipSingleStrengthHardening, SlipSingleHardening,
       std::shared_ptr<SlipSingleStrengthHardening>>(m,
                                                     "SlipSingleStrengthHardening")

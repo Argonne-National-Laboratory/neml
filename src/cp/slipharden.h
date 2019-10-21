@@ -125,6 +125,47 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
                                         const SlipRule & R) const = 0;
 };
 
+/// Sum of individual SlipSingleStrenghHardening models (static strengths also
+/// summed)
+class SumSlipSingleStrengthHardening: public SlipSingleHardening
+{
+ public:
+  /// Initialize with a list of models
+  SumSlipSingleStrengthHardening(std::vector<std::shared_ptr<SlipSingleStrengthHardening>>
+                                 models);
+
+  /// Request whatever history you will need
+  virtual void populate_history(History & history) const;
+  /// Setup history
+  virtual void init_history(History & history) const;
+
+  /// The rate of the history
+  virtual History hist(const Symmetric & stress, 
+                     const Orientation & Q, const History & history,
+                     Lattice & L, double T, const SlipRule & R) const;
+  /// Derivative of the history wrt stress
+  virtual History d_hist_d_s(const Symmetric & stress, 
+                             const Orientation & Q, const History & history,
+                             Lattice & L, double T,
+                             const SlipRule & R) const;
+  /// Derivative of the history wrt the history
+  virtual History
+      d_hist_d_h(const Symmetric & stress, 
+                 const Orientation & Q,
+                 const History & history,
+                 Lattice & L, 
+                 double T, const SlipRule & R) const;
+
+  /// The scalar map
+  virtual double hist_map(const History & history, double T) const;
+  /// The derivative of the scalar map
+  virtual History d_hist_map(const History & history, double T) const;
+
+ private:
+  size_t nmodels() const;
+  const std::vector<std::shared_ptr<SlipSingleStrengthHardening>> models_;
+};
+
 /// Slip strength rule where the single strength evolves with sum|dg|
 class PlasticSlipHardening: public SlipSingleStrengthHardening
 {

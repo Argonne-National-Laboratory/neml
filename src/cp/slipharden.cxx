@@ -75,6 +75,105 @@ History SlipSingleStrengthHardening::d_hist_map(const History & history,
   return res;
 }
 
+SumSlipSingleStrengthHardening::SumSlipSingleStrengthHardening(
+    std::vector<std::shared_ptr<SlipSingleStrengthHardening>> models)
+  :   models_(models)
+{
+
+}
+
+void SumSlipSingleStrengthHardening::populate_history(History & history) const
+{
+  for (size_t i = 0; i < nmodels(); i++) {
+    history.add<double>("strength"+std::to_string(i));
+  }
+}
+
+void SumSlipSingleStrengthHardening::init_history(History & history) const
+{
+  for (size_t i = 0; i < nmodels(); i++) {
+    history.get<double>("strength"+std::to_string(i)) = models_[i]->init_strength();
+  }
+}
+
+History SumSlipSingleStrengthHardening::hist(
+    const Symmetric & stress, 
+    const Orientation & Q, const History & history,
+    Lattice & L, double T, const SlipRule & R) const
+{
+  History res = history.copy_blank();
+  for (size_t i = 0; i < nmodels(); i++) {
+    res.get<double>("strength"+std::to_string(i)) = models_[i]->hist_rate(stress, Q, history, L, T, R);
+  }
+
+  return res;
+}
+
+History SumSlipSingleStrengthHardening::d_hist_d_s(
+    const Symmetric & stress, 
+    const Orientation & Q, const History & history,
+    Lattice & L, double T,
+    const SlipRule & R) const
+{
+  History res = history.derivative<Symmetric>();
+  for (size_t i = 0; i < nmodels(); i++) {
+    res.get<Symmetric>("strength"+std::to_string(i)) = models_[i]->d_hist_rate_d_stress(stress,
+                                                               Q, 
+                                                               history,L, T, R);
+  }
+  return res;
+}
+
+History SumSlipSingleStrengthHardening::d_hist_d_h(
+    const Symmetric & stress, 
+    const Orientation & Q,
+    const History & history,
+    Lattice & L, 
+    double T, const SlipRule & R) const
+{
+  History res = history.derivative<History>();
+
+  for (size_t i = 0; i < nmodels(); i++) {
+    for (size_t j = 0; j < nmodels(); j++) {
+      if (i == j) {
+        res.get<double>("strength"+std::to_string(i)+"_strength"+std::to_string(j)) =
+            models_[i]->d_hist_rate_d_strength(
+              stress, Q, history, L, T, R);
+      }
+      else {
+        res.get<double>("strength"+std::to_string(i)+"_strength"+std::to_string(j)) = 0;
+      }
+    }
+  }
+  return res;
+}
+
+double SumSlipSingleStrengthHardening::hist_map(const History & history, 
+                                             double T) const
+{
+  double sum = 0;
+  for (size_t i=0; i < nmodels(); i++) {
+    sum += history.get<double>("strength"+std::to_string(i)) +
+        models_[i]->static_strength(T);
+  }
+  return sum;
+}
+
+History SumSlipSingleStrengthHardening::d_hist_map(const History & history, 
+                                                double T) const
+{
+  History res = history.derivative<double>();
+  for (size_t i=0; i < nmodels(); i++) {
+    res.get<double>("strength"+std::to_string(i)) = 1.0;
+  }
+  return res;
+}
+
+size_t SumSlipSingleStrengthHardening::nmodels() const
+{
+  return models_.size();
+}
+
 double PlasticSlipHardening::hist_rate(
     const Symmetric & stress, const Orientation & Q,
     const History & history, Lattice & L, double T, const SlipRule & R) const
