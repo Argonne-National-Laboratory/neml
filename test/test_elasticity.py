@@ -25,12 +25,12 @@ class CommonElasticity(object):
   def test_tensor_C(self):
     CT = self.model.C_tensor(self.T)
     C = self.model.C(self.T)
-    self.assertEqual(CT, tensors.SymSym(C))
+    self.assertEqual(CT, tensors.SymSymR4(C))
 
   def test_tensor_S(self):
     ST = self.model.S_tensor(self.T)
     S = self.model.S(self.T)
-    self.assertEqual(ST, tensors.SymSym(S))
+    self.assertEqual(ST, tensors.SymSymR4(S))
 
 class TestIsotropicConstantModel(CommonElasticity, unittest.TestCase):
   def setUp(self):

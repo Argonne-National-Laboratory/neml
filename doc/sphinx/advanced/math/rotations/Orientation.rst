@@ -17,7 +17,7 @@ It provides the ``apply`` method capable of applying a rotation to:
 
 * RankFour
 
-* SymSym
+* SymSymR4
 
 classes.
 

@@ -10,7 +10,7 @@ from neml import history
 def diff_skew_symmetric(fn, s0):
   dfn = lambda s: fn(tensors.Symmetric(usym(s))).data
 
-  return tensors.SkewSym(differentiate(dfn, s0.data))
+  return tensors.SkewSymR4(differentiate(dfn, s0.data))
 
 def diff_skew_history(fn, h0):
   vec = np.copy(np.array(h0))
@@ -25,12 +25,12 @@ def diff_skew_history(fn, h0):
 def diff_symmetric_symmetric(fn, s0):
   dfn = lambda s: fn(tensors.Symmetric(usym(s))).data
 
-  return tensors.SymSym(differentiate(dfn, s0.data))
+  return tensors.SymSymR4(differentiate(dfn, s0.data))
 
 def diff_symmetric_skew(fn, w0):
   dfn = lambda w: fn(tensors.Skew(uskew(w))).data
 
-  return tensors.SymSkew(differentiate(dfn, w0.data))
+  return tensors.SymSkewR4(differentiate(dfn, w0.data))
 
 def diff_symmetric_history(fn, h0):
   vec = np.copy(np.array(h0))

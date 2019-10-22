@@ -1088,39 +1088,39 @@ const double & RankFour::operator()(size_t i, size_t j, size_t k, size_t l) cons
   return s_[i*27+j*9+k*3+l];
 }
 
-SymSym RankFour::to_sym() const
+SymSymR4 RankFour::to_sym() const
 {
-  SymSym res;
+  SymSymR4 res;
   
   full2mandel(s_, res.s());
 
   return res;
 }
 
-SymSkew RankFour::to_symskew() const
+SymSkewR4 RankFour::to_symskew() const
 {
-  SymSkew res;
+  SymSkewR4 res;
 
   full2skew(s_, res.s());
 
   return res;
 }
 
-SkewSym RankFour::to_skewsym() const
+SkewSymR4 RankFour::to_skewsym() const
 {
-  SkewSym res;
+  SkewSymR4 res;
 
   full2wws(s_, res.s());
 
   return res;
 }
 
-double & SymSym::operator()(size_t i, size_t j)
+double & SymSymR4::operator()(size_t i, size_t j)
 {
   return s_[i*6+j];
 }
 
-const double & SymSym::operator()(size_t i, size_t j) const
+const double & SymSymR4::operator()(size_t i, size_t j) const
 {
   return s_[i*6+j];
 }
@@ -1134,17 +1134,17 @@ RankFour RankFour::dot(const RankFour & other) const
   return res;
 }
 
-RankFour RankFour::dot(const SymSym & other) const
+RankFour RankFour::dot(const SymSymR4 & other) const
 {
   return (*this) * other.to_full();
 }
 
-RankFour RankFour::dot(const SymSkew & other) const
+RankFour RankFour::dot(const SymSkewR4 & other) const
 {
   return (*this) * other.to_full();
 }
 
-RankFour RankFour::dot(const SkewSym & other) const
+RankFour RankFour::dot(const SkewSymR4 & other) const
 {
   return (*this) * other.to_full();
 }
@@ -1209,17 +1209,17 @@ RankFour operator*(const RankFour & a, const RankFour & b)
   return a.dot(b);
 }
 
-RankFour operator*(const RankFour & a, const SymSym & b)
+RankFour operator*(const RankFour & a, const SymSymR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const RankFour & a, const SymSkew & b)
+RankFour operator*(const RankFour & a, const SymSkewR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const RankFour & a, const SkewSym & b)
+RankFour operator*(const RankFour & a, const SkewSymR4 & b)
 {
   return a.dot(b);
 }
@@ -1254,30 +1254,30 @@ std::ostream & operator<<(std::ostream & os, const RankFour & v)
   return os;
 }
 
-/* Start SymSym Tensor */
-SymSym::SymSym() :
+/* Start SymSymR4 Tensor */
+SymSymR4::SymSymR4() :
     Tensor(36)
 {
   std::fill(s_, s_+36, 0.0);
 }
 
-SymSym::SymSym(const std::vector<double> v) :
+SymSymR4::SymSymR4(const std::vector<double> v) :
     Tensor(v)
 {
   if (v.size() != 36) {
-    throw std::invalid_argument("Input to SymSym must have size 36!");
+    throw std::invalid_argument("Input to SymSymR4 must have size 36!");
   }
 }
 
-SymSym::SymSym(const std::vector<std::vector<double>> A) :
+SymSymR4::SymSymR4(const std::vector<std::vector<double>> A) :
     Tensor(36)
 {
   if (A.size() != 6) {
-    throw std::invalid_argument("SymSym must be initiated with a 6x6 array!");
+    throw std::invalid_argument("SymSymR4 must be initiated with a 6x6 array!");
   }
   for (auto vi : A) {
     if (vi.size() != 6) {
-      throw std::invalid_argument("SymSym must be initiated with a 6x6 array!");
+      throw std::invalid_argument("SymSymR4 must be initiated with a 6x6 array!");
     }
   }
 
@@ -1288,40 +1288,40 @@ SymSym::SymSym(const std::vector<std::vector<double>> A) :
   }
 }
 
-SymSym::SymSym(double * v) :
+SymSymR4::SymSymR4(double * v) :
     Tensor(v, 36)
 {
 }
 
-SymSym::SymSym(const double * v) :
+SymSymR4::SymSymR4(const double * v) :
     Tensor(v, 36)
 {
 }
 
-SymSym SymSym::opposite() const
+SymSymR4 SymSymR4::opposite() const
 {
-  SymSym cpy(*this);
+  SymSymR4 cpy(*this);
   cpy.negate_();
   return cpy;
 }
 
-SymSym SymSym::operator-() const
+SymSymR4 SymSymR4::operator-() const
 {
   return opposite();
 }
 
-SymSym & SymSym::operator+=(const SymSym & other)
+SymSymR4 & SymSymR4::operator+=(const SymSymR4 & other)
 {
   add_(other);
   return *this;
 }
 
-SymSym & SymSym::operator-=(const SymSym & other)
+SymSymR4 & SymSymR4::operator-=(const SymSymR4 & other)
 {
   return this->operator+=(-other);
 }
 
-RankFour SymSym::to_full() const
+RankFour SymSymR4::to_full() const
 {
   RankFour res;
 
@@ -1330,41 +1330,41 @@ RankFour SymSym::to_full() const
   return res;
 }
 
-RankFour SymSym::dot(const RankFour & other) const
+RankFour SymSymR4::dot(const RankFour & other) const
 {
   return this->to_full() * other;
 }
 
-SymSym SymSym::dot(const SymSym & other) const
+SymSymR4 SymSymR4::dot(const SymSymR4 & other) const
 {
-  SymSym res;
+  SymSymR4 res;
 
   mat_mat(6, 6, 6, this->data(), other.data(), res.s());
   
   return res;
 }
 
-RankFour SymSym::dot(const SymSkew & other) const
+RankFour SymSymR4::dot(const SymSkewR4 & other) const
 {
   return this->to_full() * other.to_full();
 }
 
-RankFour SymSym::dot(const SkewSym & other) const
+RankFour SymSymR4::dot(const SkewSymR4 & other) const
 {
   return this->to_full() * other.to_full();
 }
 
-RankTwo SymSym::dot(const RankTwo & other) const
+RankTwo SymSymR4::dot(const RankTwo & other) const
 {
   return this->to_full() * other;
 }
 
-RankTwo SymSym::dot(const Skew & other) const
+RankTwo SymSymR4::dot(const Skew & other) const
 {
   return this->to_full() * other;
 }
 
-Symmetric SymSym::dot(const Symmetric & other) const
+Symmetric SymSymR4::dot(const Symmetric & other) const
 {
   Symmetric res;
 
@@ -1374,79 +1374,79 @@ Symmetric SymSym::dot(const Symmetric & other) const
 }
 
 // Binary operators with scalars
-SymSym operator*(double s, const SymSym & v)
+SymSymR4 operator*(double s, const SymSymR4 & v)
 {
-  SymSym cpy(v);
+  SymSymR4 cpy(v);
   cpy *= s;
   return cpy;
 }
 
-SymSym operator*(const SymSym & v, double s)
+SymSymR4 operator*(const SymSymR4 & v, double s)
 {
   return operator*(s, v);
 }
 
-SymSym operator/(const SymSym & v, double s)
+SymSymR4 operator/(const SymSymR4 & v, double s)
 {
-  SymSym cpy(v);
+  SymSymR4 cpy(v);
   cpy /= s;
   return cpy;
 }
 
 // Various forms of addition
-SymSym operator+(const SymSym & a, const SymSym & b)
+SymSymR4 operator+(const SymSymR4 & a, const SymSymR4 & b)
 {
-  SymSym cpy(a);
+  SymSymR4 cpy(a);
   cpy += b;
   return cpy;
 }
 
-SymSym operator-(const SymSym & a, const SymSym & b)
+SymSymR4 operator-(const SymSymR4 & a, const SymSymR4 & b)
 {
-  SymSym cpy(a);
+  SymSymR4 cpy(a);
   cpy -= b;
   return cpy;
 }
 
 // Various forms of multiplication
-RankFour operator*(const SymSym & a, const RankFour & b)
+RankFour operator*(const SymSymR4 & a, const RankFour & b)
 {
   return a.dot(b);
 }
 
-SymSym operator*(const SymSym & a, const SymSym & b)
+SymSymR4 operator*(const SymSymR4 & a, const SymSymR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SymSym & a, const SymSkew & b)
+RankFour operator*(const SymSymR4 & a, const SymSkewR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SymSym & a, const SkewSym & b)
+RankFour operator*(const SymSymR4 & a, const SkewSymR4 & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SymSym & a, const RankTwo & b)
+RankTwo operator*(const SymSymR4 & a, const RankTwo & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SymSym &a, const Skew & b)
+RankTwo operator*(const SymSymR4 &a, const Skew & b)
 {
   return a.dot(b);
 }
 
-Symmetric operator*(const SymSym & a, const Symmetric & b)
+Symmetric operator*(const SymSymR4 & a, const Symmetric & b)
 {
   return a.dot(b);
 }
 
-SymSym douter(const Symmetric & a, const Symmetric & b)
+SymSymR4 douter(const Symmetric & a, const Symmetric & b)
 {
-  SymSym res;
+  SymSymR4 res;
   for (size_t i = 0; i < 6; i++) {
     for (size_t j = 0; j < 6; j++) {
       res(i,j) = a.data()[i] * b.data()[j];
@@ -1456,8 +1456,8 @@ SymSym douter(const Symmetric & a, const Symmetric & b)
   return res;
 }
 
-/// io for SymSym tensors
-std::ostream & operator<<(std::ostream & os, const SymSym & v)
+/// io for SymSymR4 tensors
+std::ostream & operator<<(std::ostream & os, const SymSymR4 & v)
 {
   const double * const d = v.data();
   for (size_t i = 0; i<6; i++) {
@@ -1471,29 +1471,29 @@ std::ostream & operator<<(std::ostream & os, const SymSym & v)
   return os;
 }
 
-/* Start SymSkew Tensor */
-SymSkew::SymSkew() :
+/* Start SymSkewR4 Tensor */
+SymSkewR4::SymSkewR4() :
     Tensor(18)
 {
 }
 
-SymSkew::SymSkew(const std::vector<double> v) :
+SymSkewR4::SymSkewR4(const std::vector<double> v) :
     Tensor(v)
 {
   if (v.size() != 18) {
-    throw std::invalid_argument("Input to SymSkew must have size 18!");
+    throw std::invalid_argument("Input to SymSkewR4 must have size 18!");
   }
 }
 
-SymSkew::SymSkew(const std::vector<std::vector<double>> A) :
+SymSkewR4::SymSkewR4(const std::vector<std::vector<double>> A) :
     Tensor(18)
 {
   if (A.size() != 6) {
-    throw std::invalid_argument("SymSkew must be initiated with a 6x3 array!");
+    throw std::invalid_argument("SymSkewR4 must be initiated with a 6x3 array!");
   }
   for (auto vi : A) {
     if (vi.size() != 3) {
-      throw std::invalid_argument("SymSkew must be initiated with a 6x3 array!");
+      throw std::invalid_argument("SymSkewR4 must be initiated with a 6x3 array!");
     }
   }
 
@@ -1504,40 +1504,40 @@ SymSkew::SymSkew(const std::vector<std::vector<double>> A) :
   }
 }
 
-SymSkew::SymSkew(double * v) :
+SymSkewR4::SymSkewR4(double * v) :
     Tensor(v, 18)
 {
 }
 
-SymSkew::SymSkew(const double * v) :
+SymSkewR4::SymSkewR4(const double * v) :
     Tensor(v, 18)
 {
 }
 
-SymSkew SymSkew::opposite() const
+SymSkewR4 SymSkewR4::opposite() const
 {
-  SymSkew cpy(*this);
+  SymSkewR4 cpy(*this);
   cpy.negate_();
   return cpy;
 }
 
-SymSkew SymSkew::operator-() const
+SymSkewR4 SymSkewR4::operator-() const
 {
   return opposite();
 }
 
-SymSkew & SymSkew::operator+=(const SymSkew & other)
+SymSkewR4 & SymSkewR4::operator+=(const SymSkewR4 & other)
 {
   add_(other);
   return *this;
 }
 
-SymSkew & SymSkew::operator-=(const SymSkew & other)
+SymSkewR4 & SymSkewR4::operator-=(const SymSkewR4 & other)
 {
   return this->operator+=(-other);
 }
 
-RankFour SymSkew::to_full() const
+RankFour SymSkewR4::to_full() const
 {
   RankFour res;
 
@@ -1546,12 +1546,12 @@ RankFour SymSkew::to_full() const
   return res;
 }
 
-RankFour SymSkew::dot(const RankFour & other) const
+RankFour SymSkewR4::dot(const RankFour & other) const
 {
   return this->to_full() * other;
 }
 
-RankFour SymSkew::dot(const SymSym & other) const
+RankFour SymSkewR4::dot(const SymSymR4 & other) const
 {
   RankFour res;
 
@@ -1560,7 +1560,7 @@ RankFour SymSkew::dot(const SymSym & other) const
   return res;
 }
 
-RankFour SymSkew::dot(const SymSkew & other) const
+RankFour SymSkewR4::dot(const SymSkewR4 & other) const
 {
   RankFour res;
 
@@ -1569,22 +1569,22 @@ RankFour SymSkew::dot(const SymSkew & other) const
   return res;
 }
 
-RankFour SymSkew::dot(const SkewSym & other) const
+RankFour SymSkewR4::dot(const SkewSymR4 & other) const
 {
   return this->to_full() * other.to_full();
 }
 
-RankTwo SymSkew::dot(const RankTwo & other) const
+RankTwo SymSkewR4::dot(const RankTwo & other) const
 {
   return this->to_full() * other;
 }
 
-RankTwo SymSkew::dot(const Skew & other) const
+RankTwo SymSkewR4::dot(const Skew & other) const
 {
   return this->to_full() * other.to_full();
 }
 
-RankTwo SymSkew::dot(const Symmetric & other) const
+RankTwo SymSkewR4::dot(const Symmetric & other) const
 {
   RankTwo res;
   
@@ -1594,77 +1594,77 @@ RankTwo SymSkew::dot(const Symmetric & other) const
 }
 
 // Binary operators with scalars
-SymSkew operator*(double s, const SymSkew & v)
+SymSkewR4 operator*(double s, const SymSkewR4 & v)
 {
-  SymSkew cpy(v);
+  SymSkewR4 cpy(v);
   cpy *= s;
   return cpy;
 }
 
-SymSkew operator*(const SymSkew & v, double s)
+SymSkewR4 operator*(const SymSkewR4 & v, double s)
 {
   return operator*(s, v);
 }
 
-SymSkew operator/(const SymSkew & v, double s)
+SymSkewR4 operator/(const SymSkewR4 & v, double s)
 {
-  SymSkew cpy(v);
+  SymSkewR4 cpy(v);
   cpy /= s;
   return cpy;
 }
 
 // Various forms of addition
-SymSkew operator+(const SymSkew & a, const SymSkew & b)
+SymSkewR4 operator+(const SymSkewR4 & a, const SymSkewR4 & b)
 {
-  SymSkew cpy(a);
+  SymSkewR4 cpy(a);
   cpy += b;
   return cpy;
 }
 
-SymSkew operator-(const SymSkew & a, const SymSkew & b)
+SymSkewR4 operator-(const SymSkewR4 & a, const SymSkewR4 & b)
 {
-  SymSkew cpy(a);
+  SymSkewR4 cpy(a);
   cpy -= b;
   return cpy;
 }
 
 // Various forms of multiplication
-RankFour operator*(const SymSkew & a, const RankFour & b)
+RankFour operator*(const SymSkewR4 & a, const RankFour & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SymSkew & a, const SymSym & b)
+RankFour operator*(const SymSkewR4 & a, const SymSymR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SymSkew & a, const SymSkew & b)
+RankFour operator*(const SymSkewR4 & a, const SymSkewR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SymSkew & a, const SkewSym & b)
+RankFour operator*(const SymSkewR4 & a, const SkewSymR4 & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SymSkew & a, const RankTwo & b)
+RankTwo operator*(const SymSkewR4 & a, const RankTwo & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SymSkew &a, const Skew & b)
+RankTwo operator*(const SymSkewR4 &a, const Skew & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SymSkew & a, const Symmetric & b)
+RankTwo operator*(const SymSkewR4 & a, const Symmetric & b)
 {
   return a.dot(b);
 }
 
-std::ostream & operator<<(std::ostream & os, const SymSkew & v)
+std::ostream & operator<<(std::ostream & os, const SymSkewR4 & v)
 {
   const double * const d = v.data();
   for (size_t i = 0; i<6; i++) {
@@ -1678,30 +1678,30 @@ std::ostream & operator<<(std::ostream & os, const SymSkew & v)
   return os;
 }
 
-/* Start SkewSym Tensor */
-SkewSym::SkewSym() :
+/* Start SkewSymR4 Tensor */
+SkewSymR4::SkewSymR4() :
     Tensor(18)
 {
   std::fill(s_, s_+18, 0.0);
 }
 
-SkewSym::SkewSym(const std::vector<double> v) :
+SkewSymR4::SkewSymR4(const std::vector<double> v) :
     Tensor(v)
 {
   if (v.size() != 18) {
-    throw std::invalid_argument("Input to SkewSym must have size 18!");
+    throw std::invalid_argument("Input to SkewSymR4 must have size 18!");
   }
 }
 
-SkewSym::SkewSym(const std::vector<std::vector<double>> A) :
+SkewSymR4::SkewSymR4(const std::vector<std::vector<double>> A) :
     Tensor(18)
 {
   if (A.size() != 3) {
-    throw std::invalid_argument("SkewSym must be initiated with a 3x6 array!");
+    throw std::invalid_argument("SkewSymR4 must be initiated with a 3x6 array!");
   }
   for (auto vi : A) {
     if (vi.size() != 6) {
-      throw std::invalid_argument("SkewSym must be initiated with a 3x6 array!");
+      throw std::invalid_argument("SkewSymR4 must be initiated with a 3x6 array!");
     }
   }
 
@@ -1712,40 +1712,40 @@ SkewSym::SkewSym(const std::vector<std::vector<double>> A) :
   }
 }
 
-SkewSym::SkewSym(double * v) :
+SkewSymR4::SkewSymR4(double * v) :
     Tensor(v, 18)
 {
 }
 
-SkewSym::SkewSym(const double * v) :
+SkewSymR4::SkewSymR4(const double * v) :
     Tensor(v, 18)
 {
 }
 
-SkewSym SkewSym::opposite() const
+SkewSymR4 SkewSymR4::opposite() const
 {
-  SkewSym cpy(*this);
+  SkewSymR4 cpy(*this);
   cpy.negate_();
   return cpy;
 }
 
-SkewSym SkewSym::operator-() const
+SkewSymR4 SkewSymR4::operator-() const
 {
   return opposite();
 }
 
-SkewSym & SkewSym::operator+=(const SkewSym & other)
+SkewSymR4 & SkewSymR4::operator+=(const SkewSymR4 & other)
 {
   add_(other);
   return *this;
 }
 
-SkewSym & SkewSym::operator-=(const SkewSym & other)
+SkewSymR4 & SkewSymR4::operator-=(const SkewSymR4 & other)
 {
   return this->operator+=(-other);
 }
 
-RankFour SkewSym::to_full() const
+RankFour SkewSymR4::to_full() const
 {
   RankFour res;
 
@@ -1754,12 +1754,12 @@ RankFour SkewSym::to_full() const
   return res;
 }
 
-RankFour SkewSym::dot(const RankFour & other) const
+RankFour SkewSymR4::dot(const RankFour & other) const
 {
   return this->to_full() * other;
 }
 
-RankFour SkewSym::dot(const SymSym & other) const
+RankFour SkewSymR4::dot(const SymSymR4 & other) const
 {
   RankFour res;
 
@@ -1768,7 +1768,7 @@ RankFour SkewSym::dot(const SymSym & other) const
   return res;
 }
 
-RankFour SkewSym::dot(const SkewSym & other) const
+RankFour SkewSymR4::dot(const SkewSymR4 & other) const
 {
   RankFour res;
 
@@ -1777,22 +1777,22 @@ RankFour SkewSym::dot(const SkewSym & other) const
   return res;
 }
 
-RankFour SkewSym::dot(const SymSkew & other) const
+RankFour SkewSymR4::dot(const SymSkewR4 & other) const
 {
   return this->to_full() * other.to_full();
 }
 
-RankTwo SkewSym::dot(const RankTwo & other) const
+RankTwo SkewSymR4::dot(const RankTwo & other) const
 {
   return this->to_full() * other;
 }
 
-RankTwo SkewSym::dot(const Skew & other) const
+RankTwo SkewSymR4::dot(const Skew & other) const
 {
   return this->to_full() * other.to_full();
 }
 
-RankTwo SkewSym::dot(const Symmetric & other) const
+RankTwo SkewSymR4::dot(const Symmetric & other) const
 {
   RankTwo res;
   
@@ -1802,79 +1802,79 @@ RankTwo SkewSym::dot(const Symmetric & other) const
 }
 
 // Binary operators with scalars
-SkewSym operator*(double s, const SkewSym & v)
+SkewSymR4 operator*(double s, const SkewSymR4 & v)
 {
-  SkewSym cpy(v);
+  SkewSymR4 cpy(v);
   cpy *= s;
   return cpy;
 }
 
-SkewSym operator*(const SkewSym & v, double s)
+SkewSymR4 operator*(const SkewSymR4 & v, double s)
 {
   return operator*(s, v);
 }
 
-SkewSym operator/(const SkewSym & v, double s)
+SkewSymR4 operator/(const SkewSymR4 & v, double s)
 {
-  SkewSym cpy(v);
+  SkewSymR4 cpy(v);
   cpy /= s;
   return cpy;
 }
 
 // Various forms of addition
-SkewSym operator+(const SkewSym & a, const SkewSym & b)
+SkewSymR4 operator+(const SkewSymR4 & a, const SkewSymR4 & b)
 {
-  SkewSym cpy(a);
+  SkewSymR4 cpy(a);
   cpy += b;
   return cpy;
 }
 
-SkewSym operator-(const SkewSym & a, const SkewSym & b)
+SkewSymR4 operator-(const SkewSymR4 & a, const SkewSymR4 & b)
 {
-  SkewSym cpy(a);
+  SkewSymR4 cpy(a);
   cpy -= b;
   return cpy;
 }
 
 // Various forms of multiplication
-RankFour operator*(const SkewSym & a, const RankFour & b)
+RankFour operator*(const SkewSymR4 & a, const RankFour & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SkewSym & a, const SymSym & b)
+RankFour operator*(const SkewSymR4 & a, const SymSymR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SkewSym & a, const SkewSym & b)
+RankFour operator*(const SkewSymR4 & a, const SkewSymR4 & b)
 {
   return a.dot(b);
 }
 
-RankFour operator*(const SkewSym & a, const SymSkew & b)
+RankFour operator*(const SkewSymR4 & a, const SymSkewR4 & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SkewSym & a, const RankTwo & b)
+RankTwo operator*(const SkewSymR4 & a, const RankTwo & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SkewSym &a, const Skew & b)
+RankTwo operator*(const SkewSymR4 &a, const Skew & b)
 {
   return a.dot(b);
 }
 
-RankTwo operator*(const SkewSym & a, const Symmetric & b)
+RankTwo operator*(const SkewSymR4 & a, const Symmetric & b)
 {
   return a.dot(b);
 }
 
-SkewSym douter(const Skew & a, const Symmetric & b)
+SkewSymR4 douter(const Skew & a, const Symmetric & b)
 {
-  SkewSym res;
+  SkewSymR4 res;
   for (size_t i = 0; i < 3; i++) {
     for (size_t j = 0; j < 6; j++) {
       res.s()[i*6+j] = a.data()[i] * b.data()[j];
@@ -1884,7 +1884,7 @@ SkewSym douter(const Skew & a, const Symmetric & b)
   return res;  
 }
 
-std::ostream & operator<<(std::ostream & os, const SkewSym & v)
+std::ostream & operator<<(std::ostream & os, const SkewSymR4 & v)
 {
   const double * const d = v.data();
   for (size_t i = 0; i<3; i++) {
@@ -1898,29 +1898,29 @@ std::ostream & operator<<(std::ostream & os, const SkewSym & v)
   return os;
 }
 
-SymSym SymSymSkew_SkewSymSym(const SymSym & S, const Skew & W)
+SymSymR4 SymSymR4Skew_SkewSymR4SymR4(const SymSymR4 & S, const Skew & W)
 {
-  SymSym res;
+  SymSymR4 res;
   
-  SymSymSkewmSkewSymSym(S.data(), W.data(), res.s());
+  SymSymR4SkewmSkewSymR4SymR4(S.data(), W.data(), res.s());
 
   return res;
 }
 
-SymSym SymSkewSym_SkewSymSym(const SkewSym & S, const Symmetric & D)
+SymSymR4 SymSkewR4Sym_SkewSymR4SymR4(const SkewSymR4 & S, const Symmetric & D)
 {
-  SymSym res;
+  SymSymR4 res;
 
-  SymSkewSymmSkewSymSym(D.data(), S.data(), res.s());
+  SymSkewR4SymmSkewSymR4SymR4(D.data(), S.data(), res.s());
 
   return res;
 }
 
-SymSkew SpecialSymSymSym(const SymSym & S, const Symmetric & D)
+SymSkewR4 SpecialSymSymR4Sym(const SymSymR4 & S, const Symmetric & D)
 {
-  SymSkew res;
+  SymSkewR4 res;
 
-  SpecialSymSymSym(D.data(), S.data(), res.s());
+  SpecialSymSymR4Sym(D.data(), S.data(), res.s());
 
   return res;
 }

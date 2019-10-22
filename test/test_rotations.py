@@ -217,7 +217,7 @@ class TestApplyThings(unittest.TestCase):
       [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
       [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
     self.SSS1 = ms2ts(self.SS1)
-    self.TSS1 = tensors.SymSym(self.SS1)
+    self.TSS1 = tensors.SymSymR4(self.SS1)
 
   def test_apply_vector(self):
     rv = self.q.apply(self.Tv)

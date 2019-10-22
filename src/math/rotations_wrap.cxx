@@ -212,10 +212,10 @@ PYBIND11_MODULE(rotations, m) {
             return me.apply(v);
            }, "Apply to a RankFour")
       .def("apply", 
-           [](Orientation & me, SymSym & v) -> SymSym
+           [](Orientation & me, SymSymR4 & v) -> SymSymR4
            {
             return me.apply(v);
-           }, "Apply to a SymSym")
+           }, "Apply to a SymSymR4")
       
       .def(py::self *= py::self)
       .def(py::self * py::self)

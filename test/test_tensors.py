@@ -417,7 +417,7 @@ class TestRankFour(unittest.TestCase):
       [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
       [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
     self.SS_full = common.ms2ts(self.SS)
-    self.TSS = tensors.SymSym(self.SS)
+    self.TSS = tensors.SymSymR4(self.SS)
 
     self.SW = np.array([
       [ 5.43434005, -6.55983214,  0.29737664],
@@ -427,14 +427,14 @@ class TestRankFour(unittest.TestCase):
       [-7.18030867,  1.56100537, -9.83238641],
       [-4.52369317, -3.07284914, -7.54966999]])
     self.SW_full = common.ws2ts(self.SW)
-    self.TSW = tensors.SymSkew(self.SW)
+    self.TSW = tensors.SymSkewR4(self.SW)
 
     self.WS = np.array([
       [-8.3567359 , -5.39728818, -8.00844442, -8.33365112, -0.97903364, -8.23943149],
       [-6.97125417,  4.34802055,  7.06281056, -1.57511617,  7.83359933, -9.37625432],
       [-6.0799489 , -6.0309543 ,  3.68575895,  8.84296976,  6.55799427, -9.22029379]])
     self.WS_full = common.wws2ts(self.WS)
-    self.TWS = tensors.SkewSym(self.WS)
+    self.TWS = tensors.SkewSymR4(self.WS)
 
     self.scalar = -2.2
 
@@ -501,7 +501,7 @@ class TestRankFour(unittest.TestCase):
     self.TR1[1,1,1,1] = 4.0
     self.assertTrue(np.isclose(self.TR1[1,1,1,1],4.0))
 
-class TestSymSym(unittest.TestCase):
+class TestSymSymR4(unittest.TestCase):
   def setUp(self):
     self.SS1 = np.array([
       [ 5.99159801, -2.24342348,  0.26667281, -0.95466199,  3.98931478, -0.10846981],
@@ -511,7 +511,7 @@ class TestSymSym(unittest.TestCase):
       [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
       [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
     self.SS1_full = common.ms2ts(self.SS1)
-    self.TSS1 = tensors.SymSym(self.SS1)
+    self.TSS1 = tensors.SymSymR4(self.SS1)
 
     self.SS2 = np.array([
       [-3.83767383, -8.63726504, -4.52095938,  9.35252323,  2.12800902, 3.26478511],
@@ -520,7 +520,7 @@ class TestSymSym(unittest.TestCase):
       [-0.97547288, -6.35708101, -4.35087656, -2.56567326,  4.32627031, 5.99408963],
       [ 6.30359707,  5.72926973,  2.47121354, -7.26333416, -5.08412215, -9.21872687],
       [-6.10780884,  1.01881487, -1.93491321,  6.13272186, -8.8721007, -2.97045116]])
-    self.TSS2 = tensors.SymSym(self.SS2)
+    self.TSS2 = tensors.SymSymR4(self.SS2)
 
     self.SW = np.array([
       [ 5.43434005, -6.55983214,  0.29737664],
@@ -530,14 +530,14 @@ class TestSymSym(unittest.TestCase):
       [-7.18030867,  1.56100537, -9.83238641],
       [-4.52369317, -3.07284914, -7.54966999]])
     self.SW_full = common.ws2ts(self.SW)
-    self.TSW = tensors.SymSkew(self.SW)
+    self.TSW = tensors.SymSkewR4(self.SW)
 
     self.WS = np.array([
       [-8.3567359 , -5.39728818, -8.00844442, -8.33365112, -0.97903364, -8.23943149],
       [-6.97125417,  4.34802055,  7.06281056, -1.57511617,  7.83359933, -9.37625432],
       [-6.0799489 , -6.0309543 ,  3.68575895,  8.84296976,  6.55799427, -9.22029379]])
     self.WS_full = common.wws2ts(self.WS)
-    self.TWS = tensors.SkewSym(self.WS)
+    self.TWS = tensors.SkewSymR4(self.WS)
 
     self.R = np.array([[[[-8.03675620e+00,  2.58575052e+00,  2.44069661e+00],
              [ 4.75021663e+00,  1.24463394e+00, -8.69751301e-01],
@@ -601,8 +601,8 @@ class TestSymSym(unittest.TestCase):
     self.assertEqual(self.TSS1, new)
 
   def test_add(self):
-    self.assertEqual(tensors.SymSym(self.SS1 + self.SS2), self.TSS2 + self.TSS1)
-    self.assertEqual(tensors.SymSym(self.SS1 - self.SS2), self.TSS1 - self.TSS2)
+    self.assertEqual(tensors.SymSymR4(self.SS1 + self.SS2), self.TSS2 + self.TSS1)
+    self.assertEqual(tensors.SymSymR4(self.SS1 - self.SS2), self.TSS1 - self.TSS2)
 
   def test_equality(self):
     self.assertEqual(self.TSS1, self.TSS1)
@@ -611,15 +611,15 @@ class TestSymSym(unittest.TestCase):
     self.assertNotEqual(self.TSS1, self.TSS2)
 
   def test_negate(self):
-    self.assertEqual(tensors.SymSym(-self.SS1), -self.TSS1)
+    self.assertEqual(tensors.SymSymR4(-self.SS1), -self.TSS1)
 
   def test_scalar_mult(self):
-    self.assertEqual(tensors.SymSym(self.scalar * self.SS1), self.scalar * self.TSS1)
-    self.assertEqual(tensors.SymSym(self.scalar * self.SS2), self.TSS2 * self.scalar)
-    self.assertEqual(tensors.SymSym(self.SS1 / self.scalar), self.TSS1 / self.scalar)
+    self.assertEqual(tensors.SymSymR4(self.scalar * self.SS1), self.scalar * self.TSS1)
+    self.assertEqual(tensors.SymSymR4(self.scalar * self.SS2), self.TSS2 * self.scalar)
+    self.assertEqual(tensors.SymSymR4(self.SS1 / self.scalar), self.TSS1 / self.scalar)
 
   def test_product_sym_sym(self):
-    self.assertEqual(tensors.SymSym(np.dot(self.SS1, self.SS2)), self.TSS1 * self.TSS2)
+    self.assertEqual(tensors.SymSymR4(np.dot(self.SS1, self.SS2)), self.TSS1 * self.TSS2)
 
   def test_product_sym_full(self):
     self.assertEqual(tensors.RankFour(np.einsum('ijkl,klmn', self.SS1_full, self.R)), self.TSS1 * self.TR)
@@ -640,19 +640,19 @@ class TestSymSym(unittest.TestCase):
     self.assertEqual(tensors.RankTwo(np.einsum('ijkl,kl', self.SS1_full, self.W)), self.TSS1 * self.TW)
 
   def test_douter(self):
-    self.assertEqual(tensors.SymSym(common.ts2ms(np.einsum('ij,kl', self.S, self.S2))), tensors.douter(self.TS, self.TS2))
+    self.assertEqual(tensors.SymSymR4(common.ts2ms(np.einsum('ij,kl', self.S, self.S2))), tensors.douter(self.TS, self.TS2))
 
   def test_id(self):
-    id_t = tensors.SymSym(np.eye(6))
-    self.assertEqual(id_t, tensors.SymSym.id())
+    id_t = tensors.SymSymR4(np.eye(6))
+    self.assertEqual(id_t, tensors.SymSymR4.id())
 
   def test_id_dev(self):
     ot = np.zeros((6,6))
     ot[:3,:3] = 1.0/3.0
-    id_t = tensors.SymSym(np.eye(6) - ot)
-    self.assertEqual(id_t, tensors.SymSym.id_dev())
+    id_t = tensors.SymSymR4(np.eye(6) - ot)
+    self.assertEqual(id_t, tensors.SymSymR4.id_dev())
 
-class TestSymSkew(unittest.TestCase):
+class TestSymSkewR4(unittest.TestCase):
   def setUp(self):
     self.SW1 = np.array([
       [ 5.43434005, -6.55983214,  0.29737664],
@@ -662,7 +662,7 @@ class TestSymSkew(unittest.TestCase):
       [-7.18030867,  1.56100537, -9.83238641],
       [-4.52369317, -3.07284914, -7.54966999]])
     self.SW1_full = common.ws2ts(self.SW1)
-    self.TSW1 = tensors.SymSkew(self.SW1)
+    self.TSW1 = tensors.SymSkewR4(self.SW1)
 
     self.SW2 = np.array([
       [ 7.90885123, -1.89089468, -6.95528566],
@@ -673,14 +673,14 @@ class TestSymSkew(unittest.TestCase):
       [-8.76272792, -3.60354692,  2.7402794 ]])
 
     self.SW2_full = common.ws2ts(self.SW2)
-    self.TSW2 = tensors.SymSkew(self.SW2)
+    self.TSW2 = tensors.SymSkewR4(self.SW2)
 
     self.WS = np.array([
       [-8.3567359 , -5.39728818, -8.00844442, -8.33365112, -0.97903364, -8.23943149],
       [-6.97125417,  4.34802055,  7.06281056, -1.57511617,  7.83359933, -9.37625432],
       [-6.0799489 , -6.0309543 ,  3.68575895,  8.84296976,  6.55799427, -9.22029379]])
     self.WS_full = common.wws2ts(self.WS)
-    self.TWS = tensors.SkewSym(self.WS)
+    self.TWS = tensors.SkewSymR4(self.WS)
 
     self.SS = np.array([
       [ 5.99159801, -2.24342348,  0.26667281, -0.95466199,  3.98931478, -0.10846981],
@@ -690,7 +690,7 @@ class TestSymSkew(unittest.TestCase):
       [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
       [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
     self.SS_full = common.ms2ts(self.SS)
-    self.TSS = tensors.SymSym(self.SS)
+    self.TSS = tensors.SymSymR4(self.SS)
 
     self.R = np.array([[[[-8.03675620e+00,  2.58575052e+00,  2.44069661e+00],
              [ 4.75021663e+00,  1.24463394e+00, -8.69751301e-01],
@@ -750,8 +750,8 @@ class TestSymSkew(unittest.TestCase):
     self.assertEqual(self.TSW1, new)
 
   def test_add(self):
-    self.assertEqual(tensors.SymSkew(self.SW1 + self.SW2), self.TSW2 + self.TSW1)
-    self.assertEqual(tensors.SymSkew(self.SW1 - self.SW2), self.TSW1 - self.TSW2)
+    self.assertEqual(tensors.SymSkewR4(self.SW1 + self.SW2), self.TSW2 + self.TSW1)
+    self.assertEqual(tensors.SymSkewR4(self.SW1 - self.SW2), self.TSW1 - self.TSW2)
 
   def test_equality(self):
     self.assertEqual(self.TSW1, self.TSW1)
@@ -760,12 +760,12 @@ class TestSymSkew(unittest.TestCase):
     self.assertNotEqual(self.TSW1, self.TSW2)
 
   def test_negate(self):
-    self.assertEqual(tensors.SymSkew(-self.SW1), -self.TSW1)
+    self.assertEqual(tensors.SymSkewR4(-self.SW1), -self.TSW1)
 
   def test_scalar_mult(self):
-    self.assertEqual(tensors.SymSkew(self.scalar * self.SW1), self.scalar * self.TSW1)
-    self.assertEqual(tensors.SymSkew(self.scalar * self.SW2), self.TSW2 * self.scalar)
-    self.assertEqual(tensors.SymSkew(self.SW1 / self.scalar), self.TSW1 / self.scalar)
+    self.assertEqual(tensors.SymSkewR4(self.scalar * self.SW1), self.scalar * self.TSW1)
+    self.assertEqual(tensors.SymSkewR4(self.scalar * self.SW2), self.TSW2 * self.scalar)
+    self.assertEqual(tensors.SymSkewR4(self.SW1 / self.scalar), self.TSW1 / self.scalar)
 
   def test_product_sym_sym(self):
     self.assertEqual(tensors.RankFour(np.einsum('ijkl,klmn', self.SW1_full, self.SS_full)), self.TSW1 * self.TSS)
@@ -788,21 +788,21 @@ class TestSymSkew(unittest.TestCase):
   def test_product_skew(self):
     self.assertEqual(tensors.RankTwo(np.einsum('ijkl,kl', self.SW1_full, self.W)), self.TSW1 * self.TW)
 
-class TestSkewSym(unittest.TestCase):
+class TestSkewSymR4(unittest.TestCase):
   def setUp(self):
     self.WS1 = np.array([
       [-8.3567359 , -5.39728818, -8.00844442, -8.33365112, -0.97903364, -8.23943149],
       [-6.97125417,  4.34802055,  7.06281056, -1.57511617,  7.83359933, -9.37625432],
       [-6.0799489 , -6.0309543 ,  3.68575895,  8.84296976,  6.55799427, -9.22029379]])
     self.WS1_full = common.wws2ts(self.WS1)
-    self.TWS1 = tensors.SkewSym(self.WS1)
+    self.TWS1 = tensors.SkewSymR4(self.WS1)
 
     self.WS2 = np.array([
       [-8.80662663,  0.46179936, -5.49454144,  7.91618428,  5.34053953, -6.68997405],
       [ 4.15874971, -4.59781751,  7.43746813,  8.99981425, -0.97692573, 2.5075246 ],
       [ 9.53201007, -8.03524224,  0.94329443, -6.44415877, -9.92911741, 3.51742689]])
     self.WS2_full = common.wws2ts(self.WS2)
-    self.TWS2 = tensors.SkewSym(self.WS2)
+    self.TWS2 = tensors.SkewSymR4(self.WS2)
 
     self.SW = np.array([
       [ 5.43434005, -6.55983214,  0.29737664],
@@ -812,7 +812,7 @@ class TestSkewSym(unittest.TestCase):
       [-7.18030867,  1.56100537, -9.83238641],
       [-4.52369317, -3.07284914, -7.54966999]])
     self.SW_full = common.ws2ts(self.SW)
-    self.TSW = tensors.SymSkew(self.SW)
+    self.TSW = tensors.SymSkewR4(self.SW)
 
     self.SS = np.array([
       [ 5.99159801, -2.24342348,  0.26667281, -0.95466199,  3.98931478, -0.10846981],
@@ -822,7 +822,7 @@ class TestSkewSym(unittest.TestCase):
       [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
       [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
     self.SS_full = common.ms2ts(self.SS)
-    self.TSS = tensors.SymSym(self.SS)
+    self.TSS = tensors.SymSymR4(self.SS)
 
     self.R = np.array([[[[-8.03675620e+00,  2.58575052e+00,  2.44069661e+00],
              [ 4.75021663e+00,  1.24463394e+00, -8.69751301e-01],
@@ -882,8 +882,8 @@ class TestSkewSym(unittest.TestCase):
     self.assertEqual(self.TWS1, new)
 
   def test_add(self):
-    self.assertEqual(tensors.SkewSym(self.WS1 + self.WS2), self.TWS2 + self.TWS1)
-    self.assertEqual(tensors.SkewSym(self.WS1 - self.WS2), self.TWS1 - self.TWS2)
+    self.assertEqual(tensors.SkewSymR4(self.WS1 + self.WS2), self.TWS2 + self.TWS1)
+    self.assertEqual(tensors.SkewSymR4(self.WS1 - self.WS2), self.TWS1 - self.TWS2)
 
   def test_equality(self):
     self.assertEqual(self.TWS1, self.TWS1)
@@ -892,12 +892,12 @@ class TestSkewSym(unittest.TestCase):
     self.assertNotEqual(self.TWS1, self.TWS2)
 
   def test_negate(self):
-    self.assertEqual(tensors.SkewSym(-self.WS1), -self.TWS1)
+    self.assertEqual(tensors.SkewSymR4(-self.WS1), -self.TWS1)
 
   def test_scalar_mult(self):
-    self.assertEqual(tensors.SkewSym(self.scalar * self.WS1), self.scalar * self.TWS1)
-    self.assertEqual(tensors.SkewSym(self.scalar * self.WS2), self.TWS2 * self.scalar)
-    self.assertEqual(tensors.SkewSym(self.WS1 / self.scalar), self.TWS1 / self.scalar)
+    self.assertEqual(tensors.SkewSymR4(self.scalar * self.WS1), self.scalar * self.TWS1)
+    self.assertEqual(tensors.SkewSymR4(self.scalar * self.WS2), self.TWS2 * self.scalar)
+    self.assertEqual(tensors.SkewSymR4(self.WS1 / self.scalar), self.TWS1 / self.scalar)
 
   def test_product_sym_sym(self):
     self.assertEqual(tensors.RankFour(np.einsum('ijkl,klmn', self.WS1_full, self.SS_full)), self.TWS1 * self.TSS)
@@ -921,7 +921,7 @@ class TestSkewSym(unittest.TestCase):
     self.assertEqual(tensors.RankTwo(np.einsum('ijkl,kl', self.WS1_full, self.W)), self.TWS1 * self.TW)
 
   def test_douter(self):
-    self.assertEqual(tensors.SkewSym(common.ts2wws(np.einsum('ij,kl', self.W, self.S))), tensors.douter(self.TW, self.TS))
+    self.assertEqual(tensors.SkewSymR4(common.ts2wws(np.einsum('ij,kl', self.W, self.S))), tensors.douter(self.TW, self.TS))
 
 class TestCPSpeciality(unittest.TestCase):
   def setUp(self):
@@ -933,7 +933,7 @@ class TestCPSpeciality(unittest.TestCase):
       [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
       [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
     self.SS_full = common.ms2ts(self.SS)
-    self.TSS = tensors.SymSym(self.SS)
+    self.TSS = tensors.SymSymR4(self.SS)
 
     self.W = np.array([[-9.36416517,  2.95527444,  8.70983194],
            [-1.54693052,  8.7905658 , -5.10895168],
@@ -950,30 +950,30 @@ class TestCPSpeciality(unittest.TestCase):
       [-6.97125417,  4.34802055,  7.06281056, -1.57511617,  7.83359933, -9.37625432],
       [-6.0799489 , -6.0309543 ,  3.68575895,  8.84296976,  6.55799427, -9.22029379]])
     self.WS_full = common.wws2ts(self.WS)
-    self.TWS = tensors.SkewSym(self.WS)
+    self.TWS = tensors.SkewSymR4(self.WS)
 
   def test_symsymskew_skewsymsym(self):
-    A1 = tensors.SymSymSkew_SkewSymSym(self.TSS, self.TW)
+    A1 = tensors.SymSymR4Skew_SkewSymR4SymR4(self.TSS, self.TW)
 
     A2_ten = np.einsum('kmst,ml', self.SS_full, self.W) - np.einsum('km,mlst',
         self.W, self.SS_full)
-    A2 = tensors.SymSym(common.ts2ms(A2_ten))
+    A2 = tensors.SymSymR4(common.ts2ms(A2_ten))
 
     self.assertEqual(A1, A2)
 
   def test_symskewsym_skewsymsym(self):
-    A1 = tensors.SymSkewSym_SkewSymSym(self.TWS, self.TS)
+    A1 = tensors.SymSkewR4Sym_SkewSymR4SymR4(self.TWS, self.TS)
 
     A2_ten = np.einsum('km,mlst', self.S, self.WS_full) - np.einsum('kmst,ml',
         self.WS_full, self.S)
-    A2 = tensors.SymSym(common.ts2ms(A2_ten))
+    A2 = tensors.SymSymR4(common.ts2ms(A2_ten))
 
     self.assertEqual(A1, A2)
 
   def test_special(self):
-    A1 = tensors.SpecialSymSymSym(self.TSS, self.TS)
+    A1 = tensors.SpecialSymSymR4Sym(self.TSS, self.TS)
     A2_ten = np.einsum('ijkz,ky', self.SS_full, self.S) - np.einsum(
         'ijyl,zl', self.SS_full, self.S)
-    A2 = tensors.SymSkew(common.ts2sww(A2_ten))
+    A2 = tensors.SymSkewR4(common.ts2sww(A2_ten))
 
     self.assertEqual(A1, A2)

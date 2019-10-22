@@ -35,7 +35,7 @@ Currently, the class is configured to store and return objects of the following 
 
 * :doc:`math/rotations/Orientation`
 
-* :doc:`math/tensors/SymSym`
+* :doc:`math/tensors/SymSymR4`
 
 Internally, all of these classes are stored in a single flat array.  
 The system can either manage its own memory (freeing it on deletion of the

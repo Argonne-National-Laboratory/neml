@@ -36,19 +36,19 @@ class KinematicModel: public NEMLObject {
       const History & history, Lattice & lattice,
       double T, const History & fixed) const = 0;
   /// Derivative of stress rate with respect to stress
-  virtual SymSym d_stress_rate_d_stress(
+  virtual SymSymR4 d_stress_rate_d_stress(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
       double T, const History & fixed) const = 0;
   /// Derivative of the stress rate with respect to the deformation rate
-  virtual SymSym d_stress_rate_d_d(
+  virtual SymSymR4 d_stress_rate_d_d(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
       double T, const History & fixed) const = 0;
   /// Derivative of the stress rate with respect to the vorticity
-  virtual SymSkew d_stress_rate_d_w(
+  virtual SymSkewR4 d_stress_rate_d_w(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
@@ -93,14 +93,14 @@ class KinematicModel: public NEMLObject {
   
   /// Derivative of the stress rate with respect to the deformation 
   /// keeping fixed variables fixed.
-  virtual SymSym d_stress_rate_d_d_decouple(
+  virtual SymSymR4 d_stress_rate_d_d_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
       double T, const History & fixed);
   /// Derivative of the stress rate with respect to the vorticity keeping
   /// fixed variables fixed
-  virtual SymSkew d_stress_rate_d_w_decouple(
+  virtual SymSkewR4 d_stress_rate_d_w_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
@@ -171,19 +171,19 @@ class StandardKinematicModel: public KinematicModel {
       const History & history, Lattice & lattice,
       double T, const History & fixed) const;
   /// Derivative of stress rate with respect to stress
-  virtual SymSym d_stress_rate_d_stress(
+  virtual SymSymR4 d_stress_rate_d_stress(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
       double T, const History & fixed) const;
   /// Derivative of the stress rate with respect to the deformation rate
-  virtual SymSym d_stress_rate_d_d(
+  virtual SymSymR4 d_stress_rate_d_d(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
       double T, const History & fixed) const;
   /// Derivative of the stress rate with respect to the vorticity
-  virtual SymSkew d_stress_rate_d_w(
+  virtual SymSkewR4 d_stress_rate_d_w(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
@@ -228,7 +228,7 @@ class StandardKinematicModel: public KinematicModel {
   
   /// Derivative of the stress rate with respect to the vorticity keeping
   /// fixed variables fixed
-  virtual SymSkew d_stress_rate_d_w_decouple(
+  virtual SymSkewR4 d_stress_rate_d_w_decouple(
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,

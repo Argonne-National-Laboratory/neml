@@ -27,7 +27,7 @@ class InelasticModel: public NEMLObject {
                         const History & history, 
                         Lattice & lattice, double T) const = 0;
   /// Derivative of the symmetric part with respect to stress
-  virtual SymSym d_d_p_d_stress(const Symmetric & stress, const Orientation & Q,
+  virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress, const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice, double T) const = 0;
   /// Derivative of the symmetric part with respect to stress
@@ -59,7 +59,7 @@ class InelasticModel: public NEMLObject {
                    Lattice & lattice,
                    double T) const = 0;
   /// Derivative of the skew part with respect to stress
-  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+  virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
@@ -100,7 +100,7 @@ class NoInelasticity: public InelasticModel {
                         Lattice & lattice,
                         double T) const;
   /// Derivative of the symmetric part with respect to stress (=0)
-  virtual SymSym d_d_p_d_stress(const Symmetric & stress,
+  virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice,
@@ -134,7 +134,7 @@ class NoInelasticity: public InelasticModel {
                    const History & history,
                    Lattice & lattice, double T) const;
   /// Derivative of the skew part with respect to stress (=0)
-  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+  virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
@@ -175,7 +175,7 @@ class AsaroInelasticity: public InelasticModel {
                         const History & history,
                         Lattice & lattice, double T) const;
   /// Derivative of the symmetric part with respect to stress
-  virtual SymSym d_d_p_d_stress(const Symmetric & stress,
+  virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice, double T) const;
@@ -206,7 +206,7 @@ class AsaroInelasticity: public InelasticModel {
                    const History & history,
                    Lattice & lattice, double T) const;
   /// Derivative of the skew part with respect to stress
-  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+  virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
@@ -250,7 +250,7 @@ class PowerLawInelasticity: public InelasticModel {
                         Lattice & lattice,
                         double T) const;
   /// Derivative of the symmetric part with respect to the stress
-  virtual SymSym d_d_p_d_stress(const Symmetric & stress,
+  virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice,
@@ -285,7 +285,7 @@ class PowerLawInelasticity: public InelasticModel {
                    const History & history,
                    Lattice & lattice, double T) const;
   /// Derivative of the skew part with respect to stress (=0)
-  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+  virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
@@ -336,7 +336,7 @@ class CombinedInelasticity: public InelasticModel {
                         Lattice & lattice,
                         double T) const;
   /// Sum the derivatives of the symmetric part with respect to stress
-  virtual SymSym d_d_p_d_stress(const Symmetric & stress,
+  virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice,
@@ -371,7 +371,7 @@ class CombinedInelasticity: public InelasticModel {
                    const History & history,
                    Lattice & lattice, double T) const;
   /// Sum the derivatives of the skew parts with respect to the stress 
-  virtual SkewSym d_w_p_d_stress(const Symmetric & stress,
+  virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,

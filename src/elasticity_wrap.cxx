@@ -34,24 +34,24 @@ PYBIND11_MODULE(elasticity, m) {
             return S;
            }, "Return compliance elasticity matrix.")
       .def("C_tensor",
-           [](const LinearElasticModel & m, double T) -> SymSym
+           [](const LinearElasticModel & m, double T) -> SymSymR4
            {
             return m.C(T);
            }, "Return stiffness elasticity tensor.")
 
       .def("S_tensor",
-           [](const LinearElasticModel & m, double T) -> SymSym
+           [](const LinearElasticModel & m, double T) -> SymSymR4
            {
             return m.S(T);
            }, "Return compliance elasticity tensor.")
       .def("C_tensor",
-           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
+           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSymR4
            {
             return m.C(T, Q);
            }, "Return rotated stiffness elasticity tensor.")
 
       .def("S_tensor",
-           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSym
+           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSymR4
            {
             return m.S(T, Q);
            }, "Return rotated compliance elasticity tensor.")

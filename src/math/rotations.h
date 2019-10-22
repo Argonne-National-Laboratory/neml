@@ -231,8 +231,8 @@ class Orientation: public Quaternion {
   Skew apply(const Skew & a) const;
   /// Rotate a RankFour tensor
   RankFour apply(const RankFour & a) const;
-  /// Rotate a SymSym rank four tensor
-  SymSym apply(const SymSym & a) const;
+  /// Rotate a SymSymR4 rank four tensor
+  SymSymR4 apply(const SymSymR4 & a) const;
 
   /// Geodesic distance
   double distance(const Orientation & other) const;

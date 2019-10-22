@@ -8,26 +8,26 @@
 
 namespace neml {
 
-SymSym LinearElasticModel::C(double T) const
+SymSymR4 LinearElasticModel::C(double T) const
 {
-  SymSym res;
+  SymSymR4 res;
   C(T, res.s());
   return res;
 }
 
-SymSym LinearElasticModel::S(double T) const
+SymSymR4 LinearElasticModel::S(double T) const
 {
-  SymSym res;
+  SymSymR4 res;
   S(T, res.s());
   return res;
 }
 
-SymSym LinearElasticModel::C(double T, const Orientation & Q) const
+SymSymR4 LinearElasticModel::C(double T, const Orientation & Q) const
 {
   return Q.apply(C(T));
 }
 
-SymSym LinearElasticModel::S(double T, const Orientation & Q) const
+SymSymR4 LinearElasticModel::S(double T, const Orientation & Q) const
 {
   return Q.apply(S(T));
 }

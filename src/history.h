@@ -28,7 +28,7 @@ template <> constexpr StorageType GetStorageType<Symmetric>() {return TYPE_SYMME
 template <> constexpr StorageType GetStorageType<Skew>() {return TYPE_SKEW;}
 template <> constexpr StorageType GetStorageType<Orientation>() {return TYPE_ROT;}
 template <> constexpr StorageType GetStorageType<double>() {return TYPE_SCALAR;}
-template <> constexpr StorageType GetStorageType<SymSym>() {return TYPE_SYMSYM;}
+template <> constexpr StorageType GetStorageType<SymSymR4>() {return TYPE_SYMSYM;}
 
 /// Storage size
 const std::map<StorageType,size_t> storage_size = 

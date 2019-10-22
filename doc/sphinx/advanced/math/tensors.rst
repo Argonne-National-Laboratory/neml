@@ -23,9 +23,9 @@ All the tensor classes derive from a common base class (see below).  NEML implem
    tensors/Symmetric
    tensors/Skew
    tensors/RankFour
-   tensors/SymSym
-   tensors/SymSkew
-   tensors/SkewSym
+   tensors/SymSymR4
+   tensors/SymSkewR4
+   tensors/SkewSymR4
 
 Binary operators
 ----------------

@@ -46,12 +46,12 @@ Symmetric NoInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
   return Symmetric();
 }
 
-SymSym NoInelasticity::d_d_p_d_stress(
+SymSymR4 NoInelasticity::d_d_p_d_stress(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
     Lattice & lattice, double T) const
 {
-  return SymSym();
+  return SymSymR4();
 }
 
 History NoInelasticity::d_d_p_d_history(
@@ -93,12 +93,12 @@ Skew NoInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
   return Skew();
 }
 
-SkewSym NoInelasticity::d_w_p_d_stress(const Symmetric & stress, 
+SkewSymR4 NoInelasticity::d_w_p_d_stress(const Symmetric & stress, 
                                        const Orientation & Q,
                                        const History & history,
                                        Lattice & lattice, double T) const
 {
-  return SkewSym();
+  return SkewSymR4();
 }
 
 History NoInelasticity::d_w_p_d_history(const Symmetric & stress,
@@ -166,12 +166,12 @@ Symmetric AsaroInelasticity::d_p(const Symmetric & stress, const Orientation & Q
   return d;
 }
 
-SymSym AsaroInelasticity::d_d_p_d_stress(
+SymSymR4 AsaroInelasticity::d_d_p_d_stress(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
     Lattice & lattice, double T) const
 {
-  SymSym ds;
+  SymSymR4 ds;
 
   for (size_t g = 0; g < lattice.ngroup(); g++) {
     for (size_t i = 0; i < lattice.nslip(g); i++) {
@@ -242,12 +242,12 @@ Skew AsaroInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
   return w;
 }
 
-SkewSym AsaroInelasticity::d_w_p_d_stress(const Symmetric & stress, 
+SkewSymR4 AsaroInelasticity::d_w_p_d_stress(const Symmetric & stress, 
                                        const Orientation & Q,
                                        const History & history,
                                        Lattice & lattice, double T) const
 {
-  SkewSym ds;
+  SkewSymR4 ds;
 
   for (size_t g = 0; g < lattice.ngroup(); g++) {
     for (size_t i = 0; i < lattice.nslip(g); i++) {
@@ -337,7 +337,7 @@ Symmetric PowerLawInelasticity::d_p(const Symmetric & stress, const Orientation 
   return A * pow(seq, n-1.0) * stress.dev();
 }
 
-SymSym PowerLawInelasticity::d_d_p_d_stress(
+SymSymR4 PowerLawInelasticity::d_d_p_d_stress(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
     Lattice & lattice, double T) const
@@ -355,8 +355,8 @@ SymSym PowerLawInelasticity::d_d_p_d_stress(
   double rate = A * pow(seq, n);
   double drate = A * n * pow(seq, n-1.0);
 
-  return SymSym::id_dev().dot(3.0/2.0 * (drate - rate / seq) * douter(dir,dir) + 
-                             SymSym::id() * rate / seq);
+  return SymSymR4::id_dev().dot(3.0/2.0 * (drate - rate / seq) * douter(dir,dir) + 
+                             SymSymR4::id() * rate / seq);
 }
 
 History PowerLawInelasticity::d_d_p_d_history(
@@ -398,12 +398,12 @@ Skew PowerLawInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
   return Skew();
 }
 
-SkewSym PowerLawInelasticity::d_w_p_d_stress(const Symmetric & stress, 
+SkewSymR4 PowerLawInelasticity::d_w_p_d_stress(const Symmetric & stress, 
                                        const Orientation & Q,
                                        const History & history,
                                        Lattice & lattice, double T) const
 {
-  return SkewSym();
+  return SkewSymR4();
 }
 
 History PowerLawInelasticity::d_w_p_d_history(const Symmetric & stress,
@@ -479,12 +479,12 @@ Symmetric CombinedInelasticity::d_p(const Symmetric & stress, const Orientation 
   return sum;
 }
 
-SymSym CombinedInelasticity::d_d_p_d_stress(
+SymSymR4 CombinedInelasticity::d_d_p_d_stress(
     const Symmetric & stress, const Orientation & Q,
     const History & history,
     Lattice & lattice, double T) const
 {
-  SymSym sum;
+  SymSymR4 sum;
   for (auto model : models_) {
     sum += model->d_d_p_d_stress(stress, Q, history, lattice, T);
   }
@@ -550,12 +550,12 @@ Skew CombinedInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
   return sum;
 }
 
-SkewSym CombinedInelasticity::d_w_p_d_stress(const Symmetric & stress, 
+SkewSymR4 CombinedInelasticity::d_w_p_d_stress(const Symmetric & stress, 
                                        const Orientation & Q,
                                        const History & history,
                                        Lattice & lattice, double T) const
 {
-  SkewSym sum;
+  SkewSymR4 sum;
   for (auto model : models_) {
     sum += model->d_w_p_d_stress(stress, Q, history, lattice, T);
   }

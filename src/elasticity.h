@@ -23,14 +23,14 @@ class LinearElasticModel: public NEMLObject {
   virtual int S(double T, double * const Sv) const = 0;
 
   /// The stiffness tensor in a tensor object
-  SymSym C(double T) const;
+  SymSymR4 C(double T) const;
   /// The compliance tensor in a tensor object
-  SymSym S(double T) const;
+  SymSymR4 S(double T) const;
   
   /// The rotated stiffness tensor in a tensor object
-  SymSym C(double T, const Orientation & Q) const;
+  SymSymR4 C(double T, const Orientation & Q) const;
   /// The rotated compliance tensor in a tensor object
-  SymSym S(double T, const Orientation & Q) const;
+  SymSymR4 S(double T, const Orientation & Q) const;
 
   /// An effective shear modulus
   virtual double G(double T) const;

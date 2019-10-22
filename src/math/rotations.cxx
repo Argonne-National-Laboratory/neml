@@ -956,9 +956,9 @@ RankFour Orientation::apply(const RankFour & a) const
   return res;
 }
 
-SymSym Orientation::apply(const SymSym & a) const
+SymSymR4 Orientation::apply(const SymSymR4 & a) const
 {
-  SymSym res;
+  SymSymR4 res;
   
   double M[9];
   to_matrix(M);

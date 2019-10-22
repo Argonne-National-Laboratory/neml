@@ -9,7 +9,7 @@
 
 namespace neml {
 
-int SymSymSkewmSkewSymSym(const double * const M, const double * const W, double * const SS)
+int SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, double * const SS)
 {
 	SS[0] = sqrt(2)*(-M[24]*W[1] + M[30]*W[2]);
 	SS[1] = sqrt(2)*(-M[25]*W[1] + M[31]*W[2]);
@@ -51,7 +51,7 @@ int SymSymSkewmSkewSymSym(const double * const M, const double * const W, double
   return 0;
 }
 
-int SymSkewSymmSkewSymSym(const double * const D, const double * const M, double * const SS)
+int SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, double * const SS)
 {
 	SS[0] = sqrt(2)*(-D[4]*M[6] + D[5]*M[12]);
 	SS[1] = sqrt(2)*(-D[4]*M[7] + D[5]*M[13]);
@@ -93,7 +93,7 @@ int SymSkewSymmSkewSymSym(const double * const D, const double * const M, double
   return 0;
 }
 
-int SpecialSymSymSym(const double * const D, const double * const M, double * const SW)
+int SpecialSymSymR4Sym(const double * const D, const double * const M, double * const SW)
 {
 	SW[0] = -sqrt(2)*D[1]*M[3]/2 + sqrt(2)*D[2]*M[3]/2 + sqrt(2)*D[3]*M[1]/2 - sqrt(2)*D[3]*M[2]/2 + D[4]*M[5]/2 - D[5]*M[4]/2;
 	SW[1] = sqrt(2)*D[0]*M[4]/2 - sqrt(2)*D[2]*M[4]/2 - D[3]*M[5]/2 - sqrt(2)*D[4]*M[0]/2 + sqrt(2)*D[4]*M[2]/2 + D[5]*M[3]/2;
