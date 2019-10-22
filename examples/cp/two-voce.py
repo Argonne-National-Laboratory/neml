@@ -7,7 +7,7 @@ import numpy as np
 
 from neml.cp import crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal
 from neml.math import rotations, tensors, nemlmath
-from neml import elasticity
+from neml import elasticity, parse
 
 import matplotlib.pyplot as plt
 
@@ -44,8 +44,6 @@ if __name__ == "__main__":
   strengthmodel = slipharden.SumSlipSingleStrengthHardening([strengthmodel_1,
     strengthmodel_2])
 
-  #strengthmodel = strengthmodel_2
-
   slipmodel = sliprules.PowerLawSlipRule(strengthmodel, g0, n)
   imodel = inelasticity.AsaroInelasticity(slipmodel)
   emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
@@ -55,6 +53,8 @@ if __name__ == "__main__":
   lattice.add_slip_system([1,1,0],[1,1,1])
 
   model = singlecrystal.SingleCrystalModel(kmodel, lattice)
+
+  model = parse.parse_xml("cpmodel.xml",  "tvm")
 
   T = 300.0
 
