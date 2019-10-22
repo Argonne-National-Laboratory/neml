@@ -490,11 +490,12 @@ double CombinedInelasticity::strength(const History & history, Lattice & L,
                                       double T) const
 {
   // May need to think on this
-  double sum = 0.0;
+  double min = 0.0;
   for (auto model : models_) {
-    sum += model->strength(history, L, T);
+    double si = model->strength(history, L, T);
+    if (si > min) min = si;
   }
-  return sum;
+  return min;
 }
 
 Symmetric CombinedInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
