@@ -301,18 +301,17 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
   // This guy is stored column major
   for (size_t i = 0; i<6; i++) {
     for (size_t j = 0; j<nh; j++) {
-      J[CINDEX(i,j+6,nparams())] = -dSdH.rawptr()[CINDEX(j,i,6)] * ats->dt;
+      J[CINDEX(i,(j+6),nparams())] = -dSdH.rawptr()[CINDEX(j,i,6)] * ats->dt;
     }
   }
   for (size_t i = 0; i<nh; i++) {
     for (size_t j = 0; j<6; j++) {
-      J[CINDEX(i+6,j,nparams())] = -dHdS.rawptr()[CINDEX(i,j,6)] * ats->dt;
+      J[CINDEX((i+6),j,nparams())] = -dHdS.rawptr()[CINDEX(i,j,6)] * ats->dt;
     }
   }
-  // This guy is stored column major
   for (size_t i = 0; i<nh; i++) {
     for (size_t j = 0; j<nh; j++) {
-      J[CINDEX(i+6,j+6,nparams())] = -dHdH.rawptr()[CINDEX(j,i,nh)] * ats->dt;
+      J[CINDEX((i+6),(j+6),nparams())] = -dHdH.rawptr()[CINDEX(i,j,nh)] * ats->dt;
     }
   }
 
@@ -430,19 +429,19 @@ void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
 
   for (size_t i=0; i<6; i++) {
     for (size_t j=0; j<nh; j++) {
-      J12[CINDEX(i,j,nh)] = J[CINDEX(i,j+6,nparams())];
+      J12[CINDEX(i,j,nh)] = J[CINDEX(i,(j+6),nparams())];
     }
   }
  
   for (size_t i=0; i<nh; i++) {
     for (size_t j=0; j<6; j++) {
-      J21[CINDEX(i,j,6)] = J[CINDEX(i+6,j,nparams())];
+      J21[CINDEX(i,j,6)] = J[CINDEX((i+6),j,nparams())];
     }
   }
 
   for (size_t i=0; i<nh; i++) {
     for (size_t j=0; j<nh; j++) {
-      J22[CINDEX(i,j,nh)] = J[CINDEX(i+6,j+6,nparams())];
+      J22[CINDEX(i,j,nh)] = J[CINDEX((i+6),(j+6),nparams())];
     }
   }
 
@@ -487,10 +486,19 @@ void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
   hd += kinematics_->d_history_rate_d_d_decouple(S, ts->d, ts->w,
                                                 ts->Q, H,
                                                 ts->lattice, ts->T, fixed);
+  // hd is stored column major...
+  double * hdt = new double[nh*6];
+  for (size_t i = 0; i < nh; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      hdt[CINDEX(i,j,6)] = hd.rawptr()[CINDEX(j,i,nh)];
+    }
+  }
+
 
   // Sadly need one more intermediate
   double * I1 = new double[36];
-  mat_mat(6, 6, nh, M1, hd.rawptr(), I1);
+  mat_mat(6, 6, nh, M1, hdt, I1);
+  delete [] hdt;
   for (size_t i=0; i<36; i++) {
     I1[i] = (sd.data()[i] - I1[i]); // Would mult by dt if things were sane
   }
@@ -512,10 +520,18 @@ void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
   hw += kinematics_->d_history_rate_d_w_decouple(S, ts->d, ts->w,
                                                  ts->Q, H,
                                                  ts->lattice, ts->T, fixed);
+  // This is transposed
+  double * hwt = new double [nh*3];
+  for (size_t i = 0; i < nh; i++) {
+    for (size_t j = 0; j < 3; j++) {
+      hwt[CINDEX(i,j,3)] = hw.rawptr()[CINDEX(j,i,nh)];
+    }
+  }
 
   // Sadly need one more intermediate
   double * I2 = new double[18];
-  mat_mat(6, 3, nh, M1, hw.rawptr(), I2);
+  mat_mat(6, 3, nh, M1, hwt, I2);
+  delete [] hwt;
   for (size_t i=0; i<18; i++) {
     I2[i] = (sw.data()[i] - I2[i]); // Would mult by dt if things were sane
   }

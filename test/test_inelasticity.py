@@ -23,7 +23,7 @@ class CommonInelastic(object):
         self.H)
     d = np.array(self.model.d_d_p_d_history(self.S, self.Q, self.H, self.L, self.T))
     
-    self.assertTrue(np.allclose(d.T.reshape(nd.shape), nd))
+    self.assertTrue(np.allclose(d.T.reshape(nd.shape, order = 'F'), nd))
 
   def test_w_p_d_stress(self):
     nd = diff_skew_symmetric(lambda s: self.model.w_p(s, self.Q, self.H, self.L, self.T), 
@@ -36,7 +36,7 @@ class CommonInelastic(object):
         self.H)
     d = np.array(self.model.d_w_p_d_history(self.S, self.Q, self.H, self.L, self.T))
 
-    self.assertTrue(np.allclose(d.T.reshape(nd.shape), nd))
+    self.assertTrue(np.allclose(d.T.reshape(nd.shape, order = 'F'), nd))
 
   def test_d_hist_rate_d_stress(self):
     nd = diff_history_symmetric(lambda s: self.model.history_rate(s, self.Q, self.H, self.L, self.T),
@@ -239,3 +239,45 @@ class TestCombinedInelasticity(unittest.TestCase, CommonInelastic):
     h3.add_union(h2)
 
     self.assertTrue(np.allclose(np.array(h), np.array(h3)))
+
+class TestComplexInelasticity(unittest.TestCase, CommonInelastic):
+  def setUp(self):
+    self.strength_0 = 35.0
+    self.H = history.History()
+    self.H.add_scalar("strength0")
+    self.H.set_scalar("strength0", self.strength_0)
+
+    self.strength_1 = 25.0
+    self.H.add_scalar("strength1")
+    self.H.set_scalar("strength1", self.strength_1)
+
+    self.tau0_0 = 10.0
+    self.tau_sat_0 = 50.0
+    self.b_0 = 2.5
+
+    self.tau0_1 = 5.0
+    self.tau_sat_1 = 25.0
+    self.b_1 = 1.0
+
+    self.strengthmodel = slipharden.SumSlipSingleStrengthHardening(
+        [
+          slipharden.VoceSlipHardening(self.tau_sat_0, self.b_0, self.tau0_0),
+          slipharden.VoceSlipHardening(self.tau_sat_1, self.b_1, self.tau0_1)
+          ])
+    
+    self.g0 = 1.0
+    self.n = 3.0
+    self.slipmodel = sliprules.PowerLawSlipRule(self.strengthmodel, self.g0, self.n)
+
+    self.model = inelasticity.AsaroInelasticity(self.slipmodel)
+
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+
+    self.T = 300.0

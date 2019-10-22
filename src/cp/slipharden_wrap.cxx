@@ -30,6 +30,11 @@ PYBIND11_MODULE(slipharden, m) {
   py::class_<SumSlipSingleStrengthHardening, SlipSingleHardening,
       std::shared_ptr<SumSlipSingleStrengthHardening>>(m,
                                                        "SumSlipSingleStrengthHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<SumSlipSingleStrengthHardening>(
+                          args, kwargs, {"models"});
+                    }))
       ;
 
   py::class_<SlipSingleStrengthHardening, SlipSingleHardening,
@@ -39,8 +44,8 @@ PYBIND11_MODULE(slipharden, m) {
       .def("hist_rate", &SlipSingleStrengthHardening::hist_rate)
       .def("d_hist_rate_d_stress",
            &SlipSingleStrengthHardening::d_hist_rate_d_stress)
-      .def("d_hist_rate_d_strength",
-           &SlipSingleStrengthHardening::d_hist_rate_d_strength)
+      .def("d_hist_rate_d_hist",
+           &SlipSingleStrengthHardening::d_hist_rate_d_hist)
       .def("static_strength", &SlipSingleStrengthHardening::static_strength)
       ;
 

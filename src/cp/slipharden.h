@@ -76,6 +76,8 @@ class SlipSingleHardening: public SlipHardening
 class SlipSingleStrengthHardening: public SlipSingleHardening
 {
  public:
+  SlipSingleStrengthHardening(std::string var_name = "strength");
+
   /// Request whatever history you will need
   virtual void populate_history(History & history) const;
   /// Setup history
@@ -103,6 +105,9 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
   /// The derivative of the scalar map
   virtual History d_hist_map(const History & history, double T) const;
 
+  /// Set the variable's name
+  void set_variable(std::string name);
+
   /// Static (not evolving) strength
   virtual double static_strength(double T) const = 0;
   
@@ -119,10 +124,13 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
                                          Lattice & L, double T,
                                          const SlipRule & R) const = 0;
   /// Derivative of scalar law wrt the scalar
-  virtual double d_hist_rate_d_strength(const Symmetric & stress, const Orientation & Q, 
-                                        const History & history,
-                                        Lattice & L, double T,
-                                        const SlipRule & R) const = 0;
+  virtual History d_hist_rate_d_hist(const Symmetric & stress, const Orientation & Q, 
+                                     const History & history,
+                                     Lattice & L, double T,
+                                     const SlipRule & R) const = 0;
+
+ protected:
+  std::string var_name_;
 };
 
 /// Sum of individual SlipSingleStrenghHardening models (static strengths also
@@ -133,6 +141,13 @@ class SumSlipSingleStrengthHardening: public SlipSingleHardening
   /// Initialize with a list of models
   SumSlipSingleStrengthHardening(std::vector<std::shared_ptr<SlipSingleStrengthHardening>>
                                  models);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
 
   /// Request whatever history you will need
   virtual void populate_history(History & history) const;
@@ -166,10 +181,14 @@ class SumSlipSingleStrengthHardening: public SlipSingleHardening
   const std::vector<std::shared_ptr<SlipSingleStrengthHardening>> models_;
 };
 
+static Register<SumSlipSingleStrengthHardening> regSumSlipSingleStrengthHardening;
+
 /// Slip strength rule where the single strength evolves with sum|dg|
 class PlasticSlipHardening: public SlipSingleStrengthHardening
 {
  public:
+  PlasticSlipHardening(std::string var_name = "strength");
+
   /// Scalar evolution law
   virtual double hist_rate(const Symmetric & stress, const Orientation & Q,
                            const History & history, Lattice & L, double T, const SlipRule & R) const;
@@ -178,9 +197,9 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
                                          const History & history, Lattice & L, double T,
                                          const SlipRule & R) const;
   /// Derivative of scalar law wrt the scalar
-  virtual double d_hist_rate_d_strength(const Symmetric & stress, const Orientation & Q, 
-                                        const History & history, Lattice & L, double T,
-                                        const SlipRule & R) const;
+  virtual History d_hist_rate_d_hist(const Symmetric & stress, const Orientation & Q, 
+                                     const History & history, Lattice & L, double T,
+                                     const SlipRule & R) const;
 
   /// Prefactor
   virtual double hist_factor(double strength, Lattice & L, double T) const = 0;
@@ -197,7 +216,8 @@ class VoceSlipHardening: public PlasticSlipHardening
   /// strength
   VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
                     std::shared_ptr<Interpolate> b,
-                    std::shared_ptr<Interpolate> tau_0);
+                    std::shared_ptr<Interpolate> tau_0,
+                    std::string var_name = "strength");
 
   /// String type for the object system
   static std::string type();

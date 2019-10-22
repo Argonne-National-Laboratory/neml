@@ -57,7 +57,7 @@ class CommonSlipStrengthSlipRule(object):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         rs = self.L.shear(g, i, self.Q, self.S)
-        strength = self.H.get_scalar("strength") + self.static
+        strength = self.strength + self.static
         self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T),
           self.model.sslip(g, i, rs, strength, self.T)))
 
@@ -120,3 +120,40 @@ class TestPowerLawSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlip
         self.assertTrue(np.isclose(self.model.sslip(g, i, self.tau, self.strength, self.T),
           self.g0 * np.abs(self.tau/self.strength)**(self.n-1.0) * self.tau/self.strength))
 
+
+class TestBiVoceSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRule):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    self.strength_1 = 35.0
+    self.strength_2 = 25.0
+    self.strength = self.strength_1 + self.strength_2
+    self.H = history.History()
+    self.H.add_scalar("strength0")
+    self.H.set_scalar("strength0", self.strength_1)
+    self.H.add_scalar("strength1")
+    self.H.set_scalar("strength1", self.strength_2)
+
+    self.T = 300.0
+
+    self.tau0 = 10.0
+    self.tau_sat = 50.0
+    self.b = 2.5
+
+    self.strengthmodel = slipharden.SumSlipSingleStrengthHardening(
+        [slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0),
+          slipharden.VoceSlipHardening(self.tau_sat/2, self.b/2, self.tau0/2)])
+
+    self.static = self.tau0 + self.tau0 / 2
+    
+    self.g0 = 1.0
+    self.n = 3.0
+    self.model = sliprules.PowerLawSlipRule(self.strengthmodel, self.g0, self.n)
+
+    self.tau = 33.0
