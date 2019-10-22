@@ -65,6 +65,10 @@ class SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
   /// Actually initialize history
   void init_history(History & history) const;
+
+  /// Useful methods for external models that want an idea of an average
+  /// strength
+  double strength(const History & history, Lattice & L, double T) const;
   
   /// Large deformation incremental update
   virtual int update_ld_inc(

@@ -15,6 +15,7 @@ PYBIND11_MODULE(inelasticity, m) {
                                                               "InelasticModel")
       .def("populate_history", &InelasticModel::populate_history)
       .def("init_history", &InelasticModel::init_history)
+      .def("strength", &InelasticModel::strength)
       .def("d_p", &InelasticModel::d_p)
       .def("d_d_p_d_stress", &InelasticModel::d_d_p_d_stress)
       .def("d_d_p_d_history", &InelasticModel::d_d_p_d_history)

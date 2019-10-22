@@ -16,6 +16,8 @@ PYBIND11_MODULE(kinematics, m) {
       .def("populate_history", &KinematicModel::populate_history)
       .def("init_history", &KinematicModel::init_history)
 
+      .def("strength", &KinematicModel::strength)
+
       .def("decouple", &KinematicModel::decouple)
 
       .def("stress_rate", &KinematicModel::stress_rate)

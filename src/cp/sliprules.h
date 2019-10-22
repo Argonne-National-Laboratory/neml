@@ -27,7 +27,10 @@ class SlipRule: public NEMLObject
   virtual void populate_history(History & history) const = 0;
   /// Actually set the history to their initial values
   virtual void init_history(History & history) const = 0;
-  
+ 
+  /// Helper for models that want an average strength
+  virtual double strength(const History & history, Lattice & L, double T) const = 0;
+
   /// Slip rate on group g, system i
   virtual double slip(size_t g, size_t i, const Symmetric & stress, 
                       const Orientation & Q, const History & history,
@@ -78,7 +81,10 @@ class SlipStrengthSlipRule: public SlipRule
   virtual void populate_history(History & history) const;
   /// Actually initialize the history
   virtual void init_history(History & history) const;
-  
+ 
+  /// Helper for models that want an average strength
+  virtual double strength(const History & history, Lattice & L, double T) const;
+
   /// Slip rate on group g, system i
   virtual double slip(size_t g, size_t i, const Symmetric & stress, 
                       const Orientation & Q, const History & history,

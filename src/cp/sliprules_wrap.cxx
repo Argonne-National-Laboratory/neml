@@ -14,6 +14,7 @@ PYBIND11_MODULE(sliprules, m) {
   py::class_<SlipRule, NEMLObject, std::shared_ptr<SlipRule>>(m, "SlipRule")
       .def("populate_history", &SlipRule::populate_history)
       .def("init_history", &SlipRule::init_history)
+      .def("strength", &SlipRule::strength)
       .def("slip", &SlipRule::slip)
       .def("d_slip_d_s", &SlipRule::d_slip_d_s)
       .def("d_slip_d_h", &SlipRule::d_slip_d_h)

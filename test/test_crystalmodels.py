@@ -143,6 +143,10 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
 
     self.nsteps = 10
 
+  def test_strength(self):
+    self.assertTrue(np.isclose(self.model.strength(self.H_np1, self.L, 
+      self.T), self.strength_np1 + self.tau0))
+
   def test_nhist(self):
     self.assertEqual(self.model.nstore, 5)
 

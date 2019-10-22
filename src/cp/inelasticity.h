@@ -21,7 +21,10 @@ class InelasticModel: public NEMLObject {
   virtual void populate_history(History & history) const = 0;
   /// Actually initialize the history object with the starting values
   virtual void init_history(History & history) const = 0;
-  
+ 
+  /// Helper for external models that want an average strength
+  virtual double strength(const History & history, Lattice & L, double T) const = 0;
+
   /// Symmetric part of the plastic deformation
   virtual Symmetric d_p(const Symmetric & stress, const Orientation & Q,
                         const History & history, 
@@ -92,7 +95,10 @@ class NoInelasticity: public InelasticModel {
   virtual void populate_history(History & history) const;
   /// Define initial history (none)
   virtual void init_history(History & history) const;
-  
+ 
+  /// Helper for external models that want an average strength
+  virtual double strength(const History & history, Lattice & L, double T) const;
+
   /// Symmetric part of the plastic deformation = 0
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
@@ -168,7 +174,10 @@ class AsaroInelasticity: public InelasticModel {
   virtual void populate_history(History & history) const;
   /// Initialize the history with the starting values, deferred to the SlipRule
   virtual void init_history(History & history) const;
-  
+ 
+  /// Helper for external models that want an average strength
+  virtual double strength(const History & history, Lattice & L, double T) const;
+
   /// Symmetric part of the plastic deformation rate
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
@@ -243,6 +252,9 @@ class PowerLawInelasticity: public InelasticModel {
   /// Initialize the history variables (n/a)
   virtual void init_history(History & history) const;
   
+  /// Helper for external models that want an average strength
+  virtual double strength(const History & history, Lattice & L, double T) const;
+
   /// Symmetric part of the deformation rate
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
@@ -323,7 +335,10 @@ class CombinedInelasticity: public InelasticModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+ 
+  /// Helper for external models that want an average strength
+  virtual double strength(const History & history, Lattice & L, double T) const;
+
   /// Setup all history variables
   virtual void populate_history(History & history) const;
   /// Initialize history with actual values

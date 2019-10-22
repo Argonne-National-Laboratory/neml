@@ -71,6 +71,12 @@ void SingleCrystalModel::init_history(History & history) const
   kinematics_->init_history(history);
 }
 
+double SingleCrystalModel::strength(const History & history, Lattice & L,
+                                    double T) const
+{
+  return kinematics_->strength(history, L, T);
+}
+
 int SingleCrystalModel::update_ld_inc(
    const double * const d_np1, const double * const d_n,
    const double * const w_np1, const double * const w_n,

@@ -83,6 +83,12 @@ void StandardKinematicModel::init_history(History & history) const
   imodel_->init_history(history);
 }
 
+double StandardKinematicModel::strength(const History & history, Lattice & L,
+                                        double T) const
+{
+  return imodel_->strength(history, L, T);
+}
+
 History StandardKinematicModel::decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,

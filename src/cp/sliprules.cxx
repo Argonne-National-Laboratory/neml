@@ -68,6 +68,21 @@ void SlipStrengthSlipRule::init_history(History & history) const
   strength_->init_history(history);
 }
 
+double SlipStrengthSlipRule::strength(const History & history,
+                                      Lattice & L, double T) const
+{
+  double val = 0.0;
+  double num = 0.0;
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      val += strength_->hist_to_tau(g, i, history, T);
+      num += 1.0;
+    }
+  }
+
+  return val / num;
+}
+
 double SlipStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & stress, 
                     const Orientation & Q, const History & history,
                     Lattice & L, double T) const

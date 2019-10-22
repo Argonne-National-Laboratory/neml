@@ -39,6 +39,12 @@ void NoInelasticity::init_history(History & history) const
   return;
 }
 
+double NoInelasticity::strength(const History & history, Lattice & L,
+                                double T) const
+{
+  return 0; // I guess
+}
+
 Symmetric NoInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
                               const History & history,
                               Lattice & lattice, double T) const
@@ -149,6 +155,12 @@ void AsaroInelasticity::populate_history(History & history) const
 void AsaroInelasticity::init_history(History & history) const
 {
   rule_->init_history(history);
+}
+
+double AsaroInelasticity::strength(const History & history, Lattice & L,
+                                   double T) const
+{
+  return rule_->strength(history, L, T);
 }
 
 Symmetric AsaroInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
@@ -322,6 +334,12 @@ void PowerLawInelasticity::init_history(History & history) const
   return;
 }
 
+double PowerLawInelasticity::strength(const History & history,
+                                      Lattice & L, double T) const
+{
+  return pow(A_->value(T), -1.0/(n_->value(T)));
+}
+
 Symmetric PowerLawInelasticity::d_p(const Symmetric & stress, const Orientation & Q,
                               const History & history,
                               Lattice & lattice, double T) const
@@ -466,6 +484,17 @@ void CombinedInelasticity::init_history(History & history) const
     model->init_history(history);
   }
   return;
+}
+
+double CombinedInelasticity::strength(const History & history, Lattice & L,
+                                      double T) const
+{
+  // May need to think on this
+  double sum = 0.0;
+  for (auto model : models_) {
+    sum += model->strength(history, L, T);
+  }
+  return sum;
 }
 
 Symmetric CombinedInelasticity::d_p(const Symmetric & stress, const Orientation & Q,

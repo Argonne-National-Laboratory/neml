@@ -20,7 +20,10 @@ class KinematicModel: public NEMLObject {
   virtual void populate_history(History & history) const = 0;
   /// Initialize history with actual starting values
   virtual void init_history(History & history) const = 0;
-  
+ 
+  /// Helper for external models that want a strength
+  virtual double strength(const History & history, Lattice & L, double T) const = 0;
+
   /// Hook to allow user to decouple parts of the update
   /// Any items added to the History object will be treated explicitly
   virtual History decouple(
@@ -155,6 +158,9 @@ class StandardKinematicModel: public KinematicModel {
   virtual void populate_history(History & history) const;
   /// Initialize the history object with the starting values
   virtual void init_history(History & history) const;
+
+  /// Helper for external models that want a strength
+  virtual double strength(const History & history, Lattice & L, double T) const;
 
   /// Anything added to this History instance will be kept fixed in the 
   /// implicit integration
