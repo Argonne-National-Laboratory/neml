@@ -186,6 +186,61 @@ double VoceIsotropicHardeningRule::d(double T) const
   return d_->value(T);
 }
 
+// Implementation of voce hardening
+PowerLawIsotropicHardeningRule::PowerLawIsotropicHardeningRule(
+    std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> A, 
+    std::shared_ptr<Interpolate> n) :
+    s0_(s0), A_(A), n_(n)
+{
+
+}
+
+std::string PowerLawIsotropicHardeningRule::type()
+{
+  return "PowerLawIsotropicHardeningRule";
+}
+
+ParameterSet PowerLawIsotropicHardeningRule::parameters()
+{
+  ParameterSet pset(PowerLawIsotropicHardeningRule::type());
+
+  pset.add_parameter<NEMLObject>("s0");
+  pset.add_parameter<NEMLObject>("A");
+  pset.add_parameter<NEMLObject>("n");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PowerLawIsotropicHardeningRule::initialize(ParameterSet & params)
+{
+  return neml::make_unique<PowerLawIsotropicHardeningRule>(
+      params.get_object_parameter<Interpolate>("s0"),
+      params.get_object_parameter<Interpolate>("A"),
+      params.get_object_parameter<Interpolate>("n")
+      ); 
+}
+
+int PowerLawIsotropicHardeningRule::q(const double * const alpha, 
+                                    double T, double * const qv) const
+{
+  qv[0] = -s0_->value(T) - A_->value(T) * pow(alpha[0], n_->value(T));
+
+  return 0;
+}
+
+int PowerLawIsotropicHardeningRule::dq_da(const double * const alpha, 
+                                    double T, double * const dqv) const
+{
+  if (alpha[0] == 0.0) {
+    dqv[0] = -1e15; // In actuality - infinity
+  }
+  else {
+    dqv[0] = -A_->value(T) * n_->value(T) * pow(alpha[0], n_->value(T) - 1);
+  }
+
+  return 0;
+}
+
 // Implementation of combined isotropic class
 CombinedIsotropicHardeningRule::CombinedIsotropicHardeningRule(
       std::vector<std::shared_ptr<IsotropicHardeningRule>> rules)

@@ -84,6 +84,17 @@ PYBIND11_MODULE(hardening, m) {
       .def("d", &VoceIsotropicHardeningRule::d)
       ;
 
+  py::class_<PowerLawIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<PowerLawIsotropicHardeningRule>>(m, "PowerLawIsotropicHardeningRule")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return
+                      create_object_python<PowerLawIsotropicHardeningRule>(args,
+                                                                       kwargs,
+                                                                       {"s0",
+                                                                       "A", "n"});
+                    }))
+      ;
+
   py::class_<CombinedIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<CombinedIsotropicHardeningRule>>(m, "CombinedIsotropicHardeningRule")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
