@@ -51,4 +51,22 @@
      </hardening>
    </flow>
  </model_2>
+
+ <powerlaw type="SmallStrainRateIndependentPlasticity">
+   <elastic type="IsotropicLinearElasticModel">
+     <m1>100000.0</m1>
+     <m1_type>youngs</m1_type>
+     <m2>0.3</m2>
+     <m2_type>poissons</m2_type>
+   </elastic>
+
+   <flow type="RateIndependentAssociativeFlow">
+     <surface type="IsoJ2"/>
+     <hardening type="PowerLawIsotropicHardeningRule">
+       <s0>100.0</s0>
+       <A>200.0</A>
+       <n>0.2</n>
+     </hardening>
+   </flow>
+ </powerlaw>
 </materials>
