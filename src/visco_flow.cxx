@@ -1,6 +1,6 @@
 #include "visco_flow.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 
 #include <cmath>
 #include <iostream>

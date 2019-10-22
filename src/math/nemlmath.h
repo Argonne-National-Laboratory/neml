@@ -2,6 +2,9 @@
 #define NEMLMATH_H
 
 #include <cstddef>
+#include <vector>
+#include <string>
+#include <cmath>
 
 #define CINDEX(i,j,n) (j + i * n)
 
@@ -28,6 +31,15 @@ namespace neml {
 const double idsym[81] = {1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0};
 const double idskew[81] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
+/// Specialty crystal plasticity operator: M_kmab*W_ml - W_km*M_mlab
+int SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, double * const SS);
+
+/// Specialty crystal plasticity operator: D_km * M_mlab - M_kmab D_ml
+int SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, double * const SS);
+
+/// Specialty operator for the skew part of the tangent: C_ijkb * e_ka - C_ijal * e_bl
+int SpecialSymSymR4Sym(const double * const D, const double * const M, double * const SW);
+
 /// Convert the symmetric and skew parts into a complete fourth order
 int transform_fourth(const double * const D, const double * const W, double * const M);
 
@@ -39,6 +51,12 @@ int full2skew(const double * const A, double * const M);
 
 /// Convert a skew derivative matrix to a 9x9
 int skew2full(const double * const M, double * const A);
+
+/// Convert a 9x9 into a ws matrix
+int full2wws(const double * const A, double * const M);
+
+/// Convert a 3x6 ws matrix into a 9x9
+int wws2full(const double * const M, double * const A);
 
 /// Convert a 9x9 to a mandel matrix
 int full2mandel(const double * const A, double * const M);
@@ -65,6 +83,12 @@ int sym(const double * const A, double * const v);
 
 /// Convert a symmetric vector to a full matrix
 int usym(const double * const v, double * const A);
+
+/// Convert a full skew rank 2 to a skew vector
+int skew(const double * const A, double * const v);
+
+/// Convert a skew vector to a full matrix
+int uskew(const double * const v, double * const A);
 
 /// Negate a vector in place
 int minus_vec(double * const a, int n);
@@ -115,7 +139,49 @@ int solve_mat(const double * const A, int n, double * const x);
 double condition(const double * const A, int n);
 
 /// Evaluate a polynomial with Horner's method, highest order term first
-double polyval(const double * const poly, const int n, double x);
+double polyval(const std::vector<double> & poly, double x);
+
+/// Construct a polynomial with the given roots
+std::vector<double> poly_from_roots(const std::vector<double> & roots);
+
+/// Get the derivative of a polynomial
+std::vector<double> differentiate_poly(const std::vector<double> & poly,
+                                       int n = 1);
+
+/// The greatest common divisor between two numbers
+int gcd(int a, int b);
+
+/// The greatest common divisor between a lot of numbers
+int common_gcd(std::vector<int> in);
+
+/// Divide a vector by the collective GCD
+std::vector<int> reduce_gcd(std::vector<int> in);
+
+/// Convert to radians
+double convert_angle(double a, std::string);
+
+/// Convert from radians
+double cast_angle(double a, std::string angles);
+
+/// Vectorized quaternion multiplication
+void qmult_vec(const double * const As, const double * const B, 
+               size_t n, double * const C);
+
+#define RTOL 1.0E-5
+#define ATOL 1.0E-8
+
+/// This is only to be used for testing
+bool isclose(double a, double b);
+
+/// Perform A * B * A.T
+int rotate_matrix(int m, int n, const double * const A,
+                  const double * const B, double * C);
+
+/// Factorial
+int fact(int n);
+
+/// Factorial as a double + cacheing
+double factorial(int n);
 
 /// Get the eigenvalues of a symmetric 3x3 matrix in Mandel notation
 int eigenvalues_sym(const double * const s, double * values);

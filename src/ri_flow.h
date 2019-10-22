@@ -4,7 +4,7 @@
 #include "objects.h"
 #include "surfaces.h"
 #include "hardening.h"
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 
 #include <memory>
 

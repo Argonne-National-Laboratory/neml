@@ -34,9 +34,8 @@ FIND_PACKAGE(Boost REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
 
 ### Configure standard-ish libraries ###
-set(BLAS_VENDOR Generic)
-FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
+FIND_PACKAGE(BLAS REQUIRED)
 
 INCLUDE_DIRECTORIES(SYSTEM rapidxml)
 
@@ -44,16 +43,20 @@ INCLUDE_DIRECTORIES(SYSTEM rapidxml)
 # Make better debug on Intel
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -traceback -ftrapuv")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Werror")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -g -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg -pedantic -Wextra -Wall -Wno-unused-parameter")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
-      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Werror")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -g -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Werror -Wno-unused-private-field")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-private-field")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-private-field")
 else()
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -g")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg")
 endif()
 
 # For MacOS
@@ -63,6 +66,27 @@ if(APPLE)
 endif(APPLE)
 ######
 
+### Offer to use OMP for crystal system ###
+option(USE_OPENMP "Compile with OpenMP" ON)
+if (USE_OPENMP)
+      if (APPLE)
+            add_definitions(-DUSE_OMP)
+            set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-Xpreprocessor -fopenmp")
+            set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Xpreprocessor -fopenmp")
+            set(OpenMP_CXX_LIBRARIES "-lomp")
+            set(OpenMP_C_LIBRARIES "-lomp")
+      else()
+            find_package(OpenMP)
+            if(NOT OPENMP_FOUND)
+                  message(WARNING "OpenMP requested but the compiler does not support it!")
+            else()
+                  add_definitions(-DUSE_OMP)
+                  set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS})
+                  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
+            endif()
+      endif()
+endif()
+###
 
 ### DOCUMENTATION ###
 option(BUILD_DOCUMENTATION "Build documentation: manual and doxygen" OFF)

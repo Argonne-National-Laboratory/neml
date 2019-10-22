@@ -14,6 +14,9 @@
 
 namespace neml {
 
+/// Typedef for slip systems
+typedef std::vector<std::pair<std::vector<int>,std::vector<int>>> list_systems;
+
 /// We can avoid this with proper C++14, will need ifdefs
 template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
@@ -35,11 +38,12 @@ class NEMLObject {
 //    NEMLObject
 //    vector<NEMLObject>
 //    string
+//    vector<pair<vector<int>,vector<int>>, i.e. groups of slip systems
 
 /// This black magic lets us store parameters in a unified map
 typedef boost::variant<double, int, bool, std::vector<double>, 
         std::shared_ptr<NEMLObject>,std::vector<std::shared_ptr<NEMLObject>>,
-        std::string> param_type;
+        std::string, list_systems> param_type;
 /// This is the enum name we assign to each type for the "external" interfaces
 /// to use in reconstructing a type from data
 enum ParamType {
@@ -49,7 +53,8 @@ enum ParamType {
   TYPE_VEC_DOUBLE       = 3,
   TYPE_NEML_OBJECT      = 4,
   TYPE_VEC_NEML_OBJECT  = 5,
-  TYPE_STRING           = 6
+  TYPE_STRING           = 6,
+  TYPE_SLIP             = 7
 };
 // This black magic lets us map the actual type of each parameter to the enum
 template <class T> constexpr ParamType GetParamType();
@@ -67,6 +72,8 @@ template <> constexpr ParamType GetParamType<std::vector<std::shared_ptr<NEMLObj
 template <> constexpr ParamType GetParamType<std::vector<NEMLObject>>()
 {return TYPE_VEC_NEML_OBJECT;}
 template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
+template <> constexpr ParamType GetParamType<list_systems>()
+{return TYPE_SLIP;}
 
 /// Error if you ask for a parameter that an object doesn't recognize
 class UnknownParameter: public std::exception {

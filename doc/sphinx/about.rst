@@ -79,6 +79,7 @@ FE program.
 The focus of the library is on extensibility, rather than computational 
 efficiency.
 
+.. _conventions:
 
 Mathematical conventions
 ------------------------

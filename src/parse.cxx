@@ -132,6 +132,9 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
       case TYPE_STRING:
         pset.assign_parameter(name, get_string(child));
         break;
+      case TYPE_SLIP:
+        pset.assign_parameter(name, get_slip(child));
+        break;
       default:
         throw std::runtime_error("Unrecognized object type!");
         break;
@@ -213,6 +216,39 @@ std::string get_string(const rapidxml::xml_node<> * node)
     throw InvalidType(node->name(), get_type_of_node(node), "string");
 }
 
+list_systems get_slip( const rapidxml::xml_node<> * node)
+{
+  list_systems groups;
+  
+  std::string text = get_string(node);
+
+  std::stringstream ss(text);
+  std::string to;
+  
+  // Separate by newlines
+  while(std::getline(ss, to,'\n')) {
+    // Delete blank characters at front and back of string
+    strip(to);
+
+    // Skip blanks
+    if (to == "") continue;
+
+    // Split by semicolon
+    std::string dir = to.substr(0, to.find(";"));
+    strip(dir);
+    std::string nor = to.substr(to.find(";")+1);
+    strip(nor);
+    
+    // Make into vectors
+    auto d = split_string_int(dir);
+    auto n = split_string_int(nor);
+    
+    groups.push_back(make_pair(d,n));
+  }
+
+  return groups;
+}
+
 std::string get_type_of_node(const rapidxml::xml_node<> * node)
 {
   for (auto attributes = node->first_attribute(); attributes; attributes = attributes->next_attribute())
@@ -238,6 +274,31 @@ std::vector<double> split_string(std::string sval)
     value.push_back(std::stod(*it));
   }
   return value;
+}
+
+std::vector<int> split_string_int(std::string sval)
+{
+  std::vector<std::string> splits;
+  std::stringstream ss(sval);
+  std::string temp;
+  while (ss >> temp) {
+    splits.push_back(temp);
+  }
+  std::vector<int> value;
+  for (auto it = splits.begin(); it != splits.end(); ++it) {
+    value.push_back(std::stoi(*it));
+  }
+  return value;
+}
+
+std::string & strip(std::string & s)
+{
+  auto noblank = [](char c) { return !std::isspace<char>(c, std::locale::classic());}; 
+
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), noblank));
+  s.erase(std::find_if(s.rbegin(), s.rend(), noblank).base(), s.end());
+  
+  return s;
 }
 
 } // namespace neml

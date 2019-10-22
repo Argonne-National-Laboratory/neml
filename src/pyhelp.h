@@ -7,6 +7,7 @@
 #include "pybind11.h"
 #include "numpy.h"
 #include "stl.h"
+#include "operators.h"
 
 #include <vector>
 #include <algorithm>
@@ -55,6 +56,22 @@ template<class T> py::array_t<T> alloc_mat(size_t m, size_t n)
           ));
   auto ptr = arr2ptr<T>(arr);
   std::fill(ptr, ptr + m * n, 0);
+  return arr;
+}
+
+// Allocate a new, zeroed matrix
+template<class T> py::array_t<T> alloc_3d(size_t m, size_t n, size_t o)
+{
+  auto arr = py::array(py::buffer_info(
+          nullptr,
+          sizeof(T),
+          py::format_descriptor<T>::value,
+          3,
+          {m, n, o},
+          {sizeof(T) * n * o, sizeof(T) * o, sizeof(T)}
+          ));
+  auto ptr = arr2ptr<T>(arr);
+  std::fill(ptr, ptr + m * n * o, 0);
   return arr;
 }
 
@@ -110,6 +127,9 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
       break;
     case TYPE_STRING:
       pset.assign_parameter(name, py::cast<std::string>(value));
+      break;
+    case TYPE_SLIP:
+      pset.assign_parameter(name, py::cast<list_systems>(value));
       break;
     default:
       throw std::runtime_error("Unrecognized object type!");

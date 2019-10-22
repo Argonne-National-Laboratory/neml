@@ -33,11 +33,33 @@ PYBIND11_MODULE(elasticity, m) {
             py_error(ier);
             return S;
            }, "Return compliance elasticity matrix.")
-      .def("E", &LinearElasticModel::E, "Young's modulus as a function of temperature.")
-      .def("nu", &LinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
-      .def("G", &LinearElasticModel::G, "Shear modulus as a function of temperature.")
-      .def("K", &LinearElasticModel::K, "Bulk modulus as a function of temperature.")
-      .def_property_readonly("valid", &LinearElasticModel::valid, "Good or dummy model.")
+      .def("C_tensor",
+           [](const LinearElasticModel & m, double T) -> SymSymR4
+           {
+            return m.C(T);
+           }, "Return stiffness elasticity tensor.")
+
+      .def("S_tensor",
+           [](const LinearElasticModel & m, double T) -> SymSymR4
+           {
+            return m.S(T);
+           }, "Return compliance elasticity tensor.")
+      .def("C_tensor",
+           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSymR4
+           {
+            return m.C(T, Q);
+           }, "Return rotated stiffness elasticity tensor.")
+
+      .def("S_tensor",
+           [](const LinearElasticModel & m, double T, const Orientation & Q) -> SymSymR4
+           {
+            return m.S(T, Q);
+           }, "Return rotated compliance elasticity tensor.")
+      .def("G", (double (LinearElasticModel::*)(double) const) &LinearElasticModel::G)
+      .def("G", (double (LinearElasticModel::*)(double, const Orientation &,
+                                                const Vector &, const Vector &)
+                 const)
+           &LinearElasticModel::G)
       ;
 
   py::class_<IsotropicLinearElasticModel, LinearElasticModel, std::shared_ptr<IsotropicLinearElasticModel>>(m, "IsotropicLinearElasticModel")
@@ -45,14 +67,17 @@ PYBIND11_MODULE(elasticity, m) {
         {
           return create_object_python<IsotropicLinearElasticModel>(args, kwargs, {"m1", "m1_type", "m2", "m2_type"});
         }))
+      .def("E", &IsotropicLinearElasticModel::E, "Young's modulus as a function of temperature.")
+      .def("nu", &IsotropicLinearElasticModel::nu, "Poisson's ratio as a function of temperature.")
+      .def("K", &IsotropicLinearElasticModel::K, "Bulk modulus as a function of temperature.")
       ;
-  
-  py::class_<BlankElasticModel, LinearElasticModel, std::shared_ptr<BlankElasticModel>>(m, "BlankElasticModel")
+
+  py::class_<CubicLinearElasticModel, LinearElasticModel, std::shared_ptr<CubicLinearElasticModel>>(m, "CubicLinearElasticModel")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<BlankElasticModel>(args, kwargs, {});
+          return create_object_python<CubicLinearElasticModel>(args, kwargs, {"m1", "m2", "m3", "method"});
         }))
-      ;
+  ;
 }
 
 }

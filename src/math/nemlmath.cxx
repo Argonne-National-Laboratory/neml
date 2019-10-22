@@ -1,12 +1,121 @@
 #include "nemlmath.h"
 
-#include "nemlerror.h"
+#include "../nemlerror.h"
 
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <algorithm>
 
 namespace neml {
+
+int SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, double * const SS)
+{
+	SS[0] = sqrt(2)*(-M[24]*W[1] + M[30]*W[2]);
+	SS[1] = sqrt(2)*(-M[25]*W[1] + M[31]*W[2]);
+	SS[2] = sqrt(2)*(-M[26]*W[1] + M[32]*W[2]);
+	SS[3] = sqrt(2)*(-M[27]*W[1] + M[33]*W[2]);
+	SS[4] = sqrt(2)*(-M[28]*W[1] + M[34]*W[2]);
+	SS[5] = sqrt(2)*(-M[29]*W[1] + M[35]*W[2]);
+	SS[6] = sqrt(2)*(M[18]*W[0] - M[30]*W[2]);
+	SS[7] = sqrt(2)*(M[19]*W[0] - M[31]*W[2]);
+	SS[8] = sqrt(2)*(M[20]*W[0] - M[32]*W[2]);
+	SS[9] = sqrt(2)*(M[21]*W[0] - M[33]*W[2]);
+	SS[10] = sqrt(2)*(M[22]*W[0] - M[34]*W[2]);
+	SS[11] = sqrt(2)*(M[23]*W[0] - M[35]*W[2]);
+	SS[12] = sqrt(2)*(-M[18]*W[0] + M[24]*W[1]);
+	SS[13] = sqrt(2)*(-M[19]*W[0] + M[25]*W[1]);
+	SS[14] = sqrt(2)*(-M[20]*W[0] + M[26]*W[1]);
+	SS[15] = sqrt(2)*(-M[21]*W[0] + M[27]*W[1]);
+	SS[16] = sqrt(2)*(-M[22]*W[0] + M[28]*W[1]);
+	SS[17] = sqrt(2)*(-M[23]*W[0] + M[29]*W[1]);
+	SS[18] = sqrt(2)*M[12]*W[0] - M[24]*W[2] + M[30]*W[1] - sqrt(2)*M[6]*W[0];
+	SS[19] = sqrt(2)*M[13]*W[0] - M[25]*W[2] + M[31]*W[1] - sqrt(2)*M[7]*W[0];
+	SS[20] = sqrt(2)*M[14]*W[0] - M[26]*W[2] + M[32]*W[1] - sqrt(2)*M[8]*W[0];
+	SS[21] = sqrt(2)*M[15]*W[0] - M[27]*W[2] + M[33]*W[1] - sqrt(2)*M[9]*W[0];
+	SS[22] = -sqrt(2)*M[10]*W[0] + sqrt(2)*M[16]*W[0] - M[28]*W[2] + M[34]*W[1];
+	SS[23] = -sqrt(2)*M[11]*W[0] + sqrt(2)*M[17]*W[0] - M[29]*W[2] + M[35]*W[1];
+	SS[24] = sqrt(2)*M[0]*W[1] - sqrt(2)*M[12]*W[1] + M[18]*W[2] - M[30]*W[0];
+	SS[25] = -sqrt(2)*M[13]*W[1] + M[19]*W[2] + sqrt(2)*M[1]*W[1] - M[31]*W[0];
+	SS[26] = -sqrt(2)*M[14]*W[1] + M[20]*W[2] + sqrt(2)*M[2]*W[1] - M[32]*W[0];
+	SS[27] = -sqrt(2)*M[15]*W[1] + M[21]*W[2] - M[33]*W[0] + sqrt(2)*M[3]*W[1];
+	SS[28] = -sqrt(2)*M[16]*W[1] + M[22]*W[2] - M[34]*W[0] + sqrt(2)*M[4]*W[1];
+	SS[29] = -sqrt(2)*M[17]*W[1] + M[23]*W[2] - M[35]*W[0] + sqrt(2)*M[5]*W[1];
+	SS[30] = -sqrt(2)*M[0]*W[2] - M[18]*W[1] + M[24]*W[0] + sqrt(2)*M[6]*W[2];
+	SS[31] = -M[19]*W[1] - sqrt(2)*M[1]*W[2] + M[25]*W[0] + sqrt(2)*M[7]*W[2];
+	SS[32] = -M[20]*W[1] + M[26]*W[0] - sqrt(2)*M[2]*W[2] + sqrt(2)*M[8]*W[2];
+	SS[33] = -M[21]*W[1] + M[27]*W[0] - sqrt(2)*M[3]*W[2] + sqrt(2)*M[9]*W[2];
+	SS[34] = sqrt(2)*M[10]*W[2] - M[22]*W[1] + M[28]*W[0] - sqrt(2)*M[4]*W[2];
+	SS[35] = sqrt(2)*M[11]*W[2] - M[23]*W[1] + M[29]*W[0] - sqrt(2)*M[5]*W[2];
+ 
+  return 0;
+}
+
+int SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, double * const SS)
+{
+	SS[0] = sqrt(2)*(-D[4]*M[6] + D[5]*M[12]);
+	SS[1] = sqrt(2)*(-D[4]*M[7] + D[5]*M[13]);
+	SS[2] = sqrt(2)*(-D[4]*M[8] + D[5]*M[14]);
+	SS[3] = sqrt(2)*(-D[4]*M[9] + D[5]*M[15]);
+	SS[4] = sqrt(2)*(-D[4]*M[10] + D[5]*M[16]);
+	SS[5] = sqrt(2)*(-D[4]*M[11] + D[5]*M[17]);
+	SS[6] = sqrt(2)*(D[3]*M[0] - D[5]*M[12]);
+	SS[7] = sqrt(2)*(D[3]*M[1] - D[5]*M[13]);
+	SS[8] = sqrt(2)*(D[3]*M[2] - D[5]*M[14]);
+	SS[9] = sqrt(2)*(D[3]*M[3] - D[5]*M[15]);
+	SS[10] = sqrt(2)*(D[3]*M[4] - D[5]*M[16]);
+	SS[11] = sqrt(2)*(D[3]*M[5] - D[5]*M[17]);
+	SS[12] = sqrt(2)*(-D[3]*M[0] + D[4]*M[6]);
+	SS[13] = sqrt(2)*(-D[3]*M[1] + D[4]*M[7]);
+	SS[14] = sqrt(2)*(-D[3]*M[2] + D[4]*M[8]);
+	SS[15] = sqrt(2)*(-D[3]*M[3] + D[4]*M[9]);
+	SS[16] = sqrt(2)*(-D[3]*M[4] + D[4]*M[10]);
+	SS[17] = sqrt(2)*(-D[3]*M[5] + D[4]*M[11]);
+	SS[18] = -sqrt(2)*D[1]*M[0] + sqrt(2)*D[2]*M[0] - D[4]*M[12] + D[5]*M[6];
+	SS[19] = -sqrt(2)*D[1]*M[1] + sqrt(2)*D[2]*M[1] - D[4]*M[13] + D[5]*M[7];
+	SS[20] = -sqrt(2)*D[1]*M[2] + sqrt(2)*D[2]*M[2] - D[4]*M[14] + D[5]*M[8];
+	SS[21] = -sqrt(2)*D[1]*M[3] + sqrt(2)*D[2]*M[3] - D[4]*M[15] + D[5]*M[9];
+	SS[22] = -sqrt(2)*D[1]*M[4] + sqrt(2)*D[2]*M[4] - D[4]*M[16] + D[5]*M[10];
+	SS[23] = -sqrt(2)*D[1]*M[5] + sqrt(2)*D[2]*M[5] - D[4]*M[17] + D[5]*M[11];
+	SS[24] = sqrt(2)*D[0]*M[6] - sqrt(2)*D[2]*M[6] + D[3]*M[12] - D[5]*M[0];
+	SS[25] = sqrt(2)*D[0]*M[7] - sqrt(2)*D[2]*M[7] + D[3]*M[13] - D[5]*M[1];
+	SS[26] = sqrt(2)*D[0]*M[8] - sqrt(2)*D[2]*M[8] + D[3]*M[14] - D[5]*M[2];
+	SS[27] = sqrt(2)*D[0]*M[9] - sqrt(2)*D[2]*M[9] + D[3]*M[15] - D[5]*M[3];
+	SS[28] = sqrt(2)*D[0]*M[10] - sqrt(2)*D[2]*M[10] + D[3]*M[16] - D[5]*M[4];
+	SS[29] = sqrt(2)*D[0]*M[11] - sqrt(2)*D[2]*M[11] + D[3]*M[17] - D[5]*M[5];
+	SS[30] = -sqrt(2)*D[0]*M[12] + sqrt(2)*D[1]*M[12] - D[3]*M[6] + D[4]*M[0];
+	SS[31] = -sqrt(2)*D[0]*M[13] + sqrt(2)*D[1]*M[13] - D[3]*M[7] + D[4]*M[1];
+	SS[32] = -sqrt(2)*D[0]*M[14] + sqrt(2)*D[1]*M[14] - D[3]*M[8] + D[4]*M[2];
+	SS[33] = -sqrt(2)*D[0]*M[15] + sqrt(2)*D[1]*M[15] - D[3]*M[9] + D[4]*M[3];
+	SS[34] = -sqrt(2)*D[0]*M[16] + sqrt(2)*D[1]*M[16] - D[3]*M[10] + D[4]*M[4];
+	SS[35] = -sqrt(2)*D[0]*M[17] + sqrt(2)*D[1]*M[17] - D[3]*M[11] + D[4]*M[5];
+
+  return 0;
+}
+
+int SpecialSymSymR4Sym(const double * const D, const double * const M, double * const SW)
+{
+	SW[0] = -sqrt(2)*D[1]*M[3]/2 + sqrt(2)*D[2]*M[3]/2 + sqrt(2)*D[3]*M[1]/2 - sqrt(2)*D[3]*M[2]/2 + D[4]*M[5]/2 - D[5]*M[4]/2;
+	SW[1] = sqrt(2)*D[0]*M[4]/2 - sqrt(2)*D[2]*M[4]/2 - D[3]*M[5]/2 - sqrt(2)*D[4]*M[0]/2 + sqrt(2)*D[4]*M[2]/2 + D[5]*M[3]/2;
+	SW[2] = -sqrt(2)*D[0]*M[5]/2 + sqrt(2)*D[1]*M[5]/2 + D[3]*M[4]/2 - D[4]*M[3]/2 + sqrt(2)*D[5]*M[0]/2 - sqrt(2)*D[5]*M[1]/2;
+	SW[3] = -sqrt(2)*D[1]*M[9]/2 + sqrt(2)*D[2]*M[9]/2 + sqrt(2)*D[3]*M[7]/2 - sqrt(2)*D[3]*M[8]/2 + D[4]*M[11]/2 - D[5]*M[10]/2;
+	SW[4] = sqrt(2)*D[0]*M[10]/2 - sqrt(2)*D[2]*M[10]/2 - D[3]*M[11]/2 - sqrt(2)*D[4]*M[6]/2 + sqrt(2)*D[4]*M[8]/2 + D[5]*M[9]/2;
+	SW[5] = -sqrt(2)*D[0]*M[11]/2 + sqrt(2)*D[1]*M[11]/2 + D[3]*M[10]/2 - D[4]*M[9]/2 + sqrt(2)*D[5]*M[6]/2 - sqrt(2)*D[5]*M[7]/2;
+	SW[6] = -sqrt(2)*D[1]*M[15]/2 + sqrt(2)*D[2]*M[15]/2 + sqrt(2)*D[3]*M[13]/2 - sqrt(2)*D[3]*M[14]/2 + D[4]*M[17]/2 - D[5]*M[16]/2;
+	SW[7] = sqrt(2)*D[0]*M[16]/2 - sqrt(2)*D[2]*M[16]/2 - D[3]*M[17]/2 - sqrt(2)*D[4]*M[12]/2 + sqrt(2)*D[4]*M[14]/2 + D[5]*M[15]/2;
+	SW[8] = -sqrt(2)*D[0]*M[17]/2 + sqrt(2)*D[1]*M[17]/2 + D[3]*M[16]/2 - D[4]*M[15]/2 + sqrt(2)*D[5]*M[12]/2 - sqrt(2)*D[5]*M[13]/2;
+	SW[9] = -sqrt(2)*D[1]*M[21]/2 + sqrt(2)*D[2]*M[21]/2 + sqrt(2)*D[3]*M[19]/2 - sqrt(2)*D[3]*M[20]/2 + D[4]*M[23]/2 - D[5]*M[22]/2;
+	SW[10] = sqrt(2)*D[0]*M[22]/2 - sqrt(2)*D[2]*M[22]/2 - D[3]*M[23]/2 - sqrt(2)*D[4]*M[18]/2 + sqrt(2)*D[4]*M[20]/2 + D[5]*M[21]/2;
+	SW[11] = -sqrt(2)*D[0]*M[23]/2 + sqrt(2)*D[1]*M[23]/2 + D[3]*M[22]/2 - D[4]*M[21]/2 + sqrt(2)*D[5]*M[18]/2 - sqrt(2)*D[5]*M[19]/2;
+	SW[12] = -sqrt(2)*D[1]*M[27]/2 + sqrt(2)*D[2]*M[27]/2 + sqrt(2)*D[3]*M[25]/2 - sqrt(2)*D[3]*M[26]/2 + D[4]*M[29]/2 - D[5]*M[28]/2;
+	SW[13] = sqrt(2)*D[0]*M[28]/2 - sqrt(2)*D[2]*M[28]/2 - D[3]*M[29]/2 - sqrt(2)*D[4]*M[24]/2 + sqrt(2)*D[4]*M[26]/2 + D[5]*M[27]/2;
+	SW[14] = -sqrt(2)*D[0]*M[29]/2 + sqrt(2)*D[1]*M[29]/2 + D[3]*M[28]/2 - D[4]*M[27]/2 + sqrt(2)*D[5]*M[24]/2 - sqrt(2)*D[5]*M[25]/2;
+	SW[15] = -sqrt(2)*D[1]*M[33]/2 + sqrt(2)*D[2]*M[33]/2 + sqrt(2)*D[3]*M[31]/2 - sqrt(2)*D[3]*M[32]/2 + D[4]*M[35]/2 - D[5]*M[34]/2;
+	SW[16] = sqrt(2)*D[0]*M[34]/2 - sqrt(2)*D[2]*M[34]/2 - D[3]*M[35]/2 - sqrt(2)*D[4]*M[30]/2 + sqrt(2)*D[4]*M[32]/2 + D[5]*M[33]/2;
+	SW[17] = -sqrt(2)*D[0]*M[35]/2 + sqrt(2)*D[1]*M[35]/2 + D[3]*M[34]/2 - D[4]*M[33]/2 + sqrt(2)*D[5]*M[30]/2 - sqrt(2)*D[5]*M[31]/2;
+
+  return 0;
+}
 
 int transform_fourth(const double * const D, const double * const W, double * const M)
 {
@@ -293,6 +402,117 @@ int skew2full(const double * const M, double * const A)
   return 0;
 }
 
+int full2wws(const double * const A, double * const M)
+{
+	M[0] = -A[45];
+	M[1] = -A[49];
+	M[2] = -A[53];
+	M[3] = -sqrt(2)*A[50];
+	M[4] = -sqrt(2)*A[47];
+	M[5] = -sqrt(2)*A[46];
+	M[6] = A[18];
+	M[7] = A[22];
+	M[8] = A[26];
+	M[9] = sqrt(2)*A[23];
+	M[10] = sqrt(2)*A[20];
+	M[11] = sqrt(2)*A[19];
+	M[12] = -A[9];
+	M[13] = -A[13];
+	M[14] = -A[17];
+	M[15] = -sqrt(2)*A[14];
+	M[16] = -sqrt(2)*A[11];
+	M[17] = -sqrt(2)*A[10];
+
+  return 0;
+}
+
+int wws2full(const double * const M, double * const A)
+{
+	A[0] = 0;
+	A[1] = 0;
+	A[2] = 0;
+	A[3] = 0;
+	A[4] = 0;
+	A[5] = 0;
+	A[6] = 0;
+	A[7] = 0;
+	A[8] = 0;
+	A[9] = -M[12];
+	A[10] = -sqrt(2)*M[17]/2;
+	A[11] = -sqrt(2)*M[16]/2;
+	A[12] = -sqrt(2)*M[17]/2;
+	A[13] = -M[13];
+	A[14] = -sqrt(2)*M[15]/2;
+	A[15] = -sqrt(2)*M[16]/2;
+	A[16] = -sqrt(2)*M[15]/2;
+	A[17] = -M[14];
+	A[18] = M[6];
+	A[19] = sqrt(2)*M[11]/2;
+	A[20] = sqrt(2)*M[10]/2;
+	A[21] = sqrt(2)*M[11]/2;
+	A[22] = M[7];
+	A[23] = sqrt(2)*M[9]/2;
+	A[24] = sqrt(2)*M[10]/2;
+	A[25] = sqrt(2)*M[9]/2;
+	A[26] = M[8];
+	A[27] = M[12];
+	A[28] = sqrt(2)*M[17]/2;
+	A[29] = sqrt(2)*M[16]/2;
+	A[30] = sqrt(2)*M[17]/2;
+	A[31] = M[13];
+	A[32] = sqrt(2)*M[15]/2;
+	A[33] = sqrt(2)*M[16]/2;
+	A[34] = sqrt(2)*M[15]/2;
+	A[35] = M[14];
+	A[36] = 0;
+	A[37] = 0;
+	A[38] = 0;
+	A[39] = 0;
+	A[40] = 0;
+	A[41] = 0;
+	A[42] = 0;
+	A[43] = 0;
+	A[44] = 0;
+	A[45] = -M[0];
+	A[46] = -sqrt(2)*M[5]/2;
+	A[47] = -sqrt(2)*M[4]/2;
+	A[48] = -sqrt(2)*M[5]/2;
+	A[49] = -M[1];
+	A[50] = -sqrt(2)*M[3]/2;
+	A[51] = -sqrt(2)*M[4]/2;
+	A[52] = -sqrt(2)*M[3]/2;
+	A[53] = -M[2];
+	A[54] = -M[6];
+	A[55] = -sqrt(2)*M[11]/2;
+	A[56] = -sqrt(2)*M[10]/2;
+	A[57] = -sqrt(2)*M[11]/2;
+	A[58] = -M[7];
+	A[59] = -sqrt(2)*M[9]/2;
+	A[60] = -sqrt(2)*M[10]/2;
+	A[61] = -sqrt(2)*M[9]/2;
+	A[62] = -M[8];
+	A[63] = M[0];
+	A[64] = sqrt(2)*M[5]/2;
+	A[65] = sqrt(2)*M[4]/2;
+	A[66] = sqrt(2)*M[5]/2;
+	A[67] = M[1];
+	A[68] = sqrt(2)*M[3]/2;
+	A[69] = sqrt(2)*M[4]/2;
+	A[70] = sqrt(2)*M[3]/2;
+	A[71] = M[2];
+	A[72] = 0;
+	A[73] = 0;
+	A[74] = 0;
+	A[75] = 0;
+	A[76] = 0;
+	A[77] = 0;
+	A[78] = 0;
+	A[79] = 0;
+	A[80] = 0;
+  
+  return 0;
+}
+
 int full2mandel(const double * const A, double * const M)
 {
 	M[0] = A[0];
@@ -572,6 +792,29 @@ int usym(const double * const v, double * const A)
   return 0;
 }
 
+int skew(const double * const A, double * const v)
+{
+  v[0] = -A[5];
+  v[1] = A[2];
+  v[2] = -A[1];
+  return 0;
+}
+
+int uskew(const double * const v, double * const A)
+{
+  A[0] = 0;
+  A[1] = -v[2];
+  A[2] = v[1];
+  A[3] = v[2];
+  A[4] = 0;
+  A[5] = -v[0];
+  A[6] = -v[1];
+  A[7] = v[0];
+  A[8] = 0;
+
+  return 0;
+}
+
 int minus_vec(double * const a, int n)
 {
   for (int i=0; i<n; i++) {
@@ -777,13 +1020,173 @@ double condition(const double * const A, int n)
   return 1.0 / rcond;
 }
 
-double polyval(const double * const poly, const int n, double x)
+double polyval(const std::vector<double> & poly, double x)
 {
+  int n = poly.size();
   double res = poly[0];
   for (int i=1; i < n; i++) {
     res = res * x + poly[i];
   }
   return res;
+}
+
+std::vector<double> poly_from_roots(const std::vector<double> & roots)
+{
+  std::vector<double> poly(1);
+  poly[0] = 1.0;
+
+  for (auto r = roots.begin(); r != roots.end(); ++r) {
+    auto pprime = std::vector<double>(poly);
+    poly.resize(poly.size()+1);
+    for (int i=poly.size()-1; i > 0; i--) {
+      poly[i] = poly[i-1];
+    }
+    poly[0] = 0.0;
+
+    for (size_t i=0; i < pprime.size(); i++) {
+      pprime[i] *= *r;
+    }
+
+    for (size_t i=0; i<(poly.size()-1); i++) {
+      poly[i] -= pprime[i];
+    }
+  }
+
+  std::reverse(poly.begin(), poly.end());
+
+  return poly;
+}
+
+std::vector<double> differentiate_poly(const std::vector<double> & poly, int n)
+{
+  auto res = std::vector<double>(poly);
+  int cs = poly.size();
+  for (int i = 0; i < n; i++) {
+    if ((cs - 1) == 0) {
+      return {0.0};
+    }
+    
+    cs -= 1;
+    for (int i=0; i<cs; i++) {
+      res[i] = res[i] * (double) (cs - i);
+    }
+  }
+
+  res.resize(cs);
+
+  return res;
+}
+
+int gcd(int a, int b)
+{
+  if (a == 0) return b;
+  return gcd(b % a, a);
+}
+
+int common_gcd(std::vector<int> in)
+{
+  int c = in[0];
+  for (size_t i = 1; i < in.size(); i++) {
+    c = gcd(c, in[i]);
+  }
+  return c;
+}
+
+std::vector<int> reduce_gcd(std::vector<int> in)
+{
+  std::vector<int> out(in);
+  int f = common_gcd(out);
+  for (size_t i=0; i<out.size(); i++) {
+    out[i] /= abs(f);
+  }
+
+  return out;
+}
+
+double convert_angle(double a, std::string angles)
+{
+  if (std::string("radians").compare(angles) == 0) {
+    return a;
+  }
+  else if (std::string("degrees").compare(angles) == 0) {
+    return a / 360.0 * 2.0 * M_PI;
+  }
+  else {
+    throw std::invalid_argument("Angle type must be radians or degrees.");
+  }
+}
+
+double cast_angle(double a, std::string angles)
+{
+  if (std::string("radians").compare(angles) == 0) {
+    return a;
+  }
+  else if (std::string("degrees").compare(angles) == 0) {
+    return a / (2.0 * M_PI) * 360.0;
+  }
+  else {
+    throw std::invalid_argument("Angle type must be radians or degrees.");
+  }
+}
+
+void qmult_vec(const double * const As, const double * const B, 
+               size_t n, double * const Cs)
+{
+  double Bs[16];
+  Bs[0] = B[0];
+  Bs[4] = -B[1];
+  Bs[8] = -B[2];
+  Bs[12] = -B[3];
+
+  Bs[1] = B[1];
+  Bs[5] = B[0];
+  Bs[9] = B[3];
+  Bs[13] = -B[2];
+
+  Bs[2] = B[2];
+  Bs[6] = -B[3];
+  Bs[10] = B[0];
+  Bs[14] = B[1];
+
+  Bs[3] = B[3];
+  Bs[7] = B[2];
+  Bs[11] = -B[1];
+  Bs[15] = B[0];
+
+  dgemm_("N", "N", 4, n, 4, 1.0, Bs, 4, As, 4, 0.0, Cs, 4);
+}
+
+bool isclose(double a, double b)
+{
+  return fabs(a - b) <= (ATOL + RTOL * fabs(b));
+}
+
+int rotate_matrix(int m, int n, const double * const A,
+                  const double * const B, double * C)
+{
+  double * temp = new double[m*n];
+  
+  // A_mn
+  // B_nn
+  // temp_nm = B_nn * A.T_nm
+  // C_mm = A_mn * temp_nm
+
+  dgemm_("T", "N", m, n, n, 1.0, A, n, B, n, 0.0, temp, m);
+  dgemm_("N", "N", m, m, n, 1.0, temp, m, A, n, 0.0, C, m);
+
+  delete [] temp;
+
+  return 0;
+}
+
+int fact(int n)
+{
+  return (n == 1 || n == 0) ? 1 : fact(n - 1) * n;
+}
+
+double factorial(int n)
+{
+  return (double) fact(n);
 }
 
 int eigenvalues_sym(const double * const s, double * values)

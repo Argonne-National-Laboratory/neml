@@ -1,8 +1,8 @@
-#include "pyhelp.h" // include first to avoid annoying redef warning
+#include "../pyhelp.h" // include first to avoid annoying redef warning
 
 #include "nemlmath.h"
 
-#include "nemlerror.h"
+#include "../nemlerror.h"
 
 namespace py = pybind11;
 
@@ -94,6 +94,36 @@ PYBIND11_MODULE(nemlmath, m) {
 
           return A;
         }, "Convert a skew-stored tensor to a 9x9");
+
+  m.def("full2wws",
+        [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
+        {
+          if (A.request().ndim != 2) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+          if ((A.request().shape[0] != 9) or (A.request().shape[1] != 9)) {
+            throw LinalgError("Input must be a 9x9 matrix!");
+          }
+
+          auto M = alloc_mat<double>(3,6);
+          full2wws(arr2ptr<double>(A), arr2ptr<double>(M));
+
+          return M;
+        }, "Convert a 9x9 to a ws matrix");
+  
+  m.def("wws2full",
+        [](py::array_t<double, py::array::c_style> M) -> py::array_t<double>
+        {
+          if ((M.request().ndim != 2) || (M.request().shape[0] != 3) 
+              || (M.request().shape[1] != 6)) {
+            throw LinalgError("Input must be a 3x6 matrix!");
+          }
+
+          auto A = alloc_mat<double>(9,9);
+          wws2full(arr2ptr<double>(M), arr2ptr<double>(A));
+
+          return A;
+        }, "Convert a ws to a full 9x9");
 
   m.def("full2mandel",
         [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
@@ -222,6 +252,39 @@ PYBIND11_MODULE(nemlmath, m) {
           
           return M;
         }, "Convert a Mandel vector to a full tensor.");
+
+  m.def("skew",
+        [](py::array_t<double, py::array::c_style> M) -> py::array_t<double>
+        {
+          if (M.request().ndim != 2) {
+            throw LinalgError("Input must be a mtrix!");
+          }
+          if ((M.request().shape[0] != 3) || (M.request().shape[1] != 3)) {
+            throw LinalgError("Input must be size 3x3!");
+          }
+          auto v = alloc_vec<double>(3);
+
+          skew(arr2ptr<double>(M), arr2ptr<double>(v));
+
+          return v;
+
+        }, "Convert a full tensor to a skew vector.");
+
+  m.def("uskew",
+        [](py::array_t<double, py::array::c_style> v) -> py::array_t<double>
+        {
+          if (v.request().ndim != 1) {
+            throw LinalgError("Input must be a vector!");
+          }
+          if (v.request().shape[0] != 3) {
+            throw LinalgError("Input must be a length 3 vector!");
+          }
+          auto M = alloc_mat<double>(3, 3);
+
+          uskew(arr2ptr<double>(v), arr2ptr<double>(M));
+          
+          return M;
+        }, "Convert a skew vector to a full tensor.");
 
   m.def("minus_vec",
         [](py::array_t<double, py::array::c_style> a) -> py::array_t<double>
@@ -488,16 +551,14 @@ PYBIND11_MODULE(nemlmath, m) {
           return condition(arr2ptr<double>(A), A.request().shape[1]);
         }, "Calculate the approximate condition number of A.");
 
-   m.def("polyval",
-        [](py::array_t<double, py::array::c_style> poly, double x) -> double
-        {
-          if (poly.request().ndim != 1) {
-            throw LinalgError("poly is not a vector!");
-          }
+   m.def("polyval", &polyval,
+         "Evaluate a polynomial at x, highest order term first.");
 
-          return polyval(arr2ptr<double>(poly), poly.request().shape[0], x);
+   m.def("poly_from_roots", &poly_from_roots, 
+         "Setup a polynomial from roots");
 
-        }, "Evaluate a polynomial at x, highest order term first.");
+   m.def("differentiate_poly", &differentiate_poly, 
+         "Differentiate a polynomial", py::arg("poly"), py::arg("n") = 1);
 
    m.def("eigenvalues_sym",
          [](py::array_t<double, py::array::c_style> s) -> std::tuple<double, double, double>
@@ -619,6 +680,35 @@ PYBIND11_MODULE(nemlmath, m) {
           return b;
 
          }, "Thin wrapper for DGTTRS");
+
+  m.def("gcd", &gcd);
+  m.def("common_gcd", &common_gcd);
+  m.def("reduce_gcd", &reduce_gcd);
+  m.def("convert_angle", &convert_angle);
+  m.def("cast_angle", &cast_angle);
+  m.def("isclose", &isclose);
+  m.def("rotate_matrix",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double,
+           py::array::c_style> B) -> py::array_t<double>
+        {
+          int m = A.request().shape[0];
+          int n = A.request().shape[1];
+
+          if ((A.request().ndim != 2) || (B.request().ndim != 2)) {
+            throw LinalgError("A and B must be matrices!");
+          }
+          if ((n != B.request().shape[0]) || (n != B.request().shape[1])) {
+            throw LinalgError("A and B must be conformal!");
+          }
+
+          auto C = alloc_mat<double>(m,m);
+          
+          rotate_matrix(m, n, arr2ptr<double>(A), arr2ptr<double>(B), arr2ptr<double>(C));
+
+          return C; 
+        }, "A * B * A.T");
+  m.def("fact", &fact);
+  m.def("factorial", &factorial);
 }
 
 } // namespace neml

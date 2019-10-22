@@ -28,7 +28,6 @@ Implementations
 
 .. toctree::
    elastic/isotropic_elastic
-   elastic/dummy_elastic
 
 
 .. _le-class:

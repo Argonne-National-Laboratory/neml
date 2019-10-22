@@ -1,6 +1,6 @@
 #include "elasticity.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 #include "nemlerror.h"
 
 #include <algorithm>
@@ -8,9 +8,41 @@
 
 namespace neml {
 
-bool LinearElasticModel::valid() const
+SymSymR4 LinearElasticModel::C(double T) const
 {
-  return false;
+  SymSymR4 res;
+  C(T, res.s());
+  return res;
+}
+
+SymSymR4 LinearElasticModel::S(double T) const
+{
+  SymSymR4 res;
+  S(T, res.s());
+  return res;
+}
+
+SymSymR4 LinearElasticModel::C(double T, const Orientation & Q) const
+{
+  return Q.apply(C(T));
+}
+
+SymSymR4 LinearElasticModel::S(double T, const Orientation & Q) const
+{
+  return Q.apply(S(T));
+}
+
+double LinearElasticModel::G(double T) const
+{
+  return G(T, Orientation::createEulerAngles(0,0,0), 
+           Vector({1,0,0}), Vector({0,1,0}));
+}
+
+double LinearElasticModel::G(double T, const Orientation & Q, const Vector & b,
+                             const Vector & n) const
+{
+  RankTwo dir = outer(b,n)/(b.norm() * n.norm());
+  return dir.contract(C(T,Q).dot(dir));
 }
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
@@ -90,14 +122,6 @@ double IsotropicLinearElasticModel::nu(double T) const
   return (3.0 * K - 2.0 * G) / (2.0 * (3.0 * K + G));
 }
 
-double IsotropicLinearElasticModel::G(double T) const
-{
-  double G, K;
-  get_GK_(T, G, K);
-
-  return G;
-}
-
 double IsotropicLinearElasticModel::K(double T) const
 {
   double G, K;
@@ -160,11 +184,6 @@ int IsotropicLinearElasticModel::S_calc_(double G, double K, double * const Sv) 
   return 0;
 }
 
-bool IsotropicLinearElasticModel::valid() const
-{
-  return true;
-}
-
 void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) const
 {
   double m1 = m1_->value(T);
@@ -223,56 +242,98 @@ void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) cons
   }
 }
 
-BlankElasticModel::BlankElasticModel()
+CubicLinearElasticModel::CubicLinearElasticModel(
+    std::shared_ptr<Interpolate> m1,
+    std::shared_ptr<Interpolate> m2,
+    std::shared_ptr<Interpolate> m3,
+    std::string method) :
+      M1_(m1), M2_(m2), M3_(m3), method_(method)
 {
-
+  if ((method != "moduli") and (method != "components")) {
+    throw std::invalid_argument("Unknown initialization method " + method);
+  }
 }
 
-std::string BlankElasticModel::type()
+std::string CubicLinearElasticModel::type()
 {
-  return "BlankElasticModel";
+  return "CubicLinearElasticModel";
 }
 
-ParameterSet BlankElasticModel::parameters()
+ParameterSet CubicLinearElasticModel::parameters()
 {
-  ParameterSet pset(BlankElasticModel::type());
+  ParameterSet pset(CubicLinearElasticModel::type());
+
+  pset.add_parameter<NEMLObject>("m1");
+  pset.add_parameter<NEMLObject>("m2");
+  pset.add_parameter<NEMLObject>("m3");
+  pset.add_parameter<std::string>("method");
 
   return pset;
 }
 
-std::unique_ptr<NEMLObject> BlankElasticModel::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> CubicLinearElasticModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<BlankElasticModel>(); 
+  return neml::make_unique<CubicLinearElasticModel>(
+      params.get_object_parameter<Interpolate>("m1"),
+      params.get_object_parameter<Interpolate>("m2"),
+      params.get_object_parameter<Interpolate>("m3"),
+      params.get_parameter<std::string>("method")
+      ); 
 }
 
-int BlankElasticModel::C(double T, double * const Cv) const
+int CubicLinearElasticModel::C(double T, double * const Cv) const
 {
-  return DUMMY_ELASTIC;
-}
+  double C1, C2, C3;
+  get_components_(T, C1, C2, C3);
 
-int BlankElasticModel::S(double T, double * const Sv) const
-{
-  return DUMMY_ELASTIC;
-}
+  std::fill(Cv, Cv+36, 0.0);
 
-double BlankElasticModel::E(double T) const
-{
+  Cv[0] = C1;
+  Cv[1] = C2;
+  Cv[2] = C2;
+
+  Cv[6] = C2;
+  Cv[7] = C1;
+  Cv[8] = C2;
+
+  Cv[12] = C2;
+  Cv[13] = C2;
+  Cv[14] = C1;
+
+  Cv[21] = C3;
+  Cv[28] = C3;
+  Cv[35] = C3;
+
   return 0;
 }
 
-double BlankElasticModel::nu(double T) const
+int CubicLinearElasticModel::S(double T, double * const Sv) const
 {
-  return 0;
+  C(T, Sv);
+  return invert_mat(Sv, 6);
 }
 
-double BlankElasticModel::G(double T) const
+void CubicLinearElasticModel::get_components_(double T, 
+                                              double & C1, double & C2,
+                                              double & C3) const
 {
-  return 0;
-}
+  if (method_ == "moduli") {
+    double E = M1_->value(T);
+    double nu = M2_->value(T);
+    double mu = M3_->value(T);
 
-double BlankElasticModel::K(double T) const
-{
-  return 0;
+    C1 = E/((1+nu)*(1-2*nu)) * (1-nu);
+    C2 = E/((1+nu)*(1-2*nu)) * nu;
+    C3 = 2.0 * mu;
+  }
+  else if (method_ == "components") {
+    C1 = M1_->value(T);
+    C2 = M2_->value(T);
+    C3 = M3_->value(T);
+  }
+  else {
+    throw std::invalid_argument("Invalid method in class internal!");
+  }
 }
 
 } // namespace neml

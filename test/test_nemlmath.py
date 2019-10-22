@@ -1,10 +1,10 @@
 import sys
 sys.path.append('..')
 
-from neml.nemlmath import *
+from neml.math.nemlmath import *
 from common import *
 
-from neml import nemlmath
+from neml.math import nemlmath
 
 import unittest
 import numpy as np
@@ -20,6 +20,10 @@ class TestLDTangent(unittest.TestCase):
     self.skew_deriv_red = ra.random((6,3))
     self.skew_deriv_ten = ws2ts(self.skew_deriv_red)
     self.skew_deriv_99 = unroll_fourth(self.skew_deriv_ten)
+
+    self.wws_deriv_red = ra.random((3,6))
+    self.wws_deriv_ten = wws2ts(self.wws_deriv_red)
+    self.wws_deriv_99 = unroll_fourth(self.wws_deriv_ten)
 
     self.S = np.array([[10.0,-20.0,15.0],[-20.0,60.0,5.0],[15.0,5.0,20.0]])
     self.S_v = sym(self.S)
@@ -37,6 +41,10 @@ class TestLDTangent(unittest.TestCase):
   def test_skew_convert(self):
     self.assertTrue(np.allclose(nemlmath.skew2full(self.skew_deriv_red), self.skew_deriv_99))
     self.assertTrue(np.allclose(nemlmath.full2skew(self.skew_deriv_99), self.skew_deriv_red))
+
+  def test_wws_convert(self):
+    self.assertTrue(np.allclose(nemlmath.wws2full(self.wws_deriv_red), self.wws_deriv_99))
+    self.assertTrue(np.allclose(nemlmath.full2wws(self.wws_deriv_99), self.wws_deriv_red))
 
   def test_identities(self):
     sym = unroll_fourth(0.5*(np.einsum('ik,jl', np.eye(3), np.eye(3)) + np.einsum('jk,il', np.eye(3), np.eye(3))))
@@ -93,17 +101,29 @@ class TestLDUpdate(unittest.TestCase):
     verify = dS_c - np.dot(S_np1, self.L.T) - np.dot(self.L, S_np1) + np.trace(self.L) * S_np1
     self.assertTrue(np.allclose(self.dS, verify))
 
-  def test_to_vector(self):
+  def test_sym_to_vector(self):
     """
       Make sure the C++ tensor -> Mandel works
     """
     self.assertTrue(np.allclose(self.Dv, nemlmath.sym(self.D)))
 
-  def test_to_tensor(self):
+  def test_sym_to_tensor(self):
     """
       Make sure the C++ Mandel -> tensor works
     """
     self.assertTrue(np.allclose(self.D, nemlmath.usym(self.Dv)))
+
+  def test_skew_to_vector(self):
+    """
+      Test C++ tensor -> skew
+    """
+    self.assertTrue(np.allclose(self.Wv, nemlmath.skew(self.W)))
+
+  def test_skew_to_tensor(self):
+    """
+      Test C++ vector -> tensor
+    """
+    self.assertTrue(np.allclose(self.W, nemlmath.uskew(self.Wv)))
 
   def test_rhs(self):
     """
@@ -233,6 +253,18 @@ class TestMatMat(unittest.TestCase):
   def test_matmat(self):
     self.assertTrue(np.allclose(np.dot(self.A, self.B), mat_mat(self.A, self.B)))
 
+class TestRotateMat(unittest.TestCase):
+  def setUp(self):
+    self.m = 6
+    self.n = 6
+    self.A = ra.random((self.m,self.n))
+    self.B = ra.random((self.n,self.n))
+
+  def test_rotate(self):
+    C = nemlmath.rotate_matrix(self.A, self.B)
+    C2 = np.dot(self.A, np.dot(self.B, self.A.T))
+    self.assertTrue(np.allclose(C,C2))
+
 class TestInvert(unittest.TestCase):
   def setUp(self):
     self.n = 10
@@ -303,6 +335,64 @@ class TestPoly(unittest.TestCase):
     npv = np.polyval(self.poly, self.x)
     mv  = polyval(self.poly, self.x)
     self.assertTrue(np.isclose(npv, mv))
+
+  def test_derivs(self):
+    for n in range(5):
+      p1 = np.polyder(self.poly, m = n)
+      p2 = differentiate_poly(self.poly, n)
+      self.assertTrue(np.allclose(p1,p2))
+
+  def test_problem_case(self):
+    p = np.array([-1.,  0.,  1.])
+    for n in range(4):
+      p1 = np.polyder(p, m = n)
+      p2 = differentiate_poly(p, n)
+      self.assertTrue(np.allclose(p1,p2))
+
+  def test_poly_from_roots(self):
+    p1 = np.polynomial.polynomial.polyfromroots(self.poly)[::-1]
+    p2 = poly_from_roots(self.poly)
+
+    self.assertTrue(np.allclose(p1,p2))
+
+class TestMisc(unittest.TestCase):
+  def setUp(self):
+    self.a1_deg = 127.0
+    self.a1_rad = np.deg2rad(self.a1_deg)
+
+  def test_cast_angle(self):
+    self.assertAlmostEqual(
+        self.a1_deg, 
+        nemlmath.cast_angle(self.a1_rad, "degrees"))
+    self.assertAlmostEqual(
+        self.a1_rad,
+        nemlmath.cast_angle(self.a1_rad, "radians"))
+
+  def test_convert_angle(self):
+    self.assertAlmostEqual(
+        self.a1_rad,
+        nemlmath.convert_angle(self.a1_deg, "degrees"))
+    self.assertAlmostEqual(
+        self.a1_rad,
+        nemlmath.convert_angle(self.a1_rad, "radians"))
+
+  def test_gcd(self):
+    self.assertEqual(nemlmath.gcd(12,20), 4)
+
+  def test_common_gcd(self):
+    self.assertEqual(nemlmath.common_gcd([10,15,20]), 5)
+
+  def test_reduce_gcd(self):
+    self.assertEqual(nemlmath.reduce_gcd([10,20,15]), [2,4,3])
+
+  def test_isclose(self):
+    self.assertTrue(nemlmath.isclose(1.0e10, 1.00001e10))
+    self.assertFalse(nemlmath.isclose(1.0e-7, 1.0e-8))
+
+class TestVariousFactorial(unittest.TestCase):
+  def test_factorial(self):
+    for i in range(10):
+      self.assertTrue(np.isclose(np.math.factorial(i), factorial(i)))
 
 class TestEigenstuff(unittest.TestCase):
   def setUp(self):

@@ -22,6 +22,7 @@ void py_error(int ier)
     case CREEP_PLASTICITY: throw std::runtime_error("Creep models can only be combined with rate independent models");
     case INCOMPATIBLE_KM: throw std::runtime_error("Incompatible lengths in Kocks-Mecking region model: number of models = number of splits + 1");
     case DUMMY_ELASTIC: throw std::runtime_error("Calling for elastic constants from a dummy elastic model.");
+    case INCOMPATIBLE_VECTORS: throw std::runtime_error("Inputs do not have the same length.");
     case UNKNOWN_ERROR: throw std::runtime_error("Unknown error");
 
     default: throw std::runtime_error("Unknown error!");
@@ -46,6 +47,7 @@ std::string string_error(int ier)
     case CREEP_PLASTICITY: return "Creep models can only be combined with rate independent plasticity models";
     case INCOMPATIBLE_KM: return "Incompatible lengths in Kocks-Mecking region model: number of models = number of splits + 1";
     case DUMMY_ELASTIC: return "Calling for elastic constants from a dummy elastic model";
+    case INCOMPATIBLE_VECTORS: return "Inputs do not have the same length.";
     case UNKNOWN_ERROR: return "Unknown error";
 
     default: return "Unknown error";

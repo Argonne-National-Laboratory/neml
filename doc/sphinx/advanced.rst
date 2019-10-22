@@ -10,9 +10,10 @@ individual components in NEML and generate XML input and the python bindings.
 
 .. toctree::
    :maxdepth: 1
-
+   
    advanced/errors
    advanced/math
+   advanced/history
    advanced/solvers
    advanced/objects
    advanced/python

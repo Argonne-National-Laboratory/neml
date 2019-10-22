@@ -1,0 +1,477 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+CP model working document
+\end_layout
+
+\begin_layout Section
+Kinematics
+\end_layout
+
+\begin_layout Subsection
+General organization
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{F}=\boldsymbol{F}^{e}\boldsymbol{F}^{p}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\dot{\boldsymbol{F}}=\dot{\boldsymbol{F}}^{e}\boldsymbol{F}^{p}+\boldsymbol{F}^{e}\dot{\boldsymbol{F}}^{p}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\boldsymbol{l}=\dot{\boldsymbol{F}}\boldsymbol{F}^{-1}=\dot{\boldsymbol{F}}^{e}\boldsymbol{F}^{e-1}+\boldsymbol{F}^{e}\dot{\boldsymbol{F}}^{p}\boldsymbol{F}^{p-1}\boldsymbol{F}^{e-1}
+\]
+
+\end_inset
+
+Keep things general and let 
+\begin_inset Formula 
+\begin{equation}
+\dot{\boldsymbol{F}}^{p}\boldsymbol{F}^{p-1}=\bar{\boldsymbol{l}}_{p}
+\end{equation}
+
+\end_inset
+
+be a general model of the stress, history, and lattice.
+\end_layout
+
+\begin_layout Standard
+Follow the rest through though by assuming
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{F}^{e}=\left(\boldsymbol{I}+\bm{\varepsilon}\right)\boldsymbol{R}^{e}
+\end{equation}
+
+\end_inset
+
+with 
+\begin_inset Formula $\bm{\varepsilon}$
+\end_inset
+
+ small so that
+\begin_inset Formula 
+\begin{equation}
+\left(\boldsymbol{I}+\bm{\varepsilon}\right)^{-1}\approx\boldsymbol{I}-\bm{\varepsilon}.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Then
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{l}=\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\Omega}^{e}-\bm{\Omega}^{e}\bm{\varepsilon}+\bm{\varepsilon}\bm{\Omega}^{e}-\bm{\varepsilon}\bm{\Omega}^{e}\bm{\varepsilon}+\boldsymbol{l}_{p}-\boldsymbol{l}_{p}\bm{\varepsilon}+\bm{\varepsilon}\boldsymbol{l}_{p}-\bm{\varepsilon}\boldsymbol{l}_{p}\bm{\varepsilon}
+\end{equation}
+
+\end_inset
+
+labeling
+\begin_inset Formula 
+\begin{equation}
+\bm{\Omega}^{e}=\dot{\boldsymbol{R}}^{e}\boldsymbol{R}^{eT}
+\end{equation}
+
+\end_inset
+
+and
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{l}_{p}=\boldsymbol{R}^{e}\bar{\boldsymbol{l}}_{p}\boldsymbol{R}^{eT}
+\end{equation}
+
+\end_inset
+
+which is a slight abuse of notation but only by the elastic stretch.
+ 
+\end_layout
+
+\begin_layout Standard
+Note if we only maintain the current orientation 
+\begin_inset Formula $\boldsymbol{Q}=\boldsymbol{R}^{e}\boldsymbol{Q}_{0}$
+\end_inset
+
+ then
+\begin_inset Formula 
+\begin{equation}
+\dot{\boldsymbol{Q}}\boldsymbol{Q}^{T}=\dot{\boldsymbol{R}}^{e}\boldsymbol{Q}_{0}\boldsymbol{Q}_{0}^{T}\boldsymbol{R}^{eT}=\dot{\boldsymbol{R}}^{e}\boldsymbol{R}^{eT}=\bm{\Omega}^{e}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Make the executive decision to drop terms that are quadratic in 
+\begin_inset Formula $\bm{\varepsilon}$
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{l}=\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\Omega}^{e}-\bm{\Omega}^{e}\bm{\varepsilon}+\bm{\varepsilon}\bm{\Omega}^{e}+\boldsymbol{l}_{p}-\boldsymbol{l}_{p}\bm{\varepsilon}+\bm{\varepsilon}\boldsymbol{l}_{p}
+\end{equation}
+
+\end_inset
+
+Now separate the symmetric and skew parts
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{d}=\frac{1}{2}\left(\boldsymbol{l}+\boldsymbol{l}^{T}\right)=\dot{\bm{\varepsilon}}+\boldsymbol{d}_{p}+\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)-\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}-\frac{1}{2}\left(\dot{\bm{\varepsilon}}\bm{\varepsilon}+\bm{\varepsilon}\dot{\bm{\varepsilon}}\right)\label{eq:sym}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{w}=\frac{1}{2}\left(\boldsymbol{l}-\boldsymbol{l}^{T}\right)=\bm{\Omega}^{e}+\boldsymbol{w}_{p}+\bm{\varepsilon}\boldsymbol{d}_{p}-\boldsymbol{d}_{p}\bm{\varepsilon}+\frac{1}{2}\left(\bm{\varepsilon}\dot{\bm{\varepsilon}}-\dot{\bm{\varepsilon}}\bm{\varepsilon}\right)\label{eq:skew}
+\end{equation}
+
+\end_inset
+
+Now you all see why I hate the 
+\begin_inset Formula $\dot{\bm{\varepsilon}}\bm{\varepsilon}$
+\end_inset
+
+ terms.
+ Everything is so pretty without them.
+ In fact I hate them so much I am going to drop them despite all of you
+ for now and consider putting them back in later
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{d}=\frac{1}{2}\left(\boldsymbol{l}+\boldsymbol{l}^{T}\right)=\dot{\bm{\varepsilon}}+\boldsymbol{d}_{p}+\bm{\varepsilon}\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)-\left(\bm{\Omega}^{e}+\boldsymbol{w}_{p}\right)\bm{\varepsilon}\label{eq:sym-1}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{w}=\frac{1}{2}\left(\boldsymbol{l}-\boldsymbol{l}^{T}\right)=\bm{\Omega}^{e}+\boldsymbol{w}_{p}+\bm{\varepsilon}\boldsymbol{d}_{p}-\boldsymbol{d}_{p}\bm{\varepsilon}\label{eq:skew-1}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Reorganize Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:sym"
+
+\end_inset
+
+ and apply the hypoelastic hypothesis and let 
+\begin_inset Formula 
+\[
+\bm{\Omega}^{\star}=\bm{\Omega}^{e}+\boldsymbol{w}_{p}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{C}:\dot{\bm{\varepsilon}}=\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\bm{\varepsilon}\bm{\Omega}^{\star}+\bm{\Omega}^{\star}\bm{\varepsilon}\right]
+\end{equation}
+
+\end_inset
+
+State in terms of stresses
+\begin_inset Formula 
+\begin{equation}
+\dot{\bm{\sigma}}=\boldsymbol{C}:\left[\boldsymbol{d}-\boldsymbol{d}_{p}-\boldsymbol{S}:\boldsymbol{\sigma}\cdot\bm{\Omega}^{\star}+\bm{\Omega}^{\star}\cdot\boldsymbol{S}:\boldsymbol{\sigma}\right]
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\boldsymbol{S}$
+\end_inset
+
+ is the elastic compliance, again in the current configuration.
+\end_layout
+
+\begin_layout Standard
+The total residual equation will then be
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{R}=\left[\begin{array}{c}
+\boldsymbol{R}_{1}\\
+\boldsymbol{R}_{2}
+\end{array}\right]=\left[\begin{array}{c}
+\boldsymbol{\sigma}_{n+1}-\bm{\sigma}_{n}-\dot{\bm{\sigma}}\Delta t\\
+\boldsymbol{h}_{n+1}-\mathbf{h}_{n}-\dot{\boldsymbol{h}}\Delta t
+\end{array}\right]=\boldsymbol{0}
+\end{equation}
+
+\end_inset
+
+for the set of history variables and corresponding evolution equations 
+\begin_inset Formula $\boldsymbol{h}$
+\end_inset
+
+.
+ We will require some Jacobian terms.
+\end_layout
+
+\begin_layout Subsection
+Tangents
+\end_layout
+
+\begin_layout Standard
+And now we want the tangent, as always.
+ In the usual way:
+\begin_inset Formula 
+\begin{alignat}{2}
+d\mathbf{R}_{1} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\sigma}}:d\bm{\sigma}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{h}}:d\bm{h}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{d}}:d\bm{d}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{w}}:d\bm{w}\\
+d\mathbf{R}_{2} & = & \frac{\partial\mathbf{R}_{2}}{\partial\bm{\sigma}}:d\bm{\sigma}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{h}}:d\bm{h}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{d}}:d\bm{d}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{w}}:d\bm{w}
+\end{alignat}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So for 
+\begin_inset Formula $d\bm{d}$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{alignat}{2}
+\mathbf{0} & = & \frac{\partial\mathbf{R}_{1}}{\partial\bm{\sigma}}:\frac{d\bm{\sigma}}{d\bm{d}}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{h}}:\frac{d\bm{h}}{d\bm{d}}+\frac{\partial\mathbf{R}_{1}}{\partial\bm{d}}\\
+\mathbf{0} & = & \frac{\partial\mathbf{R}_{2}}{\partial\bm{\sigma}}:\frac{d\bm{\sigma}}{d\bm{d}}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{h}}:\frac{d\bm{h}}{d\bm{d}}+\frac{\partial\mathbf{R}_{2}}{\partial\bm{d}}
+\end{alignat}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{alignat}{2}
+\mathbf{0} & = & \mathbf{J}_{11}:\mathbf{A}+\mathbf{J}_{12}:\frac{d\bm{h}}{d\bm{d}}-\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{d}}\Delta t\\
+\mathbf{0} & = & \mathbf{J}_{21}:\mathbf{A}+\mathbf{J}_{22}:\frac{d\bm{h}}{d\bm{d}}-\frac{\partial\dot{\bm{h}}}{\partial\bm{d}}\Delta t
+\end{alignat}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\mathbf{A}=\left(\mathbf{J}_{11}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\mathbf{J}_{21}\right)^{-1}:\left(\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{d}}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\frac{\partial\dot{\bm{h}}}{\partial\bm{d}}\right)\Delta t
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $d\bm{w}$
+\end_inset
+
+ is exactly analogous 
+\begin_inset Formula 
+\begin{equation}
+\mathbf{B}=\left(\mathbf{J}_{11}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\mathbf{J}_{21}\right)^{-1}:\left(\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{w}}-\mathbf{J}_{12}:\mathbf{J}_{22}^{-1}:\frac{\partial\dot{\bm{h}}}{\partial\bm{w}}\right)\Delta t
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Specific models
+\end_layout
+
+\begin_layout Standard
+The model for 
+\begin_inset Formula $\boldsymbol{l}_{p}$
+\end_inset
+
+ is 
+\begin_inset Formula 
+\begin{equation}
+\bar{\boldsymbol{l}}_{p}=\sum_{i=1}^{n_{slip}}\dot{\gamma}_{i}\left(\bar{\bm{d}}_{i}\otimes\bar{\boldsymbol{n}}_{i}\right)
+\end{equation}
+
+\end_inset
+
+ for some 
+\begin_inset Formula $\dot{\gamma}_{i}$
+\end_inset
+
+.
+ Note we can write
+\begin_inset Formula 
+\begin{equation}
+\bm{l}_{p}=\sum_{i=1}^{n_{slip}}\dot{\gamma}_{i}\left(\bm{d}_{i}\otimes\boldsymbol{n}_{i}\right)
+\end{equation}
+
+\end_inset
+
+by rotating the slip normal and directions forward.
+ Typically 
+\begin_inset Formula 
+\begin{equation}
+\dot{\gamma}_{i}=\dot{\gamma}_{i}^{\left(0\right)}\frac{\tau_{i}}{\bar{\tau}_{i}}\left|\frac{\tau_{i}}{\bar{\tau}_{i}}\right|^{n-1}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula 
+\begin{equation}
+\tau_{i}=\bm{\sigma}:\left(\bm{d}_{i}\otimes\boldsymbol{n}_{i}\right)
+\end{equation}
+
+\end_inset
+
+where the symmetric part of 
+\begin_inset Formula $\bm{d}_{i}\otimes\boldsymbol{n}_{i}$
+\end_inset
+
+ would suffice.
+\end_layout
+
+\begin_layout Standard
+The slip system strength model varies greatly model to model, but let's
+ start with the absolute easiest
+\begin_inset Formula 
+\begin{equation}
+\bar{\tau}_{i}=\bar{\tau}
+\end{equation}
+
+\end_inset
+
+with 
+\begin_inset Formula 
+\begin{equation}
+\dot{\bar{\tau}}=\delta\left(\tau_{sat}-\bar{\tau}\right)\sum\left|\dot{\gamma}_{i}\right|.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For the rotations rearrange 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:skew-1"
+
+\end_inset
+
+ to give
+\begin_inset Formula 
+\begin{equation}
+\bm{\Omega}^{e}=\boldsymbol{w}-\boldsymbol{w}_{p}-\bm{\varepsilon}\boldsymbol{d}_{p}+\boldsymbol{d}_{p}\bm{\varepsilon}
+\end{equation}
+
+\end_inset
+
+which is the rate form we want.
+\end_layout
+
+\end_body
+\end_document

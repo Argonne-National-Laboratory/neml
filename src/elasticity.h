@@ -3,6 +3,8 @@
 
 #include "objects.h"
 #include "interpolate.h"
+#include "math/tensors.h"
+#include "math/rotations.h"
 
 #include <memory>
 #include <vector>
@@ -19,18 +21,22 @@ class LinearElasticModel: public NEMLObject {
   virtual int C(double T, double * const Cv) const = 0;
   /// The compliance tensor, in Mandel notation
   virtual int S(double T, double * const Sv) const = 0;
+
+  /// The stiffness tensor in a tensor object
+  SymSymR4 C(double T) const;
+  /// The compliance tensor in a tensor object
+  SymSymR4 S(double T) const;
   
-  /// The Young's modulus
-  virtual double E(double T) const = 0;
-  /// Poisson's ratio
-  virtual double nu(double T) const = 0;
-  /// The shear modulus
-  virtual double G(double T) const = 0;
-  /// The bulk modulus
-  virtual double K(double T) const = 0;
-  
-  /// Is this a valid, usable model?
-  virtual bool valid() const;
+  /// The rotated stiffness tensor in a tensor object
+  SymSymR4 C(double T, const Orientation & Q) const;
+  /// The rotated compliance tensor in a tensor object
+  SymSymR4 S(double T, const Orientation & Q) const;
+
+  /// An effective shear modulus
+  virtual double G(double T) const;
+  virtual double G(double T, const Orientation & Q, const Vector & b,
+                   const Vector & n) const;
+
 };
 
 /// Isotropic shear modulus generating properties from shear and bulk models
@@ -54,19 +60,14 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
   virtual int C(double T, double * const Cv) const;
   /// Implement the compliance tensor
   virtual int S(double T, double * const Sv) const;
-  
+
   /// The Young's modulus
   virtual double E(double T) const;
   /// Poisson's ratio
   virtual double nu(double T) const;
-  /// The shear modulus
-  virtual double G(double T) const;
   /// The bulk modulus
   virtual double K(double T) const;
   
-  /// This is a valid model
-  virtual bool valid() const;
-
  private:
   int C_calc_(double G, double K, double * const Cv) const;
   int S_calc_(double G, double K, double * const Sv) const;
@@ -82,10 +83,12 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
 
 static Register<IsotropicLinearElasticModel> regIsotropicLinearElasticModel;
 
-/// Dummy model  used to signal "take elastic properties from another object"
-class BlankElasticModel: public LinearElasticModel {
+class CubicLinearElasticModel: public LinearElasticModel {
  public:
-  BlankElasticModel();
+  CubicLinearElasticModel(std::shared_ptr<Interpolate> m1,
+                          std::shared_ptr<Interpolate> m2,
+                          std::shared_ptr<Interpolate> m3,
+                          std::string method);
 
   /// The string type for the object system
   static std::string type();
@@ -94,22 +97,21 @@ class BlankElasticModel: public LinearElasticModel {
   /// Initialize from a parameter set
   static ParameterSet parameters();
   
-  /// Just raise an error
+  /// Implement the stiffness tensor
   virtual int C(double T, double * const Cv) const;
-  /// Raise an error
+  /// Implement the compliance tensor
   virtual int S(double T, double * const Sv) const;
-  
-  /// Raise an error
-  virtual double E(double T) const;
-  /// Raise an error
-  virtual double nu(double T) const;
-  /// Raise an error
-  virtual double G(double T) const;
-  /// Raise an error
-  virtual double K(double T) const;
+
+ private:
+  void get_components_(double T, double & C1, double & C2, double & C3) const;
+
+
+ private:
+  std::shared_ptr<Interpolate> M1_, M2_, M3_;
+  std::string method_;
 };
 
-static Register<BlankElasticModel> regBlankElasticModel;
+static Register<CubicLinearElasticModel> regCubicLinearElasticModel;
 
 } // namespace neml
 

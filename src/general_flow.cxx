@@ -1,6 +1,6 @@
 #include "general_flow.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 
 
 #include <algorithm>

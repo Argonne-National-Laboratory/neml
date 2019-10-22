@@ -1,6 +1,6 @@
 #include "models.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 #include "nemlerror.h"
 
 #include <cassert>
@@ -99,16 +99,6 @@ int NEMLModel_sd::elastic_strains(const double * const s_np1,
   return mat_vec(S, 6, s_np1, 6, e_np1);
 }
 
-double NEMLModel_sd::bulk(double T) const
-{
-  return elastic_->K(T);
-}
-
-double NEMLModel_sd::shear(double T) const
-{
-  return elastic_->G(T);
-}
-
 int NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
@@ -154,6 +144,47 @@ int NEMLModel_sd::calc_tangent_(const double * const D, const double * const W,
 
   return 0;
 }
+
+// NEMLModel_ldi implementation
+NEMLModel_ldi::NEMLModel_ldi() :
+      NEMLModel()
+{
+
+}
+
+NEMLModel_ldi::~NEMLModel_ldi()
+{
+
+}
+
+int NEMLModel_ldi::update_sd(
+   const double * const e_np1, const double * const e_n,
+   double T_np1, double T_n,
+   double t_np1, double t_n,
+   double * const s_np1, const double * const s_n,
+   double * const h_np1, const double * const h_n,
+   double * const A_np1,
+   double & u_np1, double u_n,
+   double & p_np1, double p_n)
+{
+  double W[3] = {0,0,0};
+  double B[18];
+  return update_ld_inc(e_np1, e_n, W, W, T_np1, T_n, t_np1, t_n,
+                       s_np1, s_n, h_np1, h_n, A_np1, B, u_np1, u_n,
+                       p_np1, p_n);
+}
+
+size_t NEMLModel_ldi::nstore() const
+{
+  return nhist();
+}
+
+int NEMLModel_ldi::init_store(double * const store) const
+{
+  init_hist(&store[0]);
+  return 0;
+}
+
 
 // Implementation of small strain elasticity
 SmallStrainElasticity::SmallStrainElasticity(

@@ -8,7 +8,7 @@
 #include <string>
 
 #include "objects.h"
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 #include "interpolate.h"
 
 namespace neml {
