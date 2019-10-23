@@ -12,6 +12,7 @@ PYBIND11_MODULE(parse, m) {
   m.doc() = "Python wrapper to read XML input files.";
   
   m.def("parse_xml", &parse_xml);
+  m.def("parse_string", &parse_string);
 
   py::register_exception<NodeNotFound>(m, "NodeNotFound");
   py::register_exception<DuplicateNode>(m, "DuplicateNode");
