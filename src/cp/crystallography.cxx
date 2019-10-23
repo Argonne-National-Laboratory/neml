@@ -10,62 +10,62 @@
 
 namespace neml {
 
-const double a = sqrt(2.0) / 2.0;
-const double b = sqrt(3.0) / 2.0;
-const double h = 0.5;
-const std::vector<Orientation> tetragonal = {
-  Orientation({ 1, 0, 0, 0}),
-  Orientation({ 0, 0, 1, 0}),
-  Orientation({ 0, 1, 0, 0}),
-  Orientation({ 0, 0, 0, 1}),
-  Orientation({ a, 0, 0,-a}),
-  Orientation({ a, 0, 0, a}),
-  Orientation({ 0, a, a, 0}),
-  Orientation({ 0,-a, a, 0})
-};
-const std::vector<Orientation> hexagonal = {
-  Orientation({ 1, 0, 0, 0}),
-  Orientation({ b, 0, 0,-h}),
-  Orientation({ b, 0, 0, h}),
-  Orientation({-h, 0, 0, b}),
-  Orientation({ 0, 0, 0, 1}),
-  Orientation({ h, 0, 0, b}),
-  Orientation({ 0, b,-h, 0}),
-  Orientation({ 0, 1, 0, 0}),
-  Orientation({ 0, b, h, 0}),
-  Orientation({ 0, h, b, 0}),
-  Orientation({ 0, 0, 1, 0}),
-  Orientation({ 0,-h, b, 0})
-};
-const std::vector<Orientation> cubic = {
-  Orientation({ 1, 0, 0, 0}),
-  Orientation({ h, h, h, h}),
-  Orientation({-h, h, h, h}),
-  Orientation({ h,-h, h, h}),
-  Orientation({ h, h,-h, h}),
-  Orientation({-h,-h,-h, h}),
-  Orientation({ h,-h,-h, h}),
-  Orientation({-h,-h, h, h}),
-  Orientation({-h, h,-h, h}),
-  Orientation({ 0, 0, 1, 0}),
-  Orientation({ 0, 0, 0, 1}),
-  Orientation({ 0, 1, 0 ,0}),
-  Orientation({ 0,-h, 0, h}),
-  Orientation({ 0, h, 0, h}),
-  Orientation({ h, 0, h, 0}),
-  Orientation({ h, 0,-h, 0}),
-  Orientation({ 0, 0,-h, h}),
-  Orientation({ h, h, 0, 0}),
-  Orientation({ h,-h, 0, 0}),
-  Orientation({ 0, 0, h, h}),
-  Orientation({ 0,-h, h, 0}),
-  Orientation({ h, 0, 0,-h}),
-  Orientation({ 0, h, h, 0}),
-  Orientation({ h, 0, 0, h})
-};
-
 std::vector<Orientation> symmetry_rotations(std::string sclass)
 {
+  const double a = sqrt(2.0) / 2.0;
+  const double b = sqrt(3.0) / 2.0;
+  const double h = 0.5;
+  const std::vector<Orientation> tetragonal = {
+    Orientation({ 1, 0, 0, 0}),
+    Orientation({ 0, 0, 1, 0}),
+    Orientation({ 0, 1, 0, 0}),
+    Orientation({ 0, 0, 0, 1}),
+    Orientation({ a, 0, 0,-a}),
+    Orientation({ a, 0, 0, a}),
+    Orientation({ 0, a, a, 0}),
+    Orientation({ 0,-a, a, 0})
+  };
+  const std::vector<Orientation> hexagonal = {
+    Orientation({ 1, 0, 0, 0}),
+    Orientation({ b, 0, 0,-h}),
+    Orientation({ b, 0, 0, h}),
+    Orientation({-h, 0, 0, b}),
+    Orientation({ 0, 0, 0, 1}),
+    Orientation({ h, 0, 0, b}),
+    Orientation({ 0, b,-h, 0}),
+    Orientation({ 0, 1, 0, 0}),
+    Orientation({ 0, b, h, 0}),
+    Orientation({ 0, h, b, 0}),
+    Orientation({ 0, 0, 1, 0}),
+    Orientation({ 0,-h, b, 0})
+  };
+  const std::vector<Orientation> cubic = {
+    Orientation({ 1, 0, 0, 0}),
+    Orientation({ h, h, h, h}),
+    Orientation({-h, h, h, h}),
+    Orientation({ h,-h, h, h}),
+    Orientation({ h, h,-h, h}),
+    Orientation({-h,-h,-h, h}),
+    Orientation({ h,-h,-h, h}),
+    Orientation({-h,-h, h, h}),
+    Orientation({-h, h,-h, h}),
+    Orientation({ 0, 0, 1, 0}),
+    Orientation({ 0, 0, 0, 1}),
+    Orientation({ 0, 1, 0 ,0}),
+    Orientation({ 0,-h, 0, h}),
+    Orientation({ 0, h, 0, h}),
+    Orientation({ h, 0, h, 0}),
+    Orientation({ h, 0,-h, 0}),
+    Orientation({ 0, 0,-h, h}),
+    Orientation({ h, h, 0, 0}),
+    Orientation({ h,-h, 0, 0}),
+    Orientation({ 0, 0, h, h}),
+    Orientation({ 0,-h, h, 0}),
+    Orientation({ h, 0, 0,-h}),
+    Orientation({ 0, h, h, 0}),
+    Orientation({ h, 0, 0, h})
+  };
+
   std::vector<Orientation> res;
   if (sclass == "432") {
     for (int i=0; i<24; i++) {

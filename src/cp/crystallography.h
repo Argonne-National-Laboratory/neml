@@ -12,10 +12,6 @@
 
 namespace neml {
 
-extern const std::vector<Orientation> tetragonal;
-extern const std::vector<Orientation> hexagonal;
-extern const std::vector<Orientation> cubic;
-
 std::vector<Orientation> symmetry_rotations(std::string sclass);
 
 class SymmetryGroup: public NEMLObject {
