@@ -24,6 +24,7 @@ Implementations
    iso_linear
    iso_interpolated
    iso_voce
+   iso_power
    iso_combined
 
 Class description

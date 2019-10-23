@@ -130,6 +130,32 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
 
 static Register<VoceIsotropicHardeningRule> regVoceIsotropicHardeningRule;
 
+/// Power law hardening
+class PowerLawIsotropicHardeningRule: public IsotropicHardeningRule {
+ public:
+  /// Parameters: initial yield stress, prefactor, exponent
+  PowerLawIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, 
+                                      std::shared_ptr<Interpolate> A, 
+                                      std::shared_ptr<Interpolate> n);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+  
+  /// q = -s0 - A * alpha[0]**n
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  /// Derivative of map
+  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  
+ private:
+  const std::shared_ptr<const Interpolate> s0_, A_, n_;
+};
+
+static Register<PowerLawIsotropicHardeningRule> regPowerLawIsotropicHardeningRule;
+
 /// Combined hardening rule superimposing a bunch of separate ones
 class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
