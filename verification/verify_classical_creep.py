@@ -35,19 +35,28 @@ if __name__ == "__main__":
   cmodel = models.SmallStrainCreepPlasticity(emodel, bmodel, cfmodel)
   model = damage.ClassicalCreepDamageModel_sd(emodel, S, xi, phi, cmodel)
 
+  model2 = damage.ModularCreepDamageModel_sd(emodel, S, xi, phi,
+      damage.VonMisesEffectiveStress(), cmodel)
+
   # Computed life
-  srange = np.linspace(s0/2,s0*2, 10)
+  srange = np.linspace(s0/2,s0, 10)
   tfs = S**(xi) / (1+phi) * srange**(-xi)
   
   slife = []
+  slife2 = []
   for s,tf in zip(srange, tfs):
     res = drivers.creep(model, s, srate, tf * 1.25, verbose = False,
         logspace = False, check_dmg = True, nsteps = 1000)
     slife.append(res['rtime'][-1])
+    res2 = drivers.creep(model2, s, srate, tf * 1.25, verbose = False,
+        logspace = False, check_dmg = True, nsteps = 1000)
+    slife2.append(res2['rtime'][-1])
   
-  plt.plot(srange, tfs/3600.0)
-  plt.plot(srange, np.array(slife)/3600.0)
+  plt.plot(srange, tfs/3600.0, label = "Analytic formula")
+  plt.plot(srange, np.array(slife)/3600.0, label = "ClassicalCreepDamageModel")
+  plt.plot(srange, np.array(slife2)/3600.0, label = "ModularCreepDamageModel")
   plt.ylim([0,18000])
   plt.xlabel("Stress (MPa)")
   plt.ylabel("Failure time (hrs)")
+  plt.legend(loc = 'best')
   plt.show()
