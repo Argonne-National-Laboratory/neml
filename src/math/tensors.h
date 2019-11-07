@@ -20,7 +20,7 @@ class SymSymR4;
 class SymSkewR4;
 class SkewSymR4;
 
-class Tensor {
+class NEML_EXPORT Tensor {
  public:
   Tensor(std::size_t n);
   Tensor(const Tensor & other);
@@ -59,10 +59,10 @@ class Tensor {
 };
 
 /// Dangerous but useful
-bool operator==(const Tensor & a, const Tensor & b);
-bool operator!=(const Tensor & a, const Tensor & b);
+NEML_EXPORT bool operator==(const Tensor & a, const Tensor & b);
+NEML_EXPORT bool operator!=(const Tensor & a, const Tensor & b);
 
-class Vector: public Tensor {
+class NEML_EXPORT Vector: public Tensor {
  public:
   Vector();
   Vector(const std::vector<double> v);
@@ -87,22 +87,22 @@ class Vector: public Tensor {
 };
 
 // Binary operators with scalars
-Vector operator*(double s, const Vector & v);
-Vector operator*(const Vector & v, double s);
-Vector operator/(const Vector & v, double s);
+NEML_EXPORT Vector operator*(double s, const Vector & v);
+NEML_EXPORT Vector operator*(const Vector & v, double s);
+NEML_EXPORT Vector operator/(const Vector & v, double s);
 
 // Binary operators with vectors
-Vector operator+(const Vector & a, const Vector & b);
-Vector operator-(const Vector & a, const Vector & b);
+NEML_EXPORT Vector operator+(const Vector & a, const Vector & b);
+NEML_EXPORT Vector operator-(const Vector & a, const Vector & b);
 
 /// io for vectors
-std::ostream & operator<<(std::ostream & os, const Vector & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const Vector & v);
 
 // Produces tensors
-RankTwo outer(const Vector & a, const Vector & b);
+NEML_EXPORT RankTwo outer(const Vector & a, const Vector & b);
 
 /// Full Rank 2 tensor
-class RankTwo: public Tensor {
+class NEML_EXPORT RankTwo: public Tensor {
  public:
   RankTwo();
   RankTwo(const std::vector<double> v);
@@ -144,38 +144,38 @@ class RankTwo: public Tensor {
 };
 
 // Binary operators with scalars
-RankTwo operator*(double s, const RankTwo & v);
-RankTwo operator*(const RankTwo & v, double s);
-RankTwo operator/(const RankTwo & v, double s);
+NEML_EXPORT RankTwo operator*(double s, const RankTwo & v);
+NEML_EXPORT RankTwo operator*(const RankTwo & v, double s);
+NEML_EXPORT RankTwo operator/(const RankTwo & v, double s);
 
 // Various forms of addition
-RankTwo operator+(const RankTwo & a, const RankTwo & b);
-RankTwo operator-(const RankTwo & a, const RankTwo & b);
-RankTwo operator+(const RankTwo & a, const Symmetric & b);
-RankTwo operator-(const RankTwo & a, const Symmetric & b);
-RankTwo operator+(const Symmetric & a, const RankTwo & b);
-RankTwo operator-(const Symmetric & a, const RankTwo & b);
-RankTwo operator+(const RankTwo & a, const Skew & b);
-RankTwo operator-(const RankTwo & a, const Skew & b);
-RankTwo operator+(const Skew & a, const RankTwo & b);
-RankTwo operator-(const Skew & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator+(const RankTwo & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator-(const RankTwo & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator+(const RankTwo & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator-(const RankTwo & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator+(const Symmetric & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator-(const Symmetric & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator+(const RankTwo & a, const Skew & b);
+NEML_EXPORT RankTwo operator-(const RankTwo & a, const Skew & b);
+NEML_EXPORT RankTwo operator+(const Skew & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator-(const Skew & a, const RankTwo & b);
 
 // Various forms of multiplication
-Vector operator*(const RankTwo & a, const Vector & b);
-Vector operator*(const Vector & a, const RankTwo & b);
-RankTwo operator*(const RankTwo & a, const RankTwo & b);
-RankTwo operator*(const RankTwo & a, const Symmetric & b);
-RankTwo operator*(const Symmetric & a, const RankTwo & b);
-RankTwo operator*(const RankTwo & a, const Skew & b);
-RankTwo operator*(const Skew & a, const RankTwo & b);
-RankTwo operator*(const Skew & a, const Symmetric & b);
-RankTwo operator*(const Symmetric & a, const Skew & b);
+NEML_EXPORT Vector operator*(const RankTwo & a, const Vector & b);
+NEML_EXPORT Vector operator*(const Vector & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const RankTwo & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const RankTwo & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator*(const Symmetric & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const RankTwo & a, const Skew & b);
+NEML_EXPORT RankTwo operator*(const Skew & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const Skew & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator*(const Symmetric & a, const Skew & b);
 
 /// io for RankTwo tensors
-std::ostream & operator<<(std::ostream & os, const RankTwo & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const RankTwo & v);
 
 /// Symmetric Mandel rank 2 tensor
-class Symmetric: public Tensor {
+class NEML_EXPORT Symmetric: public Tensor {
  public:
   Symmetric();
   Symmetric(const std::vector<double> v);
@@ -213,23 +213,23 @@ class Symmetric: public Tensor {
 };
 
 // Binary operators with scalars
-Symmetric operator*(double s, const Symmetric & v);
-Symmetric operator*(const Symmetric & v, double s);
-Symmetric operator/(const Symmetric & v, double s);
+NEML_EXPORT Symmetric operator*(double s, const Symmetric & v);
+NEML_EXPORT Symmetric operator*(const Symmetric & v, double s);
+NEML_EXPORT Symmetric operator/(const Symmetric & v, double s);
 
 // Various forms of addition
-Symmetric operator+(const Symmetric & a, const Symmetric & b);
-Symmetric operator-(const Symmetric & a, const Symmetric & b);
+NEML_EXPORT Symmetric operator+(const Symmetric & a, const Symmetric & b);
+NEML_EXPORT Symmetric operator-(const Symmetric & a, const Symmetric & b);
 
 // Various forms of multiplication
-Vector operator*(const Symmetric & a, const Vector & b);
-Vector operator*(const Vector & a, const Symmetric & b);
-Symmetric operator*(const Symmetric & a, const Symmetric & b);
+NEML_EXPORT Vector operator*(const Symmetric & a, const Vector & b);
+NEML_EXPORT Vector operator*(const Vector & a, const Symmetric & b);
+NEML_EXPORT Symmetric operator*(const Symmetric & a, const Symmetric & b);
 
 /// io for symmetric tensors
-std::ostream & operator<<(std::ostream & os, const Symmetric & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const Symmetric & v);
 
-class Skew: public Tensor {
+class NEML_EXPORT Skew: public Tensor {
  public:
   Skew();
   Skew(const std::vector<double> v);
@@ -260,23 +260,23 @@ class Skew: public Tensor {
 };
 
 // Binary operators with scalars
-Skew operator*(double s, const Skew & v);
-Skew operator*(const Skew & v, double s);
-Skew operator/(const Skew & v, double s);
+NEML_EXPORT Skew operator*(double s, const Skew & v);
+NEML_EXPORT Skew operator*(const Skew & v, double s);
+NEML_EXPORT Skew operator/(const Skew & v, double s);
 
 // Various forms of addition
-Skew operator+(const Skew & a, const Skew & b);
-Skew operator-(const Skew & a, const Skew & b);
+NEML_EXPORT Skew operator+(const Skew & a, const Skew & b);
+NEML_EXPORT Skew operator-(const Skew & a, const Skew & b);
 
 // Various forms of multiplication
-Vector operator*(const Skew & a, const Vector & b);
-Vector operator*(const Vector & a, const Skew & b);
-Skew operator*(const Skew & a, const Skew & b);
+NEML_EXPORT Vector operator*(const Skew & a, const Vector & b);
+NEML_EXPORT Vector operator*(const Vector & a, const Skew & b);
+NEML_EXPORT Skew operator*(const Skew & a, const Skew & b);
 
 /// io for skew tensors
-std::ostream & operator<<(std::ostream & os, const Skew & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const Skew & v);
 
-class RankFour: public Tensor {
+class NEML_EXPORT RankFour: public Tensor {
  public:
   RankFour();
   RankFour(const std::vector<double> v);
@@ -309,28 +309,28 @@ class RankFour: public Tensor {
 };
 
 // Binary operators with scalars
-RankFour operator*(double s, const RankFour & v);
-RankFour operator*(const RankFour & v, double s);
-RankFour operator/(const RankFour & v, double s);
+NEML_EXPORT RankFour operator*(double s, const RankFour & v);
+NEML_EXPORT RankFour operator*(const RankFour & v, double s);
+NEML_EXPORT RankFour operator/(const RankFour & v, double s);
 
 // Various forms of addition
-RankFour operator+(const RankFour & a, const RankFour & b);
-RankFour operator-(const RankFour & a, const RankFour & b);
+NEML_EXPORT RankFour operator+(const RankFour & a, const RankFour & b);
+NEML_EXPORT RankFour operator-(const RankFour & a, const RankFour & b);
 
 // Various forms of multiplication
-RankFour operator*(const RankFour & a, const RankFour & b);
-RankFour operator*(const RankFour & a, const SymSymR4 & b);
-RankFour operator*(const RankFour & a, const SymSkewR4 & b);
-RankFour operator*(const RankFour & a, const SkewSymR4 & b);
+NEML_EXPORT RankFour operator*(const RankFour & a, const RankFour & b);
+NEML_EXPORT RankFour operator*(const RankFour & a, const SymSymR4 & b);
+NEML_EXPORT RankFour operator*(const RankFour & a, const SymSkewR4 & b);
+NEML_EXPORT RankFour operator*(const RankFour & a, const SkewSymR4 & b);
 
-RankTwo operator*(const RankFour & a, const RankTwo & b);
-RankTwo operator*(const RankFour & a, const Symmetric & b);
-RankTwo operator*(const RankFour & a, const Skew & b);
+NEML_EXPORT RankTwo operator*(const RankFour & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const RankFour & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator*(const RankFour & a, const Skew & b);
 
 /// io for SymSymR4 tensors
-std::ostream & operator<<(std::ostream & os, const RankFour & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const RankFour & v);
 
-class SymSymR4: public Tensor {
+class NEML_EXPORT SymSymR4: public Tensor {
  public:
   SymSymR4();
   SymSymR4(const std::vector<double> v);
@@ -381,31 +381,31 @@ class SymSymR4: public Tensor {
 };
 
 // Binary operators with scalars
-SymSymR4 operator*(double s, const SymSymR4 & v);
-SymSymR4 operator*(const SymSymR4 & v, double s);
-SymSymR4 operator/(const SymSymR4 & v, double s);
+NEML_EXPORT SymSymR4 operator*(double s, const SymSymR4 & v);
+NEML_EXPORT SymSymR4 operator*(const SymSymR4 & v, double s);
+NEML_EXPORT SymSymR4 operator/(const SymSymR4 & v, double s);
 
 // Various forms of addition
-SymSymR4 operator+(const SymSymR4 & a, const SymSymR4 & b);
-SymSymR4 operator-(const SymSymR4 & a, const SymSymR4 & b);
+NEML_EXPORT SymSymR4 operator+(const SymSymR4 & a, const SymSymR4 & b);
+NEML_EXPORT SymSymR4 operator-(const SymSymR4 & a, const SymSymR4 & b);
 
 // Various forms of multiplication
-RankFour operator*(const SymSymR4 & a, const RankFour & b);
-SymSymR4 operator*(const SymSymR4 & a, const SymSymR4 & b);
-RankFour operator*(const SymSymR4 & a, const SymSkewR4 & b);
-RankFour operator*(const SymSymR4 & a, const SkewSymR4 & b);
+NEML_EXPORT RankFour operator*(const SymSymR4 & a, const RankFour & b);
+NEML_EXPORT SymSymR4 operator*(const SymSymR4 & a, const SymSymR4 & b);
+NEML_EXPORT RankFour operator*(const SymSymR4 & a, const SymSkewR4 & b);
+NEML_EXPORT RankFour operator*(const SymSymR4 & a, const SkewSymR4 & b);
 
-RankTwo operator*(const SymSymR4 & a, const RankTwo & b);
-RankTwo operator*(const SymSymR4 & a, const Skew & b);
-Symmetric operator*(const SymSymR4 & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator*(const SymSymR4 & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const SymSymR4 & a, const Skew & b);
+NEML_EXPORT Symmetric operator*(const SymSymR4 & a, const Symmetric & b);
 
 /// D1_ij D2_kl
-SymSymR4 douter(const Symmetric & a, const Symmetric & b);
+NEML_EXPORT SymSymR4 douter(const Symmetric & a, const Symmetric & b);
 
 /// io for SymSymR4 tensors
-std::ostream & operator<<(std::ostream & os, const SymSymR4 & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const SymSymR4 & v);
 
-class SymSkewR4: public Tensor {
+class NEML_EXPORT SymSkewR4: public Tensor {
  public:
   SymSkewR4();
   SymSkewR4(const std::vector<double> v);
@@ -436,28 +436,28 @@ class SymSkewR4: public Tensor {
 };
 
 // Binary operators with scalars
-SymSkewR4 operator*(double s, const SymSkewR4 & v);
-SymSkewR4 operator*(const SymSkewR4 & v, double s);
-SymSkewR4 operator/(const SymSkewR4 & v, double s);
+NEML_EXPORT SymSkewR4 operator*(double s, const SymSkewR4 & v);
+NEML_EXPORT SymSkewR4 operator*(const SymSkewR4 & v, double s);
+NEML_EXPORT SymSkewR4 operator/(const SymSkewR4 & v, double s);
 
 // Various forms of addition
-SymSkewR4 operator+(const SymSkewR4 & a, const SymSkewR4 & b);
-SymSkewR4 operator-(const SymSkewR4 & a, const SymSkewR4 & b);
+NEML_EXPORT SymSkewR4 operator+(const SymSkewR4 & a, const SymSkewR4 & b);
+NEML_EXPORT SymSkewR4 operator-(const SymSkewR4 & a, const SymSkewR4 & b);
 
 // Various forms of multiplication
-RankFour operator*(const SymSkewR4 & a, const RankFour & b);
-RankFour operator*(const SymSkewR4 & a, const SymSymR4 & b);
-RankFour operator*(const SymSkewR4 & a, const SymSkewR4 & b);
-RankFour operator*(const SymSkewR4 & a, const SkewSymR4 & b);
+NEML_EXPORT RankFour operator*(const SymSkewR4 & a, const RankFour & b);
+NEML_EXPORT RankFour operator*(const SymSkewR4 & a, const SymSymR4 & b);
+NEML_EXPORT RankFour operator*(const SymSkewR4 & a, const SymSkewR4 & b);
+NEML_EXPORT RankFour operator*(const SymSkewR4 & a, const SkewSymR4 & b);
 
-RankTwo operator*(const SymSkewR4 & a, const RankTwo & b);
-RankTwo operator*(const SymSkewR4 & a, const Skew & b);
-RankTwo operator*(const SymSkewR4 & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator*(const SymSkewR4 & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const SymSkewR4 & a, const Skew & b);
+NEML_EXPORT RankTwo operator*(const SymSkewR4 & a, const Symmetric & b);
 
 /// io for SymSkewR4 tensors
-std::ostream & operator<<(std::ostream & os, const SymSkewR4 & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const SymSkewR4 & v);
 
-class SkewSymR4: public Tensor {
+class NEML_EXPORT SkewSymR4: public Tensor {
  public:
   SkewSymR4();
   SkewSymR4(const std::vector<double> v);
@@ -488,40 +488,40 @@ class SkewSymR4: public Tensor {
 };
 
 // Binary operators with scalars
-SkewSymR4 operator*(double s, const SkewSymR4 & v);
-SkewSymR4 operator*(const SkewSymR4 & v, double s);
-SkewSymR4 operator/(const SkewSymR4 & v, double s);
+NEML_EXPORT SkewSymR4 operator*(double s, const SkewSymR4 & v);
+NEML_EXPORT SkewSymR4 operator*(const SkewSymR4 & v, double s);
+NEML_EXPORT SkewSymR4 operator/(const SkewSymR4 & v, double s);
 
 // Various forms of addition
-SkewSymR4 operator+(const SkewSymR4 & a, const SkewSymR4 & b);
-SkewSymR4 operator-(const SkewSymR4 & a, const SkewSymR4 & b);
+NEML_EXPORT SkewSymR4 operator+(const SkewSymR4 & a, const SkewSymR4 & b);
+NEML_EXPORT SkewSymR4 operator-(const SkewSymR4 & a, const SkewSymR4 & b);
 
 // Various forms of multiplication
-RankFour operator*(const SkewSymR4 & a, const RankFour & b);
-RankFour operator*(const SkewSymR4 & a, const SymSymR4 & b);
-RankFour operator*(const SkewSymR4 & a, const SkewSymR4 & b);
-RankFour operator*(const SkewSymR4 & a, const SymSkewR4 & b);
+NEML_EXPORT RankFour operator*(const SkewSymR4 & a, const RankFour & b);
+NEML_EXPORT RankFour operator*(const SkewSymR4 & a, const SymSymR4 & b);
+NEML_EXPORT RankFour operator*(const SkewSymR4 & a, const SkewSymR4 & b);
+NEML_EXPORT RankFour operator*(const SkewSymR4 & a, const SymSkewR4 & b);
 
-RankTwo operator*(const SkewSymR4 & a, const RankTwo & b);
-RankTwo operator*(const SkewSymR4 & a, const Skew & b);
-RankTwo operator*(const SkewSymR4 & a, const Symmetric & b);
+NEML_EXPORT RankTwo operator*(const SkewSymR4 & a, const RankTwo & b);
+NEML_EXPORT RankTwo operator*(const SkewSymR4 & a, const Skew & b);
+NEML_EXPORT RankTwo operator*(const SkewSymR4 & a, const Symmetric & b);
 
 // ij kl
-SkewSymR4 douter(const Skew & a, const Symmetric & b);
+NEML_EXPORT SkewSymR4 douter(const Skew & a, const Symmetric & b);
 
 /// io for SkewSymR4 tensors
-std::ostream & operator<<(std::ostream & os, const SkewSymR4 & v);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const SkewSymR4 & v);
 
 
 // Helper CP methods
 /// Skmab*Wml - Wkm*Smlab
-SymSymR4 SymSymR4Skew_SkewSymR4SymR4(const SymSymR4 & S, const Skew & W);
+NEML_EXPORT SymSymR4 SymSymR4Skew_SkewSymR4SymR4(const SymSymR4 & S, const Skew & W);
 
 /// Dkm*Smlab - Skmab*Dml
-SymSymR4 SymSkewR4Sym_SkewSymR4SymR4(const SkewSymR4 & S, const Symmetric & D);
+NEML_EXPORT SymSymR4 SymSkewR4Sym_SkewSymR4SymR4(const SkewSymR4 & S, const Symmetric & D);
 
 /// Specialty operator for Skew part C_ijkb e_ka - C_ijal e_bl
-SymSkewR4 SpecialSymSymR4Sym(const SymSymR4 & S, const Symmetric & D);
+NEML_EXPORT SymSkewR4 SpecialSymSymR4Sym(const SymSymR4 & S, const Symmetric & D);
 
 } // namespace neml
 

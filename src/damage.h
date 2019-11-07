@@ -11,7 +11,7 @@
 namespace neml {
 
 /// Small strain damage model
-class NEMLDamagedModel_sd: public NEMLModel_sd {
+class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
  public:
   /// Input is an elastic model, an undamaged base material, and the CTE
   NEMLDamagedModel_sd(
@@ -62,7 +62,7 @@ class SDTrialState: public TrialState {
 };
 
 /// Special case where the damage variable is a scalar
-class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
+class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
  public:
   /// Parameters are an elastic model, a base model, the CTE, a solver
   /// tolerance, the maximum number of solver iterations, and a verbosity
@@ -150,7 +150,7 @@ class NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public Solvable {
 };
 
 /// Stack multiple scalar damage models together
-class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   /// Parameters: elastic model, vector of damage models, the base model
   /// CTE, solver tolerance, solver max iterations, and a verbosity flag
@@ -208,7 +208,7 @@ class CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
 static Register<CombinedDamageModel_sd> regCombinedDamageModel_sd;
 
 /// Classical Hayhurst-Leckie-Rabotnov-Kachanov damage
-class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   /// Parameters are the elastic model, the parameters A, xi, phi, the
   /// base model, the CTE, the solver tolerance, maximum iterations,
@@ -271,14 +271,14 @@ class ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
 static Register<ClassicalCreepDamageModel_sd> regClassicalCreepDamageModel_sd;
 
 /// Base class of modular effective stresses used by ModularCreepDamageModel_sd
-class EffectiveStress: public NEMLObject {
+class NEML_EXPORT EffectiveStress: public NEMLObject {
  public:
   virtual int effective(const double * const s, double & eff) const = 0;
   virtual int deffective(const double * const s, double * const deff) const = 0;
 };
 
 /// von Mises stress
-class VonMisesEffectiveStress: public EffectiveStress
+class NEML_EXPORT VonMisesEffectiveStress: public EffectiveStress
 {
  public:
   VonMisesEffectiveStress();
@@ -297,7 +297,7 @@ class VonMisesEffectiveStress: public EffectiveStress
 static Register<VonMisesEffectiveStress> regVonMisesEffectiveStress;
 
 /// Huddleston stress
-class HuddlestonEffectiveStress: public EffectiveStress
+class NEML_EXPORT HuddlestonEffectiveStress: public EffectiveStress
 {
  public:
   HuddlestonEffectiveStress(double b);
@@ -319,7 +319,7 @@ class HuddlestonEffectiveStress: public EffectiveStress
 static Register<HuddlestonEffectiveStress> regHuddlestonEffectiveStress;
 
 /// Maximum principal stress
-class MaxPrincipalEffectiveStress: public EffectiveStress
+class NEML_EXPORT MaxPrincipalEffectiveStress: public EffectiveStress
 {
  public:
   MaxPrincipalEffectiveStress();
@@ -338,7 +338,7 @@ class MaxPrincipalEffectiveStress: public EffectiveStress
 static Register<MaxPrincipalEffectiveStress> regMaxPrincipalEffectiveStress;
 
 /// Maximum of several effective stress measures
-class MaxSeveralEffectiveStress: public EffectiveStress
+class NEML_EXPORT MaxSeveralEffectiveStress: public EffectiveStress
 {
  public:
   MaxSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures);
@@ -363,7 +363,7 @@ class MaxSeveralEffectiveStress: public EffectiveStress
 static Register<MaxSeveralEffectiveStress> regMaxSeveralEffectiveStress;
 
 /// Weighted some of several effective stresses
-class SumSeveralEffectiveStress: public EffectiveStress
+class NEML_EXPORT SumSeveralEffectiveStress: public EffectiveStress
 {
  public:
   SumSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures,
@@ -391,7 +391,7 @@ static Register<SumSeveralEffectiveStress> regSumSeveralEffectiveStress;
 //      1) You can change the effective stress measure
 //      2) There is an extra (1-w)^xi term in the formulation to make the
 //         results match the old analytic solutions
-class ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   ModularCreepDamageModel_sd(
                             std::shared_ptr<LinearElasticModel> elastic,
@@ -452,7 +452,7 @@ class ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
 static Register<ModularCreepDamageModel_sd> regModularCreepDamageModel_sd;
 
 /// A standard damage model where the damage rate goes as the plastic strain
-class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   /// Parameters: elastic model, base model, CTE, solver tolerance,
   /// solver maximum number of iterations, verbosity flag
@@ -510,7 +510,7 @@ class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
 };
 
 /// Simple power law damage
-class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
+class NEML_EXPORT NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
  public:
   /// Parameters are an elastic model, the constants A and a, the base
   /// material model, the CTE, a solver tolerance, solver maximum number
@@ -551,7 +551,7 @@ class NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
 static Register<NEMLPowerLawDamagedModel_sd> regNEMLPowerLawDamagedModel_sd;
 
 /// Simple exponential damage model
-class NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
+class NEML_EXPORT NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
  public:
   /// Parameters are the elastic model, parameters W0, k0, and af, the
   /// base material model, the CTE, a solver tolerance, maximum number

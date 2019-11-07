@@ -12,7 +12,7 @@
 namespace neml {
 
 /// ABC for a completely general flow rule...
-class GeneralFlowRule: public NEMLObject {
+class NEML_EXPORT GeneralFlowRule: public NEMLObject {
  public:
   /// Number of history variables
   virtual size_t nhist() const = 0;
@@ -77,7 +77,7 @@ class GeneralFlowRule: public NEMLObject {
 
 /// Thermo-visco-plasticity
 //  Stress rates, temperature rates, and time can all enter the model
-class TVPFlowRule : public GeneralFlowRule {
+class NEML_EXPORT TVPFlowRule : public GeneralFlowRule {
  public:
   /// Parameters: elastic model and a viscoplastic flow rule
   TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,

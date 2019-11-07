@@ -22,7 +22,7 @@ namespace neml {
 class SlipRule; // Why would we need a forward declaration?
 
 /// ABC for a slip hardening model
-class SlipHardening: public NEMLObject
+class NEML_EXPORT SlipHardening: public NEMLObject
 {
  public:
   /// Request whatever history you will need
@@ -57,7 +57,7 @@ class SlipHardening: public NEMLObject
 };
 
 /// Slip strength rules where all systems share the same strength
-class SlipSingleHardening: public SlipHardening
+class NEML_EXPORT SlipSingleHardening: public SlipHardening
 {
  public:
   /// Map the set of history variables to the slip system hardening
@@ -75,7 +75,7 @@ class SlipSingleHardening: public SlipHardening
 };
 
 /// Slip strength rule where all systems evolve on a single scalar strength
-class SlipSingleStrengthHardening: public SlipSingleHardening
+class NEML_EXPORT SlipSingleStrengthHardening: public SlipSingleHardening
 {
  public:
   SlipSingleStrengthHardening(std::string var_name = "strength");
@@ -137,7 +137,7 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
 
 /// Sum of individual SlipSingleStrenghHardening models (static strengths also
 /// summed)
-class SumSlipSingleStrengthHardening: public SlipSingleHardening
+class NEML_EXPORT SumSlipSingleStrengthHardening: public SlipSingleHardening
 {
  public:
   /// Initialize with a list of models
@@ -186,7 +186,7 @@ class SumSlipSingleStrengthHardening: public SlipSingleHardening
 static Register<SumSlipSingleStrengthHardening> regSumSlipSingleStrengthHardening;
 
 /// Slip strength rule where the single strength evolves with sum|dg|
-class PlasticSlipHardening: public SlipSingleStrengthHardening
+class NEML_EXPORT PlasticSlipHardening: public SlipSingleStrengthHardening
 {
  public:
   PlasticSlipHardening(std::string var_name = "strength");
@@ -211,7 +211,7 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
 };
 
 /// Everyone's favorite Voce model
-class VoceSlipHardening: public PlasticSlipHardening
+class NEML_EXPORT VoceSlipHardening: public PlasticSlipHardening
 {
  public:
   /// Initialize with the saturated strength, the rate constant, and a constant

@@ -14,7 +14,7 @@
 namespace neml {
 
 /// ABC describing viscoplastic flow
-class ViscoPlasticFlowRule: public NEMLObject {
+class NEML_EXPORT ViscoPlasticFlowRule: public NEMLObject {
  public:
   /// Number of history variables
   virtual size_t nhist() const = 0;
@@ -94,7 +94,7 @@ class ViscoPlasticFlowRule: public NEMLObject {
 };
 
 /// The "g" function in the Perzyna model -- often a power law
-class GFlow: public NEMLObject {
+class NEML_EXPORT GFlow: public NEMLObject {
  public:
   /// The value of g
   virtual double g(double f, double T) const = 0;
@@ -103,7 +103,7 @@ class GFlow: public NEMLObject {
 };
 
 /// g is a power law
-class GPowerLaw: public GFlow {
+class NEML_EXPORT GPowerLaw: public GFlow {
  public:
   /// Parameter: the power law exponent
   GPowerLaw(std::shared_ptr<Interpolate> n, std::shared_ptr<Interpolate> eta);
@@ -134,7 +134,7 @@ class GPowerLaw: public GFlow {
 static Register<GPowerLaw> regGPowerLaw;
 
 /// Perzyna associative viscoplasticity
-class PerzynaFlowRule : public ViscoPlasticFlowRule {
+class NEML_EXPORT PerzynaFlowRule : public ViscoPlasticFlowRule {
  public:
   /// Parameters: a flow surface, a hardening rule, and the rate sensitivity
   /// function
@@ -195,7 +195,7 @@ static Register<PerzynaFlowRule> regPerzynaFlowRule;
 /// Various Chaboche type fluidity models.
 //
 //  These depend only on the equivalent plastic strain
-class FluidityModel: public NEMLObject {
+class NEML_EXPORT FluidityModel: public NEMLObject {
  public:
   /// Value of viscosity as a function of temperature and inelastic strain
   virtual double eta(double a, double T) const = 0;
@@ -204,7 +204,7 @@ class FluidityModel: public NEMLObject {
 };
 
 /// The fluidity is constant with respect to plastic strain
-class ConstantFluidity: public FluidityModel {
+class NEML_EXPORT ConstantFluidity: public FluidityModel {
  public:
   /// Parameter: constant value of viscosity
   ConstantFluidity(std::shared_ptr<Interpolate> eta);
@@ -228,7 +228,7 @@ class ConstantFluidity: public FluidityModel {
 static Register<ConstantFluidity> regConstantFluidity;
 
 /// Voce-like saturating fluidity
-class SaturatingFluidity: public FluidityModel {
+class NEML_EXPORT SaturatingFluidity: public FluidityModel {
  public:
   /// Parameters: K0, initial viscosity, A, saturated increase in viscosity,
   /// b, sets saturation rate
@@ -260,7 +260,7 @@ static Register<SaturatingFluidity> regSaturatingFluidity;
 //  (which should be Chaboche's for the full model), and a Perzyna rate
 //  rule with a potentially history-dependent fluidity
 //
-class ChabocheFlowRule: public ViscoPlasticFlowRule {
+class NEML_EXPORT ChabocheFlowRule: public ViscoPlasticFlowRule {
  public:
   /// Parameters: a yield surface, a nonassociative hardening rule,
   /// the fluidity function, and a rate sensitivity exponent
@@ -351,7 +351,7 @@ static Register<ChabocheFlowRule> regChabocheFlowRule;
 //  Interpolations are hard-coded because of their complexity
 //  They are public so I can easily test them
 //
-class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
+class NEML_EXPORT YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
  public:
   /// All parameters are hard coded to those given in the paper
   YaguchiGr91FlowRule();

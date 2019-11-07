@@ -20,19 +20,19 @@
 namespace neml {
 
 /// Parse from file to a shared_ptr
-std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname);
+NEML_EXPORT std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname);
 
 /// Parse from file to a unique_ptr
-std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname);
+NEML_EXPORT std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname);
 
 /// Extract a NEMLObject from a xml node as a unique_ptr
-std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node);
+NEML_EXPORT std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node);
 
 /// Extract a NEMLObject from a xml node
 std::shared_ptr<NEMLObject> get_object(const rapidxml::xml_node<> * node);
 
 /// Actually get a valid parameter set from a node
-ParameterSet get_parameters(const rapidxml::xml_node<> * node);
+ ParameterSet get_parameters(const rapidxml::xml_node<> * node);
 
 /// Extract a vector of NEMLObjects from an xml node
 std::vector<std::shared_ptr<NEMLObject>> get_vector_object(const rapidxml::xml_node<> * node);

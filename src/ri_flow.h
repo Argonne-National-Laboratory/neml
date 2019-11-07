@@ -13,7 +13,7 @@
 namespace neml {
 
 /// ABC describing rate independent flow
-class RateIndependentFlowRule: public NEMLObject {
+class NEML_EXPORT RateIndependentFlowRule: public NEMLObject {
  public:
   /// Number of history variables
   virtual size_t nhist() const = 0;
@@ -52,7 +52,7 @@ class RateIndependentFlowRule: public NEMLObject {
 };
 
 /// Implementation of associative RI flow
-class RateIndependentAssociativeFlow: public RateIndependentFlowRule {
+class NEML_EXPORT RateIndependentAssociativeFlow: public RateIndependentFlowRule {
  public:
   /// Parameters: yield surface and hardening rule
   RateIndependentAssociativeFlow(std::shared_ptr<YieldSurface> surface,
@@ -115,7 +115,7 @@ static Register<RateIndependentAssociativeFlow> regRateIndependentAssociativeFlo
 //    Examples of this kind of model include Frederick-Armstrong and the
 //    Chaboche rate-independent varieties.
 //
-class RateIndependentNonAssociativeHardening: public RateIndependentFlowRule {
+class NEML_EXPORT RateIndependentNonAssociativeHardening: public RateIndependentFlowRule {
  public:
   RateIndependentNonAssociativeHardening(std::shared_ptr<YieldSurface> surface,
                                          std::shared_ptr<NonAssociativeHardening> hardening);

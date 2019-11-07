@@ -22,7 +22,7 @@ namespace neml {
 class SlipHardening;
 
 /// Abstract base class for a slip rule
-class SlipRule: public NEMLObject
+class NEML_EXPORT SlipRule: public NEMLObject
 {
  public:
   /// Populate the history object with the appropriate variable names and types
@@ -73,7 +73,7 @@ class SlipRule: public NEMLObject
 
 /// Class where all slip rules that give the system response proportional to some strength,
 /// which is in turn a function of the history
-class SlipStrengthSlipRule: public SlipRule
+class NEML_EXPORT SlipStrengthSlipRule: public SlipRule
 {
  public:
   /// Initialize with the strength model
@@ -130,7 +130,7 @@ class SlipStrengthSlipRule: public SlipRule
 };
 
 /// The standard power law slip strength/rate relation
-class PowerLawSlipRule: public SlipStrengthSlipRule
+class NEML_EXPORT PowerLawSlipRule: public SlipStrengthSlipRule
 {
  public:
   /// Initialize with the strength object, the reference strain rate, and the

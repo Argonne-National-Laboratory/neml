@@ -11,7 +11,7 @@
 namespace neml {
 
 /// Scalar creep functions in terms of effective stress and strain
-class ScalarCreepRule: public NEMLObject {
+class NEML_EXPORT ScalarCreepRule: public NEMLObject {
   public:
    /// Scalar creep strain rate as a function of effective stress,
    /// effective strain, time, and temperature
@@ -32,7 +32,7 @@ class ScalarCreepRule: public NEMLObject {
 };
 
 /// Creep rate law from Blackburn 1972
-class BlackburnMinimumCreep: public ScalarCreepRule {
+class NEML_EXPORT BlackburnMinimumCreep: public ScalarCreepRule {
  public:
   BlackburnMinimumCreep(std::shared_ptr<Interpolate> A,
                         std::shared_ptr<Interpolate> n,
@@ -66,7 +66,7 @@ class BlackburnMinimumCreep: public ScalarCreepRule {
 static Register<BlackburnMinimumCreep> regBlackburnMinimumCreep;
 
 /// Creep rate law from Swindeman 1999
-class SwindemanMinimumCreep: public ScalarCreepRule {
+class NEML_EXPORT SwindemanMinimumCreep: public ScalarCreepRule {
  public:
   SwindemanMinimumCreep(double C, double n, double V, double Q);
 
@@ -96,7 +96,7 @@ class SwindemanMinimumCreep: public ScalarCreepRule {
 static Register<SwindemanMinimumCreep> regSwindemanMinimumCreep;
 
 /// Simple power law creep
-class PowerLawCreep: public ScalarCreepRule {
+class NEML_EXPORT PowerLawCreep: public ScalarCreepRule {
  public:
   /// Parameters: prefector A and exponent n
   PowerLawCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
@@ -129,7 +129,7 @@ class PowerLawCreep: public ScalarCreepRule {
 static Register<PowerLawCreep> regPowerLawCreep;
 
 /// A power law type model that uses KM concepts to switch between mechanisms
-class RegionKMCreep: public ScalarCreepRule {
+class NEML_EXPORT RegionKMCreep: public ScalarCreepRule {
  public:
   /// Inputs: cuts in normalized activation energy, prefactors for each region
   /// exponents for each region, boltzmann constant, burgers vector,
@@ -166,7 +166,7 @@ class RegionKMCreep: public ScalarCreepRule {
 static Register<RegionKMCreep> regRegionKMCreep;
 
 /// Classical Norton-Bailey creep
-class NortonBaileyCreep: public ScalarCreepRule {
+class NEML_EXPORT NortonBaileyCreep: public ScalarCreepRule {
  public:
   /// Parameters: prefactor A, stress exponent n, time exponent m
   NortonBaileyCreep(std::shared_ptr<Interpolate> A,
@@ -201,7 +201,7 @@ class NortonBaileyCreep: public ScalarCreepRule {
 static Register<NortonBaileyCreep> regNortonBaileyCreep;
 
 /// Classical Mukherjee creep
-class MukherjeeCreep: public ScalarCreepRule {
+class NEML_EXPORT MukherjeeCreep: public ScalarCreepRule {
  public:
   /// Parameters: elastic model (for shear modulus), prefactor,
   /// stress exponent, reference lattice diffusivity, activation energy for
@@ -247,7 +247,7 @@ class MukherjeeCreep: public ScalarCreepRule {
 static Register<MukherjeeCreep> regMukherjeeCreep;
 
 /// A generic creep rate model where log(creep_rate) = Interpolate(log(stress))
-class GenericCreep: public ScalarCreepRule {
+class NEML_EXPORT GenericCreep: public ScalarCreepRule {
  public:
   /// Parameters: interpolate giving the log creep rate
   GenericCreep(std::shared_ptr<Interpolate> cfn);
@@ -281,7 +281,7 @@ class CreepModelTrialState : public TrialState {
 };
 
 /// Interface to creep models
-class CreepModel: public NEMLObject, public Solvable {
+class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
  public:
   /// Parameters are a solver tolerance, the maximum allowable iterations,
   /// and a verbosity flag
@@ -336,7 +336,7 @@ class CreepModel: public NEMLObject, public Solvable {
 };
 
 /// J2 creep based on a scalar creep rule
-class J2CreepModel: public CreepModel {
+class NEML_EXPORT J2CreepModel: public CreepModel {
  public:
   /// Parameters: scalar creep rule, nonlinear tolerance, maximum solver
   /// iterations, and a verbosity flag

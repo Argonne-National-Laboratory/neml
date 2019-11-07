@@ -17,7 +17,7 @@ namespace neml {
 /// A inelastic model supplying D_p and W_p
 //  A complete model for implicit rotations would include the derivatives wrt
 //  the orientation.  Similarly it would include all the w_p derivatives.
-class InelasticModel: public NEMLObject {
+class NEML_EXPORT InelasticModel: public NEMLObject {
  public:
   /// Populate a history object with the correct variables
   virtual void populate_history(History & history) const = 0;
@@ -79,7 +79,7 @@ class InelasticModel: public NEMLObject {
 
 /// This model returns zero for the plastic deformation, resulting model
 /// would be linear-elastic
-class NoInelasticity: public InelasticModel {
+class NEML_EXPORT NoInelasticity: public InelasticModel {
  public:
   /// Don't need any parameters to return zero!
   NoInelasticity();
@@ -158,7 +158,7 @@ class NoInelasticity: public InelasticModel {
 static Register<NoInelasticity> regNoInelasticity;
 
 /// The classic crystal plasticity inelastic model, as described in the manual
-class AsaroInelasticity: public InelasticModel {
+class NEML_EXPORT AsaroInelasticity: public InelasticModel {
  public:
   /// Provide a SlipRule defining the slip rate/strength relations
   AsaroInelasticity(std::shared_ptr<SlipRule> rule);
@@ -237,7 +237,7 @@ static Register<AsaroInelasticity> regAsaroInelasticity;
 
 /// An isotropic power law creep model,
 /// typically combined with slip system models to represent diffusion
-class PowerLawInelasticity: public InelasticModel {
+class NEML_EXPORT PowerLawInelasticity: public InelasticModel {
  public:
   PowerLawInelasticity(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
   virtual ~PowerLawInelasticity();
@@ -324,7 +324,7 @@ static Register<PowerLawInelasticity> regPowerLawInelasticity;
 /// Metamodel that combines the rates of several individual InelasticModels
 // The model plastic deformation rates are summed, the model histories are
 // concatenated
-class CombinedInelasticity: public InelasticModel {
+class NEML_EXPORT CombinedInelasticity: public InelasticModel {
  public:
   /// Initialize with the list of models
   CombinedInelasticity(std::vector<std::shared_ptr<InelasticModel>> models);

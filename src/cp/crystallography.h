@@ -14,9 +14,9 @@
 
 namespace neml {
 
-std::vector<Orientation> symmetry_rotations(std::string sclass);
+NEML_EXPORT std::vector<Orientation> symmetry_rotations(std::string sclass);
 
-class SymmetryGroup: public NEMLObject {
+class NEML_EXPORT SymmetryGroup: public NEMLObject {
  public:
   /// Initialize with the Hermann-Mauguin notation as a string
   SymmetryGroup(std::string sclass);
@@ -57,7 +57,7 @@ class SymmetryGroup: public NEMLObject {
 
 static Register<SymmetryGroup> regSymmetryGroup;
 
-class Lattice: public NEMLObject {
+class NEML_EXPORT Lattice: public NEMLObject {
  public:
   /// Initialize with the three lattice vectors, the symmetry group and
   /// (optionally) a initial list of slip systems
@@ -146,7 +146,7 @@ class Lattice: public NEMLObject {
   std::vector<std::vector<Skew>> Ns_;
 };
 
-class CubicLattice: public Lattice {
+class NEML_EXPORT CubicLattice: public Lattice {
  public:
   /// Specialized Lattice for cubic systems, initialize with the lattice
   /// parameter

@@ -9,7 +9,7 @@
 
 namespace neml {
 
-int evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
+NEML_EXPORT int evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
                            const double * const d_np1, const double * const d_n,
                            const double * const w_np1, const double * const w_n,
                            const double * const T_np1, const double * const T_n,
@@ -20,11 +20,11 @@ int evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
                            double * const u_np1, const double * const u_n,
                            double * const p_np1, const double * const p_n,
                            int nthreads = 1);
-int init_history_batch(SingleCrystalModel & model, size_t n, double * const hist);
-int set_orientation_passive_batch(SingleCrystalModel & model, size_t n,
+NEML_EXPORT int init_history_batch(SingleCrystalModel & model, size_t n, double * const hist);
+NEML_EXPORT int set_orientation_passive_batch(SingleCrystalModel & model, size_t n,
                                   double * const hist,
                                   std::vector<Orientation> orientations);
-int get_orientation_passive_batch(SingleCrystalModel & model, size_t n,
+NEML_EXPORT int get_orientation_passive_batch(SingleCrystalModel & model, size_t n,
                                   double * const hist,
                                   std::vector<Orientation> & orientations);
 

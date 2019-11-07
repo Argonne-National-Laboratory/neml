@@ -34,3 +34,9 @@ CMakeDoxygenDefaults.cmake
 *.ninja
 .ninja*
 *.dll*
+*.vcxproj*
+*.sln
+*.manifest
+*.exp
+*.lib
+*.pyd

@@ -41,7 +41,7 @@ class SCTrialState: public TrialState {
 };
 
 /// Single crystal model integrator
-class SingleCrystalModel: public NEMLModel_ldi, public Solvable
+class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
 {
  public:
   /// Raw constructor

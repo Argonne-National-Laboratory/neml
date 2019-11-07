@@ -30,13 +30,13 @@ typedef enum Error {
 } Error;
 
 /// Translate an error code to an exception
-void py_error(int ier);
+NEML_EXPORT void py_error(int ier);
 
 /// Translate an error code to a string
-std::string string_error(int ier);
+NEML_EXPORT std::string string_error(int ier);
 
 /// Descriptive exception for problems with BLAS/LAPACK
-class LinalgError: public std::runtime_error {
+class NEML_EXPORT LinalgError: public std::runtime_error {
  public:
   LinalgError(const char* m);
 

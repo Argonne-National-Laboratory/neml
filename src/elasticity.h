@@ -17,7 +17,7 @@ namespace neml {
 
 /// Interface of all linear elastic models
 //    Return properties as a function of temperature
-class LinearElasticModel: public NEMLObject {
+class NEML_EXPORT LinearElasticModel: public NEMLObject {
  public:
   /// The stiffness tensor, in Mandel notation
   virtual int C(double T, double * const Cv) const = 0;
@@ -42,7 +42,7 @@ class LinearElasticModel: public NEMLObject {
 };
 
 /// Isotropic shear modulus generating properties from shear and bulk models
-class IsotropicLinearElasticModel: public LinearElasticModel {
+class NEML_EXPORT IsotropicLinearElasticModel: public LinearElasticModel {
  public:
   /// See detailed documentation for how to initialize with elastic constants
   IsotropicLinearElasticModel(
@@ -85,7 +85,7 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
 
 static Register<IsotropicLinearElasticModel> regIsotropicLinearElasticModel;
 
-class CubicLinearElasticModel: public LinearElasticModel {
+class NEML_EXPORT CubicLinearElasticModel: public LinearElasticModel {
  public:
   CubicLinearElasticModel(std::shared_ptr<Interpolate> m1,
                           std::shared_ptr<Interpolate> m2,

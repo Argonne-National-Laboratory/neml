@@ -27,7 +27,7 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 
 /// NEMLObjects are current pretty useless.  However, they are a hook
 /// for future work on serialization.
-class NEMLObject {
+class NEML_EXPORT NEMLObject {
  public:
   virtual ~NEMLObject() {};
 };
@@ -78,7 +78,7 @@ template <> constexpr ParamType GetParamType<list_systems>()
 {return TYPE_SLIP;}
 
 /// Error if you ask for a parameter that an object doesn't recognize
-class UnknownParameter: public std::exception {
+class NEML_EXPORT UnknownParameter: public std::exception {
  public:
   UnknownParameter(std::string object, std::string name) :
       object_(object), name_(name)
@@ -101,7 +101,7 @@ class UnknownParameter: public std::exception {
 };
 
 /// Error to call if you try a bad cast
-class WrongTypeError: public std::exception {
+class NEML_EXPORT WrongTypeError: public std::exception {
  public:
   WrongTypeError()
   {
@@ -119,7 +119,7 @@ class WrongTypeError: public std::exception {
 };
 
 /// Parameters for objects created through the NEMLObject interface
-class ParameterSet {
+class NEML_EXPORT ParameterSet {
  public:
   /// Default constructor, needed to push onto stack
   ParameterSet();
@@ -227,7 +227,7 @@ class ParameterSet {
 };
 
 /// Factory that produces NEMLObjects from ParameterSets
-class Factory {
+class NEML_EXPORT Factory {
  public:
   /// Provide a valid parameter set for the object type
   ParameterSet provide_parameters(std::string type);
@@ -279,7 +279,7 @@ class Factory {
 
 /// Little object used for auto registration
 template<typename T>
-class Register {
+class NEML_EXPORT Register {
  public:
   Register()
   {
@@ -288,7 +288,7 @@ class Register {
 };
 
 /// Error to throw if parameters are not completely defined
-class UndefinedParameters: public std::exception {
+class NEML_EXPORT UndefinedParameters: public std::exception {
  public:
   UndefinedParameters(std::string name, std::vector<std::string> unassigned) :
       name_(name), unassigned_(unassigned)
@@ -315,7 +315,7 @@ class UndefinedParameters: public std::exception {
 };
 
 /// Error to throw if the class isn't registered
-class UnregisteredError: public std::exception {
+class NEML_EXPORT UnregisteredError: public std::exception {
  public:
   UnregisteredError(std::string name) :
       name_(name)

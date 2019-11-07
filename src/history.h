@@ -56,7 +56,7 @@ const std::map<StorageType,const std::map<StorageType,StorageType>> derivative_t
        {TYPE_ROT,       TYPE_ROT}}}
   };
 
-class History {
+class NEML_EXPORT History {
  public:
   /// Default constructor (manage own memory)
   History();

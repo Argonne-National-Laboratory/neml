@@ -16,7 +16,7 @@
 namespace neml {
 
 /// Describes the stress, history, and rotation rates
-class KinematicModel: public NEMLObject {
+class NEML_EXPORT KinematicModel: public NEMLObject {
  public:
   /// Populate history with the correct variable names and types
   virtual void populate_history(History & history) const = 0;
@@ -141,7 +141,7 @@ class KinematicModel: public NEMLObject {
 };
 
 /// My standard kinematic assumptions, outlined in the manual
-class StandardKinematicModel: public KinematicModel {
+class NEML_EXPORT StandardKinematicModel: public KinematicModel {
  public:
   /// Initialize with elastic and inelastic models
   StandardKinematicModel(std::shared_ptr<LinearElasticModel> emodel,

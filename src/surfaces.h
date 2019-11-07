@@ -24,7 +24,7 @@ namespace neml {
 //  right now there's no enforcement mechanism to make sure that a model
 //  with the correct number of variables also has the right type of
 //  variables.
-class YieldSurface: public NEMLObject {
+class NEML_EXPORT YieldSurface: public NEMLObject {
  public:
   /// Indicates how many history variables the model expects to get
   virtual size_t nhist() const = 0;
@@ -56,7 +56,7 @@ class YieldSurface: public NEMLObject {
 
 /// Helper to reduce a isotropic + kinematic function to isotropic only
 template<class BT, typename... Args>
-class IsoFunction: public YieldSurface {
+class NEML_EXPORT IsoFunction: public YieldSurface {
  public:
   /// Take whatever args the template class takes
   IsoFunction(Args... args) :
@@ -176,7 +176,7 @@ class IsoFunction: public YieldSurface {
 //    hist[0]     q (isotropic hardening)
 //    hist[1:7]   X (backstress)
 //
-class IsoKinJ2: public YieldSurface {
+class NEML_EXPORT IsoKinJ2: public YieldSurface {
  public:
   /// No parameters
   IsoKinJ2();
@@ -229,7 +229,7 @@ static Register<IsoKinJ2> regIsoKinJ2;
 //  IsoKinJ2 code.  I switched to this for convenience and reliability but
 //  note it is slightly memory inefficient.
 //
-class IsoJ2: public IsoFunction<IsoKinJ2> {
+class NEML_EXPORT IsoJ2: public IsoFunction<IsoKinJ2> {
  public:
   /// No parameters
   IsoJ2() :
@@ -253,7 +253,7 @@ static Register<IsoJ2> regIsoJ2;
 //    hist[0]     q (isotropic hardening)
 //    hist[1:7]   X (backstress)
 //
-class IsoKinJ2I1: public YieldSurface {
+class NEML_EXPORT IsoKinJ2I1: public YieldSurface {
  public:
   /// Parameters: h prefactor, l exponent
   IsoKinJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l);
@@ -303,7 +303,7 @@ class IsoKinJ2I1: public YieldSurface {
 static Register<IsoKinJ2I1> regIsoKinJ2I1;
 
 /// Isotropic only version of J2I1 surface
-class IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
+class NEML_EXPORT IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
     std::shared_ptr<Interpolate>> {
  public:
   // h prefactor and l exponent

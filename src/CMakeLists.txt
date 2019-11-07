@@ -1,4 +1,5 @@
 include(macros.cmake)
+include (GenerateExportHeader)
 
 if (WRAP_PYTHON)
       add_subdirectory(../pybind11 ${PROJECT_BINARY_DIR}/neml)
@@ -29,7 +30,7 @@ add_library(neml SHARED
 add_subdirectory(math)
 add_subdirectory(cp)
 target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
-
+generate_export_header(neml)
 
 ### python bindings in neml ###
 if (WRAP_PYTHON)
@@ -37,7 +38,7 @@ if (WRAP_PYTHON)
       if (WIN32)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
       endif()
-      
+
       pybind(objects)
       pybind(solvers)
       pybind(elasticity)

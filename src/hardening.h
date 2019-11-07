@@ -15,7 +15,7 @@ namespace neml {
 /// Interface for a generic hardening rule
 //    1) Take alpha to q
 //    2) Give the gradient of that function
-class HardeningRule: public NEMLObject {
+class NEML_EXPORT HardeningRule: public NEMLObject {
  public:
   /// The number of history variables
   virtual size_t nhist() const = 0;
@@ -28,7 +28,7 @@ class HardeningRule: public NEMLObject {
 };
 
 /// Isotropic hardening rules
-class IsotropicHardeningRule: public HardeningRule {
+class NEML_EXPORT IsotropicHardeningRule: public HardeningRule {
  public:
   /// Number of strain-like history variable, defaults to 1
   virtual size_t nhist() const;
@@ -42,7 +42,7 @@ class IsotropicHardeningRule: public HardeningRule {
 };
 
 /// Linear, isotropic hardening
-class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
+class NEML_EXPORT LinearIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial surface size and linear coefficient
   LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K);
@@ -74,7 +74,7 @@ static Register<LinearIsotropicHardeningRule> regLinearIsotropicHardeningRule;
 //    The convention will be to provide a flow curve as
 //    (plastic strain, flow stress) tuples, with the value of the curve at
 //    0 being the initial yield stress
-class InterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
+class NEML_EXPORT InterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameter is the interpolate to use
   InterpolatedIsotropicHardeningRule(std::shared_ptr<Interpolate> flow);
@@ -99,7 +99,7 @@ static Register<InterpolatedIsotropicHardeningRule>
   regInterpolatedIsotropicHardeningRule;
 
 /// Voce isotropic hardening
-class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
+class NEML_EXPORT VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial yield stress, total increase amount,
   /// saturation speed constant
@@ -133,7 +133,7 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
 static Register<VoceIsotropicHardeningRule> regVoceIsotropicHardeningRule;
 
 /// Power law hardening
-class PowerLawIsotropicHardeningRule: public IsotropicHardeningRule {
+class NEML_EXPORT PowerLawIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial yield stress, prefactor, exponent
   PowerLawIsotropicHardeningRule(std::shared_ptr<Interpolate> s0,
@@ -159,7 +159,7 @@ class PowerLawIsotropicHardeningRule: public IsotropicHardeningRule {
 static Register<PowerLawIsotropicHardeningRule> regPowerLawIsotropicHardeningRule;
 
 /// Combined hardening rule superimposing a bunch of separate ones
-class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
+class NEML_EXPORT CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameter is a vector of isotropic hardening rules
   CombinedIsotropicHardeningRule(
@@ -188,7 +188,7 @@ class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
 static Register<CombinedIsotropicHardeningRule> regCombinedIsotropicHardeningRule;
 
 /// Base class for pure kinematic hardening
-class KinematicHardeningRule: public HardeningRule {
+class NEML_EXPORT KinematicHardeningRule: public HardeningRule {
  public:
   /// Number of history variables (6)
   virtual size_t nhist() const;
@@ -202,7 +202,7 @@ class KinematicHardeningRule: public HardeningRule {
 };
 
 /// Simple linear kinematic hardening
-class LinearKinematicHardeningRule: public KinematicHardeningRule {
+class NEML_EXPORT LinearKinematicHardeningRule: public KinematicHardeningRule {
  public:
   /// Parameter is the linear hardening coefficient
   LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H);
@@ -229,7 +229,7 @@ class LinearKinematicHardeningRule: public KinematicHardeningRule {
 static Register<LinearKinematicHardeningRule> regLinearKinematicHardeningRule;
 
 /// Class to combine isotropic and kinematic hardening rules
-class CombinedHardeningRule: public HardeningRule {
+class NEML_EXPORT CombinedHardeningRule: public HardeningRule {
  public:
   /// Parameters: a isotropic hardening rule and a kinematic hardening rule
   CombinedHardeningRule(std::shared_ptr<IsotropicHardeningRule> iso,
@@ -259,7 +259,7 @@ class CombinedHardeningRule: public HardeningRule {
 static Register<CombinedHardeningRule> regCombinedHardeningRule;
 
 /// ABC of a non-associative hardening rule
-class NonAssociativeHardening: public NEMLObject {
+class NEML_EXPORT NonAssociativeHardening: public NEMLObject {
  public:
   /// How many stress-like variables
   virtual size_t ninter() const = 0; // How many "q" variables it spits out
@@ -306,7 +306,7 @@ class NonAssociativeHardening: public NEMLObject {
 };
 
 /// Model for the gamma constant used in Chaboche hardening
-class GammaModel: public NEMLObject {
+class NEML_EXPORT GammaModel: public NEMLObject {
  public:
   /// Gamma as a function of equivalent inelastic strain
   virtual double gamma(double ep, double T) const = 0;
@@ -316,7 +316,7 @@ class GammaModel: public NEMLObject {
 };
 
 /// Gamma is constant with respect to strain
-class ConstantGamma: public GammaModel {
+class NEML_EXPORT ConstantGamma: public GammaModel {
  public:
   /// Parameter is just the constant value
   ConstantGamma(std::shared_ptr<Interpolate> g);
@@ -343,7 +343,7 @@ class ConstantGamma: public GammaModel {
 static Register<ConstantGamma> regConstantGamma;
 
 /// Gamma evolves with a saturating Voce form
-class SatGamma: public GammaModel {
+class NEML_EXPORT SatGamma: public GammaModel {
  public:
   /// Parameters are the initial value of gamma, the saturated value of gamma
   /// and the saturation speed constant
@@ -377,7 +377,7 @@ static Register<SatGamma> regSatGamma;
 /// Chaboche model: generalized Frederick-Armstrong
 //    This model degenerates to Frederick-Armstrong for n = 1 and
 //    A = 0, a = 1
-class Chaboche: public NonAssociativeHardening {
+class NEML_EXPORT Chaboche: public NonAssociativeHardening {
  public:
   /// Parameters: isotropic hardening model, vector of backstress constants C,
   /// vector of gamma functions, vector of static recovery constants A,

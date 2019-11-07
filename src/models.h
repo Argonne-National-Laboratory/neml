@@ -23,7 +23,7 @@ namespace neml {
 /// NEML material model interface definitions
 //  All material models inherit from this base class.  It defines interfaces
 //  and provides the methods for reading in material parameters.
-class NEMLModel: public NEMLObject {
+class NEML_EXPORT NEMLModel: public NEMLObject {
   public:
    /// Total number of stored internal variables
    virtual size_t nstore() const = 0;
@@ -67,7 +67,7 @@ class NEMLModel: public NEMLObject {
 };
 
 /// Large deformation incremental update model
-class NEMLModel_ldi: public NEMLModel {
+class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
   public:
     NEMLModel_ldi();
     virtual ~NEMLModel_ldi();
@@ -107,7 +107,7 @@ class NEMLModel_ldi: public NEMLModel {
 };
 
 /// Small deformation stress update
-class NEMLModel_sd: public NEMLModel {
+class NEML_EXPORT NEMLModel_sd: public NEMLModel {
   public:
     /// All small strain models use small strain elasticity and CTE
     NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
@@ -177,7 +177,7 @@ class NEMLModel_sd: public NEMLModel {
 
 /// Small strain linear elasticity
 //  This is generally only used as a basic test
-class SmallStrainElasticity: public NEMLModel_sd {
+class NEML_EXPORT SmallStrainElasticity: public NEMLModel_sd {
  public:
   /// Parameters are the minimum: an elastic model and a thermal expansion
   SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
@@ -259,7 +259,7 @@ class GITrialState : public TrialState {
 //    the yield surface is constant along lines from the origin to a point
 //    in stress space outside the surface (i.e. J2).
 
-class SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
+class NEML_EXPORT SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
  public:
   /// Parameters: elastic model, yield surface, yield stress, CTE,
   /// integration tolerance, maximum number of iterations,
@@ -343,7 +343,7 @@ static Register<SmallStrainPerfectPlasticity> regSmallStrainPerfectPlasticity;
 //
 //    The class does check for Kuhn-Tucker violations when it returns,
 //    reporting an error if the conditions are violated.
-class SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable {
+class NEML_EXPORT SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable {
  public:
   /// Parameters: elasticity model, flow rule, CTE, solver tolerance, maximum
   /// solver iterations, verbosity flag, tolerance on the Kuhn-Tucker conditions
@@ -412,7 +412,7 @@ static Register<SmallStrainRateIndependentPlasticity> regSmallStrainRateIndepend
 /// Small strain, rate-independent plasticity + creep
 //  Uses a combined iteration of a rate independent plastic + creep model
 //  to solver overall update
-class SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
+class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvable {
  public:
   /// Parameters are an elastic model, a base NEMLModel_sd, a CreepModel,
   /// the CTE, a solution tolerance, the maximum number of nonlinear
@@ -485,7 +485,7 @@ static Register<SmallStrainCreepPlasticity> regSmallStrainCreepPlasticity;
 /// Small strain general integrator
 //    General NR one some stress rate + history evolution rate
 //
-class GeneralIntegrator: public NEMLModel_sd, public Solvable {
+class NEML_EXPORT GeneralIntegrator: public NEMLModel_sd, public Solvable {
  public:
   /// Parameters are an elastic model, a general flow rule,
   /// the CTE, the integration tolerance, the maximum
@@ -565,7 +565,7 @@ static Register<GeneralIntegrator> regGeneralIntegrator;
 //  segments.  All the models must have compatible hardening -- the history
 //  is just going to be blindly passed between the models.
 //
-class KMRegimeModel: public NEMLModel_sd {
+class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
  public:
   /// Parameters are an elastic model, a vector of valid NEMLModel_sd objects,
   /// the transition activation energies, the Boltzmann constant in appropriate
