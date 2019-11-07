@@ -5,6 +5,8 @@
 #include "models.h"
 #include "damage.h"
 
+#include "windows.h"
+
 #include "rapidxml.hpp"
 #include "rapidxml_utils.hpp"
 
@@ -76,14 +78,14 @@ class NodeNotFound: public std::exception {
   NodeNotFound(std::string node_name, int line) :
       node_name_(node_name), line_(line)
   {
-  
+
   };
 
   const char * what() const throw ()
   {
     std::stringstream ss;
 
-    ss << "Node with name " << node_name_ 
+    ss << "Node with name " << node_name_
         << " was not found near line " << line_ << "!";
 
     return ss.str().c_str();
@@ -130,7 +132,7 @@ class InvalidType: public std::exception {
   {
     std::stringstream ss;
 
-    ss << "Node with name " << name_ << " and type " << type_ 
+    ss << "Node with name " << name_ << " and type " << type_
         << "cannot be converted to the correct type " << ctype_ << "!";
 
     return ss.str().c_str();

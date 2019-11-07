@@ -5,6 +5,8 @@
 #include "elasticity.h"
 #include "visco_flow.h"
 
+#include "windows.h"
+
 #include <cstddef>
 
 namespace neml {
@@ -16,7 +18,7 @@ class GeneralFlowRule: public NEMLObject {
   virtual size_t nhist() const = 0;
   /// Initialize the history at time zero
   virtual int init_hist(double * const h) = 0;
-  
+
   /// Stress rate
   virtual int s(const double * const s, const double * const alpha,
                 const double * const edot, double T,
@@ -37,7 +39,7 @@ class GeneralFlowRule: public NEMLObject {
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot) = 0;
-  
+
   /// History rate
   virtual int a(const double * const s, const double * const alpha,
                 const double * const edot, double T,
@@ -58,7 +60,7 @@ class GeneralFlowRule: public NEMLObject {
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot) = 0;
-  
+
   /// The implementation needs to define inelastic dissipation
   virtual int work_rate(const double * const s, const double * const alpha,
                 const double * const edot, double T,
@@ -80,14 +82,14 @@ class TVPFlowRule : public GeneralFlowRule {
   /// Parameters: elastic model and a viscoplastic flow rule
   TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
               std::shared_ptr<ViscoPlasticFlowRule> flow);
-  
+
   /// String type for the object system
   static std::string type();
   /// Return default parameters
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Initialize from parameter set
   static ParameterSet parameters();
-  
+
   /// Number of history variables
   virtual size_t nhist() const;
   /// Initialize history
@@ -113,7 +115,7 @@ class TVPFlowRule : public GeneralFlowRule {
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot);
-  
+
   /// History rate
   virtual int a(const double * const s, const double * const alpha,
                 const double * const edot, double T,
@@ -134,7 +136,7 @@ class TVPFlowRule : public GeneralFlowRule {
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
-  
+
   /// The implementation needs to define inelastic dissipation
   virtual int work_rate(const double * const s, const double * const alpha,
                 const double * const edot, double T,
@@ -147,7 +149,7 @@ class TVPFlowRule : public GeneralFlowRule {
 
   /// Set a new elastic model
   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
-  
+
  private:
   std::shared_ptr<LinearElasticModel> elastic_;
   std::shared_ptr<ViscoPlasticFlowRule> flow_;

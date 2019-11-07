@@ -1,6 +1,8 @@
 #ifndef NEMLERROR_H
 #define NEMLERROR_H
 
+#include "windows.h"
+
 #include <stdexcept>
 #include <string>
 

@@ -6,6 +6,8 @@
 #include "hardening.h"
 #include "math/nemlmath.h"
 
+#include "windows.h"
+
 #include <memory>
 
 namespace neml {
@@ -17,7 +19,7 @@ class RateIndependentFlowRule: public NEMLObject {
   virtual size_t nhist() const = 0;
   /// Setup the history at time zero
   virtual int init_hist(double * const h) const = 0;
-  
+
   /// Yield surface
   virtual int f(const double* const s, const double* const alpha, double T,
                 double & fv) const = 0;
@@ -55,19 +57,19 @@ class RateIndependentAssociativeFlow: public RateIndependentFlowRule {
   /// Parameters: yield surface and hardening rule
   RateIndependentAssociativeFlow(std::shared_ptr<YieldSurface> surface,
                                  std::shared_ptr<HardeningRule> hardening);
-  
+
   /// String type for the object system
   static std::string type();
   /// Setup default parameters
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Initialize from a parameter set
   static ParameterSet parameters();
-  
+
   /// History size according to the HardeningRule
   virtual size_t nhist() const;
   /// Initialize history with the HardeningRule
   virtual int init_hist(double * const h) const;
-  
+
   /// Yield surface
   virtual int f(const double* const s, const double* const alpha, double T,
                 double & fv) const;
@@ -129,7 +131,7 @@ class RateIndependentNonAssociativeHardening: public RateIndependentFlowRule {
   virtual size_t nhist() const;
   /// Initialize history with the HardeningRule
   virtual int init_hist(double * const h) const;
-  
+
   /// Yield surface
   virtual int f(const double* const s, const double* const alpha, double T,
                 double & fv) const;

@@ -6,6 +6,8 @@
 #include "../math/rotations.h"
 #include "../math/tensors.h"
 
+#include "../windows.h"
+
 #include <vector>
 #include <string>
 #include <memory>
@@ -20,7 +22,7 @@ class SymmetryGroup: public NEMLObject {
   SymmetryGroup(std::string sclass);
   /// Destructor
   virtual ~SymmetryGroup();
- 
+
   /// String type for the object system
   static std::string type();
   /// Initialize from parameter set
@@ -33,7 +35,7 @@ class SymmetryGroup: public NEMLObject {
 
   /// Number of symmetry operators
   size_t nops() const;
-  
+
   /// Find the minimum misorientation transformation between a and b
   Orientation misorientation(const Orientation & a, const Orientation & b) const;
 
@@ -41,7 +43,7 @@ class SymmetryGroup: public NEMLObject {
   double distance(const Orientation & a, const Orientation & b) const;
 
   /// Find the orientation which, under symmetry operations, is closest to b
-  void closest(const Orientation & a, const Orientation & b, 
+  void closest(const Orientation & a, const Orientation & b,
                Orientation & close, double & dist) const;
 
  private:
@@ -63,7 +65,7 @@ class Lattice: public NEMLObject {
           list_systems isystems = {});
   /// Destructor
   virtual ~Lattice();
-  
+
   /// First lattice vector
   const Vector & a1() {return a1_;};
   /// Second lattice vector
@@ -76,61 +78,61 @@ class Lattice: public NEMLObject {
   const Vector & b2() {return b2_;};
   /// Third reciprocal vector
   const Vector & b3() {return b3_;};
-  
+
   /// Return the list of burgers vectors
   const std::vector<std::vector<Vector>> & burgers_vectors() {return burgers_vectors_;};
   /// Return the list of normalized slip directions
   const std::vector<std::vector<Vector>> & slip_directions() {return slip_directions_;};
   /// Return the last of normalize slip normals
   const std::vector<std::vector<Vector>> & slip_planes() {return slip_planes_;};
-  
+
   /// Convert Miller directions to cartesian vectors
   Vector miller2cart_direction(std::vector<int> m);
   /// Convert Miller planes to cartesian normal vectors
   Vector miller2cart_plane(std::vector<int> m);
-  
+
   /// Find all sets of equivalent vectors (+/- different)
   std::vector<Vector> equivalent_vectors(Vector v);
   /// Find all all sets of equivalent vectors (+/- the same)
   std::vector<Vector> equivalent_vectors_bidirectional(Vector v);
-  
+
   /// Add a slip system given the Miller direction and plane
   void add_slip_system(std::vector<int> d, std::vector<int> p);
-  
+
   /// Number of groups of slip systems
   size_t ngroup() const;
   /// Number of slip systems in group g
   size_t nslip(size_t g) const;
   /// Flat index of slip group g, system i
   size_t flat(size_t g, size_t i) const;
-  
+
   /// Return the sym(d x n) tensor for group g, system i, rotated with Q
   Symmetric M(size_t g, size_t i, const Orientation & Q);
   /// Return the skew(d x n) tensor for group g, system i, rotated with Q
   Skew N(size_t g, size_t i, const Orientation & Q);
-  
+
   /// Calculate the resolved shear stress on group g, system i, rotated with Q
   /// given the stress
   double shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
                stress);
-  /// Calculate the derivative of the resolved shear stress on group g, 
+  /// Calculate the derivative of the resolved shear stress on group g,
   /// system i, rotated with Q, given the stress
   Symmetric d_shear(size_t g, size_t i, const Orientation & Q, const Symmetric &
                     stress);
-  
+
   /// Access the symmetry operations
   const std::shared_ptr<SymmetryGroup> symmetry();
 
  private:
   void make_reciprocal_lattice_();
   static void assert_miller_(std::vector<int> m);
-  
+
   void cache_rot_(const Orientation & Q);
 
  private:
   Vector a1_, a2_, a3_, b1_, b2_, b3_;
   const std::shared_ptr<SymmetryGroup> symmetry_;
-  
+
   std::vector<std::vector<Vector>> burgers_vectors_;
   std::vector<std::vector<Vector>> slip_directions_;
   std::vector<std::vector<Vector>> slip_planes_;

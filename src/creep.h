@@ -6,44 +6,46 @@
 #include "interpolate.h"
 #include "solvers.h"
 
+#include "windows.h"
+
 namespace neml {
 
 /// Scalar creep functions in terms of effective stress and strain
 class ScalarCreepRule: public NEMLObject {
   public:
-   /// Scalar creep strain rate as a function of effective stress, 
+   /// Scalar creep strain rate as a function of effective stress,
    /// effective strain, time, and temperature
    virtual int g(double seq, double eeq, double t, double T, double & g)
        const = 0;
    /// Derivative of scalar creep rate wrt effective stress
-   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) 
+   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg)
        const = 0;
    /// Derivative of scalar creep rate wrt effective strain
-   virtual int dg_de(double seq, double eeq, double t, double T, double & dg) 
+   virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
        const = 0;
    /// Derivative of scalar creep rate wrt time, defaults to zero
-   virtual int dg_dt(double seq, double eeq, double t, double T, double & dg) 
+   virtual int dg_dt(double seq, double eeq, double t, double T, double & dg)
        const;
    /// Derivative of scalar creep rate wrt temperature, defaults to zero
-   virtual int dg_dT(double seq, double eeq, double t, double T, double & dg) 
+   virtual int dg_dT(double seq, double eeq, double t, double T, double & dg)
        const;
 };
 
 /// Creep rate law from Blackburn 1972
 class BlackburnMinimumCreep: public ScalarCreepRule {
  public:
-  BlackburnMinimumCreep(std::shared_ptr<Interpolate> A, 
+  BlackburnMinimumCreep(std::shared_ptr<Interpolate> A,
                         std::shared_ptr<Interpolate> n,
                         std::shared_ptr<Interpolate> beta,
                         double R, double Q);
-  
+
   /// String type for the object system
   static std::string type();
   /// Setup from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return default parameters
   static ParameterSet parameters();
-  
+
   /// rate = A * (sinh(beta*s/n)^n * exp(-Q/(R*T))
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   /// Derivative of rate wrt effective stress
@@ -53,9 +55,9 @@ class BlackburnMinimumCreep: public ScalarCreepRule {
   virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
       const;
   /// Derivative of rate wrt temperature
-  virtual int dg_dT(double seq, double eeq, double t, double T, double & dg) 
+  virtual int dg_dT(double seq, double eeq, double t, double T, double & dg)
       const;
-  
+
  private:
   const std::shared_ptr<const Interpolate> A_, n_, beta_;
   const double R_, Q_;
@@ -67,14 +69,14 @@ static Register<BlackburnMinimumCreep> regBlackburnMinimumCreep;
 class SwindemanMinimumCreep: public ScalarCreepRule {
  public:
   SwindemanMinimumCreep(double C, double n, double V, double Q);
-  
+
   /// String type for the object system
   static std::string type();
   /// Setup from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return default parameters
   static ParameterSet parameters();
-  
+
   /// rate = C * S^n * exp(V*S) * exp(-Q/T)
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   /// Derivative of rate wrt effective stress
@@ -84,9 +86,9 @@ class SwindemanMinimumCreep: public ScalarCreepRule {
   virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
       const;
   /// Derivative of rate wrt temperature
-  virtual int dg_dT(double seq, double eeq, double t, double T, double & dg) 
+  virtual int dg_dT(double seq, double eeq, double t, double T, double & dg)
       const;
-  
+
  private:
   const double C_, n_, V_, Q_;
 };
@@ -98,14 +100,14 @@ class PowerLawCreep: public ScalarCreepRule {
  public:
   /// Parameters: prefector A and exponent n
   PowerLawCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
-  
+
   /// String type for the object system
   static std::string type();
   /// Setup from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return default parameters
   static ParameterSet parameters();
-  
+
   /// rate = A * seq**n
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   /// Derivative of rate wrt effective stress
@@ -114,7 +116,7 @@ class PowerLawCreep: public ScalarCreepRule {
   /// Derivative of rate wrt effective strain = 0
   virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
       const;
-  
+
   /// Getter for the prefactor
   double A(double T) const;
   /// Getter for the exponent
@@ -130,19 +132,19 @@ static Register<PowerLawCreep> regPowerLawCreep;
 class RegionKMCreep: public ScalarCreepRule {
  public:
   /// Inputs: cuts in normalized activation energy, prefactors for each region
-  /// exponents for each region, boltzmann constant, burgers vector, 
+  /// exponents for each region, boltzmann constant, burgers vector,
   /// reference strain rate, elastic model, to compute mu
-  RegionKMCreep(std::vector<double> cuts, std::vector<double> A, 
+  RegionKMCreep(std::vector<double> cuts, std::vector<double> A,
                 std::vector<double> B, double kboltz, double b, double eps0,
                 std::shared_ptr<LinearElasticModel> emodel);
-  
+
   /// String type for the object system
   static std::string type();
   /// Setup from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return the default parameters
   static ParameterSet parameters();
-  
+
   /// See documentation for details of the creep rate
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   /// Derivative of creep rate wrt effective stress
@@ -167,24 +169,24 @@ static Register<RegionKMCreep> regRegionKMCreep;
 class NortonBaileyCreep: public ScalarCreepRule {
  public:
   /// Parameters: prefactor A, stress exponent n, time exponent m
-  NortonBaileyCreep(std::shared_ptr<Interpolate> A, 
+  NortonBaileyCreep(std::shared_ptr<Interpolate> A,
                     std::shared_ptr<Interpolate> m,
                     std::shared_ptr<Interpolate> n);
-  
+
   /// String type for the object system
   static std::string type();
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return default parameters
   static ParameterSet parameters();
-  
+
   /// creep rate = m * A**(1/m) * seq**(n/m) * eeq ** ((m-1)/m)
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   /// Derivative of creep rate wrt effective stress
   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
   /// Derivative of creep rate wrt effective strain
   virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
-  
+
   /// Getter for the prefactor
   double A(double T) const;
   /// Getter for the stress exponent
@@ -201,27 +203,27 @@ static Register<NortonBaileyCreep> regNortonBaileyCreep;
 /// Classical Mukherjee creep
 class MukherjeeCreep: public ScalarCreepRule {
  public:
-  /// Parameters: elastic model (for shear modulus), prefactor, 
+  /// Parameters: elastic model (for shear modulus), prefactor,
   /// stress exponent, reference lattice diffusivity, activation energy for
   /// lattice diffusion, burgers vector, boltzmann constant, gas constant
   MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel, double A, double n,
                  double D0, double Q, double b, double k, double R);
-  
+
   /// String type for the object system
   static std::string type();
   /// Setup from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return default parameters
   static ParameterSet parameters();
-  
-  /// scalar creep rate = A * D0 * exp(Q / (RT)) * mu * b / (k * T) * 
+
+  /// scalar creep rate = A * D0 * exp(Q / (RT)) * mu * b / (k * T) *
   /// (seq / mu)**n
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   /// Derivative of creep rate wrt effective stress
   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
   /// Derivative of creep rate wrt effective strain
   virtual int dg_de(double seq, double eeq, double t, double T, double & dg) const;
-  
+
   /// Getter for A
   double A() const;
   /// Getter for parameter n
@@ -257,7 +259,7 @@ class GenericCreep: public ScalarCreepRule {
   /// Return default parameters
   static ParameterSet parameters();
 
-  /// scalar creep rate = exp(f(log(sigma))) 
+  /// scalar creep rate = exp(f(log(sigma)))
   virtual int g(double seq, double eeq, double t, double T, double & g) const;
   /// Derivative of creep rate wrt effective stress
   virtual int dg_ds(double seq, double eeq, double t, double T, double & dg) const;
@@ -284,32 +286,32 @@ class CreepModel: public NEMLObject, public Solvable {
   /// Parameters are a solver tolerance, the maximum allowable iterations,
   /// and a verbosity flag
   CreepModel(double tol, int miter, bool verbose);
-  
+
   /// Use the creep rate function to update the creep strain
-  int update(const double * const s_np1, 
+  int update(const double * const s_np1,
              double * const e_np1, const double * const e_n,
              double T_np1, double T_n,
              double t_np1, double t_n,
              double * const A_np1);
-  
+
   /// The creep rate as a function of stress, strain, time, and temperature
-  virtual int f(const double * const s, const double * const e, double t, double T, 
+  virtual int f(const double * const s, const double * const e, double t, double T,
                 double * const f) const = 0;
   /// The derivative of the creep rate wrt stress
-  virtual int df_ds(const double * const s, const double * const e, double t, double T, 
+  virtual int df_ds(const double * const s, const double * const e, double t, double T,
                 double * const df) const = 0;
   /// The derivative of the creep rate wrt strain
-  virtual int df_de(const double * const s, const double * const e, double t, double T, 
+  virtual int df_de(const double * const s, const double * const e, double t, double T,
                 double * const df) const = 0;
   /// The derivative of the creep rate wrt time, defaults to zero
-  virtual int df_dt(const double * const s, const double * const e, double t, double T, 
+  virtual int df_dt(const double * const s, const double * const e, double t, double T,
                 double * const df) const;
   /// The derivative of the creep rate wrt temperature, defaults to zero
-  virtual int df_dT(const double * const s, const double * const e, double t, double T, 
+  virtual int df_dT(const double * const s, const double * const e, double t, double T,
                 double * const df) const;
-  
+
   /// Setup a trial state for the solver
-  int make_trial_state(const double * const s_np1, 
+  int make_trial_state(const double * const s_np1,
                        const double * const e_n,
                        double T_np1, double T_n,
                        double t_np1, double t_n,
@@ -324,7 +326,7 @@ class CreepModel: public NEMLObject, public Solvable {
                  double * const J);
 
  private:
-  int calc_tangent_(const double * const e_np1, CreepModelTrialState & ts, 
+  int calc_tangent_(const double * const e_np1, CreepModelTrialState & ts,
                     double * const A_np1);
 
  protected:
@@ -340,29 +342,29 @@ class J2CreepModel: public CreepModel {
   /// iterations, and a verbosity flag
   J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
                double tol, int miter, bool verbose);
-  
+
   /// String type for the object system
   static std::string type();
   /// Initialize an object from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return the default parameters
   static ParameterSet parameters();
-  
-  /// creep_rate = dev(s) / ||dev(s)|| * scalar(effective_strain, 
+
+  /// creep_rate = dev(s) / ||dev(s)|| * scalar(effective_strain,
   /// effective_stress, time, temperature)
-  virtual int f(const double * const s, const double * const e, double t, double T, 
+  virtual int f(const double * const s, const double * const e, double t, double T,
                 double * const f) const;
   /// Derivative of creep rate wrt stress
-  virtual int df_ds(const double * const s, const double * const e, double t, double T, 
+  virtual int df_ds(const double * const s, const double * const e, double t, double T,
                 double * const df) const;
   /// Derivative of creep rate wrt strain
-  virtual int df_de(const double * const s, const double * const e, double t, double T, 
+  virtual int df_de(const double * const s, const double * const e, double t, double T,
                 double * const df) const;
   /// Derivative of creep rate wrt time
-  virtual int df_dt(const double * const s, const double * const e, double t, double T, 
+  virtual int df_dt(const double * const s, const double * const e, double t, double T,
                 double * const df) const;
   /// Derivative of creep rate wrt temperature
-  virtual int df_dT(const double * const s, const double * const e, double t, double T, 
+  virtual int df_dT(const double * const s, const double * const e, double t, double T,
                 double * const df) const;
 
  private:

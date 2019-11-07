@@ -6,6 +6,8 @@
 #include <map>
 #include <cmath>
 
+#include "../windows.h"
+
 namespace neml {
 
 // Forward declarations
@@ -27,7 +29,7 @@ class Tensor {
   Tensor(double * flat, size_t n);
   Tensor(const double * flat, size_t n);
   virtual ~Tensor();
-  
+
   /// Do I own my own data?
   bool istore() const {return istore_;};
 
@@ -46,7 +48,7 @@ class Tensor {
  protected:
   /// Helper to add data
   void add_(const Tensor & other);
-  
+
   /// Helper to negate
   void negate_();
 
@@ -189,7 +191,7 @@ class Symmetric: public Tensor {
 
   Symmetric & operator+=(const Symmetric & other);
   Symmetric & operator-=(const Symmetric & other);
-  
+
   static Symmetric id() { return
     Symmetric(std::vector<double>({1,1,1,0,0,0}));};
   Symmetric inverse() const;
@@ -366,7 +368,7 @@ class SymSymR4: public Tensor {
               {0.0,0.0,0.0,0.0,0.0,1.0}
               }
               ));};
-  static SymSymR4 id_dev() {return 
+  static SymSymR4 id_dev() {return
     SymSymR4(std::vector<std::vector<double>>({
               {1.0-1.0/3.0,-1.0/3.0,-1.0/3.0,0.0,0.0,0.0},
               {-1.0/3.0,1.0-1.0/3.0,-1.0/3.0,0.0,0.0,0.0},

@@ -8,4 +8,7 @@ macro(pybind sname)
             set_property(TARGET ${sname} PROPERTY OUTPUT_NAME "${sname}.so")
             set_property(TARGET ${sname} PROPERTY SUFFIX "")
       endif()
+      if (WIN32)
+
+      endif()
 endmacro(pybind)

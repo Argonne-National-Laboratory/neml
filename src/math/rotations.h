@@ -9,6 +9,8 @@
 #include <vector>
 #include <string>
 
+#include "../windows.h"
+
 #define CINDEX(i,j,n) (j + i * n)
 
 namespace neml {
@@ -35,7 +37,7 @@ class Quaternion: public NEMLObject {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual ~Quaternion();
-  
+
   /// Copy
   Quaternion & operator=(const Quaternion & rhs);
   /// Move
@@ -140,15 +142,15 @@ class Orientation: public Quaternion {
   static Orientation createAxisAngle(const double * const n, double a,
                                      std::string angles = "radians");
   /// Set from an input axis/angle pair
-  void setAxisAngle(const double * const n, double a, 
+  void setAxisAngle(const double * const n, double a,
                     std::string angles = "radians");
 
   /// Create from various Euler angles
-  static Orientation createEulerAngles(double a, double b, double c, 
+  static Orientation createEulerAngles(double a, double b, double c,
                                        std::string angles = "radians",
                                        std::string convention = "kocks");
   /// Set from inputEuler angles
-  void setEulerAngles(double a, double b, double c, 
+  void setEulerAngles(double a, double b, double c,
                       std::string angles = "radians",
                       std::string convention = "kocks");
 
@@ -156,21 +158,21 @@ class Orientation: public Quaternion {
   static Orientation createHopf(double psi, double theta, double phi,
                                 std::string angles = "radians");
   /// Set from input Hopf coordinates
-  void setHopf(double psi, double theta, double phi, 
+  void setHopf(double psi, double theta, double phi,
                std::string angles = "radians");
 
   /// Create from hyperspherical coordinates
   static Orientation createHyperspherical(double a1, double a2, double a3,
                                           std::string angles = "radians");
   /// Set from input hyperspherical coordinates
-  void setHyperspherical(double a1, double a2, double a3, 
+  void setHyperspherical(double a1, double a2, double a3,
                          std::string angles = "radians");
 
   /// Create from two vectors
   static Orientation createVectors(const Vector & x, const Vector & y);
   /// Set from input two vectors
   void setVectors(const Vector & x, const Vector & y);
-  
+
   // Actual constructors
   /// Default constructor (defaults to identity, manage own memory)
   Orientation();
@@ -183,7 +185,7 @@ class Orientation: public Quaternion {
 
   // Various conversions
   /// Convert to Euler angles
-  void to_euler(double & a, double & b, double & c, 
+  void to_euler(double & a, double & b, double & c,
                 std::string angles = "radians",
                 std::string convention = "kocks") const;
   /// Convert to an axis/angle pair
@@ -199,7 +201,7 @@ class Orientation: public Quaternion {
   void to_hopf(double & alpha, double & beta, double & gamma,
                std::string angles = "radians") const;
   /// Convert to hyperspherical coordinates
-  void to_hyperspherical(double & a1, double & a2, double & a3, 
+  void to_hyperspherical(double & a1, double & a2, double & a3,
                          std::string angles = "radians") const;
 
   // Annoyingly the operators must be for the most part redefined

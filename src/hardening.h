@@ -4,6 +4,8 @@
 #include "interpolate.h"
 #include "objects.h"
 
+#include "windows.h"
+
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -44,19 +46,19 @@ class LinearIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial surface size and linear coefficient
   LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K);
-  
+
   /// String type for the object system
   static std::string type();
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
-  /// q = -s0 - K * alpha[0] 
+
+  /// q = -s0 - K * alpha[0]
   virtual int q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
-  
+
   /// Getter for the yield stress
   double s0(double T) const;
 
@@ -83,7 +85,7 @@ class InterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// q = -interpolate(T)
   virtual int q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of the map
@@ -99,10 +101,10 @@ static Register<InterpolatedIsotropicHardeningRule>
 /// Voce isotropic hardening
 class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
-  /// Parameters: initial yield stress, total increase amount, 
+  /// Parameters: initial yield stress, total increase amount,
   /// saturation speed constant
-  VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, 
-                             std::shared_ptr<Interpolate> R, 
+  VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0,
+                             std::shared_ptr<Interpolate> R,
                              std::shared_ptr<Interpolate> d);
 
   /// String type for the object system
@@ -111,12 +113,12 @@ class VoceIsotropicHardeningRule: public IsotropicHardeningRule {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// q = -s0 - R * (1 - exp(-d * alpha[0]))
   virtual int q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
-  
+
   /// Getter for initial yield stress
   double s0(double T) const;
   /// Getter for R
@@ -134,8 +136,8 @@ static Register<VoceIsotropicHardeningRule> regVoceIsotropicHardeningRule;
 class PowerLawIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial yield stress, prefactor, exponent
-  PowerLawIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, 
-                                      std::shared_ptr<Interpolate> A, 
+  PowerLawIsotropicHardeningRule(std::shared_ptr<Interpolate> s0,
+                                      std::shared_ptr<Interpolate> A,
                                       std::shared_ptr<Interpolate> n);
 
   /// String type for the object system
@@ -144,12 +146,12 @@ class PowerLawIsotropicHardeningRule: public IsotropicHardeningRule {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// q = -s0 - A * alpha[0]**n
   virtual int q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
-  
+
  private:
   const std::shared_ptr<const Interpolate> s0_, A_, n_;
 };
@@ -169,12 +171,12 @@ class CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// q = Sum(q_i(alpha))
   virtual int q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
-  
+
   /// Getter on the number of combined rules
   size_t nrules() const;
 
@@ -211,12 +213,12 @@ class LinearKinematicHardeningRule: public KinematicHardeningRule {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// q = -H * alpha[:6]
   virtual int q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of the map
   virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
-  
+
   /// Getter for the hardening coefficieint
   double H(double T) const;
 
@@ -239,7 +241,7 @@ class CombinedHardeningRule: public HardeningRule {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// Sum of the two model nhists
   virtual size_t nhist() const;
   /// Call init_hist on each model
@@ -263,15 +265,15 @@ class NonAssociativeHardening: public NEMLObject {
   virtual size_t ninter() const = 0; // How many "q" variables it spits out
   /// How many strain-like variables
   virtual size_t nhist() const = 0; // How many internal variables it stores
-  
+
   /// Initialize the strain-like variables
   virtual int init_hist(double * const alpha) const = 0;
-  
+
   /// Map from strain to stress
   virtual int q(const double * const alpha, double T, double * const qv) const = 0;
   /// Derivative of the map
   virtual int dq_da(const double * const alpha, double T, double * const qv) const = 0;
-  
+
   /// Hardening proportional to the equivalent inelastic strain
   virtual int h(const double * const s, const double * const alpha, double T,
                 double * const hv) const = 0;
@@ -325,12 +327,12 @@ class ConstantGamma: public GammaModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// gamma = C
   virtual double gamma(double ep, double T) const;
   /// derivative of the gamma function
   virtual double dgamma(double ep, double T) const;
-  
+
   /// Getter for the constant value
   double g(double T) const;
 
@@ -353,12 +355,12 @@ class SatGamma: public GammaModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// gamma = gs + (g0 - gs) * exp(-beta * ep)
   virtual double gamma(double ep, double T) const;
   /// Derivative of the gamma function
   virtual double dgamma(double ep, double T) const;
-  
+
   /// Parameter getter
   double gs(double T) const;
   /// Parameter getter
@@ -393,20 +395,20 @@ class Chaboche: public NonAssociativeHardening {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// 1 (isotropic) + 6 (backstress) = 7
   virtual size_t ninter() const; // How many "q" variables it spits out
   /// 1 (isotropic) + n_backstresses * 6
   virtual size_t nhist() const; // How many internal variables it stores
-  
+
   /// Initialize everything to zero
   virtual int init_hist(double * const alpha) const;
-  
+
   /// Map the isotropic variable, map the backstresses
   virtual int q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
   virtual int dq_da(const double * const alpha, double T, double * const qv) const;
-  
+
   /// Hardening proportional to inelastic strain rate
   /// Assume associated isotropic hardening, each backstress is
   /// -2/3 * C * X/norm(X) - sqrt(2/3) gamma(ep) * X
@@ -430,7 +432,7 @@ class Chaboche: public NonAssociativeHardening {
   /// Derivative of h_time wrt history
   virtual int dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
-  
+
   /// Hardening proportional to the temperature rate
   /// Zero for the isotropic part
   /// Zero for each backstress if noniso = False
@@ -452,7 +454,7 @@ class Chaboche: public NonAssociativeHardening {
 
  private:
   void backstress_(const double * const alpha, double * const X) const;
-  
+
  private:
   std::shared_ptr<IsotropicHardeningRule> iso_;
   const int n_;

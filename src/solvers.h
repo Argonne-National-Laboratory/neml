@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <memory>
 
+#include "windows.h"
+
 #ifdef SOLVER_NOX
 #include "NOX.H"
 #include "NOX_LAPACK_Group.H"
@@ -30,7 +32,7 @@ class Solvable {
 };
 
 /// Call the built-in solver
-int solve(Solvable * system, double * x, TrialState * ts, 
+int solve(Solvable * system, double * x, TrialState * ts,
           double tol = 1.0e-8, int miter = 50,
           bool verbose = false, bool relative = false);
 
@@ -44,14 +46,14 @@ class NOXSolver: public NOX::LAPACK::Interface {
  public:
   /// Setup with the solvable object and the trial state
   NOXSolver(Solvable * system, TrialState * ts);
-  
+
   /// Get a NOX initial guess
   const NOX::LAPACK::Vector& getInitialGuess();
-  
+
   /// Compute the residual
   bool computeF(NOX::LAPACK::Vector& f, const NOX::LAPACK::Vector& x);
   /// Compute the jacobian
-  bool computeJacobian(NOX::LAPACK::Matrix<double>& J, 
+  bool computeJacobian(NOX::LAPACK::Matrix<double>& J,
       const NOX::LAPACK::Vector& x);
 
  private:
@@ -61,7 +63,7 @@ class NOXSolver: public NOX::LAPACK::Interface {
 };
 
 /// Interface to nox
-int nox(Solvable * system, double * x, TrialState * ts, 
+int nox(Solvable * system, double * x, TrialState * ts,
         double tol, int miter, bool verbose);
 
 #endif

@@ -6,6 +6,8 @@
 #include "math/tensors.h"
 #include "math/rotations.h"
 
+#include "windows.h"
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -26,7 +28,7 @@ class LinearElasticModel: public NEMLObject {
   SymSymR4 C(double T) const;
   /// The compliance tensor in a tensor object
   SymSymR4 S(double T) const;
-  
+
   /// The rotated stiffness tensor in a tensor object
   SymSymR4 C(double T, const Orientation & Q) const;
   /// The rotated compliance tensor in a tensor object
@@ -44,18 +46,18 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
  public:
   /// See detailed documentation for how to initialize with elastic constants
   IsotropicLinearElasticModel(
-      std::shared_ptr<Interpolate> m1, 
+      std::shared_ptr<Interpolate> m1,
       std::string m1_type,
       std::shared_ptr<Interpolate> m2,
       std::string m2_type);
-  
+
   /// The string type for the object system
   static std::string type();
   /// Setup default parameters for the object system
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Initialize from a parameter set
   static ParameterSet parameters();
-  
+
   /// Implement the stiffness tensor
   virtual int C(double T, double * const Cv) const;
   /// Implement the compliance tensor
@@ -67,17 +69,17 @@ class IsotropicLinearElasticModel: public LinearElasticModel {
   virtual double nu(double T) const;
   /// The bulk modulus
   virtual double K(double T) const;
-  
+
  private:
   int C_calc_(double G, double K, double * const Cv) const;
   int S_calc_(double G, double K, double * const Sv) const;
 
   void get_GK_(double T, double & G, double & K) const;
-  
+
  private:
   std::shared_ptr<Interpolate> m1_, m2_;
   std::string m1_type_, m2_type_;
-  const std::set<std::string> valid_types_ = {"bulk", "shear", 
+  const std::set<std::string> valid_types_ = {"bulk", "shear",
     "youngs", "poissons"};
 };
 
@@ -96,7 +98,7 @@ class CubicLinearElasticModel: public LinearElasticModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Initialize from a parameter set
   static ParameterSet parameters();
-  
+
   /// Implement the stiffness tensor
   virtual int C(double T, double * const Cv) const;
   /// Implement the compliance tensor

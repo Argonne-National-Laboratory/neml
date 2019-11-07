@@ -31,3 +31,6 @@ CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
 *.e
 *.trelis
+*.ninja
+.ninja*
+*.dll*

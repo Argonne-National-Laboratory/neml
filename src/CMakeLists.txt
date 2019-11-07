@@ -1,22 +1,20 @@
 include(macros.cmake)
 
-# This works to turn off optimization on the large static data, but
-# keep in mind this is really appending -O0 to the compile flags, not
-# replacing the optimization options from the base CMake configuration
-SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/cp/sphere.cxx PROPERTIES COMPILE_FLAGS -O0)
-
 ### BASE LIBRARY IN LIB ###
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-add_library(neml SHARED 
+if (WIN32)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+endif()
+add_library(neml SHARED
       objects.cxx
-      models.cxx 
-      solvers.cxx 
-      surfaces.cxx 
-      hardening.cxx 
+      models.cxx
+      solvers.cxx
+      surfaces.cxx
+      hardening.cxx
       ri_flow.cxx
-      visco_flow.cxx 
-      general_flow.cxx 
-      nemlerror.cxx 
+      visco_flow.cxx
+      general_flow.cxx
+      nemlerror.cxx
       elasticity.cxx
       parse.cxx
       cinterface.cxx
@@ -32,6 +30,9 @@ target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRAR
 ### python bindings in neml ###
 if (WRAP_PYTHON)
       set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
+      if (WIN32)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
+      endif()
       # Actual modules
       pybind(objects)
       pybind(solvers)
@@ -48,4 +49,3 @@ if (WRAP_PYTHON)
       pybind(damage)
       pybind(history)
 endif()
-

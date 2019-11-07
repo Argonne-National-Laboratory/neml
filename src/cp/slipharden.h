@@ -11,6 +11,8 @@
 #include "../math/tensors.h"
 #include "../math/rotations.h"
 
+#include "../windows.h"
+
 #include <map>
 #include <vector>
 #include <string>
@@ -27,30 +29,30 @@ class SlipHardening: public NEMLObject
   virtual void populate_history(History & history) const = 0;
   /// Setup history
   virtual void init_history(History & history) const = 0;
-  
+
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
                              double T) const = 0;
   /// Derivative of the map wrt to history
   virtual History
-      d_hist_to_tau(size_t g, size_t i, const History & history, 
+      d_hist_to_tau(size_t g, size_t i, const History & history,
                     double T) const = 0;
-  
+
   /// The rate of the history
-  virtual History hist(const Symmetric & stress, 
+  virtual History hist(const Symmetric & stress,
                      const Orientation & Q, const History & history,
                      Lattice & L, double T, const SlipRule & R) const = 0;
   /// Derivative of the history wrt stress
-  virtual History d_hist_d_s(const Symmetric & stress, 
+  virtual History d_hist_d_s(const Symmetric & stress,
                              const Orientation & Q, const History & history,
                              Lattice & L, double T,
                              const SlipRule & R) const = 0;
   /// Derivative of the history wrt the history
   virtual History
-      d_hist_d_h(const Symmetric & stress, 
+      d_hist_d_h(const Symmetric & stress,
                  const Orientation & Q,
                  const History & history,
-                 Lattice & L, 
+                 Lattice & L,
                  double T, const SlipRule & R) const = 0;
 };
 
@@ -63,7 +65,7 @@ class SlipSingleHardening: public SlipHardening
                              double T) const;
   /// Derivative of the map wrt to history
   virtual History
-      d_hist_to_tau(size_t g, size_t i, const History & history, 
+      d_hist_to_tau(size_t g, size_t i, const History & history,
                     double T) const;
 
   /// The scalar map
@@ -84,20 +86,20 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
   virtual void init_history(History & history) const;
 
   /// The rate of the history
-  virtual History hist(const Symmetric & stress, 
+  virtual History hist(const Symmetric & stress,
                      const Orientation & Q, const History & history,
                      Lattice & L, double T, const SlipRule & R) const;
   /// Derivative of the history wrt stress
-  virtual History d_hist_d_s(const Symmetric & stress, 
+  virtual History d_hist_d_s(const Symmetric & stress,
                              const Orientation & Q, const History & history,
                              Lattice & L, double T,
                              const SlipRule & R) const;
   /// Derivative of the history wrt the history
   virtual History
-      d_hist_d_h(const Symmetric & stress, 
+      d_hist_d_h(const Symmetric & stress,
                  const Orientation & Q,
                  const History & history,
-                 Lattice & L, 
+                 Lattice & L,
                  double T, const SlipRule & R) const;
 
   /// The scalar map
@@ -110,7 +112,7 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
 
   /// Static (not evolving) strength
   virtual double static_strength(double T) const = 0;
-  
+
   /// Setup the scalar
   virtual double init_strength() const = 0;
 
@@ -119,12 +121,12 @@ class SlipSingleStrengthHardening: public SlipSingleHardening
                            const History & history,
                            Lattice & L, double T, const SlipRule & R) const = 0;
   /// Derivative of scalar law wrt stress
-  virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q, 
+  virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q,
                                          const History & history,
                                          Lattice & L, double T,
                                          const SlipRule & R) const = 0;
   /// Derivative of scalar law wrt the scalar
-  virtual History d_hist_rate_d_hist(const Symmetric & stress, const Orientation & Q, 
+  virtual History d_hist_rate_d_hist(const Symmetric & stress, const Orientation & Q,
                                      const History & history,
                                      Lattice & L, double T,
                                      const SlipRule & R) const = 0;
@@ -155,20 +157,20 @@ class SumSlipSingleStrengthHardening: public SlipSingleHardening
   virtual void init_history(History & history) const;
 
   /// The rate of the history
-  virtual History hist(const Symmetric & stress, 
+  virtual History hist(const Symmetric & stress,
                      const Orientation & Q, const History & history,
                      Lattice & L, double T, const SlipRule & R) const;
   /// Derivative of the history wrt stress
-  virtual History d_hist_d_s(const Symmetric & stress, 
+  virtual History d_hist_d_s(const Symmetric & stress,
                              const Orientation & Q, const History & history,
                              Lattice & L, double T,
                              const SlipRule & R) const;
   /// Derivative of the history wrt the history
   virtual History
-      d_hist_d_h(const Symmetric & stress, 
+      d_hist_d_h(const Symmetric & stress,
                  const Orientation & Q,
                  const History & history,
-                 Lattice & L, 
+                 Lattice & L,
                  double T, const SlipRule & R) const;
 
   /// The scalar map
@@ -193,11 +195,11 @@ class PlasticSlipHardening: public SlipSingleStrengthHardening
   virtual double hist_rate(const Symmetric & stress, const Orientation & Q,
                            const History & history, Lattice & L, double T, const SlipRule & R) const;
   /// Derivative of scalar law wrt stress
-  virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q, 
+  virtual Symmetric d_hist_rate_d_stress(const Symmetric & stress, const Orientation & Q,
                                          const History & history, Lattice & L, double T,
                                          const SlipRule & R) const;
   /// Derivative of scalar law wrt the scalar
-  virtual History d_hist_rate_d_hist(const Symmetric & stress, const Orientation & Q, 
+  virtual History d_hist_rate_d_hist(const Symmetric & stress, const Orientation & Q,
                                      const History & history, Lattice & L, double T,
                                      const SlipRule & R) const;
 

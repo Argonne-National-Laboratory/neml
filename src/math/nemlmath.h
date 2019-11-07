@@ -1,6 +1,8 @@
 #ifndef NEMLMATH_H
 #define NEMLMATH_H
 
+#include "../windows.h"
+
 #include <cstddef>
 #include <vector>
 #include <string>
@@ -164,7 +166,7 @@ double convert_angle(double a, std::string);
 double cast_angle(double a, std::string angles);
 
 /// Vectorized quaternion multiplication
-void qmult_vec(const double * const As, const double * const B, 
+void qmult_vec(const double * const As, const double * const B,
                size_t n, double * const C);
 
 #define RTOL 1.0E-5

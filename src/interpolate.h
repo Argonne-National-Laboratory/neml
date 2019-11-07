@@ -3,6 +3,8 @@
 
 #include "objects.h"
 
+#include "windows.h"
+
 #include <vector>
 #include <memory>
 
@@ -10,7 +12,7 @@ namespace neml {
 
 /// Base class for interpolation functions
 //  This class defines a scalar interpolation function.
-//  An implementation must also define the first derivative. 
+//  An implementation must also define the first derivative.
 class Interpolate: public NEMLObject {
  public:
   Interpolate();
@@ -39,7 +41,7 @@ class PolynomialInterpolate : public Interpolate {
   static ParameterSet parameters();
   /// Create object from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-  
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 
@@ -76,7 +78,7 @@ static Register<GenericPiecewiseInterpolate> regGenericPiecewiseInterpolate;
 /// Piecewise linear interpolation
 class PiecewiseLinearInterpolate: public Interpolate {
  public:
-  /// Parameters are a list of x coordinates and a corresponding list of y 
+  /// Parameters are a list of x coordinates and a corresponding list of y
   /// coordinates
   PiecewiseLinearInterpolate(const std::vector<double> points,
                              const std::vector<double> values);
@@ -189,7 +191,7 @@ class MTSShearInterpolate : public Interpolate {
 static Register<MTSShearInterpolate> regMTSShearInterpolate;
 
 /// A helper to make a vector of constant interpolates from a vector
-std::vector<std::shared_ptr<Interpolate>> 
+std::vector<std::shared_ptr<Interpolate>>
   make_vector(const std::vector<double> & iv);
 
 /// A helper to evaluate a vector of interpolates
