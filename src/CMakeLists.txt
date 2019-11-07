@@ -1,5 +1,9 @@
 include(macros.cmake)
 
+if (WRAP_PYTHON)
+      add_subdirectory(../pybind11 ${PROJECT_BINARY_DIR}/neml)
+endif()
+
 ### BASE LIBRARY IN LIB ###
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 if (WIN32)
@@ -33,7 +37,7 @@ if (WRAP_PYTHON)
       if (WIN32)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
       endif()
-      # Actual modules
+      
       pybind(objects)
       pybind(solvers)
       pybind(elasticity)
