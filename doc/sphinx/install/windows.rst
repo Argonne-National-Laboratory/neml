@@ -12,12 +12,14 @@ Fortran compiler for most setups.  At that point you may was well use
 Intel C++ as well.
 
 When installing Visual Studio include the include "Desktop development with C++"
- and "Python development" options.
+and "Python development" options.
 
 When installing the Intel compilers use the default selected packages.
 
+You will also need to install the `boost library <https://www.boost.org/users/download/>`_.  Installing boost is easy as it's a header library -- just unzip the archive to a convenient location.  In this example we use ``C:\Program Files\boost`` but you can put it wherever you want.
+
 Additionally, these directions assume you have the Windows command line
-version of `git <https://git-scm.com/download/win>` installed.
+version of `git <https://git-scm.com/download/win>`_ installed.
 
 Basic library
 """""""""""""
@@ -31,7 +33,7 @@ Navigate to where you want to install NEML.  As an example
 
 .. code-block:: console
 
-  cd C:\\Users\\Mark\\source\\repos
+  cd C:\Users\Mark\source\repos
 
 Use git to checkout the dev branch of NEML:
 
@@ -48,7 +50,10 @@ run
 
   ninja
 
-This should build the NEML base library using the `Ninja build system <https://ninja-build.org/>`.
+Remember to replace ``C:\Program Files\boost`` with the location you chose 
+to install boost.
+
+This should build the NEML base library using the `Ninja build system <https://ninja-build.org/>`_.
 
 At this point all you need to do is to add the ``neml\lib`` directory to your ``PATH``.
 
@@ -102,10 +107,6 @@ back to the directory you installed NEML.  Now run
   ninja
 
 This will build NEML with the python bindings.
-
-You then need to add the ``neml\neml`` directory to your ``PATH`` variable.
-Follow the directions above, but now, for this example, the directory to
-add is ``C:\Users\Mark\source\repos\neml\neml``.
 
 Now return to your terminal window and navigate to the NEML installation
 directory, if you're not already there.  To test that this all worked run:
