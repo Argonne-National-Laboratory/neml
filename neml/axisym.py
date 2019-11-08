@@ -5,7 +5,8 @@ import scipy.linalg.lapack as lapack
 from numpy.polynomial.legendre import leggauss as lgg
 import scipy.optimize as opt
 
-from neml import nemlmath, arbbar
+from neml import arbbar
+from neml.math import nemlmath
 
 from functools import partial
 
