@@ -27,17 +27,17 @@ std::vector<Orientation> symmetry_rotations(std::string sclass)
   };
   const std::vector<Orientation> hexagonal = {
     Orientation({ 1, 0, 0, 0}),
-    Orientation({ b, 0, 0,-h}),
-    Orientation({ b, 0, 0, h}),
-    Orientation({-h, 0, 0, b}),
-    Orientation({ 0, 0, 0, 1}),
+    Orientation({ -h, 0, 0,b}),
     Orientation({ h, 0, 0, b}),
-    Orientation({ 0, b,-h, 0}),
+    Orientation({b, 0, 0, -h}),
+    Orientation({ 0, 0, 0, 1}),
+    Orientation({ b, 0, 0, h}),
+    Orientation({ 0,-h, b, 0}),
     Orientation({ 0, 1, 0, 0}),
-    Orientation({ 0, b, h, 0}),
     Orientation({ 0, h, b, 0}),
+    Orientation({ 0, b, h, 0}),
     Orientation({ 0, 0, 1, 0}),
-    Orientation({ 0,-h, b, 0})
+    Orientation({ 0, b,-h, 0})
   };
   const std::vector<Orientation> cubic = {
     Orientation({ 1, 0, 0, 0}),
