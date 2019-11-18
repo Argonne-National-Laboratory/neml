@@ -23,17 +23,7 @@ PYBIND11_MODULE(crystallography, m) {
                     }))
       .def_property_readonly("ops", &SymmetryGroup::ops)
       .def("misorientation", &SymmetryGroup::misorientation)
-      .def("distance", &SymmetryGroup::distance)
-      .def("closest", 
-           [](SymmetryGroup & self, const Orientation & a, 
-              const Orientation & b) -> std::tuple<Orientation, double>
-           {
-            Orientation res;
-            double d;
-            self.closest(a, b, res, d);
-
-            return std::make_tuple(res, d);
-           })
+      .def("misorientation_block", &SymmetryGroup::misorientation_block)
       ;
 
   py::class_<Lattice, NEMLObject, std::shared_ptr<Lattice>>(m, "Lattice")

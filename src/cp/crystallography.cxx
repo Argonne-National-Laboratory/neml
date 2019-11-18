@@ -134,11 +134,11 @@ std::vector<Orientation> symmetry_rotations(std::string sclass)
 SymmetryGroup::SymmetryGroup(std::string sclass) :
     ops_(symmetry_rotations(sclass))
 {
-  raw_.resize(ops_.size()*4);
-  size_t j = 0;
-  for (auto it = ops_.begin(); it != ops_.end(); ++it) {
-    std::copy(it->quat(), it->quat()+4, &raw_[j]);
-    j += 4;
+  misops_.reserve(ops_.size() * ops_.size());
+  for (auto a : ops_) {
+    for (auto b : ops_) {
+      misops_.push_back(a * b);
+    }
   }
 }
 
@@ -181,69 +181,67 @@ Orientation SymmetryGroup::misorientation(const Orientation & a,
                                           const Orientation & b) const
 {
   Orientation best;
+  Orientation ab = a * b.inverse();
   double angle_best = 2 * M_PI;
   double cn[3];
   double ca;
-  for (auto ri = ops_.begin(); ri != ops_.end(); ++ri) {
-    for (auto rj = ops_.begin(); rj != ops_.end(); ++rj) {
-      Orientation trial = *ri * a * b.inverse() * *rj;
-      trial.to_axis_angle(cn, ca);
-      if (ca < angle_best) {
-        angle_best = ca;
-        best = trial;
-      }
+  for (auto misop : misops_) {
+    Orientation trial = misop * ab;
+    trial.to_axis_angle(cn, ca);
+    if (ca < angle_best) {
+      angle_best = ca;
+      best = trial;
     }
   }
 
   return best;
 }
 
-double SymmetryGroup::distance(const Orientation & a, const Orientation & b)
-  const
+std::vector<Orientation> SymmetryGroup::misorientation_block(
+    const std::vector<Orientation> & A, const std::vector<Orientation> & B)
 {
-  double * dd = new double [nops()];
+  size_t N = A.size();
   
-  opdist_(a.quat(), b.quat(), dd);
-
-  double val = *std::min_element(&dd[0], &dd[nops()]);
-
-  delete [] dd;
-
-  return val;
-}
-
-void SymmetryGroup::closest(const Orientation & a, const Orientation & b, 
-                            Orientation & close, double & dist) const
-{
-  double * dd = new double [nops()];
-  
-  opdist_(a.quat(), b.quat(), dd);
-
-  double * loc = std::min_element(&dd[0], &dd[nops()]);
-
-  dist = *loc;
-
-  size_t ind = loc - &dd[0];
-
-  delete [] dd;
-
-  close = ops_[ind] * a;
-}
-
-void SymmetryGroup::opdist_(const double * const q1, 
-                            const double * const q2, double * const res) 
-  const
-{
-  double * qs = new double [4 * nops()];
-  
-  qmult_vec(&raw_[0], q1, nops(), qs);
-  dgemv_("T", 4, nops(), 1.0, qs, 4, q2, 1, 0.0, res, 1);
-
-  delete [] qs;
-
-  for (size_t i=0; i<nops(); i++) {
-    res[i] = acos(fabs(res[i]));
+  if (N != B.size()) {
+    throw std::runtime_error("Blocks of input orientations do not have matching sizes!");
   }
+
+  double * V = new double[N*4];
+  for (size_t i = 0; i < N; i++) {
+    Orientation v(&V[4*i]);
+    v = A[i] * B[i].inverse();
+  }
+  
+  size_t S = misops_.size();
+  double * M = new double[S * 4 * 4];
+  for (size_t i = 0; i < S; i++) {
+    misops_[i].to_product_matrix(&M[i*4*4]);
+  }
+
+  // Answer is now M * V.T
+  double * R = new double[S * 4 * N];
+  mat_mat_ABT(S*4, N, 4, M, V, R);
+
+  delete [] M;
+  delete [] V;
+
+  std::vector<Orientation> res(N);
+  for (size_t i = 0; i < N; i++) {
+    double best_angle = 3 * M_PI;
+    size_t bi = -1;
+    for (size_t j = 0; j < S; j++) {
+      double ang = 2.0 * acos(R[CINDEX((j*4),i,N)]);
+      if (ang < best_angle) {
+        best_angle = ang;
+        bi = j;
+      }
+    }
+    res[i] = Orientation({R[CINDEX((bi*4+0),i,N)],R[CINDEX((bi*4+1),i,N)],R[CINDEX((bi*4+2),i,N)],R[CINDEX((bi*4+3),i,N)]});
+  }
+
+  delete [] R;
+
+  return res;
 }
 
 Lattice::Lattice(Vector a1, Vector a2, Vector a3,

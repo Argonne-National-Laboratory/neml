@@ -502,6 +502,24 @@ PYBIND11_MODULE(nemlmath, m) {
           return C;
         }, "Matrix-matrix product C = A.B.");
 
+  m.def("mat_mat_ABT",
+        [](py::array_t<double, py::array::c_style> A, py::array_t<double, py::array::c_style> B) -> py::array_t<double>
+        {
+          if ((A.request().ndim != 2) || (B.request().ndim != 2)) {
+            throw LinalgError("A and B must be matrices!");
+          }
+          if (A.request().shape[1] != B.request().shape[1]) {
+            throw LinalgError("A and B must be conformal!");
+          }
+
+          auto C = alloc_mat<double>(A.request().shape[0], B.request().shape[0]);
+          
+          mat_mat_ABT(A.request().shape[0], B.request().shape[0], A.request().shape[1],
+                  arr2ptr<double>(A), arr2ptr<double>(B), arr2ptr<double>(C));
+
+          return C;
+        }, "Matrix-matrix product C = A.B.T");
+
   m.def("invert_mat", 
         [](py::array_t<double, py::array::c_style> A) -> py::array_t<double>
         {

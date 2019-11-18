@@ -234,6 +234,29 @@ size_t Quaternion::hash() const
   return key;
 }
 
+void Quaternion::to_product_matrix(double * M) const
+{
+  M[0] = quat_[0];
+  M[1] = -quat_[1];
+  M[2] = -quat_[2];
+  M[3] = -quat_[3];
+
+  M[4] = quat_[1];
+  M[5] = quat_[0];
+  M[6] = -quat_[3];
+  M[7] = quat_[2];
+
+  M[8] = quat_[2];
+  M[9] = quat_[3];
+  M[10] = quat_[0];
+  M[11] = -quat_[1];
+
+  M[12] = quat_[3];
+  M[13] = -quat_[2];
+  M[14] = quat_[1];
+  M[15] = quat_[0];
+}
+
 Quaternion operator*(double s, const Quaternion & q)
 {
   Quaternion cpy(q);
