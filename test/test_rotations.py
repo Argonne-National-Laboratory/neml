@@ -66,6 +66,11 @@ class BasicMath(object):
     self.assertTrue(np.isclose(self.A.dot(self.B), 
       np.dot(self.A.quat, self.B.quat)))
 
+  def test_matrix_composition(self):
+    AB = self.A * self.B
+    c = rotations.Quaternion(np.dot(self.A.to_product_matrix(), self.B.quat))
+    self.assertTrue(np.allclose(AB.quat, c.quat))
+
 class ScalarMath(object):
   def test_scalar_division(self):
     self.assertTrue(np.allclose((self.A / self.s).quat, self.a / self.s))

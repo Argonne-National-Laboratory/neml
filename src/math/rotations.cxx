@@ -234,6 +234,29 @@ size_t Quaternion::hash() const
   return key;
 }
 
+void Quaternion::to_product_matrix(double * M) const
+{
+  M[0] = quat_[0];
+  M[1] = -quat_[1];
+  M[2] = -quat_[2];
+  M[3] = -quat_[3];
+
+  M[4] = quat_[1];
+  M[5] = quat_[0];
+  M[6] = -quat_[3];
+  M[7] = quat_[2];
+
+  M[8] = quat_[2];
+  M[9] = quat_[3];
+  M[10] = quat_[0];
+  M[11] = -quat_[1];
+
+  M[12] = quat_[3];
+  M[13] = -quat_[2];
+  M[14] = quat_[1];
+  M[15] = quat_[0];
+}
+
 Quaternion operator*(double s, const Quaternion & q)
 {
   Quaternion cpy(q);
@@ -642,8 +665,10 @@ void Orientation::to_euler(double & a, double & b, double & c,
 void Orientation::to_axis_angle(double * const n, double & a, 
                                 std::string angles) const
 {
-  a = 2.0 * acos(quat_[0]);
-  double s = sin(a / 2.0);
+  double na = 2.0 * acos(quat_[0]);
+  a = cast_angle(na, angles);
+
+  double s = sin(na / 2.0);
   if (a < 1.0e-16) {  // obvious hack
     // If the angle is zero the axis is arbitrary
     n[0] = 1.0;

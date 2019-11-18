@@ -129,6 +129,9 @@ int mat_vec_trans(const double * const A, int m, const double * const b, int n, 
 // Matrix-matrix C = A . B
 int mat_mat(int m, int n, int k, const double * const A, const double * const B, double * const C);
 
+// Matrix-matrix C = A . B.T
+int mat_mat_ABT(int m, int n, int k, const double * const A, const double * const B, double * const C);
+
 /// Invert a matrix in place
 int invert_mat(double* const A, int n);
 

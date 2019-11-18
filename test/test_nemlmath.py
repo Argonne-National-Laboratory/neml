@@ -253,6 +253,10 @@ class TestMatMat(unittest.TestCase):
   def test_matmat(self):
     self.assertTrue(np.allclose(np.dot(self.A, self.B), mat_mat(self.A, self.B)))
 
+  def test_matmat_ABT(self):
+    B = self.B.T
+    self.assertTrue(np.allclose(np.dot(self.A, B.T), mat_mat_ABT(self.A, B)))
+
 class TestRotateMat(unittest.TestCase):
   def setUp(self):
     self.m = 6

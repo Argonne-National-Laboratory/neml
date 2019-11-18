@@ -38,7 +38,7 @@ ktw_tetra = np.array(
     ], dtype = float)
 
 a = np.sqrt(3.0)/2.0
-h = -1.0/2.0
+h = 1.0/2.0
 ktw_hexagonal = np.array(
     [
       [ [ 1, 0, 0], 
@@ -181,54 +181,59 @@ def ktw_rotational_groups(typ):
   else:
     raise ValueError("Unknown rotational group %s." % typ)
 
+groups = ["1", "2", "222", "42", "4", "3", "6", "32", "622", "23", "432"]
+
 class TestRotationalGroups(unittest.TestCase):
   def compare(self, matrix, quaternion):
-    for M, q in zip(matrix, quaternion):
+    for i,(M, q) in enumerate(zip(matrix, quaternion)):
       self.assertTrue(np.allclose(M, q.to_matrix()))
 
-  def test_1(self):
-    self.compare(ktw_rotational_groups("1"), 
-        crystallography.symmetry_rotations("1"))
+  def test_definition(self):
+    for grp in groups:
+      print(grp)
+      self.compare(ktw_rotational_groups(grp),
+          crystallography.symmetry_rotations(grp))
 
-  def test_2(self):
-    self.compare(ktw_rotational_groups("2"),
-        crystallography.symmetry_rotations("2"))
+  def test_is_group(self):
+    for grp in groups:
+      print(grp)
+      ops = crystallography.symmetry_rotations(grp)
+      self.assertTrue(self.includes_identity(ops))
+      self.assertTrue(self.closed(ops))
+      self.assertTrue(self.has_inverse(ops))
 
-  def test_222(self):
-    self.compare(ktw_rotational_groups("222"),
-        crystallography.symmetry_rotations("2"))
+  def includes_identity(self, ops):
+    for op in ops:
+      if np.allclose(op.quat, [1,0,0,0]):
+        break
+    else:
+      return False
+    return True
 
-  def test_42(self):
-    self.compare(ktw_rotational_groups("42"),
-        crystallography.symmetry_rotations("42"))
+  def closed(self, ops):
+    for i,op_a in enumerate(ops):
+      for j,op_b in enumerate(ops):
+        c = op_a * op_b
+        found = False
+        for op_c in ops:
+          if np.allclose(c.quat, op_c.quat) or np.allclose(c.quat, -op_c.quat):
+            found = True
+            break
+        if not found:
+          return False
 
-  def test_4(self):
-    self.compare(ktw_rotational_groups("4"),
-        crystallography.symmetry_rotations("4"))
+    return True
 
-  def test_3(self):
-    self.compare(ktw_rotational_groups("3"),
-        crystallography.symmetry_rotations("3"))
-
-  def test_6(self):
-    self.compare(ktw_rotational_groups("6"),
-        crystallography.symmetry_rotations("6"))
-
-  def test_32(self):
-    self.compare(ktw_rotational_groups("32"),
-        crystallography.symmetry_rotations("32"))
-
-  def test_622(self):
-    self.compare(ktw_rotational_groups("622"),
-        crystallography.symmetry_rotations("622"))
-
-  def test_23(self):
-    self.compare(ktw_rotational_groups("23"),
-        crystallography.symmetry_rotations("23"))
-
-  def test_432(self):
-    self.compare(ktw_rotational_groups("432"),
-        crystallography.symmetry_rotations("432"))
+  def has_inverse(self, ops):
+    for op_a in ops:
+      opa_inv = op_a.inverse()
+      for op_b in ops:
+        if np.allclose(opa_inv.quat, op_b.quat) or np.allclose(opa_inv.quat, -op_b.quat):
+          break
+      else:
+        return False
+    
+    return True
 
 class LTests(object):
   def test_lattice(self):

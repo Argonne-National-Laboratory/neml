@@ -120,10 +120,12 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.strength_np1 = 30.0
 
     self.H_n = history.History()
+
     self.H_n.add_scalar("strength")
     self.H_n.set_scalar("strength", self.strength_n)
 
     self.H_np1 = history.History()
+
     self.H_np1.add_scalar("strength")
     self.H_np1.set_scalar("strength", self.strength_np1)
 
@@ -144,7 +146,9 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.nsteps = 10
 
   def test_strength(self):
-    self.assertTrue(np.isclose(self.model.strength(self.H_np1, self.L, 
+    h = self.model.init_store()
+    h[4] = self.strength_np1
+    self.assertTrue(np.isclose(self.model.strength(h, 
       self.T), self.strength_np1 + self.tau0))
 
   def test_nhist(self):

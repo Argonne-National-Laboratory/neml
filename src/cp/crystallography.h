@@ -37,20 +37,12 @@ class SymmetryGroup: public NEMLObject {
   /// Find the minimum misorientation transformation between a and b
   Orientation misorientation(const Orientation & a, const Orientation & b) const;
 
-  /// Find the distance between a and b with the usual metric
-  double distance(const Orientation & a, const Orientation & b) const;
-
-  /// Find the orientation which, under symmetry operations, is closest to b
-  void closest(const Orientation & a, const Orientation & b, 
-               Orientation & close, double & dist) const;
-
- private:
-  void opdist_(const double * const q1, const double * const q2,
-               double * const res) const;
+  /// Find the disorientation in a blocked way that trades memory for cpu
+  std::vector<Orientation> misorientation_block(const std::vector<Orientation> & A, const std::vector<Orientation> & B);
 
  private:
   const std::vector<Orientation> ops_;
-  std::vector<double> raw_;
+  std::vector<Orientation> misops_;
 };
 
 static Register<SymmetryGroup> regSymmetryGroup;

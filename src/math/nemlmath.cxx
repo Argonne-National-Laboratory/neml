@@ -955,6 +955,15 @@ int mat_mat(int m, int n, int k, const double * const A,
   return 0;
 }
 
+int mat_mat_ABT(int m, int n, int k, const double * const A,
+            const double * const B, double * const C)
+{
+  // Provide as A_mk B_nk
+  dgemm_("T", "N", n, m, k, 1.0, B, k, A, k, 0.0, C, n);
+
+  return 0;
+}
+
 int solve_mat(const double * const A, int n, double * const x)
 {
   int info;

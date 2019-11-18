@@ -82,6 +82,9 @@ class Quaternion: public NEMLObject {
   /// Hash function for quick comparisons
   size_t hash() const;
 
+  /// Product matrix for quaternion composition
+  void to_product_matrix(double * M) const;
+
  protected:
   void alloc_();
 
