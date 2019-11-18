@@ -665,8 +665,10 @@ void Orientation::to_euler(double & a, double & b, double & c,
 void Orientation::to_axis_angle(double * const n, double & a, 
                                 std::string angles) const
 {
-  a = 2.0 * acos(quat_[0]);
-  double s = sin(a / 2.0);
+  double na = 2.0 * acos(quat_[0]);
+  a = cast_angle(na, angles);
+
+  double s = sin(na / 2.0);
   if (a < 1.0e-16) {  // obvious hack
     // If the angle is zero the axis is arbitrary
     n[0] = 1.0;
