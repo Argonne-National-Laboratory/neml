@@ -164,7 +164,7 @@ ParameterSet SymmetryGroup::parameters()
 std::unique_ptr<NEMLObject> SymmetryGroup::initialize(ParameterSet & params)
 {
   return neml::make_unique<SymmetryGroup>(
-      params.get_parameter<std::string>("sclass")); 
+      params.get_parameter<std::string>("sclass"));
 }
 
 const std::vector<Orientation> & SymmetryGroup::ops() const
@@ -177,7 +177,7 @@ size_t SymmetryGroup::nops() const
   return ops_.size();
 }
 
-Orientation SymmetryGroup::misorientation(const Orientation & a, 
+Orientation SymmetryGroup::misorientation(const Orientation & a,
                                           const Orientation & b) const
 {
   Orientation best;
@@ -201,7 +201,7 @@ std::vector<Orientation> SymmetryGroup::misorientation_block(
     const std::vector<Orientation> & A, const std::vector<Orientation> & B)
 {
   size_t N = A.size();
-  
+
   if (N != B.size()) {
     throw std::runtime_error("Blocks of input orientations do not have matching sizes!");
   }
@@ -211,7 +211,7 @@ std::vector<Orientation> SymmetryGroup::misorientation_block(
     Orientation v(&V[4*i]);
     v = A[i] * B[i].inverse();
   }
-  
+
   size_t S = misops_.size();
   double * M = new double[S * 4 * 4];
   for (size_t i = 0; i < S; i++) {
@@ -230,7 +230,8 @@ std::vector<Orientation> SymmetryGroup::misorientation_block(
     double best_angle = 3 * M_PI;
     size_t bi = -1;
     for (size_t j = 0; j < S; j++) {
-      double ang = 2.0 * acos(R[CINDEX((j*4),i,N)]);
+      double f = std::max(-1.0,std::min(1.0,R[CINDEX((j*4),i,N)])); // need to check to prevent precision error and lie between [-1,1]
+      double ang = 2.0 * acos(f);
       if (ang < best_angle) {
         best_angle = ang;
         bi = j;
@@ -301,7 +302,7 @@ std::vector<Vector> Lattice::equivalent_vectors(Vector v)
 std::vector<Vector> Lattice::equivalent_vectors_bidirectional(Vector v)
 {
   std::vector<Vector> both = equivalent_vectors(v);
-  
+
   std::vector<Vector> single;
 
   for (auto a = both.begin(); a != both.end(); ++a) {
@@ -316,7 +317,7 @@ std::vector<Vector> Lattice::equivalent_vectors_bidirectional(Vector v)
       single.push_back(*a);
     }
   }
-  
+
   return single;
 }
 
@@ -328,12 +329,12 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
       miller2cart_direction(d));
   std::vector<Vector> pns = equivalent_vectors_bidirectional(
       miller2cart_plane(p));
-  
+
   for (auto bi = pbs.begin(); bi != pbs.end(); ++bi) {
     for (auto ni = pns.begin(); ni != pns.end(); ++ni) {
       Vector nd = *bi / bi->norm();
       Vector nn = *ni / ni->norm();
-      
+
       if (isclose(nd.dot(nn), 0.0)) {
         burgers.push_back(*bi);
         directions.push_back(nd);
@@ -369,7 +370,7 @@ Symmetric Lattice::M(size_t g, size_t i, const Orientation & Q)
 {
   cache_rot_(Q);
   return Ms_[g][i];
-  return Q.apply(Symmetric(outer(slip_directions_[g][i], 
+  return Q.apply(Symmetric(outer(slip_directions_[g][i],
                                  slip_planes_[g][i])));
 }
 
@@ -379,13 +380,13 @@ Skew Lattice::N(size_t g, size_t i, const Orientation & Q)
   return Ns_[g][i];
 }
 
-double Lattice::shear(size_t g, size_t i, const Orientation & Q, 
+double Lattice::shear(size_t g, size_t i, const Orientation & Q,
                       const Symmetric & stress)
 {
   return M(g,i,Q).contract(stress);
 }
 
-Symmetric Lattice::d_shear(size_t g, size_t i, const Orientation & Q, 
+Symmetric Lattice::d_shear(size_t g, size_t i, const Orientation & Q,
                            const Symmetric & stress)
 {
   return M(g, i, Q);
@@ -423,17 +424,17 @@ void Lattice::cache_rot_(const Orientation & Q)
     Ms_[g].resize(nslip(g));
     Ns_[g].resize(nslip(g));
     for (size_t i = 0; i < nslip(g); i++) {
-      Ms_[g][i] = Q.apply(Symmetric(outer(slip_directions_[g][i], 
-                                          slip_planes_[g][i]))); 
-      Ns_[g][i] = Q.apply(Skew(outer(slip_directions_[g][i], 
-                                     slip_planes_[g][i]))); 
+      Ms_[g][i] = Q.apply(Symmetric(outer(slip_directions_[g][i],
+                                          slip_planes_[g][i])));
+      Ns_[g][i] = Q.apply(Skew(outer(slip_directions_[g][i],
+                                     slip_planes_[g][i])));
     }
   }
 }
 
-CubicLattice::CubicLattice(double a, 
+CubicLattice::CubicLattice(double a,
                            list_systems isystems) :
-    Lattice(Vector({a,0,0}),Vector({0,a,0}),Vector({0,0,a}), 
+    Lattice(Vector({a,0,0}),Vector({0,a,0}),Vector({0,0,a}),
             std::make_shared<SymmetryGroup>("432"), isystems)
 {
 
@@ -449,7 +450,7 @@ ParameterSet CubicLattice::parameters()
   ParameterSet pset(CubicLattice::type());
 
   pset.add_parameter<double>("a");
-  pset.add_optional_parameter<list_systems>("slip_systems", 
+  pset.add_optional_parameter<list_systems>("slip_systems",
                                             list_systems());
 
   return pset;
@@ -459,7 +460,7 @@ std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
 {
   return neml::make_unique<CubicLattice>(
       params.get_parameter<double>("a"),
-      params.get_parameter<list_systems>("slip_systems")); 
+      params.get_parameter<list_systems>("slip_systems"));
 }
 
 } // namespace neml

@@ -25,7 +25,7 @@ Quaternion::Quaternion()
 Quaternion::Quaternion(const std::vector<double> v)
 {
   alloc_();
-  std::copy(&v[0], &v[4], quat_);
+  std::copy(v.begin(), v.end(), quat_);
 }
 
 Quaternion::Quaternion(double * v)
@@ -46,7 +46,7 @@ Quaternion::Quaternion(const Quaternion & other) :
   }
 }
 
-Quaternion::Quaternion(const Quaternion && other) : 
+Quaternion::Quaternion(const Quaternion && other) :
     store_(other.store())
 {
   if (store_) {
@@ -106,14 +106,14 @@ Quaternion & Quaternion::operator=(const Quaternion && rhs)
   return *this;
 }
 
-bool Quaternion::store() const 
+bool Quaternion::store() const
 {
   return store_;
 }
 
-const double * Quaternion::quat() const 
+const double * Quaternion::quat() const
 {
-  return quat_; 
+  return quat_;
 }
 
 double * Quaternion::data()
@@ -121,7 +121,7 @@ double * Quaternion::data()
   return quat_;
 }
 
-double Quaternion::norm() const 
+double Quaternion::norm() const
 {
   return sqrt(
       quat_[0] * quat_[0]
@@ -226,7 +226,7 @@ double Quaternion::dot(const Quaternion & other) const
 size_t Quaternion::hash() const
 {
   size_t key = 0;
-  
+
   for (size_t i = 0; i<4; i++) {
     boost::hash_combine<double>(key, quat_[i]);
   }
@@ -328,7 +328,7 @@ void Quaternion::inverse_(double * const out) const
 void Quaternion::exp_(double * const out) const
 {
   double nv = 0.0;
-  for (int i=1; i<4; i++) 
+  for (int i=1; i<4; i++)
   {
     nv += quat_[i] * quat_[i];
   }
@@ -345,7 +345,7 @@ void Quaternion::log_(double * const out) const
 {
   double n = this->norm();
   double nv = 0.0;
-  for (int i=1; i<4; i++) 
+  for (int i=1; i<4; i++)
   {
     nv += quat_[i] * quat_[i];
   }
@@ -417,7 +417,7 @@ std::unique_ptr<NEMLObject> Orientation::initialize(ParameterSet & params)
   if (angles.size() != 3) {
     throw std::runtime_error("Orientation parameter angles must be length three!");
   }
-  
+
   return std::unique_ptr<Orientation>(new Orientation(
           Orientation::createEulerAngles(angles[0], angles[1], angles[2],
                                          params.get_parameter<std::string>("angle_type"))
@@ -439,7 +439,7 @@ void Orientation::setRodrigues(const double * const r)
   }
 
   double f = 1.0 / (sqrt(1.0 + nr));
-  
+
   quat_[0] = f;
   quat_[1] = r[0] * f;
   quat_[2] = r[1] * f;
@@ -496,7 +496,7 @@ void Orientation::setMatrix(const double * const M)
   quat_[3] = z;
 }
 
-Orientation Orientation::createAxisAngle(const double * const n, double a, 
+Orientation Orientation::createAxisAngle(const double * const n, double a,
                                          std::string angles)
 {
   Orientation q;
@@ -504,11 +504,11 @@ Orientation Orientation::createAxisAngle(const double * const n, double a,
   return q;
 }
 
-void Orientation::setAxisAngle(const double * const n, double a, 
+void Orientation::setAxisAngle(const double * const n, double a,
                                std::string angles)
 {
   a = convert_angle(a, angles);
-  
+
   quat_[0] = cos(a/2.0);
   double s = sin(a/2.0);
   quat_[1] = s * n[0];
@@ -517,7 +517,7 @@ void Orientation::setAxisAngle(const double * const n, double a,
 }
 
 Orientation Orientation::createEulerAngles(double a, double b, double c,
-                                           std::string angles, 
+                                           std::string angles,
                                            std::string convention)
 {
   Orientation q;
@@ -526,7 +526,7 @@ Orientation Orientation::createEulerAngles(double a, double b, double c,
 }
 
 void Orientation::setEulerAngles(double a, double b, double c,
-                                 std::string angles, 
+                                 std::string angles,
                                  std::string convention)
 {
   a = convert_angle(a, angles);
@@ -577,7 +577,7 @@ void Orientation::setHyperspherical(double a1, double a2, double a3,
   a1 = convert_angle(a1, angles);
   a2 = convert_angle(a2, angles);
   a3 = convert_angle(a3, angles);
-  
+
   quat_[0] = cos(a1);
   quat_[1] = sin(a1)*cos(a2);
   quat_[2] = sin(a1)*sin(a2)*cos(a3);
@@ -598,7 +598,7 @@ void Orientation::setVectors(const Vector & x, const Vector & y)
   }
   Vector z = x.cross(y);
   double M[9];
-  
+
   M[0] = x(0);
   M[1] = y(0);
   M[2] = z(0);
@@ -636,7 +636,7 @@ Orientation::Orientation(const Quaternion & other) :
   normalize_();
 }
 
-void Orientation::to_euler(double & a, double & b, double & c, 
+void Orientation::to_euler(double & a, double & b, double & c,
                            std::string angles, std::string convention) const
 {
   double tol = 1.0e-15;
@@ -654,7 +654,7 @@ void Orientation::to_euler(double & a, double & b, double & c,
     sc = M_PI / 2 - atan2(M[CINDEX(0,2,3)] / s, M[CINDEX(1,2,3)] / s);
     sa = M_PI / 2 - atan2(M[CINDEX(2,0,3)] / s, M[CINDEX(2,1,3)] / s);
   }
-  
+
   double na, nb, nc;
   from_kocks_(sa, sb, sc, na, nb, nc, convention);
   a = cast_angle(na, angles);
@@ -662,10 +662,11 @@ void Orientation::to_euler(double & a, double & b, double & c,
   c = cast_angle(nc, angles);
 }
 
-void Orientation::to_axis_angle(double * const n, double & a, 
+void Orientation::to_axis_angle(double * const n, double & a,
                                 std::string angles) const
 {
-  double na = 2.0 * acos(quat_[0]);
+  double f = std::max(-1.0,std::min(quat_[0],1.0)); // need to check to prevent precision error of > 1
+  double na = 2.0 * std::acos(f);
   a = cast_angle(na, angles);
 
   double s = sin(na / 2.0);
@@ -872,7 +873,7 @@ void Orientation::from_kocks_(double a, double b, double c, double & oa,
   }
 }
 
-void Orientation::kocks_to_matrix_(double a, double b, double c, 
+void Orientation::kocks_to_matrix_(double a, double b, double c,
                                    double * const M)
 {
   M[0] = -sin(c) * sin(a) - cos(c) * cos(a) * cos(b);
@@ -959,7 +960,7 @@ Skew Orientation::apply(const Skew & a) const
 RankFour Orientation::apply(const RankFour & a) const
 {
   RankTwo Q = to_tensor();
-  
+
   RankFour res;
   for (size_t i = 0; i<3; i++) {
     for (size_t j = 0; j<3; j++) {
@@ -984,7 +985,7 @@ RankFour Orientation::apply(const RankFour & a) const
 SymSymR4 Orientation::apply(const SymSymR4 & a) const
 {
   SymSymR4 res;
-  
+
   double M[9];
   to_matrix(M);
 
@@ -999,7 +1000,7 @@ SymSymR4 Orientation::apply(const SymSymR4 & a) const
 }
 
 double Orientation::distance(const Orientation & other) const
-{ 
+{
   double d = fabs(this->dot(other));
   if (d>1.0) d = 1.0;
   return acos(d);
@@ -1010,7 +1011,7 @@ std::vector<Orientation> random_orientations(int n)
   double u[3];
   double w, x, y, z;
   std::vector<Orientation> result;
-  
+
   std::random_device rdev{};
   std::default_random_engine generator{rdev()};
   std::uniform_real_distribution<double> distribution(0.0,1.0);
@@ -1027,7 +1028,7 @@ std::vector<Orientation> random_orientations(int n)
 
     result.emplace_back(Orientation({w,x,y,z}));
   }
-  
+
   return result;
 }
 
