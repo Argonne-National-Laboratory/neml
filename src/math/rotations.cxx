@@ -25,7 +25,7 @@ Quaternion::Quaternion()
 Quaternion::Quaternion(const std::vector<double> v)
 {
   alloc_();
-  std::copy(&v[0], &v[4], quat_);
+  std::copy(v.begin(), v.end(), quat_);
 }
 
 Quaternion::Quaternion(double * v)
