@@ -3,6 +3,7 @@
 
 #include "models.h"
 #include "elasticity.h"
+#include "larsonmiller.h"
 
 #include <memory>
 
@@ -448,6 +449,63 @@ class ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
 };
 
 static Register<ModularCreepDamageModel_sd> regModularCreepDamageModel_sd;
+
+/// Time-fraction ASME damage using a generic Larson-Miller relation and effective stress
+class LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+ public:
+  LarsonMillerCreepDamageModel_sd(
+                            std::shared_ptr<LinearElasticModel> elastic,
+                            std::shared_ptr<LarsonMillerRelation> lmr,
+                            std::shared_ptr<EffectiveStress> estress,
+                            std::shared_ptr<NEMLModel_sd> base,
+                            std::shared_ptr<Interpolate> alpha,
+                            double tol, int miter,
+                            bool verbose, bool truesdell, 
+                            bool ekill, double dkill,
+                            double sfact);
+  
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  
+  /// The damage function d_np1 = d_n + 1/tr(s*(1-w), T) * dt
+  virtual int damage(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt damage
+  virtual int ddamage_dd(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt strain
+  virtual int ddamage_de(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt stress
+  virtual int ddamage_ds(double d_np1, double d_n, 
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+
+ protected:
+  std::shared_ptr<LarsonMillerRelation> lmr_;
+  std::shared_ptr<EffectiveStress> estress_;
+};
+
+static Register<LarsonMillerCreepDamageModel_sd> regLarsonMillerCreepDamageModel_sd;
 
 /// A standard damage model where the damage rate goes as the plastic strain
 class NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
