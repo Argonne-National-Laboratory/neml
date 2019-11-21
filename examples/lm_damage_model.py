@@ -35,12 +35,8 @@ if __name__ == "__main__":
     res = drivers.creep(model, s, 100.0, 300000*3600.0, 
         T = T, check_dmg = True, dtol = 0.95, nsteps_up = 20,
         nsteps = 1000, logspace = True)
-    #plt.figure()
-    #plt.plot(res['rtime'], res['rstrain'])
-    #plt.show()
     time = res['rtime'][-1] / 3600.0
     lmp = T * (np.log10(time) + base_C)
-    print(lmp,time)
     lmps.append(lmp)
   
   plt.figure()

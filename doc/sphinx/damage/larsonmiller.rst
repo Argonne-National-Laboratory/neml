@@ -15,7 +15,8 @@ by a :ref:`larson-miller` object.
 This model implements classical time-fraction damage summation in a finite 
 element framework.  It currently does not include graceful element deletion
 routines, though those may be added in the future.  This means the simulation
-can only progress up to the point of damage nucleation and not beyond.
+can only progress up to the point where the simulation reaches 
+:math:`\omega = 1` at the first material point in the calculation.
 
 Parameters
 ----------
