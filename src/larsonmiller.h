@@ -14,7 +14,7 @@ class LMTrialState: public TrialState {
 
 /// Classical Larson-Miller relation between stress and rupture time
 //    Input function gives log(s) = fn(LMP) with LMP = T * (C + log(tr)) 
-class LarsonMillerRelation: public NEMLObject, public Solvable {
+class NEML_EXPORT LarsonMillerRelation: public NEMLObject, public Solvable {
  public:
   LarsonMillerRelation(std::shared_ptr<Interpolate> fn, double C,
                        double tol, int miter, bool verbose);

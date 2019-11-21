@@ -453,7 +453,7 @@ class NEML_EXPORT ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
 static Register<ModularCreepDamageModel_sd> regModularCreepDamageModel_sd;
 
 /// Time-fraction ASME damage using a generic Larson-Miller relation and effective stress
-class LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   LarsonMillerCreepDamageModel_sd(
                             std::shared_ptr<LinearElasticModel> elastic,
