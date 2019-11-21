@@ -23,7 +23,8 @@ add_library(neml SHARED
       interpolate.cxx
       creep.cxx
       damage.cxx
-      history.cxx)
+      history.cxx
+      larsonmiller.cxx)
 add_subdirectory(math)
 add_subdirectory(cp)
 target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
@@ -47,5 +48,6 @@ if (WRAP_PYTHON)
       pybind(creep)
       pybind(damage)
       pybind(history)
+      pybind(larsonmiller)
 endif()
 

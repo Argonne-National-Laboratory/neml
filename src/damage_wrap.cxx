@@ -11,8 +11,10 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(damage, m) {
+  py::module::import("neml.models");
   py::module::import("neml.objects");
   py::module::import("neml.solvers");
+  py::module::import("neml.larsonmiller");
 
   m.doc() = "NEML damage models.";
 
@@ -174,6 +176,17 @@ PYBIND11_MODULE(damage, m) {
                                                                     {"elastic",
                                                                     "A", "xi",
                                                                     "phi", "estress", 
+                                                                    "base"});
+        }))
+      ;
+
+  py::class_<LarsonMillerCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<LarsonMillerCreepDamageModel_sd>>(m, "LarsonMillerCreepDamageModel_sd")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<LarsonMillerCreepDamageModel_sd>(args, kwargs,
+                                                                    {"elastic",
+                                                                    "lmr",
+                                                                    "estress", 
                                                                     "base"});
         }))
       ;
