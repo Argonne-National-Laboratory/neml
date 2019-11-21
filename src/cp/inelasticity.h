@@ -10,24 +10,26 @@
 #include "../math/rotations.h"
 #include "../math/tensors.h"
 
+#include "../windows.h"
+
 namespace neml {
 
 /// A inelastic model supplying D_p and W_p
 //  A complete model for implicit rotations would include the derivatives wrt
 //  the orientation.  Similarly it would include all the w_p derivatives.
-class InelasticModel: public NEMLObject {
+class NEML_EXPORT InelasticModel: public NEMLObject {
  public:
   /// Populate a history object with the correct variables
   virtual void populate_history(History & history) const = 0;
   /// Actually initialize the history object with the starting values
   virtual void init_history(History & history) const = 0;
- 
+
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T) const = 0;
 
   /// Symmetric part of the plastic deformation
   virtual Symmetric d_p(const Symmetric & stress, const Orientation & Q,
-                        const History & history, 
+                        const History & history,
                         Lattice & lattice, double T) const = 0;
   /// Derivative of the symmetric part with respect to stress
   virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress, const Orientation & Q,
@@ -38,13 +40,13 @@ class InelasticModel: public NEMLObject {
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice, double T) const = 0;
-  
+
   /// History rate
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
                                Lattice & lattice, double T) const = 0;
   /// Derivative of the history rate with respect to stress
-  virtual History d_history_rate_d_stress(const Symmetric & stress, 
+  virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
@@ -77,7 +79,7 @@ class InelasticModel: public NEMLObject {
 
 /// This model returns zero for the plastic deformation, resulting model
 /// would be linear-elastic
-class NoInelasticity: public InelasticModel {
+class NEML_EXPORT NoInelasticity: public InelasticModel {
  public:
   /// Don't need any parameters to return zero!
   NoInelasticity();
@@ -90,12 +92,12 @@ class NoInelasticity: public InelasticModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// Add history variables (none needed)
   virtual void populate_history(History & history) const;
   /// Define initial history (none)
   virtual void init_history(History & history) const;
- 
+
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T) const;
 
@@ -117,13 +119,13 @@ class NoInelasticity: public InelasticModel {
                                   const History & history,
                                   Lattice & lattice,
                                   double T) const;
-  
+
   /// History rate (null, as there are no history variables)
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
                                Lattice & lattice, double T) const;
   /// Derivative of the history rate with respect to stress (null)
-  virtual History d_history_rate_d_stress(const Symmetric & stress, 
+  virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
@@ -156,7 +158,7 @@ class NoInelasticity: public InelasticModel {
 static Register<NoInelasticity> regNoInelasticity;
 
 /// The classic crystal plasticity inelastic model, as described in the manual
-class AsaroInelasticity: public InelasticModel {
+class NEML_EXPORT AsaroInelasticity: public InelasticModel {
  public:
   /// Provide a SlipRule defining the slip rate/strength relations
   AsaroInelasticity(std::shared_ptr<SlipRule> rule);
@@ -169,12 +171,12 @@ class AsaroInelasticity: public InelasticModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// Populate the history, deferred to the SlipRule
   virtual void populate_history(History & history) const;
   /// Initialize the history with the starting values, deferred to the SlipRule
   virtual void init_history(History & history) const;
- 
+
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T) const;
 
@@ -193,13 +195,13 @@ class AsaroInelasticity: public InelasticModel {
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice, double T) const;
-  
+
   /// History rate, deferred to the SlipRule
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
                                Lattice & lattice, double T) const;
   /// Derivative of the history rate with respect to stress
-  virtual History d_history_rate_d_stress(const Symmetric & stress, 
+  virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice, double T) const;
@@ -208,7 +210,7 @@ class AsaroInelasticity: public InelasticModel {
                                          const Orientation & Q,
                                          const History & history,
                                          Lattice & lattice, double T) const;
-  
+
   /// Skew part of the plastic deformation rate
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
@@ -233,9 +235,9 @@ class AsaroInelasticity: public InelasticModel {
 
 static Register<AsaroInelasticity> regAsaroInelasticity;
 
-/// An isotropic power law creep model, 
+/// An isotropic power law creep model,
 /// typically combined with slip system models to represent diffusion
-class PowerLawInelasticity: public InelasticModel {
+class NEML_EXPORT PowerLawInelasticity: public InelasticModel {
  public:
   PowerLawInelasticity(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
   virtual ~PowerLawInelasticity();
@@ -246,12 +248,12 @@ class PowerLawInelasticity: public InelasticModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// Setup history variables (none used in this implementation)
   virtual void populate_history(History & history) const;
   /// Initialize the history variables (n/a)
   virtual void init_history(History & history) const;
-  
+
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T) const;
 
@@ -279,7 +281,7 @@ class PowerLawInelasticity: public InelasticModel {
                                const History & history,
                                Lattice & lattice, double T) const;
   /// Derivative of the history with respect to the stress (null here)
-  virtual History d_history_rate_d_stress(const Symmetric & stress, 
+  virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
@@ -290,7 +292,7 @@ class PowerLawInelasticity: public InelasticModel {
                                          const History & history,
                                          Lattice & lattice,
                                          double T) const;
-  
+
   /// Skew part of the deformation rate (zero here)
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
@@ -322,7 +324,7 @@ static Register<PowerLawInelasticity> regPowerLawInelasticity;
 /// Metamodel that combines the rates of several individual InelasticModels
 // The model plastic deformation rates are summed, the model histories are
 // concatenated
-class CombinedInelasticity: public InelasticModel {
+class NEML_EXPORT CombinedInelasticity: public InelasticModel {
  public:
   /// Initialize with the list of models
   CombinedInelasticity(std::vector<std::shared_ptr<InelasticModel>> models);
@@ -335,7 +337,7 @@ class CombinedInelasticity: public InelasticModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
- 
+
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T) const;
 
@@ -343,7 +345,7 @@ class CombinedInelasticity: public InelasticModel {
   virtual void populate_history(History & history) const;
   /// Initialize history with actual values
   virtual void init_history(History & history) const;
-  
+
   /// Sum the symmetric parts of the plastic deformation rates
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
@@ -362,13 +364,13 @@ class CombinedInelasticity: public InelasticModel {
                                   const History & history,
                                   Lattice & lattice,
                                   double T) const;
-  
+
   /// Concatenate the history rates
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
                                Lattice & lattice, double T) const;
   /// Concatenate the derivative of the history rates with respect to stress
-  virtual History d_history_rate_d_stress(const Symmetric & stress, 
+  virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
@@ -385,7 +387,7 @@ class CombinedInelasticity: public InelasticModel {
                    const Orientation & Q,
                    const History & history,
                    Lattice & lattice, double T) const;
-  /// Sum the derivatives of the skew parts with respect to the stress 
+  /// Sum the derivatives of the skew parts with respect to the stress
   virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,

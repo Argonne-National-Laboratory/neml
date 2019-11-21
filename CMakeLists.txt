@@ -7,7 +7,6 @@ set(NEML_version 1.1.0)
 ### Setup modules ###
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-
 ### Need c++ 11 ###
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -53,10 +52,6 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STR
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Werror -Wno-unused-private-field")
       set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-private-field")
       set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-private-field")
-else()
-      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg")
 endif()
 
 # For MacOS
@@ -98,8 +93,6 @@ endif()
 ### PYTHON BINDINGS ###
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
-      FIND_PACKAGE(PythonLibs 3.4 REQUIRED)
-      INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
 endif()
 

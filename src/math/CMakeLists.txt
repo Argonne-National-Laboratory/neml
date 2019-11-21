@@ -7,6 +7,10 @@ target_sources(neml PRIVATE
 
 if (WRAP_PYTHON)
       set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/math)
+      if (WIN32)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/math)
+      endif()
+
       pybind(nemlmath)
       pybind(rotations)
       pybind(tensors)

@@ -7,18 +7,20 @@
 #include "hardening.h"
 #include "interpolate.h"
 
+#include "windows.h"
+
 #include <memory>
 
 namespace neml {
 
 /// ABC describing viscoplastic flow
-class ViscoPlasticFlowRule: public NEMLObject {
+class NEML_EXPORT ViscoPlasticFlowRule: public NEMLObject {
  public:
   /// Number of history variables
   virtual size_t nhist() const = 0;
   /// Initialize history at time zero
   virtual int init_hist(double * const h) const = 0;
-  
+
   /// Scalar flow rate
   virtual int y(const double* const s, const double* const alpha, double T,
                 double & yv) const = 0;
@@ -39,7 +41,7 @@ class ViscoPlasticFlowRule: public NEMLObject {
   /// Derivative of g wrt history
   virtual int dg_da(const double * const s, const double * const alpha, double T,
                double * const dgv) const = 0;
-  
+
   /// Contribution towards the flow proportional directly to time
   virtual int g_time(const double * const s, const double * const alpha, double T,
                 double * const gv) const;
@@ -92,7 +94,7 @@ class ViscoPlasticFlowRule: public NEMLObject {
 };
 
 /// The "g" function in the Perzyna model -- often a power law
-class GFlow: public NEMLObject {
+class NEML_EXPORT GFlow: public NEMLObject {
  public:
   /// The value of g
   virtual double g(double f, double T) const = 0;
@@ -101,23 +103,23 @@ class GFlow: public NEMLObject {
 };
 
 /// g is a power law
-class GPowerLaw: public GFlow {
+class NEML_EXPORT GPowerLaw: public GFlow {
  public:
   /// Parameter: the power law exponent
   GPowerLaw(std::shared_ptr<Interpolate> n, std::shared_ptr<Interpolate> eta);
-  
+
   /// String type for the object system
   static std::string type();
   /// Default parameters
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Initialize from parameters
   static ParameterSet parameters();
-  
+
   /// g = (f/eta)^n
   virtual double g(double f, double T) const;
   /// Derivative of g wrt f
   virtual double dg(double f, double T) const;
-  
+
   /// Helper, just return the power law exponent
   double n(double T) const;
 
@@ -132,26 +134,26 @@ class GPowerLaw: public GFlow {
 static Register<GPowerLaw> regGPowerLaw;
 
 /// Perzyna associative viscoplasticity
-class PerzynaFlowRule : public ViscoPlasticFlowRule {
+class NEML_EXPORT PerzynaFlowRule : public ViscoPlasticFlowRule {
  public:
-  /// Parameters: a flow surface, a hardening rule, and the rate sensitivity 
+  /// Parameters: a flow surface, a hardening rule, and the rate sensitivity
   /// function
   PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
                   std::shared_ptr<HardeningRule> hardening,
                   std::shared_ptr<GFlow> g);
-  
+
   /// String type for the object system
   static std::string type();
   /// Default parameters
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Initialize from parameters
   static ParameterSet parameters();
-  
+
   /// Number of history variables
   virtual size_t nhist() const;
   /// Initialize history at time zero
   virtual int init_hist(double * const h) const;
-  
+
   /// Scalar strain rate
   virtual int y(const double* const s, const double* const alpha, double T,
                 double & yv) const;
@@ -193,7 +195,7 @@ static Register<PerzynaFlowRule> regPerzynaFlowRule;
 /// Various Chaboche type fluidity models.
 //
 //  These depend only on the equivalent plastic strain
-class FluidityModel: public NEMLObject {
+class NEML_EXPORT FluidityModel: public NEMLObject {
  public:
   /// Value of viscosity as a function of temperature and inelastic strain
   virtual double eta(double a, double T) const = 0;
@@ -202,18 +204,18 @@ class FluidityModel: public NEMLObject {
 };
 
 /// The fluidity is constant with respect to plastic strain
-class ConstantFluidity: public FluidityModel {
+class NEML_EXPORT ConstantFluidity: public FluidityModel {
  public:
   /// Parameter: constant value of viscosity
   ConstantFluidity(std::shared_ptr<Interpolate> eta);
-  
+
   /// String type for the object system
   static std::string type();
   /// Initialize with a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// Value of eta
   virtual double eta(double a, double T) const;
   /// Derivative of eta wrt inelastic strain (zero for this implementation)
@@ -226,7 +228,7 @@ class ConstantFluidity: public FluidityModel {
 static Register<ConstantFluidity> regConstantFluidity;
 
 /// Voce-like saturating fluidity
-class SaturatingFluidity: public FluidityModel {
+class NEML_EXPORT SaturatingFluidity: public FluidityModel {
  public:
   /// Parameters: K0, initial viscosity, A, saturated increase in viscosity,
   /// b, sets saturation rate
@@ -240,7 +242,7 @@ class SaturatingFluidity: public FluidityModel {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-  
+
   /// Value of eta
   virtual double eta(double a, double T) const;
   /// Derivative of eta wrt inelastic strain
@@ -254,11 +256,11 @@ static Register<SaturatingFluidity> regSaturatingFluidity;
 
 /// Non-associative flow based on Chaboche's viscoplastic formulation
 //
-//  It uses an associative flow rule, a non-associative hardening rule 
+//  It uses an associative flow rule, a non-associative hardening rule
 //  (which should be Chaboche's for the full model), and a Perzyna rate
 //  rule with a potentially history-dependent fluidity
 //
-class ChabocheFlowRule: public ViscoPlasticFlowRule {
+class NEML_EXPORT ChabocheFlowRule: public ViscoPlasticFlowRule {
  public:
   /// Parameters: a yield surface, a nonassociative hardening rule,
   /// the fluidity function, and a rate sensitivity exponent
@@ -266,19 +268,19 @@ class ChabocheFlowRule: public ViscoPlasticFlowRule {
                    std::shared_ptr<NonAssociativeHardening> hardening,
                    std::shared_ptr<FluidityModel> fluidity,
                    std::shared_ptr<Interpolate> n);
-  
+
   /// String type for the object system
   static std::string type();
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Return default parameters
   static ParameterSet parameters();
-  
+
   /// Number of history variables (from the hardening model)
   virtual size_t nhist() const;
   /// Initialize history at time zero
   virtual int init_hist(double * const h) const;
-  
+
   // Scalar inelastic strain rate
   virtual int y(const double* const s, const double* const alpha, double T,
                 double & yv) const;
@@ -349,24 +351,24 @@ static Register<ChabocheFlowRule> regChabocheFlowRule;
 //  Interpolations are hard-coded because of their complexity
 //  They are public so I can easily test them
 //
-class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
+class NEML_EXPORT YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
  public:
   /// All parameters are hard coded to those given in the paper
   YaguchiGr91FlowRule();
-  
+
   /// String type for the object system
   static std::string type();
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameter set
   static ParameterSet parameters();
-  
+
   /// Number of history variables (14)
   virtual size_t nhist() const;
   /// Initialize history (6 values for X1, 6 values for X2, 1 value for Q and
   /// 1 value for sigma_a)
   virtual int init_hist(double * const h) const;
-  
+
   /// Scalar inelastic strain rate
   virtual int y(const double* const s, const double* const alpha, double T,
                 double & yv) const;
@@ -406,7 +408,7 @@ class YaguchiGr91FlowRule: public ViscoPlasticFlowRule {
   /// Derivative of h_time wrt history
   virtual int dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
-  
+
   /// Value of parameter D
   double D(double T) const;
   /// Value of parameter n
