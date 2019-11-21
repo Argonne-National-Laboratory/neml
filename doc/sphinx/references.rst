@@ -38,3 +38,5 @@ References
 .. [M2015] Messner, M. C., Beaudoin, A. and R. H. Dodds, Jr. "Consistent crystal plasticity kinematics and linearization for the implicit finite element method," `Engineering Computations,` 32(6): pp. 1526-1548 (2015).
 
 .. [L1969] Lee, E. H. "Elastic-plastic deformation at finite strains," `ASME Journal of Applied Mechanics,` 36: pp. 1-6 (1969).
+
+.. [LM1952] Larson, F. and J. Miller. "A time-temperature relationship for rupture and creep stresses," `Transactions of the American Society of Mechanical Engineers,` 74: pp. 765-771 (1952).

@@ -21,7 +21,7 @@ if __name__ == "__main__":
   bmodel =  parse.parse_xml("example.xml", "gr91_simple")
   
   fn = interpolate.PolynomialInterpolate([-6.65303514e-09,  2.95224385e-04, -6.19561357e-01])
-  C = 28.50845
+  C = 28.0
   lmr = larsonmiller.LarsonMillerRelation(fn, C)
   estress = damage.VonMisesEffectiveStress()
   model = damage.LarsonMillerCreepDamageModel_sd(
@@ -32,7 +32,7 @@ if __name__ == "__main__":
   lmps = []
 
   for s in srange:
-    res = drivers.creep(model, s, 100.0, 200000*3600.0, 
+    res = drivers.creep(model, s, 100.0, 300000*3600.0, 
         T = T, check_dmg = True, dtol = 0.95, nsteps_up = 20,
         nsteps = 1000, logspace = True)
     #plt.figure()

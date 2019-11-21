@@ -1,3 +1,5 @@
+.. _interpolate-functions:
+
 Interpolation functions
 =======================
 

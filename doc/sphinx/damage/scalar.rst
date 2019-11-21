@@ -34,6 +34,7 @@ Implementations
    classical
    modular
    standard
+   larsonmiller
 
 Class description
 -----------------
