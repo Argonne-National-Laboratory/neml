@@ -6,4 +6,4 @@ install:
       - cmake -DPYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.6 -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.6m.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.6m -D WRAP_PYTHON=ON .
       - make
 script:
-      - nosetests3
+      - nosetests-3.6
