@@ -1095,6 +1095,12 @@ int LarsonMillerCreepDamageModel_sd::damage(
   estress_->effective(s_np1, se);
   double dt = t_np1 - t_n;
 
+  // The usual problem
+  if (se == 0.0) {
+    *dd = d_n;
+    return 0;
+  }
+
   double tR;
   int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
   if (ier != 0) return ier;
@@ -1114,6 +1120,13 @@ int LarsonMillerCreepDamageModel_sd::ddamage_dd(
 {
   double se;
   estress_->effective(s_np1, se);
+
+  // The usual problem
+  if (se == 0.0) {
+    *dd = 0.0;
+    return 0;
+  }
+
   double dt = t_np1 - t_n;
 
   double tR;
@@ -1125,7 +1138,7 @@ int LarsonMillerCreepDamageModel_sd::ddamage_dd(
   if (ier != 0) return ier;
 
   *dd = (dt * dtR * se) / (tR * tR);
-
+  
   return 0;
 }
 
@@ -1153,6 +1166,12 @@ int LarsonMillerCreepDamageModel_sd::ddamage_ds(
   double se;
   estress_->effective(s_np1, se);
   double dt = t_np1 - t_n;
+
+  // The usual problem
+  if (se == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
 
   double tR;
   int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
