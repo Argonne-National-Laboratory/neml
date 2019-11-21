@@ -11,6 +11,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 
 PYBIND11_MODULE(damage, m) {
+  py::module::import("neml.models");
   py::module::import("neml.objects");
   py::module::import("neml.solvers");
   py::module::import("neml.larsonmiller");
