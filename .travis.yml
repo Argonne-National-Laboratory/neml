@@ -2,7 +2,7 @@ sudo: enabled
 before_install:
       - sudo apt-get install -y build-essential cmake libboost-dev libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose
 install:
-      - cmake -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.7.dylib -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.7 -D WRAP_PYTHON=ON .
+      - cmake -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.6.dylib -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.6 -D WRAP_PYTHON=ON .
       - make
 script:
       - nosetests3
