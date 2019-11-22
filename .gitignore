@@ -31,3 +31,13 @@ CMakeDoxyfile.in
 CMakeDoxygenDefaults.cmake
 *.e
 *.trelis
+*.ninja
+.ninja*
+*.dll*
+*.vcxproj*
+*.sln
+*.manifest
+*.exp
+*.lib
+*.pyd
+src/neml_export.h

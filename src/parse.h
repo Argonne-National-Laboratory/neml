@@ -5,6 +5,8 @@
 #include "models.h"
 #include "damage.h"
 
+#include "windows.h"
+
 #include "rapidxml.hpp"
 #include "rapidxml_utils.hpp"
 
@@ -18,19 +20,19 @@
 namespace neml {
 
 /// Parse from file to a shared_ptr
-std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname);
+NEML_EXPORT std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname);
 
 /// Parse from file to a unique_ptr
-std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname);
+NEML_EXPORT std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname);
 
 /// Extract a NEMLObject from a xml node as a unique_ptr
-std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node);
+NEML_EXPORT std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node);
 
 /// Extract a NEMLObject from a xml node
 std::shared_ptr<NEMLObject> get_object(const rapidxml::xml_node<> * node);
 
 /// Actually get a valid parameter set from a node
-ParameterSet get_parameters(const rapidxml::xml_node<> * node);
+ ParameterSet get_parameters(const rapidxml::xml_node<> * node);
 
 /// Extract a vector of NEMLObjects from an xml node
 std::vector<std::shared_ptr<NEMLObject>> get_vector_object(const rapidxml::xml_node<> * node);
@@ -76,14 +78,14 @@ class NodeNotFound: public std::exception {
   NodeNotFound(std::string node_name, int line) :
       node_name_(node_name), line_(line)
   {
-  
+
   };
 
   const char * what() const throw ()
   {
     std::stringstream ss;
 
-    ss << "Node with name " << node_name_ 
+    ss << "Node with name " << node_name_
         << " was not found near line " << line_ << "!";
 
     return ss.str().c_str();
@@ -130,7 +132,7 @@ class InvalidType: public std::exception {
   {
     std::stringstream ss;
 
-    ss << "Node with name " << name_ << " and type " << type_ 
+    ss << "Node with name " << name_ << " and type " << type_
         << "cannot be converted to the correct type " << ctype_ << "!";
 
     return ss.str().c_str();

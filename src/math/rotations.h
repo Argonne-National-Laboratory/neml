@@ -9,12 +9,14 @@
 #include <vector>
 #include <string>
 
+#include "../windows.h"
+
 #define CINDEX(i,j,n) (j + i * n)
 
 namespace neml {
 
 /// A generic quaternion, stored as [s v1 v2 v3]
-class Quaternion: public NEMLObject {
+class NEML_EXPORT Quaternion: public NEMLObject {
  public:
   /// Default constructor (manage own memory)
   Quaternion();
@@ -35,7 +37,7 @@ class Quaternion: public NEMLObject {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual ~Quaternion();
-  
+
   /// Copy
   Quaternion & operator=(const Quaternion & rhs);
   /// Move
@@ -106,20 +108,20 @@ static Register<Quaternion> regQuat;
 
 // Binary operators
 /// Scalar multiplication
-Quaternion operator*(double s, const Quaternion & q);
+NEML_EXPORT Quaternion operator*(double s, const Quaternion & q);
 /// Scalar multiplication
-Quaternion operator*(const Quaternion & q, double s);
+NEML_EXPORT Quaternion operator*(const Quaternion & q, double s);
 /// Composition
-Quaternion operator*(const Quaternion & lhs, const Quaternion & rhs);
+NEML_EXPORT Quaternion operator*(const Quaternion & lhs, const Quaternion & rhs);
 /// Scalar division
-Quaternion operator/(const Quaternion & q, double s);
+NEML_EXPORT Quaternion operator/(const Quaternion & q, double s);
 /// Scalar division
-Quaternion operator/(const Quaternion & lhs, const Quaternion & rhs);
+NEML_EXPORT Quaternion operator/(const Quaternion & lhs, const Quaternion & rhs);
 
 /// C++ stream output for quaternions
-std::ostream & operator<<(std::ostream & os, const Quaternion & q);
+NEML_EXPORT std::ostream & operator<<(std::ostream & os, const Quaternion & q);
 
-class Orientation: public Quaternion {
+class NEML_EXPORT Orientation: public Quaternion {
  public:
   /// Type for the object system
   static std::string type();
@@ -143,15 +145,15 @@ class Orientation: public Quaternion {
   static Orientation createAxisAngle(const double * const n, double a,
                                      std::string angles = "radians");
   /// Set from an input axis/angle pair
-  void setAxisAngle(const double * const n, double a, 
+  void setAxisAngle(const double * const n, double a,
                     std::string angles = "radians");
 
   /// Create from various Euler angles
-  static Orientation createEulerAngles(double a, double b, double c, 
+  static Orientation createEulerAngles(double a, double b, double c,
                                        std::string angles = "radians",
                                        std::string convention = "kocks");
   /// Set from inputEuler angles
-  void setEulerAngles(double a, double b, double c, 
+  void setEulerAngles(double a, double b, double c,
                       std::string angles = "radians",
                       std::string convention = "kocks");
 
@@ -159,21 +161,21 @@ class Orientation: public Quaternion {
   static Orientation createHopf(double psi, double theta, double phi,
                                 std::string angles = "radians");
   /// Set from input Hopf coordinates
-  void setHopf(double psi, double theta, double phi, 
+  void setHopf(double psi, double theta, double phi,
                std::string angles = "radians");
 
   /// Create from hyperspherical coordinates
   static Orientation createHyperspherical(double a1, double a2, double a3,
                                           std::string angles = "radians");
   /// Set from input hyperspherical coordinates
-  void setHyperspherical(double a1, double a2, double a3, 
+  void setHyperspherical(double a1, double a2, double a3,
                          std::string angles = "radians");
 
   /// Create from two vectors
   static Orientation createVectors(const Vector & x, const Vector & y);
   /// Set from input two vectors
   void setVectors(const Vector & x, const Vector & y);
-  
+
   // Actual constructors
   /// Default constructor (defaults to identity, manage own memory)
   Orientation();
@@ -186,7 +188,7 @@ class Orientation: public Quaternion {
 
   // Various conversions
   /// Convert to Euler angles
-  void to_euler(double & a, double & b, double & c, 
+  void to_euler(double & a, double & b, double & c,
                 std::string angles = "radians",
                 std::string convention = "kocks") const;
   /// Convert to an axis/angle pair
@@ -202,7 +204,7 @@ class Orientation: public Quaternion {
   void to_hopf(double & alpha, double & beta, double & gamma,
                std::string angles = "radians") const;
   /// Convert to hyperspherical coordinates
-  void to_hyperspherical(double & a1, double & a2, double & a3, 
+  void to_hyperspherical(double & a1, double & a2, double & a3,
                          std::string angles = "radians") const;
 
   // Annoyingly the operators must be for the most part redefined
@@ -253,29 +255,29 @@ static Register<Orientation> regOrientation;
 
 // Binary operators
 /// Compose two rotations
-Orientation operator*(const Orientation & lhs, const Orientation & rhs);
+NEML_EXPORT Orientation operator*(const Orientation & lhs, const Orientation & rhs);
 /// Compose a rotation with the inverse of a rotation
-Orientation operator/(const Orientation & lhs, const Orientation & rhs);
+NEML_EXPORT Orientation operator/(const Orientation & lhs, const Orientation & rhs);
 
 /// Generate n random orientations
 //    This algorithm comes from LaValle, 2006 who I believe grabbed it
 //    from Shoemake, 1992
-std::vector<Orientation> random_orientations(int n);
+NEML_EXPORT std::vector<Orientation> random_orientations(int n);
 
 /// Exponential map of a skew tensor in my convention
-Orientation wexp(const Skew & w);
+NEML_EXPORT Orientation wexp(const Skew & w);
 
 /// Inverse exponential map of a quaternion to a skew tensor in my convention
-Skew wlog(const Orientation & q);
+NEML_EXPORT Skew wlog(const Orientation & q);
 
 /// Geodesic distance
-double distance(const Orientation & q1, const Orientation & q2);
+NEML_EXPORT double distance(const Orientation & q1, const Orientation & q2);
 
 /// Arbitrary rotation from a to b
-Orientation rotate_to(const Vector & a, const Vector & b);
+NEML_EXPORT Orientation rotate_to(const Vector & a, const Vector & b);
 
 /// Family of rotations from a to b parameterized by an angle
-Orientation rotate_to_family(const Vector & a, const Vector & b, double ang);
+NEML_EXPORT Orientation rotate_to_family(const Vector & a, const Vector & b, double ang);
 
 } // namespace neml
 

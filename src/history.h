@@ -4,6 +4,8 @@
 #include "math/tensors.h"
 #include "math/rotations.h"
 
+#include "windows.h"
+
 #include <string>
 #include <map>
 
@@ -31,7 +33,7 @@ template <> constexpr StorageType GetStorageType<double>() {return TYPE_SCALAR;}
 template <> constexpr StorageType GetStorageType<SymSymR4>() {return TYPE_SYMSYM;}
 
 /// Storage size
-const std::map<StorageType,size_t> storage_size = 
+const std::map<StorageType,size_t> storage_size =
   { {TYPE_VECTOR,    3},
     {TYPE_SCALAR,    1},
     {TYPE_RANKTWO,   9},
@@ -54,7 +56,7 @@ const std::map<StorageType,const std::map<StorageType,StorageType>> derivative_t
        {TYPE_ROT,       TYPE_ROT}}}
   };
 
-class History {
+class NEML_EXPORT History {
  public:
   /// Default constructor (manage own memory)
   History();
@@ -85,7 +87,7 @@ class History {
   const double * rawptr() const {return storage_;};
   /// Raw data pointer (nonconst)
   double * rawptr() {return storage_;};
-  
+
   /// Set storage to some external pointer
   void set_data(double * input);
   /// Copy data from some external pointer
@@ -95,7 +97,7 @@ class History {
 
   /// Convert to store
   void make_store();
-  
+
   /// Add a generic object
   template<typename T>
   void add(std::string name)
@@ -105,11 +107,11 @@ class History {
 
   /// Add known object
   void add(std::string name, StorageType type, size_t size);
-  
+
   /// Helper for template magic
   template<class T>
   struct item_return{ typedef T type; };
-  
+
   /// Get an item (provide with correct class)
   template<class T>
   typename item_return<T>::type get(std::string name) const
@@ -125,14 +127,14 @@ class History {
   const std::map<std::string,StorageType> & get_type() const {return type_;};
   /// Get the name order
   const std::vector<std::string> & get_order() const {return order_;};
-  
+
   /// Get the location map
   std::map<std::string,size_t> & get_loc() {return loc_;};
   /// Get the type map
   std::map<std::string,StorageType> & get_type() {return type_;};
   /// Get the order
   std::vector<std::string> & get_order() {return order_;};
-  
+
   const std::vector<std::string> & items() const {return get_order();};
 
   /// Resize method
@@ -146,10 +148,10 @@ class History {
 
   /// Combine another history object through a union
   History & add_union(const History & other);
-  
+
   /// Make a blank copy
   History copy_blank(std::vector<std::string> exclude = {}) const;
-  
+
   /// Copy over the order maps
   void copy_maps(const History & other);
 
@@ -166,7 +168,7 @@ class History {
 
     for (auto item : order_) {
       StorageType ctype = type_.at(item);
-      StorageType ntype = derivative_type.at(ctype).at(dtype); 
+      StorageType ntype = derivative_type.at(ctype).at(dtype);
       deriv.add(item, ntype, storage_size.at(ntype));
     }
 
