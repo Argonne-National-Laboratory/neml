@@ -99,7 +99,7 @@ to call for the material response.
 The :file:`util/` directory contains example bindings of NEML into
 C++, C, and Fortran codes.  The CMake variable ``-D BUILD_UTILS=ON`` option
 compiles these example interfaces.
-During this option on requires a Fortran and C compiler.
+Turing this option on requires a Fortran and C compiler.
 Looking at these examples demonstrates how you can integrate NEML into your
 finite element code.
 

@@ -8,8 +8,8 @@ If you only want to use the python bindings then other compilers, including
 the Microsoft Visual C++ compiler, will likely work.  However,
 if you want to link to Abaqus or ANSYS through the :ref:`external interface <external>`
 then you will need a Fortran compiler, which seems to mean using the Intel
-Fortran compiler for most setups.  At that point you may was well use
-Intel C++ as well.
+Fortran compiler for most setups.  At that point you may as well use
+Intel C++.
 
 When installing Visual Studio include the include "Desktop development with C++"
 and "Python development" options.
@@ -33,7 +33,7 @@ Navigate to where you want to install NEML.  As an example
 
 .. code-block:: console
 
-  cd C:\Users\Mark\source\repos
+  cd C:\Users\SomeUser\source\repos
 
 Use git to checkout the dev branch of NEML:
 
@@ -67,7 +67,7 @@ then select "Path" in the "User variables" category, click "Edit"
 .. image:: path.png
 
 then click "New" and then enter the path to the ``lib`` directory in NEML, here
-this is ``C:\Users\Mark\source\repos\neml\lib``.  Accept all the open dialogs
+this is ``C:\Users\SomeUser\source\repos\neml\lib``.  Accept all the open dialogs
 and you are ready to go.
 
 Python bindings
