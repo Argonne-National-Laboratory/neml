@@ -31,6 +31,13 @@ PYBIND11_MODULE(singlecrystal, m) {
            {
             return m.strength(arr2ptr<double>(h), T);
            }, "Return an effective strength for the model")
+      .def("Fe",
+           [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> stress, py::array_t<double, py::array::c_style> hist, double T) -> py::array_t<double> 
+           {
+            auto Fe = alloc_mat<double>(3,3);
+            m.Fe(arr2ptr<double>(stress), arr2ptr<double>(hist), T, arr2ptr<double>(Fe));
+            return Fe;
+           }, "Return the elastic deformation gradient.")
       .def("get_passive_orientation", 
            [](SingleCrystalModel & m, const History & hist) -> Orientation
            {

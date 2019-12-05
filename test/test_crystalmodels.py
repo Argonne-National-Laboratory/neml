@@ -151,6 +151,22 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.assertTrue(np.isclose(self.model.strength(h, 
       self.T), self.strength_np1 + self.tau0))
 
+  def test_Fe(self):
+    Qc = rotations.Orientation(12.0,35.0,61.0, angle_type = "degrees")
+
+    h = self.model.init_store()
+    h[:4] = Qc.quat
+    h[4] = self.strength_np1
+
+    Fe1 = self.model.Fe(self.stress_np1, h, self.T)
+
+    Re = (Qc * self.Q.inverse()).to_matrix()
+    E = common.usym(np.array(self.emodel.S_tensor(self.T, Qc
+      ).dot(self.S_np1).data)) + np.eye(3)
+    Fe2 = np.dot(E, Re)
+
+    self.assertTrue(np.allclose(Fe1,Fe2, rtol = 1e-3))
+
   def test_nhist(self):
     self.assertEqual(self.model.nstore, 5)
 

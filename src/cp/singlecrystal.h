@@ -71,6 +71,10 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   /// Useful methods for external models that want an idea of an average
   /// strength
   double strength(double * const hist, double T) const;
+
+  /// Used to calculate the Nye tensor
+  void Fe(double * const stress, double * const hist, double T,
+          double * Fe) const;
   
   /// Large deformation incremental update
   virtual int update_ld_inc(
@@ -115,13 +119,13 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   Orientation get_passive_orientation(const History & hist) const;
 
   /// Set the current orientation given an active rotation (crystal to lab)
-  void set_active_orientation(double * const hist, const Orientation & q) const;
+  void set_active_orientation(double * const hist, const Orientation & q);
   /// Set the current orientation given an active rotation (crystal to lab)
-  void set_active_orientation(History & hist, const Orientation & q) const;
+  void set_active_orientation(History & hist, const Orientation & q);
   /// Set the current orientation given a passive rotation (lab to crystal)
-  void set_passive_orientation(double * const hist, const Orientation & q) const;
+  void set_passive_orientation(double * const hist, const Orientation & q);
   /// Set the current orientation given a passive rotation (lab to crystal)
-  void set_passive_orientation(History & hist, const Orientation & q) const;
+  void set_passive_orientation(History & hist, const Orientation & q);
 
  private:
   History gather_history_(double * data) const;

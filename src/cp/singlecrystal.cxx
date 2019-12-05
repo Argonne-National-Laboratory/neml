@@ -77,6 +77,23 @@ double SingleCrystalModel::strength(double * const hist, double T) const
   return kinematics_->strength(h, *lattice_, T);
 }
 
+void SingleCrystalModel::Fe(double * const stress, double * const hist,
+                            double T, double * const Fe) const
+{
+  Symmetric S(stress);
+  RankTwo FE(Fe);
+  const History h = gather_history_(hist);
+ 
+  Orientation Re = h.get<Orientation>("rotation") * (*q0_).inverse();
+  Symmetric estrain = kinematics_->elastic_strains(stress, h.get<Orientation>("rotation"),
+                                                   h, T);
+
+  RankTwo RR;
+  Re.to_matrix(RR.s());
+
+  FE = (Symmetric::id() + estrain) * RR;
+}
+
 int SingleCrystalModel::update_ld_inc(
    const double * const d_np1, const double * const d_n,
    const double * const w_np1, const double * const w_n,
@@ -358,7 +375,7 @@ Orientation SingleCrystalModel::get_passive_orientation(
 }
 
 void SingleCrystalModel::set_active_orientation(
-    double * const hist, const Orientation & q) const
+    double * const hist, const Orientation & q)
 {
   History h = gather_history_(hist);
 
@@ -366,13 +383,18 @@ void SingleCrystalModel::set_active_orientation(
 }
 
 void SingleCrystalModel::set_active_orientation(
-    History & hist, const Orientation & q) const
+    History & hist, const Orientation & q)
 {
   hist.get<Orientation>("rotation") = q;
+  // This may need to be considered carefully, but for the cases of either
+  // 1) Setting initial orientations through an external mechanism
+  // 2) Recrystallization or twinning
+  // resetting the reference angle is correct.
+  q0_ = std::make_shared<Orientation>(q);
 }
 
 void SingleCrystalModel::set_passive_orientation(
-    double * const hist, const Orientation & q) const
+    double * const hist, const Orientation & q)
 {
   History h = gather_history_(hist);
 
@@ -380,9 +402,9 @@ void SingleCrystalModel::set_passive_orientation(
 }
 
 void SingleCrystalModel::set_passive_orientation(
-    History & hist, const Orientation & q) const
+    History & hist, const Orientation & q)
 {
-  hist.get<Orientation>("rotation") = q.inverse();
+  set_active_orientation(hist, q.inverse());
 }
 
 History SingleCrystalModel::gather_history_(double * data) const
