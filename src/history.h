@@ -177,8 +177,8 @@ class NEML_EXPORT History {
     return deriv;
   }
 
-  /// Split a history into a subgroup
-  History split(std::vector<std::string> sep) const;
+  /// Split a history in two
+  History split(std::vector<std::string> sep, bool after = true) const;
 
  private:
   void error_if_exists_(std::string name) const;

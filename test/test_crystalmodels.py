@@ -26,7 +26,7 @@ class CommonTangents(object):
       t_np1 = t_n + self.dt
       d_np1 = d_n + self.Ddir * self.dt
       w_np1 = w_n + self.Wdir * self.dt
-      
+
       s_np1, h_np1, A_np1, B_np1, u_np1, p_np1 = model.update_ld_inc(
           d_np1, d_n, w_np1, w_n, self.T, self.T, t_np1, t_n, s_n, h_n,
           u_n, p_n)

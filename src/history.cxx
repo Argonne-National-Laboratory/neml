@@ -239,7 +239,7 @@ void History::zero()
   std::fill(storage_, storage_+size_, 0.0);
 }
 
-History History::split(std::vector<std::string> sep) const
+History History::split(std::vector<std::string> sep, bool after) const
 {
   // Check to see if the groups are contiguous and get the offset
   size_t i;
@@ -249,23 +249,40 @@ History History::split(std::vector<std::string> sep) const
     }
   }
 
-  History sub(false);
-
+  History res(false);
+  
   // Move the maps
-  for (size_t j = i; j < order_.size(); j++) {
-    sub.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
+  if (after) {
+    for (size_t j = i; j < order_.size(); j++) {
+      res.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
+    }
+  }
+  else {
+    for (size_t j = 0; j < i; j++) {
+      res.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
+    }
   }
 
   // Either copy or just split, depending on if we own data
   if (store_) {
-    sub.make_store();
-    sub.copy_data(&storage_[loc_.at(order_[i])]);
+    res.make_store();
+    if (after) {
+      res.copy_data(&storage_[loc_.at(order_[i])]);
+    }
+    else {
+      res.copy_data(&storage_[loc_.at(order_[0])]);
+    }
   }
   else {
-    sub.set_data(&storage_[loc_.at(order_[i])]);
+    if (after) {
+      res.set_data(&storage_[loc_.at(order_[i])]);
+    }
+    else {
+      res.set_data(&storage_[loc_.at(order_[0])]);
+    }
   }
-  
-  return sub;
+
+  return res;
 }
 
 } // namespace neml

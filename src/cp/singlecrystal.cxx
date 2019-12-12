@@ -134,10 +134,11 @@ int SingleCrystalModel::update_ld_inc(
   // As the update is decoupled, split the histories into hardening/
   // orientation groups
   Orientation Q_n = HF_n.get<Orientation>("rotation");
-
+  
   History H_np1 = HF_np1.split({"rotation"});
   History H_n = HF_n.split({"rotation"});
-  
+  History F_n = HF_n.split({"rotation"}, false);
+
   /* Begin adaptive stepping */
   double dT = T_np1 - T_n;
   int progress = 0;
@@ -153,8 +154,9 @@ int SingleCrystalModel::update_ld_inc(
     double step = 1.0 / pow(2, subdiv);
 
     // Decouple the updates
-    History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
-                                          local_lattice, T_n + dT * step);
+    History fixed = (kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
+                                          local_lattice, T_n + dT *
+                                          step)).add_union(F_n);
 
     // Set the trial state
     SCTrialState trial(D, W,
