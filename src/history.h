@@ -180,6 +180,9 @@ class NEML_EXPORT History {
   /// Split a history in two
   History split(std::vector<std::string> sep, bool after = true) const;
 
+  /// Quick function to check to see if something is in the vector
+  bool contains(std::string name) const;
+
  private:
   void error_if_exists_(std::string name) const;
   void error_if_not_exists_(std::string name) const;

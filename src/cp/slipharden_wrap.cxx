@@ -19,6 +19,7 @@ PYBIND11_MODULE(slipharden, m) {
       .def("hist", &SlipHardening::hist)
       .def("d_hist_d_s", &SlipHardening::d_hist_d_s)
       .def("d_hist_d_h", &SlipHardening::d_hist_d_h)
+      .def_property_readonly("use_nye", &SlipHardening::use_nye)
       ;
 
   py::class_<SlipSingleHardening, SlipHardening,

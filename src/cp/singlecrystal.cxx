@@ -62,19 +62,27 @@ std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params
 void SingleCrystalModel::populate_history(History & history) const
 {
   history.add<Orientation>("rotation");
+  if (use_nye()) {
+    history.add<RankTwo>("nye");
+  }
   kinematics_->populate_history(history);
 }
 
 void SingleCrystalModel::init_history(History & history) const
 {
   history.get<Orientation>("rotation") = *q0_;
+  if (use_nye()) {
+    history.get<RankTwo>("nye") = RankTwo({0,0,0,0,0,0,0,0,0});
+  }
   kinematics_->init_history(history);
 }
 
 double SingleCrystalModel::strength(double * const hist, double T) const
 {
-  History h = gather_history_(hist);
-  return kinematics_->strength(h, *lattice_, T);
+  History h_total = gather_history_(hist);
+  History h = h_total.split(not_updated_());
+  History f = h_total.split(not_updated_(), false);
+  return kinematics_->strength(h, *lattice_, T, f);
 }
 
 void SingleCrystalModel::Fe(double * const stress, double * const hist,
@@ -135,9 +143,9 @@ int SingleCrystalModel::update_ld_inc(
   // orientation groups
   Orientation Q_n = HF_n.get<Orientation>("rotation");
   
-  History H_np1 = HF_np1.split({"rotation"});
-  History H_n = HF_n.split({"rotation"});
-  History F_n = HF_n.split({"rotation"}, false);
+  History H_np1 = HF_np1.split(not_updated_());
+  History H_n = HF_n.split(not_updated_());
+  History F_n = HF_n.split(not_updated_(), false);
 
   /* Begin adaptive stepping */
   double dT = T_np1 - T_n;
@@ -154,16 +162,16 @@ int SingleCrystalModel::update_ld_inc(
     double step = 1.0 / pow(2, subdiv);
 
     // Decouple the updates
-    History fixed = (kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
+    History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
                                           local_lattice, T_n + dT *
-                                          step)).add_union(F_n);
+                                          step, F_n);
 
     // Set the trial state
     SCTrialState trial(D, W,
                        S_np1, H_np1, // Yes, really
                        Q_n, local_lattice,
                        T_n + dT * step, dt * step,
-                       S_np1, H_np1, fixed);
+                       fixed);
 
     // Solve the update
     int ier = solve_substep_(&trial, S_np1, H_np1);
@@ -268,8 +276,8 @@ size_t SingleCrystalModel::nparams() const
 int SingleCrystalModel::init_x(double * const x, TrialState * ts)
 {
   SCTrialState * ats = static_cast<SCTrialState*>(ts);
-  std::copy(ats->s_guess.data(), ats->s_guess.data()+6, x);
-  std::copy(ats->h_guess.rawptr(), ats->h_guess.rawptr()+ats->history.size(), &x[6]);
+  std::copy(ats->S.data(), ats->S.data()+6, x);
+  std::copy(ats->history.rawptr(), ats->history.rawptr()+ats->history.size(), &x[6]);
   return 0;
 }
 
@@ -407,6 +415,18 @@ void SingleCrystalModel::set_passive_orientation(
     History & hist, const Orientation & q)
 {
   set_active_orientation(hist, q.inverse());
+}
+
+bool SingleCrystalModel::use_nye() const
+{
+  return kinematics_->use_nye();
+}
+
+void SingleCrystalModel::update_nye(const double * const nye, 
+                                    double * const hist) const
+{
+  History h = gather_history_(hist);
+  h.get<RankTwo>("nye") = RankTwo(nye);
 }
 
 History SingleCrystalModel::gather_history_(double * data) const
@@ -578,7 +598,8 @@ void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
 Orientation SingleCrystalModel::update_rot_(Symmetric & S_np1, History & H_np1,
                                             SCTrialState * ts) const
 {
-  Skew spin = kinematics_->spin(S_np1, ts->d, ts->w, ts->Q, H_np1, ts->lattice, ts->T);
+  Skew spin = kinematics_->spin(S_np1, ts->d, ts->w, ts->Q, H_np1, ts->lattice, ts->T,
+                                ts->fixed);
   return wexp(spin * ts->dt) * ts->Q;
 }
 
@@ -622,6 +643,16 @@ int SingleCrystalModel::solve_substep_(SCTrialState * ts,
   hist.copy_data(&x[6]);
 
   return ier;
+}
+
+std::vector<std::string> SingleCrystalModel::not_updated_() const
+{
+  if (use_nye()) {
+    return {"rotation", "nye"};
+  }
+  else {
+    return {"rotation"};
+  }
 }
 
 } // namespace neml

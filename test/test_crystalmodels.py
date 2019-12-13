@@ -131,10 +131,11 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
 
     self.dt = 2.0
 
-    self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, self.H_n, self.L, self.T)
+    self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, 
+        self.H_n, self.L, self.T, history.History())
 
     self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
-        self.S_n, self.H_n, self.fixed)
+        self.fixed)
 
     self.x = np.zeros((self.model.nparams,))
     self.x[:6] = self.stress_np1
@@ -285,10 +286,11 @@ class TestComplicatedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
 
     self.dt = 2.0
 
-    self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, self.H_n, self.L, self.T)
+    self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, self.H_n, self.L, self.T,
+        history.History())
 
     self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
-        self.S_n, self.H_n, self.fixed)
+        self.fixed)
 
     self.x = np.zeros((self.model.nparams,))
     self.x[:6] = self.stress_np1

@@ -17,6 +17,10 @@ class TestBasicAddGet(unittest.TestCase):
     self.hist.add_skew("E")
     self.hist.add_orientation("q")
 
+  def test_exists(self):
+    self.assertTrue(self.hist.contains("a"))
+    self.assertFalse(self.hist.contains("alsd"))
+
   def test_get_correct(self):
     a = self.hist.get_scalar("a")
     b = self.hist.get_vector("b")

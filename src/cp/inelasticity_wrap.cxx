@@ -25,6 +25,7 @@ PYBIND11_MODULE(inelasticity, m) {
       .def("w_p", &InelasticModel::w_p)
       .def("d_w_p_d_stress", &InelasticModel::d_w_p_d_stress)
       .def("d_w_p_d_history", &InelasticModel::d_w_p_d_history)
+      .def_property_readonly("use_nye", &InelasticModel::use_nye)
       ;
 
   py::class_<NoInelasticity, InelasticModel, std::shared_ptr<NoInelasticity>>(m,

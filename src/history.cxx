@@ -207,6 +207,11 @@ void History::copy_maps(const History & other)
   order_.assign(other.get_order().begin(), other.get_order().end());
 }
 
+bool History::contains(std::string name) const
+{
+  return (loc_.count(name) == 1);
+}
+
 void History::error_if_exists_(std::string name) const
 {
   if (loc_.count(name) != 0) {
