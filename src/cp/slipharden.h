@@ -254,6 +254,7 @@ class NEML_EXPORT VoceSlipHardening: public PlasticSlipHardening
   VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
                     std::shared_ptr<Interpolate> b,
                     std::shared_ptr<Interpolate> tau_0,
+                    std::shared_ptr<Interpolate> k,
                     std::string var_name = "strength");
 
   /// String type for the object system
@@ -276,10 +277,17 @@ class NEML_EXPORT VoceSlipHardening: public PlasticSlipHardening
   virtual double d_hist_factor(double strength, Lattice & L, double T,
                                const History & fixed) const;
 
+  /// Dynamically determine if we're going to use the Nye tensor
+  virtual bool use_nye() const;
+
+  /// Actual nye contribution
+  virtual double nye_part(const RankTwo & nye, double T) const;
+
  private:
   std::shared_ptr<Interpolate> tau_sat_;
   std::shared_ptr<Interpolate> b_;
   std::shared_ptr<Interpolate> tau_0_;
+  std::shared_ptr<Interpolate> k_;
 };
 
 static Register<VoceSlipHardening> regVoceSlipHardening;

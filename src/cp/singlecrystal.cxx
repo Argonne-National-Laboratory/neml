@@ -422,11 +422,11 @@ bool SingleCrystalModel::use_nye() const
   return kinematics_->use_nye();
 }
 
-void SingleCrystalModel::update_nye(const double * const nye, 
-                                    double * const hist) const
+void SingleCrystalModel::update_nye(double * const hist,
+                                    const double * const nye) const
 {
   History h = gather_history_(hist);
-  h.get<RankTwo>("nye") = RankTwo(nye);
+  h.get<RankTwo>("nye") = RankTwo(std::vector<double>(nye,nye+9));
 }
 
 History SingleCrystalModel::gather_history_(double * data) const

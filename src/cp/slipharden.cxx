@@ -299,8 +299,10 @@ History PlasticSlipHardening::d_hist_rate_d_hist(
 VoceSlipHardening::VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
                                      std::shared_ptr<Interpolate> b,
                                      std::shared_ptr<Interpolate> tau_0,
+                                     std::shared_ptr<Interpolate> k,
                                      std::string var_name) :
-    PlasticSlipHardening(var_name), tau_sat_(tau_sat), b_(b), tau_0_(tau_0)
+    PlasticSlipHardening(var_name), tau_sat_(tau_sat), b_(b), tau_0_(tau_0), 
+    k_(k)
 {
   
 }
@@ -316,7 +318,8 @@ std::unique_ptr<NEMLObject> VoceSlipHardening::initialize(
   return neml::make_unique<VoceSlipHardening>(
       params.get_object_parameter<Interpolate>("tau_sat"),
       params.get_object_parameter<Interpolate>("b"),
-      params.get_object_parameter<Interpolate>("tau_0"));
+      params.get_object_parameter<Interpolate>("tau_0"),
+      params.get_object_parameter<Interpolate>("k"));
 }
 
 ParameterSet VoceSlipHardening::parameters()
@@ -326,6 +329,9 @@ ParameterSet VoceSlipHardening::parameters()
   pset.add_parameter<NEMLObject>("tau_sat");
   pset.add_parameter<NEMLObject>("b");
   pset.add_parameter<NEMLObject>("tau_0");
+
+  pset.add_optional_parameter<NEMLObject>("k", 
+                                    std::make_shared<ConstantInterpolate>(0));
 
   return pset;
 }
@@ -355,6 +361,27 @@ double VoceSlipHardening::d_hist_factor(double strength, Lattice & L, double T,
   double b = b_->value(T);
 
   return -b;
+}
+
+bool VoceSlipHardening::use_nye() const
+{
+  bool is_constant = true;
+  try {
+    auto cnst = std::dynamic_pointer_cast<ConstantInterpolate>(k_);
+  }
+  catch (std::bad_cast e) {
+    is_constant = false;
+  }
+
+  if (is_constant and (k_->value(0) == 0.0)) {
+    return false;
+  }
+  return true;
+}
+
+double VoceSlipHardening::nye_part(const RankTwo & nye, double T) const
+{
+  return k_->value(T) * nye.norm();
 }
 
 } // namespace neml

@@ -85,9 +85,9 @@ PYBIND11_MODULE(singlecrystal, m) {
            }, "Set the orientation using a active rotation (crystal -> sample)")
       .def_property_readonly("use_nye", &SingleCrystalModel::use_nye)
       .def("update_nye",
-           [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> nye, py::array_t<double, py::array::c_style> hist)
+           [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> hist, py::array_t<double, py::array::c_style> nye)
            {
-            m.update_nye(arr2ptr<double>(nye), arr2ptr<double>(hist));
+            m.update_nye(arr2ptr<double>(hist), arr2ptr<double>(nye));
            }, "Update the history with the current Nye tensor.")
     ;
 }

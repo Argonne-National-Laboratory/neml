@@ -128,7 +128,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   virtual bool use_nye() const;
 
   /// Actually update the Nye tensor
-  void update_nye(const double * const nye, double * const hist) const;
+  void update_nye(double * const hist, const double * const nye) const;
 
  private:
   History gather_history_(double * data) const;
