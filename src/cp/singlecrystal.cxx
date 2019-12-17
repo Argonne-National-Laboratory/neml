@@ -93,11 +93,12 @@ void SingleCrystalModel::Fe(double * const stress, double * const hist,
   Symmetric S(stress);
   RankTwo FE(Fe);
   const History h = gather_history_(hist);
- 
-  Orientation Re = h.get<Orientation>("rotation") * h.get<Orientation>("rotation0").inverse();
-  Symmetric estrain = kinematics_->elastic_strains(stress, h.get<Orientation>("rotation"),
-                                                   h, T);
 
+  Orientation Q = h.get<Orientation>("rotation").deepcopy();
+  Orientation Q0 = h.get<Orientation>("rotation0").deepcopy();
+ 
+  Orientation Re = Q * Q0.inverse();
+  Symmetric estrain = kinematics_->elastic_strains(stress, Q, h, T);
   RankTwo RR;
   Re.to_matrix(RR.s());
 
