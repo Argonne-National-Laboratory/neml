@@ -224,6 +224,11 @@ int SingleCrystalModel::update_ld_inc(
   }
   /* End adaptive stepping */
 
+  /// If we store the Nye tensor just copy it over
+  if (use_nye()) {
+    HF_np1.get<RankTwo>("nye") = HF_n.get<RankTwo>("nye");
+  }
+
   // Calculate the new energy
   u_np1 = u_n + calc_energy_inc_(D_np1, D_n, S_np1, S_n);
   
