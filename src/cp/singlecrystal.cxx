@@ -217,7 +217,7 @@ int SingleCrystalModel::update_ld_inc(
         else {
           HF_np1.get<Orientation>("rotation") = Q_n;
         }
-        HF_np1.get<Orientation>("rotation0") = HF_n.get<Orientation>("rotation0");
+        //HF_np1.get<Orientation>("rotation0") = HF_n.get<Orientation>("rotation0");
       }
 
     }
@@ -226,7 +226,7 @@ int SingleCrystalModel::update_ld_inc(
 
   /// If we store the Nye tensor just copy it over
   if (use_nye()) {
-    HF_np1.get<RankTwo>("nye") = HF_n.get<RankTwo>("nye");
+    //HF_np1.get<RankTwo>("nye") = HF_n.get<RankTwo>("nye");
   }
 
   // Calculate the new energy
@@ -242,8 +242,7 @@ int SingleCrystalModel::update_ld_inc(
 
 size_t SingleCrystalModel::nhist() const
 {
-  const History h = gather_blank_history_();
-  return h.size();
+  return stored_hist_.size();
 }
 
 int SingleCrystalModel::init_hist(double * const hist) const
