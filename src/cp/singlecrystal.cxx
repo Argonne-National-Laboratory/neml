@@ -62,6 +62,7 @@ std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params
 void SingleCrystalModel::populate_history(History & history) const
 {
   history.add<Orientation>("rotation");
+  history.add<Orientation>("rotation0");
   if (use_nye()) {
     history.add<RankTwo>("nye");
   }
@@ -71,6 +72,7 @@ void SingleCrystalModel::populate_history(History & history) const
 void SingleCrystalModel::init_history(History & history) const
 {
   history.get<Orientation>("rotation") = *q0_;
+  history.get<Orientation>("rotation0") = *q0_;
   if (use_nye()) {
     history.get<RankTwo>("nye") = RankTwo({0,0,0,0,0,0,0,0,0});
   }
@@ -92,7 +94,7 @@ void SingleCrystalModel::Fe(double * const stress, double * const hist,
   RankTwo FE(Fe);
   const History h = gather_history_(hist);
  
-  Orientation Re = h.get<Orientation>("rotation") * (*q0_).inverse();
+  Orientation Re = h.get<Orientation>("rotation") * h.get<Orientation>("rotation0").inverse();
   Symmetric estrain = kinematics_->elastic_strains(stress, h.get<Orientation>("rotation"),
                                                    h, T);
 
@@ -215,6 +217,7 @@ int SingleCrystalModel::update_ld_inc(
         else {
           HF_np1.get<Orientation>("rotation") = Q_n;
         }
+        HF_np1.get<Orientation>("rotation0") = HF_n.get<Orientation>("rotation0");
       }
 
     }
@@ -269,8 +272,13 @@ int SingleCrystalModel::elastic_strains(
 
 size_t SingleCrystalModel::nparams() const
 {
-  // 6 stress + the history minus the rotation
-  return 6 + nhist() - 4;
+  // 6 stress + the history minus the rotations minus the nye tensor
+  if (use_nye()) {
+    return 6 + nhist() - 8 - 9;
+  }
+  else {
+    return 6 + nhist() - 8;
+  }
 }
 
 int SingleCrystalModel::init_x(double * const x, TrialState * ts)
@@ -400,7 +408,7 @@ void SingleCrystalModel::set_active_orientation(
   // 1) Setting initial orientations through an external mechanism
   // 2) Recrystallization or twinning
   // resetting the reference angle is correct.
-  q0_ = std::make_shared<Orientation>(q);
+  hist.get<Orientation>("rotation0") = q;
 }
 
 void SingleCrystalModel::set_passive_orientation(
@@ -425,8 +433,10 @@ bool SingleCrystalModel::use_nye() const
 void SingleCrystalModel::update_nye(double * const hist,
                                     const double * const nye) const
 {
-  History h = gather_history_(hist);
-  h.get<RankTwo>("nye") = RankTwo(std::vector<double>(nye,nye+9));
+  if (use_nye()) {
+    History h = gather_history_(hist);
+    h.get<RankTwo>("nye") = RankTwo(std::vector<double>(nye,nye+9));
+  }
 }
 
 History SingleCrystalModel::gather_history_(double * data) const
@@ -648,10 +658,10 @@ int SingleCrystalModel::solve_substep_(SCTrialState * ts,
 std::vector<std::string> SingleCrystalModel::not_updated_() const
 {
   if (use_nye()) {
-    return {"rotation", "nye"};
+    return {"rotation", "rotation0", "nye"};
   }
   else {
-    return {"rotation"};
+    return {"rotation", "rotation0"};
   }
 }
 

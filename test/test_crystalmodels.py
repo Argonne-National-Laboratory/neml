@@ -148,7 +148,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
 
   def test_strength(self):
     h = self.model.init_store()
-    h[4] = self.strength_np1
+    h[8] = self.strength_np1
     self.assertTrue(np.isclose(self.model.strength(h, 
       self.T), self.strength_np1 + self.tau0))
 
@@ -157,7 +157,8 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
 
     h = self.model.init_store()
     h[:4] = Qc.quat
-    h[4] = self.strength_np1
+    h[4:8] = self.Q.quat
+    h[8] = self.strength_np1
 
     Fe1 = self.model.Fe(self.stress_np1, h, self.T)
 
@@ -169,13 +170,14 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.assertTrue(np.allclose(Fe1,Fe2, rtol = 1e-3))
 
   def test_nhist(self):
-    self.assertEqual(self.model.nstore, 5)
+    self.assertEqual(self.model.nstore, 9)
 
   def test_init_hist(self):
     h = self.model.init_store()
     
     self.assertTrue(np.allclose(h[:4], self.Q.quat))
-    self.assertTrue(np.isclose(h[4],0.0))
+    self.assertTrue(np.allclose(h[4:8], self.Q.quat))
+    self.assertTrue(np.isclose(h[8],0.0))
 
   def test_residual(self):
     R, J = self.model.RJ(self.x, self.ts)
@@ -225,7 +227,6 @@ class TestComplicatedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
           slipharden.VoceSlipHardening(self.tau_sat_1, self.b_1, self.tau0_1)
           ])
 
-    
     self.g0 = 1.0
     self.n = 3.0
     self.slipmodel = sliprules.PowerLawSlipRule(self.strengthmodel, self.g0, self.n)
@@ -302,7 +303,7 @@ class TestComplicatedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.nsteps = 10
 
   def test_nhist(self):
-    self.assertEqual(self.model.nstore, 6)
+    self.assertEqual(self.model.nstore, 10)
 
 class TestNyeStuffCrystal(unittest.TestCase):
   def setUp(self):
@@ -389,14 +390,13 @@ class TestNyeStuffCrystal(unittest.TestCase):
     self.nye = np.array([[0.01,0.02,0.03],[1.2,1.1,1.3],[0.8,0.9,1.0]])
 
   def test_nhist(self):
-    self.assertEqual(self.model.nstore, 14)
+    self.assertEqual(self.model.nstore, 18)
 
   def test_use_nye(self):
     self.assertTrue(self.model.use_nye)
 
   def test_set_nye(self):
     h = self.model.init_store()
-    self.assertTrue(np.allclose(h[4:13], np.zeros((3,3)).flatten()))
+    self.assertTrue(np.allclose(h[8:17], np.zeros((3,3)).flatten()))
     self.model.update_nye(h, self.nye)
-    print(h)
-    self.assertTrue(np.allclose(h[4:13], self.nye.flatten()))
+    self.assertTrue(np.allclose(h[8:17], self.nye.flatten()))
