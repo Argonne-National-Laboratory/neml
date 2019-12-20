@@ -366,15 +366,13 @@ size_t Lattice::flat(size_t g, size_t i) const
   return offsets_[g] + i;
 }
 
-Symmetric Lattice::M(size_t g, size_t i, const Orientation & Q)
+const Symmetric & Lattice::M(size_t g, size_t i, const Orientation & Q)
 {
   cache_rot_(Q);
   return Ms_[g][i];
-  return Q.apply(Symmetric(outer(slip_directions_[g][i],
-                                 slip_planes_[g][i])));
 }
 
-Skew Lattice::N(size_t g, size_t i, const Orientation & Q)
+const Skew & Lattice::N(size_t g, size_t i, const Orientation & Q)
 {
   cache_rot_(Q);
   return Ns_[g][i];
