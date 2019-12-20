@@ -6,6 +6,7 @@ from neml.math import rotations, tensors
 
 import unittest
 import numpy as np
+import numpy.linalg as la
 
 import common
 
@@ -165,7 +166,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     Re = (Qc * self.Q.inverse()).to_matrix()
     E = common.usym(np.array(self.emodel.S_tensor(self.T, Qc
       ).dot(self.S_np1).data)) + np.eye(3)
-    Fe2 = np.dot(E, Re)
+    Fe2 = la.inv(np.dot(E, Re))
 
     self.assertTrue(np.allclose(Fe1,Fe2, rtol = 1e-3))
 

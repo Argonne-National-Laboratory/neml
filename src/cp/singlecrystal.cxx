@@ -102,7 +102,7 @@ void SingleCrystalModel::Fe(double * const stress, double * const hist,
   RankTwo RR;
   Re.to_matrix(RR.s());
 
-  FE = (Symmetric::id() + estrain) * RR;
+  FE = ((Symmetric::id() + estrain) * RR).inverse();
 }
 
 int SingleCrystalModel::update_ld_inc(
