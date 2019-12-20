@@ -140,6 +140,9 @@ class NEML_EXPORT History {
   /// Resize method
   void resize(size_t inc);
 
+  /// Actually increase internal storage
+  void increase_store(size_t newsize);
+
   /// Multiply everything by a scalar
   void scalar_multiply(double scalar);
 
@@ -162,9 +165,19 @@ class NEML_EXPORT History {
   template<class T>
   History derivative() const
   {
-    History deriv;
-
     StorageType dtype = GetStorageType<T>();
+
+    // Precalculate size that will be needed
+    size_t nsize = 0;
+    for (auto item : order_) {
+      StorageType ctype = type_.at(item);
+      StorageType ntype = derivative_type.at(ctype).at(dtype);
+      nsize += storage_size.at(ntype);
+    }
+    
+    // Cost of moving memory was actually quite high...
+    History deriv;
+    deriv.increase_store(nsize);
 
     for (auto item : order_) {
       StorageType ctype = type_.at(item);
@@ -190,6 +203,7 @@ class NEML_EXPORT History {
 
  private:
   size_t size_;
+  size_t storesize_;
   bool store_;
   double * storage_;
 

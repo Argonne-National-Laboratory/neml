@@ -7,26 +7,26 @@
 namespace neml {
 
 History::History() :
-    size_(0), store_(true)
+    size_(0), storesize_(0), store_(true)
 {
-  storage_ = new double [size_];
+  storage_ = new double [storesize_];
   zero();
 }
 
 History::History(bool store) :
-    size_(0), store_(store)
+    size_(0), storesize_(0), store_(store)
 {
   if (store) {
-    storage_ = new double [size_];
+    storage_ = new double [storesize_];
     zero();
   }
 }
 
 History::History(const History & other) :
-    size_(other.size()), store_(other.store())
+    size_(other.size()), storesize_(other.size()), store_(other.store())
 {
   if (store_) {
-    storage_ = new double[size_];
+    storage_ = new double[storesize_];
     std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   }
   else {
@@ -36,10 +36,10 @@ History::History(const History & other) :
 }
 
 History::History(const History && other) :
-    size_(other.size()), store_(other.store())
+    size_(other.size()), storesize_(other.size()), store_(other.store())
 {
   if (store_) {
-    storage_ = new double[size_];
+    storage_ = new double[storesize_];
     std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   }
   else {
@@ -49,13 +49,13 @@ History::History(const History && other) :
 }
 
 History::History(double * data) :
-    size_(0), store_(false)
+    size_(0), storesize_(0), store_(false)
 {
   storage_ = data;
 }
 
 History::History(const double * data) :
-    size_(0), store_(false)
+    size_(0), storesize_(0), store_(false)
 {
   storage_ = const_cast<double*>(data);
 }
@@ -142,7 +142,8 @@ void History::make_store()
   if (store_) return;
 
   store_ = true;
-  storage_ = new double [size_];
+  storesize_ = size_;
+  storage_ = new double [storesize_];
 }
 
 void History::add(std::string name, StorageType type, size_t size)
@@ -157,12 +158,20 @@ void History::add(std::string name, StorageType type, size_t size)
 void History::resize(size_t inc)
 {
   if (store_) {
-    double * newstore = new double [size_+inc];
-    std::copy(storage_, storage_+size_, newstore);
-    delete [] storage_;
-    storage_ = newstore;
+    if ((size_ + inc) > storesize_) {
+      increase_store((size_ + inc));
+    }
   }
   size_ += inc;
+}
+
+void History::increase_store(size_t newsize)
+{
+  storesize_ = newsize;
+  double * newstore = new double[newsize];
+  std::copy(storage_, storage_+size_, newstore);
+  delete [] storage_;
+  storage_ = newstore;
 }
 
 void History::scalar_multiply(double scalar)
