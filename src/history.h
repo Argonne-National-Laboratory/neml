@@ -194,7 +194,7 @@ class NEML_EXPORT History {
   History split(std::vector<std::string> sep, bool after = true) const;
 
   /// Quick function to check to see if something is in the vector
-  bool contains(std::string name) const;
+  inline bool contains(std::string name) const { return loc_.count(name) == 1;};
 
  private:
   void error_if_exists_(std::string name) const;

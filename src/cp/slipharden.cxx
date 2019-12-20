@@ -105,6 +105,8 @@ void SlipSingleStrengthHardening::set_variable(std::string name)
 double SlipSingleStrengthHardening::nye_contribution(const History & fixed,
                                                      double T) const 
 {
+  if (not use_nye()) return 0;
+
   if (fixed.contains("nye")) {
     return nye_part(fixed.get<RankTwo>("nye"), T);
   }

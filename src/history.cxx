@@ -216,14 +216,9 @@ void History::copy_maps(const History & other)
   order_.assign(other.get_order().begin(), other.get_order().end());
 }
 
-bool History::contains(std::string name) const
-{
-  return (loc_.count(name) == 1);
-}
-
 void History::error_if_exists_(std::string name) const
 {
-  if (loc_.count(name) != 0) {
+  if (contains(name)) {
     std::stringstream ss;
     ss << "History variable name " << name << " already stored." << std::endl;
     throw std::runtime_error(ss.str());
@@ -232,7 +227,8 @@ void History::error_if_exists_(std::string name) const
 
 void History::error_if_not_exists_(std::string name) const
 {
-  if (loc_.count(name) != 1) {
+  // This is a huge time drain
+  if (not contains(name)) {
     std::stringstream ss;
     ss << "No history variable named " << name << " is stored." << std::endl;
     throw std::runtime_error(ss.str());
@@ -241,6 +237,7 @@ void History::error_if_not_exists_(std::string name) const
 
 void History::error_if_wrong_type_(std::string name, StorageType type) const
 {
+  // This is a huge time drain
   if (type != type_.at(name)) {
     std::stringstream ss;
     ss << name << " is not of the type requested." << std::endl;

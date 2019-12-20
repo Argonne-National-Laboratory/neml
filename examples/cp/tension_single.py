@@ -83,5 +83,5 @@ if __name__ == "__main__":
     p_n = p_np1
   
   print(s[-1])
-  #plt.plot(e, s)
-  #plt.show()
+  plt.plot(e, s)
+  plt.show()
