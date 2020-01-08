@@ -88,6 +88,59 @@ double PowerLawCreep::n(double T) const
   return n_->value(T);
 }
 
+// Implementation of power law creep
+NormalizedPowerLawCreep::NormalizedPowerLawCreep(std::shared_ptr<Interpolate> s0,
+                             std::shared_ptr<Interpolate> n) :
+    s0_(s0), n_(n)
+{
+
+}
+
+std::string NormalizedPowerLawCreep::type()
+{
+  return "NormalizedPowerLawCreep";
+}
+
+ParameterSet NormalizedPowerLawCreep::parameters()
+{
+  ParameterSet pset(NormalizedPowerLawCreep::type());
+
+  pset.add_parameter<NEMLObject>("s0");
+  pset.add_parameter<NEMLObject>("n");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> NormalizedPowerLawCreep::initialize(ParameterSet & params)
+{
+  return neml::make_unique<NormalizedPowerLawCreep>(
+      params.get_object_parameter<Interpolate>("s0"),
+      params.get_object_parameter<Interpolate>("n")
+      ); 
+}
+
+
+int NormalizedPowerLawCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  g = pow(seq / s0_->value(T), n_->value(T));
+  return 0;
+}
+
+int NormalizedPowerLawCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  double nv = n_->value(T);
+  double s0v = s0_->value(T);
+
+  dg = nv / s0v * pow(seq / s0v, nv - 1.0);
+  return 0;
+}
+
+int NormalizedPowerLawCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
 // Implementation of the Blackburn minimum creep rate equation
 BlackburnMinimumCreep::BlackburnMinimumCreep(
     std::shared_ptr<Interpolate> A,

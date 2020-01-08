@@ -70,6 +70,23 @@ class TestPowerLawCreep(unittest.TestCase, CommonScalarCreep):
     g_calc = self.A * self.s ** (self.n)
     self.assertTrue(np.isclose(g_direct, g_calc))
 
+class TestNormalizedPowerLawCreep(unittest.TestCase, CommonScalarCreep):
+  def setUp(self):
+    self.s0 = 500.0
+    self.n = 3.0
+
+    self.model = creep.NormalizedPowerLawCreep(self.s0, self.n) 
+
+    self.T = 300.0
+    self.e = 0.1
+    self.s = 150.0
+    self.t = 10.0
+
+  def test_g(self):
+    g_direct = self.model.g(self.s, self.e, self.t, self.T)
+    g_calc = (self.s / self.s0) ** (self.n)
+    self.assertTrue(np.isclose(g_direct, g_calc))
+
 class TestBlackburnMinimumCreep(unittest.TestCase, CommonScalarCreep):
   def setUp(self):
     self.A = 1.0e-6

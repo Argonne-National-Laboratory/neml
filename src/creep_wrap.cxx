@@ -157,6 +157,13 @@ PYBIND11_MODULE(creep, m) {
       .def("n", &PowerLawCreep::n)
     ;
 
+  py::class_<NormalizedPowerLawCreep, ScalarCreepRule, std::shared_ptr<NormalizedPowerLawCreep>>(m, "NormalizedPowerLawCreep")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<NormalizedPowerLawCreep>(args, kwargs, {"s0", "n"});
+        }))
+    ;
+
   py::class_<BlackburnMinimumCreep, ScalarCreepRule, std::shared_ptr<BlackburnMinimumCreep>>(m, "BlackburnMinimumCreep")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {

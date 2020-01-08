@@ -20,6 +20,7 @@ Implementations
 .. toctree::
 
    s_power
+   s_normpower
    s_km
    s_norton
    s_mukherjee
