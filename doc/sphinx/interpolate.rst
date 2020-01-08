@@ -43,6 +43,18 @@ Expresses a constant parameter
    :members:
    :undoc-members:
 
+GenericPiecewiseInterpolate
+---------------------------
+
+A general piecewise interpolate.  If :math:`x \le p_i` then it
+calls interpolation function :math:`f_i`. 
+For :math:`x > p_i` it calls interpolation function
+:math:`f_{i+1}`.
+
+.. doxygenclass:: neml::GenericPiecewiseInterpolate
+   :members:
+   :undoc-members:
+
 PolynomialInterpolate
 ---------------------
 
