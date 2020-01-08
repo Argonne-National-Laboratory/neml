@@ -285,9 +285,10 @@ int SwindemanMinimumCreep::dg_dT(double seq, double eeq, double t, double T, dou
 }
 
 // Implementation of the mechanism switching model
-RegionKMCreep::RegionKMCreep(std::vector<double> cuts, std::vector<double> A, 
-                             std::vector<double> B, double kboltz, double b,
-                             double eps0, 
+RegionKMCreep::RegionKMCreep(std::vector<double> cuts, 
+                             std::vector<std::shared_ptr<Interpolate>> A, 
+                             std::vector<std::shared_ptr<Interpolate>> B,
+                             double kboltz, double b, double eps0, 
                              std::shared_ptr<LinearElasticModel> emodel) :
     cuts_(cuts), A_(A), B_(B), kboltz_(kboltz), b_(b), eps0_(eps0), 
     b3_(pow(b,3)), emodel_(emodel)
@@ -305,8 +306,8 @@ ParameterSet RegionKMCreep::parameters()
   ParameterSet pset(RegionKMCreep::type());
 
   pset.add_parameter<std::vector<double>>("cuts");
-  pset.add_parameter<std::vector<double>>("A");
-  pset.add_parameter<std::vector<double>>("B");
+  pset.add_parameter<std::vector<NEMLObject>>("A");
+  pset.add_parameter<std::vector<NEMLObject>>("B");
   pset.add_parameter<double>("kboltz");
   pset.add_parameter<double>("b");
   pset.add_parameter<double>("eps0");
@@ -319,8 +320,8 @@ std::unique_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
 {
   return neml::make_unique<RegionKMCreep>(
       params.get_parameter<std::vector<double>>("cuts"),
-      params.get_parameter<std::vector<double>>("A"),
-      params.get_parameter<std::vector<double>>("B"),
+      params.get_object_parameter_vector<Interpolate>("A"),
+      params.get_object_parameter_vector<Interpolate>("B"),
       params.get_parameter<double>("kboltz"),
       params.get_parameter<double>("b"),
       params.get_parameter<double>("eps0"),
@@ -364,27 +365,27 @@ void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & B
   double neq = seq / mu;
   int nregion = A_.size();
   if (nregion == 1) {
-    Ai = A_[0];
-    Bi = B_[0];
+    Ai = A_[0]->value(T);
+    Bi = B_[0]->value(T);
     return;
   }
 
   size_t i;
   if (neq < cuts_[0]) {
-    Ai = A_[0];
-    Bi = B_[0];
+    Ai = A_[0]->value(T);
+    Bi = B_[0]->value(T);
     return;
   }
   for (i=0; i<cuts_.size(); i++) {
     if (neq > cuts_[i]) {
-      Ai = A_[i+1];
-      Bi = B_[i+1];
+      Ai = A_[i+1]->value(T);
+      Bi = B_[i+1]->value(T);
       return;
     }
   }
   if (i == cuts_.size()) {
-    Ai = A_[i];
-    Bi = B_[i];
+    Ai = A_[i]->value(T);
+    Bi = B_[i]->value(T);
   }
 }
 

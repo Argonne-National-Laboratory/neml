@@ -162,8 +162,8 @@ class NEML_EXPORT RegionKMCreep: public ScalarCreepRule {
   /// Inputs: cuts in normalized activation energy, prefactors for each region
   /// exponents for each region, boltzmann constant, burgers vector,
   /// reference strain rate, elastic model, to compute mu
-  RegionKMCreep(std::vector<double> cuts, std::vector<double> A,
-                std::vector<double> B, double kboltz, double b, double eps0,
+  RegionKMCreep(std::vector<double> cuts, std::vector<std::shared_ptr<Interpolate>> A,
+                std::vector<std::shared_ptr<Interpolate>> B, double kboltz, double b, double eps0,
                 std::shared_ptr<LinearElasticModel> emodel);
 
   /// String type for the object system
@@ -185,8 +185,8 @@ class NEML_EXPORT RegionKMCreep: public ScalarCreepRule {
 
  private:
   const std::vector<double> cuts_;
-  const std::vector<double> A_;
-  const std::vector<double> B_;
+  const std::vector<std::shared_ptr<Interpolate>> A_;
+  const std::vector<std::shared_ptr<Interpolate>> B_;
   const double kboltz_, b_, eps0_, b3_;
   const std::shared_ptr<LinearElasticModel> emodel_;
 };
