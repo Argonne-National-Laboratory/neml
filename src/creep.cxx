@@ -775,6 +775,100 @@ int CreepModel::calc_tangent_(const double * const e_np1,
   return 0;
 }
 
+// Implementation of 2.25Cr-1Mo rule
+MinCreep225Cr1MoCreep::MinCreep225Cr1MoCreep()
+{
+
+}
+
+std::string MinCreep225Cr1MoCreep::type()
+{
+  return "MinCreep225Cr1MoCreep";
+}
+
+ParameterSet MinCreep225Cr1MoCreep::parameters()
+{
+  ParameterSet pset(MinCreep225Cr1MoCreep::type());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> MinCreep225Cr1MoCreep::initialize(ParameterSet & params)
+{
+  return neml::make_unique<MinCreep225Cr1MoCreep>(); 
+}
+
+
+int MinCreep225Cr1MoCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  if (seq < 60.0) {
+    g = e1_(seq, T);
+  }
+  else {
+    if (T <= (13.571 * pow(seq, 0.68127) - 1.8 * seq + 710.78)) {
+      g = e1_(seq, T);
+    }
+    else {
+      g = e2_(seq, T);
+    }
+  }
+
+  return 0;
+}
+
+int MinCreep225Cr1MoCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  if (seq < 60.0) {
+    dg = de1_(seq, T);
+  }
+  else {
+    if (T <= (13.571 * pow(seq, 0.68127) - 1.8 * seq + 710.78)) {
+      dg = de1_(seq, T);
+    }
+    else {
+      dg = de2_(seq, T);
+    }
+  }
+
+  return 0;
+}
+
+int MinCreep225Cr1MoCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
+double MinCreep225Cr1MoCreep::e1_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 6.7475 + 0.011426 * seq + 987.72 / U * log10(seq) - 13494.0/T;
+  return pow(10.0, exp) / 100.0;
+}
+
+double MinCreep225Cr1MoCreep::e2_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 11.498 - 8.2226*U / T - 20448 / T + 5862.4 / T * log10(seq);
+  return pow(10.0, exp) / 100.0;
+}
+
+double MinCreep225Cr1MoCreep::de1_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 4.7475 + 0.011426 * seq + 428.961 / U * log(seq) - 13494.0/T;
+  return pow(10.0, exp) * (0.011426 + 428.961 / (seq * U)) * log(10.0);
+}
+
+double MinCreep225Cr1MoCreep::de2_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 9.498 - 8.2226*U / T - 20448 / T + 2546.01 / T * log(seq);
+  return 2546.01 * pow(10.0, exp) * log(10.0) / (seq * T);
+}
+
+const PiecewiseLinearInterpolate MinCreep225Cr1MoCreep::U  = PiecewiseLinearInterpolate({644.15,673.15,723.15,773.15,823.15,873.15,894.15,922.15},{471,468,452,418,634,284,300,270});
+
 // Implementation of J2 creep
 J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
                            double tol, int miter, bool verbose) :

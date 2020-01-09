@@ -300,6 +300,42 @@ class NEML_EXPORT GenericCreep: public ScalarCreepRule {
 
 static Register<GenericCreep> regGenericCreep;
 
+/// The hopelessly complicated 2.25Cr minimum creep rate model
+//  Units: MPa and hours
+class NEML_EXPORT MinCreep225Cr1MoCreep: public ScalarCreepRule {
+ public:
+  /// Parameters: prefector A and exponent n
+  MinCreep225Cr1MoCreep();
+
+  /// String type for the object system
+  static std::string type();
+  /// Setup from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  /// See documentation for the hideous formula
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  /// Derivative of rate wrt effective stress
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg)
+      const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
+      const;
+
+ private:
+  double e1_(double seq, double T) const;
+  double e2_(double seq, double T) const;
+
+  double de1_(double seq, double T) const;
+  double de2_(double seq, double T) const;
+
+ private:
+  const static PiecewiseLinearInterpolate U;
+};
+
+static Register<MinCreep225Cr1MoCreep> regMinCreep225Cr1MoCreep;
+
 /// Creep trial state
 class CreepModelTrialState : public TrialState {
  public:

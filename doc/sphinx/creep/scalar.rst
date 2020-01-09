@@ -27,6 +27,7 @@ Implementations
    s_generic
    s_blackburn
    s_swindeman
+   s_crmo
 
 Class description
 -----------------
