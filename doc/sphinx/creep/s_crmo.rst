@@ -48,7 +48,7 @@ Temperature Value
 922.15      270
 =========== =====
 
-Because the model is fully parameterized in the C++ implement it must
+Because the model is fully parameterized in the C++ implementation it must
 be used with units of MPa, hours, and Kelvin.
 
 Parameters

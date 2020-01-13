@@ -299,7 +299,8 @@ class Test225CreepCase3(unittest.TestCase, CommonScalarCreep):
   def test_g(self):
     g_direct = self.model.g(self.s, self.e, self.t, self.T)
     Uv = self.U.value(self.T - 273.15)
-    g_calc = 10.0**(11.498-8.2226*Uv/self.T-20448/self.T+5862.4/self.T*np.log10(self.s))/100.0
+    g_calc = 10.0**(11.498 - 8.2226 * Uv / self.T - 20448 / self.T + 
+        5862.4 / self.T * np.log10(self.s)) / 100.0
     self.assertTrue(np.isclose(g_direct, g_calc))
 
 class CommonCreepModel(object):
