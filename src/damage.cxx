@@ -618,12 +618,12 @@ int MeanEffectiveStress::effective(const double *const s, double &eff) const {
 int MeanEffectiveStress::deffective(const double *const s,
                                     double *const deff) const {
 
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < 6; i++) {
     if (i < 3)
       deff[i] = 1. / 3.;
     else
       deff[i] = 0;
-
+  }
   return 0;
 }
 
