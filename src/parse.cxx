@@ -148,6 +148,18 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
     const rapidxml::xml_node<> * node)
 {
   std::vector<std::shared_ptr<NEMLObject>> joined;
+
+  // A somewhat dangerous shortcut -- a list of text values should be
+  // interpreted as a list of ConstantInterpolates
+  if ((rapidxml::count_children(const_cast<rapidxml::xml_node<>*>(node))==1) and 
+      (node->first_node()->type() == rapidxml::node_data)) {
+    std::vector<double> data = get_vector_double(node);
+    for (auto v : data) {
+      joined.push_back(neml::make_unique<ConstantInterpolate>(v));
+    }
+    return joined;
+  }
+
   for (rapidxml::xml_node<> * child = node->first_node(); child; child = child->next_sibling()) {
     std::string name = (child)->name();
     if (name == "text") continue;
