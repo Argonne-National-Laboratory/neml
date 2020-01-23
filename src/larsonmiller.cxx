@@ -1,5 +1,7 @@
 #include "larsonmiller.h"
 
+#include "math/nemlmath.h"
+
 namespace neml {
 
 LarsonMillerRelation::LarsonMillerRelation(std::shared_ptr<Interpolate> fn, 
