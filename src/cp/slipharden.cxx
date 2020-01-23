@@ -386,4 +386,70 @@ double VoceSlipHardening::nye_part(const RankTwo & nye, double T) const
   return k_->value(T) * nye.norm();
 }
 
+LinearSlipHardening::LinearSlipHardening(std::shared_ptr<Interpolate> tau0,
+                                         std::shared_ptr<Interpolate> k1,
+                                         std::shared_ptr<Interpolate> k2,
+                                         std::string var_name) :
+    PlasticSlipHardening(var_name), tau0_(tau0), k1_(k1), k2_(k2)
+{
+  
+}
+
+std::string LinearSlipHardening::type()
+{
+  return "LinearSlipHardening";
+}
+
+std::unique_ptr<NEMLObject> LinearSlipHardening::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<LinearSlipHardening>(
+      params.get_object_parameter<Interpolate>("tau0"),
+      params.get_object_parameter<Interpolate>("k1"),
+      params.get_object_parameter<Interpolate>("k2"));
+}
+
+ParameterSet LinearSlipHardening::parameters()
+{
+  ParameterSet pset(LinearSlipHardening::type());
+  
+  pset.add_parameter<NEMLObject>("tau0");
+  pset.add_parameter<NEMLObject>("k1");
+  pset.add_parameter<NEMLObject>("k2");
+
+  return pset;
+}
+
+double LinearSlipHardening::init_strength() const
+{
+  return 0.0;
+}
+
+double LinearSlipHardening::static_strength(double T) const
+{
+  return tau0_->value(T);
+}
+
+double LinearSlipHardening::hist_factor(double strength, Lattice & L, 
+                                      double T, const History & fixed) const
+{
+  return k1_->value(T);
+}
+
+double LinearSlipHardening::d_hist_factor(double strength, Lattice & L, double T,
+                                        const History & fixed) const
+{
+  return 0;
+}
+
+bool LinearSlipHardening::use_nye() const
+{
+  return true;
+}
+
+double LinearSlipHardening::nye_part(const RankTwo & nye, double T) const
+{
+  return k2_->value(T) * nye.norm();
+}
+
 } // namespace neml

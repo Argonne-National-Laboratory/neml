@@ -67,6 +67,15 @@ PYBIND11_MODULE(slipharden, m) {
                     }))
       ;
 
+  py::class_<LinearSlipHardening, PlasticSlipHardening,
+        std::shared_ptr<LinearSlipHardening>>(m, "LinearSlipHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<LinearSlipHardening>(
+                          args, kwargs, {"tau0", "k1", "k2"});
+                    }))
+      ;
+
 } // PYBIND11_MODULE
 
 } // namespace neml

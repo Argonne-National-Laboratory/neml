@@ -292,6 +292,51 @@ class NEML_EXPORT VoceSlipHardening: public PlasticSlipHardening
 
 static Register<VoceSlipHardening> regVoceSlipHardening;
 
+/// The simplest of all linear hardening models
+class NEML_EXPORT LinearSlipHardening: public PlasticSlipHardening
+{
+ public:
+  /// Initialize with the saturated strength, the rate constant, and a constant
+  /// strength
+  LinearSlipHardening(std::shared_ptr<Interpolate> tau0,
+                      std::shared_ptr<Interpolate> k1,
+                      std::shared_ptr<Interpolate> k2,
+                      std::string var_name = "strength");
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Setup the scalar
+  virtual double init_strength() const;
+
+  /// Static strength
+  virtual double static_strength(double T) const;
+
+  /// Prefactor
+  virtual double hist_factor(double strength, Lattice & L, double T,
+                             const History & fixed) const;
+  /// Derivative of the prefactor
+  virtual double d_hist_factor(double strength, Lattice & L, double T,
+                               const History & fixed) const;
+
+  /// Dynamically determine if we're going to use the Nye tensor
+  virtual bool use_nye() const;
+
+  /// Actual nye contribution
+  virtual double nye_part(const RankTwo & nye, double T) const;
+
+ private:
+  std::shared_ptr<Interpolate> tau0_;
+  std::shared_ptr<Interpolate> k1_;
+  std::shared_ptr<Interpolate> k2_;
+};
+
+static Register<LinearSlipHardening> regLinearSlipHardening;
+
 }
 
 #endif // SLIPHARDEN_H

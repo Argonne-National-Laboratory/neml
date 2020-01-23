@@ -290,3 +290,62 @@ class TestMultiVoceHardening(unittest.TestCase,
 
   def test_use_nye(self):
     self.assertFalse(self.model.use_nye)
+
+class TestLinearSlipHardening(unittest.TestCase, CommonPlasticSlipHardening, 
+    CommonSlipSingleStrengthHardening, CommonSlipSingleHardening, CommonSlipHardening):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    self.strength = 35.0
+    self.H = history.History()
+    self.H.add_scalar("strength")
+    self.H.set_scalar("strength", self.strength)
+
+    self.T = 300.0
+
+    self.tau0 = 10.0
+    self.k1 = 2.0
+    self.k2 = 3.0
+
+    self.static = self.tau0
+
+    self.model = slipharden.LinearSlipHardening(self.tau0, self.k1, self.k2)
+    
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.nye = tensors.RankTwo([[1.1,1.2,1.3],[2.1,2.2,2.3],[3.1,3.2,3.3]])
+    self.nye_part = self.k2 * la.norm(self.nye.data.reshape((3,3)), ord = 'fro')
+
+    self.fixed = history.History()
+    self.fixed.add_ranktwo("nye")
+    self.fixed.set_ranktwo("nye", self.nye)
+    
+  def test_initialize_hist(self):
+    H = history.History()
+    self.model.populate_history(H)
+    self.model.init_history(H)
+    self.assertTrue(np.isclose(H.get_scalar('strength'), 0.0))
+
+  def test_static_strength(self):
+    self.assertTrue(np.isclose(self.model.static_strength(self.T), self.tau0))
+  
+  def test_factor(self):
+    self.assertTrue(np.isclose(
+      self.model.hist_factor(self.strength, self.L, self.T, self.fixed),
+      self.k1))
+
+  def test_nye_factor(self):
+    self.assertTrue(np.isclose(
+      self.model.nye_part(self.nye, self.T), self.nye_part))
+
+  def test_use_nye(self):
+    self.assertTrue(self.model.use_nye)
+
