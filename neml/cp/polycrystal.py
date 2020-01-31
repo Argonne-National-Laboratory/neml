@@ -1,5 +1,6 @@
 from neml.math import nemlmath
 from neml.cp import batch, singlecrystal
+from neml.nlsolvers import newton
 
 import numpy as np
 
@@ -47,6 +48,7 @@ class PolycrystalModel(object):
     
     self.L = np.zeros((3,3))
     self.s = np.zeros((6,))
+    self.e = np.zeros((6,))
     self.T = self.T0
     self.t = 0.0
     self.u = 0.0
@@ -67,7 +69,9 @@ class PolycrystalModel(object):
     # Advance the macrostep
     self.t += dt
     self.T = T
-    self.L, self.s, T, self.u, self.p = self.take_step(L, dt, T, nthreads)
+    self.L, self.s, A, B, T, self.u, self.p = self.take_step(L, dt, T, nthreads)
+
+    self.e += nemlmath.sym(0.5*(self.L+self.L.T)) * dt
 
     # Accept the microstep
     self.d_n = np.copy(self.d_np1)
@@ -77,6 +81,65 @@ class PolycrystalModel(object):
     self.p_n = np.copy(self.p_np1)
     self.T_n = np.copy(self.T_np1)
     self.h_n = np.copy(self.h_np1)
+
+  def take_stress_step(self, sdir, erate, dt, T = 300.0, nthreads = 1, w = np.zeros((3,)),
+      verbose = False, rtol = 1e-6, atol = 1e-8, miter = 20):
+    """
+      Take our usual stress-controlled step in a direction at a particular
+      strain rate
+
+      Parameters:
+        sdir:       stress direction
+        erate:      strain rate
+        dt:         time increment
+
+      Keyword Args:
+        T:          temperature
+        nthreads:   number of threads to use
+        w:          macroscale spin
+        verbose:    print verbose solver info
+        rtol:       relative tolerance
+        atol:       absolute tolerance
+        miter:      maximum iterations
+    """
+    x0 = np.concatenate((sdir * erate * dt, [1,]))
+    s_n = np.copy(self.s)
+
+    def sfn(x):
+      de = x[:6]
+      a = x[6]
+
+      L = nemlmath.usym(de) / dt + nemlmath.uskew(w)
+
+      self.L, self.s, A, B, C, self.u, self.p = self.take_step(L, dt, T, nthreads)
+
+      R = np.zeros((7,))
+      J = np.zeros((7,7))
+
+      R[:6] = self.s - s_n  - sdir * a
+      R[6] = np.dot(sdir, de) / dt - erate
+
+      J[:6,:6] = A
+      J[:6,6] = -sdir
+      J[6,:6] = sdir / dt
+      J[6,6] = 0
+
+      return R, J
+
+    x = newton(sfn, x0, verbose = verbose, rtol = rtol, atol = atol, miter = miter)
+
+    self.e += x[:6]
+
+    # Accept the microstep
+    self.T = T
+    self.t += dt
+    self.d_n = np.copy(self.d_np1)
+    self.w_n = np.copy(self.w_np1)
+    self.s_n = np.copy(self.s_np1)
+    self.u_n = np.copy(self.u_np1)
+    self.p_n = np.copy(self.p_np1)
+    self.T_n = np.copy(self.T_np1)
+    self.h_n = np.copy(self.h_np1) 
 
   def orientation(self, i):
     """
@@ -138,4 +201,4 @@ class TaylorModel(PolycrystalModel):
 
     T = nemlmath.transform_fourth(A_avg, B_avg)
 
-    return L, np.mean(self.s_np1, axis = 0), T, np.mean(self.u_np1), np.mean(self.p_np1)
+    return L, np.mean(self.s_np1, axis = 0), np.mean(A_np1, axis = 0), np.mean(B_np1, axis = 0), T, np.mean(self.u_np1), np.mean(self.p_np1)
