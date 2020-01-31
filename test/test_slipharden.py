@@ -194,7 +194,7 @@ class TestNyeVoceHardening(unittest.TestCase, CommonPlasticSlipHardening,
     self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
 
     self.nye = tensors.RankTwo([[1.1,1.2,1.3],[2.1,2.2,2.3],[3.1,3.2,3.3]])
-    self.nye_part = self.k * la.norm(self.nye.data.reshape((3,3)), ord = 'fro')
+    self.nye_part = self.k * np.sqrt(la.norm(self.nye.data.reshape((3,3)), ord = 'fro'))
 
     self.fixed = history.History()
     self.fixed.add_ranktwo("nye")

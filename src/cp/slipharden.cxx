@@ -383,7 +383,7 @@ bool VoceSlipHardening::use_nye() const
 
 double VoceSlipHardening::nye_part(const RankTwo & nye, double T) const
 {
-  return k_->value(T) * nye.norm();
+  return k_->value(T) * sqrt(nye.norm());
 }
 
 LinearSlipHardening::LinearSlipHardening(std::shared_ptr<Interpolate> tau0,
