@@ -7,7 +7,7 @@ import numpy as np
 
 from neml.cp import crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal, polycrystal
 from neml.math import rotations, tensors, nemlmath
-from neml import elasticity
+from neml import elasticity, drivers
 
 import matplotlib.pyplot as plt
 
@@ -32,7 +32,6 @@ if __name__ == "__main__":
 
   for rho in rhos:
     t0 = alpha*mu*burg*np.sqrt(rho)
-    print("HMM",t0)
     ts = 100.0
     b = 0.4
 
@@ -58,19 +57,13 @@ if __name__ == "__main__":
 
     dt = emax / erate / steps
 
-    pmodel = polycrystal.TaylorModel(model, orientations)
+    pmodel = polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
 
-    e = [0.0]
-    s = [0.0]
-    for i in range(steps):
-      print(i)
-      pmodel.take_stress_step(sdir, erate, dt, nthreads = nthreads, 
-          verbose = True)
-      e.append(pmodel.e[2])
-      s.append(pmodel.s[2])
+    res = drivers.uniaxial_test(pmodel, erate, emax = emax, nsteps = steps, 
+        verbose = True)
 
-    strains.append(e)
-    stresses.append(s)
+    strains.append(res['strain'])
+    stresses.append(res['stress'])
   
   plt.style.use("presentation")
   plt.figure()
