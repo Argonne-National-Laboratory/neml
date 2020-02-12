@@ -40,7 +40,58 @@ class CommonSlipRule(object):
       self.T), self.H)
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
-class CommonSlipStrengthSlipRule(object):
+class CommonSlipMultiStrengthSlipRule(object):
+  def test_setup_history(self):
+    model_hist = history.History()
+    self.model.populate_history(model_hist)
+    self.model.init_history(model_hist)
+    
+    manual_hist = history.History()
+    for strength in self.strengths:
+      Hs = history.History()
+      strength.populate_history(Hs)
+      strength.init_history(Hs)
+      manual_hist.add_union(Hs)
+
+    self.assertTrue(np.allclose(np.array(model_hist),
+      np.array(manual_hist)))
+
+  def test_history_rate(self):
+    reference = self.model.hist_rate(self.S, self.Q, self.H, self.L, self.T)
+    combined = history.History()
+    for strength in self.strengths:
+      combined.add_union(strength.hist(self.S, self.Q, self.H, self.L, self.T, self.model))
+
+    self.assertTrue(np.allclose(reference, combined))
+
+  def test_slip_rate(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        rs = self.L.shear(g, i, self.Q, self.S)
+        self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T),
+          self.model.sslip(g, i, rs, self.strength_values, self.T)))
+
+  def test_slip_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        rs = self.L.shear(g, i, self.Q, self.S)
+        nd = differentiate(lambda t: self.model.sslip(g, i, t, self.strength_values, self.T),
+            rs)
+        d = self.model.d_sslip_dtau(g, i, rs, self.strength_values, self.T)
+
+        self.assertTrue(np.isclose(d, nd))
+
+  def test_slip_strength(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        rs = self.L.shear(g, i, self.Q, self.S)
+
+        nd = differentiate(lambda s: self.model.sslip(g, i, rs, s, self.T), np.array(self.strength_values))
+        d = self.model.d_sslip_dstrength(g, i, rs, self.strength_values, self.T)
+
+        self.assertTrue(np.allclose(nd,d))
+
+class CommonSlipStrengthSlipRule(CommonSlipMultiStrengthSlipRule):
   def test_init_hist(self):
     H1 = history.History()
     self.model.populate_history(H1)
@@ -79,8 +130,6 @@ class CommonSlipStrengthSlipRule(object):
       for i in range(self.L.nslip(g)):
         nd = differentiate(lambda s: self.model.scalar_sslip(g, i, self.tau, s, self.T), self.strength)
         d = self.model.scalar_d_sslip_dstrength(g, i, self.tau, self.strength, self.T)
-        print(nd)
-        print(d)
         self.assertTrue(np.isclose(nd, d))
 
 class TestPowerLawSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRule):
@@ -105,8 +154,11 @@ class TestPowerLawSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlip
     self.b = 2.5
 
     self.strengthmodel = slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0)
+    self.strengths = [self.strengthmodel]
 
     self.static = self.tau0
+
+    self.strength_values = [self.strength + self.static]
     
     self.g0 = 1.0
     self.n = 3.0
@@ -149,8 +201,10 @@ class TestBiVoceSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRu
     self.strengthmodel = slipharden.SumSlipSingleStrengthHardening(
         [slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0),
           slipharden.VoceSlipHardening(self.tau_sat/2, self.b/2, self.tau0/2)])
-
     self.static = self.tau0 + self.tau0 / 2
+
+    self.strengths = [self.strengthmodel]
+    self.strength_values = [self.strength + self.static]
     
     self.g0 = 1.0
     self.n = 3.0
