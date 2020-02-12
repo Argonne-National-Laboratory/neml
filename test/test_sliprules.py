@@ -59,7 +59,7 @@ class CommonSlipStrengthSlipRule(object):
         rs = self.L.shear(g, i, self.Q, self.S)
         strength = self.strength + self.static
         self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T),
-          self.model.sslip(g, i, rs, strength, self.T)))
+          self.model.scalar_sslip(g, i, rs, strength, self.T)))
 
   def test_d_hist_rate(self):
     self.assertTrue(np.allclose(
@@ -69,16 +69,16 @@ class CommonSlipStrengthSlipRule(object):
   def test_d_sslip_d_tau(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        nd = differentiate(lambda t: self.model.sslip(g, i, t, self.strength, self.T),
+        nd = differentiate(lambda t: self.model.scalar_sslip(g, i, t, self.strength, self.T),
             self.tau)
-        d = self.model.d_sslip_dtau(g, i, self.tau, self.strength, self.T)
+        d = self.model.scalar_d_sslip_dtau(g, i, self.tau, self.strength, self.T)
         self.assertTrue(np.isclose(nd,d))
 
   def test_d_sslip_d_strength(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        nd = differentiate(lambda s: self.model.sslip(g, i, self.tau, s, self.T), self.strength)
-        d = self.model.d_sslip_dstrength(g, i, self.tau, self.strength, self.T)
+        nd = differentiate(lambda s: self.model.scalar_sslip(g, i, self.tau, s, self.T), self.strength)
+        d = self.model.scalar_d_sslip_dstrength(g, i, self.tau, self.strength, self.T)
         print(nd)
         print(d)
         self.assertTrue(np.isclose(nd, d))
@@ -117,7 +117,7 @@ class TestPowerLawSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlip
   def test_scalar_rate(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        self.assertTrue(np.isclose(self.model.sslip(g, i, self.tau, self.strength, self.T),
+        self.assertTrue(np.isclose(self.model.scalar_sslip(g, i, self.tau, self.strength, self.T),
           self.g0 * np.abs(self.tau/self.strength)**(self.n-1.0) * self.tau/self.strength))
 
 

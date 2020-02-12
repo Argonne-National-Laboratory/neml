@@ -26,11 +26,19 @@ PYBIND11_MODULE(sliprules, m) {
       .def("d_sum_slip_d_hist", &SlipRule::d_sum_slip_d_hist)
       ;
 
-  py::class_<SlipStrengthSlipRule, SlipRule,
+  py::class_<SlipMultiStrengthSlipRule, SlipRule,
+        std::shared_ptr<SlipMultiStrengthSlipRule>>(m, "SlipMultiStrengthSlipRule")
+      .def("sslip", &SlipMultiStrengthSlipRule::sslip)
+      .def("d_sslip_dtau", &SlipMultiStrengthSlipRule::d_sslip_dtau)
+      .def("d_sslip_dstrength", &SlipMultiStrengthSlipRule::d_sslip_dstrength)
+      ;
+
+  py::class_<SlipStrengthSlipRule, SlipMultiStrengthSlipRule,
         std::shared_ptr<SlipStrengthSlipRule>>(m, "SlipStrengthSlipRule")
-      .def("sslip", &SlipStrengthSlipRule::sslip)
-      .def("d_sslip_dtau", &SlipStrengthSlipRule::d_sslip_dtau)
-      .def("d_sslip_dstrength", &SlipStrengthSlipRule::d_sslip_dstrength)
+      .def("scalar_sslip", &SlipStrengthSlipRule::scalar_sslip)
+      .def("scalar_d_sslip_dtau", &SlipStrengthSlipRule::scalar_d_sslip_dtau)
+      .def("scalar_d_sslip_dstrength",
+           &SlipStrengthSlipRule::scalar_d_sslip_dstrength)
       ;
 
   py::class_<PowerLawSlipRule, SlipStrengthSlipRule,
