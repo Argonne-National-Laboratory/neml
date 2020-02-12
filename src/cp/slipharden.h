@@ -25,6 +25,11 @@ class SlipRule; // Why would we need a forward declaration?
 class NEML_EXPORT SlipHardening: public NEMLObject
 {
  public:
+  /// Report your variable names
+  virtual std::vector<std::string> varnames() const = 0;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars) = 0;
+
   /// Request whatever history you will need
   virtual void populate_history(History & history) const = 0;
   /// Setup history
@@ -79,6 +84,11 @@ class NEML_EXPORT SlipSingleStrengthHardening: public SlipSingleHardening
 {
  public:
   SlipSingleStrengthHardening(std::string var_name = "strength");
+
+  /// Report varnames
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
   virtual void populate_history(History & history) const;
@@ -143,6 +153,11 @@ class NEML_EXPORT SumSlipSingleStrengthHardening: public SlipSingleHardening
   /// Initialize with a list of models
   SumSlipSingleStrengthHardening(std::vector<std::shared_ptr<SlipSingleStrengthHardening>>
                                  models);
+
+  /// Report varnames
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
 
   /// String type for the object system
   static std::string type();

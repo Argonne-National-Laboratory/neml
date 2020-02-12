@@ -19,7 +19,16 @@ SlipSingleStrengthHardening::SlipSingleStrengthHardening(std::string var_name)
 {
 
 }
-      
+
+std::vector<std::string> SlipSingleStrengthHardening::varnames() const
+{
+  return {var_name_};
+}
+
+void SlipSingleStrengthHardening::set_varnames(std::vector<std::string> vars)
+{
+  set_variable(vars[0]);
+}
 
 void SlipSingleStrengthHardening::populate_history(History & history) const
 {
@@ -94,6 +103,24 @@ SumSlipSingleStrengthHardening::SumSlipSingleStrengthHardening(
   for (size_t i = 0; i < nmodels(); i++) {
     models_[i]->set_variable("strength"+std::to_string(i));
   }
+}
+
+std::vector<std::string> SumSlipSingleStrengthHardening::varnames() const
+{
+  std::vector<std::string> names;
+  
+  for (size_t i = 0; i < nmodels(); i++) {
+    names.push_back("strength"+std::to_string(i));
+  }
+
+  return names;
+}
+
+void SumSlipSingleStrengthHardening::set_varnames(std::vector<std::string> vars)
+{
+  for (size_t i = 0; i < nmodels(); i++) {
+    models_[i]->set_variable(vars[i]);
+  } 
 }
 
 std::string SumSlipSingleStrengthHardening::type()
