@@ -128,14 +128,42 @@ class NEML_EXPORT PowerLawCreep: public ScalarCreepRule {
 
 static Register<PowerLawCreep> regPowerLawCreep;
 
+/// Power law creep normalized in a slightly nicer way
+class NEML_EXPORT NormalizedPowerLawCreep: public ScalarCreepRule {
+ public:
+  /// Parameters: stress divisor s0 and exponent n
+  NormalizedPowerLawCreep(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> n);
+
+  /// String type for the object system
+  static std::string type();
+  /// Setup from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  /// rate = (seq/s0)**n
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  /// Derivative of rate wrt effective stress
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg)
+      const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
+      const;
+
+ private:
+  const std::shared_ptr<const Interpolate> s0_, n_;
+};
+
+static Register<NormalizedPowerLawCreep> regNormalizedPowerLawCreep;
+
 /// A power law type model that uses KM concepts to switch between mechanisms
 class NEML_EXPORT RegionKMCreep: public ScalarCreepRule {
  public:
   /// Inputs: cuts in normalized activation energy, prefactors for each region
   /// exponents for each region, boltzmann constant, burgers vector,
   /// reference strain rate, elastic model, to compute mu
-  RegionKMCreep(std::vector<double> cuts, std::vector<double> A,
-                std::vector<double> B, double kboltz, double b, double eps0,
+  RegionKMCreep(std::vector<double> cuts, std::vector<std::shared_ptr<Interpolate>> A,
+                std::vector<std::shared_ptr<Interpolate>> B, double kboltz, double b, double eps0,
                 std::shared_ptr<LinearElasticModel> emodel);
 
   /// String type for the object system
@@ -157,8 +185,8 @@ class NEML_EXPORT RegionKMCreep: public ScalarCreepRule {
 
  private:
   const std::vector<double> cuts_;
-  const std::vector<double> A_;
-  const std::vector<double> B_;
+  const std::vector<std::shared_ptr<Interpolate>> A_;
+  const std::vector<std::shared_ptr<Interpolate>> B_;
   const double kboltz_, b_, eps0_, b3_;
   const std::shared_ptr<LinearElasticModel> emodel_;
 };
@@ -271,6 +299,42 @@ class NEML_EXPORT GenericCreep: public ScalarCreepRule {
 };
 
 static Register<GenericCreep> regGenericCreep;
+
+/// The hopelessly complicated 2.25Cr minimum creep rate model
+//  Units: MPa and hours
+class NEML_EXPORT MinCreep225Cr1MoCreep: public ScalarCreepRule {
+ public:
+  /// Parameters: prefector A and exponent n
+  MinCreep225Cr1MoCreep();
+
+  /// String type for the object system
+  static std::string type();
+  /// Setup from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  /// See documentation for the hideous formula
+  virtual int g(double seq, double eeq, double t, double T, double & g) const;
+  /// Derivative of rate wrt effective stress
+  virtual int dg_ds(double seq, double eeq, double t, double T, double & dg)
+      const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual int dg_de(double seq, double eeq, double t, double T, double & dg)
+      const;
+
+ private:
+  double e1_(double seq, double T) const;
+  double e2_(double seq, double T) const;
+
+  double de1_(double seq, double T) const;
+  double de2_(double seq, double T) const;
+
+ private:
+  const static PiecewiseLinearInterpolate U;
+};
+
+static Register<MinCreep225Cr1MoCreep> regMinCreep225Cr1MoCreep;
 
 /// Creep trial state
 class CreepModelTrialState : public TrialState {

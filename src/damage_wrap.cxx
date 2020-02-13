@@ -141,6 +141,13 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
+  py::class_<MeanEffectiveStress, EffectiveStress, std::shared_ptr<MeanEffectiveStress>>(m, "MeanEffectiveStress")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MeanEffectiveStress>(args, kwargs, {});
+        }))
+      ;
+
   py::class_<HuddlestonEffectiveStress, EffectiveStress, std::shared_ptr<HuddlestonEffectiveStress>>(m, "HuddlestonEffectiveStress")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {

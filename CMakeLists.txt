@@ -11,6 +11,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+### Default to shared libs ###
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+
 ### Select nonlinear solver ###
 set(SOLVER "newton" CACHE STRING "Nonlinear solver to use")
 set_property(CACHE SOLVER PROPERTY STRINGS newton nox)
@@ -97,6 +100,11 @@ endif()
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
+endif()
+
+### Check if we can validly build shared libraries ###
+if ((NOT BUILD_SHARED_LIBS) AND WRAP_PYTHON)
+      message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
 endif()
 
 ### BASE LIBRARY ###

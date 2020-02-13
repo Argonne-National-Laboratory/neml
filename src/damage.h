@@ -297,6 +297,25 @@ class NEML_EXPORT VonMisesEffectiveStress: public EffectiveStress
 
 static Register<VonMisesEffectiveStress> regVonMisesEffectiveStress;
 
+/// Mean stress
+class NEML_EXPORT MeanEffectiveStress: public EffectiveStress
+{
+ public:
+  MeanEffectiveStress();
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual int effective(const double * const s, double & eff) const;
+  virtual int deffective(const double * const s, double * const deff) const;
+};
+
+static Register<MeanEffectiveStress> regMeanEffectiveStress;
+
 /// Huddleston stress
 class NEML_EXPORT HuddlestonEffectiveStress: public EffectiveStress
 {
