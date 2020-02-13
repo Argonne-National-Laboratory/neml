@@ -22,3 +22,4 @@ Class description
 
 .. doxygenclass:: neml::NoInelasticity
    :members:
+   :undoc-members:

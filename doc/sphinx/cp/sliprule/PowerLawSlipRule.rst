@@ -26,3 +26,5 @@ Class description
 -----------------
 
 .. doxygenclass:: neml::PowerLawSlipRule
+   :members:
+   :undoc-members:

@@ -13,9 +13,9 @@ Additionally, these objects provide the definition of the history evolution rate
 The interface is then:
 
 .. math::
-   \bar{\tau}_{g,i}, \frac{\partial \bar{\tau}_{g,i}}{\partial \mathbf{h}} \leftarrow \mathcal{T}\left(\mathbf{h}, T \right)
+   \bar{\tau}_{g,i}, \frac{\partial \bar{\tau}_{g,i}}{\partial \mathbf{h}} \leftarrow \mathcal{T}\left(\mathbf{h}, \bm{\alpha}, T \right)
 
-   \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, T \right).
+   \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, \bm{\alpha}, T \right).
 
 Implementations
 ---------------
@@ -31,3 +31,4 @@ Class description
 
 .. doxygenclass:: neml::SlipHardening
    :members:
+   :undoc-members:
