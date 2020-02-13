@@ -15,29 +15,29 @@ class CommonSlipRule(object):
   def test_d_slip_d_stress(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        d = self.model.d_slip_d_s(g, i, self.S, self.Q, self.H, self.L, self.T)
+        d = self.model.d_slip_d_s(g, i, self.S, self.Q, self.H, self.L, self.T, self.fixed)
         nd = diff_scalar_symmetric(lambda s: self.model.slip(g, i, s, self.Q, self.H, 
-          self.L, self.T), self.S)
+          self.L, self.T, self.fixed), self.S)
         self.assertEqual(d, nd)
 
   def test_d_slip_d_hist(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        d = np.array(self.model.d_slip_d_h(g, i, self.S, self.Q, self.H, self.L, self.T))
+        d = np.array(self.model.d_slip_d_h(g, i, self.S, self.Q, self.H, self.L, self.T, self.fixed))
         nd = np.array(diff_history_scalar(lambda h: self.model.slip(g, i, self.S, self.Q, h,
-          self.L, self.T), self.H))
+          self.L, self.T, self.fixed), self.H))
         self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
   def test_d_hist_rate_d_stress(self):
-    d = np.array(self.model.d_hist_rate_d_stress(self.S, self.Q, self.H, self.L, self.T))
+    d = np.array(self.model.d_hist_rate_d_stress(self.S, self.Q, self.H, self.L, self.T, self.fixed))
     nd = diff_history_symmetric(lambda s: self.model.hist_rate(s, self.Q, self.H, self.L,
-      self.T), self.S)
+      self.T, self.fixed), self.S)
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
   def test_d_hist_rate_d_hist(self):
-    d = np.array(self.model.d_hist_rate_d_hist(self.S, self.Q, self.H, self.L, self.T))
+    d = np.array(self.model.d_hist_rate_d_hist(self.S, self.Q, self.H, self.L, self.T, self.fixed))
     nd = diff_history_history(lambda h: self.model.hist_rate(self.S, self.Q, h, self.L,
-      self.T), self.H)
+      self.T, self.fixed), self.H)
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
 class CommonSlipMultiStrengthSlipRule(object):
@@ -57,10 +57,11 @@ class CommonSlipMultiStrengthSlipRule(object):
       np.array(manual_hist)))
 
   def test_history_rate(self):
-    reference = self.model.hist_rate(self.S, self.Q, self.H, self.L, self.T)
+    reference = self.model.hist_rate(self.S, self.Q, self.H, self.L, self.T,
+        self.fixed)
     combined = history.History()
     for strength in self.strengths:
-      combined.add_union(strength.hist(self.S, self.Q, self.H, self.L, self.T, self.model))
+      combined.add_union(strength.hist(self.S, self.Q, self.H, self.L, self.T, self.model, self.fixed))
 
     self.assertTrue(np.allclose(reference, combined))
 
@@ -68,10 +69,7 @@ class CommonSlipMultiStrengthSlipRule(object):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         rs = self.L.shear(g, i, self.Q, self.S)
-        print(self.model.slip(g,i,self.S, self.Q, self.H, self.L, self.T))
-        print(self.model.sslip(g, i, rs, self.strength_values, self.T))
-        print(self.strength_values)
-        self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T),
+        self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T, self.fixed),
           self.model.sslip(g, i, rs, self.strength_values, self.T)))
 
   def test_slip_tau(self):
@@ -134,6 +132,8 @@ class TestKinematicPowerLawSlip(unittest.TestCase, CommonSlipMultiStrengthSlipRu
 
     self.tau = 45.0
 
+    self.fixed = history.History()
+
   def test_sslip(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
@@ -163,13 +163,13 @@ class CommonSlipStrengthSlipRule(CommonSlipMultiStrengthSlipRule):
       for i in range(self.L.nslip(g)):
         rs = self.L.shear(g, i, self.Q, self.S)
         strength = self.strength + self.static
-        self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T),
+        self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T, self.fixed),
           self.model.scalar_sslip(g, i, rs, strength, self.T)))
 
   def test_d_hist_rate(self):
     self.assertTrue(np.allclose(
-      np.array(self.model.hist_rate(self.S, self.Q, self.H, self.L, self.T)),
-      np.array(self.strengthmodel.hist(self.S, self.Q, self.H, self.L, self.T, self.model))))
+      np.array(self.model.hist_rate(self.S, self.Q, self.H, self.L, self.T, self.fixed)),
+      np.array(self.strengthmodel.hist(self.S, self.Q, self.H, self.L, self.T, self.model, self.fixed))))
 
   def test_d_sslip_d_tau(self):
     for g in range(self.L.ngroup):
@@ -220,6 +220,8 @@ class TestPowerLawSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlip
 
     self.tau = 33.0
 
+    self.fixed = history.History()
+
   def test_scalar_rate(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
@@ -265,3 +267,5 @@ class TestBiVoceSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRu
     self.model = sliprules.PowerLawSlipRule(self.strengthmodel, self.g0, self.n)
 
     self.tau = 33.0
+
+    self.fixed = history.History()

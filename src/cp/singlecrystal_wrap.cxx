@@ -14,7 +14,7 @@ PYBIND11_MODULE(singlecrystal, m) {
   m.doc() = "Single crystal constitutive models";
 
   py::class_<SCTrialState, TrialState>(m, "SCTrialState")
-      .def(py::init<Symmetric&,Skew&,Symmetric&,History&,Orientation&,Lattice&,double,double,Symmetric&,History&,History&>())
+      .def(py::init<Symmetric&,Skew&,Symmetric&,History&,Orientation&,Lattice&,double,double,History&>())
       ;
 
   py::class_<SingleCrystalModel, NEMLModel_ldi, Solvable, std::shared_ptr<SingleCrystalModel>>(m, "SingleCrystalModel")
@@ -31,6 +31,13 @@ PYBIND11_MODULE(singlecrystal, m) {
            {
             return m.strength(arr2ptr<double>(h), T);
            }, "Return an effective strength for the model")
+      .def("Fe",
+           [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> stress, py::array_t<double, py::array::c_style> hist, double T) -> py::array_t<double> 
+           {
+            auto Fe = alloc_mat<double>(3,3);
+            m.Fe(arr2ptr<double>(stress), arr2ptr<double>(hist), T, arr2ptr<double>(Fe));
+            return Fe;
+           }, "Return the elastic deformation gradient.")
       .def("get_passive_orientation", 
            [](SingleCrystalModel & m, const History & hist) -> Orientation
            {
@@ -76,6 +83,12 @@ PYBIND11_MODULE(singlecrystal, m) {
            {
             m.set_active_orientation(arr2ptr<double>(hist), q);
            }, "Set the orientation using a active rotation (crystal -> sample)")
+      .def_property_readonly("use_nye", &SingleCrystalModel::use_nye)
+      .def("update_nye",
+           [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> hist, py::array_t<double, py::array::c_style> nye)
+           {
+            m.update_nye(arr2ptr<double>(hist), arr2ptr<double>(nye));
+           }, "Update the history with the current Nye tensor.")
     ;
 }
 

@@ -7,26 +7,26 @@
 namespace neml {
 
 History::History() :
-    size_(0), store_(true)
+    size_(0), storesize_(0), store_(true)
 {
-  storage_ = new double [size_];
+  storage_ = new double [storesize_];
   zero();
 }
 
 History::History(bool store) :
-    size_(0), store_(store)
+    size_(0), storesize_(0), store_(store)
 {
   if (store) {
-    storage_ = new double [size_];
+    storage_ = new double [storesize_];
     zero();
   }
 }
 
 History::History(const History & other) :
-    size_(other.size()), store_(other.store())
+    size_(other.size()), storesize_(other.size()), store_(other.store())
 {
   if (store_) {
-    storage_ = new double[size_];
+    storage_ = new double[storesize_];
     std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   }
   else {
@@ -36,10 +36,10 @@ History::History(const History & other) :
 }
 
 History::History(const History && other) :
-    size_(other.size()), store_(other.store())
+    size_(other.size()), storesize_(other.size()), store_(other.store())
 {
   if (store_) {
-    storage_ = new double[size_];
+    storage_ = new double[storesize_];
     std::copy(other.rawptr(), other.rawptr() + size_, storage_);
   }
   else {
@@ -49,13 +49,13 @@ History::History(const History && other) :
 }
 
 History::History(double * data) :
-    size_(0), store_(false)
+    size_(0), storesize_(0), store_(false)
 {
   storage_ = data;
 }
 
 History::History(const double * data) :
-    size_(0), store_(false)
+    size_(0), storesize_(0), store_(false)
 {
   storage_ = const_cast<double*>(data);
 }
@@ -142,7 +142,8 @@ void History::make_store()
   if (store_) return;
 
   store_ = true;
-  storage_ = new double [size_];
+  storesize_ = size_;
+  storage_ = new double [storesize_];
 }
 
 void History::add(std::string name, StorageType type, size_t size)
@@ -157,12 +158,20 @@ void History::add(std::string name, StorageType type, size_t size)
 void History::resize(size_t inc)
 {
   if (store_) {
-    double * newstore = new double [size_+inc];
-    std::copy(storage_, storage_+size_, newstore);
-    delete [] storage_;
-    storage_ = newstore;
+    if ((size_ + inc) > storesize_) {
+      increase_store((size_ + inc));
+    }
   }
   size_ += inc;
+}
+
+void History::increase_store(size_t newsize)
+{
+  storesize_ = newsize;
+  double * newstore = new double[newsize];
+  std::copy(storage_, storage_+size_, newstore);
+  delete [] storage_;
+  storage_ = newstore;
 }
 
 void History::scalar_multiply(double scalar)
@@ -209,7 +218,7 @@ void History::copy_maps(const History & other)
 
 void History::error_if_exists_(std::string name) const
 {
-  if (loc_.count(name) != 0) {
+  if (contains(name)) {
     std::stringstream ss;
     ss << "History variable name " << name << " already stored." << std::endl;
     throw std::runtime_error(ss.str());
@@ -218,7 +227,8 @@ void History::error_if_exists_(std::string name) const
 
 void History::error_if_not_exists_(std::string name) const
 {
-  if (loc_.count(name) != 1) {
+  // This is a huge time drain
+  if (not contains(name)) {
     std::stringstream ss;
     ss << "No history variable named " << name << " is stored." << std::endl;
     throw std::runtime_error(ss.str());
@@ -227,6 +237,7 @@ void History::error_if_not_exists_(std::string name) const
 
 void History::error_if_wrong_type_(std::string name, StorageType type) const
 {
+  // This is a huge time drain
   if (type != type_.at(name)) {
     std::stringstream ss;
     ss << name << " is not of the type requested." << std::endl;
@@ -239,7 +250,7 @@ void History::zero()
   std::fill(storage_, storage_+size_, 0.0);
 }
 
-History History::split(std::vector<std::string> sep) const
+History History::split(std::vector<std::string> sep, bool after) const
 {
   // Check to see if the groups are contiguous and get the offset
   size_t i;
@@ -249,23 +260,40 @@ History History::split(std::vector<std::string> sep) const
     }
   }
 
-  History sub(false);
-
+  History res(false);
+  
   // Move the maps
-  for (size_t j = i; j < order_.size(); j++) {
-    sub.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
+  if (after) {
+    for (size_t j = i; j < order_.size(); j++) {
+      res.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
+    }
+  }
+  else {
+    for (size_t j = 0; j < i; j++) {
+      res.add(order_[j], type_.at(order_[j]), storage_size.at(type_.at(order_[j])));
+    }
   }
 
   // Either copy or just split, depending on if we own data
   if (store_) {
-    sub.make_store();
-    sub.copy_data(&storage_[loc_.at(order_[i])]);
+    res.make_store();
+    if (after) {
+      res.copy_data(&storage_[loc_.at(order_[i])]);
+    }
+    else {
+      res.copy_data(&storage_[loc_.at(order_[0])]);
+    }
   }
   else {
-    sub.set_data(&storage_[loc_.at(order_[i])]);
+    if (after) {
+      res.set_data(&storage_[loc_.at(order_[i])]);
+    }
+    else {
+      res.set_data(&storage_[loc_.at(order_[0])]);
+    }
   }
-  
-  return sub;
+
+  return res;
 }
 
 } // namespace neml

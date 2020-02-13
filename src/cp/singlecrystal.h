@@ -21,10 +21,9 @@ class SCTrialState: public TrialState {
   SCTrialState(const Symmetric & d, const Skew & w, const Symmetric & S, const
                History & H, const Orientation & Q, const Lattice & lattice,
                double T, double dt,
-               const Symmetric & s_guess, const History & h_guess,
                const History & fixed) :
       d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt),
-      s_guess(s_guess), h_guess(h_guess), fixed(fixed)
+      fixed(fixed)
   {};
 
   Symmetric d;
@@ -35,8 +34,6 @@ class SCTrialState: public TrialState {
   Lattice lattice;
   double T;
   double dt;
-  Symmetric s_guess;
-  History h_guess;
   History fixed;
 };
 
@@ -71,6 +68,10 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   /// Useful methods for external models that want an idea of an average
   /// strength
   double strength(double * const hist, double T) const;
+
+  /// Used to calculate the Nye tensor
+  void Fe(double * const stress, double * const hist, double T,
+          double * Fe) const;
   
   /// Large deformation incremental update
   virtual int update_ld_inc(
@@ -115,13 +116,19 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   Orientation get_passive_orientation(const History & hist) const;
 
   /// Set the current orientation given an active rotation (crystal to lab)
-  void set_active_orientation(double * const hist, const Orientation & q) const;
+  void set_active_orientation(double * const hist, const Orientation & q);
   /// Set the current orientation given an active rotation (crystal to lab)
-  void set_active_orientation(History & hist, const Orientation & q) const;
+  void set_active_orientation(History & hist, const Orientation & q);
   /// Set the current orientation given a passive rotation (lab to crystal)
-  void set_passive_orientation(double * const hist, const Orientation & q) const;
+  void set_passive_orientation(double * const hist, const Orientation & q);
   /// Set the current orientation given a passive rotation (lab to crystal)
-  void set_passive_orientation(History & hist, const Orientation & q) const;
+  void set_passive_orientation(History & hist, const Orientation & q);
+
+  /// Whether this model uses the nye tensor
+  virtual bool use_nye() const;
+
+  /// Actually update the Nye tensor
+  void update_nye(double * const hist, const double * const nye) const;
 
  private:
   History gather_history_(double * data) const;
@@ -140,6 +147,8 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
                         const History & H_n) const;
 
   int solve_substep_(SCTrialState * ts, Symmetric & stress, History & hist);
+
+  std::vector<std::string> not_updated_() const;
 
  private:
   std::shared_ptr<KinematicModel> kinematics_;

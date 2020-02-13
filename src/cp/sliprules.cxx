@@ -4,12 +4,12 @@ namespace neml {
 
 double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q, 
                           const History & history, Lattice & L, 
-                          double T) const
+                          double T, const History & fixed) const
 {
   double dg = 0.0;
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
-      dg += fabs(slip(g, i, stress, Q, history, L, T));
+      dg += fabs(slip(g, i, stress, Q, history, L, T, fixed));
     }
   }
 
@@ -19,13 +19,15 @@ double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q,
 Symmetric SlipRule::d_sum_slip_d_stress(const Symmetric & stress, 
                                         const Orientation & Q, 
                                         const History & history,
-                                        Lattice & L, double T) const
+                                        Lattice & L, double T, 
+                                        const History & fixed) const
 {
   Symmetric ds;
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
-      double dg = slip(g, i, stress, Q, history, L, T);
-      ds += copysign(1.0, dg) * d_slip_d_s(g, i, stress, Q, history, L, T);
+      double dg = slip(g, i, stress, Q, history, L, T, fixed);
+      ds += copysign(1.0, dg) * d_slip_d_s(g, i, stress, Q, history, L, T,
+                                           fixed);
     }
   }
 
@@ -35,20 +37,25 @@ Symmetric SlipRule::d_sum_slip_d_stress(const Symmetric & stress,
 History SlipRule::d_sum_slip_d_hist(const Symmetric & stress,
                                     const Orientation & Q, 
                                     const History & history, Lattice & L,
-                                    double T) const
+                                    double T, const History & fixed) const
 {
   History res = history.copy_blank();
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
-      double dg = slip(g, i, stress, Q, history, L, T);
+      double dg = slip(g, i, stress, Q, history, L, T, fixed);
       double sgn = copysign(1.0, dg);
-      History temp = d_slip_d_h(g, i, stress, Q,  history, L, T);
+      History temp = d_slip_d_h(g, i, stress, Q,  history, L, T, fixed);
       temp.scalar_multiply(sgn);
       res += temp;
     }
   }
 
   return res;
+}
+
+bool SlipRule::use_nye() const
+{
+  return false;
 }
 
 SlipMultiStrengthSlipRule::SlipMultiStrengthSlipRule(
@@ -87,14 +94,15 @@ void SlipMultiStrengthSlipRule::init_history(History & history) const
 }
 
 double SlipMultiStrengthSlipRule::strength(const History & history,
-                                      Lattice & L, double T) const
+                                      Lattice & L, double T,
+                                      const History & fixed) const
 {
   double val = 0.0;
   double num = 0.0;
   for (auto strength : strengths_) {
     for (size_t g = 0; g < L.ngroup(); g++) {
       for (size_t i = 0; i < L.nslip(g); i++) {
-        val += strength->hist_to_tau(g, i, history, T);
+        val += strength->hist_to_tau(g, i, history, T, fixed);
         num += 1.0;
       }
     }
@@ -105,13 +113,13 @@ double SlipMultiStrengthSlipRule::strength(const History & history,
 
 double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & stress, 
                     const Orientation & Q, const History & history,
-                    Lattice & L, double T) const
+                    Lattice & L, double T, const History & fixed) const
 {
   double tau = L.shear(g, i, Q, stress);
   std::vector<double> strengths(nstrength());
 
   for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T);
+    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T, fixed);
   }
 
   return sslip(g, i, tau, strengths, T);
@@ -119,14 +127,14 @@ double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & str
 
 Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmetric & stress, 
                              const Orientation & Q, const History & history,
-                             Lattice & L, double T) const
+                             Lattice & L, double T, const History & fixed) const
 {
   double tau = L.shear(g, i, Q, stress);  
   Symmetric dtau = L.d_shear(g, i, Q, stress);
 
   std::vector<double> strengths(nstrength());
   for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T);
+    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T, fixed);
   }
 
   return d_sslip_dtau(g, i, tau, strengths, T) * dtau;
@@ -134,21 +142,21 @@ Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmet
 
 History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetric & stress, 
                    const Orientation & Q, const History & history,
-                   Lattice & L, double T) const
+                   Lattice & L, double T, const History & fixed) const
 {
   double tau = L.shear(g, i, Q, stress);  
   Symmetric dtau = L.d_shear(g, i, Q, stress);
+
   std::vector<double> strengths(nstrength());
   for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T);
+    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T, fixed);
   }
 
   std::vector<double> dtb = d_sslip_dstrength(g, i, tau, strengths, T);
 
   History dhist;
-
   for (size_t i = 0; i < nstrength(); i++) {
-    History deriv = strengths_[i]->d_hist_to_tau(g, i, history, T);
+    History deriv = strengths_[i]->d_hist_to_tau(g, i, history, T, fixed);
     deriv.scalar_multiply(dtb[i]);
     dhist.add_union(deriv); 
   }
@@ -158,35 +166,43 @@ History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetri
 
 History SlipMultiStrengthSlipRule::hist_rate(const Symmetric & stress, 
                     const Orientation & Q, const History & history,
-                    Lattice & L, double T) const
+                    Lattice & L, double T, const History & fixed) const
 {
   History res;
   for (auto strength : strengths_) {
-    res.add_union(strength->hist(stress, Q, history, L, T, *this));
+    res.add_union(strength->hist(stress, Q, history, L, T, *this, fixed));
   }
   return res;
 }
 
 History SlipMultiStrengthSlipRule::d_hist_rate_d_stress(const Symmetric & stress, 
                     const Orientation & Q, const History & history,
-                    Lattice & L, double T) const
+                    Lattice & L, double T, const History & fixed) const
 {
   History dhist;
   for (auto strength : strengths_) {
-    dhist.add_union(strength->d_hist_d_s(stress, Q, history, L, T, *this));
+    dhist.add_union(strength->d_hist_d_s(stress, Q, history, L, T, *this, fixed));
   }
   return dhist;
 }
 
 History SlipMultiStrengthSlipRule::d_hist_rate_d_hist(const Symmetric & stress, 
                     const Orientation & Q, const History & history,
-                    Lattice & L, double T) const
+                    Lattice & L, double T, const History & fixed) const
 {
   History dhist;
   for (auto strength : strengths_) {
-    dhist.add_union(strength->d_hist_d_h(stress, Q, history, L, T, *this));
+    dhist.add_union(strength->d_hist_d_h(stress, Q, history, L, T, *this, fixed));
   }
   return dhist;
+}
+
+bool SlipMultiStrengthSlipRule::use_nye() const
+{
+  for (auto strength : strengths_) {
+    if (strength->use_nye()) return true;
+  }
+  return false;
 }
 
 KinematicPowerLawSlipRule::KinematicPowerLawSlipRule(

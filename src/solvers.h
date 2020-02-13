@@ -22,6 +22,8 @@ class TrialState {
 /// Generic nonlinear solver interface
 class NEML_EXPORT Solvable {
  public:
+  virtual ~Solvable() {};
+
   /// Number of parameters in the nonlinear equation
   virtual size_t nparams() const = 0;
   /// Initialize a guess to start the solution iterations

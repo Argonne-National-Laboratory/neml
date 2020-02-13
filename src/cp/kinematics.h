@@ -24,7 +24,8 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
   virtual void init_history(History & history) const = 0;
 
   /// Helper for external models that want a strength
-  virtual double strength(const History & history, Lattice & L, double T) const = 0;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const = 0;
 
   /// Hook to allow user to decouple parts of the update
   /// Any items added to the History object will be treated explicitly
@@ -32,7 +33,7 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) = 0;
+      double T, const History & fixed) = 0;
 
   /// Stress rate
   virtual Symmetric stress_rate(
@@ -131,13 +132,16 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const = 0;
+      double T, const History & fixed) const = 0;
 
   /// Helper to calculate elastic strains
   virtual Symmetric elastic_strains(const Symmetric & stress,
                                     const Orientation & Q,
                                     const History & history,
                                     double T) = 0;
+
+  /// Whether this model uses the Nye tensor
+  virtual bool use_nye() const;
 };
 
 /// My standard kinematic assumptions, outlined in the manual
@@ -162,7 +166,8 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
   virtual void init_history(History & history) const;
 
   /// Helper for external models that want a strength
-  virtual double strength(const History & history, Lattice & L, double T) const;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const;
 
   /// Anything added to this History instance will be kept fixed in the
   /// implicit integration
@@ -170,7 +175,7 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T);
+      double T, const History & fixed);
 
   /// Stress rate
   virtual Symmetric stress_rate(
@@ -247,13 +252,16 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
       const Symmetric & stress, const Symmetric & d,
       const Skew & w, const Orientation & Q,
       const History & history, Lattice & lattice,
-      double T) const;
+      double T, const History & fixed) const;
 
   /// Helper to calculate elastic strains
   virtual Symmetric elastic_strains(const Symmetric & stress,
                                     const Orientation & Q,
                                     const History & history,
                                     double T);
+
+  /// Whether this model uses the Nye tensor
+  virtual bool use_nye() const;
 
  private:
   std::shared_ptr<LinearElasticModel> emodel_;

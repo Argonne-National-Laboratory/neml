@@ -45,7 +45,8 @@ class CommonKinematics(object):
 
   def test_d_stress_rate_d_d_decouple(self):
     def dfn(d):
-      fixed = self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T,
+          history.History())
       return self.model.stress_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T, fixed)
 
     nd = diff_symmetric_symmetric(dfn, self.d) - self.model.d_stress_rate_d_d(self.S, self.d, 
@@ -57,7 +58,8 @@ class CommonKinematics(object):
 
   def test_d_stress_rate_d_w_decouple(self):
     def dfn(w):
-      fixed = self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T,
+          history.History())
       return self.model.stress_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T, fixed)
 
     nd = diff_symmetric_skew(dfn, self.w) - self.model.d_stress_rate_d_w(self.S, self.d,
@@ -101,7 +103,8 @@ class CommonKinematics(object):
 
   def test_d_history_rate_d_d_decouple(self):
     def dfn(d):
-      fixed = self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, d, self.w, self.Q, self.H, self.L, self.T,
+          history.History())
       return self.model.history_rate(self.S, d, self.w, self.Q, self.H, self.L, self.T, fixed)
     
     nd1 = diff_history_symmetric(dfn, self.d)
@@ -115,7 +118,8 @@ class CommonKinematics(object):
   
   def test_d_history_rate_d_w_decouple(self):
     def dfn(w):
-      fixed = self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T)
+      fixed = self.model.decouple(self.S, self.d, w, self.Q, self.H, self.L, self.T,
+          history.History())
       return self.model.history_rate(self.S, self.d, w, self.Q, self.H, self.L, self.T, fixed)
   
     nd1 = diff_history_skew(dfn, self.w)
@@ -185,9 +189,10 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
     self.model = kinematics.StandardKinematicModel(self.emodel, self.imodel)
     
     self.fspin = self.model.spin(self.S, self.d, self.w, self.Q, self.H,
-        self.L, self.T)
+        self.L, self.T, history.History())
 
-    self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
+    self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T,
+        history.History())
 
   def test_setup_history(self):
     H1 = history.History()
@@ -207,8 +212,8 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
     w = uskew(self.w.data)
     Ofull = uskew(self.fspin.data)
     
-    dp = usym(self.imodel.d_p(self.S, self.Q, self.H, self.L, self.T).data)
-    wp = uskew(self.imodel.w_p(self.S, self.Q, self.H, self.L, self.T).data)
+    dp = usym(self.imodel.d_p(self.S, self.Q, self.H, self.L, self.T, self.fixed).data)
+    wp = uskew(self.imodel.w_p(self.S, self.Q, self.H, self.L, self.T, self.fixed).data)
 
     O = wp + Ofull
 
@@ -227,7 +232,7 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
   def test_hist_rate(self):
     H1 = self.model.history_rate(self.S, self.d, self.w,
         self.Q, self.H, self.L, self.T, self.fixed)
-    H2 = self.imodel.history_rate(self.S, self.Q, self.H, self.L, self.T)
+    H2 = self.imodel.history_rate(self.S, self.Q, self.H, self.L, self.T, self.fixed)
 
     self.assertTrue(np.allclose(np.array(H1), np.array(H2)))
 
@@ -238,8 +243,8 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
     w = uskew(self.w.data)
     Ofull = uskew(self.fspin.data)
     
-    dp = usym(self.imodel.d_p(self.S, self.Q, self.H, self.L, self.T).data)
-    wp = uskew(self.imodel.w_p(self.S, self.Q, self.H, self.L, self.T).data)
+    dp = usym(self.imodel.d_p(self.S, self.Q, self.H, self.L, self.T, self.fixed).data)
+    wp = uskew(self.imodel.w_p(self.S, self.Q, self.H, self.L, self.T, self.fixed).data)
 
     O = wp + Ofull
 
@@ -250,7 +255,7 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
     spin1 = tensors.Skew(
         w - wp - np.dot(e, dp) + np.dot(dp, e))
     spin2 = self.model.spin(self.S, self.d, self.w, self.Q, self.H, 
-        self.L, self.T)
+        self.L, self.T, self.fixed)
 
     self.assertTrue(spin1, spin2)
 
@@ -316,6 +321,7 @@ class TestStandardKinematicsComplicated(unittest.TestCase, CommonKinematics):
     self.model = kinematics.StandardKinematicModel(self.emodel, self.imodel)
     
     self.fspin = self.model.spin(self.S, self.d, self.w, self.Q, self.H,
-        self.L, self.T)
+        self.L, self.T, history.History())
 
-    self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T)
+    self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T,
+        history.History())

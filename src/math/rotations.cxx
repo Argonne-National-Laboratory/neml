@@ -636,6 +636,15 @@ Orientation::Orientation(const Quaternion & other) :
   normalize_();
 }
 
+Orientation Orientation::deepcopy() const
+{
+  Orientation other;
+  
+  std::copy(quat_, quat_+4, other.data());
+
+  return other;
+}
+
 void Orientation::to_euler(double & a, double & b, double & c,
                            std::string angles, std::string convention) const
 {
