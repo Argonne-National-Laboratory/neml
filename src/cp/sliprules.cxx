@@ -207,11 +207,12 @@ bool SlipMultiStrengthSlipRule::use_nye() const
 
 KinematicPowerLawSlipRule::KinematicPowerLawSlipRule(
     std::shared_ptr<SlipHardening> backstrength,
-    std::shared_ptr<SlipHardening> understrength,
+    std::shared_ptr<SlipHardening> isostrength,
+    std::shared_ptr<SlipHardening> flowresistance,
     std::shared_ptr<Interpolate> gamma0,
     std::shared_ptr<Interpolate> n) :
-      SlipMultiStrengthSlipRule({backstrength, understrength}), gamma0_(gamma0),
-      n_(n)
+      SlipMultiStrengthSlipRule({backstrength, isostrength, flowresistance}),
+      gamma0_(gamma0), n_(n)
 {
 
 }
@@ -226,7 +227,8 @@ std::unique_ptr<NEMLObject> KinematicPowerLawSlipRule::initialize(
 {
   return neml::make_unique<KinematicPowerLawSlipRule>(
       params.get_object_parameter<SlipHardening>("backstrength"),
-      params.get_object_parameter<SlipHardening>("understrength"),
+      params.get_object_parameter<SlipHardening>("isostrength"),
+      params.get_object_parameter<SlipHardening>("flowresistance"),
       params.get_object_parameter<Interpolate>("gamma0"),
       params.get_object_parameter<Interpolate>("n"));
 }
@@ -236,7 +238,8 @@ ParameterSet KinematicPowerLawSlipRule::parameters()
   ParameterSet pset(KinematicPowerLawSlipRule::type());
   
   pset.add_parameter<NEMLObject>("backstrength");
-  pset.add_parameter<NEMLObject>("understrength");
+  pset.add_parameter<NEMLObject>("isostrength");
+  pset.add_parameter<NEMLObject>("flowresistance");
   pset.add_parameter<NEMLObject>("gamma0");
   pset.add_parameter<NEMLObject>("n");
 
@@ -248,16 +251,17 @@ double KinematicPowerLawSlipRule::sslip(size_t g, size_t i, double tau,
                                         double T) const
 {
   double bs = strengths[0];
-  double us = strengths[1];
+  double is = strengths[1];
+  double fr = strengths[2];
 
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((tau - bs) < 0.0) {
+  if ((fabs(tau - bs) - is) < 0.0) {
     return 0.0;
   }
   else {
-    return g0 * (tau - bs) / us * pow(fabs((tau-bs)/us), n-1.0);
+    return g0 * pow((fabs(tau - bs) - is) / fr, n-1) * (fabs(tau - bs) - is) / fr;
   }
 }
 
@@ -266,17 +270,19 @@ double KinematicPowerLawSlipRule::d_sslip_dtau(size_t g, size_t i, double tau,
                                                double T) const
 {
   double bs = strengths[0];
-  double us = strengths[1];
+  double is = strengths[1];
+  double fr = strengths[2];
 
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((tau - bs) < 0.0) {
+  if ((fabs(tau - bs) - is) < 0.0) {
     return 0.0;
   }
   else {
-    return g0 * n * pow(us,-n) * pow(fabs(bs-tau), n-1.0);
-  } 
+    return g0*n*pow((fabs(bs-tau)-is)/fr,n)*copysign(1.0,bs-tau) / 
+        (is - fabs(bs-tau));
+  }
 }
 
 std::vector<double> KinematicPowerLawSlipRule::d_sslip_dstrength(
@@ -284,19 +290,21 @@ std::vector<double> KinematicPowerLawSlipRule::d_sslip_dstrength(
     double T) const
 {
   double bs = strengths[0];
-  double us = strengths[1];
+  double is = strengths[1];
+  double fr = strengths[2];
 
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((tau - bs) < 0.0) {
-    return {0.0,0.0};
+  if ((fabs(tau - bs) - is) < 0.0) {
+    return {0.0,0.0,0.0};
   }
   else {
-    double d1 = -g0 * n * pow(us,-n) * pow(fabs(bs-tau),n-1.0);
-    double d2 = g0 * n * (bs - tau) * pow(us,-1.0-n) * pow(fabs(bs-tau), n - 1.0);
-    return {d1, d2};
-  } 
+    double dbs = pow(fr,-n)*g0*n*pow(fabs(bs-tau)-is,n-1)*copysign(1.0,bs-tau);
+    double dis = g0 * n * pow((fabs(bs-tau)-is)/fr,n) / (is - fabs(bs-tau));
+    double dfr = -pow(fr,-1-n)*g0*n*pow(-is+fabs(bs-tau),n);
+    return {dbs, dis, dfr};
+  }
 }
 
 SlipStrengthSlipRule::SlipStrengthSlipRule(

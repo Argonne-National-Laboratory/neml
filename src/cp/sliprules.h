@@ -151,10 +151,11 @@ class NEML_EXPORT SlipMultiStrengthSlipRule: public SlipRule
 class NEML_EXPORT KinematicPowerLawSlipRule: public SlipMultiStrengthSlipRule
 {
  public:
-  /// Initialize with two strength objects: the "back" strength and the regular
-  /// in addition to a reference rate and an n
+  /// A completely generic slip rule with a backstrength, a isostrength, and
+  /// a flow resistance.
   KinematicPowerLawSlipRule(std::shared_ptr<SlipHardening> backstrength,
-                            std::shared_ptr<SlipHardening> understrength,
+                            std::shared_ptr<SlipHardening> isostrength,
+                            std::shared_ptr<SlipHardening> flowresistance,
                             std::shared_ptr<Interpolate> gamma0,
                             std::shared_ptr<Interpolate> n);
 

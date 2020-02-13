@@ -80,7 +80,7 @@ class CommonSlipMultiStrengthSlipRule(object):
             rs)
         d = self.model.d_sslip_dtau(g, i, rs, self.strength_values, self.T)
 
-        self.assertTrue(np.isclose(d, nd))
+        self.assertTrue(np.isclose(d, nd, rtol = 1e-4))
 
   def test_slip_strength(self):
     for g in range(self.L.ngroup):
@@ -104,11 +104,14 @@ class TestKinematicPowerLawSlip(unittest.TestCase, CommonSlipMultiStrengthSlipRu
       [10.0,  15.0,35.0]]))
     self.strength0 = 15.0
     self.strength1 = 20.0
+    self.strength2 = 20.0
     self.H = history.History()
     self.H.add_scalar("strength0")
     self.H.add_scalar("strength1")
+    self.H.add_scalar("strength2")
     self.H.set_scalar("strength0", self.strength0)
     self.H.set_scalar("strength1", self.strength1)
+    self.H.set_scalar("strength2", self.strength2)
 
     self.T = 300.0
 
@@ -120,24 +123,32 @@ class TestKinematicPowerLawSlip(unittest.TestCase, CommonSlipMultiStrengthSlipRu
     self.tau_sat_2 = 55.0
     self.b_2 = 3.0
 
-    self.backstrength = slipharden.VoceSlipHardening(self.tau_sat_1, self.b_1, self.tau0_1)
-    self.understrength = slipharden.VoceSlipHardening(self.tau_sat_2, self.b_2, self.tau0_2)
-    self.strengths = [self.backstrength, self.understrength]
+    self.tau0_3 = 10.0
+    self.tau_sat_3 = 45.0
+    self.b_3 = 5.0
 
-    self.strength_values = [self.strength0 + self.tau0_1, self.strength1 + self.tau0_2]
+    self.backstrength = slipharden.VoceSlipHardening(self.tau_sat_1, self.b_1, self.tau0_1)
+    self.isostrength = slipharden.VoceSlipHardening(self.tau_sat_2, self.b_2, self.tau0_2)
+    self.flowresistance = slipharden.VoceSlipHardening(self.tau_sat_3, self.b_3, self.tau0_3)
+    self.strengths = [self.backstrength, self.isostrength, self.flowresistance]
+
+    self.strength_values = [self.strength0 + self.tau0_1, self.strength1 + self.tau0_2, self.strength2 + self.tau0_3]
     
     self.g0 = 1.0
     self.n = 3.0
-    self.model = sliprules.KinematicPowerLawSlipRule(self.backstrength, self.understrength, self.g0, self.n)
+    self.model = sliprules.KinematicPowerLawSlipRule(self.backstrength, self.isostrength, self.flowresistance, self.g0, self.n)
 
-    self.tau = 45.0
+    self.tau = 80.0
 
     self.fixed = history.History()
 
   def test_sslip(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        inv = (self.tau - self.strength0 - self.tau0_1) / (self.strength1 + self.tau0_2) 
+        bs = self.strength_values[0]
+        iso = self.strength_values[1]
+        fr = self.strength_values[2]
+        inv = (np.abs(self.tau - bs) - iso) / fr
 
         expected = self.g0 * np.abs(inv) ** (self.n-1.0) * inv
         

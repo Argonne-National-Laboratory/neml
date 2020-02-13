@@ -39,8 +39,8 @@ PYBIND11_MODULE(sliprules, m) {
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return create_object_python<KinematicPowerLawSlipRule>(
-                          args, kwargs, {"backstrength", "understrength",
-                          "gamma0", "n"});
+                          args, kwargs, {"backstrength", "isostrength",
+                          "flowresistance", "gamma0", "n"});
                     }))
       ;
 
