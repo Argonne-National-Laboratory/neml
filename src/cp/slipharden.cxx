@@ -2,6 +2,13 @@
 
 namespace neml {
 
+History SlipHardening::blank_hist() const
+{
+  History hist;
+  populate_history(hist);
+  return hist;
+}
+
 double SlipSingleHardening::hist_to_tau(
     size_t g, size_t i, const History & history, double T) const
 {
@@ -45,7 +52,7 @@ History SlipSingleStrengthHardening::hist(
     const Orientation & Q, const History & history,
     Lattice & L, double T, const SlipRule & R) const
 {
-  History res = history.copy_blank();
+  History res = blank_hist();
   res.get<double>(var_name_) = hist_rate(stress, Q, history, L, T, R);
 
   return res;
@@ -57,7 +64,7 @@ History SlipSingleStrengthHardening::d_hist_d_s(
     Lattice & L, double T,
     const SlipRule & R) const
 {
-  History res = history.derivative<Symmetric>();
+  History res = blank_hist().derivative<Symmetric>();
   res.get<Symmetric>(var_name_) = d_hist_rate_d_stress(stress,
                                                                Q, 
                                                                history,L, T, R);
@@ -163,7 +170,7 @@ History SumSlipSingleStrengthHardening::hist(
     const Orientation & Q, const History & history,
     Lattice & L, double T, const SlipRule & R) const
 {
-  History res = history.copy_blank();
+  History res = blank_hist();
   for (size_t i = 0; i < nmodels(); i++) {
     res.get<double>("strength"+std::to_string(i)) = models_[i]->hist_rate(stress, Q, history, L, T, R);
   }
@@ -177,7 +184,7 @@ History SumSlipSingleStrengthHardening::d_hist_d_s(
     Lattice & L, double T,
     const SlipRule & R) const
 {
-  History res = history.derivative<Symmetric>();
+  History res = blank_hist().derivative<Symmetric>();
   for (size_t i = 0; i < nmodels(); i++) {
     res.get<Symmetric>("strength"+std::to_string(i)) = models_[i]->d_hist_rate_d_stress(stress,
                                                                Q, 

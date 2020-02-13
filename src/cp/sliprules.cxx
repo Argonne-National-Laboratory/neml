@@ -55,7 +55,16 @@ SlipMultiStrengthSlipRule::SlipMultiStrengthSlipRule(
     std::vector<std::shared_ptr<SlipHardening>> strengths) :
       strengths_(strengths)
 {
-  
+  // Rename variables to avoid conflicts
+  if (strengths.size() > 1) {
+    for (size_t i = 0; i < strengths_.size(); i++) {
+      auto vars = strengths_[i]->varnames();
+      for (size_t j = 0; j < vars.size(); j++) {
+        vars[j] += std::to_string(i);
+      }
+      strengths_[i]->set_varnames(vars);
+    }
+  }
 }
 
 size_t SlipMultiStrengthSlipRule::nstrength() const
@@ -100,6 +109,7 @@ double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & str
 {
   double tau = L.shear(g, i, Q, stress);
   std::vector<double> strengths(nstrength());
+
   for (size_t i = 0; i < nstrength(); i++) {
     strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T);
   }
@@ -122,7 +132,6 @@ Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmet
   return d_sslip_dtau(g, i, tau, strengths, T) * dtau;
 }
 
-// This is the hard one
 History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetric & stress, 
                    const Orientation & Q, const History & history,
                    Lattice & L, double T) const
@@ -151,11 +160,11 @@ History SlipMultiStrengthSlipRule::hist_rate(const Symmetric & stress,
                     const Orientation & Q, const History & history,
                     Lattice & L, double T) const
 {
-  History hist;
+  History res;
   for (auto strength : strengths_) {
-    hist.add_union(strength->hist(stress, Q, history, L, T, *this));
+    res.add_union(strength->hist(stress, Q, history, L, T, *this));
   }
-  return hist;
+  return res;
 }
 
 History SlipMultiStrengthSlipRule::d_hist_rate_d_stress(const Symmetric & stress, 
@@ -180,6 +189,99 @@ History SlipMultiStrengthSlipRule::d_hist_rate_d_hist(const Symmetric & stress,
   return dhist;
 }
 
+KinematicPowerLawSlipRule::KinematicPowerLawSlipRule(
+    std::shared_ptr<SlipHardening> backstrength,
+    std::shared_ptr<SlipHardening> understrength,
+    std::shared_ptr<Interpolate> gamma0,
+    std::shared_ptr<Interpolate> n) :
+      SlipMultiStrengthSlipRule({backstrength, understrength}), gamma0_(gamma0),
+      n_(n)
+{
+
+}
+
+std::string KinematicPowerLawSlipRule::type()
+{
+  return "KinematicPowerLawSlipRule";
+}
+
+std::unique_ptr<NEMLObject> KinematicPowerLawSlipRule::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<KinematicPowerLawSlipRule>(
+      params.get_object_parameter<SlipHardening>("backstrength"),
+      params.get_object_parameter<SlipHardening>("understrength"),
+      params.get_object_parameter<Interpolate>("gamma0"),
+      params.get_object_parameter<Interpolate>("n"));
+}
+
+ParameterSet KinematicPowerLawSlipRule::parameters()
+{
+  ParameterSet pset(KinematicPowerLawSlipRule::type());
+  
+  pset.add_parameter<NEMLObject>("backstrength");
+  pset.add_parameter<NEMLObject>("understrength");
+  pset.add_parameter<NEMLObject>("gamma0");
+  pset.add_parameter<NEMLObject>("n");
+
+  return pset;
+}
+
+double KinematicPowerLawSlipRule::sslip(size_t g, size_t i, double tau, 
+                                        std::vector<double> strengths, 
+                                        double T) const
+{
+  double bs = strengths[0];
+  double us = strengths[1];
+
+  double g0 = gamma0_->value(T);
+  double n = n_->value(T);
+
+  if ((tau - bs) < 0.0) {
+    return 0.0;
+  }
+  else {
+    return g0 * (tau - bs) / us * pow(fabs((tau-bs)/us), n-1.0);
+  }
+}
+
+double KinematicPowerLawSlipRule::d_sslip_dtau(size_t g, size_t i, double tau, 
+                                               std::vector<double> strengths,
+                                               double T) const
+{
+  double bs = strengths[0];
+  double us = strengths[1];
+
+  double g0 = gamma0_->value(T);
+  double n = n_->value(T);
+
+  if ((tau - bs) < 0.0) {
+    return 0.0;
+  }
+  else {
+    return g0 * n * pow(us,-n) * pow(fabs(bs-tau), n-1.0);
+  } 
+}
+
+std::vector<double> KinematicPowerLawSlipRule::d_sslip_dstrength(
+    size_t g, size_t i, double tau, std::vector<double> strengths, 
+    double T) const
+{
+  double bs = strengths[0];
+  double us = strengths[1];
+
+  double g0 = gamma0_->value(T);
+  double n = n_->value(T);
+
+  if ((tau - bs) < 0.0) {
+    return {0.0,0.0};
+  }
+  else {
+    double d1 = -g0 * n * pow(us,-n) * pow(fabs(bs-tau),n-1.0);
+    double d2 = g0 * n * (bs - tau) * pow(us,-1.0-n) * pow(fabs(bs-tau), n - 1.0);
+    return {d1, d2};
+  } 
+}
 
 SlipStrengthSlipRule::SlipStrengthSlipRule(
     std::shared_ptr<SlipHardening> strength) :

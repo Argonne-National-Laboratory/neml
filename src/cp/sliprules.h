@@ -135,6 +135,44 @@ class NEML_EXPORT SlipMultiStrengthSlipRule: public SlipRule
   std::vector<std::shared_ptr<SlipHardening>> strengths_;
 };
 
+/// Kinematic hardening type power law slip
+class NEML_EXPORT KinematicPowerLawSlipRule: public SlipMultiStrengthSlipRule
+{
+ public:
+  /// Initialize with two strength objects: the "back" strength and the regular
+  /// in addition to a reference rate and an n
+  KinematicPowerLawSlipRule(std::shared_ptr<SlipHardening> backstrength,
+                            std::shared_ptr<SlipHardening> understrength,
+                            std::shared_ptr<Interpolate> gamma0,
+                            std::shared_ptr<Interpolate> n);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// The slip rate on group g, system i given the resolved shear, the strength,
+  /// and temperature
+  virtual double sslip(size_t g, size_t i, double tau, 
+                       std::vector<double> strengths, double T) const;
+  /// Derivative of slip rate with respect to the resolved shear
+  virtual double d_sslip_dtau(size_t g, size_t i, double tau, 
+                              std::vector<double> strengths,
+                              double T) const;
+  /// Derivative of the slip rate with respect to the strengths
+  virtual std::vector<double> d_sslip_dstrength(size_t g, size_t i, double tau,
+                                                std::vector<double> strengths,
+                                                double T) const;
+
+ private:
+  std::shared_ptr<Interpolate> gamma0_;
+  std::shared_ptr<Interpolate> n_;
+};
+
+static Register<KinematicPowerLawSlipRule> regKinematicPowerLawSlipRule;
+
 /// Class where all slip rules that give the system response proportional to some strength,
 /// which is in turn a function of the history
 class NEML_EXPORT SlipStrengthSlipRule: public SlipMultiStrengthSlipRule

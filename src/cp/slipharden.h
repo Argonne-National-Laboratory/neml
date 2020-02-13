@@ -59,6 +59,9 @@ class NEML_EXPORT SlipHardening: public NEMLObject
                  const History & history,
                  Lattice & L,
                  double T, const SlipRule & R) const = 0;
+
+ protected:
+  History blank_hist() const;
 };
 
 /// Slip strength rules where all systems share the same strength

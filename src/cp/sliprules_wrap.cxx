@@ -33,6 +33,16 @@ PYBIND11_MODULE(sliprules, m) {
       .def("d_sslip_dstrength", &SlipMultiStrengthSlipRule::d_sslip_dstrength)
       ;
 
+  py::class_<KinematicPowerLawSlipRule, SlipMultiStrengthSlipRule,
+        std::shared_ptr<KinematicPowerLawSlipRule>>(m, "KinematicPowerLawSlipRule")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<KinematicPowerLawSlipRule>(
+                          args, kwargs, {"backstrength", "understrength",
+                          "gamma0", "n"});
+                    }))
+      ;
+
   py::class_<SlipStrengthSlipRule, SlipMultiStrengthSlipRule,
         std::shared_ptr<SlipStrengthSlipRule>>(m, "SlipStrengthSlipRule")
       .def("scalar_sslip", &SlipStrengthSlipRule::scalar_sslip)

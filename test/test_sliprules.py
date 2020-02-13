@@ -68,6 +68,9 @@ class CommonSlipMultiStrengthSlipRule(object):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         rs = self.L.shear(g, i, self.Q, self.S)
+        print(self.model.slip(g,i,self.S, self.Q, self.H, self.L, self.T))
+        print(self.model.sslip(g, i, rs, self.strength_values, self.T))
+        print(self.strength_values)
         self.assertTrue(np.isclose(self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T),
           self.model.sslip(g, i, rs, self.strength_values, self.T)))
 
@@ -90,6 +93,57 @@ class CommonSlipMultiStrengthSlipRule(object):
         d = self.model.d_sslip_dstrength(g, i, rs, self.strength_values, self.T)
 
         self.assertTrue(np.allclose(nd,d))
+
+class TestKinematicPowerLawSlip(unittest.TestCase, CommonSlipMultiStrengthSlipRule):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    self.strength0 = 15.0
+    self.strength1 = 20.0
+    self.H = history.History()
+    self.H.add_scalar("strength0")
+    self.H.add_scalar("strength1")
+    self.H.set_scalar("strength0", self.strength0)
+    self.H.set_scalar("strength1", self.strength1)
+
+    self.T = 300.0
+
+    self.tau0_1 = 10.0
+    self.tau_sat_1 = 50.0
+    self.b_1 = 2.5
+
+    self.tau0_2 = 15.0
+    self.tau_sat_2 = 55.0
+    self.b_2 = 3.0
+
+    self.backstrength = slipharden.VoceSlipHardening(self.tau_sat_1, self.b_1, self.tau0_1)
+    self.understrength = slipharden.VoceSlipHardening(self.tau_sat_2, self.b_2, self.tau0_2)
+    self.strengths = [self.backstrength, self.understrength]
+
+    self.strength_values = [self.strength0 + self.tau0_1, self.strength1 + self.tau0_2]
+    
+    self.g0 = 1.0
+    self.n = 3.0
+    self.model = sliprules.KinematicPowerLawSlipRule(self.backstrength, self.understrength, self.g0, self.n)
+
+    self.tau = 45.0
+
+  def test_sslip(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        inv = (self.tau - self.strength0 - self.tau0_1) / (self.strength1 + self.tau0_2) 
+
+        expected = self.g0 * np.abs(inv) ** (self.n-1.0) * inv
+        
+        actual = self.model.sslip(g, i, self.tau, self.strength_values, self.T)
+
+        self.assertTrue(np.isclose(expected, actual))
 
 class CommonSlipStrengthSlipRule(CommonSlipMultiStrengthSlipRule):
   def test_init_hist(self):
