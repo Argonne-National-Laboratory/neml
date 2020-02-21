@@ -134,8 +134,9 @@ PYBIND11_MODULE(history, m) {
         .def("scalar_multiply", &History::scalar_multiply)
         .def(py::self += py::self)
         .def("zero", &History::zero)
-        .def("split", &History::split)
+        .def("split", &History::split, py::arg("group"), py::arg("after") = true)
         .def("add_union", &History::add_union)
+        .def("contains", &History::contains)
       ;
 }
 

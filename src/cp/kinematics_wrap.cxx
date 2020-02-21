@@ -41,6 +41,8 @@ PYBIND11_MODULE(kinematics, m) {
       .def("spin", &KinematicModel::spin)
 
       .def("elastic_strains", &KinematicModel::elastic_strains)
+
+      .def_property_readonly("use_nye", &KinematicModel::use_nye)
       ;
 
   py::class_<StandardKinematicModel, KinematicModel, std::shared_ptr<StandardKinematicModel>>(m, "StandardKinematicModel")

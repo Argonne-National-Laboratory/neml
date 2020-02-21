@@ -10,11 +10,11 @@ partial derivatives.
 The mathematical interface is:
 
 .. math::
-     \mathbf{D}^p, \frac{\partial \mathbf{D}^p}{\partial \bm{\sigma}}, \frac{\partial \mathbf{D}^p}{\partial \mathbf{h}} \leftarrow \mathcal{D}\left(\bm{\sigma}, \mathbf{h}, T \right)
+     \mathbf{D}^p, \frac{\partial \mathbf{D}^p}{\partial \bm{\sigma}}, \frac{\partial \mathbf{D}^p}{\partial \mathbf{h}} \leftarrow \mathcal{D}\left(\bm{\sigma}, \mathbf{h}, \bm{\alpha}, T \right)
 
-     \mathbf{W}^p, \frac{\partial \mathbf{W}^p}{\partial \bm{\sigma}}, \frac{\partial \mathbf{W}^p}{\partial \mathbf{h}} \leftarrow \mathcal{W}\left(\bm{\sigma}, \mathbf{h}, T \right)
+     \mathbf{W}^p, \frac{\partial \mathbf{W}^p}{\partial \bm{\sigma}}, \frac{\partial \mathbf{W}^p}{\partial \mathbf{h}} \leftarrow \mathcal{W}\left(\bm{\sigma}, \mathbf{h}, \bm{\alpha}, T \right)
 
-   \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, T \right)
+   \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, \bm{\alpha}, T \right)
 
 where all these quantities are defined in the crystal plasticity :ref:`overview <cp-formulation>`.
 Note the implementations also have the crystallographic information
@@ -36,3 +36,5 @@ Class description
 
 .. doxygenclass:: neml::InelasticModel
    :members:
+   :undoc-members:
+

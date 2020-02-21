@@ -1205,7 +1205,7 @@ int eigenvalues_sym(const double * const s, double * values)
   
   int swork = 15;
   double work[15];
-  int info;
+  int info = 0;
 
   dsyev_("N", "U", 3, F, 3, values, work, swork, info);
 
@@ -1218,7 +1218,7 @@ int eigenvectors_sym(const double * const s, double * vectors)
 
   int swork = 15;
   double work[15];
-  int info;
+  int info = 0;
   double values[3];
 
   dsyev_("V", "U", 3, vectors, 3, values, work, swork, info);

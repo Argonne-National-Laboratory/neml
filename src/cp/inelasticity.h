@@ -25,56 +25,64 @@ class NEML_EXPORT InelasticModel: public NEMLObject {
   virtual void init_history(History & history) const = 0;
 
   /// Helper for external models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T) const = 0;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const = 0;
 
   /// Symmetric part of the plastic deformation
   virtual Symmetric d_p(const Symmetric & stress, const Orientation & Q,
                         const History & history,
-                        Lattice & lattice, double T) const = 0;
+                        Lattice & lattice, double T,
+                        const History & fixed) const = 0;
   /// Derivative of the symmetric part with respect to stress
   virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress, const Orientation & Q,
                                 const History & history,
-                                Lattice & lattice, double T) const = 0;
+                                Lattice & lattice, double T,
+                                const History & fixed) const = 0;
   /// Derivative of the symmetric part with respect to stress
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  Lattice & lattice, double T) const = 0;
+                                  Lattice & lattice, double T,
+                                  const History & fixed) const = 0;
 
   /// History rate
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               Lattice & lattice, double T) const = 0;
+                               Lattice & lattice, double T,
+                               const History & fixed) const = 0;
   /// Derivative of the history rate with respect to stress
   virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
-                                          double T) const = 0;
+                                          double T, const History & fixed) const = 0;
   /// Derivative of the history rate with respect to the history
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
                                          Lattice & lattice,
-                                         double T) const = 0;
+                                         double T, const History & fixed) const = 0;
   /// Skew part of the plastic deformation rate
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
                    Lattice & lattice,
-                   double T) const = 0;
+                   double T, const History & fixed) const = 0;
   /// Derivative of the skew part with respect to stress
   virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
-                                 double T) const = 0;
+                                 double T, const History & fixed) const = 0;
   /// Derivative of the skew part with respect to history
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const = 0;
+                                  double T, const History & fixed) const = 0;
+
+  /// Whether this model uses the nye tensor
+  virtual bool use_nye() const;
 };
 
 /// This model returns zero for the plastic deformation, resulting model
@@ -99,60 +107,63 @@ class NEML_EXPORT NoInelasticity: public InelasticModel {
   virtual void init_history(History & history) const;
 
   /// Helper for external models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T) const;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const;
 
   /// Symmetric part of the plastic deformation = 0
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
                         const History & history,
                         Lattice & lattice,
-                        double T) const;
+                        double T, const History & fixed) const;
   /// Derivative of the symmetric part with respect to stress (=0)
   virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice,
-                                double T) const;
+                                double T, const History & fixed) const;
   /// Derivative of the symmetric part with respect to history (null)
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const;
+                                  double T, const History & fixed) const;
 
   /// History rate (null, as there are no history variables)
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               Lattice & lattice, double T) const;
+                               Lattice & lattice, double T,
+                               const History & fixed) const;
   /// Derivative of the history rate with respect to stress (null)
   virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
-                                          double T) const;
+                                          double T, const History & fixed) const;
   /// Derivative of the history rate with respect to history (null)
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
                                          Lattice & lattice,
-                                         double T) const;
+                                         double T, const History & fixed) const;
   // Skew part of the plastic deformation (=0)
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
-                   Lattice & lattice, double T) const;
+                   Lattice & lattice, double T,
+                   const History & fixed) const;
   /// Derivative of the skew part with respect to stress (=0)
   virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
-                                 double T) const;
+                                 double T, const History & fixed) const;
   /// Derivative of the skew part with respect to history (null)
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const;
+                                  double T, const History & fixed) const;
 };
 
 static Register<NoInelasticity> regNoInelasticity;
@@ -178,56 +189,69 @@ class NEML_EXPORT AsaroInelasticity: public InelasticModel {
   virtual void init_history(History & history) const;
 
   /// Helper for external models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T) const;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const;
 
   /// Symmetric part of the plastic deformation rate
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
                         const History & history,
-                        Lattice & lattice, double T) const;
+                        Lattice & lattice, double T,
+                        const History & fixed) const;
   /// Derivative of the symmetric part with respect to stress
   virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
-                                Lattice & lattice, double T) const;
+                                Lattice & lattice, double T,
+                                const History & fixed) const;
   /// Derivative of the symmetric part with respect to history
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
-                                  Lattice & lattice, double T) const;
+                                  Lattice & lattice, double T, 
+                                  const History & fixed) const;
 
   /// History rate, deferred to the SlipRule
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               Lattice & lattice, double T) const;
+                               Lattice & lattice, double T,
+                               const History & fixed) const;
   /// Derivative of the history rate with respect to stress
   virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
-                                          Lattice & lattice, double T) const;
+                                          Lattice & lattice, double T,
+                                          const History & fixed) const;
   /// Derivative of the history rate with respect to history
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
-                                         Lattice & lattice, double T) const;
+                                         Lattice & lattice, double T,
+                                         const History & fixed) const;
 
   /// Skew part of the plastic deformation rate
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
-                   Lattice & lattice, double T) const;
+                   Lattice & lattice, double T,
+                   const History & fixed) const;
   /// Derivative of the skew part with respect to stress
   virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
-                                 double T) const;
+                                 double T,
+                                 const History & fixed) const;
   /// Derivative of the skew part with respect to history
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const;
+                                  double T,
+                                  const History & fixed) const;
+
+  /// Whether this model uses the Nye tensor
+  virtual bool use_nye() const;
 
  private:
   std::shared_ptr<SlipRule> rule_;
@@ -255,61 +279,70 @@ class NEML_EXPORT PowerLawInelasticity: public InelasticModel {
   virtual void init_history(History & history) const;
 
   /// Helper for external models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T) const;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const;
 
   /// Symmetric part of the deformation rate
   virtual Symmetric d_p(const Symmetric & stress,
                         const Orientation & Q,
                         const History & history,
                         Lattice & lattice,
-                        double T) const;
+                        double T,
+                        const History & fixed) const;
   /// Derivative of the symmetric part with respect to the stress
   virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice,
-                                double T) const;
+                                double T, const History & fixed) const;
   /// Derivative of the symmetric part with respect to the history (null here)
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const;
+                                  double T,
+                                  const History & fixed) const;
 
   /// History rate (null)
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               Lattice & lattice, double T) const;
+                               Lattice & lattice, double T,
+                               const History & fixed) const;
   /// Derivative of the history with respect to the stress (null here)
   virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
-                                          double T) const;
+                                          double T,
+                                          const History & fixed) const;
   /// Derivative of the history rate with respect to the history (null here)
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
                                          Lattice & lattice,
-                                         double T) const;
+                                         double T,
+                                         const History & fixed) const;
 
   /// Skew part of the deformation rate (zero here)
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
-                   Lattice & lattice, double T) const;
+                   Lattice & lattice, double T,
+                   const History & fixed) const;
   /// Derivative of the skew part with respect to stress (=0)
   virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
-                                 double T) const;
+                                 double T,
+                                 const History & fixed) const;
   /// Derivative of the skew part with respect to the history (null here)
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const;
+                                  double T,
+                                  const History & fixed) const;
 
  private:
   double seq_(const Symmetric & stress) const;
@@ -339,7 +372,8 @@ class NEML_EXPORT CombinedInelasticity: public InelasticModel {
   static ParameterSet parameters();
 
   /// Helper for external models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T) const;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const;
 
   /// Setup all history variables
   virtual void populate_history(History & history) const;
@@ -351,54 +385,61 @@ class NEML_EXPORT CombinedInelasticity: public InelasticModel {
                         const Orientation & Q,
                         const History & history,
                         Lattice & lattice,
-                        double T) const;
+                        double T, const History & fixed) const;
   /// Sum the derivatives of the symmetric part with respect to stress
   virtual SymSymR4 d_d_p_d_stress(const Symmetric & stress,
                                 const Orientation & Q,
                                 const History & history,
                                 Lattice & lattice,
-                                double T) const;
+                                double T, const History & fixed) const;
   /// Concatenate the derivatives of the symmetric part with respect to history
   virtual History d_d_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const;
+                                  double T, const History & fixed) const;
 
   /// Concatenate the history rates
   virtual History history_rate(const Symmetric & stress, const Orientation & Q,
                                const History & history,
-                               Lattice & lattice, double T) const;
+                               Lattice & lattice, double T, 
+                               const History & fixed) const;
   /// Concatenate the derivative of the history rates with respect to stress
   virtual History d_history_rate_d_stress(const Symmetric & stress,
                                           const Orientation & Q,
                                           const History & history,
                                           Lattice & lattice,
-                                          double T) const;
+                                          double T,
+                                          const History & fixed) const;
   /// Concatenate the derivative of the history rates with respect to history
   virtual History d_history_rate_d_history(const Symmetric & stress,
                                          const Orientation & Q,
                                          const History & history,
                                          Lattice & lattice,
-                                         double T) const;
+                                         double T,
+                                         const History & fixed) const;
 
   /// Sum the skew parts of the plastic deformation rates
   virtual Skew w_p(const Symmetric & stress,
                    const Orientation & Q,
                    const History & history,
-                   Lattice & lattice, double T) const;
+                   Lattice & lattice, double T,
+                   const History & fixed) const;
   /// Sum the derivatives of the skew parts with respect to the stress
   virtual SkewSymR4 d_w_p_d_stress(const Symmetric & stress,
                                  const Orientation & Q,
                                  const History & history,
                                  Lattice & lattice,
-                                 double T) const;
+                                 double T, const History & fixed) const;
   /// Concatenate the derivatives of the skew parts with respect to the history
   virtual History d_w_p_d_history(const Symmetric & stress,
                                   const Orientation & Q,
                                   const History & history,
                                   Lattice & lattice,
-                                  double T) const;
+                                  double T, const History & fixed) const;
+
+  /// Whether this model uses the Nye tensor
+  virtual bool use_nye() const;
 
  private:
   std::vector<std::shared_ptr<InelasticModel>> models_;

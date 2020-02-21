@@ -19,6 +19,7 @@ PYBIND11_MODULE(slipharden, m) {
       .def("hist", &SlipHardening::hist)
       .def("d_hist_d_s", &SlipHardening::d_hist_d_s)
       .def("d_hist_d_h", &SlipHardening::d_hist_d_h)
+      .def_property_readonly("use_nye", &SlipHardening::use_nye)
       ;
 
   py::class_<SlipSingleHardening, SlipHardening,
@@ -47,6 +48,8 @@ PYBIND11_MODULE(slipharden, m) {
       .def("d_hist_rate_d_hist",
            &SlipSingleStrengthHardening::d_hist_rate_d_hist)
       .def("static_strength", &SlipSingleStrengthHardening::static_strength)
+      .def("nye_contribution", &SlipSingleStrengthHardening::nye_contribution)
+      .def("nye_part", &SlipSingleStrengthHardening::nye_part)
       ;
 
   py::class_<PlasticSlipHardening, SlipSingleStrengthHardening,
@@ -61,6 +64,15 @@ PYBIND11_MODULE(slipharden, m) {
                     {
                       return create_object_python<VoceSlipHardening>(
                           args, kwargs, {"tau_sat", "b", "tau_0"});
+                    }))
+      ;
+
+  py::class_<LinearSlipHardening, PlasticSlipHardening,
+        std::shared_ptr<LinearSlipHardening>>(m, "LinearSlipHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<LinearSlipHardening>(
+                          args, kwargs, {"tau0", "k1", "k2"});
                     }))
       ;
 

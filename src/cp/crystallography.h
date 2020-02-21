@@ -99,9 +99,9 @@ class NEML_EXPORT Lattice: public NEMLObject {
   size_t flat(size_t g, size_t i) const;
 
   /// Return the sym(d x n) tensor for group g, system i, rotated with Q
-  Symmetric M(size_t g, size_t i, const Orientation & Q);
+  const Symmetric & M(size_t g, size_t i, const Orientation & Q);
   /// Return the skew(d x n) tensor for group g, system i, rotated with Q
-  Skew N(size_t g, size_t i, const Orientation & Q);
+  const Skew & N(size_t g, size_t i, const Orientation & Q);
 
   /// Calculate the resolved shear stress on group g, system i, rotated with Q
   /// given the stress

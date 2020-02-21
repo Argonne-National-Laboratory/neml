@@ -31,44 +31,51 @@ class NEML_EXPORT SlipRule: public NEMLObject
   virtual void init_history(History & history) const = 0;
 
   /// Helper for models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T) const = 0;
+  virtual double strength(const History & history, Lattice & L, double T,
+                          const History & fixed) const = 0;
 
   /// Slip rate on group g, system i
   virtual double slip(size_t g, size_t i, const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const = 0;
+                      Lattice & L, double T, const History & fixed) const = 0;
   /// Derivative of the slip rate with respect to stress
   virtual Symmetric d_slip_d_s(size_t g, size_t i, const Symmetric & stress,
                                const Orientation & Q, const History & history,
-                               Lattice & L, double T) const = 0;
+                               Lattice & L, double T, const History & fixed) const = 0;
   /// Derivative of the slip rate with respect to history
   virtual History
       d_slip_d_h(size_t g, size_t i, const Symmetric & stress,
                  const Orientation & Q, const History & history,
-                 Lattice & L, double T) const = 0;
+                 Lattice & L, double T, const History & fixed) const = 0;
 
   /// History rate
   virtual History hist_rate(const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const = 0;
+                      Lattice & L, double T, const History & fixed) const = 0;
   /// Derivative of the history rate with respect to the stress
   virtual History d_hist_rate_d_stress(const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const = 0;
+                      Lattice & L, double T, const History & fixed) const = 0;
   /// Derivative of the history rate with respect to the history
   virtual History d_hist_rate_d_hist(const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const = 0;
+                      Lattice & L, double T, const History & fixed) const = 0;
 
   /// Calculate the sum of the absolute value of the slip rates
   double sum_slip(const Symmetric & stress, const Orientation & Q,
-                  const History & history, Lattice & L, double T) const;
+                  const History & history, Lattice & L, double T,
+                  const History & fixed) const;
   /// Derivative of the sum of the absolute value of the slip rates wrt stress
   Symmetric d_sum_slip_d_stress(const Symmetric & stress, const Orientation & Q,
-                  const History & history, Lattice & L, double T) const;
+                  const History & history, Lattice & L, double T,
+                  const History & fixed) const;
   /// Derivative of the sum of the absolute value of the slip rate wrt history
   History d_sum_slip_d_hist(const Symmetric & stress, const Orientation & Q,
-                  const History & history, Lattice & L, double T) const;
+                  const History & history, Lattice & L, double T,
+                  const History & fixed) const;
+
+  /// Whether this model uses the Nye tensor
+  virtual bool use_nye() const;
 };
 
 /// Class where all slip rules that give the system response proportional to some strength,
@@ -85,34 +92,37 @@ class NEML_EXPORT SlipStrengthSlipRule: public SlipRule
   virtual void init_history(History & history) const;
 
   /// Helper for models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T) const;
+  virtual double strength(const History & history, Lattice & L, double T, 
+                          const History & fixed) const;
 
   /// Slip rate on group g, system i
   virtual double slip(size_t g, size_t i, const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const;
+                      Lattice & L, double T,
+                      const History & fixed) const;
   /// Derivative of slip rate with respect to stress
   virtual Symmetric d_slip_d_s(size_t g, size_t i, const Symmetric & stress,
                                const Orientation & Q, const History & history,
-                               Lattice & L, double T) const;
+                               Lattice & L, double T,
+                               const History & fixed) const;
   /// Derivative of slip rate with respect to history
   virtual History
       d_slip_d_h(size_t g, size_t i, const Symmetric & stress,
                  const Orientation & Q, const History & history,
-                 Lattice & L, double T) const;
+                 Lattice & L, double T, const History & fixed) const;
 
   /// History evolution equations
   virtual History hist_rate(const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const;
+                      Lattice & L, double T, const History & fixed) const;
   /// Derivative of the history rate with respect to stress
   virtual History d_hist_rate_d_stress(const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const;
+                      Lattice & L, double T, const History & fixed) const;
   /// Derivative of the history rate with respect to the history
   virtual History d_hist_rate_d_hist(const Symmetric & stress,
                       const Orientation & Q, const History & history,
-                      Lattice & L, double T) const;
+                      Lattice & L, double T, const History & fixed) const;
 
   /// The slip rate on group g, system i given the resolved shear, the strength,
   /// and temperature
@@ -124,6 +134,9 @@ class NEML_EXPORT SlipStrengthSlipRule: public SlipRule
   /// Derivative of the slip rate with respect to the strength
   virtual double d_sslip_dstrength(size_t g, size_t i, double tau,
                                    double strength, double T) const = 0;
+
+  /// Whether this model uses the Nye tensor
+  virtual bool use_nye() const;
 
  private:
   std::shared_ptr<SlipHardening> strength_;

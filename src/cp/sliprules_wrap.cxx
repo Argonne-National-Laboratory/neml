@@ -24,6 +24,7 @@ PYBIND11_MODULE(sliprules, m) {
       .def("sum_slip", &SlipRule::sum_slip)
       .def("d_sum_slip_d_stress", &SlipRule::d_sum_slip_d_stress)
       .def("d_sum_slip_d_hist", &SlipRule::d_sum_slip_d_hist)
+      .def_property_readonly("use_nye", &SlipRule::use_nye)
       ;
 
   py::class_<SlipStrengthSlipRule, SlipRule,

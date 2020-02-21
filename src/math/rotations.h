@@ -186,6 +186,9 @@ class NEML_EXPORT Orientation: public Quaternion {
   /// Copy constructor
   Orientation(const Quaternion & other);
 
+  /// Explicit deepcopy
+  Orientation deepcopy() const;
+
   // Various conversions
   /// Convert to Euler angles
   void to_euler(double & a, double & b, double & c,

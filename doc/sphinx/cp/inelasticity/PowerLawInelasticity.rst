@@ -39,3 +39,4 @@ Class description
 
 .. doxygenclass:: neml::PowerLawInelasticity
    :members:
+   :undoc-members:
