@@ -212,8 +212,9 @@ to provide crystal models with the Nye tensor
    \bm{\alpha} = -\nabla \times \mathbf{F}^{e-1}
 
 Describing the areal density of geometrically necessary dislocations.
+For this definition of the Nye tensor, the curl is taken in the current configuration.
 The Nye tensor can be used as an *ad hoc* contributor to slip system
-flow or hardening models.  The NEML system itself cannot calculate
+flow or hardening models.  The NEML system cannot calculate
 the Nye tensor itself -- that requires gradient information not available
 at the material point level -- but can accept the calculated Nye tensor
 from a higher level framework, for example an FEA model, and process it

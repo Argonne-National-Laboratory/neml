@@ -59,13 +59,11 @@ if __name__ == "__main__":
 
     pmodel = polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
 
-    res = drivers.uniaxial_test(pmodel, erate, emax = emax, nsteps = steps, 
-        verbose = True)
+    res = drivers.uniaxial_test(pmodel, erate, emax = emax, nsteps = steps)
 
     strains.append(res['strain'])
     stresses.append(res['stress'])
   
-  plt.style.use("presentation")
   plt.figure()
   for e,s,r in zip(strains, stresses, rhos):
     plt.plot(e,s, label = r"$\rho=%3.1e\,\mathrm{m^{-2}}$" % r)

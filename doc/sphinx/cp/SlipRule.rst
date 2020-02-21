@@ -12,7 +12,7 @@ and the slip rate on each individual slip system as well as the history evolutio
 
    \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, \bm{\alpha}, T \right)
 
-where :math:`g` indicates the slip family and :math:`i` indicates the system within the group.
+where :math:`g` indicates the slip group and :math:`i` indicates the system within the group.
 
 
 Implementations

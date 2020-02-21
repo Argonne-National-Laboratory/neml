@@ -4,7 +4,7 @@ TaylorModel
 Overview
 --------
 
-This polycrystal homogenization model implements the standard Taylor approximation.  Here the individual crystal receiver the same deformation information and the resulting stresses are averaged.
+This polycrystal homogenization model implements the standard Taylor approximation.  Here the individual crystal receives the same deformation information and the resulting stresses are averaged.
 
 Mathematically, each crystal receives the same, macroscopic :math:`\mathbf{D}` and :math:`\mathbf{W}` deformation rate objects
 
