@@ -23,6 +23,7 @@ Implementations
    :maxdepth: 1
 
    VoceSlipHardening
+   LinearSlipHardening
 
 
 Class description
@@ -30,3 +31,4 @@ Class description
 
 .. doxygenclass:: neml::PlasticSlipHardening
    :members:
+   :undoc-members:

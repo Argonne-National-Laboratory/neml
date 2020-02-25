@@ -80,7 +80,7 @@ If you installed nose, all the tests can be run from the root :file:`neml`
 directory by running :command:`nosetests`.
 
 Assuming the tests passed, you can begin to build material models with NEML.
-The manual has a :doc:`section <tutorial>` giving a brief tutorial on setting up a
+The manual has a :doc:`../tutorial` giving a brief tutorial on setting up a
 material model either with the python bindings or the XML input files
 and then running that model using the python drivers for some simple
 loadings.

@@ -11,9 +11,9 @@ The actual internal variables remain generic.
 This produces the interface
 
 .. math::
-   \bar{\tau}, \frac{\partial \bar{\tau}}{\partial \mathbf{h}} \leftarrow \mathcal{T}\left(\mathbf{h}, T \right)
+   \bar{\tau}, \frac{\partial \bar{\tau}}{\partial \mathbf{h}} \leftarrow \mathcal{T}\left(\mathbf{h}, \bm{\alpha}, T \right)
 
-   \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, T \right)
+   \dot{\mathbf{h}}, \frac{\partial \dot{\mathbf{h}}}{\partial \bm{\sigma}}, \frac{\partial \dot{\mathbf{h}}}{\partial \mathbf{h}} \leftarrow \mathcal{H}\left(\bm{\sigma}, \mathbf{h}, \bm{\alpha}, T \right)
 
 where :math:`\bar{\tau}` is now a single scalar.
 
@@ -24,6 +24,7 @@ Implementations
    :maxdepth: 1
 
    SlipSingleStrengthHardening
+   SumSlipSingleStrengthHardening
 
 
 Class description
@@ -31,3 +32,4 @@ Class description
 
 .. doxygenclass:: neml::SlipSingleHardening
    :members:
+   :undoc-members:

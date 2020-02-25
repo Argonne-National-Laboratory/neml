@@ -33,3 +33,4 @@ Class description
 
 .. doxygenclass:: neml::CombinedInelasticity
    :members:
+   :undoc-members:

@@ -43,3 +43,4 @@ Class description
 
 .. doxygenclass:: neml::AsaroInelasticity
    :members:
+   :undoc-members:
