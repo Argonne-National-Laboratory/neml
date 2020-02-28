@@ -144,9 +144,9 @@ ParameterSet SquareMatrix::parameters()
 
   pset.add_parameter<size_t>("m");
 
-  pset.add_optional_parameter<std::string>("type", "zero");
-  pset.add_optional_parameter<std::vector<double>>("data", {});
-  pset.add_optional_parameter<std::vector<size_t>>("blocks", {});
+  pset.add_optional_parameter<std::string>("type", std::string("zero"));
+  pset.add_optional_parameter<std::vector<double>>("data", std::vector<double>());
+  pset.add_optional_parameter<std::vector<size_t>>("blocks", std::vector<size_t>());
 
   return pset;
 }
