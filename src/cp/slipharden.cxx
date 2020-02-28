@@ -1,5 +1,7 @@
 #include "slipharden.h"
 
+#include <stdexcept>
+
 namespace neml {
 
 History SlipHardening::blank_hist() const
@@ -14,15 +16,192 @@ bool SlipHardening::use_nye() const
   return false;
 }
 
+GeneralLinearHardening::GeneralLinearHardening(std::shared_ptr<SquareMatrix> M, 
+                                               std::vector<double> tau_0,
+                                               bool absval) :
+    M_(M), tau_0_(tau_0), absval_(absval)
+{
+  if (M_->n() != tau_0_.size()) {
+    throw std::invalid_argument("Hardening matrix and initial strength sizes do not agree!");
+  }
+  
+  varnames_.resize(size());
+  for (size_t i = 0; i < size(); i++) {
+    varnames_[i] = "strength"+std::to_string(i);
+  }
+}
+
+std::string GeneralLinearHardening::type()
+{
+  return "GeneralLinearHardening";
+}
+
+std::unique_ptr<NEMLObject> GeneralLinearHardening::initialize(ParameterSet & params)
+{
+  return neml::make_unique<GeneralLinearHardening>(
+      params.get_object_parameter<SquareMatrix>("M"),
+      params.get_parameter<std::vector<double>>("tau_0"),
+      params.get_parameter<bool>("absval"));
+}
+
+ParameterSet GeneralLinearHardening::parameters()
+{
+  ParameterSet pset(GeneralLinearHardening::type());
+
+  pset.add_parameter<NEMLObject>("M");
+  pset.add_parameter<std::vector<double>>("tau_0");
+
+  pset.add_optional_parameter<bool>("absval", true);
+
+  return pset;
+}
+
+std::vector<std::string> GeneralLinearHardening::varnames() const
+{
+  return varnames_;
+}
+
+void GeneralLinearHardening::set_varnames(std::vector<std::string> vars)
+{
+  varnames_ = vars;
+}
+
+void GeneralLinearHardening::populate_history(History & history) const
+{
+  for (auto vn : varnames_) {
+    history.add<double>(vn);
+  }
+}
+
+void GeneralLinearHardening::init_history(History & history) const
+{
+  size_t i = 0;
+  for (auto vn : varnames_) {
+    history.get<double>(vn) = tau_0_[i];
+    i++;
+  }
+}
+
+double GeneralLinearHardening::hist_to_tau(size_t g, size_t i, 
+                                           const History & history,
+                                           Lattice & L,
+                                           double T, const History & fixed) const
+{
+  consistency(L);
+  return history.get<double>(varnames_[L.flat(g,i)]);
+}
+
+History GeneralLinearHardening::d_hist_to_tau(size_t g, size_t i, 
+                                              const History & history,
+                                              Lattice & L,
+                                              double T, 
+                                              const History & fixed) const
+{
+  consistency(L);  
+  History res = history.derivative<double>();
+  // This works because the above zeros out the vector
+  res.get<double>(varnames_[L.flat(g,i)]) = 1.0;
+  return res;
+}
+
+History GeneralLinearHardening::hist(const Symmetric & stress, 
+                                     const Orientation & Q,
+                                     const History & history, 
+                                     Lattice & L, double T, const SlipRule & R, 
+                                     const History & fixed) const
+{
+  consistency(L);  
+
+  // Vector of slip rates
+  FlatVector v(L.ntotal());
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(i); i++) {
+      if (absval_) {
+        v.data()[L.flat(g,i)] = fabs(R.slip(g, i, stress, Q, history, L, T, fixed));
+      }
+      else {
+        v.data()[L.flat(g,i)] = R.slip(g, i, stress, Q, history, L, T, fixed);
+      }
+    }
+  }
+
+  // Vector of results
+  History res = blank_hist();
+  FlatVector resv(L.ntotal(), &(res.get<double>(varnames_[0])));
+
+  // Do the multiplication!
+  M_->matvec(v, resv);
+
+  return res;
+}
+
+History GeneralLinearHardening::d_hist_d_s(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history,
+                                           Lattice & L, double T, 
+                                           const SlipRule & R,
+                                           const History & fixed) const
+{
+  consistency(L);
+  History res = blank_hist().derivative<Symmetric>();
+  
+  // Vector of stress derivatives
+  std::vector<Symmetric> v(L.ntotal());
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(i); i++) {
+      if (absval_) {
+        v.data()[L.flat(g,i)] = copysign(1.0, R.slip(g, i, stress, Q, history,
+                                                     L, T, fixed)) * 
+            R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
+      }
+      else {
+        v.data()[L.flat(g,i)] = R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
+      }
+    }
+  }
+
+  // Do the sum
+  for (size_t i = 0; i < L.ntotal(); i++) {
+    for (size_t j = 0; j < L.ntotal(); j++) {
+      res.get<Symmetric>(varnames_[i]) += M_->data()[CINDEX(i,j,L.ntotal())] * v[j];
+    }
+  }
+
+  return res;
+}
+
+History GeneralLinearHardening::d_hist_d_h(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history, 
+                                           Lattice & L,
+                                           double T, const SlipRule & R, 
+                                           const History & fixed) const
+{
+  consistency(L); 
+  return history.derivative<History>(); // zero!
+}
+
+size_t GeneralLinearHardening::size() const
+{
+  return tau_0_.size();
+}
+
+void GeneralLinearHardening::consistency(Lattice & L) const
+{
+  if (L.ntotal() != size()) {
+    throw std::logic_error("Lattice and hardening matrix sizes do not match");
+  }
+}
+
 double SlipSingleHardening::hist_to_tau(
-    size_t g, size_t i, const History & history, double T, 
+    size_t g, size_t i, const History & history, Lattice & L, double T, 
     const History & fixed) const
 {
   return hist_map(history, T, fixed);
 }
 
 History SlipSingleHardening::d_hist_to_tau(
-    size_t g, size_t i, const History & history, double T,
+    size_t g, size_t i, const History & history, Lattice & L, double T,
     const History & fixed) const
 {
   return d_hist_map(history, T, fixed);

@@ -31,8 +31,8 @@ class CommonSlipHardening():
   def test_d_hist_to_tau_d_hist(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.T, self.fixed), self.H)
-        d = self.model.d_hist_to_tau(g, i, self.H, self.T, self.fixed)
+        nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.L, self.T, self.fixed), self.H)
+        d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
 
 class CommonSlipSingleHardening():
@@ -46,7 +46,7 @@ class CommonSlipSingleHardening():
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         self.assertTrue(np.isclose(self.strength + self.static + self.nye_part, 
-          self.model.hist_to_tau(g, i, self.H, self.T, self.fixed)))
+          self.model.hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)))
 
 class CommonSlipSingleStrengthHardening():
   def test_hist_map(self):

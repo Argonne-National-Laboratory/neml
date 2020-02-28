@@ -102,7 +102,7 @@ double SlipMultiStrengthSlipRule::strength(const History & history,
   for (auto strength : strengths_) {
     for (size_t g = 0; g < L.ngroup(); g++) {
       for (size_t i = 0; i < L.nslip(g); i++) {
-        val += strength->hist_to_tau(g, i, history, T, fixed);
+        val += strength->hist_to_tau(g, i, history, L, T, fixed);
         num += 1.0;
       }
     }
@@ -119,7 +119,7 @@ double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & str
   std::vector<double> strengths(nstrength());
 
   for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T, fixed);
+    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
   }
 
   return sslip(g, i, tau, strengths, T);
@@ -134,7 +134,7 @@ Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmet
 
   std::vector<double> strengths(nstrength());
   for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T, fixed);
+    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
   }
 
   return d_sslip_dtau(g, i, tau, strengths, T) * dtau;
@@ -149,14 +149,14 @@ History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetri
 
   std::vector<double> strengths(nstrength());
   for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, T, fixed);
+    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
   }
 
   std::vector<double> dtb = d_sslip_dstrength(g, i, tau, strengths, T);
 
   History dhist;
   for (size_t i = 0; i < nstrength(); i++) {
-    History deriv = strengths_[i]->d_hist_to_tau(g, i, history, T, fixed);
+    History deriv = strengths_[i]->d_hist_to_tau(g, i, history, L, T, fixed);
     deriv.scalar_multiply(dtb[i]);
     dhist.add_union(deriv); 
   }
