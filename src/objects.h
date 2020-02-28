@@ -41,11 +41,13 @@ class NEML_EXPORT NEMLObject {
 //    vector<NEMLObject>
 //    string
 //    vector<pair<vector<int>,vector<int>>, i.e. groups of slip systems
+//    size_t
+//    vector<size_t>
 
 /// This black magic lets us store parameters in a unified map
 typedef boost::variant<double, int, bool, std::vector<double>,
         std::shared_ptr<NEMLObject>,std::vector<std::shared_ptr<NEMLObject>>,
-        std::string, list_systems> param_type;
+        std::string, list_systems, size_t, std::vector<size_t>> param_type;
 /// This is the enum name we assign to each type for the "external" interfaces
 /// to use in reconstructing a type from data
 enum ParamType {
@@ -56,7 +58,9 @@ enum ParamType {
   TYPE_NEML_OBJECT      = 4,
   TYPE_VEC_NEML_OBJECT  = 5,
   TYPE_STRING           = 6,
-  TYPE_SLIP             = 7
+  TYPE_SLIP             = 7,
+  TYPE_SIZE_TYPE        = 8,
+  TYPE_VEC_SIZE_TYPE    = 9
 };
 // This black magic lets us map the actual type of each parameter to the enum
 template <class T> constexpr ParamType GetParamType();
@@ -76,6 +80,9 @@ template <> constexpr ParamType GetParamType<std::vector<NEMLObject>>()
 template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
 template <> constexpr ParamType GetParamType<list_systems>()
 {return TYPE_SLIP;}
+template <> constexpr ParamType GetParamType<size_t>() {return TYPE_SIZE_TYPE;}
+template <> constexpr ParamType GetParamType<std::vector<size_t>>() {return
+TYPE_VEC_SIZE_TYPE;}
 
 /// Error if you ask for a parameter that an object doesn't recognize
 class NEML_EXPORT UnknownParameter: public std::exception {
