@@ -22,7 +22,14 @@ FlatVector::FlatVector(const std::vector<double> input) :
     FlatVector(input.size())
 {
   std::copy(input.begin(), input.end(), data_);
-}      
+}     
+
+FlatVector::FlatVector(const FlatVector & other) :
+    n_(other.n()), own_(true)
+{
+  data_ = new double [n_];
+  std::copy(other.data(), other.data() + n_, data_);
+}
 
 FlatVector::~FlatVector() 
 {
@@ -48,6 +55,11 @@ void FlatVector::copy(double * data)
 }
 
 double * FlatVector::data()
+{
+  return data_;
+}
+
+const double * FlatVector::data() const
 {
   return data_;
 }
@@ -90,9 +102,8 @@ void Matrix::matvec(const FlatVector & other, FlatVector & res)
 {
   if ((other.n() != n()) || (res.n() != m())) {
     throw std::invalid_argument("Matrix and vector sizes wrong for dot"
-                                "product");
+                                " product");
   }
-
   mat_vec(data_, m(), other.data_, n(), res.data_);
 }
 
@@ -124,7 +135,7 @@ SquareMatrix::SquareMatrix(size_t m, std::string type,
   else if (type == "dense") {
     if (data.size() != size()) {
       throw std::invalid_argument("Input data does not have the right shape for"
-                                  "matrix");
+                                  " matrix");
     }
     std::copy(data.begin(), data.end(), data_);
   }
@@ -172,7 +183,7 @@ void SquareMatrix::setup_diagonal_(std::vector<double> & data)
 {
   if (data.size() != n()) {
     throw std::invalid_argument("For diagonal initialization data vector must"
-                                "have the same size as the matrix rank");
+                                " have the same size as the matrix rank");
   }
   std::fill(data_, data_+size(), 0.0);
   for (size_t i = 0; i < m(); i++) {
@@ -185,9 +196,12 @@ void SquareMatrix::setup_diagonal_blocks_(std::vector<double> & data,
 {
   if (blocks.size() != data.size()) {
     throw std::invalid_argument("For diagonal block initialization data vector"
-                                "must have the same size as the blocks vector");
+                                " must have the same size as the blocks vector");
   }
   check_blocks_(blocks);
+
+  std::fill(data_, data_+size(), 0.0);
+
   size_t ci = 0;
   size_t cb = 0;
   for (auto bs : blocks) {
@@ -204,8 +218,8 @@ void SquareMatrix::setup_block_(std::vector<double> & data,
 {
   if (data.size() != (blocks.size() * blocks.size())) {
     throw std::invalid_argument("For block initialization the data vector"
-                                "must have a size equal to the number of blocks"
-                                "squared");
+                                " must have a size equal to the number of blocks"
+                                " squared");
   }
   check_blocks_(blocks);
 
@@ -216,7 +230,7 @@ void SquareMatrix::setup_block_(std::vector<double> & data,
       size_t co = CINDEX(bi, bj, blocks.size());
       for (size_t i = offsets[bi]; i < offsets[bi+1]; i++) {
         for (size_t j = offsets[bj]; j < offsets[bj+1]; j++) {
-          data[CINDEX(i,j,m())] = data[co];
+          data_[CINDEX(i,j,m())] = data[co];
         }
       }
     }
@@ -231,7 +245,7 @@ void SquareMatrix::check_blocks_(std::vector<size_t> & blocks)
   }
   if (sum != n()) {
     throw std::invalid_argument("The blocks vector must have entries that"
-                                "sum to the matrix rank");
+                                " sum to the matrix rank");
   }
 }
 

@@ -15,6 +15,7 @@ class NEML_EXPORT FlatVector {
   FlatVector(size_t n);
   FlatVector(size_t n, double * data);
   FlatVector(const std::vector<double> input);
+  FlatVector(const FlatVector & other);
   virtual ~FlatVector();
 
   size_t n() const;
@@ -23,6 +24,7 @@ class NEML_EXPORT FlatVector {
   void copy(double * data);
 
   double * data();
+  const double * data() const;
 
  protected:
   size_t n_;

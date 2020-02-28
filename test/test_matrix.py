@@ -33,8 +33,49 @@ class TestBasicMatrix(unittest.TestCase):
 
 class TestMatVec(unittest.TestCase):
   def setUp(self):
-    pass
+    self.a_data = [1.0,1.1,2.3]
+    self.a = matrix.FlatVector(self.a_data)
+
+    self.b_data = [-8.0,1.1,2.2,3.3]
+    self.b = matrix.FlatVector(self.b_data)
+
+    self.M_data = np.array([[2.0,3.0,1.0],[7.1,3.1,-1.0],[2.0,-1.2,8.1]])
+    self.M = matrix.SquareMatrix(3, type = "dense", 
+        data = list(self.M_data.flatten())) 
+
+  def test_correct(self):
+    self.assertTrue(np.allclose(self.M.dot(self.a), np.dot(self.M_data, 
+      self.a_data)))
+
+  def test_bad_size(self):
+    with self.assertRaises(ValueError):
+      self.M.dot(self.b)
 
 class TestMatDefinition(unittest.TestCase):
-  def setUp(self):
-    pass
+  def test_zero(self):
+    self.assertTrue(np.allclose(matrix.SquareMatrix(4), np.zeros((4,4))))
+
+  def test_identity(self):
+    self.assertTrue(np.allclose(matrix.SquareMatrix(4, type = "identity"), 
+      np.eye(4)))
+
+  def test_diagonal(self):
+    self.assertTrue(np.allclose(matrix.SquareMatrix(4, type = "diagonal",
+      data = [1,2,3,4]), np.diag([1,2,3,4])))
+
+  def test_block_diagonal(self):
+    self.assertTrue(np.allclose(matrix.SquareMatrix(4, type = "diagonal_blocks",
+      data = [1,2], blocks = [3,1]), np.array([
+        [1,0,0,0],
+        [0,1,0,0],
+        [0,0,1,0],
+        [0,0,0,2]])))
+
+  def test_blocks(self):
+    self.assertTrue(np.allclose(matrix.SquareMatrix(4, type = "block",
+      data = [1,2,3,4], blocks=[3,1]),
+      np.array([
+        [1,1,1,2],
+        [1,1,1,2],
+        [1,1,1,2],
+        [3,3,3,4]])))
