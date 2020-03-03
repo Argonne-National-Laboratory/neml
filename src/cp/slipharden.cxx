@@ -149,13 +149,14 @@ History GeneralLinearHardening::d_hist_d_s(const Symmetric & stress,
   std::vector<Symmetric> v(L.ntotal());
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
-      if (absval_) {
-        v[L.flat(g,i)] = copysign(1.0, R.slip(g, i, stress, Q, history,
-                                                     L, T, fixed)) * 
-            R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
-      }
-      else {
-        v[L.flat(g,i)] = R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
+      v[L.flat(g,i)] = R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
+    }
+  }
+
+  if (absval_) {
+    for (size_t g = 0; g < L.ngroup(); g++) {
+      for (size_t i = 0; i < L.nslip(g); i++) {
+        v[L.flat(g,i)] *= copysign(1.0, R.slip(g, i, stress, Q, history, L, T, fixed));
       }
     }
   }
@@ -181,13 +182,19 @@ History GeneralLinearHardening::d_hist_d_h(const Symmetric & stress,
   auto res = history.derivative<History>();
 
   // Do the sum
-  for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t k = 0; k < L.nslip(g); k++) {
-      size_t i = L.flat(g,k);
-      History curr = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
-      for (size_t j = 0; j < L.ntotal(); j++) {
-        res.get<double>(varnames_[i]+"_"+varnames_[j]) +=
-            M_->data()[CINDEX(i,j,L.ntotal())] * curr.get<double>(varnames_[j]);
+  for (size_t i = 0; i < L.ntotal(); i++) {
+    for (size_t g = 0; g < L.ngroup(); g++) {
+      for (size_t l = 0; l < L.nslip(g); l++) {
+        size_t j = L.flat(g, l); 
+        History curr = R.d_slip_d_h(g, l, stress, Q,  history, L, T, fixed);
+        double sign = 1.0;
+        if (absval_) {
+          sign = copysign(1.0, R.slip(g, l, stress, Q, history, L, T, fixed));
+        }
+        for (size_t k = 0; k < L.ntotal(); k++) {
+          res.get<double>(varnames_[i]+"_"+varnames_[k]) += 
+              M_->data()[CINDEX(i,j,L.ntotal())] * sign * curr.get<double>(varnames_[k]);
+        }
       }
     }
   }
