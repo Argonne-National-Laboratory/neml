@@ -36,6 +36,49 @@ class CommonSlipHardening():
         d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
 
+class TestConstantHardening(unittest.TestCase, CommonSlipHardening):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.nslip = self.L.ntotal
+
+    self.static = 20.0
+
+    self.H = history.History()
+
+    self.T = 300.0
+
+    self.s0 = [self.static]*self.nslip
+
+    self.model = slipharden.FixedStrengthHardening(self.s0)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        should = self.static
+        self.assertAlmostEqual(model, should)
+
+  def test_definition(self):
+    hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,
+        self.fixed)
+    exact = np.array([])
+    self.assertTrue(np.allclose(hrate, exact))
+
 class TestGeneralLinearHardeningNoAbs(unittest.TestCase, CommonSlipHardening):
   def setUp(self):
     self.L = crystallography.CubicLattice(1.0)
@@ -72,6 +115,14 @@ class TestGeneralLinearHardeningNoAbs(unittest.TestCase, CommonSlipHardening):
     self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
 
     self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        should = self.static + self.current
+        self.assertAlmostEqual(model, should)
 
   def test_definition(self):
     hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,
@@ -117,6 +168,14 @@ class TestGeneralLinearHardeningAbs(unittest.TestCase, CommonSlipHardening):
     self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
 
     self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        should = self.static + self.current
+        self.assertAlmostEqual(model, should)
 
   def test_definition(self):
     hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,

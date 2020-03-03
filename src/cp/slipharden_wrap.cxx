@@ -24,6 +24,14 @@ PYBIND11_MODULE(slipharden, m) {
       .def_property_readonly("use_nye", &SlipHardening::use_nye)
       ;
 
+  py::class_<FixedStrengthHardening, SlipHardening, std::shared_ptr<FixedStrengthHardening>>(m, "FixedStrengthHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<FixedStrengthHardening>(
+                          args, kwargs, {"strengths"});
+                    }))
+    ;
+
   py::class_<GeneralLinearHardening, SlipHardening, std::shared_ptr<GeneralLinearHardening>>(m, "GeneralLinearHardening")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
