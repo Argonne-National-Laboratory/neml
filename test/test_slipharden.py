@@ -24,6 +24,9 @@ class CommonSlipHardening():
     nd = diff_history_history(lambda h: self.model.hist(self.S, self.Q, h, self.L, self.T,
       self.sliprule, self.fixed), self.H)
 
+    print(d)
+    print(nd)
+
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
   def test_d_hist_to_tau_d_hist(self):
@@ -33,7 +36,7 @@ class CommonSlipHardening():
         d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
 
-class TestGeneralLinearHardeningAbs(unittest.TestCase, CommonSlipHardening):
+class TestGeneralLinearHardeningNoAbs(unittest.TestCase, CommonSlipHardening):
   def setUp(self):
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
@@ -56,18 +59,27 @@ class TestGeneralLinearHardeningAbs(unittest.TestCase, CommonSlipHardening):
 
     self.T = 300.0
 
-    M = matrix.SquareMatrix(self.nslip, type = "block", 
+    self.M = matrix.SquareMatrix(self.nslip, type = "block", 
         data = [0.1,0.2,0.3,0.4], blocks = [6,6])
 
-    s0 = [self.static]*self.nslip
+    self.s0 = [self.static]*self.nslip
 
-    self.model = slipharden.GeneralLinearHardening(M, s0)
+    self.model = slipharden.GeneralLinearHardening(self.M, self.s0, 
+        absval = False)
 
     self.g0 = 1.0
     self.n = 3.0
     self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
 
     self.fixed = history.History()
+
+  def test_definition(self):
+    hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,
+        self.fixed)
+    srates = [self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, self.T, 
+      self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))]
+    exact = np.dot(np.array(self.M), srates)
+    self.assertTrue(np.allclose(hrate, exact))
 
 class CommonSlipSingleHardening():
   def test_d_hist_map(self):

@@ -110,18 +110,18 @@ History GeneralLinearHardening::hist(const Symmetric & stress,
                                      Lattice & L, double T, const SlipRule & R, 
                                      const History & fixed) const
 {
-  consistency(L);  
+  consistency(L); 
 
   // Vector of slip rates
   FlatVector v(L.ntotal());
   for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t i = 0; i < L.nslip(i); i++) {
-      if (absval_) {
-        v.data()[L.flat(g,i)] = fabs(R.slip(g, i, stress, Q, history, L, T, fixed));
-      }
-      else {
-        v.data()[L.flat(g,i)] = R.slip(g, i, stress, Q, history, L, T, fixed);
-      }
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      v.data()[L.flat(g,i)] = R.slip(g, i, stress, Q, history, L, T, fixed);
+    }
+  }
+  if (absval_) {
+    for (size_t j = 0; j < L.ntotal(); j++) {
+      v.data()[j] = fabs(v.data()[j]);
     }
   }
 
@@ -148,14 +148,14 @@ History GeneralLinearHardening::d_hist_d_s(const Symmetric & stress,
   // Vector of stress derivatives
   std::vector<Symmetric> v(L.ntotal());
   for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t i = 0; i < L.nslip(i); i++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
       if (absval_) {
-        v.data()[L.flat(g,i)] = copysign(1.0, R.slip(g, i, stress, Q, history,
+        v[L.flat(g,i)] = copysign(1.0, R.slip(g, i, stress, Q, history,
                                                      L, T, fixed)) * 
             R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
       }
       else {
-        v.data()[L.flat(g,i)] = R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
+        v[L.flat(g,i)] = R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
       }
     }
   }
@@ -178,7 +178,21 @@ History GeneralLinearHardening::d_hist_d_h(const Symmetric & stress,
                                            const History & fixed) const
 {
   consistency(L); 
-  return history.derivative<History>(); // zero!
+  auto res = history.derivative<History>();
+
+  // Do the sum
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t k = 0; k < L.nslip(g); k++) {
+      size_t i = L.flat(g,k);
+      History curr = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
+      for (size_t j = 0; j < L.ntotal(); j++) {
+        res.get<double>(varnames_[i]+"_"+varnames_[j]) +=
+            M_->data()[CINDEX(i,j,L.ntotal())] * curr.get<double>(varnames_[j]);
+      }
+    }
+  }
+
+  return res;
 }
 
 size_t GeneralLinearHardening::size() const
