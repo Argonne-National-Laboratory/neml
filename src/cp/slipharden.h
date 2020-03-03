@@ -137,6 +137,8 @@ class NEML_EXPORT GeneralLinearHardening: public SlipHardening
   std::vector<std::string> varnames_;
 };
 
+static Register<GeneralLinearHardening> regGeneralLinearHardening;
+
 /// Slip strength rules where all systems share the same strength
 class NEML_EXPORT SlipSingleHardening: public SlipHardening
 {

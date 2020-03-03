@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from neml import history, interpolate
-from neml.math import tensors, rotations
+from neml.math import tensors, rotations, matrix
 from neml.cp import crystallography, slipharden, sliprules
 
 from common import differentiate
@@ -23,9 +23,7 @@ class CommonSlipHardening():
       self.fixed))
     nd = diff_history_history(lambda h: self.model.hist(self.S, self.Q, h, self.L, self.T,
       self.sliprule, self.fixed), self.H)
-    
-    print(d)
-    print(nd)
+
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
   def test_d_hist_to_tau_d_hist(self):
@@ -34,6 +32,42 @@ class CommonSlipHardening():
         nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.L, self.T, self.fixed), self.H)
         d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
+
+class TestGeneralLinearHardeningAbs(unittest.TestCase, CommonSlipHardening):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.nslip = self.L.ntotal
+
+    self.static = 20.0
+    self.current = 25.0
+
+    self.H = history.History()
+    for i in range(self.nslip):
+      self.H.add_scalar("strength"+str(i))
+      self.H.set_scalar("strength"+str(i), self.current)
+
+    self.T = 300.0
+
+    M = matrix.SquareMatrix(self.nslip, type = "block", 
+        data = [0.1,0.2,0.3,0.4], blocks = [6,6])
+
+    s0 = [self.static]*self.nslip
+
+    self.model = slipharden.GeneralLinearHardening(M, s0)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
 
 class CommonSlipSingleHardening():
   def test_d_hist_map(self):
