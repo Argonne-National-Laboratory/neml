@@ -831,6 +831,14 @@ Orientation Orientation::pow(double w) const
 void Orientation::normalize_()
 {
   double nv = this->norm();
+  // I'm debating not handling this case...
+  if (nv == 0) {
+    for (int i=0; i<3; i++) {
+      quat_[i] = 0.0;
+    }
+    quat_[3] = 1.0;
+    return;
+  }
   for (int i=0; i<4; i++) {
     quat_[i] /= nv;
   }

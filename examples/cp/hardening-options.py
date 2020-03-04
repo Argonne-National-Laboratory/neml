@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
   N = 100
-  nthreads = 30
+  nthreads = 1
 
   E = 160000.0
   nu = 0.31
@@ -76,3 +76,6 @@ if __name__ == "__main__":
   models = [make_model(s) for s in smodels]
 
   results = [drivers.uniaxial_test(m, erate, verbose = True) for m in models]
+
+  plt.plot(results[0]['strain'], results[0]['stress'])
+  plt.show()
