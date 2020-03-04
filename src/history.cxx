@@ -259,6 +259,15 @@ History History::split(std::vector<std::string> sep, bool after) const
       throw std::runtime_error("History items to separate out must be contiguous!");
     }
   }
+  // Special case where we need to return a zero history
+  if (((i == order_.size()) && after) || ((i == 0) && (! after))) {
+    if (store_) {
+      return History(true);
+    }
+    else {
+      return History(false);
+    }
+  }
 
   History res(false);
   
