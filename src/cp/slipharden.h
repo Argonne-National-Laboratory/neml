@@ -136,7 +136,8 @@ class NEML_EXPORT GeneralLinearHardening: public SlipHardening
  public:
   GeneralLinearHardening(std::shared_ptr<SquareMatrix> M, 
                          std::vector<double> tau_0,
-                         bool absval);
+                         bool absval,
+                         std::string varprefix);
 
   /// String type for the object system
   static std::string type();
@@ -192,6 +193,7 @@ class NEML_EXPORT GeneralLinearHardening: public SlipHardening
   std::shared_ptr<SquareMatrix> M_;
   std::vector<double> tau_0_;
   bool absval_;
+  std::string varprefix_;
   std::vector<std::string> varnames_;
 };
 

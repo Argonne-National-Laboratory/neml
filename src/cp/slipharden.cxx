@@ -73,7 +73,7 @@ History FixedStrengthHardening::d_hist_to_tau(size_t g, size_t i,
                                               double T, 
                                               const History & fixed) const
 {
-  return history.derivative<double>();
+  return blank_hist().derivative<double>();
 }
 
 History FixedStrengthHardening::hist(const Symmetric & stress, 
@@ -107,8 +107,9 @@ History FixedStrengthHardening::d_hist_d_h(const Symmetric & stress,
 
 GeneralLinearHardening::GeneralLinearHardening(std::shared_ptr<SquareMatrix> M, 
                                                std::vector<double> tau_0,
-                                               bool absval) :
-    M_(M), tau_0_(tau_0), absval_(absval)
+                                               bool absval,
+                                               std::string varprefix) :
+    M_(M), tau_0_(tau_0), absval_(absval), varprefix_(varprefix)
 {
   if (M_->n() != tau_0_.size()) {
     throw std::invalid_argument("Hardening matrix and initial strength sizes do not agree!");
@@ -116,7 +117,7 @@ GeneralLinearHardening::GeneralLinearHardening(std::shared_ptr<SquareMatrix> M,
   
   varnames_.resize(size());
   for (size_t i = 0; i < size(); i++) {
-    varnames_[i] = "strength"+std::to_string(i);
+    varnames_[i] = varprefix_+std::to_string(i);
   }
 }
 
@@ -130,7 +131,8 @@ std::unique_ptr<NEMLObject> GeneralLinearHardening::initialize(ParameterSet & pa
   return neml::make_unique<GeneralLinearHardening>(
       params.get_object_parameter<SquareMatrix>("M"),
       params.get_parameter<std::vector<double>>("tau_0"),
-      params.get_parameter<bool>("absval"));
+      params.get_parameter<bool>("absval"),
+      params.get_parameter<std::string>("varprefix"));
 }
 
 ParameterSet GeneralLinearHardening::parameters()
@@ -141,6 +143,8 @@ ParameterSet GeneralLinearHardening::parameters()
   pset.add_parameter<std::vector<double>>("tau_0");
 
   pset.add_optional_parameter<bool>("absval", true);
+  pset.add_optional_parameter<std::string>("varprefix", 
+                                           std::string("strength"));
 
   return pset;
 }
@@ -187,7 +191,7 @@ History GeneralLinearHardening::d_hist_to_tau(size_t g, size_t i,
                                               const History & fixed) const
 {
   consistency(L);  
-  History res = history.derivative<double>();
+  History res = blank_hist().derivative<double>();
   // This works because the above zeros out the vector
   res.get<double>(varnames_[L.flat(g,i)]) = 1.0;
   return res;
@@ -396,7 +400,7 @@ History SlipSingleStrengthHardening::d_hist_map(const History & history,
                                                 double T, 
                                                 const History & fixed) const
 {
-  History res = history.derivative<double>();
+  History res = blank_hist().derivative<double>();
   res.get<double>(var_name_) = 1.0;
   return res;
 }
@@ -555,7 +559,7 @@ History SumSlipSingleStrengthHardening::d_hist_map(const History & history,
                                                    double T,
                                                    const History & fixed) const
 {
-  History res = history.derivative<double>();
+  History res = blank_hist().derivative<double>();
   for (size_t i=0; i < nmodels(); i++) {
     res.get<double>("strength"+std::to_string(i)) = 1.0;
   }

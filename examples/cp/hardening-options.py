@@ -13,12 +13,12 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
   N = 100
-  nthreads = 1
+  nthreads = 20
 
   E = 160000.0
   nu = 0.31
 
-  g0 = 1.0
+  g0 = 1.0e-4
   n = 10.0
 
   K = E / 50.0
@@ -27,7 +27,7 @@ if __name__ == "__main__":
   emax = 0.01
   erate = 1.0e-4
   R = -1
-  ncycles = 2
+  ncycles = 3
   
   lattice = crystallography.CubicLattice(1.0)
   lattice.add_slip_system([1,1,0],[1,1,1])
@@ -43,27 +43,45 @@ if __name__ == "__main__":
   #     2) K = E / 50
   #     3) abs on the slip rates
   h1 = slipharden.GeneralLinearHardening(M, [s0] * lattice.ntotal, 
-      absval = True)
+      absval = True, varprefix = "strength")
 
   # Option 2: diagonal hardening with:
+  #     1) Initial strength of 37.5
+  #     2) K = E / 50
+  #     3) abs on the slip rates
+  h2 = slipharden.GeneralLinearHardening(M, [s0/2] * lattice.ntotal, 
+      absval = True, varprefix = "strength")
+
+  # Option 3: diagonal hardening with:
+  #     1) Initial strength of 0
+  #     2) K = E / 50
+  #     3) abs on the slip rates
+  h3 = slipharden.GeneralLinearHardening(M, [0] * lattice.ntotal, 
+      absval = True, varprefix = "strength") 
+
+  # Option 4: diagonal hardening with:
   #     1) Initial strength of 0
   #     2) K = E / 50
   #     3) no abs on the slip rates
-  h2 = slipharden.GeneralLinearHardening(M, [0] * lattice.ntotal, 
-      absval = False)
+  h4 = slipharden.GeneralLinearHardening(M, [0] * lattice.ntotal, 
+      absval = False, varprefix = "strength")
 
-  # Option 3: no hardening, strength of 75
-  h3 = slipharden.FixedStrengthHardening([s0] * lattice.ntotal)
+  # Option 5: no hardening, strength of 75
+  h5 = slipharden.FixedStrengthHardening([s0] * lattice.ntotal)
 
-  # Option 4: no hardening, strength of 0
-  h4 = slipharden.FixedStrengthHardening([0] * lattice.ntotal)
+  # Option 6: no hardening, strength of 37.5
+  h6 = slipharden.FixedStrengthHardening([s0/2] * lattice.ntotal)
+
+  # Option 7: no hardening, strength of 0
+  h7 = slipharden.FixedStrengthHardening([0] * lattice.ntotal)
 
   # The order is the backstrength, the isotropic strength, and the flow resistance
-  strength441 = sliprules.PowerLawSlipRule(h3, g0, n)
+  strength775 = sliprules.KinematicPowerLawSlipRule(h7, h7, h5, g0, n)
+  strength766 = sliprules.KinematicPowerLawSlipRule(h7, h6, h6, g0, n)
 
-  # Get the actual polycrystal models
-  smodels = [strength441]
-  names = ["441"]
+  strength771 = sliprules.KinematicPowerLawSlipRule(h7, h7, h1, g0, n)
+  strength722 = sliprules.KinematicPowerLawSlipRule(h7, h2, h2, g0, n)
+  strength735 = sliprules.KinematicPowerLawSlipRule(h7, h3, h5, g0, n)
 
   def make_model(smodel):
     imodel = inelasticity.AsaroInelasticity(smodel)
@@ -72,10 +90,41 @@ if __name__ == "__main__":
     model = singlecrystal.SingleCrystalModel(kmodel, lattice, verbose = True)
     return model
     return polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
+  
+  """
+  # Perfect plasticity options
+  smodels = [strength775, strength766]
+  names = ["775", "766"]
 
   models = [make_model(s) for s in smodels]
 
-  results = [drivers.uniaxial_test(m, erate, verbose = True) for m in models]
+  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles)
+      for m in models]
+  
+  plt.figure()
+  plt.title("Various perfect plasticity options")
+  for res, name in zip(results, names):
+    plt.plot(res['strain'], res['stress'], label = name)
+  plt.legend(loc='best')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.show()
+  """
 
-  plt.plot(results[0]['strain'], results[0]['stress'])
+  # Pure isotropic options
+  smodels = [strength771]
+  names = ["771"]
+
+  models = [make_model(s) for s in smodels]
+
+  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles)
+      for m in models]
+  
+  plt.figure()
+  plt.title("Various isotropic hardening options")
+  for res, name in zip(results, names):
+    plt.plot(res['strain'], res['stress'], label = name)
+  plt.legend(loc='best')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
   plt.show()
