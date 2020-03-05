@@ -106,12 +106,12 @@ class TestKinematicPowerLawSlip(unittest.TestCase, CommonSlipMultiStrengthSlipRu
     self.strength1 = 20.0
     self.strength2 = 20.0
     self.H = history.History()
-    self.H.add_scalar("strength0")
-    self.H.add_scalar("strength1")
-    self.H.add_scalar("strength2")
-    self.H.set_scalar("strength0", self.strength0)
-    self.H.set_scalar("strength1", self.strength1)
-    self.H.set_scalar("strength2", self.strength2)
+    self.H.add_scalar("strength_#0")
+    self.H.add_scalar("strength_#1")
+    self.H.add_scalar("strength_#2")
+    self.H.set_scalar("strength_#0", self.strength0)
+    self.H.set_scalar("strength_#1", self.strength1)
+    self.H.set_scalar("strength_#2", self.strength2)
 
     self.T = 300.0
 
