@@ -150,8 +150,8 @@ class TestKinematicPowerLawSlip(unittest.TestCase, CommonSlipMultiStrengthSlipRu
         fr = self.strength_values[2]
         inv = (np.abs(self.tau - bs) - iso) / fr
 
-        expected = self.g0 * np.abs(inv) ** (self.n-1.0) * inv
-        
+        expected = self.g0 * np.abs(inv) ** (self.n) * np.sign(self.tau - bs)
+
         actual = self.model.sslip(g, i, self.tau, self.strength_values, self.T)
 
         self.assertTrue(np.isclose(expected, actual))

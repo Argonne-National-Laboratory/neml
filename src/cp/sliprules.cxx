@@ -67,7 +67,7 @@ SlipMultiStrengthSlipRule::SlipMultiStrengthSlipRule(
     for (size_t i = 0; i < strengths_.size(); i++) {
       auto vars = strengths_[i]->varnames();
       for (size_t j = 0; j < vars.size(); j++) {
-        vars[j] += std::to_string(i);
+        vars[j] += ("_#"+std::to_string(i));
       }
       strengths_[i]->set_varnames(vars);
     }
@@ -257,11 +257,11 @@ double KinematicPowerLawSlipRule::sslip(size_t g, size_t i, double tau,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((fabs(tau - bs) - is) < 0.0) {
+  if ((fabs(tau - bs) - is) <= 0.0) {
     return 0.0;
   }
   else {
-    return g0 * pow((fabs(tau - bs) - is) / fr, n-1) * (fabs(tau - bs) - is) / fr;
+    return copysign(g0 * pow((fabs(tau - bs) - is) / fr, n), tau-bs);
   }
 }
 
@@ -276,12 +276,11 @@ double KinematicPowerLawSlipRule::d_sslip_dtau(size_t g, size_t i, double tau,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((fabs(tau - bs) - is) < 0.0) {
+  if ((fabs(tau - bs) - is) <= 0.0) {
     return 0.0;
   }
   else {
-    return g0*n*pow((fabs(bs-tau)-is)/fr,n)*copysign(1.0,bs-tau) / 
-        (is - fabs(bs-tau));
+    return g0 * n * pow((fabs(tau - bs) - is) / fr, n-1) / fr; 
   }
 }
 
@@ -296,13 +295,13 @@ std::vector<double> KinematicPowerLawSlipRule::d_sslip_dstrength(
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((fabs(tau - bs) - is) < 0.0) {
+  if ((fabs(tau - bs) - is) <= 0.0) {
     return {0.0,0.0,0.0};
   }
   else {
-    double dbs = pow(fr,-n)*g0*n*pow(fabs(bs-tau)-is,n-1)*copysign(1.0,bs-tau);
-    double dis = g0 * n * pow((fabs(bs-tau)-is)/fr,n) / (is - fabs(bs-tau));
-    double dfr = -pow(fr,-1-n)*g0*n*pow(-is+fabs(bs-tau),n);
+    double dbs = g0 * n * pow((fabs(tau-bs) - is) / fr, n) / (is - fabs(tau - bs));
+    double dis = -copysign(g0 * n * pow((fabs(tau-bs) - is) / fr, n-1) / fr, tau - bs);
+    double dfr = -copysign(g0 * n * pow((fabs(tau-bs) - is) / fr, n) / fr, tau - bs);
     return {dbs, dis, dfr};
   }
 }
