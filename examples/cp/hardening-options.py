@@ -12,8 +12,8 @@ from neml import elasticity, drivers
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  N = 100
-  nthreads = 20
+  N = 10
+  nthreads = 2
 
   E = 160000.0
   nu = 0.31
@@ -43,28 +43,28 @@ if __name__ == "__main__":
   #     2) K = E / 50
   #     3) abs on the slip rates
   h1 = slipharden.GeneralLinearHardening(M, [s0] * lattice.ntotal, 
-      absval = True, varprefix = "strength")
+      absval = True)
 
   # Option 2: diagonal hardening with:
   #     1) Initial strength of 37.5
   #     2) K = E / 50
   #     3) abs on the slip rates
   h2 = slipharden.GeneralLinearHardening(M, [s0/2] * lattice.ntotal, 
-      absval = True, varprefix = "strength")
+      absval = True)
 
   # Option 3: diagonal hardening with:
   #     1) Initial strength of 0
   #     2) K = E / 50
   #     3) abs on the slip rates
   h3 = slipharden.GeneralLinearHardening(M, [0] * lattice.ntotal, 
-      absval = True, varprefix = "strength") 
+      absval = True) 
 
   # Option 4: diagonal hardening with:
   #     1) Initial strength of 0
   #     2) K = E / 50
   #     3) no abs on the slip rates
   h4 = slipharden.GeneralLinearHardening(M, [0] * lattice.ntotal, 
-      absval = False, varprefix = "strength")
+      absval = False)
 
   # Option 5: no hardening, strength of 75
   h5 = slipharden.FixedStrengthHardening([s0] * lattice.ntotal)
@@ -87,8 +87,7 @@ if __name__ == "__main__":
     imodel = inelasticity.AsaroInelasticity(smodel)
     emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
     kmodel = kinematics.StandardKinematicModel(emodel, imodel)
-    model = singlecrystal.SingleCrystalModel(kmodel, lattice, verbose = True)
-    return model
+    model = singlecrystal.SingleCrystalModel(kmodel, lattice)
     return polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
   
   """
@@ -117,7 +116,7 @@ if __name__ == "__main__":
 
   models = [make_model(s) for s in smodels]
 
-  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles)
+  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
       for m in models]
   
   plt.figure()

@@ -102,7 +102,7 @@ History FixedStrengthHardening::d_hist_d_h(const Symmetric & stress,
                                            double T, const SlipRule & R, 
                                            const History & fixed) const
 {
-  return history.derivative<History>();
+  return blank_hist().derivative<History>();
 }
 
 GeneralLinearHardening::GeneralLinearHardening(std::shared_ptr<SquareMatrix> M, 
@@ -272,7 +272,7 @@ History GeneralLinearHardening::d_hist_d_h(const Symmetric & stress,
                                            const History & fixed) const
 {
   consistency(L); 
-  auto res = history.derivative<History>();
+  auto res = blank_hist().derivative<History>();
 
   // Do the sum
   for (size_t i = 0; i < L.ntotal(); i++) {
