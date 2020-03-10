@@ -12,8 +12,8 @@ from neml import elasticity, drivers
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  N = 10
-  nthreads = 2
+  N = 200
+  nthreads = 30
 
   E = 160000.0
   nu = 0.31
@@ -51,6 +51,8 @@ if __name__ == "__main__":
   #     3) abs on the slip rates
   h2 = slipharden.GeneralLinearHardening(M, [s0/2] * lattice.ntotal, 
       absval = True)
+  h2b = slipharden.GeneralLinearHardening(M, [s0/2] * lattice.ntotal, 
+      absval = True)
 
   # Option 3: diagonal hardening with:
   #     1) Initial strength of 0
@@ -80,7 +82,7 @@ if __name__ == "__main__":
   strength766 = sliprules.KinematicPowerLawSlipRule(h7, h6, h6, g0, n)
 
   strength771 = sliprules.KinematicPowerLawSlipRule(h7, h7, h1, g0, n)
-  strength722 = sliprules.KinematicPowerLawSlipRule(h7, h2, h2, g0, n)
+  strength722 = sliprules.KinematicPowerLawSlipRule(h7, h2, h2b, g0, n)
   strength735 = sliprules.KinematicPowerLawSlipRule(h7, h3, h5, g0, n)
 
   def make_model(smodel):
@@ -90,7 +92,6 @@ if __name__ == "__main__":
     model = singlecrystal.SingleCrystalModel(kmodel, lattice)
     return polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
   
-  """
   # Perfect plasticity options
   smodels = [strength775, strength766]
   names = ["775", "766"]
@@ -108,16 +109,17 @@ if __name__ == "__main__":
   plt.xlabel("Strain (mm/mm)")
   plt.ylabel("Stress (MPa)")
   plt.show()
+  
   """
-
   # Pure isotropic options
-  smodels = [strength771]
-  names = ["771"]
+  smodels = [strength771, strength722, strength735][:1]
+  names = ["771", "722", "735"][:1]
 
   models = [make_model(s) for s in smodels]
 
-  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
-      for m in models]
+  #results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
+  #    for m in models]
+  results = [drivers.uniaxial_test(m, erate, verbose = True) for m in models]
   
   plt.figure()
   plt.title("Various isotropic hardening options")
@@ -127,3 +129,4 @@ if __name__ == "__main__":
   plt.xlabel("Strain (mm/mm)")
   plt.ylabel("Stress (MPa)")
   plt.show()
+  """
