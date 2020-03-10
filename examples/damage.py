@@ -95,6 +95,11 @@ def unload_ex():
   print("Calculated final elastic strain: %f" % model.elastic_strains(
     driver.stress_int[-1], driver.T_int[-1], driver.stored[-1])[0])
 
+  Ep = (driver.stress[-2,0]-driver.stress[-1,0])/(driver.strain[-2,0]-driver.strain[-1,0])
+  
+  print("Initial Young's modulus: %f" % E)
+  print("Final Young's modulus: %f" % Ep)
+
   plt.plot(driver.strain[:,0], driver.stress[:,0])
   plt.show()
 
