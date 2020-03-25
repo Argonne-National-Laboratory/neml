@@ -140,6 +140,12 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
                double T_np1, double T_n, double t_np1, double t_n,
                double w_np1, double w_n, const double * const A_prime,
                double * const A);
+  int ekill_update_(double T_np1, const double * const e_np1, 
+                    double * const s_np1, 
+                    double * const h_np1, const double * const h_n,
+                    double * A_np1, 
+                    double & u_np1, double u_n, 
+                    double & p_np1, double p_n);
 
  protected:
   double tol_;
