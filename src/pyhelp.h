@@ -103,7 +103,7 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
         pset.assign_parameter(name, std::make_shared<ConstantInterpolate>(v));
         break;
       }
-      catch (py::cast_error e) {
+      catch (py::cast_error & e) {
 
       }
       pset.assign_parameter(name, py::cast<std::shared_ptr<NEMLObject>>(value));
@@ -120,7 +120,7 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
         pset.assign_parameter(name, vect);
         break;
       }
-      catch (py::cast_error e) {
+      catch (py::cast_error & e) {
 
       }
       pset.assign_parameter(name, py::cast<std::vector<std::shared_ptr<NEMLObject>>>(value));

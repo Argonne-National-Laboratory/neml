@@ -1,5 +1,4 @@
-#ifndef MODELS_H
-#define MODELS_H
+#pragma once
 
 #include "solvers.h"
 #include "objects.h"
@@ -175,6 +174,48 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
 
 };
 
+/// Pull in if you want to automatically adaptively integrate
+class SubstepModel_sd: public NEMLModel_sd {
+ public:
+  SubstepModel_sd(std::shared_ptr<LinearElasticModel> emodel,
+                  std::shared_ptr<Interpolate> alpha,
+                  bool truesdell, int max_divide);
+
+  /// Complete substep update
+  virtual int update_sd(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1,
+      double & u_np1, double u_n,
+      double & p_np1, double p_n);
+
+  /// Single step update
+  virtual int update_sd_single(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1,
+      double & u_np1, double u_n,
+      double & p_np1, double p_n) = 0;
+
+  /// Fix the tangent
+  virtual int calculate_tangent(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1) = 0;
+
+ protected:
+  int max_divide_;
+};
+
 /// Small strain linear elasticity
 //  This is generally only used as a basic test
 class NEML_EXPORT SmallStrainElasticity: public NEMLModel_sd {
@@ -259,7 +300,7 @@ class GITrialState : public TrialState {
 //    the yield surface is constant along lines from the origin to a point
 //    in stress space outside the surface (i.e. J2).
 
-class NEML_EXPORT SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solvable {
+class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd, public Solvable {
  public:
   /// Parameters: elastic model, yield surface, yield stress, CTE,
   /// integration tolerance, maximum number of iterations,
@@ -281,7 +322,7 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solv
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// The small strain stress update
-  virtual int update_sd(
+  virtual int update_sd_single(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -294,6 +335,15 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solv
   virtual size_t nhist() const;
   /// Initialize history (nothing to do)
   virtual int init_hist(double * const hist) const;
+  
+  /// Fix up the tangent
+  virtual int calculate_tangent(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1);
 
   /// Number of nonlinear equations to solve in the integration
   virtual size_t nparams() const;
@@ -330,7 +380,6 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public NEMLModel_sd, public Solv
   const double tol_;
   const int miter_;
   const bool verbose_;
-  const int max_divide_;
 };
 
 static Register<SmallStrainPerfectPlasticity> regSmallStrainPerfectPlasticity;
@@ -619,4 +668,3 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
 static Register<KMRegimeModel> regKMRegimeModel;
 
 } // namespace neml
-#endif // MODELS_H

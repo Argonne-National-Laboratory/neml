@@ -90,6 +90,10 @@ PYBIND11_MODULE(models, m) {
   py::class_<NEMLModel_ldi, NEMLModel, std::shared_ptr<NEMLModel_ldi>>(m, "NEMLModel_ldi")
       ;
 
+  py::class_<SubstepModel_sd, NEMLModel_sd, std::shared_ptr<SubstepModel_sd>>(m,
+                                                                              "SubstepModel_sd")
+      ;
+
   py::class_<SmallStrainElasticity, NEMLModel_sd, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
@@ -110,7 +114,7 @@ PYBIND11_MODULE(models, m) {
   py::class_<GITrialState, TrialState>(m, "GITrialState")
       ;
 
-  py::class_<SmallStrainPerfectPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity")
+  py::class_<SmallStrainPerfectPlasticity, SubstepModel_sd, Solvable, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<SmallStrainPerfectPlasticity>(args, kwargs,

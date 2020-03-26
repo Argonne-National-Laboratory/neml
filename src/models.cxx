@@ -185,6 +185,93 @@ int NEMLModel_ldi::init_store(double * const store) const
   return 0;
 }
 
+SubstepModel_sd::SubstepModel_sd(std::shared_ptr<LinearElasticModel> emodel,
+                                 std::shared_ptr<Interpolate> alpha,
+                                 bool truesdell, int max_divide) :
+    NEMLModel_sd(emodel, alpha, truesdell),
+    max_divide_(max_divide)
+{
+
+}
+
+int SubstepModel_sd::update_sd(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
+{
+  // Setup the substep parameters
+  int nd = 0;                     // Number of times we subdivided
+  int tf = pow(2, max_divide_);   // Total integer step count
+  int cm = tf;                    // Attempted integer step (sf = cm/tf)
+  int cs = 0;                     // Accumulated steps
+  
+  // Strain, time, and temperature increments
+  double e_diff[6];
+  sub_vec(e_np1, e_n, 6, e_diff);
+  double T_diff = T_np1 - T_n;
+  double t_diff = t_np1 - t_n;
+
+  // Previous subincrement quantities
+  double e_past[6];
+  std::copy(e_n, e_n+6, e_past);
+  double s_past[6];
+  std::copy(s_n, s_n+6, s_past);
+  double * h_past = new double [nhist()];
+  std::copy(h_n, h_n+nhist(), h_past);
+  double T_past = T_n;
+  double t_past = t_n;
+  double u_past = u_n;
+  double p_past = p_n;
+
+  // Targets
+  double e_next[6];
+  double T_next;
+  double t_next;
+
+  while (cs < tf) {
+    // targets
+    double sm = (double) (cs + cm) / (double) tf;
+    for (size_t i = 0; i<6; i++) e_next[i] = e_n[i] + sm * e_diff[i];
+    T_next = T_n + sm * T_diff;
+    t_next = t_n + sm * t_diff;
+    
+    // Try updating
+    int ier = update_sd_single(
+        e_next, e_past, T_next, T_past, t_next, t_past, s_np1, s_past,
+        h_np1, h_past, A_np1, u_np1, u_past, p_np1, p_past);
+    
+    // Failed: adapt timestep
+    if (ier != SUCCESS) {
+      nd += 1;
+      if (nd >= max_divide_) return ier;  // Failed entirely
+      cm /= 2;
+      continue;
+    }
+
+    // Succeeded: advance subincrement
+    cs += cm;
+    std::copy(e_next, e_next+6, e_past);
+    std::copy(s_np1, s_np1+6, s_past);
+    std::copy(h_np1, h_np1+nhist(), h_past);
+    T_past = T_next;
+    t_past = t_next;
+    u_past = u_np1;
+    p_past = p_np1;
+  }
+
+  delete [] h_past;
+
+  /// Fix tangent
+  int ier = calculate_tangent(
+      e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n, h_np1, h_n, A_np1);
+
+  return ier;
+}
 
 // Implementation of small strain elasticity
 SmallStrainElasticity::SmallStrainElasticity(
@@ -267,9 +354,9 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
     std::shared_ptr<Interpolate> alpha,
     double tol, int miter,
     bool verbose, int max_divide, bool truesdell) :
-      NEMLModel_sd(elastic, alpha, truesdell),
+      SubstepModel_sd(elastic, alpha, truesdell, max_divide),
       surface_(surface), ys_(ys),
-      tol_(tol), miter_(miter), verbose_(verbose), max_divide_(max_divide)
+      tol_(tol), miter_(miter), verbose_(verbose)
 {
 
 }
@@ -314,84 +401,7 @@ std::unique_ptr<NEMLObject> SmallStrainPerfectPlasticity::initialize(ParameterSe
       ); 
 }
 
-int SmallStrainPerfectPlasticity::update_sd(
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
-    double * const A_np1,
-    double & u_np1, double u_n,
-    double & p_np1, double p_n)
-{
-  // Setup for substepping
-  int nd = 0;                     // How many times we subdivided
-  int tf = pow(2, max_divide_);   // Total integer step count
-  int cm = tf;                    // Attempted step
-  int cs = 0;                     // Integer step fraction
-
-  double e_diff[6];
-  for (int i=0; i<6; i++) e_diff[i] = e_np1[i] - e_n[i];
-  double T_diff = T_np1 - T_n;
-  double t_diff = t_np1 - t_n;
-
-  double e_past[6];
-  std::copy(e_n, e_n+6, e_past);
-  // Ignore history, knowing it's blank
-  double s_past[6];
-  std::copy(s_n, s_n+6, s_past);
-  double T_past = T_n;
-  double t_past = t_n;
-  double u_past = u_n;
-  double p_past = p_n;
-
-  double e_next[6];
-  double s_next[6];
-  double T_next;
-  double t_next;
-  double u_next;
-  double p_next;
-
-  while (cs < tf) {
-    // Goal
-    double sm = (double) (cs + cm) / (double) tf;
-    for (int i=0; i<6; i++) e_next[i] = e_n[i] + sm * e_diff[i];
-    T_next = T_n + sm * T_diff;
-    t_next = t_n + sm * t_diff;
-
-    int ier = update_substep_(e_next, e_past, T_next, T_past, t_next,
-                              t_past, s_next, s_past, h_np1, h_n,
-                              A_np1, u_next, u_past, p_next, p_past);
-
-    // Subdivide
-    if (ier != SUCCESS) {
-      nd += 1;
-      if (nd >= max_divide_) {
-        return ier;
-      }
-      cm /= 2;
-      continue;
-    }
-
-    // Next substep
-    cs += cm;
-    std::copy(e_next, e_next+6, e_past);
-    std::copy(s_next, s_next+6, s_past);
-    T_past = T_next;
-    t_past = t_next;
-    u_past = u_next;
-    p_past = p_next;
-  }
-
-  // Final values
-  std::copy(s_next, s_next+6, s_np1);
-  u_np1 = u_next;
-  p_np1 = p_next;
-
-  return 0; 
-}
-
-int SmallStrainPerfectPlasticity::update_substep_(
+int SmallStrainPerfectPlasticity::update_sd_single(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -449,6 +459,18 @@ int SmallStrainPerfectPlasticity::update_substep_(
   add_vec(s_np1, s_n, 6, ds);
   u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
 
+  return 0;
+}
+
+int SmallStrainPerfectPlasticity::calculate_tangent(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n,
+      double * const A_np1)
+{
+  // This can be a noop, just keep incremental tangent
   return 0;
 }
 
@@ -732,7 +754,6 @@ int SmallStrainRateIndependentPlasticity::update_sd(
   
   // Check K-T and return
   return check_K_T_(s_np1, h_np1, T_np1, dg);
-
 }
 
 size_t SmallStrainRateIndependentPlasticity::nparams() const
