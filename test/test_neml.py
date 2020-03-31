@@ -31,9 +31,11 @@ class CommonMatModel(object):
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n, u_n, p_n)[0]
       num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
-
-      print(strain_np1)
       
+      if not np.allclose(num_A, A_np1, rtol = 1e-3, atol = 1e-1):
+        print(A_np1)
+        print(num_A)
+
       if i != 0:
         self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e-1))
       
@@ -160,7 +162,8 @@ class TestPerfectPlasticity(unittest.TestCase, CommonMatModel, CommonJacobian):
         "shear", self.K, "bulk")
 
     surface = surfaces.IsoJ2()
-    self.model = models.SmallStrainPerfectPlasticity(self.elastic, surface, self.s0)
+    self.model = models.SmallStrainPerfectPlasticity(self.elastic, surface, 
+        self.s0)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
