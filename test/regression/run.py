@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse, time, pickle
+import os.path
 
 from neml import models, parse, drivers
 
-xml = "reference.xml"
-models = "models.txt"
+xml = os.path.join(os.path.dirname(__file__),"reference.xml")
+models = os.path.join(os.path.dirname(__file__),"models.txt")
 
 strain_rate = 1.0e-4
 
