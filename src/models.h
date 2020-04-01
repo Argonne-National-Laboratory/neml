@@ -297,6 +297,7 @@ static Register<SmallStrainElasticity> regSmallStrainElasticity;
 //  Store data the solver needs and can be passed into solution interface
 class SSPPTrialState : public TrialState {
  public:
+  virtual ~SSPPTrialState() {};
   double ys, T;    // Yield stress, temperature
   double e_np1[6]; // Next strain
   double ep_n[6];  // Previous value of plastic strain
@@ -307,6 +308,7 @@ class SSPPTrialState : public TrialState {
 /// Small strain rate independent plasticity trial state
 class SSRIPTrialState : public TrialState {
  public:
+  virtual ~SSRIPTrialState() {};
   double ep_tr[6];          // Trial plastic strain
   double s_tr[6];           // Trial stress
   double e_np1[6];          // Next strain
@@ -318,6 +320,7 @@ class SSRIPTrialState : public TrialState {
 /// Small strain creep+plasticity trial state
 class SSCPTrialState : public TrialState {
  public:
+  virtual ~SSCPTrialState() {};
   double ep_strain[6];            // Current plastic strain
   double e_n[6], e_np1[6];        // Previous and next total strain
   double s_n[6];                  // Previous stress
@@ -328,6 +331,7 @@ class SSCPTrialState : public TrialState {
 /// General inelastic integrator trial state
 class GITrialState : public TrialState {
  public:
+  virtual ~GITrialState() {};
   double e_dot[6];                // Strain rate
   double s_n[6];                  // Previous stress
   double T, Tdot, dt;             // Temperature, temperature rate, time inc.

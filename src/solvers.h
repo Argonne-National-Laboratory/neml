@@ -16,7 +16,8 @@ namespace neml {
 /// Trial state
 ///  Store data the solver needs and can be passed into solution interface
 class TrialState {
-
+ public:
+  virtual ~TrialState() {};
 };
 
 /// Generic nonlinear solver interface

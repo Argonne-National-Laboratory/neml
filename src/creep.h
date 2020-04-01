@@ -339,6 +339,7 @@ static Register<MinCreep225Cr1MoCreep> regMinCreep225Cr1MoCreep;
 /// Creep trial state
 class CreepModelTrialState : public TrialState {
  public:
+  virtual ~CreepModelTrialState() {};
   double T, dt, t;
   double s_np1[6];
   double e_n[6];

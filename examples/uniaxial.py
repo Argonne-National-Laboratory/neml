@@ -28,8 +28,7 @@ if __name__ == "__main__":
       [1.0] * len(c))
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
-      check_kt = False)
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False)
   umodel = uniaxial.UniaxialModel(model, verbose = True)
 
   hn = umodel.init_store()
