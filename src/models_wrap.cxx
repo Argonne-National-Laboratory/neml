@@ -192,7 +192,7 @@ PYBIND11_MODULE(models, m) {
 
 
 
-  py::class_<GeneralIntegrator, NEMLModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
+  py::class_<GeneralIntegrator, SubstepModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<GeneralIntegrator>(args, kwargs, 

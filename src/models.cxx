@@ -1353,12 +1353,12 @@ int SmallStrainCreepPlasticity::set_elastic_model(std::shared_ptr<LinearElasticM
 GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
                                      std::shared_ptr<GeneralFlowRule> rule,
                                      std::shared_ptr<Interpolate> alpha,
-                                     double tol, int miter,
-                                     bool verbose, int max_divide, 
-                                     bool truesdell) :
-    NEMLModel_sd(elastic, alpha, truesdell),
-    rule_(rule), tol_(tol), miter_(miter), max_divide_(max_divide),
-    verbose_(verbose) 
+                                     bool truesdell, double tol, int miter,
+                                     bool verbose, int max_divide,
+                                     bool force_divide) :
+    SubstepModel_sd(elastic, alpha, truesdell, tol, miter, verbose, max_divide,
+                    force_divide),
+    rule_(rule)
 {
 
 }
@@ -1377,12 +1377,13 @@ ParameterSet GeneralIntegrator::parameters()
 
   pset.add_optional_parameter<NEMLObject>("alpha",
                                           std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<bool>("truesdell", true);
+
   pset.add_optional_parameter<double>("tol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
-  pset.add_optional_parameter<int>("max_divide", 8);
-
-  pset.add_optional_parameter<bool>("truesdell", true);
+  pset.add_optional_parameter<int>("max_divide", 4);
+  pset.add_optional_parameter<bool>("force_divide", false);
 
   return pset;
 }
@@ -1393,125 +1394,112 @@ std::unique_ptr<NEMLObject> GeneralIntegrator::initialize(ParameterSet & params)
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter<GeneralFlowRule>("rule"),
       params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<bool>("truesdell"),
       params.get_parameter<double>("tol"),
       params.get_parameter<int>("miter"),
       params.get_parameter<bool>("verbose"),
       params.get_parameter<int>("max_divide"),
-      params.get_parameter<bool>("truesdell")
+      params.get_parameter<bool>("force_divide")
       ); 
 }
 
-int GeneralIntegrator::update_sd(
+TrialState * GeneralIntegrator::setup(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    const double * const s_n,
+    const double * const h_n)
+{
+  GITrialState * tss = new GITrialState();
+  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
+                   s_n, h_n, *tss);
+  return tss;
+}
+
+bool GeneralIntegrator::elastic_step(
+    const TrialState * ts,
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    const double * const s_n,
+    const double * const h_n)
+{
+  double de[6];
+  sub_vec(e_np1, e_n, 6, de);
+  
+  double dt = t_np1 - t_n;
+
+  if (dt < std::numeric_limits<double>::epsilon()) {
+    return true;
+  }
+
+  return false;
+}
+
+int GeneralIntegrator::update_internal(
+    const double * const x,
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n)
+{
+  std::copy(x, x+6, s_np1);
+  std::copy(x+6, x+6+nhist(), h_np1);
+
+  return 0;
+}
+
+int GeneralIntegrator::strain_partial(
+    const TrialState * ts,
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    const double * const s_np1, const double * const s_n,
+    const double * const h_np1, const double * const h_n,
+    double * de)
+{
+  const GITrialState * tss = static_cast<const GITrialState*>(ts);
+  
+  double * estress = new double [6*6];
+
+  int ier = rule_->ds_de(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, estress);
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      de[CINDEX(i,j,6)] = estress[CINDEX(i,j,6)];
+    }
+  }
+
+  delete [] estress;
+
+  if (ier != SUCCESS) return ier;
+
+  double * ehist = new double [6*nhist()];
+
+  ier = rule_->da_de(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, ehist);
+  for (size_t i = 0; i < nhist(); i++) {
+    for (size_t j = 0; j < 6; j++) {
+      de[CINDEX((i+6),j,6)] = ehist[CINDEX(i,j,6)];
+    }
+  }
+
+  delete [] ehist;
+
+  return ier;
+}
+
+int GeneralIntegrator::work_and_energy(
+    const TrialState * ts,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
     double * const s_np1, const double * const s_n,
     double * const h_np1, const double * const h_n,
-    double * const A_np1,
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
-  // Setup for substepping
-  int nd = 0;                   // Number of times we divided
-  int tf = pow(2,max_divide_);  // Total integer step, to avoid floating math
-  int cm = tf;                  // Current attempted step
-  int cs = 0;                   // Current integer proportion of step completed
-  
-  // Total differences over step
-  double e_diff[6];
-  for (int i=0; i<6; i++) e_diff[i] = e_np1[i] - e_n[i];
-  double T_diff = T_np1 - T_n;
-  double t_diff = t_np1 - t_n;
-
-  // Previous values as we go along, (initialize to step n)
-  double e_past[6];
-  std::copy(e_n, e_n+6, e_past);
-  std::vector<double> h_pastv(nhist());
-  double * h_past = &h_pastv[0];
-  std::copy(h_n, h_n+nhist(), h_past);
-  double s_past[6];
-  std::copy(s_n, s_n+6, s_past);
-  double T_past = T_n;
-  double t_past = t_n;
-  
-  // Current goal as we go along
-  double e_next[6];
-  std::vector<double> h_nextv(nhist());
-  double * h_next = &h_nextv[0];
-  double s_next[6];
-  double T_next;
-  double t_next;
-  
-  while (cs < tf) {
-    // Figure out our float step multiplier
-    double sm = (double) (cs + cm) / (double) tf;
-
-    // Figure out our goals for this increment
-    for (int i=0; i<6; i++) e_next[i] = e_n[i] + sm * e_diff[i];
-    T_next = T_n + sm * T_diff;
-    t_next = t_n + sm * t_diff;
-
-    // Set trial state
-    GITrialState ts;
-    int ier = make_trial_state(e_next, e_past, T_next, T_past, t_next, t_past, 
-                     s_past, h_past, ts);
-    if (ier != SUCCESS) return ier; // Do not recover from something so dumb
-
-    // Solve for x
-    std::vector<double> xv(nparams());
-    double * x = &xv[0];
-    ier = solve(this, x, &ts, tol_, miter_, verbose_);
-
-    // Decide what to do if we fail
-    if (ier != SUCCESS) {
-      // Subdivide the step
-      nd += 1;
-      cm /= 2;
-      if (verbose_) {
-        std::cout << "Substepping:" << std::endl;
-        std::cout << "New step fraction " << ((double) cm / (double) tf) << std::endl;
-        std::cout << "New integer step " << cm << std::endl;
-        std::cout << "Step integer count " << cs << "/" << tf << std::endl;
-      }
-      // Check if we exceeded our subdivision limit
-      if (nd == max_divide_) {
-        if (verbose_) {
-          std::cout << "Substepping failed..." << std::endl;
-        }
-        return ier;
-      }
-      continue;
-    }
-
-    // Extract solved parameters
-    std::copy(x, x+6, s_next);
-    std::copy(x+6, x+6+nhist(), h_next);
-
-    // Increment next step
-    cs += cm;
-    std::copy(e_next, e_next+6, e_past);
-    std::copy(h_next, h_next+nhist(), h_past);
-    std::copy(s_next, s_next+6, s_past);
-    T_past = T_next;
-    t_past = t_next;
-
-  }
-
-  // Extract final values
-  std::copy(s_next, s_next+6, s_np1);
-  std::copy(h_next, h_next+nhist(), h_np1);
-  
-  // Get tangent over full step
-  GITrialState ts;
-  int ier = make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
-  if (ier != SUCCESS) return ier;
-  std::vector<double> yv(nparams());
-  double * y = &yv[0];
-  std::copy(s_np1, s_np1+6, y);
-  std::copy(h_np1, h_np1+nhist(), &y[6]);
-  
-  ier = calc_tangent_(y, &ts, A_np1);
-  if (ier != SUCCESS) return ier;
+  const GITrialState * tss = static_cast<const GITrialState *>(ts);
 
   // Energy calculation (trapezoid rule)
   double de[6];
@@ -1523,10 +1511,10 @@ int GeneralIntegrator::update_sd(
 
   // Need a special call
   double p_dot_np1;
-  rule_->work_rate(s_np1, h_np1, ts.e_dot, T_np1, ts.Tdot, p_dot_np1);
+  rule_->work_rate(s_np1, h_np1, tss->e_dot, T_np1, tss->Tdot, p_dot_np1);
   double p_dot_n;
-  rule_->work_rate(s_n, h_n, ts.e_dot, T_n, ts.Tdot, p_dot_n);
-  p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * ts.dt;
+  rule_->work_rate(s_n, h_n, tss->e_dot, T_n, tss->Tdot, p_dot_n);
+  p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * tss->dt;
 
   return 0;
 }
@@ -1549,7 +1537,7 @@ size_t GeneralIntegrator::nparams() const
 int GeneralIntegrator::init_x(double * const x, TrialState * ts)
 {
   GITrialState * tss = static_cast<GITrialState*>(ts);
-  std::copy(tss->s_n, tss->s_n+6, x);
+  std::copy(tss->s_guess, tss->s_guess+6, x);
   std::copy(tss->h_n.begin(), tss->h_n.end(), &x[6]);
 
   return 0;
@@ -1561,11 +1549,7 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   GITrialState * tss = static_cast<GITrialState*>(ts);
 
   // Setup
-  double s_mod[6];
-  std::copy(x, x+6, s_mod);
-  if (norm2_vec(x, 6) < std::numeric_limits<double>::epsilon()) {
-    s_mod[0] = 2.0 * std::numeric_limits<double>::epsilon();
-  }
+  const double * s_np1 = x;
   const double * const h_np1 = &x[6];
   
   // Helps with vectorization
@@ -1575,52 +1559,52 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   int nparams = this->nparams();
 
   // Residual calculation
-  int ier = rule_->s(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, R);
+  int ier = rule_->s(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, R);
   if (ier != SUCCESS) return ier;
   for (int i=0; i<6; i++) {
-    R[i] = -s_mod[i] + tss->s_n[i] + R[i] * tss->dt;
+    R[i] = s_np1[i] - tss->s_n[i] - R[i] * tss->dt;
   }
-  ier = rule_->a(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, &R[6]);
+  ier = rule_->a(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, &R[6]);
   if (ier != SUCCESS) return ier;
   for (int i=0; i<nhist; i++) {
-    R[i+6] = -h_np1[i] + tss->h_n[i] + R[i+6] * tss->dt;
+    R[i+6] = h_np1[i] - tss->h_n[i] - R[i+6] * tss->dt;
   }
 
   // Jacobian calculation
   double J11[36];
-  ier = rule_->ds_ds(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J11);
+  ier = rule_->ds_ds(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J11);
   if (ier != SUCCESS) return ier;
   for (int i=0; i<36; i++) J11[i] *= tss->dt;
   for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] -= 1.0;
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX(i,j,nparams)] = J11[CINDEX(i,j,6)];
+      J[CINDEX(i,j,nparams)] = -J11[CINDEX(i,j,6)];
     }
   }
   
   std::vector<double> J12v(6*nhist);
   double * J12 = &J12v[0];
-  ier = rule_->ds_da(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J12);
+  ier = rule_->ds_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J12);
   if (ier != SUCCESS) return ier;
   for (int i=0; i<6; i++) {
     for (int j=0; j<nhist; j++) {
-      J[CINDEX(i,(j+6),nparams)] = J12[CINDEX(i,j,nhist)] * tss->dt;
+      J[CINDEX(i,(j+6),nparams)] = -J12[CINDEX(i,j,nhist)] * tss->dt;
     }
   }
   
   std::vector<double> J21v(nhist*6);
   double * J21 = &J21v[0];
-  ier = rule_->da_ds(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J21);
+  ier = rule_->da_ds(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J21);
   if (ier != SUCCESS) return ier;
   for (int i=0; i<nhist; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX((i+6),j,nparams)] = J21[CINDEX(i,j,6)] * tss->dt;
+      J[CINDEX((i+6),j,nparams)] = -J21[CINDEX(i,j,6)] * tss->dt;
     }
   }
   
   std::vector<double> J22v(nhist*nhist);
   double * J22 = &J22v[0];
-  ier = rule_->da_da(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, J22);
+  ier = rule_->da_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J22);
   if (ier != SUCCESS) return ier;
 
   // More vectorization
@@ -1630,7 +1614,7 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
 
   for (int i=0; i<nhist; i++) {
     for (int j=0; j<nhist; j++) {
-      J[CINDEX((i+6),(j+6),nparams)] = J22[CINDEX(i,j,nhist)];
+      J[CINDEX((i+6),(j+6),nparams)] = -J22[CINDEX(i,j,nhist)];
     }
   }
   
@@ -1660,111 +1644,20 @@ int GeneralIntegrator::make_trial_state(
     std::fill(ts.e_dot, ts.e_dot+6, 0.0);
   }
   
-  // Trial stress
+  // Last stress
   std::copy(s_n, s_n+6, ts.s_n);
 
-  // Trial history
+  // Last history
   ts.h_n.resize(nhist());
   std::copy(h_n, h_n+nhist(), ts.h_n.begin());
 
-  return 0;
-}
-
-int GeneralIntegrator::calc_tangent_(const double * const x, TrialState * ts, 
-                                     double * const A_np1)
-{
-  // Quick note: I'm leaving  out a few dts that cancel in the end -- 
-  // no point in tempting fate for small time increments
- 
-  GITrialState * tss = static_cast<GITrialState*>(ts);
-
-  // Setup
-  double s_mod[36];
-  std::copy(x, x+6, s_mod);
-  if (norm2_vec(x, 6) < std::numeric_limits<double>::epsilon()) {
-    s_mod[0] = 2.0 * std::numeric_limits<double>::epsilon();
-  }
-  const double * const h_np1 = &x[6];
-
-  // Vectorization
-  int nhist = this->nhist();
-
-  // Call for extra derivatives
-  double A[36];
-  int ier = rule_->ds_de(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, A);
-  if (ier != SUCCESS) return ier;
-  std::vector<double> Bv(nhist*6);
-  double * B = &Bv[0];
-  ier = rule_->da_de(s_mod, h_np1, tss->e_dot, tss->T, tss->Tdot, B);
-  if (ier != SUCCESS) return ier;
-
-  // Call for the jacobian
-  std::vector<double> Rv(nparams());
-  double * R = &Rv[0];
-  std::vector<double> Jv(nparams()*nparams());
-  double * J = &Jv[0];
-  ier = RJ(x, ts, R, J);
-  if (ier != SUCCESS) return ier;
-
-  // Separate blocks...
-  int n = nparams();
-  
-  std::vector<double> J11v(6*6);
-  double * J11 = &J11v[0];
-  for (int i=0; i<6; i++) {
-    for (int j=0; j<6; j++) {
-      J11[CINDEX(i,j,6)] = J[CINDEX(i,j,n)];
-    }
-  }
-  
-  std::vector<double> J12v(6*nhist);
-  double * J12 = &J12v[0];
-  for (int i=0; i<6; i++) {
-    for (int j=0; j<nhist; j++) {
-      J12[CINDEX(i,j,nhist)] = J[CINDEX(i,(j+6),n)];
-    }
-  }
-  
-  std::vector<double> J21v(nhist*6);
-  double * J21 = &J21v[0];
-  for (int i=0; i<nhist; i++) {
-    for (int j=0; j<6; j++) {
-      J21[CINDEX(i,j,6)] = J[CINDEX((i+6),(j),n)];
-    }
-  }
-  
-  std::vector<double> J22v(nhist*nhist);
-  double * J22 = &J22v[0];
-  for (int i=0; i<nhist; i++) {
-    for (int j=0; j<nhist; j++) {
-      J22[CINDEX(i,j,nhist)] = J[CINDEX((i+6),(j+6),n)];
-    }
-  }
-
-  // Only need the inverse
-  ier = invert_mat(J22, nhist);
-  if (ier != SUCCESS) return ier;
-
-  // Start multiplying through
-  std::vector<double> T1v(nhist*6);
-  double * T1 = &T1v[0];
-  mat_mat(nhist, 6, nhist, J22, J21, T1);
-  std::vector<double> T2v(6*6);
-  double * T2 = &T2v[0];
-  mat_mat(6, 6, nhist, J12, T1, T2);
-  for (int i=0; i<6*6; i++) T2[i] = J11[i] - T2[i];
-  ier = invert_mat(T2, 6);
-  if (ier != SUCCESS) return ier;
-
-  std::vector<double> T3v(nhist*6);
-  double * T3 = &T3v[0];
-  mat_mat(nhist, 6, nhist, J22, B, T3);
-  std::vector<double> T4v(6*6);
-  double * T4 = &T4v[0];
-  mat_mat(6, 6, nhist, J12, T3, T4);
-  for (int i=0; i<6*6; i++) T4[i] -= A[i];
-
-  mat_mat(6, 6, 6, T2, T4, A_np1);
+  // Elastic guess
+  double C[36];
+  elastic_->C(T_np1, C);
+  double de[6];
+  sub_vec(e_np1, e_n, 6, de);
+  mat_vec(C, 6, de, 6, ts.s_guess);
+  add_vec(ts.s_guess, s_n, 6, ts.s_guess);
 
   return 0;
 }

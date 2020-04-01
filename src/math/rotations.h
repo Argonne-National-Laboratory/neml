@@ -2,6 +2,7 @@
 #define ROTATIONS_H
 
 #include "tensors.h"
+#include "nemlmath.h"
 
 #include "../objects.h"
 
@@ -10,8 +11,6 @@
 #include <string>
 
 #include "../windows.h"
-
-#define CINDEX(i,j,n) (j + i * n)
 
 namespace neml {
 
