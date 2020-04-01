@@ -313,7 +313,7 @@ size_t KinematicHardeningRule::nhist() const
 
 int KinematicHardeningRule::init_hist(double * const alpha) const
 {
-  for (int i=0; i<6; i++) alpha[0] = 0.0;
+  for (int i=0; i<6; i++) alpha[i] = 0.0;
 
   return 0;
 }
