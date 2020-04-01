@@ -352,24 +352,15 @@ int SubstepModel_sd::update_step(
   
   // Solve the system
   double * x = new double [nparams()]; 
-  int ier = solve(this, x, ts, tol_, miter_, verbose_);
-  if (ier != SUCCESS) {
-    delete [] x;
-    delete ts;
-    return ier;
-  }
-  
-  // Extract the final Jacobian (could optimize)
-  double * R = new double [nparams()];
-  ier = RJ(x, ts, R, A);
-  delete [] R;
+  int ier = solve(this, x, ts, tol_, miter_, verbose_, false, nullptr, 
+                  A); // Keep jacobian
   if (ier != SUCCESS) {
     delete [] x;
     delete ts;
     return ier;
   }
 
-  // Invert it
+  // Invert the Jacobian (or idk, could go in the tangent calc)
   ier = invert_mat(A, nparams());
   if (ier != SUCCESS) {
     delete [] x;
@@ -928,15 +919,18 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
 {
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
 
+  // Again no idea why the compiler can't do this
+  int nh = flow_->nhist();
+
   // Setup from current state
   const double * const s_np1 = &x[0];
   const double * const alpha  = &x[6];
-  const double & dg = x[6+flow_->nhist()];
+  const double & dg = x[6+nh];
 
   // Residual calculation
   double g[6];
   int ier = flow_->g(s_np1, alpha, tss->T, g); 
-  std::vector<double> hv(flow_->nhist());
+  std::vector<double> hv(nh);
   double * h = &hv[0];
   ier = flow_->h(s_np1, alpha, tss->T, h);
   double f;
@@ -952,14 +946,13 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
     R[i] = s_np1[i] - R[i];
   }
 
-  for (size_t i=0; i<flow_->nhist(); i++) {
+  for (int i=0; i<nh; i++) {
     R[i+6] = alpha[i] - tss->h_tr[i] - h[i] * dg;
   }
-  R[6+flow_->nhist()] = f;
+  R[6+nh] = f;
 
   // Now the jacobian calculation...
   int n = nparams();
-  int nh = flow_->nhist();
   
   // J11
   double gs[36];

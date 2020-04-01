@@ -37,11 +37,13 @@ class NEML_EXPORT Solvable {
 /// Call the built-in solver
 int NEML_EXPORT solve(Solvable * system, double * x, TrialState * ts,
           double tol = 1.0e-8, int miter = 50,
-          bool verbose = false, bool relative = false);
+          bool verbose = false, bool relative = false,
+          double * R = nullptr, double * J = nullptr);
 
 /// Default solver: plain NR
 int NEML_EXPORT newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative);
+          double tol, int miter, bool verbose, bool relative,
+          double * R, double * J);
 
 #ifdef SOLVER_NOX
 /// NOX object-oriented interface
@@ -67,7 +69,7 @@ class NEML_EXPORT NOXSolver: public NOX::LAPACK::Interface {
 
 /// Interface to nox
 int NEML_EXPORT nox(Solvable * system, double * x, TrialState * ts,
-        double tol, int miter, bool verbose);
+        double tol, int miter, bool verbose, double * R, double * J);
 
 #endif
 

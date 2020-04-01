@@ -782,7 +782,10 @@ int Chaboche::dh_ds(const double * const s, const double * const alpha, double T
 int Chaboche::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  std::fill(dhv, dhv + nhist()*nhist(), 0.0);
+  // Again, there should be no earthly reason the compiler can't do this
+  int nh = nhist();
+
+  std::fill(dhv, dhv + nh*nh, 0.0);
 
   std::vector<double> c = eval_vector(c_, T);
 
@@ -810,7 +813,7 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
   // Fill in the gamma part
   for (int i=0; i<n_; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhist())] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nh)] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
     }
   }
 
@@ -819,7 +822,7 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
     for (int i=0; i<6; i++) {
       for (int bj=0; bj<n_; bj++) {
         for (int j=0; j<6; j++) {
-          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nhist())] -= 2.0 / 3.0 * c[bi]  * 
+          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nh)] -= 2.0 / 3.0 * c[bi]  * 
               ss[CINDEX(i,j,6)];
         }
       }
