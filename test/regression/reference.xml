@@ -68,10 +68,10 @@
         </C>
         <gmodels>
           <g1 type="ConstantGamma">
-            <g>1000.0</g>
+            <g>100.0</g>
           </g1>
           <g2 type="ConstantGamma">
-            <g>1000.0</g>
+            <g>100.0</g>
           </g2>
         </gmodels>
         <A>
