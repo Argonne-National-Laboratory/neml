@@ -41,3 +41,4 @@ CMakeDoxygenDefaults.cmake
 *.lib
 *.pyd
 src/neml_export.h
+callgrind.out*
