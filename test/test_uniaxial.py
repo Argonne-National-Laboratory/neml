@@ -71,8 +71,7 @@ class TestUniaxialRI(CommonUniaxial, unittest.TestCase):
     hrule = hardening.Chaboche(iso, c, gmodels, A, n)
 
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-    self.model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
-        check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False)
     self.umodel = uniaxial.UniaxialModel(self.model)
     
     self.de = 0.001

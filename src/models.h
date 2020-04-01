@@ -200,18 +200,9 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
       double t_np1, double t_n,
       double * const s_np1, const double * const s_n,
       double * const h_np1, const double * const h_n,
-      double * const A_np1, double * const J,
+      double * const A, double * const E,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-
-  /// Single step tangent
-  virtual int calculate_tangent(
-      double * const J, const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n, double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
-      double * const A_np1);
 
   /// Setup the trial state
   virtual TrialState * setup(
@@ -239,7 +230,7 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
       double * const s_np1, const double * const s_n,
       double * const h_np1, const double * const h_n) = 0;
 
-  /// Minus the partial derivative of the stress residual with respect to the strain
+  /// Minus the partial derivative of the residual with respect to the strain
   virtual int strain_partial(
       const TrialState * ts,
       const double * const e_np1, const double * const e_n,
@@ -410,7 +401,7 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
       double * const s_np1, const double * const s_n,
       double * const h_np1, const double * const h_n);
 
-  /// Minus the partial derivative of the stress residual with respect to the strain
+  /// Minus the partial derivative of the residual with respect to the strain
   virtual int strain_partial(
       const TrialState * ts,
       const double * const e_np1, const double * const e_n,
@@ -452,19 +443,16 @@ static Register<SmallStrainPerfectPlasticity> regSmallStrainPerfectPlasticity;
 //    for associative flow models.  For non-associative models the algorithm
 //    may theoretically fail the discrete Kuhn-Tucker conditions, even
 //    putting aside convergence issues on the nonlinear solver.
-//
-//    The class does check for Kuhn-Tucker violations when it returns,
-//    reporting an error if the conditions are violated.
-class NEML_EXPORT SmallStrainRateIndependentPlasticity: public NEMLModel_sd, public Solvable {
+class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
  public:
   /// Parameters: elasticity model, flow rule, CTE, solver tolerance, maximum
   /// solver iterations, verbosity flag, tolerance on the Kuhn-Tucker conditions
   /// check, and a flag on whether the KT conditions should be evaluated
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
-                                       std::shared_ptr<Interpolate> alpha,
-                                       double tol, int miter, bool verbose,double kttol,
-                                       bool check_kt, bool truesdell);
+                                       std::shared_ptr<Interpolate> alpha, bool truesdell,
+                                       double tol, int miter, bool verbose,
+                                       int max_divide, bool force_divide);
 
   /// Type for the object system
   static std::string type();
@@ -473,21 +461,57 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public NEMLModel_sd, pub
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  /// The small strain stress update
-  virtual int update_sd(
+  /// Number of history variables
+  virtual size_t nhist() const;
+  /// Initialize history at time zero
+  virtual int init_hist(double * const hist) const;
+
+  /// Setup the trial state
+  virtual TrialState * setup(
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      const double * const s_n,
+      const double * const h_n);
+
+  /// Ignore update and take an elastic step
+  virtual bool elastic_step(
+      const TrialState * ts,
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      const double * const s_n,
+      const double * const h_n);
+
+  /// Interpret the x vector
+  virtual int update_internal(
+      const double * const x,
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      double * const s_np1, const double * const s_n,
+      double * const h_np1, const double * const h_n);
+
+  /// Minus the partial derivative of the residual with respect to the strain
+  virtual int strain_partial(
+      const TrialState * ts,
+      const double * const e_np1, const double * const e_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      const double * const s_np1, const double * const s_n,
+      const double * const h_np1, const double * const h_n,
+      double * const de);
+
+  /// Do the work calculation
+  virtual int work_and_energy(
+      const TrialState * ts,
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
       double * const s_np1, const double * const s_n,
       double * const h_np1, const double * const h_n,
-      double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-
-  /// Number of history variables
-  virtual size_t nhist() const;
-  /// Initialize history at time zero
-  virtual int init_hist(double * const hist) const;
 
   /// Number of solver parameters
   virtual size_t nparams() const;
@@ -508,15 +532,7 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public NEMLModel_sd, pub
                        SSRIPTrialState & ts);
 
  private:
-  int calc_tangent_(const double * const x, TrialState * ts, const double * const s_np1,
-                    const double * const h_np1, double dg, double * const A_np1);
-  int check_K_T_(const double * const s_np1, const double * const h_np1, double T_np1, double dg);
-
   std::shared_ptr<RateIndependentFlowRule> flow_;
-
-  double tol_, kttol_;
-  int miter_;
-  bool verbose_, check_kt_;
 };
 
 static Register<SmallStrainRateIndependentPlasticity> regSmallStrainRateIndependentPlasticity;

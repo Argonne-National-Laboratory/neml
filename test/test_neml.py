@@ -131,17 +131,8 @@ class CommonJacobian(object):
     
     dfn = lambda y: self.model.RJ(y, ts)[0]
     nJ = differentiate(dfn, x)
-    
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
-
-    x = self.gen_x()
-
-    R, J = self.model.RJ(x, ts)
-    
-    dfn = lambda y: self.model.RJ(y, ts)[0]
-    nJ = differentiate(dfn, x)
-
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+   
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3, atol = 1e-1))
 
 class TestPerfectPlasticity(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
@@ -207,7 +198,7 @@ class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, C
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow, check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -247,7 +238,7 @@ class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel, CommonJacobia
     hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow, check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -286,7 +277,7 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
     hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow, check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -333,8 +324,7 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
 
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow,
-        check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0

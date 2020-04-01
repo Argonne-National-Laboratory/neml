@@ -141,7 +141,7 @@ PYBIND11_MODULE(models, m) {
            }, "Setup trial state for solve.")
       ;
 
-  py::class_<SmallStrainRateIndependentPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
+  py::class_<SmallStrainRateIndependentPlasticity, SubstepModel_sd, Solvable, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<SmallStrainRateIndependentPlasticity>(args, kwargs,

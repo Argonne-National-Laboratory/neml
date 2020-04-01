@@ -30,7 +30,7 @@ class CommonMatModel(object):
           u_n, p_n)
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n, u_n, p_n)[0]
-      num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
+      num_A = differentiate(dfn, strain_np1)
 
       print(A_np1)
       print(num_A)
@@ -45,8 +45,6 @@ class CommonMatModel(object):
 
 class TestPerfectPlasticity(unittest.TestCase, CommonMatModel):
   def setUp(self):
-    self.hist0 = np.zeros((0,))
-
     self.E = 92000.0
     self.nu = 0.3
 
@@ -62,6 +60,38 @@ class TestPerfectPlasticity(unittest.TestCase, CommonMatModel):
     self.model = models.SmallStrainPerfectPlasticity(
         self.elastic, surface, self.s0,
         max_divide = 5, force_divide = True)
+
+    self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
+    self.tfinal = 10.0
+    self.T = 300.0
+    self.nsteps = 10
+
+class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel):
+  """
+    Test the rate-independent plasticity algorithm with a linearly
+    isotropically hardening yield surface.
+  """
+  def setUp(self):
+    self.hist0 = np.zeros((7,))
+
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.mu = self.E/(2*(1+self.nu))
+    self.K = self.E/(3*(1-2*self.nu))
+
+    self.s0 = 180.0
+    self.Kp = self.E/10
+
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.mu,
+        "shear", self.K, "bulk")
+
+    surface = surfaces.IsoJ2()
+    hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic,
+        flow, max_divide = 5, force_divide = True)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
