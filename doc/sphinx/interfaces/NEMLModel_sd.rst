@@ -28,8 +28,10 @@ with respect to the spatial velocity gradient.
 
 The following sections describe the basic material model implemented from
 this generic interfaces.
-Another section of the model details continuum damage models, which also
+Another :ref:`section <damage>` of the manual details continuum damage models, which also
 use this same interface.
+
+The descriptions here are given in the rate form.  Details of the integration algorithm for most of the small strain models are described :ref:`here <integration>`.
 
 Implementations
 ---------------
