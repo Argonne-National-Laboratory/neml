@@ -598,11 +598,14 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
 
 def strain_cyclic_extrapolated(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
-    verbose = False, check_dmg = False, dtol = 0.75, jump_del_N=10,allowable_jump_stress=5.0):
+    verbose = False, check_dmg = False, dtol = 0.75, min_cycle=3, unit_extrapolate = 10,
+    jump_del_N=10,allowable_jump_stress=5.0):
   """
     Strain controlled cyclic test extrapolation.
 
     Extra Keyword Args:
+      min_cycle                minimum cycles to start the extrapolation process
+      unit_extrapolate         number of cycles to perform single cycle extrapolation
       jump_del_N               number of cycles to jump
       allowable_jump_stress    extrapolate when stress jump is within this limit
 
@@ -683,8 +686,8 @@ def strain_cyclic_extrapolated(model, emax, R, erate, ncycles, T = 300.0, nsteps
         print("Damage check exceeded")
         break
 
-    if (s >= 3.0) and (extrapolate == True):        # No extrapolation before 3 cycles
-        if (s <= 10.0):                             # single cycle jump for first 10 cycles
+    if (s >= min_cycle) and (extrapolate == True):        # No extrapolation before min_cycle
+        if (s <= unit_extrapolate):                       # single cycle jump for first unit_extrapolate cycles
             del_N = 1
         else:
             del_N = jump_del_N                      # specified cycles to jump

@@ -57,41 +57,43 @@ if __name__ == "__main__":
     hold_c  = np.array([ 0.0  , 0.0  ,  0.0  , 6.0  ])*60.0
     ncycles = np.array([ 500  , 500  , 200   , 120  ])
 
-    time_act = []
-    time_ext = []
-    for r in range(len(emax)):
-        start = time.time()
-        res = drivers.strain_cyclic_extrapolated(model, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],allowable_jump_stress=10.0,jump_del_N=10,check_dmg=True)
-        end = time.time()
-        time_ext.append(end - start)
-        plt.plot(res['cycles'],res['max'],'+',label='ext run {}'.format(r+1))
-        plt.plot(res['cycles'],res['min'],'+')
-        start = time.time()
-        res = drivers.strain_cyclic(model, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],check_dmg=True)
-        end = time.time()
-        time_act.append(end - start)
-        plt.plot(res['cycles'],res['max'],label='act run {}'.format(r+1))
-        plt.plot(res['cycles'],res['min'])
-    plt.legend(loc='best')
-    plt.xlabel('cycles')
-    plt.ylabel('stress')
-    plt.title('Extrapolation comparison with damage')
-    plt.show()
-    plt.scatter(np.arange(len(emax)),time_act,label='act')
-    plt.scatter(np.arange(len(emax)),time_ext,marker='^',label='ext')
-    plt.yscale('log')
-    plt.legend(loc='best')
-    plt.ylabel('time')
-    plt.xlabel('runs')
-    plt.title('Time comparison')
-    plt.show()
+    # time_act = []
+    # time_ext = []
+    # for r in range(len(emax)):
+    #     start = time.time()
+    #     res = drivers.strain_cyclic_extrapolated(model, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],
+    #                          min_cycle=3, unit_extrapolate = 10,allowable_jump_stress=10.0,jump_del_N=10,check_dmg=True)
+    #     end = time.time()
+    #     time_ext.append(end - start)
+    #     plt.plot(res['cycles'],res['max'],'+',label='ext run {}'.format(r+1))
+    #     plt.plot(res['cycles'],res['min'],'+')
+    #     start = time.time()
+    #     res = drivers.strain_cyclic(model, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],check_dmg=True)
+    #     end = time.time()
+    #     time_act.append(end - start)
+    #     plt.plot(res['cycles'],res['max'],label='act run {}'.format(r+1))
+    #     plt.plot(res['cycles'],res['min'])
+    # plt.legend(loc='best')
+    # plt.xlabel('cycles')
+    # plt.ylabel('stress')
+    # plt.title('Extrapolation comparison with damage')
+    # plt.show()
+    # plt.scatter(np.arange(len(emax)),time_act,label='act')
+    # plt.scatter(np.arange(len(emax)),time_ext,marker='^',label='ext')
+    # plt.yscale('log')
+    # plt.legend(loc='best')
+    # plt.ylabel('time')
+    # plt.xlabel('runs')
+    # plt.title('Time comparison')
+    # plt.show()
 
     ## no damage
     time_act = []
     time_ext = []
     for r in range(len(emax)):
         start = time.time()
-        res = drivers.strain_cyclic_extrapolated(bmodel, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],allowable_jump_stress=10.0)
+        res = drivers.strain_cyclic_extrapolated(bmodel, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],
+                                                   min_cycle=3, unit_extrapolate = 10,allowable_jump_stress=10.0,jump_del_N=10)
         end = time.time()
         time_ext.append(end - start)
         plt.plot(res['cycles'],res['max'],'+',label='ext run {}'.format(r+1))
