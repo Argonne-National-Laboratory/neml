@@ -599,14 +599,14 @@ def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
 def strain_cyclic_extrapolated(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
     verbose = False, check_dmg = False, dtol = 0.75, min_cycle=3, unit_extrapolate = 10,
-    jump_del_N=10,allowable_jump_stress=5.0):
+    jump_delta_N=10, allowable_jump_stress=5.0):
   """
     Strain controlled cyclic test extrapolation.
 
     Extra Keyword Args:
       min_cycle                minimum cycles to start the extrapolation process
       unit_extrapolate         number of cycles to perform single cycle extrapolation
-      jump_del_N               number of cycles to jump
+      jump_delta_N               number of cycles to jump
       allowable_jump_stress    extrapolate when stress jump is within this limit
 
     Returns:
@@ -688,30 +688,30 @@ def strain_cyclic_extrapolated(model, emax, R, erate, ncycles, T = 300.0, nsteps
 
     if (s >= min_cycle) and (extrapolate == True):        # No extrapolation before min_cycle
         if (s <= unit_extrapolate):                       # single cycle jump for first unit_extrapolate cycles
-            del_N = 1
+            delta_N = 1
         else:
-            del_N = jump_del_N                      # specified cycles to jump
+            delta_N = jump_delta_N                        # specified cycles to jump
         n = len(driver.stored_int)
         # extrapolating history
         pos_hist_last_last = driver.stored_int[n - 1 - steps]
         pos_hist_last      = driver.stored_int[n-1]
         dN_1 = cycles[-1] - cycles[-2]
-        pos_extrapolated_history = pos_hist_last + (pos_hist_last - pos_hist_last_last)*del_N/dN_1
+        pos_extrapolated_history = pos_hist_last + (pos_hist_last - pos_hist_last_last)*delta_N/dN_1
         # extrapolating smax
         smax_last_last = smax[-2]
         smax_last = smax[-1]
-        extrapolated_smax = smax_last + (smax_last - smax_last_last)*del_N/dN_1
+        extrapolated_smax = smax_last + (smax_last - smax_last_last)*delta_N/dN_1
         # extrapolating smax
         smin_last_last = smin[-2]
         smin_last = smin[-1]
-        extrapolated_smin = smin_last + (smin_last - smin_last_last)*del_N/dN_1
+        extrapolated_smin = smin_last + (smin_last - smin_last_last)*delta_N/dN_1
         # criteria for extrapolation
         pos_stress_last_last = driver.stress_int[n - 1 - 2*steps]
         pos_stress_last      = driver.stress_int[n-1]
-        pos_extrapolated_stress = pos_stress_last + (pos_stress_last - pos_stress_last_last)*del_N/dN_1
+        pos_extrapolated_stress = pos_stress_last + (pos_stress_last - pos_stress_last_last)*delta_N/dN_1
         stress_jump = pos_extrapolated_stress[0] - pos_stress_last[0]
         if np.fabs(stress_jump) <= allowable_jump_stress:
-            s = s + del_N
+            s = s + delta_N
             if s > ncycles:
                 break
             driver.stored_int.append(pos_extrapolated_history)

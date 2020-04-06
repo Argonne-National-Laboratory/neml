@@ -62,7 +62,7 @@ if __name__ == "__main__":
     for r in range(len(emax)):
         start = time.time()
         res = drivers.strain_cyclic_extrapolated(model, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],
-                             min_cycle=3, unit_extrapolate = 10,allowable_jump_stress=10.0,jump_del_N=10,check_dmg=True)
+                             min_cycle=3, unit_extrapolate = 10,allowable_jump_stress=10.0,jump_delta_N=10,check_dmg=True)
         end = time.time()
         time_ext.append(end - start)
         plt.plot(res['cycles'],res['max'],'+',label='ext run {}'.format(r+1))
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     for r in range(len(emax)):
         start = time.time()
         res = drivers.strain_cyclic_extrapolated(bmodel, emax[r], R[r], erate[r], int(ncycles[r]),hold_time=[hold_t[r],hold_c[r]],
-                                                   min_cycle=3, unit_extrapolate = 10,allowable_jump_stress=10.0,jump_del_N=10)
+                                                   min_cycle=3, unit_extrapolate = 10,allowable_jump_stress=10.0,jump_delta_N=10)
         end = time.time()
         time_ext.append(end - start)
         plt.plot(res['cycles'],res['max'],'+',label='ext run {}'.format(r+1))
