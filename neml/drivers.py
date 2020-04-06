@@ -122,7 +122,7 @@ class Driver_sd(Driver):
       except Exception:
         return np.zeros((12,)), False
 
-    solvers = [s1,s2,s3]
+    solvers = [s1,s3]
     guesses = [x0] + extra
 
     success = False
@@ -133,7 +133,7 @@ class Driver_sd(Driver):
           break
       if success:
         break
-
+    
     if not success:
       raise MaximumIterations()
 

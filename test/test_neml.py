@@ -12,7 +12,7 @@ class CommonMatModel(object):
   """
     Tests that could be applied to all material models
   """
-  def tests_tangent_proportional_strain(self):
+  def test_tangent_proportional_strain(self):
     t_n = 0.0
     strain_n = np.zeros((6,))
     stress_n = np.zeros((6,))
@@ -31,11 +31,12 @@ class CommonMatModel(object):
       dfn = lambda e: self.model.update_sd(e,
           strain_n, self.T, self.T, t_np1, t_n, stress_n, hist_n, u_n, p_n)[0]
       num_A = differentiate(dfn, strain_np1, eps = 1.0e-9)
-
-      print(strain_np1)
       
-      if i != 0:
-        self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e-1))
+      if not np.allclose(num_A, A_np1, rtol = 1e-3, atol = 1e-1):
+        print(A_np1)
+        print(num_A)
+
+      self.assertTrue(np.allclose(num_A, A_np1, rtol = 1.0e-3, atol = 1.0e-1))
       
       strain_n = strain_np1
       stress_n = stress_np1
@@ -43,7 +44,7 @@ class CommonMatModel(object):
       u_n = u_np1
       p_n = p_np1
 
-  def tests_elastic_proportional_strain(self):
+  def test_elastic_proportional_strain(self):
     t_n = 0.0
     strain_n = np.zeros((6,))
     stress_n = np.zeros((6,))
@@ -129,17 +130,8 @@ class CommonJacobian(object):
     
     dfn = lambda y: self.model.RJ(y, ts)[0]
     nJ = differentiate(dfn, x)
-    
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
-
-    x = self.gen_x()
-
-    R, J = self.model.RJ(x, ts)
-    
-    dfn = lambda y: self.model.RJ(y, ts)[0]
-    nJ = differentiate(dfn, x)
-
-    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3))
+   
+    self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-3, atol = 1e-1))
 
 class TestPerfectPlasticity(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
@@ -160,7 +152,8 @@ class TestPerfectPlasticity(unittest.TestCase, CommonMatModel, CommonJacobian):
         "shear", self.K, "bulk")
 
     surface = surfaces.IsoJ2()
-    self.model = models.SmallStrainPerfectPlasticity(self.elastic, surface, self.s0)
+    self.model = models.SmallStrainPerfectPlasticity(self.elastic, surface, 
+        self.s0)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -204,7 +197,7 @@ class TestRIAPlasticityCombinedLinearLinear(unittest.TestCase, CommonMatModel, C
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow, check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -244,7 +237,7 @@ class TestRIAPlasticityJ2Linear(unittest.TestCase, CommonMatModel, CommonJacobia
     hrule = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow, check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -283,7 +276,7 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
     hrule = hardening.VoceIsotropicHardeningRule(self.s0, self.R, self.d)
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow, check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -297,9 +290,9 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
     return np.array(range(1,9)) / 9.0
 
 
-class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
+class TestRIChabocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
-    Test Cheboche with linear isotropic hardening
+    Test Chaboche with linear isotropic hardening
   """
   def setUp(self):
     self.hist0 = np.zeros((13,))
@@ -330,8 +323,7 @@ class TestRIChebocheLinear(unittest.TestCase, CommonMatModel, CommonJacobian):
 
     flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hmodel)
 
-    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow,
-        check_kt = False)
+    self.model = models.SmallStrainRateIndependentPlasticity(self.elastic, flow)
 
     self.efinal = np.array([0.1,-0.05,0.02,-0.03,0.1,-0.15])
     self.tfinal = 10.0
@@ -443,9 +435,9 @@ class TestCreepPlasticityPerfect(unittest.TestCase, CommonMatModel):
   def gen_start_strain(self):
     return np.zeros((6,)) + 0.01
 
-class TestDirectIntegrateCheboche(unittest.TestCase, CommonMatModel, CommonJacobian):
+class TestDirectIntegrateChaboche(unittest.TestCase, CommonMatModel, CommonJacobian):
   """
-    Test Cheboche's VP model with our new direct integrator
+    Test Chaboche's VP model with our new direct integrator
   """
   def setUp(self):
     n = 20.0
@@ -515,8 +507,6 @@ class TestPerzynaJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian):
     Perzyna associated viscoplasticity w/ voce kinematic hardening
   """
   def setUp(self):
-    self.hist0 = np.zeros((7,))
-
     self.hist0 = np.zeros((7,))
 
     self.E = 92000.0

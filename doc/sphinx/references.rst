@@ -42,3 +42,5 @@ References
 .. [LM1952] Larson, F. and J. Miller. "A time-temperature relationship for rupture and creep stresses," `Transactions of the American Society of Mechanical Engineers,` 74: pp. 765-771 (1952).
 
 .. [DHT2019] Das, S., Hofmann, F., and E. Tarleton. "Consistent determination of geometrically necessary dislocation density from simulations and experiments," `International Journal of Plasticity`, 109 pp. 18–42 (2018).
+
+.. [PRH2001] Perez-Foguet, A., Rodrigues-Ferran, A. and A. Huerta.  "Consistent tangent matrices for substepping schemes," `Computer Methods in Applied Mechanics and Engineering`, 190(35-36): pp. 4627-4647 (2001).

@@ -29,8 +29,7 @@ def verify_Q():
   hrule = hardening.Chaboche(iso, [C], gmodels, [0.0], [1.0])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
-      check_kt = False)
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False)
 
   res = drivers.uniaxial_test(model, 1.0e-2, emax = 0.2)
   stress = res['stress']
@@ -59,8 +58,7 @@ def verify_Cg():
       [0.0], [1.0])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
-      check_kt = False)
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False)
 
   res = drivers.strain_cyclic(model, 0.4, -1.0, 1.0e-4, 1)
   strain = res['strain']
@@ -92,8 +90,7 @@ def verify_warp3d():
       [0.0], [1.0])
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
-      check_kt = False)
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False)
 
   res = drivers.strain_cyclic(model, 0.0075, -1.0, 1.0e-4, 50)
   strain = res['strain']

@@ -48,12 +48,12 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
 
  protected:
    std::shared_ptr<NEMLModel_sd> base_;
-
 };
 
 /// Scalar damage trial state
 class SDTrialState: public TrialState {
  public:
+  virtual ~SDTrialState() {};
   double e_np1[6];
   double e_n[6];
   double T_np1, T_n, t_np1, t_n, u_n, p_n;

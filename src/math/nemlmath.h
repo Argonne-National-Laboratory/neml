@@ -8,7 +8,7 @@
 #include <string>
 #include <cmath>
 
-#define CINDEX(i,j,n) (j + i * n)
+#define CINDEX(i,j,n) ((j) + (i) * (n))
 
 // Note all this uses the notation:
 // symmetric: [E(0,0), E(1,1), E(2,2), sqrt(2) E(1,2), sqrt(2) E(0,2), sqrt(2) E(0,1)]
