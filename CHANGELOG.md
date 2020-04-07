@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.2.2 - 4/7/2020
+* Bugfix for new python package distribution
+
 ## 1.2.1 - 4/7/2020
 ### Bugfix
 * Documentation issue between breathe and sphinx versions resolved
