@@ -1,0 +1,7 @@
+include LICENSE
+include *.py
+include *.txt *.md
+recursive-include src *.cxx *.h *.cmake *.txt
+graft pybind11
+graft rapidxml
+prune doc cmake examples lib profiling util verification

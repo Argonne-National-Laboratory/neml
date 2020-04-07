@@ -41,7 +41,6 @@ set(BLA_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 
-
 INCLUDE_DIRECTORIES(SYSTEM rapidxml)
 
 ### PLATFORM AND COMPILER SPECIFIC OPTIONS ###
@@ -105,6 +104,16 @@ endif()
 ### Check if we can validly build shared libraries ###
 if ((NOT BUILD_SHARED_LIBS) AND WRAP_PYTHON)
       message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
+endif()
+
+if (INSTALL)
+      set(MODULE_BASE ${INSTALL})
+      set(LIBRARY_BASE ${INSTALL})
+      # This is a terrible hack, but hey it works
+      set(CMAKE_BUILD_RPATH "$ORIGIN:$ORIGIN/..")
+else()
+      set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
+      set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/lib)
 endif()
 
 ### BASE LIBRARY ###
