@@ -1,5 +1,4 @@
 #
 ##### pip requirements ######
 #
-sphinx==2.4.4
 breathe
