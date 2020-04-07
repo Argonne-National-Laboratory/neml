@@ -6,9 +6,9 @@ target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/tensors.cxx)
 
 if (WRAP_PYTHON)
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/math)
+      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MODULE_BASE}/math)
       if (WIN32)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/math)
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MODULE_BASE}/math)
       endif()
 
       pybind(nemlmath)

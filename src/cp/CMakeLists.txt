@@ -12,10 +12,10 @@ target_sources(neml PRIVATE
       )
 
 if (WRAP_PYTHON)
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/cp)
+      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MODULE_BASE}/cp)
 
       if (WIN32)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/cp)
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MODULE_BASE}/cp)
       endif()
 
       pybind(crystallography)

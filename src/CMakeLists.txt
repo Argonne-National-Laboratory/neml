@@ -6,11 +6,12 @@ if (WRAP_PYTHON)
 endif()
 
 ### BASE LIBRARY IN LIB ###
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_BASE})
 if (WIN32)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+      set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_BASE})
 endif()
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_BASE})
+
 add_library(neml
       objects.cxx
       models.cxx
@@ -32,14 +33,14 @@ add_library(neml
       )
 add_subdirectory(math)
 add_subdirectory(cp)
-target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${libxml++_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
 generate_export_header(neml)
 
 ### python bindings in neml ###
 if (WRAP_PYTHON)
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
+      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MODULE_BASE})
       if (WIN32)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml)
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MODULE_BASE})
       endif()
 
       pybind(objects)
