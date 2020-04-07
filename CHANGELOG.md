@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.2.1 - 4/7/2020
+### Bugfix
+* Documentation issue between breathe and sphinx versions resolved
+
 ## 1.2.0 - 4/7/2020
 ### Features
 * Added an entire crystal plasticity subsystem (submodule cp) for single crystal constitutive response
