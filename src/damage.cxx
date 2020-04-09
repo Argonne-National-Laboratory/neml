@@ -57,14 +57,7 @@ int NEMLScalarDamagedModel_sd::update_sd(
     double & p_np1, double p_n)
 {
   if (ekill_ and (h_n[0] >= dkill_)) {
-    std::copy(h_n, h_n + nhist(), h_np1);
-    h_np1[0] = 1.0;
-    elastic_->C(T_np1, A_np1);
-    for (int i=0; i<36; i++) A_np1[i] /= sfact_;
-    mat_vec(A_np1, 6, e_np1, 6, s_np1);
-    u_np1 = u_n;
-    p_np1 = p_n;
-    return 0;
+    return ekill_update_(T_np1, e_np1, s_np1, h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
   }
 
   // Make trial state
@@ -90,9 +83,14 @@ int NEMLScalarDamagedModel_sd::update_sd(
                    &h_np1[1], &h_n[1],
                    A_prime_np1, u_np1, u_n, p_np1, p_n);
   if (ier != SUCCESS) return ier;
-  
+
+
   for (int i=0; i<6; i++) s_np1[i] = (1-x[6]) * s_prime_np1[i];
   h_np1[0] = x[6];
+
+  if (ekill_ and (h_np1[0] >= dkill_)) {
+    return ekill_update_(T_np1, e_np1, s_np1, h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
+  }
   
   // Create the tangent
   ier = tangent_(e_np1, e_n, s_np1, s_n,
@@ -258,6 +256,30 @@ int NEMLScalarDamagedModel_sd::tangent_(
   return 0;
 }
 
+int NEMLScalarDamagedModel_sd::ekill_update_(double T_np1, 
+                                             const double * const e_np1,
+                                             double * const s_np1,
+                                             double * const h_np1,
+                                             const double * const h_n,
+                                             double * const A_np1, 
+                                             double & u_np1, double u_n,
+                                             double & p_np1, double p_n)
+{
+  std::copy(h_n, h_n + nhist(), h_np1);
+  h_np1[0] = 1.0;
+  elastic_->C(T_np1, A_np1);
+  for (int i=0; i<36; i++) A_np1[i] /= sfact_;
+  mat_vec(A_np1, 6, e_np1, 6, s_np1);
+  if (u_n > 0.0) {
+    p_np1 = p_n + u_n;
+    u_np1 = 0.0;
+  }
+  else {
+    p_np1 = p_n;
+    u_np1 = u_n;
+  }
+  return 0;
+}
 
 CombinedDamageModel_sd::CombinedDamageModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,

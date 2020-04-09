@@ -13,30 +13,36 @@ namespace neml {
 
 // This function is configured by the build
 int solve(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative)
+          double tol, int miter, bool verbose, bool relative,
+          double * R, double * J)
 {
 #ifdef SOLVER_NOX
-  return nox(system, x, ts, tol, miter, verbose);
+  return nox(system, x, ts, tol, miter, verbose, R, J);
 #elif SOLVER_NEWTON
   // Actually selected the newton solver
-  return newton(system, x, ts, tol, miter, verbose, relative);
+  return newton(system, x, ts, tol, miter, verbose, relative, R, J);
 #else
   // Default solver: plain NR
-  return newton(system, x, ts, tol, miter, verbose, relative);
+  return newton(system, x, ts, tol, miter, verbose, relative, R, J);
 #endif
 }
 
 int newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative)
+          double tol, int miter, bool verbose, bool relative,
+          double * R, double * J)
 {
   int n = system->nparams();
   system->init_x(x, ts);
+  
+  bool local_R = (R==nullptr);
+  bool local_J = (J==nullptr);
 
-  std::vector<double> Rv(n);
-  std::vector<double> Jv(n*n);
-
-  double * R = &Rv[0];
-  double * J = &Jv[0];
+  if (local_R) {
+    R = new double [n];
+  }
+  if (local_J) {
+    J = new double [n*n];
+  }
 
   int ier = 0;
 
@@ -80,6 +86,14 @@ int newton(Solvable * system, double * x, TrialState * ts,
 
   if (verbose) {
     std::cout << std::endl;
+  }
+
+  if (local_R) {
+    delete [] R;
+  }
+
+  if (local_J) {
+    delete [] J;
   }
 
   if (ier != SUCCESS) return ier;
@@ -206,7 +220,8 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
 
 
 int nox(Solvable * system, double * x, TrialState * ts,
-        double tol, int miter, bool verbose)
+        double tol, int miter, bool verbose, double * R,
+        double * J)
 {
   // Setup solver
   NOXSolver solver(system, ts);
@@ -271,6 +286,27 @@ int nox(Solvable * system, double * x, TrialState * ts,
   for (size_t i=0; i<system->nparams(); i++) {
     x[i] = soln(i);
   }
+  
+  // Would need to be figured out to be efficient
+  if ((R != nullptr) || (J != nullptr)) {
+    bool local_R = (R == nullptr);
+    if (local_R) {
+      R = new double [system->nparams()];
+    }
+    if (local_J) {
+      J = new double [system->nparams() * system->nparams()];
+    }
+
+    system->RJ(x, ts, R, J);
+
+    if (local_R) {
+      delete [] R;
+    }
+    if (local_J) {
+      delete [] J;
+    }
+  }
+
 
   return 0;
 }

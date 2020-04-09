@@ -48,3 +48,13 @@ has its own license contained in the pybind11 subdirectory.
 The NEML distribution contains a copy of
 the [rapidxml](http://rapidxml.sourceforge.net) header library, which
 has its own license contained in the rapidxml subdirectory.
+
+## Python package
+
+The python package version of the software available on PiPy requires:
+
+1. A working C++ compiler.
+2. The [Boost](https://www.boost.org/) C++ header libraries.
+3. Linkable version of [BLAS](http://www.netlib.org/blas/) and [LAPACK](http://www.netlib.org/lapack/).
+
+This version does not support multithreading or linking with external C/C++/Fortran codes.

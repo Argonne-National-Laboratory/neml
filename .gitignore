@@ -41,3 +41,7 @@ CMakeDoxygenDefaults.cmake
 *.lib
 *.pyd
 src/neml_export.h
+callgrind.out*
+build
+dist
+neml.egg-info

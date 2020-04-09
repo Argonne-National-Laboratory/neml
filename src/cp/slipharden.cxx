@@ -697,7 +697,7 @@ bool VoceSlipHardening::use_nye() const
   try {
     auto cnst = std::dynamic_pointer_cast<ConstantInterpolate>(k_);
   }
-  catch (std::bad_cast e) {
+  catch (std::bad_cast & e) {
     is_constant = false;
   }
 

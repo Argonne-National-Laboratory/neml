@@ -9,6 +9,7 @@ namespace neml {
 
 class LMTrialState: public TrialState {
  public:
+  virtual ~LMTrialState() {};
   double stress;
 };
 
