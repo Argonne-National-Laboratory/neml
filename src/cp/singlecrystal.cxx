@@ -116,6 +116,9 @@ int SingleCrystalModel::update_ld_inc(
    double & u_np1, double u_n,
    double & p_np1, double p_n)
 {
+  // Shut up a pointless memory error
+  std::fill(h_np1, h_np1+nhist(), 0.0);
+
   // Setup everything in the appropriate wrappers
   const Symmetric D_np1(d_np1);
   const Skew W_np1(w_np1);
@@ -218,7 +221,6 @@ int SingleCrystalModel::update_ld_inc(
         else {
           HF_np1.get<Orientation>("rotation") = Q_n;
         }
-        //HF_np1.get<Orientation>("rotation0") = HF_n.get<Orientation>("rotation0");
       }
 
     }
@@ -248,6 +250,7 @@ size_t SingleCrystalModel::nhist() const
 
 int SingleCrystalModel::init_hist(double * const hist) const
 {
+  std::fill(hist, hist+nhist(), 0.0); // Shuts it up about initialized memory
   History h = gather_history_(hist);
   init_history(h);
   return 0;
