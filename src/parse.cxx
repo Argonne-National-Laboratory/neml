@@ -140,6 +140,7 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
         break;
       case TYPE_VEC_SIZE_TYPE:
         pset.assign_parameter(name, get_vector_size_type(child));
+        break;
       default:
         throw std::runtime_error("Unrecognized object type!");
         break;

@@ -8,6 +8,7 @@ History SlipHardening::blank_hist() const
 {
   History hist;
   populate_history(hist);
+  hist.zero();
   return hist;
 }
 

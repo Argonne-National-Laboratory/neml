@@ -250,6 +250,24 @@ void History::zero()
   std::fill(storage_, storage_+size_, 0.0);
 }
 
+History History::history_derivative(const History & other) const
+{
+  History deriv;
+
+  for (auto i1 : order_) {
+    StorageType i1_type = type_.at(i1);
+    for (auto i2 : other.get_order()) {
+      StorageType i2_type = other.get_type().at(i2);
+      StorageType ntype = derivative_type.at(i1_type).at(i2_type);
+      deriv.add(i1+"_"+i2, ntype, storage_size.at(ntype));
+    }
+  }
+
+  deriv.zero();
+
+  return deriv;
+}
+
 History History::split(std::vector<std::string> sep, bool after) const
 {
   // Check to see if the groups are contiguous and get the offset

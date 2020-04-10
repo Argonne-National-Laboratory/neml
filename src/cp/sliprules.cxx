@@ -191,8 +191,15 @@ History SlipMultiStrengthSlipRule::d_hist_rate_d_hist(const Symmetric & stress,
                     Lattice & L, double T, const History & fixed) const
 {
   History dhist;
-  for (auto strength : strengths_) {
-    dhist.add_union(strength->d_hist_d_h(stress, Q, history, L, T, *this, fixed));
+  for (size_t i = 0; i < nstrength(); i++) {
+    for (size_t j = 0; j < nstrength(); j++) {
+      if (i == j) {
+        dhist.add_union(strengths_[i]->d_hist_d_h(stress, Q, history, L, T, *this, fixed));
+      }
+      else {
+        dhist.add_union(strengths_[i]->blank_hist().history_derivative(strengths_[j]->blank_hist()));
+      }
+    }
   }
   return dhist;
 }

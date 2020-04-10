@@ -190,6 +190,9 @@ class NEML_EXPORT History {
     return deriv;
   }
 
+  /// Derivative with respect to a different history
+  History history_derivative(const History & other) const;
+
   /// Split a history in two
   History split(std::vector<std::string> sep, bool after = true) const;
 
@@ -229,20 +232,7 @@ inline History::item_return<double>::type History::get<double>(std::string name)
 template<>
 inline History History::derivative<History>() const
 {
-  History deriv;
-
-  for (auto i1 : order_) {
-    StorageType i1_type = type_.at(i1);
-    for (auto i2 : order_) {
-      StorageType i2_type = type_.at(i2);
-      StorageType ntype = derivative_type.at(i1_type).at(i2_type);
-      deriv.add(i1+"_"+i2, ntype, storage_size.at(ntype));
-    }
-  }
-
-  deriv.zero();
-
-  return deriv;
+  return history_derivative(*this);
 }
 
 } // namespace neml

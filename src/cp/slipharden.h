@@ -67,8 +67,8 @@ class NEML_EXPORT SlipHardening: public NEMLObject
 
   /// Whether this particular model uses the Nye tensor
   virtual bool use_nye() const;
-
- protected:
+  
+  /// Helper providing a blank (zero) history
   History blank_hist() const;
 };
 
