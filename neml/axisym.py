@@ -192,10 +192,10 @@ def mesh(rs, ns, bias = False, n = 2.0):
     for i in range(len(rs)-1):
       if ns[i] % 2 == 0:
         even = True
-        nuse = ns[i] / 2 + 1
+        nuse = ns[i] // 2 + 1
       else:
         even = False
-        nuse = (ns[i] + 1) / 2 + 1
+        nuse = (ns[i] + 1) // 2 + 1
 
       x1 = (np.linspace(0,1, nuse)[1:])**n
       x2 = 1-(np.linspace(0,1, nuse)[:-1])**n + 1.0
@@ -383,8 +383,8 @@ class BreeProblem(VesselSectionProblem):
     self.pressures.append(self.p(t))
     self.external_pressures.append(self.p_ext(t))
     self.hoop.append(self.P(t))
-    self.force.append(self.barmodel.node[2]['forces'][-1])
-    self.axialstrain.append(self.barmodel.node[2]['displacements'][-1])
+    self.force.append(self.barmodel.nodes[2]['forces'][-1])
+    self.axialstrain.append(self.barmodel.nodes[2]['displacements'][-1])
     
     self.temperatures.append(np.array([self.barmodel[1][2][i]['object'].temperature[-1]
       for i in range(self.npoints)]))
