@@ -382,7 +382,7 @@ History SlipSingleStrengthHardening::d_hist_d_h(
     double T, const SlipRule & R, 
     const History & fixed) const
 {
-  History res = history.derivative<History>();
+  History res = blank_hist().derivative<History>();
   res.get<double>(var_name_+"_"+var_name_) = d_hist_rate_d_hist(
       stress, Q, history, L, T, R, fixed).get<double>(var_name_);
   return res;

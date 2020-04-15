@@ -315,7 +315,7 @@
             <M type="SquareMatrix">
               <m>12</m>
               <type>diagonal</type>
-              <data>15000 15000 15000 15000 15000 15000 15000 15000 15000 15000 15000 15000</data>
+              <data>5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000</data>
             </M>
             <tau_0>0 0 0 0 0 0 0 0 0 0 0 0</tau_0>
             <absval>false</absval>
@@ -326,14 +326,14 @@
               <type>diagonal</type>
               <data>5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000 5000</data>
             </M>
-            <tau_0>100 100 100 100 100 100 100 100 100 100 100 100</tau_0>
+            <tau_0>50 50 50 50 50 50 50 50 50 50 50 50</tau_0>
             <absval>true</absval>
           </isostrength>
           <flowresistance type="FixedStrengthHardening">
-            <strengths>200 200 200 200 200 200 200 200 200 200 200 200</strengths>           
+            <strengths>50 50 50 50 50 50 50 50 50 50 50 50</strengths>           
           </flowresistance>
           <gamma0>1.0</gamma0>
-          <n>14.0</n>
+          <n>8.0</n>
         </rule>
       </imodel>
      </kinematics>
