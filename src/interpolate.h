@@ -3,6 +3,8 @@
 
 #include "objects.h"
 
+#include "windows.h"
+
 #include <vector>
 #include <memory>
 
@@ -10,8 +12,8 @@ namespace neml {
 
 /// Base class for interpolation functions
 //  This class defines a scalar interpolation function.
-//  An implementation must also define the first derivative. 
-class Interpolate: public NEMLObject {
+//  An implementation must also define the first derivative.
+class NEML_EXPORT Interpolate: public NEMLObject {
  public:
   Interpolate();
   /// Returns the value of the function
@@ -28,7 +30,7 @@ class Interpolate: public NEMLObject {
 };
 
 /// Simple polynomial interpolation
-class PolynomialInterpolate : public Interpolate {
+class NEML_EXPORT PolynomialInterpolate : public Interpolate {
  public:
   /// Input is the coefficients of the polynomial, from highest to lowest order
   PolynomialInterpolate(const std::vector<double> coefs);
@@ -39,7 +41,7 @@ class PolynomialInterpolate : public Interpolate {
   static ParameterSet parameters();
   /// Create object from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-  
+
   virtual double value(double x) const;
   virtual double derivative(double x) const;
 
@@ -51,7 +53,7 @@ class PolynomialInterpolate : public Interpolate {
 static Register<PolynomialInterpolate> regPolynomialInterpolate;
 
 /// Generic piecewise interpolation
-class GenericPiecewiseInterpolate: public Interpolate {
+class NEML_EXPORT GenericPiecewiseInterpolate: public Interpolate {
  public:
   GenericPiecewiseInterpolate(std::vector<double> points,
                               std::vector<std::shared_ptr<Interpolate>> functions);
@@ -74,9 +76,9 @@ class GenericPiecewiseInterpolate: public Interpolate {
 static Register<GenericPiecewiseInterpolate> regGenericPiecewiseInterpolate;
 
 /// Piecewise linear interpolation
-class PiecewiseLinearInterpolate: public Interpolate {
+class NEML_EXPORT PiecewiseLinearInterpolate: public Interpolate {
  public:
-  /// Parameters are a list of x coordinates and a corresponding list of y 
+  /// Parameters are a list of x coordinates and a corresponding list of y
   /// coordinates
   PiecewiseLinearInterpolate(const std::vector<double> points,
                              const std::vector<double> values);
@@ -98,7 +100,7 @@ class PiecewiseLinearInterpolate: public Interpolate {
 static Register<PiecewiseLinearInterpolate> regPiecewiseLinearInterpolate;
 
 /// Piecewise loglinear interpolation
-class PiecewiseLogLinearInterpolate: public Interpolate {
+class NEML_EXPORT PiecewiseLogLinearInterpolate: public Interpolate {
  public:
   /// Similar to piecewise linear interpolation except the y coordinates are
   /// given as ln(y) and the interpolation is done in log space
@@ -123,7 +125,7 @@ class PiecewiseLogLinearInterpolate: public Interpolate {
 static Register<PiecewiseLogLinearInterpolate> regPiecewiseLogLinearInterpolate;
 
 /// A constant value
-class ConstantInterpolate : public Interpolate {
+class NEML_EXPORT ConstantInterpolate : public Interpolate {
  public:
   /// The parameter is the constant value!
   ConstantInterpolate(double v);
@@ -145,7 +147,7 @@ class ConstantInterpolate : public Interpolate {
 static Register<ConstantInterpolate> regConstantInterpolate;
 
 /// A*exp(B/x)
-class ExpInterpolate : public Interpolate {
+class NEML_EXPORT ExpInterpolate : public Interpolate {
  public:
   /// The parameter is the constant value!
   ExpInterpolate(double A, double B);
@@ -167,7 +169,7 @@ class ExpInterpolate : public Interpolate {
 static Register<ExpInterpolate> regExpInterpolate;
 
 /// The MTS shear modulus function proposed in the original paper
-class MTSShearInterpolate : public Interpolate {
+class NEML_EXPORT MTSShearInterpolate : public Interpolate {
  public:
   /// Interpolation using the MTS model form f(x) = V0 - D / (exp(T0 / x) - 1)
   MTSShearInterpolate(double V0, double D, double T0);
@@ -189,7 +191,7 @@ class MTSShearInterpolate : public Interpolate {
 static Register<MTSShearInterpolate> regMTSShearInterpolate;
 
 /// A helper to make a vector of constant interpolates from a vector
-std::vector<std::shared_ptr<Interpolate>> 
+std::vector<std::shared_ptr<Interpolate>>
   make_vector(const std::vector<double> & iv);
 
 /// A helper to evaluate a vector of interpolates

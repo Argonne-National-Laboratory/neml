@@ -286,23 +286,24 @@ int TVPFlowRule::da_da(const double * const s, const double * const alpha,
   int ier = flow_->y(s, alpha, T, dg);
   if (ier != SUCCESS) return ier;
 
-  int sz = nhist() * nhist();
+  int nh = nhist();
+  int sz = nh * nh;
 
   ier = flow_->dh_da(s, alpha, T, d_adot);
   if (ier != SUCCESS) return ier;
   for (int i=0; i<sz; i++) d_adot[i] *= dg;
   
-  std::vector<double> t1v(nhist());
+  std::vector<double> t1v(nh);
   double * t1 = &t1v[0];
   ier = flow_->h(s, alpha, T, t1);
   if (ier != SUCCESS) return ier;
   
-  std::vector<double> t2v(nhist());
+  std::vector<double> t2v(nh);
   double * t2 = &t2v[0];
   ier = flow_->dy_da(s, alpha, T, t2);
   if (ier != SUCCESS) return ier;
 
-  outer_update(t1, nhist(), t2, nhist(), d_adot);
+  outer_update(t1, nh, t2, nh, d_adot);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];

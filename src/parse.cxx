@@ -72,7 +72,7 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
   }
 }
 
-std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname) 
+std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname)
 {
   // Parse the XML file
   rapidxml::file <> xmlFile(fname.c_str());
@@ -136,7 +136,7 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
   if (type == "none") {
     throw InvalidType(node->name(), type, "NEMLObject");
   }
-  
+
   ParameterSet pset;
   try {
     pset = Factory::Creator()->provide_parameters(type);
@@ -192,6 +192,18 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
     const rapidxml::xml_node<> * node)
 {
   std::vector<std::shared_ptr<NEMLObject>> joined;
+
+  // A somewhat dangerous shortcut -- a list of text values should be
+  // interpreted as a list of ConstantInterpolates
+  if ((rapidxml::count_children(const_cast<rapidxml::xml_node<>*>(node))==1) and 
+      (node->first_node()->type() == rapidxml::node_data)) {
+    std::vector<double> data = get_vector_double(node);
+    for (auto v : data) {
+      joined.push_back(neml::make_unique<ConstantInterpolate>(v));
+    }
+    return joined;
+  }
+
   for (rapidxml::xml_node<> * child = node->first_node(); child; child = child->next_sibling()) {
     std::string name = (child)->name();
     if (name == "text") continue;
@@ -247,7 +259,7 @@ bool get_bool(const rapidxml::xml_node<> * node)
   }
   else {
     throw InvalidType(node->name(), get_type_of_node(node), "bool");
-  }  
+  }
 }
 
 std::string get_string(const rapidxml::xml_node<> * node)
@@ -263,12 +275,12 @@ std::string get_string(const rapidxml::xml_node<> * node)
 list_systems get_slip( const rapidxml::xml_node<> * node)
 {
   list_systems groups;
-  
+
   std::string text = get_string(node);
 
   std::stringstream ss(text);
   std::string to;
-  
+
   // Separate by newlines
   while(std::getline(ss, to,'\n')) {
     // Delete blank characters at front and back of string
@@ -282,11 +294,11 @@ list_systems get_slip( const rapidxml::xml_node<> * node)
     strip(dir);
     std::string nor = to.substr(to.find(";")+1);
     strip(nor);
-    
+
     // Make into vectors
     auto d = split_string_int(dir);
     auto n = split_string_int(nor);
-    
+
     groups.push_back(make_pair(d,n));
   }
 
@@ -337,11 +349,11 @@ std::vector<int> split_string_int(std::string sval)
 
 std::string & strip(std::string & s)
 {
-  auto noblank = [](char c) { return !std::isspace<char>(c, std::locale::classic());}; 
+  auto noblank = [](char c) { return !std::isspace(c);}; 
 
   s.erase(s.begin(), std::find_if(s.begin(), s.end(), noblank));
   s.erase(std::find_if(s.rbegin(), s.rend(), noblank).base(), s.end());
-  
+
   return s;
 }
 

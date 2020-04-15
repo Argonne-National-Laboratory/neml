@@ -14,7 +14,7 @@ It implements the stress update function
       \bm{\varepsilon}_{n+1}, \bm{\varepsilon}_{n},
       T_{n+1}, T_{n},
       t_{n+1}, t_{n},
-      \bm{\sigma}_{n},
+      \bm{\sigma}_{n} / (1 - \omega_{n+1},
       \bm{\alpha}_{n},
       \bm{\alpha}_{n},
       u_n, p_n
@@ -27,6 +27,12 @@ This object defers damage evolution to another interface.
 The damage model maintains the set of history variables from the base 
 material plus one additional history variable for the damage.
 
+.. note::
+   The scalar damage model passes in the modified stress :math:`\bm{\sigma} / (1 - \omega)` to the base stress update model in addition to modifying the stress update formula as shown in the above equation.
+
+.. warning::
+   The model also passes the modified stress :math:`\bm{\sigma} / (1-\omega)` to the damage update equation.  That is, the stress passed into these functions is the modified effective stress, not the actual external stress.  This means that the damage equations implemented in NEML vary slightly from the correpsonding literature equations working with the unmodified stress directly.
+
 Implementations
 ---------------
 
@@ -34,6 +40,7 @@ Implementations
    classical
    modular
    standard
+   larsonmiller
 
 Class description
 -----------------

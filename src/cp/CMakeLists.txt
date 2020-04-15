@@ -8,10 +8,16 @@ target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/kinematics.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/singlecrystal.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/batch.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/polycrystal.cxx
       )
 
 if (WRAP_PYTHON)
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/neml/cp)
+      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MODULE_BASE}/cp)
+
+      if (WIN32)
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MODULE_BASE}/cp)
+      endif()
+
       pybind(crystallography)
       pybind(inelasticity)
       pybind(sliprules)
@@ -19,4 +25,5 @@ if (WRAP_PYTHON)
       pybind(kinematics)
       pybind(singlecrystal)
       pybind(batch)
+      pybind(polycrystal)
 endif()

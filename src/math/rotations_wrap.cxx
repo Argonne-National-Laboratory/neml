@@ -58,6 +58,16 @@ PYBIND11_MODULE(rotations, m) {
       .def("__pow__", &Quaternion::pow, "Exponentiation with python sugar")
       .def("dot", &Quaternion::dot, "Cartesian dot product")
       .def_property_readonly("hash", &Quaternion::hash, "Hash for comparison")
+      .def("to_product_matrix", 
+           [](Quaternion & me) ->  py::array_t<double>
+           {
+            auto Mn = alloc_mat<double>(4,4);
+            double * p = arr2ptr<double>(Mn);
+            
+            me.to_product_matrix(p);
+
+            return Mn; 
+            }, "Convert to a 4x4 matrix for making composition a dot product")
 
       .def(py::self *= py::self)
       .def(py::self *= double())

@@ -11,7 +11,7 @@ The damage update is given by
    \omega_{n+1} = \omega_{n} + \left(\frac{\sigma_{eff}}{A}\right)^\xi 
       \left(1 - \omega_{n+1}\right)^{\xi-\phi} \Delta t_{n+1}
 
-where :math:`\sigma_{eff}` is modular, defined by a :ref:`effective-stress` object.
+where :math:`\sigma_{eff}` is a modular effective stress, defined by a :ref:`effective-stress` object.
 
 This class has the option for element extinction, useful in FEA simulations of damage.  If the ``ekill`` option is set to true once the material point reaches a damage threshold of ``dkill`` the constitutive response will be replaced by a linear elastic response with an elastic stiffness of :math:`\mathbf{\mathfrak{C}}/f` where the factor :math:`f` is given by the parameter ``sfact``.
 

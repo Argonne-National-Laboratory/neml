@@ -955,6 +955,15 @@ int mat_mat(int m, int n, int k, const double * const A,
   return 0;
 }
 
+int mat_mat_ABT(int m, int n, int k, const double * const A,
+            const double * const B, double * const C)
+{
+  // Provide as A_mk B_nk
+  dgemm_("T", "N", n, m, k, 1.0, B, k, A, k, 0.0, C, n);
+
+  return 0;
+}
+
 int solve_mat(const double * const A, int n, double * const x)
 {
   int info;
@@ -1196,7 +1205,7 @@ int eigenvalues_sym(const double * const s, double * values)
   
   int swork = 15;
   double work[15];
-  int info;
+  int info = 0;
 
   dsyev_("N", "U", 3, F, 3, values, work, swork, info);
 
@@ -1209,7 +1218,7 @@ int eigenvectors_sym(const double * const s, double * vectors)
 
   int swork = 15;
   double work[15];
-  int info;
+  int info = 0;
   double values[3];
 
   dsyev_("V", "U", 3, vectors, 3, values, work, swork, info);

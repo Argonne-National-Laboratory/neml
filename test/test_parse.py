@@ -4,10 +4,6 @@ import unittest
 import numpy as np
 
 class TestErrors(unittest.TestCase):
-  def test_top(self):
-    with self.assertRaises(parse.InvalidType):
-      test = parse.parse_xml("test/examples.xml", "test_badtop")
-
   def test_badobject(self):
     with self.assertRaises(RuntimeError):
       test = parse.parse_xml("test/examples.xml", "test_badobject")
@@ -86,7 +82,7 @@ class TestPowerLawDamage(CompareMats, unittest.TestCase):
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.05,0,0,0,0,0])
 
 class TestStringParser(CompareMats, unittest.TestCase):
@@ -136,7 +132,7 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 class TestJ2Isocomb(CompareMats, unittest.TestCase):
@@ -164,7 +160,7 @@ class TestJ2Isocomb(CompareMats, unittest.TestCase):
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 class TestCreepPlasticity(CompareMats, unittest.TestCase):
@@ -194,7 +190,7 @@ class TestCreepPlasticity(CompareMats, unittest.TestCase):
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 class TestJ2Combined(CompareMats, unittest.TestCase):
@@ -223,7 +219,7 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 class TestRIChaboche(CompareMats, unittest.TestCase):
@@ -279,7 +275,7 @@ class TestYaguchi(CompareMats, unittest.TestCase):
 
     self.T = 500.0
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 class TestRDChaboche(CompareMats, unittest.TestCase):
@@ -319,7 +315,7 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 class TestPerzyna(CompareMats, unittest.TestCase):
@@ -355,7 +351,7 @@ class TestPerzyna(CompareMats, unittest.TestCase):
 
     self.T = 550.0 + 273.15
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 
@@ -382,7 +378,7 @@ class TestPerfect(CompareMats, unittest.TestCase):
 
     self.T = 550.0
     self.tmax = 10.0
-    self.nsteps = 50.0
+    self.nsteps = 50
     self.emax = np.array([0.1,0.05,0,-0.025,0,0])
 
   def test_alpha(self):
@@ -411,7 +407,7 @@ class TestPerfectCreep(CompareMats, unittest.TestCase):
 
     self.T = 550.0
     self.tmax = 10.0
-    self.nsteps = 50.0
+    self.nsteps = 50
     self.emax = np.array([0.1,0.05,0,-0.025,0,0])
 
     A = 1.85e-10

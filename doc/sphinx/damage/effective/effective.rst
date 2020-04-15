@@ -22,6 +22,7 @@ Implementations
    huddleston
    maxseveral
    sumseveral
+   meanstress
 
 Class description
 -----------------

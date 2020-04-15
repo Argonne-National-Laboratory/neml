@@ -7,10 +7,12 @@ set(NEML_version 1.1.0)
 ### Setup modules ###
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-
 ### Need c++ 11 ###
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+### Default to shared libs ###
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 ### Select nonlinear solver ###
 set(SOLVER "newton" CACHE STRING "Nonlinear solver to use")
@@ -34,8 +36,10 @@ FIND_PACKAGE(Boost REQUIRED)
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
 
 ### Configure standard-ish libraries ###
-FIND_PACKAGE(LAPACK REQUIRED)
+set(BLAS_VENDOR Generic)
+set(BLA_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
+FIND_PACKAGE(LAPACK REQUIRED)
 
 INCLUDE_DIRECTORIES(SYSTEM rapidxml)
 
@@ -46,17 +50,13 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_RELEASE "-O2")
       set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Werror")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Werror -D_GLIBCXX_DEBUG")
       set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -Wextra -Wall -Wno-unused-parameter")
-      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg -pedantic -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -pedantic -Wextra -Wall -Wno-unused-parameter")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
-      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Werror -Wno-unused-private-field")
+      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Werror -Wno-unused-private-field -Wno-self-assign-overloaded")
       set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-private-field")
       set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-private-field")
-else()
-      set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg")
 endif()
 
 # For MacOS
@@ -98,9 +98,22 @@ endif()
 ### PYTHON BINDINGS ###
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
-      FIND_PACKAGE(PythonLibs 3.4 REQUIRED)
-      INCLUDE_DIRECTORIES(SYSTEM ${PYTHON_INCLUDE_DIRS})
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
+endif()
+
+### Check if we can validly build shared libraries ###
+if ((NOT BUILD_SHARED_LIBS) AND WRAP_PYTHON)
+      message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
+endif()
+
+if (INSTALL)
+      set(MODULE_BASE ${INSTALL})
+      set(LIBRARY_BASE ${INSTALL})
+      # This is a terrible hack, but hey it works
+      set(CMAKE_BUILD_RPATH "$ORIGIN:$ORIGIN/..")
+else()
+      set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
+      set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/lib)
 endif()
 
 ### BASE LIBRARY ###

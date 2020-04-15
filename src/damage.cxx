@@ -57,14 +57,7 @@ int NEMLScalarDamagedModel_sd::update_sd(
     double & p_np1, double p_n)
 {
   if (ekill_ and (h_n[0] >= dkill_)) {
-    std::copy(h_n, h_n + nhist(), h_np1);
-    h_np1[0] = 1.0;
-    elastic_->C(T_np1, A_np1);
-    for (int i=0; i<36; i++) A_np1[i] /= sfact_;
-    mat_vec(A_np1, 6, e_np1, 6, s_np1);
-    u_np1 = u_n;
-    p_np1 = p_n;
-    return 0;
+    return ekill_update_(T_np1, e_np1, s_np1, h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
   }
 
   // Make trial state
@@ -90,9 +83,14 @@ int NEMLScalarDamagedModel_sd::update_sd(
                    &h_np1[1], &h_n[1],
                    A_prime_np1, u_np1, u_n, p_np1, p_n);
   if (ier != SUCCESS) return ier;
-  
+
+
   for (int i=0; i<6; i++) s_np1[i] = (1-x[6]) * s_prime_np1[i];
   h_np1[0] = x[6];
+
+  if (ekill_ and (h_np1[0] >= dkill_)) {
+    return ekill_update_(T_np1, e_np1, s_np1, h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
+  }
   
   // Create the tangent
   ier = tangent_(e_np1, e_n, s_np1, s_n,
@@ -258,6 +256,30 @@ int NEMLScalarDamagedModel_sd::tangent_(
   return 0;
 }
 
+int NEMLScalarDamagedModel_sd::ekill_update_(double T_np1, 
+                                             const double * const e_np1,
+                                             double * const s_np1,
+                                             double * const h_np1,
+                                             const double * const h_n,
+                                             double * const A_np1, 
+                                             double & u_np1, double u_n,
+                                             double & p_np1, double p_n)
+{
+  std::copy(h_n, h_n + nhist(), h_np1);
+  h_np1[0] = 1.0;
+  elastic_->C(T_np1, A_np1);
+  for (int i=0; i<36; i++) A_np1[i] /= sfact_;
+  mat_vec(A_np1, 6, e_np1, 6, s_np1);
+  if (u_n > 0.0) {
+    p_np1 = p_n + u_n;
+    u_np1 = 0.0;
+  }
+  else {
+    p_np1 = p_n;
+    u_np1 = u_n;
+  }
+  return 0;
+}
 
 CombinedDamageModel_sd::CombinedDamageModel_sd(
     std::shared_ptr<LinearElasticModel> elastic,
@@ -594,6 +616,40 @@ int VonMisesEffectiveStress::deffective(const double * const s, double * const d
   return 0;
 }
 
+MeanEffectiveStress::MeanEffectiveStress() {}
+
+std::string MeanEffectiveStress::type() { return "MeanEffectiveStress"; }
+
+ParameterSet MeanEffectiveStress::parameters() {
+  ParameterSet pset(MeanEffectiveStress::type());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject>
+MeanEffectiveStress::initialize(ParameterSet &params) {
+  return neml::make_unique<MeanEffectiveStress>();
+}
+
+int MeanEffectiveStress::effective(const double *const s, double &eff) const {
+  eff = (s[0] + s[1] + s[2]) / 3.0;
+
+  return 0;
+}
+
+int MeanEffectiveStress::deffective(const double *const s,
+                                    double *const deff) const {
+
+  for (int i = 0; i < 6; i++) {
+    if (i < 3)
+      deff[i] = 1. / 3.;
+    else
+      deff[i] = 0;
+  }
+  return 0;
+}
+
+
 HuddlestonEffectiveStress::HuddlestonEffectiveStress(double b) :
     b_(b)
 {
@@ -630,9 +686,16 @@ int HuddlestonEffectiveStress::effective(const double * const s, double & eff) c
   double I1v = I1(s);
   double I2v = I2(s);
   double I2pv = I2(sd);
-  
   double se = sqrt(-3.0 * I2pv);
   double ss = sqrt(-3.0 * I2pv + I2v);
+
+  // check if ss = 0.0
+  if ( ss == 0.)
+  {
+    eff = 0.;
+    return 0;
+  }
+
 
   eff = se * exp(b_*(I1v / ss - 1.0));
 
@@ -645,23 +708,23 @@ int HuddlestonEffectiveStress::deffective(const double * const s, double * const
   double sd[6];
   std::copy(s, s+6, sd);
   dev_vec(sd);
-
-  if (norm2_vec(s, 6) == 0.0) {
-    std::fill(deff, deff+6, 0.0);
+  std::fill(deff, deff+6, 0.0);
+  
+  if (norm2_vec(s, 6) == 0.0) 
     return 0;
-  }
 
   double I1v = I1(s);
   double I2v = I2(s);
   double I2pv = I2(sd);
-  
   double se = sqrt(-3.0 * I2pv);
   double ss = sqrt(-3.0 * I2pv + I2v);
 
+  // check if ss = 0.0
+  if (ss == 0.0)
+    return 0;
+ 
   double eff = se * exp(b_*(I1v / ss - 1.0));
   
-  std::fill(deff, deff+6, 0.0);
-
   // I1 term
   double t1 = b_ * eff / sqrt(I2v - 3.0 * I2pv);
   for (int i=0; i<3; i++) {
@@ -1019,6 +1082,173 @@ int ModularCreepDamageModel_sd::ddamage_ds(
   estress_->deffective(s_np1, dd);
   for (int i=0; i<6; i++) dd[i] *= scalar;
   
+  return 0;
+}
+
+LarsonMillerCreepDamageModel_sd::LarsonMillerCreepDamageModel_sd(
+    std::shared_ptr<LinearElasticModel> elastic,
+    std::shared_ptr<LarsonMillerRelation> lmr,
+    std::shared_ptr<EffectiveStress> estress,
+    std::shared_ptr<NEMLModel_sd> base,
+    std::shared_ptr<Interpolate> alpha,
+    double tol, int miter,
+    bool verbose, bool truesdell,
+    bool ekill, double dkill, double sfact) :
+      NEMLScalarDamagedModel_sd(elastic, base, alpha, tol, miter, verbose, truesdell, ekill, dkill, sfact),
+      lmr_(lmr), estress_(estress)
+{
+
+
+}
+
+std::string LarsonMillerCreepDamageModel_sd::type()
+{
+  return "LarsonMillerCreepDamageModel_sd";
+}
+
+ParameterSet LarsonMillerCreepDamageModel_sd::parameters()
+{
+  ParameterSet pset(LarsonMillerCreepDamageModel_sd::type());
+
+  pset.add_parameter<NEMLObject>("elastic");
+  pset.add_parameter<NEMLObject>("lmr");
+  pset.add_parameter<NEMLObject>("estress");
+  pset.add_parameter<NEMLObject>("base");
+
+  pset.add_optional_parameter<NEMLObject>("alpha",
+                                          std::make_shared<ConstantInterpolate>(0.0));
+  pset.add_optional_parameter<double>("tol", 1.0e-8);
+  pset.add_optional_parameter<int>("miter", 50);
+  pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<bool>("truesdell", true);
+  pset.add_optional_parameter<bool>("ekill", false);
+  pset.add_optional_parameter<double>("dkill", 0.5);
+  pset.add_optional_parameter<double>("sfact", 100000.0);
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> LarsonMillerCreepDamageModel_sd::initialize(ParameterSet & params)
+{
+  return neml::make_unique<LarsonMillerCreepDamageModel_sd>(
+      params.get_object_parameter<LinearElasticModel>("elastic"),
+      params.get_object_parameter<LarsonMillerRelation>("lmr"),
+      params.get_object_parameter<EffectiveStress>("estress"),
+      params.get_object_parameter<NEMLModel_sd>("base"),
+      params.get_object_parameter<Interpolate>("alpha"),
+      params.get_parameter<double>("tol"),
+      params.get_parameter<int>("miter"),
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("truesdell"),
+      params.get_parameter<bool>("ekill"),
+      params.get_parameter<double>("dkill"),
+      params.get_parameter<double>("sfact")
+      ); 
+}
+
+int LarsonMillerCreepDamageModel_sd::damage(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double se;
+  estress_->effective(s_np1, se);
+  double dt = t_np1 - t_n;
+
+  // The usual problem
+  if (se == 0.0) {
+    *dd = d_n;
+    return 0;
+  }
+
+  double tR;
+  int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
+  if (ier != 0) return ier;
+  
+  *dd = d_n + dt / tR;
+
+  return 0;
+}
+
+int LarsonMillerCreepDamageModel_sd::ddamage_dd(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double se;
+  estress_->effective(s_np1, se);
+
+  // The usual problem
+  if (se == 0.0) {
+    *dd = 0.0;
+    return 0;
+  }
+
+  double dt = t_np1 - t_n;
+
+  double tR;
+  int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
+  if (ier != 0) return ier;
+
+  double dtR;
+  ier = lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
+  if (ier != 0) return ier;
+
+  *dd = (dt * dtR * se) / (tR * tR);
+  
+  return 0;
+}
+
+int LarsonMillerCreepDamageModel_sd::ddamage_de(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  std::fill(dd, dd+6, 0.0);
+
+  return 0;
+}
+
+int LarsonMillerCreepDamageModel_sd::ddamage_ds(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  double se;
+  estress_->effective(s_np1, se);
+  double dt = t_np1 - t_n;
+
+  // The usual problem
+  if (se == 0.0) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
+
+  double tR;
+  int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
+  if (ier != 0) return ier;
+
+  double dtR;
+  ier = lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
+  if (ier != 0) return ier;
+
+  double dse = -dtR * dt * (1-d_np1) / (tR * tR);
+
+  estress_->deffective(s_np1, dd);
+  for (int i=0; i<6; i++) dd[i] *= dse;
+
   return 0;
 }
 

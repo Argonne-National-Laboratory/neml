@@ -38,6 +38,11 @@ History KinematicModel::d_history_rate_d_w_decouple(
   return history.derivative<Skew>();
 }
 
+bool KinematicModel::use_nye() const
+{
+  return false;
+}
+
 StandardKinematicModel::StandardKinematicModel(
     std::shared_ptr<LinearElasticModel> emodel,
     std::shared_ptr<InelasticModel> imodel) :
@@ -84,16 +89,16 @@ void StandardKinematicModel::init_history(History & history) const
 }
 
 double StandardKinematicModel::strength(const History & history, Lattice & L,
-                                        double T) const
+                                        double T, const History & fixed) const
 {
-  return imodel_->strength(history, L, T);
+  return imodel_->strength(history, L, T, fixed);
 }
 
 History StandardKinematicModel::decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
     const History & history, Lattice & lattice,
-    double T)
+    double T, const History & fixed)
 {
   History constant;
 
@@ -101,11 +106,12 @@ History StandardKinematicModel::decouple(
   constant.add<SymSymR4>("C");
   constant.add<SymSymR4>("S");
 
-  constant.get<Skew>("espin") = spin(stress, d, w, Q, history, lattice, T);
+  constant.get<Skew>("espin") = spin(stress, d, w, Q, history, lattice, T, fixed);
   constant.get<SymSymR4>("C") = emodel_->C(T,Q);
   constant.get<SymSymR4>("S") = emodel_->S(T,Q);
-
-  return constant;
+  
+  // Return with whatever extra multiphysics variables you need
+  return constant.add_union(fixed);
 }
 
 Symmetric StandardKinematicModel::stress_rate(
@@ -116,9 +122,9 @@ Symmetric StandardKinematicModel::stress_rate(
 {
   Symmetric e = fixed.get<SymSymR4>("S").dot(stress);
 
-  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress, Q, history, lattice, T);
+  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress, Q, history, lattice, T, fixed);
 
-  Symmetric dp = imodel_->d_p(stress, Q, history, lattice, T);
+  Symmetric dp = imodel_->d_p(stress, Q, history, lattice, T, fixed);
 
   Symmetric net = Symmetric(e*O_s - O_s*e);
 
@@ -133,12 +139,12 @@ SymSymR4 StandardKinematicModel::d_stress_rate_d_stress(
 {
   Symmetric e = fixed.get<SymSymR4>("S").dot(stress);
 
-  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress, Q, history, lattice, T);
+  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress, Q, history, lattice, T, fixed);
 
-  SymSymR4 D1 = imodel_->d_d_p_d_stress(stress, Q, history, lattice, T);
+  SymSymR4 D1 = imodel_->d_d_p_d_stress(stress, Q, history, lattice, T, fixed);
   SymSymR4 D2 = SymSymR4Skew_SkewSymR4SymR4(fixed.get<SymSymR4>("S"), O_s);
 
-  SkewSymR4 DW = imodel_->d_w_p_d_stress(stress, Q, history, lattice, T);
+  SkewSymR4 DW = imodel_->d_w_p_d_stress(stress, Q, history, lattice, T, fixed);
 
   SymSymR4 D3 = SymSkewR4Sym_SkewSymR4SymR4(DW, e);
 
@@ -170,8 +176,8 @@ History StandardKinematicModel::d_stress_rate_d_history(
     double T, const History & fixed) const
 {
   History res = history.derivative<Symmetric>();
-  History dD = imodel_->d_d_p_d_history(stress, Q, history, lattice, T);
-  History dW = imodel_->d_w_p_d_history(stress, Q, history, lattice, T);
+  History dD = imodel_->d_d_p_d_history(stress, Q, history, lattice, T, fixed);
+  History dW = imodel_->d_w_p_d_history(stress, Q, history, lattice, T, fixed);
 
   Symmetric e = fixed.get<SymSymR4>("S").dot(stress);
 
@@ -189,7 +195,7 @@ History StandardKinematicModel::history_rate(
     const History & history, Lattice & lattice,
     double T, const History & fixed) const
 {
-  return imodel_->history_rate(stress, Q, history, lattice, T);
+  return imodel_->history_rate(stress, Q, history, lattice, T, fixed);
 }
 
 History StandardKinematicModel::d_history_rate_d_stress(
@@ -198,7 +204,7 @@ History StandardKinematicModel::d_history_rate_d_stress(
     const History & history, Lattice & lattice,
     double T, const History & fixed) const
 {
-  return imodel_->d_history_rate_d_stress(stress, Q, history, lattice, T);
+  return imodel_->d_history_rate_d_stress(stress, Q, history, lattice, T, fixed);
 }
 
 History StandardKinematicModel::d_history_rate_d_d(
@@ -225,7 +231,7 @@ History StandardKinematicModel::d_history_rate_d_history(
     const History & history, Lattice & lattice,
     double T, const History & fixed) const
 {
-  return imodel_->d_history_rate_d_history(stress, Q, history, lattice, T);
+  return imodel_->d_history_rate_d_history(stress, Q, history, lattice, T, fixed);
 }
 
 SymSkewR4 StandardKinematicModel::d_stress_rate_d_w_decouple(
@@ -243,13 +249,13 @@ Skew StandardKinematicModel::spin(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
     const History & history, Lattice & lattice,
-    double T) const
+    double T, const History & fixed) const
 {
   SymSymR4 S = emodel_->S(T, Q);
   Symmetric e = S.dot(stress);
 
-  Skew wp = imodel_->w_p(stress, Q, history, lattice, T);
-  Symmetric dp = imodel_->d_p(stress, Q, history, lattice, T);
+  Skew wp = imodel_->w_p(stress, Q, history, lattice, T, fixed);
+  Symmetric dp = imodel_->d_p(stress, Q, history, lattice, T, fixed);
   
   Skew net = Skew(e * dp - dp * e);
 
@@ -262,6 +268,11 @@ Symmetric StandardKinematicModel::elastic_strains(
 {
   SymSymR4 S = emodel_->S(T,Q);
   return S.dot(stress);
+}
+
+bool StandardKinematicModel::use_nye() const
+{
+  return imodel_->use_nye();
 }
 
 } // namespace neml

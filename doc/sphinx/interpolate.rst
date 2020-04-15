@@ -1,3 +1,5 @@
+.. _interpolate-functions:
+
 Interpolation functions
 =======================
 
@@ -38,6 +40,18 @@ Expresses a constant parameter
    f\left( x \right) = C.
 
 .. doxygenclass:: neml::ConstantInterpolate
+   :members:
+   :undoc-members:
+
+GenericPiecewiseInterpolate
+---------------------------
+
+A general piecewise interpolate.  If :math:`x \le p_i` then it
+calls interpolation function :math:`f_i`. 
+For :math:`x > p_i` it calls interpolation function
+:math:`f_{i+1}`.
+
+.. doxygenclass:: neml::GenericPiecewiseInterpolate
    :members:
    :undoc-members:
 

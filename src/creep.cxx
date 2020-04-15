@@ -88,6 +88,59 @@ double PowerLawCreep::n(double T) const
   return n_->value(T);
 }
 
+// Implementation of power law creep
+NormalizedPowerLawCreep::NormalizedPowerLawCreep(std::shared_ptr<Interpolate> s0,
+                             std::shared_ptr<Interpolate> n) :
+    s0_(s0), n_(n)
+{
+
+}
+
+std::string NormalizedPowerLawCreep::type()
+{
+  return "NormalizedPowerLawCreep";
+}
+
+ParameterSet NormalizedPowerLawCreep::parameters()
+{
+  ParameterSet pset(NormalizedPowerLawCreep::type());
+
+  pset.add_parameter<NEMLObject>("s0");
+  pset.add_parameter<NEMLObject>("n");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> NormalizedPowerLawCreep::initialize(ParameterSet & params)
+{
+  return neml::make_unique<NormalizedPowerLawCreep>(
+      params.get_object_parameter<Interpolate>("s0"),
+      params.get_object_parameter<Interpolate>("n")
+      ); 
+}
+
+
+int NormalizedPowerLawCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  g = pow(seq / s0_->value(T), n_->value(T));
+  return 0;
+}
+
+int NormalizedPowerLawCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  double nv = n_->value(T);
+  double s0v = s0_->value(T);
+
+  dg = nv / s0v * pow(seq / s0v, nv - 1.0);
+  return 0;
+}
+
+int NormalizedPowerLawCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
 // Implementation of the Blackburn minimum creep rate equation
 BlackburnMinimumCreep::BlackburnMinimumCreep(
     std::shared_ptr<Interpolate> A,
@@ -232,9 +285,10 @@ int SwindemanMinimumCreep::dg_dT(double seq, double eeq, double t, double T, dou
 }
 
 // Implementation of the mechanism switching model
-RegionKMCreep::RegionKMCreep(std::vector<double> cuts, std::vector<double> A, 
-                             std::vector<double> B, double kboltz, double b,
-                             double eps0, 
+RegionKMCreep::RegionKMCreep(std::vector<double> cuts, 
+                             std::vector<std::shared_ptr<Interpolate>> A, 
+                             std::vector<std::shared_ptr<Interpolate>> B,
+                             double kboltz, double b, double eps0, 
                              std::shared_ptr<LinearElasticModel> emodel) :
     cuts_(cuts), A_(A), B_(B), kboltz_(kboltz), b_(b), eps0_(eps0), 
     b3_(pow(b,3)), emodel_(emodel)
@@ -252,8 +306,8 @@ ParameterSet RegionKMCreep::parameters()
   ParameterSet pset(RegionKMCreep::type());
 
   pset.add_parameter<std::vector<double>>("cuts");
-  pset.add_parameter<std::vector<double>>("A");
-  pset.add_parameter<std::vector<double>>("B");
+  pset.add_parameter<std::vector<NEMLObject>>("A");
+  pset.add_parameter<std::vector<NEMLObject>>("B");
   pset.add_parameter<double>("kboltz");
   pset.add_parameter<double>("b");
   pset.add_parameter<double>("eps0");
@@ -266,8 +320,8 @@ std::unique_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
 {
   return neml::make_unique<RegionKMCreep>(
       params.get_parameter<std::vector<double>>("cuts"),
-      params.get_parameter<std::vector<double>>("A"),
-      params.get_parameter<std::vector<double>>("B"),
+      params.get_object_parameter_vector<Interpolate>("A"),
+      params.get_object_parameter_vector<Interpolate>("B"),
       params.get_parameter<double>("kboltz"),
       params.get_parameter<double>("b"),
       params.get_parameter<double>("eps0"),
@@ -311,27 +365,27 @@ void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & B
   double neq = seq / mu;
   int nregion = A_.size();
   if (nregion == 1) {
-    Ai = A_[0];
-    Bi = B_[0];
+    Ai = A_[0]->value(T);
+    Bi = B_[0]->value(T);
     return;
   }
 
   size_t i;
   if (neq < cuts_[0]) {
-    Ai = A_[0];
-    Bi = B_[0];
+    Ai = A_[0]->value(T);
+    Bi = B_[0]->value(T);
     return;
   }
   for (i=0; i<cuts_.size(); i++) {
     if (neq > cuts_[i]) {
-      Ai = A_[i+1];
-      Bi = B_[i+1];
+      Ai = A_[i+1]->value(T);
+      Bi = B_[i+1]->value(T);
       return;
     }
   }
   if (i == cuts_.size()) {
-    Ai = A_[i];
-    Bi = B_[i];
+    Ai = A_[i]->value(T);
+    Bi = B_[i]->value(T);
   }
 }
 
@@ -720,6 +774,100 @@ int CreepModel::calc_tangent_(const double * const e_np1,
 
   return 0;
 }
+
+// Implementation of 2.25Cr-1Mo rule
+MinCreep225Cr1MoCreep::MinCreep225Cr1MoCreep()
+{
+
+}
+
+std::string MinCreep225Cr1MoCreep::type()
+{
+  return "MinCreep225Cr1MoCreep";
+}
+
+ParameterSet MinCreep225Cr1MoCreep::parameters()
+{
+  ParameterSet pset(MinCreep225Cr1MoCreep::type());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> MinCreep225Cr1MoCreep::initialize(ParameterSet & params)
+{
+  return neml::make_unique<MinCreep225Cr1MoCreep>(); 
+}
+
+
+int MinCreep225Cr1MoCreep::g(double seq, double eeq, double t, double T, double & g) const
+{
+  if (seq < 60.0) {
+    g = e1_(seq, T);
+  }
+  else {
+    if (T <= (13.571 * pow(seq, 0.68127) - 1.8 * seq + 710.78)) {
+      g = e1_(seq, T);
+    }
+    else {
+      g = e2_(seq, T);
+    }
+  }
+
+  return 0;
+}
+
+int MinCreep225Cr1MoCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
+{
+  if (seq < 60.0) {
+    dg = de1_(seq, T);
+  }
+  else {
+    if (T <= (13.571 * pow(seq, 0.68127) - 1.8 * seq + 710.78)) {
+      dg = de1_(seq, T);
+    }
+    else {
+      dg = de2_(seq, T);
+    }
+  }
+
+  return 0;
+}
+
+int MinCreep225Cr1MoCreep::dg_de(double seq, double eeq, double t, double T, double & dg) const
+{
+  dg = 0.0;
+  return 0;
+}
+
+double MinCreep225Cr1MoCreep::e1_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 6.7475 + 0.011426 * seq + 987.72 / U * log10(seq) - 13494.0/T;
+  return pow(10.0, exp) / 100.0;
+}
+
+double MinCreep225Cr1MoCreep::e2_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 11.498 - 8.2226*U / T - 20448 / T + 5862.4 / T * log10(seq);
+  return pow(10.0, exp) / 100.0;
+}
+
+double MinCreep225Cr1MoCreep::de1_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 4.7475 + 0.011426 * seq + 428.961 / U * log(seq) - 13494.0/T;
+  return pow(10.0, exp) * (0.011426 + 428.961 / (seq * U)) * log(10.0);
+}
+
+double MinCreep225Cr1MoCreep::de2_(double seq, double T) const
+{
+  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double exp = 9.498 - 8.2226*U / T - 20448 / T + 2546.01 / T * log(seq);
+  return 2546.01 * pow(10.0, exp) * log(10.0) / (seq * T);
+}
+
+const PiecewiseLinearInterpolate MinCreep225Cr1MoCreep::U  = PiecewiseLinearInterpolate({644.15,673.15,723.15,773.15,823.15,873.15,894.15,922.15},{471,468,452,418,634,284,300,270});
 
 // Implementation of J2 creep
 J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,

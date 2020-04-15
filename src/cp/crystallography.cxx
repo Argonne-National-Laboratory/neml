@@ -10,62 +10,62 @@
 
 namespace neml {
 
-const double a = sqrt(2.0) / 2.0;
-const double b = sqrt(3.0) / 2.0;
-const double h = 0.5;
-const std::vector<Orientation> tetragonal = {
-  Orientation({ 1, 0, 0, 0}),
-  Orientation({ 0, 0, 1, 0}),
-  Orientation({ 0, 1, 0, 0}),
-  Orientation({ 0, 0, 0, 1}),
-  Orientation({ a, 0, 0,-a}),
-  Orientation({ a, 0, 0, a}),
-  Orientation({ 0, a, a, 0}),
-  Orientation({ 0,-a, a, 0})
-};
-const std::vector<Orientation> hexagonal = {
-  Orientation({ 1, 0, 0, 0}),
-  Orientation({ b, 0, 0,-h}),
-  Orientation({ b, 0, 0, h}),
-  Orientation({-h, 0, 0, b}),
-  Orientation({ 0, 0, 0, 1}),
-  Orientation({ h, 0, 0, b}),
-  Orientation({ 0, b,-h, 0}),
-  Orientation({ 0, 1, 0, 0}),
-  Orientation({ 0, b, h, 0}),
-  Orientation({ 0, h, b, 0}),
-  Orientation({ 0, 0, 1, 0}),
-  Orientation({ 0,-h, b, 0})
-};
-const std::vector<Orientation> cubic = {
-  Orientation({ 1, 0, 0, 0}),
-  Orientation({ h, h, h, h}),
-  Orientation({-h, h, h, h}),
-  Orientation({ h,-h, h, h}),
-  Orientation({ h, h,-h, h}),
-  Orientation({-h,-h,-h, h}),
-  Orientation({ h,-h,-h, h}),
-  Orientation({-h,-h, h, h}),
-  Orientation({-h, h,-h, h}),
-  Orientation({ 0, 0, 1, 0}),
-  Orientation({ 0, 0, 0, 1}),
-  Orientation({ 0, 1, 0 ,0}),
-  Orientation({ 0,-h, 0, h}),
-  Orientation({ 0, h, 0, h}),
-  Orientation({ h, 0, h, 0}),
-  Orientation({ h, 0,-h, 0}),
-  Orientation({ 0, 0,-h, h}),
-  Orientation({ h, h, 0, 0}),
-  Orientation({ h,-h, 0, 0}),
-  Orientation({ 0, 0, h, h}),
-  Orientation({ 0,-h, h, 0}),
-  Orientation({ h, 0, 0,-h}),
-  Orientation({ 0, h, h, 0}),
-  Orientation({ h, 0, 0, h})
-};
-
 std::vector<Orientation> symmetry_rotations(std::string sclass)
 {
+  const double a = sqrt(2.0) / 2.0;
+  const double b = sqrt(3.0) / 2.0;
+  const double h = 0.5;
+  const std::vector<Orientation> tetragonal = {
+    Orientation({ 1, 0, 0, 0}),
+    Orientation({ 0, 0, 1, 0}),
+    Orientation({ 0, 1, 0, 0}),
+    Orientation({ 0, 0, 0, 1}),
+    Orientation({ a, 0, 0,-a}),
+    Orientation({ a, 0, 0, a}),
+    Orientation({ 0, a, a, 0}),
+    Orientation({ 0,-a, a, 0})
+  };
+  const std::vector<Orientation> hexagonal = {
+    Orientation({ 1, 0, 0, 0}),
+    Orientation({ -h, 0, 0,b}),
+    Orientation({ h, 0, 0, b}),
+    Orientation({b, 0, 0, -h}),
+    Orientation({ 0, 0, 0, 1}),
+    Orientation({ b, 0, 0, h}),
+    Orientation({ 0,-h, b, 0}),
+    Orientation({ 0, 1, 0, 0}),
+    Orientation({ 0, h, b, 0}),
+    Orientation({ 0, b, h, 0}),
+    Orientation({ 0, 0, 1, 0}),
+    Orientation({ 0, b,-h, 0})
+  };
+  const std::vector<Orientation> cubic = {
+    Orientation({ 1, 0, 0, 0}),
+    Orientation({ h, h, h, h}),
+    Orientation({-h, h, h, h}),
+    Orientation({ h,-h, h, h}),
+    Orientation({ h, h,-h, h}),
+    Orientation({-h,-h,-h, h}),
+    Orientation({ h,-h,-h, h}),
+    Orientation({-h,-h, h, h}),
+    Orientation({-h, h,-h, h}),
+    Orientation({ 0, 0, 1, 0}),
+    Orientation({ 0, 0, 0, 1}),
+    Orientation({ 0, 1, 0 ,0}),
+    Orientation({ 0,-h, 0, h}),
+    Orientation({ 0, h, 0, h}),
+    Orientation({ h, 0, h, 0}),
+    Orientation({ h, 0,-h, 0}),
+    Orientation({ 0, 0,-h, h}),
+    Orientation({ h, h, 0, 0}),
+    Orientation({ h,-h, 0, 0}),
+    Orientation({ 0, 0, h, h}),
+    Orientation({ 0,-h, h, 0}),
+    Orientation({ h, 0, 0,-h}),
+    Orientation({ 0, h, h, 0}),
+    Orientation({ h, 0, 0, h})
+  };
+
   std::vector<Orientation> res;
   if (sclass == "432") {
     for (int i=0; i<24; i++) {
@@ -134,11 +134,11 @@ std::vector<Orientation> symmetry_rotations(std::string sclass)
 SymmetryGroup::SymmetryGroup(std::string sclass) :
     ops_(symmetry_rotations(sclass))
 {
-  raw_.resize(ops_.size()*4);
-  size_t j = 0;
-  for (auto it = ops_.begin(); it != ops_.end(); ++it) {
-    std::copy(it->quat(), it->quat()+4, &raw_[j]);
-    j += 4;
+  misops_.reserve(ops_.size() * ops_.size());
+  for (auto a : ops_) {
+    for (auto b : ops_) {
+      misops_.push_back(a * b);
+    }
   }
 }
 
@@ -164,7 +164,7 @@ ParameterSet SymmetryGroup::parameters()
 std::unique_ptr<NEMLObject> SymmetryGroup::initialize(ParameterSet & params)
 {
   return neml::make_unique<SymmetryGroup>(
-      params.get_parameter<std::string>("sclass")); 
+      params.get_parameter<std::string>("sclass"));
 }
 
 const std::vector<Orientation> & SymmetryGroup::ops() const
@@ -177,73 +177,72 @@ size_t SymmetryGroup::nops() const
   return ops_.size();
 }
 
-Orientation SymmetryGroup::misorientation(const Orientation & a, 
+Orientation SymmetryGroup::misorientation(const Orientation & a,
                                           const Orientation & b) const
 {
   Orientation best;
+  Orientation ab = a * b.inverse();
   double angle_best = 2 * M_PI;
   double cn[3];
   double ca;
-  for (auto ri = ops_.begin(); ri != ops_.end(); ++ri) {
-    for (auto rj = ops_.begin(); rj != ops_.end(); ++rj) {
-      Orientation trial = *ri * a * b.inverse() * *rj;
-      trial.to_axis_angle(cn, ca);
-      if (ca < angle_best) {
-        angle_best = ca;
-        best = trial;
-      }
+  for (auto misop : misops_) {
+    Orientation trial = misop * ab;
+    trial.to_axis_angle(cn, ca);
+    if (ca < angle_best) {
+      angle_best = ca;
+      best = trial;
     }
   }
 
   return best;
 }
 
-double SymmetryGroup::distance(const Orientation & a, const Orientation & b)
-  const
+std::vector<Orientation> SymmetryGroup::misorientation_block(
+    const std::vector<Orientation> & A, const std::vector<Orientation> & B)
 {
-  double * dd = new double [nops()];
-  
-  opdist_(a.quat(), b.quat(), dd);
+  size_t N = A.size();
 
-  double val = *std::min_element(&dd[0], &dd[nops()]);
-
-  delete [] dd;
-
-  return val;
-}
-
-void SymmetryGroup::closest(const Orientation & a, const Orientation & b, 
-                            Orientation & close, double & dist) const
-{
-  double * dd = new double [nops()];
-  
-  opdist_(a.quat(), b.quat(), dd);
-
-  double * loc = std::min_element(&dd[0], &dd[nops()]);
-
-  dist = *loc;
-
-  size_t ind = loc - &dd[0];
-
-  delete [] dd;
-
-  close = ops_[ind] * a;
-}
-
-void SymmetryGroup::opdist_(const double * const q1, 
-                            const double * const q2, double * const res) 
-  const
-{
-  double * qs = new double [4 * nops()];
-  
-  qmult_vec(&raw_[0], q1, nops(), qs);
-  dgemv_("T", 4, nops(), 1.0, qs, 4, q2, 1, 0.0, res, 1);
-
-  delete [] qs;
-
-  for (size_t i=0; i<nops(); i++) {
-    res[i] = acos(fabs(res[i]));
+  if (N != B.size()) {
+    throw std::runtime_error("Blocks of input orientations do not have matching sizes!");
   }
+
+  double * V = new double[N*4];
+  for (size_t i = 0; i < N; i++) {
+    Orientation v(&V[4*i]);
+    v = A[i] * B[i].inverse();
+  }
+
+  size_t S = misops_.size();
+  double * M = new double[S * 4 * 4];
+  for (size_t i = 0; i < S; i++) {
+    misops_[i].to_product_matrix(&M[i*4*4]);
+  }
+
+  // Answer is now M * V.T
+  double * R = new double[S * 4 * N];
+  mat_mat_ABT(S*4, N, 4, M, V, R);
+
+  delete [] M;
+  delete [] V;
+
+  std::vector<Orientation> res(N);
+  for (size_t i = 0; i < N; i++) {
+    double best_angle = 3 * M_PI;
+    size_t bi = -1;
+    for (size_t j = 0; j < S; j++) {
+      double f = std::max(-1.0,std::min(1.0,R[CINDEX((j*4),i,N)])); // need to check to prevent precision error and lie between [-1,1]
+      double ang = 2.0 * acos(f);
+      if (ang < best_angle) {
+        best_angle = ang;
+        bi = j;
+      }
+    }
+    res[i] = Orientation({R[CINDEX((bi*4+0),i,N)],R[CINDEX((bi*4+1),i,N)],R[CINDEX((bi*4+2),i,N)],R[CINDEX((bi*4+3),i,N)]});
+  }
+
+  delete [] R;
+
+  return res;
 }
 
 Lattice::Lattice(Vector a1, Vector a2, Vector a3,
@@ -303,7 +302,7 @@ std::vector<Vector> Lattice::equivalent_vectors(Vector v)
 std::vector<Vector> Lattice::equivalent_vectors_bidirectional(Vector v)
 {
   std::vector<Vector> both = equivalent_vectors(v);
-  
+
   std::vector<Vector> single;
 
   for (auto a = both.begin(); a != both.end(); ++a) {
@@ -318,7 +317,7 @@ std::vector<Vector> Lattice::equivalent_vectors_bidirectional(Vector v)
       single.push_back(*a);
     }
   }
-  
+
   return single;
 }
 
@@ -330,12 +329,12 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
       miller2cart_direction(d));
   std::vector<Vector> pns = equivalent_vectors_bidirectional(
       miller2cart_plane(p));
-  
+
   for (auto bi = pbs.begin(); bi != pbs.end(); ++bi) {
     for (auto ni = pns.begin(); ni != pns.end(); ++ni) {
       Vector nd = *bi / bi->norm();
       Vector nn = *ni / ni->norm();
-      
+
       if (isclose(nd.dot(nn), 0.0)) {
         burgers.push_back(*bi);
         directions.push_back(nd);
@@ -367,27 +366,25 @@ size_t Lattice::flat(size_t g, size_t i) const
   return offsets_[g] + i;
 }
 
-Symmetric Lattice::M(size_t g, size_t i, const Orientation & Q)
+const Symmetric & Lattice::M(size_t g, size_t i, const Orientation & Q)
 {
   cache_rot_(Q);
   return Ms_[g][i];
-  return Q.apply(Symmetric(outer(slip_directions_[g][i], 
-                                 slip_planes_[g][i])));
 }
 
-Skew Lattice::N(size_t g, size_t i, const Orientation & Q)
+const Skew & Lattice::N(size_t g, size_t i, const Orientation & Q)
 {
   cache_rot_(Q);
   return Ns_[g][i];
 }
 
-double Lattice::shear(size_t g, size_t i, const Orientation & Q, 
+double Lattice::shear(size_t g, size_t i, const Orientation & Q,
                       const Symmetric & stress)
 {
   return M(g,i,Q).contract(stress);
 }
 
-Symmetric Lattice::d_shear(size_t g, size_t i, const Orientation & Q, 
+Symmetric Lattice::d_shear(size_t g, size_t i, const Orientation & Q,
                            const Symmetric & stress)
 {
   return M(g, i, Q);
@@ -425,17 +422,17 @@ void Lattice::cache_rot_(const Orientation & Q)
     Ms_[g].resize(nslip(g));
     Ns_[g].resize(nslip(g));
     for (size_t i = 0; i < nslip(g); i++) {
-      Ms_[g][i] = Q.apply(Symmetric(outer(slip_directions_[g][i], 
-                                          slip_planes_[g][i]))); 
-      Ns_[g][i] = Q.apply(Skew(outer(slip_directions_[g][i], 
-                                     slip_planes_[g][i]))); 
+      Ms_[g][i] = Q.apply(Symmetric(outer(slip_directions_[g][i],
+                                          slip_planes_[g][i])));
+      Ns_[g][i] = Q.apply(Skew(outer(slip_directions_[g][i],
+                                     slip_planes_[g][i])));
     }
   }
 }
 
-CubicLattice::CubicLattice(double a, 
+CubicLattice::CubicLattice(double a,
                            list_systems isystems) :
-    Lattice(Vector({a,0,0}),Vector({0,a,0}),Vector({0,0,a}), 
+    Lattice(Vector({a,0,0}),Vector({0,a,0}),Vector({0,0,a}),
             std::make_shared<SymmetryGroup>("432"), isystems)
 {
 
@@ -451,7 +448,7 @@ ParameterSet CubicLattice::parameters()
   ParameterSet pset(CubicLattice::type());
 
   pset.add_parameter<double>("a");
-  pset.add_optional_parameter<list_systems>("slip_systems", 
+  pset.add_optional_parameter<list_systems>("slip_systems",
                                             list_systems());
 
   return pset;
@@ -461,7 +458,7 @@ std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
 {
   return neml::make_unique<CubicLattice>(
       params.get_parameter<double>("a"),
-      params.get_parameter<list_systems>("slip_systems")); 
+      params.get_parameter<list_systems>("slip_systems"));
 }
 
 } // namespace neml
