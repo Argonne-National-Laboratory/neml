@@ -356,6 +356,19 @@ class BreeProblem(VesselSectionProblem):
     self.energy = [0.0]
     self.work = [0.0]
 
+  def update_loading(self, new_p, new_T, new_p_ext = lambda t: 0.0):
+    """
+      Impose new loading functions
+    """
+    self.P = lambda t: (new_p(t) * self.r_inner - new_p_ext(t) * self.r_outer) / self.t
+    self.barmodel.nodes[2]['force bc'] = lambda t: self.P(t) * np.sum(self.weights)
+
+    self.T = new_T
+    for i,ipt in enumerate(self.ipoints):
+      def tlocal(tt, x = ipt):
+        return self.T(x, tt) 
+      self.barmodel[1][2][i]['object'].T = tlocal
+
   def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
       ndiv = 4, dfact = 2, extrapolate = False):
     """
