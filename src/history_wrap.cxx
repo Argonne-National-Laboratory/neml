@@ -137,6 +137,7 @@ PYBIND11_MODULE(history, m) {
         .def("split", &History::split, py::arg("group"), py::arg("after") = true)
         .def("add_union", &History::add_union)
         .def("contains", &History::contains)
+        .def("subset", &History::subset)
       ;
 }
 

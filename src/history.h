@@ -135,7 +135,11 @@ class NEML_EXPORT History {
   /// Get the order
   std::vector<std::string> & get_order() {return order_;};
 
+  /// Return all the items in this object
   const std::vector<std::string> & items() const {return get_order();};
+
+  /// Helper to get the size of a particular object
+  size_t size_of_entry(std::string name);
 
   /// Resize method
   void resize(size_t inc);
@@ -195,6 +199,9 @@ class NEML_EXPORT History {
 
   /// Split a history in two
   History split(std::vector<std::string> sep, bool after = true) const;
+
+  /// Extract a subset
+  History subset(std::vector<std::string> vars) const;
 
   /// Quick function to check to see if something is in the vector
   inline bool contains(std::string name) const { return loc_.find(name) !=

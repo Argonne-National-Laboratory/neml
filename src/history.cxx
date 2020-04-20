@@ -323,4 +323,18 @@ History History::split(std::vector<std::string> sep, bool after) const
   return res;
 }
 
+History History::subset(std::vector<std::string> vars) const
+{
+  History nhist;
+  for (auto var : vars) {
+    error_if_not_exists_(var);
+    size_t sz = storage_size.at(type_.at(var));
+    nhist.add(var, type_.at(var), sz);
+    std::copy(&storage_[loc_.at(var)], &storage_[loc_.at(var)]+sz, 
+              &nhist.rawptr()[nhist.get_loc().at(var)]);
+
+  }
+  return nhist;
+}
+
 } // namespace neml

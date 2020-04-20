@@ -212,6 +212,15 @@ class TestSplitStore(unittest.TestCase):
     with self.assertRaises(RuntimeError):
       nhist = self.hist.split(["b", "c"])
 
+  def test_subset(self):
+    subset = self.hist.subset(["a", "d"])
+    self.assertTrue(np.allclose(np.array([1.0,4.0]), np.array(subset)))
+    self.assertEqual(subset.items, ["a", "d"])
+
+  def test_bad_subset(self):
+    with self.assertRaises(RuntimeError):
+      subset = self.hist.subset(["a", "no"])
+
 class TestSplitNoStore(unittest.TestCase):
   def setUp(self):
     self.hist = history.History(False)
