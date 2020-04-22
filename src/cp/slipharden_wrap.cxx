@@ -21,6 +21,7 @@ PYBIND11_MODULE(slipharden, m) {
       .def("hist", &SlipHardening::hist)
       .def("d_hist_d_s", &SlipHardening::d_hist_d_s)
       .def("d_hist_d_h", &SlipHardening::d_hist_d_h)
+      .def("d_hist_d_h_ext", &SlipHardening::d_hist_d_h_ext)
       .def_property_readonly("use_nye", &SlipHardening::use_nye)
       ;
 
@@ -65,6 +66,8 @@ PYBIND11_MODULE(slipharden, m) {
            &SlipSingleStrengthHardening::d_hist_rate_d_stress)
       .def("d_hist_rate_d_hist",
            &SlipSingleStrengthHardening::d_hist_rate_d_hist)
+      .def("d_hist_rate_d_hist_ext",
+           &SlipSingleStrengthHardening::d_hist_rate_d_hist_ext)
       .def("static_strength", &SlipSingleStrengthHardening::static_strength)
       .def("nye_contribution", &SlipSingleStrengthHardening::nye_contribution)
       .def("nye_part", &SlipSingleStrengthHardening::nye_part)

@@ -190,17 +190,33 @@ History SlipMultiStrengthSlipRule::d_hist_rate_d_hist(const Symmetric & stress,
                     const Orientation & Q, const History & history,
                     Lattice & L, double T, const History & fixed) const
 {
+  std::vector<std::string> names;
   History dhist;
   for (size_t i = 0; i < nstrength(); i++) {
+    auto vns = strengths_[i]->varnames();
+    names.insert(names.end(), vns.begin(), vns.end());
     for (size_t j = 0; j < nstrength(); j++) {
       if (i == j) {
         dhist.add_union(strengths_[i]->d_hist_d_h(stress, Q, history, L, T, *this, fixed));
       }
       else {
-        dhist.add_union(strengths_[i]->blank_hist().history_derivative(strengths_[j]->blank_hist()));
+        dhist.add_union(strengths_[i]->d_hist_d_h_ext(stress, Q, history, L, T,
+                                                      *this, fixed,
+                                                      strengths_[j]->varnames()));
       }
     }
   }
+  
+  // Most regrettably this is now entirely out of order.  Need to fix up so
+  // things are row-major
+  std::vector<std::string> order;
+  for (auto n1 :  names) {
+    for (auto n2 : names) {
+      order.push_back(n1 + "_" + n2);
+    }
+  }
+  dhist.reorder(order);
+
   return dhist;
 }
 

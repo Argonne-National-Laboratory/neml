@@ -245,9 +245,10 @@ void History::error_if_wrong_type_(std::string name, StorageType type) const
   }
 }
 
-void History::zero()
+History & History::zero()
 {
   std::fill(storage_, storage_+size_, 0.0);
+  return *this;
 }
 
 History History::history_derivative(const History & other) const
@@ -335,6 +336,17 @@ History History::subset(std::vector<std::string> vars) const
 
   }
   return nhist;
+}
+
+History & History::reorder(std::vector<std::string> vars)
+{
+  History nhist = subset(vars);
+
+  copy_maps(nhist);
+
+  std::copy(nhist.rawptr(), nhist.rawptr() + size(), storage_);
+
+  return *this;
 }
 
 } // namespace neml

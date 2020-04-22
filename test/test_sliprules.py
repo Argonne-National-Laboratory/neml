@@ -38,8 +38,12 @@ class CommonSlipRule(object):
     d = np.array(self.model.d_hist_rate_d_hist(self.S, self.Q, self.H, self.L, self.T, self.fixed))
     nd = diff_history_history(lambda h: self.model.hist_rate(self.S, self.Q, h, self.L,
       self.T, self.fixed), self.H)
-    print(d.reshape(nd.shape))
+    d = d.reshape(nd.shape)
+    print(d)
     print(nd)
+    np.set_printoptions(precision = 3, suppress = True)
+    print(d[:12,:12])
+    print(nd[:12,:12])
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
 class CommonSlipMultiStrengthSlipRule(object):
@@ -167,7 +171,7 @@ class TestKinematicPowerLawSlipComplicated(unittest.TestCase, CommonSlipRule):
     self.S = tensors.Symmetric(np.array([
       [100.0,-25.0,10.0],
       [-25.0,-17.0,15.0],
-      [10.0,  15.0,35.0]]))
+      [10.0,  15.0,35.0]]))*3
 
     self.H = history.History()
 
@@ -182,13 +186,13 @@ class TestKinematicPowerLawSlipComplicated(unittest.TestCase, CommonSlipRule):
     K = E / 50.0
     s0 = 75.0
 
-    M = matrix.SquareMatrix(self.L.ntotal, type = "diagonal", 
-        data = [K] * self.L.ntotal)
+    M = matrix.SquareMatrix(self.L.ntotal, type = "dense", 
+        data = [K] * (self.L.ntotal * self.L.ntotal))
 
     self.isostrength = slipharden.GeneralLinearHardening(M, [s0/2] * self.L.ntotal, 
-        absval = True)
+        absval = False)
     self.flowresistance = slipharden.GeneralLinearHardening(M, [s0/2] * self.L.ntotal, 
-        absval = True)
+        absval = False)
     self.backstrength = slipharden.GeneralLinearHardening(M, [0] * self.L.ntotal, 
         absval = False)
 
@@ -199,7 +203,7 @@ class TestKinematicPowerLawSlipComplicated(unittest.TestCase, CommonSlipRule):
     self.model.populate_history(self.H)
     self.model.init_history(self.H)
 
-    self.strength_values = np.linspace(0,10,36)
+    self.strength_values = np.linspace(0,10,36) + 5.0
     self.H.copy_data(self.strength_values)
 
     self.fixed = history.History()

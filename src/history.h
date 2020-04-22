@@ -163,7 +163,7 @@ class NEML_EXPORT History {
   void copy_maps(const History & other);
 
   /// Make zero
-  void zero();
+  History & zero();
 
   /// Make a History appropriate to hold the derivatives of the indicated items
   template<class T>
@@ -202,6 +202,9 @@ class NEML_EXPORT History {
 
   /// Extract a subset
   History subset(std::vector<std::string> vars) const;
+
+  /// Reorder based on the provided list of names
+  History & reorder(std::vector<std::string> names);
 
   /// Quick function to check to see if something is in the vector
   inline bool contains(std::string name) const { return loc_.find(name) !=

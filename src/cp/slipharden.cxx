@@ -12,6 +12,25 @@ History SlipHardening::blank_hist() const
   return hist;
 }
 
+History SlipHardening::d_hist_to_tau_ext(size_t g, size_t i, 
+                                         const History & history, 
+                                         Lattice & L, double T, 
+                                         const History & fixed, 
+                                         std::vector<std::string> ext) const
+{
+  return history.subset(ext).derivative<double>().zero();
+}
+
+History SlipHardening::d_hist_d_h_ext(const Symmetric & stress,
+                                      const Orientation & Q,
+                                      const History & history,
+                                      Lattice & L, double T, const SlipRule & R,
+                                      const History & fixed,
+                                      std::vector<std::string> ext) const
+{
+  return blank_hist().history_derivative(history.subset(ext)).zero();
+}
+
 bool SlipHardening::use_nye() const
 {
   return false;
@@ -285,13 +304,48 @@ History GeneralLinearHardening::d_hist_d_h(const Symmetric & stress,
         if (absval_) {
           sign = copysign(1.0, R.slip(g, l, stress, Q, history, L, T, fixed));
         }
-        for (size_t k = 0; k < L.ntotal(); k++) {
-          res.get<double>(varnames_[i]+"_"+varnames_[k]) += 
-              M_->data()[CINDEX(i,j,L.ntotal())] * sign * curr.get<double>(varnames_[k]);
+        for (auto vn : varnames_) {
+          res.get<double>(varnames_[i]+"_"+vn) += 
+              M_->data()[CINDEX(i,j,L.ntotal())] * sign * curr.get<double>(vn);
         }
       }
     }
   }
+
+  return res;
+}
+
+History GeneralLinearHardening::d_hist_d_h_ext(const Symmetric & stress, 
+                                               const Orientation & Q,
+                                               const History & history,
+                                               Lattice & L, double T, const SlipRule & R,
+                                               const History & fixed, 
+                                               std::vector<std::string> ext) const
+{
+  consistency(L);
+  History res = blank_hist().history_derivative(history.subset(ext)).zero();
+
+  // Do the sum
+  for (size_t i = 0; i < L.ntotal(); i++) {
+    for (size_t g = 0; g < L.ngroup(); g++) {
+      for (size_t l = 0; l < L.nslip(g); l++) {
+        size_t j = L.flat(g, l); 
+        History curr = R.d_slip_d_h(g, l, stress, Q,  history, L, T, fixed);
+        double sign = 1.0;
+        if (absval_) {
+          sign = copysign(1.0, R.slip(g, l, stress, Q, history, L, T, fixed));
+        }
+        for (auto vn : ext) {
+          if (curr.contains(vn)) {
+            res.get<double>(varnames_[i]+"_"+vn) += 
+                M_->data()[CINDEX(i,j,L.ntotal())] * sign * curr.get<double>(vn);
+          }
+        }
+      }
+    }
+  }
+
+  return res;
 
   return res;
 }
@@ -385,6 +439,23 @@ History SlipSingleStrengthHardening::d_hist_d_h(
   History res = blank_hist().derivative<History>();
   res.get<double>(var_name_+"_"+var_name_) = d_hist_rate_d_hist(
       stress, Q, history, L, T, R, fixed).get<double>(var_name_);
+  return res;
+}
+
+History SlipSingleStrengthHardening::d_hist_d_h_ext(
+    const Symmetric & stress, const Orientation & Q, const History & history,
+    Lattice & L, double T, const SlipRule & R, const History & fixed, 
+    std::vector<std::string> ext) const
+{
+  History res = blank_hist().history_derivative(history.subset(ext)).zero();
+
+  History local_hist = d_hist_rate_d_hist_ext(stress, Q, history,
+                                              L, T, R, fixed, ext);
+
+  for (auto name : ext) {
+    res.get<double>(var_name_+"_"+name) = local_hist.get<double>(name);
+  }
+
   return res;
 }
 
@@ -543,6 +614,26 @@ History SumSlipSingleStrengthHardening::d_hist_d_h(
   return res;
 }
 
+History SumSlipSingleStrengthHardening::d_hist_d_h_ext(
+    const Symmetric & stress, const Orientation & Q, const History & history,
+    Lattice & L, double T, const SlipRule & R, const History & fixed, 
+    std::vector<std::string> ext) const
+{
+  History res = blank_hist().history_derivative(history.subset(ext)).zero();
+
+  for (size_t i = 0; i < nmodels(); i++) {
+    History local_hist = models_[i]->d_hist_rate_d_hist_ext(stress, Q, history,
+                                                            L, T, R, fixed,
+                                                            ext);
+    for (auto name : ext) {
+      res.get<double>("strength"+std::to_string(i)+"_"+name) = 
+          local_hist.get<double>(name);
+    }
+  }
+
+  return res;
+}
+
 double SumSlipSingleStrengthHardening::hist_map(const History & history, 
                                                 double T,
                                                 const History & fixed) const
@@ -623,6 +714,33 @@ History PlasticSlipHardening::d_hist_rate_d_hist(
                                                     fixed);
 
   return dhist;
+}
+
+/// Derivative of the scalar law wrt all other scalars
+History PlasticSlipHardening::d_hist_rate_d_hist_ext(const Symmetric & stress, 
+                                                     const Orientation & Q,
+                                                     const History & history,
+                                                     Lattice & L, double T,
+                                                     const SlipRule & R, 
+                                                     const History & fixed, 
+                                                     std::vector<std::string> ext) const
+{
+  History res = history.subset(ext).copy_blank();
+
+  // The only non-zero terms are the derivatives that show up in the
+  // d_sum_slip_d_hist
+  History dhist = R.d_sum_slip_d_hist(stress, Q, history, L, T, fixed);
+
+  double strength = history.get<double>(var_name_);
+  double fact = hist_factor(strength, L, T, fixed);
+
+  for (auto name : ext) {
+    if (dhist.contains(name)) {
+      res.get<double>(name) = fact * dhist.get<double>(name);
+    }
+  }
+
+  return res;
 }
 
 VoceSlipHardening::VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
