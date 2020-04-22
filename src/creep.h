@@ -68,7 +68,8 @@ static Register<BlackburnMinimumCreep> regBlackburnMinimumCreep;
 /// Creep rate law from Swindeman 1999
 class NEML_EXPORT SwindemanMinimumCreep: public ScalarCreepRule {
  public:
-  SwindemanMinimumCreep(double C, double n, double V, double Q);
+  SwindemanMinimumCreep(double C, double n, double V, double Q,
+                        bool celsius);
 
   /// String type for the object system
   static std::string type();
@@ -90,7 +91,7 @@ class NEML_EXPORT SwindemanMinimumCreep: public ScalarCreepRule {
       const;
 
  private:
-  const double C_, n_, V_, Q_;
+  const double C_, n_, V_, Q_, shift_;
 };
 
 static Register<SwindemanMinimumCreep> regSwindemanMinimumCreep;
