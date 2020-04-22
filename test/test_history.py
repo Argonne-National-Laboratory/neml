@@ -202,6 +202,11 @@ class TestSplitStore(unittest.TestCase):
     self.hist.add_scalar("d")
     self.hist.set_scalar("d", 4.0)
 
+  def test_reorder(self):
+    self.hist.reorder(["b", "c", "a", "d"])
+    self.assertEqual(self.hist.items, ["b", "c", "a", "d"])
+    self.assertTrue(np.allclose(np.array([2.0,3.0,1.0,4.0]), np.array(self.hist)))
+
   def test_good_split(self):
     nhist = self.hist.split(["a", "b"])
     self.assertEqual(nhist.size, 2)

@@ -138,6 +138,7 @@ PYBIND11_MODULE(history, m) {
         .def("add_union", &History::add_union)
         .def("contains", &History::contains)
         .def("subset", &History::subset)
+        .def("reorder", &History::reorder)
       ;
 }
 
