@@ -7,7 +7,7 @@
 #include "windows.h"
 
 #include <string>
-#include <map>
+#include <unordered_map>
 
 namespace neml {
 
@@ -33,7 +33,7 @@ template <> constexpr StorageType GetStorageType<double>() {return TYPE_SCALAR;}
 template <> constexpr StorageType GetStorageType<SymSymR4>() {return TYPE_SYMSYM;}
 
 /// Storage size
-const std::map<StorageType,size_t> storage_size =
+const std::unordered_map<StorageType,size_t> storage_size =
   { {TYPE_VECTOR,    3},
     {TYPE_SCALAR,    1},
     {TYPE_RANKTWO,   9},
@@ -46,7 +46,7 @@ const std::map<StorageType,size_t> storage_size =
 template <class T> size_t GetStorageSize() {return storage_size.at(GetStorageType<T>());}
 
 /// Map between a type and its derivative
-const std::map<StorageType,const std::map<StorageType,StorageType>> derivative_type =
+const std::unordered_map<StorageType,const std::unordered_map<StorageType,StorageType>> derivative_type =
   { {TYPE_SCALAR,
       {{TYPE_SCALAR,    TYPE_SCALAR},
        {TYPE_VECTOR,    TYPE_VECTOR},
@@ -122,16 +122,16 @@ class NEML_EXPORT History {
   }
 
   /// Get the location map
-  const std::map<std::string,size_t> & get_loc() const {return loc_;};
+  const std::unordered_map<std::string,size_t> & get_loc() const {return loc_;};
   /// Get the type map
-  const std::map<std::string,StorageType> & get_type() const {return type_;};
+  const std::unordered_map<std::string,StorageType> & get_type() const {return type_;};
   /// Get the name order
   const std::vector<std::string> & get_order() const {return order_;};
 
   /// Get the location map
-  std::map<std::string,size_t> & get_loc() {return loc_;};
+  std::unordered_map<std::string,size_t> & get_loc() {return loc_;};
   /// Get the type map
-  std::map<std::string,StorageType> & get_type() {return type_;};
+  std::unordered_map<std::string,StorageType> & get_type() {return type_;};
   /// Get the order
   std::vector<std::string> & get_order() {return order_;};
 
@@ -221,8 +221,8 @@ class NEML_EXPORT History {
   bool store_;
   double * storage_;
 
-  std::map<std::string,size_t> loc_;
-  std::map<std::string,StorageType> type_;
+  std::unordered_map<std::string,size_t> loc_;
+  std::unordered_map<std::string,StorageType> type_;
   std::vector<std::string> order_;
 };
 
