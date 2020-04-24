@@ -86,14 +86,17 @@ History & History::operator=(const History & other)
 
 History & History::add_union(const History & other)
 {
+  // This assumes no overlap
+  order_.insert(order_.end(), other.get_order().begin(), other.get_order().end());
+  type_.insert(other.get_type().begin(), other.get_type().end());
+  loc_.insert(other.get_loc().begin(), other.get_loc().end());
+  size_t offset = size();
+  resize(other.size());
   for (auto & var : other.get_order()) {
-    StorageType type = other.get_type().at(var);
-    size_t size = storage_size.at(type);
-    size_t loco = other.get_loc().at(var);
-    add(var, type, size);
-    size_t locn = loc_.at(var);
-    std::copy(other.rawptr()+loco, other.rawptr()+loco+size, storage_+locn);
+    loc_[var] += offset;
   }
+
+  std::copy(other.rawptr(), other.rawptr()+other.size(), storage_+offset);
 
   return *this;
 }
