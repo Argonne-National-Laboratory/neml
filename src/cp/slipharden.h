@@ -85,6 +85,15 @@ class NEML_EXPORT SlipHardening: public NEMLObject
   
   /// Helper providing a blank (zero) history
   History blank_hist() const;
+
+  enum class CacheType {BLANK, DOUBLE};
+
+  /// Helper accessing cached objects
+  History cache(CacheType type) const;
+
+ protected:
+  void init_cache_();
+  std::unique_ptr<History> blank_, double_;
 };
 
 /// Fixed strength

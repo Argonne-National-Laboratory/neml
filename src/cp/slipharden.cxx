@@ -6,10 +6,28 @@ namespace neml {
 
 History SlipHardening::blank_hist() const
 {
-  History hist;
-  populate_history(hist);
-  hist.zero();
-  return hist;
+  return cache(CacheType::BLANK);
+}
+
+History SlipHardening::cache(CacheType type) const
+{
+  switch (type) {
+    case CacheType::BLANK: return *blank_;
+      break;
+    case CacheType::DOUBLE: return *double_;
+      break;
+    default: throw std::runtime_error("Invalid cached type");
+      break;
+  }
+}
+
+void SlipHardening::init_cache_()
+{
+  blank_ = make_unique<History>();
+  populate_history(*blank_);
+  blank_->zero();
+
+  double_ = make_unique<History>((*blank_).derivative<double>());
 }
 
 History SlipHardening::d_hist_to_tau_ext(size_t g, size_t i, 
@@ -40,6 +58,7 @@ FixedStrengthHardening::FixedStrengthHardening(
     std::vector<std::shared_ptr<Interpolate>> strengths) :
       strengths_(strengths)
 {
+  init_cache_();
 }
 
 std::string FixedStrengthHardening::type()
@@ -69,6 +88,7 @@ std::vector<std::string> FixedStrengthHardening::varnames() const
 
 void FixedStrengthHardening::set_varnames(std::vector<std::string> vars)
 {
+  init_cache_();
 }
 
 void FixedStrengthHardening::populate_history(History & history) const
@@ -93,7 +113,7 @@ History FixedStrengthHardening::d_hist_to_tau(size_t g, size_t i,
                                               double T, 
                                               const History & fixed) const
 {
-  return blank_hist().derivative<double>();
+  return cache(CacheType::DOUBLE);
 }
 
 History FixedStrengthHardening::hist(const Symmetric & stress, 
@@ -139,6 +159,7 @@ GeneralLinearHardening::GeneralLinearHardening(std::shared_ptr<SquareMatrix> M,
   for (size_t i = 0; i < size(); i++) {
     varnames_[i] = varprefix_+std::to_string(i);
   }
+  init_cache_();
 }
 
 std::string GeneralLinearHardening::type()
@@ -177,6 +198,7 @@ std::vector<std::string> GeneralLinearHardening::varnames() const
 void GeneralLinearHardening::set_varnames(std::vector<std::string> vars)
 {
   varnames_ = vars;
+  init_cache_();
 }
 
 void GeneralLinearHardening::populate_history(History & history) const
@@ -211,7 +233,7 @@ History GeneralLinearHardening::d_hist_to_tau(size_t g, size_t i,
                                               const History & fixed) const
 {
   consistency(L);  
-  History res = blank_hist().derivative<double>();
+  History res = cache(CacheType::DOUBLE);
   // This works because the above zeros out the vector
   res.get<double>(varnames_[L.flat(g,i)]) = 1.0;
   return res;
@@ -390,6 +412,7 @@ std::vector<std::string> SlipSingleStrengthHardening::varnames() const
 void SlipSingleStrengthHardening::set_varnames(std::vector<std::string> vars)
 {
   set_variable(vars[0]);
+  init_cache_();
 }
 
 void SlipSingleStrengthHardening::populate_history(History & history) const
@@ -472,7 +495,7 @@ History SlipSingleStrengthHardening::d_hist_map(const History & history,
                                                 double T, 
                                                 const History & fixed) const
 {
-  History res = blank_hist().derivative<double>();
+  History res = cache(CacheType::DOUBLE);
   res.get<double>(var_name_) = 1.0;
   return res;
 }
@@ -507,6 +530,7 @@ SumSlipSingleStrengthHardening::SumSlipSingleStrengthHardening(
   for (size_t i = 0; i < nmodels(); i++) {
     models_[i]->set_variable("strength"+std::to_string(i));
   }
+  init_cache_();
 }
 
 std::vector<std::string> SumSlipSingleStrengthHardening::varnames() const
@@ -524,7 +548,8 @@ void SumSlipSingleStrengthHardening::set_varnames(std::vector<std::string> vars)
 {
   for (size_t i = 0; i < nmodels(); i++) {
     models_[i]->set_variable(vars[i]);
-  } 
+  }
+  init_cache_();
 }
 
 std::string SumSlipSingleStrengthHardening::type()
@@ -651,7 +676,7 @@ History SumSlipSingleStrengthHardening::d_hist_map(const History & history,
                                                    double T,
                                                    const History & fixed) const
 {
-  History res = blank_hist().derivative<double>();
+  History res = cache(CacheType::DOUBLE);
   for (size_t i=0; i < nmodels(); i++) {
     res.get<double>("strength"+std::to_string(i)) = 1.0;
   }
@@ -751,7 +776,7 @@ VoceSlipHardening::VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
     PlasticSlipHardening(var_name), tau_sat_(tau_sat), b_(b), tau_0_(tau_0), 
     k_(k)
 {
-  
+  init_cache_();
 }
 
 std::string VoceSlipHardening::type()
@@ -837,7 +862,7 @@ LinearSlipHardening::LinearSlipHardening(std::shared_ptr<Interpolate> tau0,
                                          std::string var_name) :
     PlasticSlipHardening(var_name), tau0_(tau0), k1_(k1), k2_(k2)
 {
-  
+  init_cache_();
 }
 
 std::string LinearSlipHardening::type()
