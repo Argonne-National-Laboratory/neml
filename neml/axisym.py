@@ -192,10 +192,10 @@ def mesh(rs, ns, bias = False, n = 2.0):
     for i in range(len(rs)-1):
       if ns[i] % 2 == 0:
         even = True
-        nuse = ns[i] / 2 + 1
+        nuse = ns[i] // 2 + 1
       else:
         even = False
-        nuse = (ns[i] + 1) / 2 + 1
+        nuse = (ns[i] + 1) // 2 + 1
 
       x1 = (np.linspace(0,1, nuse)[1:])**n
       x2 = 1-(np.linspace(0,1, nuse)[:-1])**n + 1.0
@@ -356,6 +356,19 @@ class BreeProblem(VesselSectionProblem):
     self.energy = [0.0]
     self.work = [0.0]
 
+  def update_loading(self, new_p, new_T, new_p_ext = lambda t: 0.0):
+    """
+      Impose new loading functions
+    """
+    self.P = lambda t: (new_p(t) * self.r_inner - new_p_ext(t) * self.r_outer) / self.t
+    self.barmodel.nodes[2]['force bc'] = lambda t: self.P(t) * np.sum(self.weights)
+
+    self.T = new_T
+    for i,ipt in enumerate(self.ipoints):
+      def tlocal(tt, x = ipt):
+        return self.T(x, tt) 
+      self.barmodel[1][2][i]['object'].T = tlocal
+
   def step(self, t, rtol = 1.0e-6, atol = 1.0e-8, verbose = False,
       ndiv = 4, dfact = 2, extrapolate = False):
     """
@@ -383,8 +396,8 @@ class BreeProblem(VesselSectionProblem):
     self.pressures.append(self.p(t))
     self.external_pressures.append(self.p_ext(t))
     self.hoop.append(self.P(t))
-    self.force.append(self.barmodel.node[2]['forces'][-1])
-    self.axialstrain.append(self.barmodel.node[2]['displacements'][-1])
+    self.force.append(self.barmodel.nodes[2]['forces'][-1])
+    self.axialstrain.append(self.barmodel.nodes[2]['displacements'][-1])
     
     self.temperatures.append(np.array([self.barmodel[1][2][i]['object'].temperature[-1]
       for i in range(self.npoints)]))

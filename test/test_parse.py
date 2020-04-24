@@ -85,6 +85,32 @@ class TestPowerLawDamage(CompareMats, unittest.TestCase):
     self.nsteps = 100
     self.emax = np.array([0.05,0,0,0,0,0])
 
+class TestStringParser(CompareMats, unittest.TestCase):
+  def setUp(self):
+    string_rep = '<test_j2iso type="SmallStrainRateIndependentPlasticity"><elastic type="IsotropicLinearElasticModel"><m1>103561.64383561644</m1><m1_type>youngs</m1_type><m2>0.2945205479452055</m2><m2_type>poissons</m2_type></elastic><flow type="RateIndependentAssociativeFlow"><surface type="IsoJ2"/><hardening type="LinearIsotropicHardeningRule"><s0>100.0</s0><K>1000.0</K></hardening></flow></test_j2iso>'
+
+    self.model1 = parse.parse_string(string_rep)
+
+    mu = 40000.0
+    K = 84000.0
+
+    ys = 100.0
+    H = 1000.0
+
+    elastic = elasticity.IsotropicLinearElasticModel(mu, "shear",
+        K, "bulk")
+
+    surface = surfaces.IsoJ2()
+    hrule = hardening.LinearIsotropicHardeningRule(ys, H)
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.model2 = models.SmallStrainRateIndependentPlasticity(elastic, flow)
+
+    self.T = 300.0
+    self.tmax = 10.0
+    self.nsteps = 100
+    self.emax = np.array([0.1,0,0,0,0,0])
+
 class TestJ2Iso(CompareMats, unittest.TestCase):
   def setUp(self):
     self.model1 = parse.parse_xml("test/examples.xml", "test_j2iso")
@@ -109,7 +135,7 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
     self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
-class TestJ2Iso(CompareMats, unittest.TestCase):
+class TestJ2Isocomb(CompareMats, unittest.TestCase):
   def setUp(self):
     self.model1 = parse.parse_xml("test/examples.xml", "test_j2isocomb")
   

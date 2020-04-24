@@ -45,3 +45,4 @@ callgrind.out*
 build
 dist
 neml.egg-info
+util/string_interface/cxxstring
