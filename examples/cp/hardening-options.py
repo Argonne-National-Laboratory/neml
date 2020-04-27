@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
   emax = 0.01
   erate = 1.0e-4
-  R = -1
+  R = -0.5
   ncycles = 3
   
   lattice = crystallography.CubicLattice(1.0)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
       for m in models]
   
   plt.figure()
-  plt.title("Various isotropic hardening options")
+  plt.title("Various kinematic hardening options")
   for res, name in zip(results, names):
     plt.plot(res['strain'], res['stress'], label = name)
   plt.legend(loc='best')
