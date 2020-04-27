@@ -12,8 +12,8 @@ from neml import elasticity, drivers
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  N = 200
-  nthreads = 30
+  N = 8
+  nthreads = 4
 
   E = 160000.0
   nu = 0.31
@@ -77,13 +77,20 @@ if __name__ == "__main__":
   # Option 7: no hardening, strength of 0
   h7 = slipharden.FixedStrengthHardening([0] * lattice.ntotal)
 
+  # Option 8: no hardening, strength of 150
+  h8 = slipharden.FixedStrengthHardening([2*s0] * lattice.ntotal)
+
   # The order is the backstrength, the isotropic strength, and the flow resistance
   strength775 = sliprules.KinematicPowerLawSlipRule(h7, h7, h5, g0, n)
   strength766 = sliprules.KinematicPowerLawSlipRule(h7, h6, h6, g0, n)
 
   strength771 = sliprules.KinematicPowerLawSlipRule(h7, h7, h1, g0, n)
   strength722 = sliprules.KinematicPowerLawSlipRule(h7, h2, h2b, g0, n)
-  strength735 = sliprules.KinematicPowerLawSlipRule(h7, h3, h5, g0, n)
+  strength735 = sliprules.KinematicPowerLawSlipRule(h7, h3, h8, g0, n)
+
+  strength471 = sliprules.KinematicPowerLawSlipRule(h4, h7, h1, g0, n)
+  strength422 = sliprules.KinematicPowerLawSlipRule(h4, h2, h2b, g0, n)
+  strength435 = sliprules.KinematicPowerLawSlipRule(h4, h3, h8, g0, n)
 
   def make_model(smodel):
     imodel = inelasticity.AsaroInelasticity(smodel)
@@ -98,7 +105,7 @@ if __name__ == "__main__":
 
   models = [make_model(s) for s in smodels]
 
-  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles)
+  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
       for m in models]
   
   plt.figure()
@@ -110,16 +117,14 @@ if __name__ == "__main__":
   plt.ylabel("Stress (MPa)")
   plt.show()
   
-  """
   # Pure isotropic options
-  smodels = [strength771, strength722, strength735][:1]
-  names = ["771", "722", "735"][:1]
+  smodels = [strength771, strength722, strength735]
+  names = ["771", "722", "735"]
 
   models = [make_model(s) for s in smodels]
 
-  #results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
-  #    for m in models]
-  results = [drivers.uniaxial_test(m, erate, verbose = True) for m in models]
+  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
+      for m in models]
   
   plt.figure()
   plt.title("Various isotropic hardening options")
@@ -129,4 +134,39 @@ if __name__ == "__main__":
   plt.xlabel("Strain (mm/mm)")
   plt.ylabel("Stress (MPa)")
   plt.show()
-  """
+
+  # Pure isotropic options
+  smodels = [strength771, strength722, strength735]
+  names = ["771", "722", "735"]
+
+  models = [make_model(s) for s in smodels]
+
+  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
+      for m in models]
+  
+  plt.figure()
+  plt.title("Various isotropic hardening options")
+  for res, name in zip(results, names):
+    plt.plot(res['strain'], res['stress'], label = name)
+  plt.legend(loc='best')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.show()
+
+  # Isotropic/kinematic options
+  smodels = [strength471, strength422, strength435]
+  names = ["471", "422", "435"]
+
+  models = [make_model(s) for s in smodels]
+
+  results = [drivers.strain_cyclic(m, emax, R, erate, ncycles, verbose = True)
+      for m in models]
+  
+  plt.figure()
+  plt.title("Various isotropic hardening options")
+  for res, name in zip(results, names):
+    plt.plot(res['strain'], res['stress'], label = name)
+  plt.legend(loc='best')
+  plt.xlabel("Strain (mm/mm)")
+  plt.ylabel("Stress (MPa)")
+  plt.show()

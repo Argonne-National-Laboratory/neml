@@ -25,6 +25,14 @@ Tensor and rotation objects
    math/rotations
    math/tensors
 
+Generic matrix system
+---------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   math/matrix
+
 Pointer array math functions
 ----------------------------
 
