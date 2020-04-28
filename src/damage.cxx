@@ -1473,6 +1473,12 @@ std::unique_ptr<NEMLObject> NEMLWorkDamagedModel_sd::initialize(ParameterSet & p
       ); 
 }
 
+int NEMLWorkDamagedModel_sd::init_damage(double * const damage) const
+{
+  damage[0] = 0.0;
+  return 0;
+}
+
 int NEMLWorkDamagedModel_sd::damage(double d_np1, double d_n,
                    const double * const e_np1, const double * const e_n,
                    const double * const s_np1, const double * const s_n,
@@ -1510,7 +1516,7 @@ int NEMLWorkDamagedModel_sd::ddamage_dd(double d_np1, double d_n,
   double dt = t_np1 - t_n;
 
   if (d_np1 == 0.0) {
-    *dd = 0.0;
+    *dd = 1e10;
     return 0;
   }
 

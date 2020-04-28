@@ -613,6 +613,8 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
+  virtual int init_damage(double * const damage) const;
+
   /// damage rate = n * d**((n-1)/n) * W_dot / W_crit
   virtual int damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
