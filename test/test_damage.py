@@ -74,7 +74,7 @@ class CommonScalarDamageModel(object):
     dfn = lambda s: self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         s, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.s_np1)[0]
-    
+
     self.assertTrue(np.allclose(dd_model, dd_calcd, rtol = 1.0e-3))
 
   def test_nparams(self):
@@ -170,6 +170,78 @@ class CommonDamagedModel(object):
       u_n = u_np1
       p_n = p_np1
       t_n = t_np1
+
+class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
+    CommonDamagedModel):
+  def setUp(self):
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+    self.H = 1000.0
+
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    kin = hardening.LinearKinematicHardeningRule(self.H)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+        flow)
+    
+    self.fn = interpolate.PolynomialInterpolate([0.1,5.0, 0])
+    self.n = 2.1
+
+    self.model = damage.NEMLWorkDamagedModel_sd(
+        self.elastic, self.fn, self.n, self.bmodel)
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0]) * 0.75
+    self.T = 100.0
+
+    self.s_np1 = self.stress
+    self.s_n = np.array([-25,150,250,-25,-100,25]) * 0.0
+
+    self.d_np1 = 0.2
+    self.d_n = 0.1
+
+    self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15]) * 0.75
+    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13]) * 0.0
+
+    self.T_np1 = self.T
+    self.T_n = 90.0
+
+    self.t_np1 = 5000.0
+    self.t_n = 0.9
+
+    self.u_n = 0.0
+    self.p_n = 0.0
+  
+    # This is a rather boring baseline history state to probe, but I can't
+    # think of a better way to get a "generic" history from a generic model
+    self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
+    self.x_trial = np.array([50,-25,150,-150,190,100.0] + [0.41])
+
+    self.nsteps = 10
+    self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
+    self.ttarget = 10.0
+
+    self.ee = np.dot(self.elastic.S(self.T_np1), self.s_np1 - self.s_n)
+    self.de = self.e_np1 - self.e_n
+    self.dp = self.de - self.ee
+    self.dt = self.t_np1 - self.t_n
+    self.Wdot = np.dot(self.s_np1, self.dp) / self.dt
+
+  def test_definition(self):
+    damage = self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
+        self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
+    should = self.d_n + self.n * self.d_np1**((self.n-1)/self.n) * self.Wdot * self.dt / self.fn.value(self.Wdot) 
+
+    self.assertAlmostEqual(damage, should)
 
 class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     CommonDamagedModel):

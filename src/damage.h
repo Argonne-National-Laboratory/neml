@@ -592,6 +592,70 @@ class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedMod
 
 };
 
+/// The isothermal form of my pet work-based damage model
+class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
+ public:
+  /// Parameters: elastic model, base model, CTE, solver tolerance,
+  /// solver maximum number of iterations, verbosity flag
+  NEMLWorkDamagedModel_sd(
+      std::shared_ptr<LinearElasticModel> elastic,
+      std::shared_ptr<Interpolate> Wcrit,
+      double n,
+      std::shared_ptr<NEMLModel_sd> base,
+      std::shared_ptr<Interpolate> alpha,
+      double tol, int miter,
+      bool verbose, bool truesdell);
+
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  /// damage rate = n * d**((n-1)/n) * W_dot / W_crit
+  virtual int damage(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt damage
+  virtual int ddamage_dd(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt strain
+  virtual int ddamage_de(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative of damage wrt stress
+  virtual int ddamage_ds(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+
+ protected:
+  double workrate(
+      const double * const strain_np1, const double * const strain_n,
+      const double * const stress_np1, const double * const stress_n,
+      double T_np1, double T_n, double t_np1, double t_n,
+      double d_np1, double d_n) const;
+                  
+ protected:
+  std::shared_ptr<Interpolate> Wcrit_;
+  double n_;
+};
+
+static Register<NEMLWorkDamagedModel_sd> regNEMLWorkDamagedModel_sd;
+
 /// Simple power law damage
 class NEML_EXPORT NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
  public:
