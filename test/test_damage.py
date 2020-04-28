@@ -56,6 +56,8 @@ class CommonScalarDamageModel(object):
     dfn = lambda d: self.model.damage(d, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.d_np1)
+
+    print(dd_model, dd_calcd)
     
     self.assertTrue(np.isclose(dd_model, dd_calcd))
 
@@ -162,6 +164,8 @@ class CommonDamagedModel(object):
       A_num = differentiate(lambda e: self.model.update_sd(e, e_n,
         self.T, self.T, t_np1, t_n, s_n, hist_n, u_n, p_n)[0], e_np1)
       
+      print(A_num)
+      print(A_np1)
       self.assertTrue(np.allclose(A_num, A_np1, rtol = 5.0e-2, atol = 1.0e-1))
 
       e_n = np.copy(e_np1)
@@ -230,11 +234,11 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
     self.ttarget = 10.0
 
-    self.ee = np.dot(self.elastic.S(self.T_np1), self.s_np1 - self.s_n)
+    self.ee = np.dot(self.elastic.S(self.T_np1), self.s_np1*(1.0-self.d_np1) - self.s_n*(1.0-self.d_n))
     self.de = self.e_np1 - self.e_n
     self.dp = self.de - self.ee
     self.dt = self.t_np1 - self.t_n
-    self.Wdot = np.dot(self.s_np1, self.dp) / self.dt
+    self.Wdot = np.dot(self.s_np1*(1.0-self.d_np1), self.dp) / self.dt
 
   def test_definition(self):
     damage = self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,

@@ -1482,11 +1482,17 @@ int NEMLWorkDamagedModel_sd::damage(double d_np1, double d_n,
 {
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           d_np1, d_n);
-  double val = Wcrit_->value(wrate);
   double dt = t_np1 - t_n;
 
-  *dd = d_n + n_ * pow(d_np1, (n_-1.0)/n_) * wrate * dt / val;
+  if (dt == 0.0) {
+    *dd = 0.0;
+    return 0;
+  }
 
+  double val = Wcrit_->value(wrate);
+
+  *dd = d_n + n_ * pow(d_np1, (n_-1.0)/n_) * wrate * dt / val;
+  
   return 0;
 }
 
@@ -1500,10 +1506,25 @@ int NEMLWorkDamagedModel_sd::ddamage_dd(double d_np1, double d_n,
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           d_np1, d_n);
   double val = Wcrit_->value(wrate);
+  double deriv = Wcrit_->derivative(wrate);
   double dt = t_np1 - t_n;
 
-  *dd = (n_-1.0) * pow(d_np1, -1.0/n_) * wrate * dt / val; 
+  if (d_np1 == 0.0) {
+    *dd = 0.0;
+    return 0;
+  }
 
+  double S[36];
+  elastic_->S(T_np1, S);
+  double e[6];
+  mat_vec(S, 6, s_np1, 6, e);
+  double f = dot_vec(s_np1, e, 6);
+  double x = -wrate / (1.0 - d_np1) + (1.0 - d_np1) * f / dt;
+
+  double other = n_*pow(d_np1, (n_-1.0)/n_) * dt / val * (1.0 - wrate / val *
+                                                          deriv) * x;
+  *dd = (n_-1.0)*pow(d_np1, -1.0/n_) * wrate * dt / val + other;
+  
   return 0;
 }
 
@@ -1516,10 +1537,12 @@ int NEMLWorkDamagedModel_sd::ddamage_de(double d_np1, double d_n,
 {
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           d_np1, d_n);
+
   double val = Wcrit_->value(wrate);
   double dval = Wcrit_->derivative(wrate);
 
-  double fact = n_ * pow(d_np1, (n_-1.0)/n_) / val * (1.0 - wrate / val * dval);
+  double fact = n_ * pow(d_np1, (n_-1.0)/n_) / val * (1.0 - wrate / val * dval)
+      * (1.0 - d_np1);
 
   for (size_t i = 0; i < 6; i++) {
     dd[i] = fact * s_np1[i];
@@ -1537,6 +1560,7 @@ int NEMLWorkDamagedModel_sd::ddamage_ds(double d_np1, double d_n,
 {
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           d_np1, d_n);
+
   double val = Wcrit_->value(wrate);
   double dval = Wcrit_->derivative(wrate);
 
@@ -1546,7 +1570,7 @@ int NEMLWorkDamagedModel_sd::ddamage_ds(double d_np1, double d_n,
   double ds[6];
   double de[6];
   for (int i=0; i<6; i++) {
-    ds[i] = s_np1[i] - s_n[i];
+    ds[i] = s_np1[i] * (1.0-d_np1) - s_n[i] * (1.0-d_n);
     de[i] = e_np1[i] - e_n[i];
   }
 
@@ -1556,10 +1580,11 @@ int NEMLWorkDamagedModel_sd::ddamage_ds(double d_np1, double d_n,
   double e[6];
   mat_vec(S, 6, s_np1, 6, e);
 
-  double fact = n_ * pow(d_np1, (n_-1.0)/n_) / val * (1.0 - wrate / val * dval);
+  double fact = n_ * pow(d_np1, (n_-1.0)/n_) / val * (1.0 - wrate / val *
+                                                      dval)*(1.0-d_np1);
 
   for (size_t i = 0; i < 6; i++) {
-    dd[i] = fact * (de[i] - dee[i] - e[i]);
+    dd[i] = fact * (de[i] - dee[i] - (1.0-d_np1)*e[i]);
   }
 
   return 0;
@@ -1571,13 +1596,18 @@ double NEMLWorkDamagedModel_sd::workrate(
     double T_np1, double T_n, double t_np1, double t_n,
     double d_np1, double d_n) const
 {
+  double dt = t_np1 - t_n;
+  if (dt == 0.0) {
+    return 0.0;
+  }
+
   double S[36];
   elastic_->S(T_np1, S);
-  
+
   double ds[6];
   double de[6];
   for (int i=0; i<6; i++) {
-    ds[i] = stress_np1[i] - stress_n[i];
+    ds[i] = stress_np1[i] *(1.0-d_np1) - stress_n[i]*(1.0-d_n);
     de[i] = strain_np1[i] - strain_n[i];
   }
 
@@ -1589,7 +1619,7 @@ double NEMLWorkDamagedModel_sd::workrate(
     dp[i] = de[i] - dee[i];
   }
 
-  return dot_vec(stress_np1, dp, 6) / (t_np1 - t_n);
+  return dot_vec(stress_np1, dp, 6) / dt * (1.0 - d_np1);
 }
 
 NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
