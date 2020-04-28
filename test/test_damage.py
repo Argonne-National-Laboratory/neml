@@ -23,8 +23,8 @@ class CommonStandardDamageModel(object):
     dS = self.s_np1 - self.s_n
     dee = np.dot(S, dS)
     de = self.e_np1 - self.e_n
-    
-    dp = np.sqrt(2.0/3.0 * (np.dot(de, de) + np.dot(dee, dee) - 
+
+    dp = np.sqrt(2.0/3.0 * (np.dot(de, de) + np.dot(dee, dee) -
       2.0 * np.dot(dee, de)))
     f = self.model.f(self.s_np1, self.d_np1, self.T_np1)
     d_calcd = self.d_n + f * dp
@@ -56,7 +56,7 @@ class CommonScalarDamageModel(object):
     dfn = lambda d: self.model.damage(d, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.d_np1)
-    
+
     self.assertTrue(np.isclose(dd_model, dd_calcd))
 
   def test_ddamage_dstrain(self):
@@ -74,7 +74,7 @@ class CommonScalarDamageModel(object):
     dfn = lambda s: self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         s, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.s_np1)[0]
-    
+
     self.assertTrue(np.allclose(dd_model, dd_calcd, rtol = 1.0e-3))
 
   def test_nparams(self):
@@ -85,7 +85,7 @@ class CommonScalarDamageModel(object):
         self.e_np1, self.e_n,
         self.T_np1, self.T_n, self.t_np1, self.t_n,
         self.s_n, self.hist_n, self.u_n, self.p_n)
-    
+
     me = np.array(list(self.s_n) + [self.d_n])
     them = self.model.init_x(trial_state)
 
@@ -108,7 +108,7 @@ class CommonScalarDamageModel(object):
         self.t_np1, self.t_n, self.s_n / (1-self.d_n), self.hist_n[1:],
         self.u_n, self.p_n)
     R_calc[:6] = s_trial - (1-w_trial) * s_p_np1
-    d_np1 = self.model.damage(w_trial, self.d_n, self.e_np1, self.e_n, 
+    d_np1 = self.model.damage(w_trial, self.d_n, self.e_np1, self.e_n,
         s_trial / (1 - w_trial), self.s_n / (1-self.d_n), self.T_np1,
         self.T_n, self.t_np1, self.t_n)
     R_calc[6] = w_trial - d_np1
@@ -122,9 +122,9 @@ class CommonScalarDamageModel(object):
         self.s_n, self.hist_n, self.u_n, self.p_n)
 
     R, J = self.model.RJ(self.x_trial, trial_state)
-    Jnum = differentiate(lambda x: self.model.RJ(x, trial_state)[0], 
+    Jnum = differentiate(lambda x: self.model.RJ(x, trial_state)[0],
         self.x_trial)
-    
+
     self.assertTrue(np.allclose(J, Jnum, rtol = 1.0e-3))
 
 class CommonDamagedModel(object):
@@ -137,7 +137,7 @@ class CommonDamagedModel(object):
     comp = list(damg) + list(base)
     fromm = self.model.init_store()
     self.assertTrue(np.allclose(fromm, comp))
-  
+
   def test_tangent_proportional_strain(self):
     t_n = 0.0
     e_n = np.zeros((6,))
@@ -149,7 +149,7 @@ class CommonDamagedModel(object):
     for m in np.linspace(0,1,self.nsteps+1)[1:]:
       t_np1 = m * self.ttarget
       e_np1 = m * self.etarget
-     
+
       trial_state = self.model.make_trial_state(
           e_np1, e_n,
           self.T, self.T, t_np1, t_n,
@@ -161,7 +161,7 @@ class CommonDamagedModel(object):
 
       A_num = differentiate(lambda e: self.model.update_sd(e, e_n,
         self.T, self.T, t_np1, t_n, s_n, hist_n, u_n, p_n)[0], e_np1)
-      
+
       self.assertTrue(np.allclose(A_num, A_np1, rtol = 5.0e-2, atol = 1.0e-1))
 
       e_n = np.copy(e_np1)
@@ -191,7 +191,7 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic,
         flow)
 
     self.xi = 0.478
@@ -199,7 +199,7 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.A = 10000000.0
 
     self.model = damage.ClassicalCreepDamageModel_sd(
-        self.elastic, 
+        self.elastic,
         self.A, self.xi, self.phi, self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
@@ -222,7 +222,76 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
 
     self.u_n = 0.0
     self.p_n = 0.0
-  
+
+    # This is a rather boring baseline history state to probe, but I can't
+    # think of a better way to get a "generic" history from a generic model
+    self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
+    self.x_trial = np.array([50,-25,150,-150,190,100.0] + [0.41])
+
+    self.nsteps = 10
+    self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
+    self.ttarget = 10.0
+
+class TestWorkRateFunctionDamage_sd(unittest.TestCase, CommonScalarDamageModel,
+    CommonDamagedModel):
+  def setUp(self):
+    self.E = 92000.0
+    self.nu = 0.3
+
+    self.s0 = 180.0
+    self.Kp = 1000.0
+    self.H = 1000.0
+
+    self.elastic = elasticity.IsotropicLinearElasticModel(self.E, "youngs",
+        self.nu, "poissons")
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.LinearIsotropicHardeningRule(self.s0, self.Kp)
+    kin = hardening.LinearKinematicHardeningRule(self.H)
+    hrule = hardening.CombinedHardeningRule(iso, kin)
+
+    flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
+
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic,
+        flow)
+
+    self.A   = 4.0
+    self.P   = 1e4
+    self.n   = 2.0
+    self.wfn = interpolate.WorkRateFunc(self.A, self.P, self.n)
+
+    self.Q = 1e3
+    self.m = 2.0
+    self.G = 1e-4
+    self.H = 1e4
+    self.xi = 1.0
+    self.phi = 1.0
+
+    self.model = damage.WorkRateFunctionDamage_sd(
+        self.elastic,
+        self.wfn, self.Q, self.m, self.G, self.H, self.xi, self.phi, self.bmodel)
+
+    self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
+    self.T = 100.0
+
+    self.s_np1 = self.stress
+    self.s_n = np.array([-25,150,250,-25,-100,25])
+
+    self.d_np1 = 0.5
+    self.d_n = 0.4
+
+    self.e_np1 = np.array([0.1,-0.01,0.15,-0.05,-0.1,0.15])
+    self.e_n = np.array([-0.05,0.025,-0.1,0.2,0.11,0.13])
+
+    self.T_np1 = self.T
+    self.T_n = 90.0
+
+    self.t_np1 = 1.0
+    self.t_n = 0.0
+
+    self.u_n = 0.0
+    self.p_n = 0.0
+
     # This is a rather boring baseline history state to probe, but I can't
     # think of a better way to get a "generic" history from a generic model
     self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
@@ -271,7 +340,7 @@ class TestHuddlestonEffectiveStress(unittest.TestCase, CommonEffectiveStress):
     I2 = 0.5*(np.trace(S)**2.0 - np.trace(np.dot(S,S)))
     Sd = S - np.trace(S) * np.eye(3) / 3.0
     I2p = 0.5*(np.trace(Sd)**2.0 - np.trace(np.dot(Sd,Sd)))
-    
+
     J2p = -I2p # Very odd thing here
 
     sb2 = np.sqrt(3.0*J2p)
@@ -279,10 +348,10 @@ class TestHuddlestonEffectiveStress(unittest.TestCase, CommonEffectiveStress):
 
     v2 = sb2 * np.exp(self.b*(I1/ss2-1.0))
     v3 = self.es.effective(self.stress)
-    
+
     self.assertTrue(np.isclose(sb,sb2))
     self.assertTrue(np.isclose(ss,ss2))
-    
+
     self.assertTrue(np.isclose(v1,v2))
     self.assertTrue(np.isclose(v1,v3))
 
@@ -318,7 +387,7 @@ class TestMaxSeveralEffectiveStress(unittest.TestCase, CommonEffectiveStress):
 
 class TestSumSeveralEffectiveStress(unittest.TestCase, CommonEffectiveStress):
   def setUp(self):
-    self.stresses = [damage.VonMisesEffectiveStress(), 
+    self.stresses = [damage.VonMisesEffectiveStress(),
         damage.MaxPrincipalEffectiveStress()]
     self.weights = [0.37, 1.0-0.37]
     self.es = damage.SumSeveralEffectiveStress(self.stresses, self.weights)
@@ -350,7 +419,7 @@ class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic,
         flow)
 
     self.xi = 0.478
@@ -358,7 +427,7 @@ class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
     self.A = 10000000.0
 
     self.model = damage.ModularCreepDamageModel_sd(
-        self.elastic, 
+        self.elastic,
         self.A, self.xi, self.phi,
         self.effective_model(),
         self.bmodel)
@@ -383,7 +452,7 @@ class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
 
     self.u_n = 0.0
     self.p_n = 0.0
-  
+
     # This is a rather boring baseline history state to probe, but I can't
     # think of a better way to get a "generic" history from a generic model
     self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
@@ -442,7 +511,7 @@ class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, CommonDamagedMode
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic,
         flow)
 
     self.fn = interpolate.PolynomialInterpolate([-6.653e-9,2.952e-4,-6.197e-1])
@@ -475,7 +544,7 @@ class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, CommonDamagedMode
 
     self.u_n = 0.0
     self.p_n = 0.0
-  
+
     # This is a rather boring baseline history state to probe, but I can't
     # think of a better way to get a "generic" history from a generic model
     self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
@@ -489,12 +558,12 @@ class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, CommonDamagedMode
     se = self.effective.effective(self.stress)
     tR = self.lmr.tR(se, self.T)
     exact = self.d_n + self.dt / tR
-    model = self.model.damage(self.d_np1, self.d_n, 
+    model = self.model.damage(self.d_np1, self.d_n,
         self.e_np1, self.e_n, self.s_np1, self.s_n,
         self.T_np1, self.T_n, self.t_np1, self.t_n)
     self.assertTrue(np.isclose(exact, model))
 
-class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel, 
+class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     CommonScalarDamageModel, CommonDamagedModel):
   def setUp(self):
     self.E = 92000.0
@@ -514,13 +583,13 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic,
         flow)
 
     self.A = 8.0e-6
     self.a = 2.2
 
-    self.model = damage.NEMLPowerLawDamagedModel_sd(self.elastic, self.A, self.a, 
+    self.model = damage.NEMLPowerLawDamagedModel_sd(self.elastic, self.A, self.a,
         self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
@@ -544,7 +613,7 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
 
     self.u_n = 0.0
     self.p_n = 0.0
-  
+
     # This is a rather boring baseline history state to probe, but I can't
     # think of a better way to get a "generic" history from a generic model
     self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
@@ -559,7 +628,7 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     f_calcd = self.A * self.effective(self.stress) ** self.a
     self.assertTrue(np.isclose(f_model, f_calcd))
 
-class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel, 
+class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     CommonScalarDamageModel, CommonDamagedModel):
   def setUp(self):
     self.E = 92000.0
@@ -579,7 +648,7 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic,
         flow)
 
     self.W0 = 10.0
@@ -587,7 +656,7 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     self.a = 2.0
 
     self.model = damage.NEMLExponentialWorkDamagedModel_sd(
-        self.elastic, self.W0, self.k0, 
+        self.elastic, self.W0, self.k0,
         self.a, self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
@@ -611,7 +680,7 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
 
     self.u_n = 0.0
     self.p_n = 0.0
-  
+
     # This is a rather boring baseline history state to probe, but I can't
     # think of a better way to get a "generic" history from a generic model
     self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))
@@ -648,7 +717,7 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
 
     flow = ri_flow.RateIndependentAssociativeFlow(surface, hrule)
 
-    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
+    self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic,
         flow)
 
     self.W0 = 10.0
@@ -656,7 +725,7 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
     self.a0 = 2.0
 
     self.model1 = damage.NEMLExponentialWorkDamagedModel_sd(
-        self.elastic, self.W0, self.k0, 
+        self.elastic, self.W0, self.k0,
         self.a0, self.bmodel)
 
     self.W02 = 10.0
@@ -664,10 +733,10 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
     self.a02 = 1.5
 
     self.model2 = damage.NEMLExponentialWorkDamagedModel_sd(
-        self.elastic, self.W02, self.k02, 
+        self.elastic, self.W02, self.k02,
         self.a02, self.bmodel)
 
-    self.model = damage.CombinedDamageModel_sd(self.elastic, 
+    self.model = damage.CombinedDamageModel_sd(self.elastic,
         [self.model1, self.model2], self.bmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
@@ -691,7 +760,7 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
 
     self.u_n = 0.0
     self.p_n = 0.0
-  
+
     # This is a rather boring baseline history state to probe, but I can't
     # think of a better way to get a "generic" history from a generic model
     self.hist_n = np.array([self.d_n] + list(self.bmodel.init_store()))

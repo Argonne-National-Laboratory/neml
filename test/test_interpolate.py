@@ -36,11 +36,11 @@ class TestPiecewiseLinearInterpolate(unittest.TestCase, BaseInterpolate):
 
     self.x = 17.0
 
-    self.valid = interpolate.PiecewiseLinearInterpolate(self.validx, 
+    self.valid = interpolate.PiecewiseLinearInterpolate(self.validx,
         self.points)
-    self.invalid1 = interpolate.PiecewiseLinearInterpolate(self.invalidx_1, 
+    self.invalid1 = interpolate.PiecewiseLinearInterpolate(self.invalidx_1,
         self.points)
-    self.invalid2 = interpolate.PiecewiseLinearInterpolate(self.invalidx_2, 
+    self.invalid2 = interpolate.PiecewiseLinearInterpolate(self.invalidx_2,
         self.points)
     self.interpolate = self.valid
 
@@ -85,13 +85,13 @@ class TestPiecewiseLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
 
     self.x = 17.0
 
-    self.valid = interpolate.PiecewiseLogLinearInterpolate(self.validx, 
+    self.valid = interpolate.PiecewiseLogLinearInterpolate(self.validx,
         self.points)
-    self.invalid1 = interpolate.PiecewiseLogLinearInterpolate(self.invalidx_1, 
+    self.invalid1 = interpolate.PiecewiseLogLinearInterpolate(self.invalidx_1,
         self.points)
-    self.invalid2 = interpolate.PiecewiseLogLinearInterpolate(self.invalidx_2, 
+    self.invalid2 = interpolate.PiecewiseLogLinearInterpolate(self.invalidx_2,
         self.points)
-    self.invalid3 = interpolate.PiecewiseLogLinearInterpolate(self.validx, 
+    self.invalid3 = interpolate.PiecewiseLogLinearInterpolate(self.validx,
         self.invalidpoints)
     self.interpolate = self.valid
 
@@ -148,3 +148,15 @@ class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):
     should = self.y0 - self.D / (np.exp(self.x0 / self.x) - 1.0)
     act = self.interpolate(self.x)
     self.assertTrue(np.isclose(should, act))
+
+class TestWorkRateFunc(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.A = 1.0
+    self.B = 5.0
+    self.N = 2.0
+    self.interpolate = interpolate.WorkRateFunc(self.A, self.B, self.N)
+    self.x = 10.0
+
+  def test_interpolate(self):
+    self.assertTrue(np.isclose(np.power(self.A * self.x + self.B, self.N),
+      self.interpolate(self.x)))
