@@ -48,7 +48,7 @@ std::unique_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & par
 {
   return neml::make_unique<PolynomialInterpolate>(
       params.get_parameter<std::vector<double>>("coefs")
-      ); 
+      );
 }
 
 double PolynomialInterpolate::value(double x) const
@@ -69,7 +69,7 @@ PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(
 {
   // Check if sorted
   if (not std::is_sorted(points.begin(), points.end())) {
-    valid_ = false; 
+    valid_ = false;
   }
 
   if (points.size() != values.size()) {
@@ -97,7 +97,7 @@ std::unique_ptr<NEMLObject> PiecewiseLinearInterpolate::initialize(ParameterSet 
   return neml::make_unique<PiecewiseLinearInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_parameter<std::vector<double>>("values")
-      ); 
+      );
 }
 
 double PiecewiseLinearInterpolate::value(double x) const
@@ -153,7 +153,7 @@ GenericPiecewiseInterpolate::GenericPiecewiseInterpolate(
 {
   // Check if sorted
   if (not std::is_sorted(points.begin(), points.end())) {
-    valid_ = false; 
+    valid_ = false;
   }
 
   if (points.size() != (functions.size()+1)) {
@@ -181,7 +181,7 @@ std::unique_ptr<NEMLObject> GenericPiecewiseInterpolate::initialize(ParameterSet
   return neml::make_unique<GenericPiecewiseInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_object_parameter_vector<Interpolate>("functions")
-      ); 
+      );
 }
 
 double GenericPiecewiseInterpolate::value(double x) const
@@ -229,7 +229,7 @@ PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
 {
   // Check if sorted
   if (not std::is_sorted(points.begin(), points.end())) {
-    valid_ = false; 
+    valid_ = false;
   }
 
   if (points.size() != values.size()) {
@@ -262,7 +262,7 @@ std::unique_ptr<NEMLObject> PiecewiseLogLinearInterpolate::initialize(ParameterS
   return neml::make_unique<PiecewiseLogLinearInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_parameter<std::vector<double>>("values")
-      ); 
+      );
 }
 
 double PiecewiseLogLinearInterpolate::value(double x) const
@@ -335,7 +335,7 @@ std::unique_ptr<NEMLObject> ConstantInterpolate::initialize(ParameterSet & param
 {
   return neml::make_unique<ConstantInterpolate>(
       params.get_parameter<double>("v")
-      ); 
+      );
 }
 
 double ConstantInterpolate::value(double x) const
@@ -374,7 +374,7 @@ std::unique_ptr<NEMLObject> ExpInterpolate::initialize(ParameterSet & params)
   return neml::make_unique<ExpInterpolate>(
       params.get_parameter<double>("A"),
       params.get_parameter<double>("B")
-      ); 
+      );
 }
 
 double ExpInterpolate::value(double x) const
@@ -390,7 +390,7 @@ double ExpInterpolate::derivative(double x) const
 MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :
     Interpolate(), V0_(V0), D_(D), T0_(T0)
 {
-  
+
 }
 
 std::string MTSShearInterpolate::type()
@@ -415,7 +415,7 @@ std::unique_ptr<NEMLObject> MTSShearInterpolate::initialize(ParameterSet & param
       params.get_parameter<double>("V0"),
       params.get_parameter<double>("D"),
       params.get_parameter<double>("T0")
-      ); 
+      );
 }
 
 double MTSShearInterpolate::value(double x) const
@@ -428,7 +428,48 @@ double MTSShearInterpolate::derivative(double x) const
   return -D_ * T0_ / (4.0 * pow(x * sinh(T0_ / (2 * x)),2));
 }
 
-std::vector<std::shared_ptr<Interpolate>> 
+WorkRateFunc::WorkRateFunc(double A, double B, double N) :
+    Interpolate(), A_(A), B_(B), N_(N)
+{
+
+}
+
+std::string WorkRateFunc::type()
+{
+  return "WorkRateFunc";
+}
+
+ParameterSet WorkRateFunc::parameters()
+{
+  ParameterSet pset(WorkRateFunc::type());
+
+  pset.add_parameter<double>("A");
+  pset.add_parameter<double>("B");
+  pset.add_parameter<double>("N");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> WorkRateFunc::initialize(ParameterSet & params)
+{
+  return neml::make_unique<WorkRateFunc>(
+      params.get_parameter<double>("A"),
+      params.get_parameter<double>("B"),
+      params.get_parameter<double>("N")
+      );
+}
+
+double WorkRateFunc::value(double x) const
+{
+  return pow(A_*x + B_, N_);
+}
+
+double WorkRateFunc::derivative(double x) const
+{
+  return N_ * A_ * pow(A_*x + B_, N_ - 1);
+}
+
+std::vector<std::shared_ptr<Interpolate>>
     make_vector(const std::vector<double> & iv)
 {
   std::vector<std::shared_ptr<Interpolate>> vt;
