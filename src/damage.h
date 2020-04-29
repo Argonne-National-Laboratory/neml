@@ -105,6 +105,9 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
                        double u_n, double p_n,
                        SDTrialState & tss);
 
+  /// Initial value of damage, overridable for models with singularities
+  virtual double d_guess() const {return 0;};
+
   /// The scalar damage model
   virtual int damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
@@ -604,7 +607,8 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
       double tol, int miter,
-      bool verbose, bool truesdell);
+      bool verbose, bool truesdell,
+      double eps);
 
   /// String type for the object system
   static std::string type();
@@ -613,7 +617,8 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual int init_damage(double * const damage) const;
+/// Initial value of damage, overridable for models with singularities
+  virtual double d_guess() const {return eps_;};
 
   /// damage rate = n * d**((n-1)/n) * W_dot / W_crit
   virtual int damage(double d_np1, double d_n,
@@ -654,6 +659,7 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
  protected:
   std::shared_ptr<Interpolate> Wcrit_;
   double n_;
+  double eps_;
 };
 
 static Register<NEMLWorkDamagedModel_sd> regNEMLWorkDamagedModel_sd;
