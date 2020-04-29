@@ -1731,7 +1731,7 @@ int NEMLWorkRateFunctionDamage_sd::damage(
   double se = this->se(s_np1);
   double dt = t_np1 - t_n;
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
-  if (isnan(deps)){
+  if (std::(deps)){
     deps = 0.0;
   }
   double work = deps * se / (1 - d_np1);
@@ -1763,7 +1763,7 @@ int NEMLWorkRateFunctionDamage_sd::ddamage_dd(
   double se = this->se(s_np1);
   double dt = t_np1 - t_n;
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
-  if (isnan(deps)){
+  if (std::isnan(deps)){
     deps = 0.0;
   }
 
@@ -1801,7 +1801,7 @@ int NEMLWorkRateFunctionDamage_sd::ddamage_de(
   double dt = t_np1 - t_n;
   double se = this->se(s_np1);
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
-  if (isnan(deps)){
+  if (std::isnan(deps)){
     deps = 0.0;
   }
 
@@ -1871,7 +1871,7 @@ int NEMLWorkRateFunctionDamage_sd::ddamage_ds(
 
 
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
-  if (isnan(deps)){
+  if (std::isnan(deps)){
     deps = 0.0;
   }
 
