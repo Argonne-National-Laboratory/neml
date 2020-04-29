@@ -702,7 +702,7 @@ class NEMLWorkRateFunctionDamage_sd: public NEMLScalarDamagedModel_sd {
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  /// The damage function d_np1 = d_n + [(\dot{W}/Q)**m / f(\dot{W})  + G*pow(\sigma / H,xi)/pow(1 - dmg,phi)] * dt
+  /// damage d_np1 = d_n + dt*[pow(Wdot/Q,m)/f(Wdot) + G*pow(se/H,xi)/pow(1-d_np1,phi)]
   virtual int damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
