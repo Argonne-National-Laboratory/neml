@@ -122,21 +122,21 @@ class BarModel(nx.MultiGraph):
     
     for n in self.nodes():
       # This gets summed below
-      self.node[n]['forces'] = np.append(self.node[n]['forces'], 0.0)
+      self.nodes[n]['forces'] = np.append(self.nodes[n]['forces'], 0.0)
       if n in free_nodes:
-        self.node[n]['displacements'] = np.append(
-            self.node[n]['displacements'], d[free_nodes.index(n)])
+        self.nodes[n]['displacements'] = np.append(
+            self.nodes[n]['displacements'], d[free_nodes.index(n)])
       else:
-        self.node[n]['displacements'] = np.append(
-            self.node[n]['displacements'], 
-            self.node[n]['displacement bc'](t_next))
+        self.nodes[n]['displacements'] = np.append(
+            self.nodes[n]['displacements'], 
+            self.nodes[n]['displacement bc'](t_next))
     
     e_sum = 0.0
     p_sum = 0.0
     for i,j,data in self.edges(data=True):
       me = data['object']
       for ni,n in enumerate((i,j)):
-        self.node[n]['forces'][-1] += self.sign[ni] * me.stress_next * me.A
+        self.nodes[n]['forces'][-1] += self.sign[ni] * me.stress_next * me.A
       e_sum += me.energy_next * me.A * me.l
       p_sum += me.dissipation_next * me.A * me.l
       me.advance_step()
@@ -153,18 +153,18 @@ class BarModel(nx.MultiGraph):
         free_nodes  the list of free nodes (this sets dof numbering)
     """
     if (not extrapolate) or (len(self.time) < 2):
-      return np.array([self.node[n]['displacements'][-1] for n in free_nodes])
+      return np.array([self.nodes[n]['displacements'][-1] for n in free_nodes])
     else:
-      xprev = np.array([self.node[n]['displacements'][-1] for n in free_nodes])
-      xprevprev = np.array([self.node[n]['displacements'][-2] for n in free_nodes])
+      xprev = np.array([self.nodes[n]['displacements'][-1] for n in free_nodes])
+      xprevprev = np.array([self.nodes[n]['displacements'][-2] for n in free_nodes])
       return xprev + value * (xprev - xprevprev)
   
   def free_fixed_nodes(self):
     """
       Return lists of the free and fixed nodes
     """
-    free = [n for n in self.nodes() if 'displacement bc' not in self.node[n]]
-    fixed = [n for n in self.nodes() if 'displacement bc' in self.node[n]]
+    free = [n for n in self.nodes() if 'displacement bc' not in self.nodes[n]]
+    fixed = [n for n in self.nodes() if 'displacement bc' in self.nodes[n]]
 
     return free, fixed
 
@@ -184,8 +184,8 @@ class BarModel(nx.MultiGraph):
 
     # External forces
     for i,n in enumerate(free_nodes):
-      if 'force bc' in self.node[n]:
-        R[i] -= self.node[n]['force bc'](t_next)
+      if 'force bc' in self.nodes[n]:
+        R[i] -= self.nodes[n]['force bc'](t_next)
       
     for i,j,data in self.edges(data=True):
       # Delta d
@@ -194,7 +194,7 @@ class BarModel(nx.MultiGraph):
         if node in free_nodes:
           dd += self.sign[index]*d[free_nodes.index(node)]
         else:
-          dd += self.sign[index]*self.node[node]['displacement bc'](t_next)
+          dd += self.sign[index]*self.nodes[node]['displacement bc'](t_next)
       
       # Force update
       f, A = data['object'].update_force(dd, t_next, self.time[-1])
@@ -220,12 +220,12 @@ class BarModel(nx.MultiGraph):
         node        node to add to
         bfn         force as a function of time
     """
-    if 'force bc' in self.node[node] or 'displacement bc' in self.node[node]:
+    if 'force bc' in self.nodes[node] or 'displacement bc' in self.nodes[node]:
       warnings.warn("Overriding previous boundary condition")
-    if 'displacement bc' in self.node[node]:
-      del self.node[node]['displacement bc']
+    if 'displacement bc' in self.nodes[node]:
+      del self.nodes[node]['displacement bc']
 
-    self.node[node]['force bc'] = bfn
+    self.nodes[node]['force bc'] = bfn
 
   def add_displacement_bc(self, node, bfn):
     """
@@ -233,12 +233,12 @@ class BarModel(nx.MultiGraph):
         node        node to add to
         bfn         displacement as a function of time
     """
-    if 'force bc' in self.node[node] or 'displacement bc' in self.node[node]:
+    if 'force bc' in self.nodes[node] or 'displacement bc' in self.nodes[node]:
       warnings.warn("Overriding previous boundary condition")
-    if 'force bc' in self.node[node]:
-      del self.node[node]['force bc']
+    if 'force bc' in self.nodes[node]:
+      del self.nodes[node]['force bc']
 
-    self.node[node]['displacement bc'] = bfn
+    self.nodes[node]['displacement bc'] = bfn
 
   def validate(self):
     """
@@ -246,10 +246,10 @@ class BarModel(nx.MultiGraph):
       run.
     """
     for node in self.nodes():
-      if 'displacements' not in self.node[node]:
-        self.node[node]['displacements'] = np.array([0.0])
-      if 'forces' not in self.node[node]:
-        self.node[node]['forces'] = np.array([0.0])
+      if 'displacements' not in self.nodes[node]:
+        self.nodes[node]['displacements'] = np.array([0.0])
+      if 'forces' not in self.nodes[node]:
+        self.nodes[node]['forces'] = np.array([0.0])
     self.validated = True
 
   def gather_element(self, quantity):

@@ -55,7 +55,7 @@ if __name__ == "__main__":
   theat = 5.0 * 3600.0
   nheat = 50
   thold = 10000.0 * 3600.0
-  nhold = 5
+  nhold = 25
   tcool = 5.0 * 3600.0
   ncool = 50
 

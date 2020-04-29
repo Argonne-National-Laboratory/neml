@@ -223,8 +223,8 @@ int BlackburnMinimumCreep::dg_dT(double seq, double eeq, double t, double T, dou
 
 // Implementation of the Swindeman minimum creep rate equation
 SwindemanMinimumCreep::SwindemanMinimumCreep(double C, double n, double V,
-                                             double Q) :
-      C_(C), n_(n), V_(V), Q_(Q)
+                                             double Q, bool celsius) :
+      C_(C), n_(n), V_(V), Q_(Q), shift_(celsius ? 273.15 : 0.0)
 {
 
 }
@@ -243,6 +243,8 @@ ParameterSet SwindemanMinimumCreep::parameters()
   pset.add_parameter<double>("V");
   pset.add_parameter<double>("Q");
 
+  pset.add_optional_parameter<bool>("celsius", false);
+
   return pset;
 }
 
@@ -252,14 +254,15 @@ std::unique_ptr<NEMLObject> SwindemanMinimumCreep::initialize(ParameterSet & par
       params.get_parameter<double>("C"),
       params.get_parameter<double>("n"),
       params.get_parameter<double>("V"),
-      params.get_parameter<double>("Q")
+      params.get_parameter<double>("Q"),
+      params.get_parameter<bool>("celsius")
       ); 
 }
 
 
 int SwindemanMinimumCreep::g(double seq, double eeq, double t, double T, double & g) const
 {
-  g = C_ * pow(seq, n_) * exp(V_ * seq) * exp(-Q_/T);
+  g = C_ * pow(seq, n_) * exp(V_ * seq) * exp(-Q_/(T+shift_));
 
   return 0;
 }
@@ -267,7 +270,7 @@ int SwindemanMinimumCreep::g(double seq, double eeq, double t, double T, double 
 int SwindemanMinimumCreep::dg_ds(double seq, double eeq, double t, double T, double & dg) const
 {
 
-  dg = C_ * exp(-Q_/T) * (n_ + seq * V_) * exp(seq * V_) * pow(seq, n_ - 1.0);
+  dg = C_ * exp(-Q_/(T+shift_)) * (n_ + seq * V_) * exp(seq * V_) * pow(seq, n_ - 1.0);
 
   return 0;
 }
@@ -280,7 +283,8 @@ int SwindemanMinimumCreep::dg_de(double seq, double eeq, double t, double T, dou
 
 int SwindemanMinimumCreep::dg_dT(double seq, double eeq, double t, double T, double & dg) const
 {
-  dg = C_ * pow(seq, n_) * exp(V_ * seq) * exp(-Q_/T) * Q_ / (T * T); 
+  dg = C_ * pow(seq, n_) * exp(V_ * seq) * exp(-Q_/(T+shift_)) * Q_ /
+      ((T+shift_) * (T+shift_)); 
   return 0;
 }
 

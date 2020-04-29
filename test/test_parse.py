@@ -108,7 +108,7 @@ class TestStringParser(CompareMats, unittest.TestCase):
 
     self.T = 300.0
     self.tmax = 10.0
-    self.nsteps = 100.0
+    self.nsteps = 100
     self.emax = np.array([0.1,0,0,0,0,0])
 
 class TestJ2Iso(CompareMats, unittest.TestCase):
