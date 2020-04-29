@@ -678,7 +678,7 @@ static Register<NEMLExponentialWorkDamagedModel_sd> regNEMLExponentialWorkDamage
 
 class NEMLWorkRateFunctionDamage_sd: public NEMLScalarDamagedModel_sd {
  public:
-  /// Parameters are the elastic model, the parameters A
+  /// Parameters are the elastic model, the workfunction, parameters,
   /// the base model, the CTE, the solver tolerance, maximum iterations,
   /// and the verbosity flag.
   NEMLWorkRateFunctionDamage_sd(
