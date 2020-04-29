@@ -1,5 +1,5 @@
 Workrate dependent damage model
-=============================
+===============================
 
 Overview
 --------
@@ -9,7 +9,7 @@ damage rate is a function of inelastic work rate.
 The object also has a second classical damage term that can account for hold
 time effects during cyclic loading.
 This damage law, thus, captures the creep-fatigue interaction.
-The damage function is
+The damage rate is
 
 .. math::
 
@@ -19,7 +19,7 @@ The damage function is
 
    f(\dot{W})   = \left(P \dot{W} + A \right)^n
 
-   \dot{W}      = \frac{\sigma_{eff} \varepsilon}_{eff}^{in}}{1 - \omega}.
+   \dot{W}      = \frac{\sigma_{eff} \dot{\varepsilon_{eff}^{in}}}{1 - \omega}.
 
 The functional dependence of damage on work rate :math:`f(\dot{W})` is selected
 following the ductility exhaustion methodology, and obtaining a critical work
@@ -52,6 +52,6 @@ Parameters
 Class description
 -----------------
 
-.. doxygenclass:: neml::NEMLWorkRateFunctionDamage_sd
+.. doxygenclass:: neml::WorkRateFunctionDamage_sd
    :members:
    :undoc-members:
