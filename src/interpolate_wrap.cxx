@@ -58,6 +58,15 @@ PYBIND11_MODULE(interpolate, m) {
         }))
       ;
 
+  py::class_<PiecewiseSemiLogLinearInterpolate, Interpolate,
+      std::shared_ptr<PiecewiseSemiLogLinearInterpolate>>(m, "PiecewiseSemiLogLinearInterpolate")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PiecewiseSemiLogLinearInterpolate>(args, kwargs,
+                                                                  {"points", "values"});
+        }))
+      ;
+
   py::class_<ConstantInterpolate, Interpolate, std::shared_ptr<ConstantInterpolate>>(m, "ConstantInterpolate")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {

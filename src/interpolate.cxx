@@ -311,6 +311,96 @@ double PiecewiseLogLinearInterpolate::derivative(double x) const
   }
 }
 
+PiecewiseSemiLogLinearInterpolate::PiecewiseSemiLogLinearInterpolate(
+    const std::vector<double> points,
+    const std::vector<double> values) :
+      Interpolate(), points_(points), values_(values)
+{
+  // Check if sorted
+  if (not std::is_sorted(points.begin(), points.end())) {
+    valid_ = false; 
+  }
+
+  if (points.size() != values.size()) {
+    valid_ = false;
+  }
+
+  for (auto pt : points) {
+    if (pt < 0.0) {
+      valid_ = false;
+    }
+  }
+}
+
+std::string PiecewiseSemiLogLinearInterpolate::type()
+{
+  return "PiecewiseSemiLogLinearInterpolate";
+}
+
+ParameterSet PiecewiseSemiLogLinearInterpolate::parameters()
+{
+  ParameterSet pset(PiecewiseSemiLogLinearInterpolate::type());
+
+  pset.add_parameter<std::vector<double>>("points");
+  pset.add_parameter<std::vector<double>>("values");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PiecewiseSemiLogLinearInterpolate::initialize(ParameterSet & params)
+{
+  return neml::make_unique<PiecewiseSemiLogLinearInterpolate>(
+      params.get_parameter<std::vector<double>>("points"),
+      params.get_parameter<std::vector<double>>("values")
+      ); 
+}
+
+double PiecewiseSemiLogLinearInterpolate::value(double x) const
+{
+  if (x <= points_.front()) {
+    return values_.front();
+  }
+  else if (x >= points_.back()) {
+    return values_.back();
+  }
+  else {
+    auto it = points_.begin();
+    for (; it != points_.end(); ++it) {
+      if (x <= *it) break;
+    }
+    size_t ind = std::distance(points_.begin(), it);
+    double x1 = points_[ind-1];
+    double x2 = points_[ind];
+    double y1 = values_[ind-1];
+    double y2 = values_[ind];
+
+    return (y2-y1)/(log10(x2)-log10(x1)) * (log10(x) - log10(x1)) + y1;
+  }
+}
+
+double PiecewiseSemiLogLinearInterpolate::derivative(double x) const
+{
+  if (x <= points_.front()) {
+    return 0.0;
+  }
+  else if (x >= points_.back()) {
+    return 0.0;
+  }
+  else {
+    auto it = points_.begin();
+    for (; it != points_.end(); ++it) {
+      if (x <= *it) break;
+    }
+    size_t ind = std::distance(points_.begin(), it);
+    double x1 = points_[ind-1];
+    double x2 = points_[ind];
+    double y1 = values_[ind-1];
+    double y2 = values_[ind];
+
+    return (y2-y1)/(log10(x2)-log10(x1)) / (x * log(10));
+  }
+}
+
 ConstantInterpolate::ConstantInterpolate(double v) :
     Interpolate(), v_(v)
 {

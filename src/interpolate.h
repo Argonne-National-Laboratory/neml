@@ -8,6 +8,8 @@
 #include <vector>
 #include <memory>
 
+#include <iostream>
+
 namespace neml {
 
 /// Base class for interpolation functions
@@ -123,6 +125,31 @@ class NEML_EXPORT PiecewiseLogLinearInterpolate: public Interpolate {
 };
 
 static Register<PiecewiseLogLinearInterpolate> regPiecewiseLogLinearInterpolate;
+
+/// Piecewise semiloglinear interpolation
+class NEML_EXPORT PiecewiseSemiLogLinearInterpolate: public Interpolate {
+ public:
+  /// Similar to piecewise linear interpolation except the interpolation is done
+  /// in log space
+  PiecewiseSemiLogLinearInterpolate(const std::vector<double> points,
+                             const std::vector<double> values);
+
+  /// Type for the object system
+  static std::string type();
+  /// Create parameters for the object system
+  static ParameterSet parameters();
+  /// Create object from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual double value(double x) const;
+  virtual double derivative(double x) const;
+
+ private:
+  const std::vector<double> points_;
+  std::vector<double> values_;
+};
+
+static Register<PiecewiseSemiLogLinearInterpolate> regPiecewiseSemiLogLinearInterpolate;
 
 /// A constant value
 class NEML_EXPORT ConstantInterpolate : public Interpolate {
