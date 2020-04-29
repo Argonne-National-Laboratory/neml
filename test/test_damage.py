@@ -232,7 +232,7 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
     self.ttarget = 10.0
 
-class TestWorkRateFunctionDamage_sd(unittest.TestCase, CommonScalarDamageModel,
+class TestNEMLWorkRateFunctionDamage_sd(unittest.TestCase, CommonScalarDamageModel,
     CommonDamagedModel):
   def setUp(self):
     self.E = 92000.0
@@ -267,7 +267,7 @@ class TestWorkRateFunctionDamage_sd(unittest.TestCase, CommonScalarDamageModel,
     self.xi = 1.0
     self.phi = 1.0
 
-    self.model = damage.WorkRateFunctionDamage_sd(
+    self.model = damage.NEMLWorkRateFunctionDamage_sd(
         self.elastic,
         self.wfn, self.Q, self.m, self.G, self.H, self.xi, self.phi, self.bmodel)
 

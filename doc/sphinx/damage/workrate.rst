@@ -52,6 +52,6 @@ Parameters
 Class description
 -----------------
 
-.. doxygenclass:: neml::WorkRateFunctionDamage_sd
+.. doxygenclass:: neml::NEMLWorkRateFunctionDamage_sd
    :members:
    :undoc-members:

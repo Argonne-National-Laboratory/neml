@@ -40,7 +40,7 @@ def workrate_ex():
   H = 1.0
   xi = 1.0
   phi = 1.0
-  model = damage.WorkRateFunctionDamage_sd(elastic, workrate, Q, m, G, H,
+  model = damage.NEMLWorkRateFunctionDamage_sd(elastic, workrate, Q, m, G, H,
                                               xi, phi, bmodel)
 
   res = drivers.uniaxial_test(model, 1.0e-3, emax = 0.03)

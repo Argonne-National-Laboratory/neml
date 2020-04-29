@@ -1644,7 +1644,7 @@ double NEMLExponentialWorkDamagedModel_sd::se(const double * const s) const
                                               pow(s[5], 2.0))) / 2.0);
 }
 
-WorkRateFunctionDamage_sd::WorkRateFunctionDamage_sd(
+NEMLWorkRateFunctionDamage_sd::NEMLWorkRateFunctionDamage_sd(
     std::shared_ptr<LinearElasticModel> elastic,
     std::shared_ptr<Interpolate> workrate,
     std::shared_ptr<Interpolate> Q,
@@ -1664,14 +1664,14 @@ WorkRateFunctionDamage_sd::WorkRateFunctionDamage_sd(
 
 }
 
-std::string WorkRateFunctionDamage_sd::type()
+std::string NEMLWorkRateFunctionDamage_sd::type()
 {
-  return "WorkRateFunctionDamage_sd";
+  return "NEMLWorkRateFunctionDamage_sd";
 }
 
-ParameterSet WorkRateFunctionDamage_sd::parameters()
+ParameterSet NEMLWorkRateFunctionDamage_sd::parameters()
 {
-  ParameterSet pset(WorkRateFunctionDamage_sd::type());
+  ParameterSet pset(NEMLWorkRateFunctionDamage_sd::type());
 
   pset.add_parameter<NEMLObject>("elastic");
   pset.add_parameter<NEMLObject>("workrate");
@@ -1693,9 +1693,9 @@ ParameterSet WorkRateFunctionDamage_sd::parameters()
   return pset;
 }
 
-std::unique_ptr<NEMLObject> WorkRateFunctionDamage_sd::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> NEMLWorkRateFunctionDamage_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<WorkRateFunctionDamage_sd>(
+  return neml::make_unique<NEMLWorkRateFunctionDamage_sd>(
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter<Interpolate>("workrate"),
       params.get_object_parameter<Interpolate>("Q"),
@@ -1713,7 +1713,7 @@ std::unique_ptr<NEMLObject> WorkRateFunctionDamage_sd::initialize(ParameterSet &
       );
 }
 
-int WorkRateFunctionDamage_sd::damage(
+int NEMLWorkRateFunctionDamage_sd::damage(
     double d_np1, double d_n,
     const double * const e_np1, const double * const e_n,
     const double * const s_np1, const double * const s_n,
@@ -1737,7 +1737,6 @@ int WorkRateFunctionDamage_sd::damage(
   double work = deps * se / (1 - d_np1);
   double work_rate = work / dt;
 
-// fval = (dot{w}/Q)**m / workRateFunction  + G*pow(\sigma / H,xi)/pow(1 - dmg,phi)
   double denominator = workrate_->value(work_rate);
   double numerator = pow(work_rate/Q,m);
   double fval = numerator / denominator;
@@ -1746,7 +1745,7 @@ int WorkRateFunctionDamage_sd::damage(
   return 0;
 }
 
-int WorkRateFunctionDamage_sd::ddamage_dd(
+int NEMLWorkRateFunctionDamage_sd::ddamage_dd(
     double d_np1, double d_n,
     const double * const e_np1, const double * const e_n,
     const double * const s_np1, const double * const s_n,
@@ -1786,7 +1785,7 @@ int WorkRateFunctionDamage_sd::ddamage_dd(
   return 0;
 }
 
-int WorkRateFunctionDamage_sd::ddamage_de(
+int NEMLWorkRateFunctionDamage_sd::ddamage_de(
     double d_np1, double d_n,
     const double * const e_np1, const double * const e_n,
     const double * const s_np1, const double * const s_n,
@@ -1846,7 +1845,7 @@ int WorkRateFunctionDamage_sd::ddamage_de(
   return 0;
 }
 
-int WorkRateFunctionDamage_sd::ddamage_ds(
+int NEMLWorkRateFunctionDamage_sd::ddamage_ds(
     double d_np1, double d_n,
     const double * const e_np1, const double * const e_n,
     const double * const s_np1, const double * const s_n,
@@ -1931,7 +1930,7 @@ int WorkRateFunctionDamage_sd::ddamage_ds(
   return 0;
 }
 
-double WorkRateFunctionDamage_sd::dep(
+double NEMLWorkRateFunctionDamage_sd::dep(
     const double * const s_np1, const double * const s_n,
     const double * const e_np1, const double * const e_n,
     double T_np1) const
@@ -1960,7 +1959,7 @@ double WorkRateFunctionDamage_sd::dep(
   }
 }
 
-double WorkRateFunctionDamage_sd::se(const double * const s) const
+double NEMLWorkRateFunctionDamage_sd::se(const double * const s) const
 {
   return sqrt((pow(s[0]-s[1], 2.0) + pow(s[1] - s[2], 2.0) +
                pow(s[2] - s[0], 2.0) + 3.0 * (pow(s[3], 2.0) + pow(s[4], 2.0) +

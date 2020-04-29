@@ -246,10 +246,10 @@ PYBIND11_MODULE(damage, m) {
               args, kwargs, {"elastic", "W0", "k0", "af", "base"});
         }))
       ;
-      py::class_<WorkRateFunctionDamage_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<WorkRateFunctionDamage_sd>>(m, "WorkRateFunctionDamage_sd")
+      py::class_<NEMLWorkRateFunctionDamage_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLWorkRateFunctionDamage_sd>>(m, "NEMLWorkRateFunctionDamage_sd")
       .def(py::init([](py::args args, py::kwargs kwargs)
             {
-              return create_object_python<WorkRateFunctionDamage_sd>(args, kwargs,
+              return create_object_python<NEMLWorkRateFunctionDamage_sd>(args, kwargs,
                                                                         {"elastic","workrate",
                                                                         "Q","m","G","H","xi","phi",
                                                                         "base"});

@@ -676,12 +676,12 @@ class NEML_EXPORT NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarD
 
 static Register<NEMLExponentialWorkDamagedModel_sd> regNEMLExponentialWorkDamagedModel_sd;
 
-class WorkRateFunctionDamage_sd: public NEMLScalarDamagedModel_sd {
+class NEMLWorkRateFunctionDamage_sd: public NEMLScalarDamagedModel_sd {
  public:
   /// Parameters are the elastic model, the parameters A
   /// the base model, the CTE, the solver tolerance, maximum iterations,
   /// and the verbosity flag.
-  WorkRateFunctionDamage_sd(
+  NEMLWorkRateFunctionDamage_sd(
                             std::shared_ptr<LinearElasticModel> elastic,
                             std::shared_ptr<Interpolate> workrate,
                             std::shared_ptr<Interpolate> Q,
@@ -702,7 +702,7 @@ class WorkRateFunctionDamage_sd: public NEMLScalarDamagedModel_sd {
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  /// The damage function d_np1 = d_n + (se / A)**xi (1 - d_np1)**(-phi) * dt
+  /// The damage function d_np1 = d_n + [(\dot{W}/Q)**m / f(\dot{W})  + G*pow(\sigma / H,xi)/pow(1 - dmg,phi)] * dt
   virtual int damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
@@ -748,7 +748,7 @@ class WorkRateFunctionDamage_sd: public NEMLScalarDamagedModel_sd {
    std::shared_ptr<Interpolate> phi_;
 };
 
-static Register<WorkRateFunctionDamage_sd> regWorkRateFunctionDamage_sd;
+static Register<NEMLWorkRateFunctionDamage_sd> regNEMLWorkRateFunctionDamage_sd;
 
 } //namespace neml
 
