@@ -79,12 +79,12 @@ PYBIND11_MODULE(interpolate, m) {
                                                            {"V0", "D", "T0"});
         }))
       ;
-      py::class_<WorkRateFunc, Interpolate, std::shared_ptr<WorkRateFunc>>(m, "WorkRateFunc")
-          .def(py::init([](py::args args, py::kwargs kwargs)
-            {
-              return create_object_python<WorkRateFunc>(args, kwargs, {"A","B","N"});
-            }))
-          ;
+  py::class_<WorkRateFunc, Interpolate, std::shared_ptr<WorkRateFunc>>(m, "WorkRateFunc")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<WorkRateFunc>(args, kwargs, {"A","B","N"});
+        }))
+      ;
 }
 
 } // namespace neml
