@@ -1623,7 +1623,7 @@ double NEMLWorkDamagedModel_sd::workrate(
     dp[i] = de[i] - dee[i];
   }
 
-  return dot_vec(stress_np1, dp, 6) / dt * (1.0 - d_np1);
+  return fabs(dot_vec(stress_np1, dp, 6) / dt * (1.0 - d_np1));
 }
 
 NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
