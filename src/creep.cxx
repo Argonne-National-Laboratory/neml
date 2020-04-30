@@ -293,9 +293,10 @@ RegionKMCreep::RegionKMCreep(std::vector<double> cuts,
                              std::vector<std::shared_ptr<Interpolate>> A, 
                              std::vector<std::shared_ptr<Interpolate>> B,
                              double kboltz, double b, double eps0, 
-                             std::shared_ptr<LinearElasticModel> emodel) :
+                             std::shared_ptr<LinearElasticModel> emodel,
+                             bool celsius) :
     cuts_(cuts), A_(A), B_(B), kboltz_(kboltz), b_(b), eps0_(eps0), 
-    b3_(pow(b,3)), emodel_(emodel)
+    b3_(pow(b,3)), emodel_(emodel), shift_(celsius ? 273.15 : 0.0)
 {
 
 }
@@ -317,6 +318,8 @@ ParameterSet RegionKMCreep::parameters()
   pset.add_parameter<double>("eps0");
   pset.add_parameter<NEMLObject>("emodel");
 
+  pset.add_optional_parameter<bool>("celsius", false);
+
   return pset;
 }
 
@@ -329,7 +332,8 @@ std::unique_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
       params.get_parameter<double>("kboltz"),
       params.get_parameter<double>("b"),
       params.get_parameter<double>("eps0"),
-      params.get_object_parameter<LinearElasticModel>("emodel")
+      params.get_object_parameter<LinearElasticModel>("emodel"),
+      params.get_parameter<bool>("celsius")
       ); 
 }
 
@@ -338,7 +342,7 @@ int RegionKMCreep::g(double seq, double eeq, double t, double T, double & g) con
   double A, B;
   select_region_(seq, T, A, B);
   double G = emodel_->G(T);
-  double C1 = -G * b3_ / (kboltz_*T);
+  double C1 = -G * b3_ / (kboltz_*(T+shift_));
 
   g = eps0_ * exp(C1*B) * pow(seq / G, C1 * A);
 
@@ -350,7 +354,7 @@ int RegionKMCreep::dg_ds(double seq, double eeq, double t, double T, double & dg
   double A, B;
   select_region_(seq, T, A, B);
   double G = emodel_->G(T);
-  double C1 = -G * b3_ / (kboltz_*T);
+  double C1 = -G * b3_ / (kboltz_*(T+shift_));
   
   dg = eps0_ * exp(C1*B) * C1 * A / G * pow(seq / G, C1 * A - 1.0);
 
