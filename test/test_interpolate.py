@@ -152,6 +152,17 @@ class TestExpInterpolate(unittest.TestCase, BaseInterpolate):
     self.assertTrue(np.isclose(self.A * np.exp(self.B/self.x),
       self.interpolate(self.x)))
 
+class TestPowerLawInterpolate(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.A = 5.1
+    self.B = 0.3
+    self.interpolate = interpolate.PowerLawInterpolate(self.A, self.B)
+    self.x = 2.1
+
+  def test_interpolate(self):
+    self.assertTrue(np.isclose(self.A * self.x**self.B, 
+      self.interpolate(self.x)))
+
 class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.y0 = 100.0

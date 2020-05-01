@@ -477,6 +477,45 @@ double ExpInterpolate::derivative(double x) const
   return -A_ * B_ * exp(B_ / x) / (x*x);
 }
 
+PowerLawInterpolate::PowerLawInterpolate(double A, double B) :
+    Interpolate(), A_(A), B_(B)
+{
+
+}
+
+std::string PowerLawInterpolate::type()
+{
+  return "PowerLawInterpolate";
+}
+
+ParameterSet PowerLawInterpolate::parameters()
+{
+  ParameterSet pset(PowerLawInterpolate::type());
+
+  pset.add_parameter<double>("A");
+  pset.add_parameter<double>("B");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> PowerLawInterpolate::initialize(ParameterSet & params)
+{
+  return neml::make_unique<PowerLawInterpolate>(
+      params.get_parameter<double>("A"),
+      params.get_parameter<double>("B")
+      ); 
+}
+
+double PowerLawInterpolate::value(double x) const
+{
+  return A_ * pow(x, B_);
+}
+
+double PowerLawInterpolate::derivative(double x) const
+{
+  return A_ * B_ * pow(x, B_-1.0);
+}
+
 MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :
     Interpolate(), V0_(V0), D_(D), T0_(T0)
 {

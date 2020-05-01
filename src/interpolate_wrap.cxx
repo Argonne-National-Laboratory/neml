@@ -81,6 +81,14 @@ PYBIND11_MODULE(interpolate, m) {
         }))
       ;
 
+  py::class_<PowerLawInterpolate, Interpolate,
+      std::shared_ptr<PowerLawInterpolate>>(m, "PowerLawInterpolate")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PowerLawInterpolate>(args, kwargs, {"A","B"});
+        }))
+      ;
+
   py::class_<MTSShearInterpolate, Interpolate, std::shared_ptr<MTSShearInterpolate>>(m, "MTSShearInterpolate")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
