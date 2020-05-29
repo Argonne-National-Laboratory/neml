@@ -24,20 +24,23 @@ std::shared_ptr<NEMLModel> parse_string(std::string input)
   }
 }
 
-std::unique_ptr<NEMLModel> parse_string_unique(std::string input)
+std::unique_ptr<NEMLModel> parse_string_unique(std::string input, std::string mname)
 {
   // Parse the string to the rapidxml representation
   rapidxml::xml_document<> doc;
   doc.parse<0>(&input[0]);
 
-  // The model is the root node
-  const rapidxml::xml_node<> * found = doc.first_node();
+  // Grab the root node
+  const rapidxml::xml_node<> * root = doc.first_node();
+
+  // Find the node with the right name
+  const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
 
   // Get the NEMLObject
   std::unique_ptr<NEMLObject> obj = get_object_unique(found);
 
   // Do a dangerous cast
-  auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel*>(obj.release()));
+  auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel *>(obj.release()));
   if (res == nullptr) {
     throw InvalidType(found->name(), get_type_of_node(found), "NEMLModel");
   }
