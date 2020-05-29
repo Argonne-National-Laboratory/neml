@@ -23,7 +23,7 @@ namespace neml {
 std::shared_ptr<NEMLModel> parse_string(std::string input);
 
 /// Parse from a string to a unique_ptr
-std::unique_ptr<NEMLModel> parse_string_unique(std::string input);
+std::unique_ptr<NEMLModel> parse_string_unique(std::string input, std::string mname);
 
 /// Parse from file to a shared_ptr
 NEML_EXPORT std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname);
