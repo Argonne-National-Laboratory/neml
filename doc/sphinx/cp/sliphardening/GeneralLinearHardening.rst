@@ -9,12 +9,12 @@ linear combination of the slip rates (or absolute value of the slip rates)
 of all other slip systems.
 
 .. math::
-   \dot{\bar{\tau}}_{k}=M_{k,j} \dot{\gamma}_j
+   \dot{\bar{\tau}}_{k}= \sum_{j=1}^{n_{total}} M_{k,j} \dot{\gamma}_j
 
 or
 
 .. math::
-   \dot{\bar{\tau}}_{k}=M_{k,j} \left|\dot{\gamma}_{j}\right|
+   \dot{\bar{\tau}}_{k}= \sum_{j=1}^{n_{total}} M_{k,j} \left|\dot{\gamma}_{j}\right|
 
 where the indices :math:`k` and :math:`j` are the unrolled indices corresponding
 to slip group and system numbers.

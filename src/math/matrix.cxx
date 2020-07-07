@@ -39,29 +39,9 @@ FlatVector::~FlatVector()
   data_ = nullptr;
 }
 
-size_t FlatVector::n() const
-{
-  return n_;
-}
-
-bool FlatVector::owns_data() const
-{
-  return own_;
-}
-
 void FlatVector::copy(double * data)
 {
   std::copy(data, data + n_, data_);
-}
-
-double * FlatVector::data()
-{
-  return data_;
-}
-
-const double * FlatVector::data() const
-{
-  return data_;
 }
 
 Matrix::Matrix(size_t m, size_t n) : 
@@ -74,21 +54,6 @@ Matrix::~Matrix()
 {
   delete [] data_;
   data_ = nullptr;
-}
-
-size_t Matrix::m() const
-{
-  return m_;
-}
-
-size_t Matrix::n() const
-{
-  return n_;
-}
-
-size_t Matrix::size() const
-{
-  return m_ * n_;
 }
 
 FlatVector Matrix::dot(const FlatVector & other)
@@ -105,11 +70,6 @@ void Matrix::matvec(const FlatVector & other, FlatVector & res)
                                 " product");
   }
   mat_vec(data_, m(), other.data_, n(), res.data_);
-}
-
-double * Matrix::data()
-{
-  return data_;
 }
 
 SquareMatrix::SquareMatrix(size_t m, std::string type,

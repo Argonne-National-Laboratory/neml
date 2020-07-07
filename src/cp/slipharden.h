@@ -84,7 +84,7 @@ class NEML_EXPORT SlipHardening: public NEMLObject
   virtual bool use_nye() const;
   
   /// Helper providing a blank (zero) history
-  History blank_hist() const;
+  History blank_hist() const {return cache(CacheType::BLANK);};
 
   enum class CacheType {BLANK, DOUBLE};
 
@@ -219,7 +219,7 @@ class NEML_EXPORT GeneralLinearHardening: public SlipHardening
                      std::vector<std::string> ext) const;
 
  protected:
-  size_t size() const;
+  size_t size() const {return tau_0_.size();};
   void consistency(Lattice & L) const;
 
  private:

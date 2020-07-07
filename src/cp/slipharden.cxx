@@ -4,11 +4,6 @@
 
 namespace neml {
 
-History SlipHardening::blank_hist() const
-{
-  return cache(CacheType::BLANK);
-}
-
 History SlipHardening::cache(CacheType type) const
 {
   switch (type) {
@@ -368,13 +363,6 @@ History GeneralLinearHardening::d_hist_d_h_ext(const Symmetric & stress,
   }
 
   return res;
-
-  return res;
-}
-
-size_t GeneralLinearHardening::size() const
-{
-  return tau_0_.size();
 }
 
 void GeneralLinearHardening::consistency(Lattice & L) const

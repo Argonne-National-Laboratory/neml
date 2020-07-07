@@ -21,7 +21,7 @@ Parameters
 
    ``backstrength``, :cpp:class:`neml::SlipHardening`, Back strength definition, No
    ``isostrength``, :cpp:class:`neml::SlipHardening`, Isotropic strength definition, No
-   ``flowreistance``, :cpp:class:`neml::SlipHardening`, Flow resistance definition, No
+   ``flowresistance``, :cpp:class:`neml::SlipHardening`, Flow resistance definition, No
    ``gamma0``, :cpp:class:`neml::Interpolate`, Reference slip rate, No
    ``n``, :cpp:class:`neml::Interpolate`, Rate sensitivity, No
 

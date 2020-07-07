@@ -9,7 +9,7 @@ double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q,
   double dg = 0.0;
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
-      dg += fabs(slip(g, i, stress, Q, history, L, T, fixed));
+      dg += std::fabs(slip(g, i, stress, Q, history, L, T, fixed));
     }
   }
 
@@ -26,7 +26,7 @@ Symmetric SlipRule::d_sum_slip_d_stress(const Symmetric & stress,
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
       double dg = slip(g, i, stress, Q, history, L, T, fixed);
-      ds += copysign(1.0, dg) * d_slip_d_s(g, i, stress, Q, history, L, T,
+      ds += std::copysign(1.0, dg) * d_slip_d_s(g, i, stress, Q, history, L, T,
                                            fixed);
     }
   }
@@ -43,7 +43,7 @@ History SlipRule::d_sum_slip_d_hist(const Symmetric & stress,
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
       double dg = slip(g, i, stress, Q, history, L, T, fixed);
-      double sgn = copysign(1.0, dg);
+      double sgn = std::copysign(1.0, dg);
       History temp = d_slip_d_h(g, i, stress, Q,  history, L, T, fixed);
       temp.scalar_multiply(sgn);
       res += temp;
@@ -280,11 +280,11 @@ double KinematicPowerLawSlipRule::sslip(size_t g, size_t i, double tau,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((fabs(tau - bs) - is) <= 0.0) {
+  if ((std::fabs(tau - bs) - is) <= 0.0) {
     return 0.0;
   }
   else {
-    return copysign(g0 * pow((fabs(tau - bs) - is) / fr, n), tau-bs);
+    return std::copysign(g0 * std::pow((std::fabs(tau - bs) - is) / fr, n), tau-bs);
   }
 }
 
@@ -299,11 +299,11 @@ double KinematicPowerLawSlipRule::d_sslip_dtau(size_t g, size_t i, double tau,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((fabs(tau - bs) - is) <= 0.0) {
+  if ((std::fabs(tau - bs) - is) <= 0.0) {
     return 0.0;
   }
   else {
-    return g0 * n * pow((fabs(tau - bs) - is) / fr, n-1) / fr; 
+    return g0 * n * std::pow((std::fabs(tau - bs) - is) / fr, n-1) / fr; 
   }
 }
 
@@ -318,13 +318,13 @@ std::vector<double> KinematicPowerLawSlipRule::d_sslip_dstrength(
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  if ((fabs(tau - bs) - is) <= 0.0) {
+  if ((std::fabs(tau - bs) - is) <= 0.0) {
     return {0.0,0.0,0.0};
   }
   else {
-    double dbs = g0 * n * pow((fabs(tau-bs) - is) / fr, n) / (is - fabs(tau - bs));
-    double dis = -copysign(g0 * n * pow((fabs(tau-bs) - is) / fr, n-1) / fr, tau - bs);
-    double dfr = -copysign(g0 * n * pow((fabs(tau-bs) - is) / fr, n) / fr, tau - bs);
+    double dbs = g0 * n * std::pow((std::fabs(tau-bs) - is) / fr, n) / (is - std::fabs(tau - bs));
+    double dis = -std::copysign(g0 * n * std::pow((std::fabs(tau-bs) - is) / fr, n-1) / fr, tau - bs);
+    double dfr = -std::copysign(g0 * n * std::pow((std::fabs(tau-bs) - is) / fr, n) / fr, tau - bs);
     return {dbs, dis, dfr};
   }
 }
@@ -397,7 +397,7 @@ double PowerLawSlipRule::scalar_sslip(size_t g, size_t i, double tau,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  return g0 * tau / strength * pow(fabs(tau/strength), n-1.0);
+  return g0 * tau / strength * std::pow(std::fabs(tau/strength), n-1.0);
 }
 
 double PowerLawSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau, 
@@ -406,7 +406,7 @@ double PowerLawSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  return g0 * n * pow(fabs(tau/strength), n-1.0) / strength;
+  return g0 * n * std::pow(std::fabs(tau/strength), n-1.0) / strength;
 }
 
 double PowerLawSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i, 
@@ -417,7 +417,7 @@ double PowerLawSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i,
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  return -n * g0 * tau * pow(fabs(tau), n -1.0) / pow(strength, n + 1.0); 
+  return -n * g0 * tau * std::pow(std::fabs(tau), n -1.0) / std::pow(strength, n + 1.0); 
 }
 
 } // namespace neml

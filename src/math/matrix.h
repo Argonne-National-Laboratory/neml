@@ -18,13 +18,13 @@ class NEML_EXPORT FlatVector {
   FlatVector(const FlatVector & other);
   virtual ~FlatVector();
 
-  size_t n() const;
-  bool owns_data() const;
+  size_t n() const {return n_;};
+  bool owns_data() const {return own_;};
 
   void copy(double * data);
 
-  double * data();
-  const double * data() const;
+  double * data() {return data_;};
+  const double * data() const {return data_;};
 
  protected:
   size_t n_;
@@ -40,14 +40,14 @@ class NEML_EXPORT Matrix {
   Matrix(size_t m, size_t n);
   virtual ~Matrix();
 
-  size_t m() const;
-  size_t n() const;
-  size_t size() const;
+  size_t m() const {return m_;};
+  size_t n() const {return n_;};
+  size_t size() const {return m_ * n_;};
 
   FlatVector dot(const FlatVector & other);
   void matvec(const FlatVector & other, FlatVector & res);
 
-  double * data();
+  double * data() {return data_;};
 
  protected:
   size_t m_, n_;
