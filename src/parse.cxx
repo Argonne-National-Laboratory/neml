@@ -182,6 +182,12 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
       case TYPE_SLIP:
         pset.assign_parameter(name, get_slip(child));
         break;
+      case TYPE_SIZE_TYPE:
+        pset.assign_parameter(name, get_size_type(child));
+        break;
+      case TYPE_VEC_SIZE_TYPE:
+        pset.assign_parameter(name, get_vector_size_type(child));
+        break;
       default:
         throw std::runtime_error("Unrecognized object type!");
         break;
@@ -308,6 +314,28 @@ list_systems get_slip( const rapidxml::xml_node<> * node)
   return groups;
 }
 
+size_t get_size_type(const rapidxml::xml_node<> * node)
+{
+  try {
+    std::string text = get_string(node);
+    return size_t(std::stoul(text));
+  }
+  catch (std::exception & e) {
+    throw InvalidType(node->name(), get_type_of_node(node), "size_t");
+  }
+}
+
+std::vector<size_t> get_vector_size_type(const rapidxml::xml_node<> * node)
+{
+  try {
+    std::string text = get_string(node);
+    return split_string_size_type(text);
+  }
+  catch (std::exception & e) {
+    throw InvalidType(node->name(), get_type_of_node(node), "vector<double>");
+  }
+}
+
 std::string get_type_of_node(const rapidxml::xml_node<> * node)
 {
   for (auto attributes = node->first_attribute(); attributes; attributes = attributes->next_attribute())
@@ -331,6 +359,21 @@ std::vector<double> split_string(std::string sval)
   std::vector<double> value;
   for (auto it = splits.begin(); it != splits.end(); ++it) {
     value.push_back(std::stod(*it));
+  }
+  return value;
+}
+
+std::vector<size_t> split_string_size_type(std::string sval)
+{
+  std::vector<std::string> splits;
+  std::stringstream ss(sval);
+  std::string temp;
+  while (ss >> temp) {
+    splits.push_back(temp);
+  }
+  std::vector<size_t> value;
+  for (auto it = splits.begin(); it != splits.end(); ++it) {
+    value.push_back(size_t(std::stoul(*it)));
   }
   return value;
 }

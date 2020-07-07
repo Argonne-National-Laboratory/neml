@@ -86,14 +86,17 @@ History & History::operator=(const History & other)
 
 History & History::add_union(const History & other)
 {
+  // This assumes no overlap
+  order_.insert(order_.end(), other.get_order().begin(), other.get_order().end());
+  type_.insert(other.get_type().begin(), other.get_type().end());
+  loc_.insert(other.get_loc().begin(), other.get_loc().end());
+  size_t offset = size();
+  resize(other.size());
   for (auto & var : other.get_order()) {
-    StorageType type = other.get_type().at(var);
-    size_t size = storage_size.at(type);
-    size_t loco = other.get_loc().at(var);
-    add(var, type, size);
-    size_t locn = loc_.at(var);
-    std::copy(other.rawptr()+loco, other.rawptr()+loco+size, storage_+locn);
+    loc_[var] += offset;
   }
+
+  std::copy(other.rawptr(), other.rawptr()+other.size(), storage_+offset);
 
   return *this;
 }
@@ -245,9 +248,28 @@ void History::error_if_wrong_type_(std::string name, StorageType type) const
   }
 }
 
-void History::zero()
+History & History::zero()
 {
   std::fill(storage_, storage_+size_, 0.0);
+  return *this;
+}
+
+History History::history_derivative(const History & other) const
+{
+  History deriv;
+
+  for (auto i1 : order_) {
+    StorageType i1_type = type_.at(i1);
+    for (auto i2 : other.get_order()) {
+      StorageType i2_type = other.get_type().at(i2);
+      StorageType ntype = derivative_type.at(i1_type).at(i2_type);
+      deriv.add(i1+"_"+i2, ntype, storage_size.at(ntype));
+    }
+  }
+
+  deriv.zero();
+
+  return deriv;
 }
 
 History History::split(std::vector<std::string> sep, bool after) const
@@ -257,6 +279,15 @@ History History::split(std::vector<std::string> sep, bool after) const
   for (i = 0; i < sep.size(); i++) {
     if (sep[i] != order_[i]) {
       throw std::runtime_error("History items to separate out must be contiguous!");
+    }
+  }
+  // Special case where we need to return a zero history
+  if (((i == order_.size()) && after) || ((i == 0) && (! after))) {
+    if (store_) {
+      return History(true);
+    }
+    else {
+      return History(false);
     }
   }
 
@@ -294,6 +325,31 @@ History History::split(std::vector<std::string> sep, bool after) const
   }
 
   return res;
+}
+
+History History::subset(std::vector<std::string> vars) const
+{
+  History nhist;
+  for (auto var : vars) {
+    error_if_not_exists_(var);
+    size_t sz = storage_size.at(type_.at(var));
+    nhist.add(var, type_.at(var), sz);
+    std::copy(&storage_[loc_.at(var)], &storage_[loc_.at(var)]+sz, 
+              &nhist.rawptr()[nhist.get_loc().at(var)]);
+
+  }
+  return nhist;
+}
+
+History & History::reorder(std::vector<std::string> vars)
+{
+  History nhist = subset(vars);
+
+  copy_maps(nhist);
+
+  std::copy(nhist.rawptr(), nhist.rawptr() + size(), storage_);
+
+  return *this;
 }
 
 } // namespace neml

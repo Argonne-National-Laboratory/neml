@@ -22,6 +22,7 @@ Implementations
    :maxdepth: 1
 
    sliprule/SlipStrengthSlipRule
+   sliprule/SlipMultiStrengthSlipRule
 
 Class description
 -----------------

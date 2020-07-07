@@ -61,6 +61,12 @@ std::string get_string(const rapidxml::xml_node<> * node);
 /// Extract a slip system from an xml node
 list_systems get_slip(const rapidxml::xml_node<> * node);
 
+/// Extract a size_type from an xml node
+size_t get_size_type(const rapidxml::xml_node<> * node);
+
+/// Extract a vector of size types from an xml node
+std::vector<size_t> get_vector_size_type(const rapidxml::xml_node<> * node);
+
 // Helpers
 /// Get a node with a given name
 const rapidxml::xml_node<> * get_child(const rapidxml::xml_node<> * node, std::string name);
@@ -70,6 +76,9 @@ std::string get_type_of_node(const rapidxml::xml_node<> * node);
 
 /// Helper to split strings
 std::vector<double> split_string(std::string sval);
+
+/// Helper to split lists of size_ts
+std::vector<size_t> split_string_size_type(std::string sval);
 
 /// Lame we can't do this with templates
 std::vector<int> split_string_int(std::string sval);

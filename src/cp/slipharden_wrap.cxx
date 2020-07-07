@@ -12,6 +12,8 @@ PYBIND11_MODULE(slipharden, m) {
   m.doc() = "Crystal plasticity slip rate relations";
 
   py::class_<SlipHardening, NEMLObject, std::shared_ptr<SlipHardening>>(m, "SlipHardening")
+      .def_property_readonly("varnames", &SlipHardening::varnames)
+      .def("set_varnames", &SlipHardening::set_varnames)
       .def("populate_history", &SlipHardening::populate_history)
       .def("init_history", &SlipHardening::init_history)
       .def("hist_to_tau", &SlipHardening::hist_to_tau)
@@ -19,7 +21,24 @@ PYBIND11_MODULE(slipharden, m) {
       .def("hist", &SlipHardening::hist)
       .def("d_hist_d_s", &SlipHardening::d_hist_d_s)
       .def("d_hist_d_h", &SlipHardening::d_hist_d_h)
+      .def("d_hist_d_h_ext", &SlipHardening::d_hist_d_h_ext)
       .def_property_readonly("use_nye", &SlipHardening::use_nye)
+      ;
+
+  py::class_<FixedStrengthHardening, SlipHardening, std::shared_ptr<FixedStrengthHardening>>(m, "FixedStrengthHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<FixedStrengthHardening>(
+                          args, kwargs, {"strengths"});
+                    }))
+    ;
+
+  py::class_<GeneralLinearHardening, SlipHardening, std::shared_ptr<GeneralLinearHardening>>(m, "GeneralLinearHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<GeneralLinearHardening>(
+                          args, kwargs, {"M", "tau_0"});
+                    }))
       ;
 
   py::class_<SlipSingleHardening, SlipHardening,
@@ -47,6 +66,8 @@ PYBIND11_MODULE(slipharden, m) {
            &SlipSingleStrengthHardening::d_hist_rate_d_stress)
       .def("d_hist_rate_d_hist",
            &SlipSingleStrengthHardening::d_hist_rate_d_hist)
+      .def("d_hist_rate_d_hist_ext",
+           &SlipSingleStrengthHardening::d_hist_rate_d_hist_ext)
       .def("static_strength", &SlipSingleStrengthHardening::static_strength)
       .def("nye_contribution", &SlipSingleStrengthHardening::nye_contribution)
       .def("nye_part", &SlipSingleStrengthHardening::nye_part)

@@ -93,7 +93,7 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
   try {
     return creators_[params.type()](params);
   }
-  catch (std::exception & e) {
+  catch (std::out_of_range & e) {
     throw UnregisteredError(params.type());
   }
 }
@@ -107,7 +107,7 @@ std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
   try {
     return creators_[params.type()](params);
   }
-  catch (std::exception & e) {
+  catch (std::out_of_range & e) {
       throw UnregisteredError(params.type());
   }
 }

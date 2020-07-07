@@ -12,4 +12,4 @@ if [[ $# -ne 1 ]]; then
     exit 2
 fi
 
-../util/cxx_interface/cxxsimple ../test/regression/reference.xml "$1" 0.02 100.0 20 300
+../util/cxx_interface/cxxsimple ../test/regression/reference.xml "$1" 0.04 100.0 100 300

@@ -202,6 +202,11 @@ class TestSplitStore(unittest.TestCase):
     self.hist.add_scalar("d")
     self.hist.set_scalar("d", 4.0)
 
+  def test_reorder(self):
+    self.hist.reorder(["b", "c", "a", "d"])
+    self.assertEqual(self.hist.items, ["b", "c", "a", "d"])
+    self.assertTrue(np.allclose(np.array([2.0,3.0,1.0,4.0]), np.array(self.hist)))
+
   def test_good_split(self):
     nhist = self.hist.split(["a", "b"])
     self.assertEqual(nhist.size, 2)
@@ -211,6 +216,15 @@ class TestSplitStore(unittest.TestCase):
   def test_bad_split(self):
     with self.assertRaises(RuntimeError):
       nhist = self.hist.split(["b", "c"])
+
+  def test_subset(self):
+    subset = self.hist.subset(["a", "d"])
+    self.assertTrue(np.allclose(np.array([1.0,4.0]), np.array(subset)))
+    self.assertEqual(subset.items, ["a", "d"])
+
+  def test_bad_subset(self):
+    with self.assertRaises(RuntimeError):
+      subset = self.hist.subset(["a", "no"])
 
 class TestSplitNoStore(unittest.TestCase):
   def setUp(self):
