@@ -127,6 +127,12 @@ History History::deepcopy() const
 
 void History::set_data(double * input)
 {
+  if (store_) {
+    store_ = false;
+    storesize_ = 0;
+    delete [] storage_;
+    storage_ = nullptr;
+  }
   storage_ = input;
 }
 

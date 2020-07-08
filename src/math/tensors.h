@@ -194,6 +194,8 @@ class NEML_EXPORT Symmetric: public Tensor {
 
   static Symmetric id() { return
     Symmetric(std::vector<double>({1,1,1,0,0,0}));};
+  static Symmetric zero() { return
+    Symmetric(std::vector<double>({0,0,0,0,0,0}));};
   Symmetric inverse() const;
   Symmetric transpose() const;
 

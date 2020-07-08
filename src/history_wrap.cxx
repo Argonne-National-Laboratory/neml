@@ -85,7 +85,6 @@ PYBIND11_MODULE(history, m) {
            {
             m.get<RankTwo>(name) = v;
            }, "Set a general tensor")
-
       .def("add_symmetric", 
            [](History & m, std::string name)
            {
