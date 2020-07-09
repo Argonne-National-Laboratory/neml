@@ -24,7 +24,7 @@ ParameterSet WalkerKremplSwitchRule::parameters()
   pset.add_parameter<NEMLObject>("elastic");
   pset.add_parameter<NEMLObject>("flow");
   pset.add_parameter<NEMLObject>("lambda");
-  pset.add_parameter<double>("eps0");
+  pset.add_parameter<double>("eps_ref");
 
   return pset;
 }
@@ -35,7 +35,7 @@ std::unique_ptr<NEMLObject> WalkerKremplSwitchRule::initialize(ParameterSet & pa
       params.get_object_parameter<LinearElasticModel>("elastic"),
       params.get_object_parameter<ViscoPlasticFlowRule>("flow"),
       params.get_object_parameter<Interpolate>("lambda"),
-      params.get_parameter<double>("eps0")
+      params.get_parameter<double>("eps_ref")
       ); 
 }
 
@@ -72,7 +72,7 @@ int WalkerKremplSwitchRule::s(const double * const s, const double * const alpha
   for (int i=0; i<6; i++) {
     erate[i] -= yv * kap * temp[i];
   }
-  
+
   double C[36];
   elastic_->C(T, C);
 
@@ -149,7 +149,7 @@ int WalkerKremplSwitchRule::ds_da(const double * const s, const double * const a
   double * t2 = &t2v[0];
   ier = flow_->dy_da(s, alpha, T, t2);
   if (ier != SUCCESS) return ier;
-  for (size_t i = 0; i < 6; i++) t2[i] *= kap;
+  for (size_t i = 0; i < nhist(); i++) t2[i] *= kap;
   outer_update_minus(t1, 6, t2, nhist(), work);
   
   double C[36];
@@ -187,7 +187,7 @@ int WalkerKremplSwitchRule::ds_de(const double * const s, const double * const a
   outer_update_minus(g, 6, dkap, 6, work);
 
   double C[36];
-  ier = elastic_->C(T, d_sdot);
+  ier = elastic_->C(T, C);
   if (ier != SUCCESS) return ier;
 
   mat_mat(6, 6, 6, C, work, d_sdot);
@@ -204,9 +204,13 @@ int WalkerKremplSwitchRule::a(const double * const s, const double * const alpha
   int ier = flow_->y(s, alpha, T, dg);
   if (ier != SUCCESS) return 0;
 
+  double kap;
+  ier = kappa(edot, T, kap);
+  if (ier != SUCCESS) return ier;
+
   ier = flow_->h(s, alpha, T, adot);
   if (ier != SUCCESS) return 0;
-  for (size_t i=0; i<nhist(); i++) adot[i] *= dg;
+  for (size_t i=0; i<nhist(); i++) adot[i] *= (dg * kap);
   
   std::vector<double> tempv(nhist());
   double * temp = &tempv[0];
@@ -231,11 +235,15 @@ int WalkerKremplSwitchRule::da_ds(const double * const s, const double * const a
   int ier = flow_->y(s, alpha, T, dg);
   if (ier != SUCCESS) return ier;
 
+  double kap;
+  ier = kappa(edot, T, kap);
+  if (ier != SUCCESS) return ier;
+
   int sz = nhist() * 6;
 
   ier = flow_->dh_ds(s, alpha, T, d_adot);
   if (ier != SUCCESS) return ier;
-  for (int i=0; i<sz; i++) d_adot[i] *= dg;
+  for (int i=0; i<sz; i++) d_adot[i] *= (dg * kap);
 
   std::vector<double> t1v(nhist());
   double * t1 = &t1v[0];
@@ -245,6 +253,7 @@ int WalkerKremplSwitchRule::da_ds(const double * const s, const double * const a
   double t2[6];
   ier = flow_->dy_ds(s, alpha, T, t2);
   if (ier != SUCCESS) return ier;
+  for (size_t i = 0; i < 6; i++) t2[i] *= kap;
 
   outer_update(t1, nhist(), t2, 6, d_adot);
   
@@ -271,12 +280,16 @@ int WalkerKremplSwitchRule::da_da(const double * const s, const double * const a
   int ier = flow_->y(s, alpha, T, dg);
   if (ier != SUCCESS) return ier;
 
+  double kap;
+  ier = kappa(edot, T, kap);
+  if (ier != SUCCESS) return ier;
+
   int nh = nhist();
   int sz = nh * nh;
 
   ier = flow_->dh_da(s, alpha, T, d_adot);
   if (ier != SUCCESS) return ier;
-  for (int i=0; i<sz; i++) d_adot[i] *= dg;
+  for (int i=0; i<sz; i++) d_adot[i] *= dg * kap;
   
   std::vector<double> t1v(nh);
   double * t1 = &t1v[0];
@@ -287,6 +300,8 @@ int WalkerKremplSwitchRule::da_da(const double * const s, const double * const a
   double * t2 = &t2v[0];
   ier = flow_->dy_da(s, alpha, T, t2);
   if (ier != SUCCESS) return ier;
+
+  for (int i = 0 ; i < nh; i++) t2[i] *= kap;
 
   outer_update(t1, nh, t2, nh, d_adot);
   
@@ -308,7 +323,22 @@ int WalkerKremplSwitchRule::da_de(const double * const s, const double * const a
               double Tdot,
               double * const d_adot)
 {
-  std::fill(d_adot, d_adot+(nhist()*6), 0.0);
+  double dg;
+  int ier = flow_->y(s, alpha, T, dg);
+  if (ier != SUCCESS) return ier;
+
+  double dkap[6];
+  ier = dkappa(edot, T, dkap);
+  if (ier != SUCCESS) return ier;
+
+  int nh = nhist();
+  double * hr = new double [nh];
+  ier = flow_->h(s, alpha, T, hr);
+  if (ier != SUCCESS) return 0;
+  for (int i = 0; i < nh; i++) hr[i] *= dg;
+
+  outer_vec(hr, nh, dkap, 6, d_adot);
+  delete [] hr;
 
   return 0;
 }
@@ -321,15 +351,19 @@ int WalkerKremplSwitchRule::work_rate(const double * const s,
   double erate[6];
   std::fill(erate, erate+6, 0.0);
 
+  double kap;
+  int ier = kappa(edot, T, kap);
+  if (ier != SUCCESS) return ier;
+
   double temp[6];
   double yv;
-  int ier = flow_->g(s, alpha, T, temp);
+  ier = flow_->g(s, alpha, T, temp);
   if (ier != SUCCESS) return ier;
   ier = flow_->y(s, alpha, T, yv);
   if (ier != SUCCESS) return ier;
 
   for (int i=0; i<6; i++) {
-    erate[i] += yv * temp[i];
+    erate[i] += yv * kap * temp[i];
   }
 
   ier = flow_->g_temp(s, alpha, T, temp);
@@ -372,7 +406,6 @@ int WalkerKremplSwitchRule::kappa(const double * const edot, double T, double &
   std::copy(edot, edot+6, edev);
   dev_vec(edev);
 
-  // Walker is unlcear, but my guess is sqrt(2/3 e:e)
   double de = std::sqrt(2.0/3.0) * norm2_vec(edev, 6);
 
   kap = 1.0 - lambda_->value(T) + lambda_->value(T) * de / eps0_;
@@ -753,7 +786,11 @@ void TestFlowRule::dy_da(const State & state, History & res) const
 
 void TestFlowRule::g(const State & state, Symmetric & res) const
 {
-  res = std::sqrt(3.0 / 2.0) * state.S.dev() / state.S.dev().norm();
+  double ns = state.S.dev().norm();
+  if (ns > 0)
+    res = std::sqrt(3.0 / 2.0) * state.S.dev() / ns;
+  else
+    res = Symmetric::zero();
 }
 
 void TestFlowRule::dg_ds(const State & state, SymSymR4 & res) const

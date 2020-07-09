@@ -23,7 +23,7 @@ PYBIND11_MODULE(walker, m) {
           return create_object_python<WalkerKremplSwitchRule>(args, kwargs,
                                                               {"elastic",
                                                               "flow", "lambda",
-                                                              "eps0"});
+                                                              "eps_ref"});
         }))
       .def("kappa",
            [](WalkerKremplSwitchRule & m, py::array_t<double,
