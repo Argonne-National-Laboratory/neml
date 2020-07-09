@@ -125,6 +125,31 @@ class NEML_EXPORT SofteningModel: public NEMLObject {
 
 static Register<SofteningModel> regSoftening;
 
+/// The simple softening model Walker actually uses
+class NEML_EXPORT WalkerSofteningModel: public SofteningModel {
+ public:
+  WalkerSofteningModel(std::shared_ptr<Interpolate> phi0,
+                       std::shared_ptr<Interpolate> phi1);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  /// Softening function
+  virtual double phi(double alpha, double T) const;
+  /// Derivative of softening function wrt alpha
+  virtual double dphi(double alpha, double T) const;
+
+ private:
+  std::shared_ptr<Interpolate> phi_0_;
+  std::shared_ptr<Interpolate> phi_1_;
+};
+
+static Register<WalkerSofteningModel> regWalkerSoftening;
+
 /// Thermal rate scaling models
 class ThermalScaling: public NEMLObject {
  public:
@@ -142,6 +167,34 @@ class ThermalScaling: public NEMLObject {
 };
 
 static Register<ThermalScaling> regThermalScaling;
+
+/// Walker's actual thermal scaling model
+class ArrheniusThermalScaling: public ThermalScaling {
+ public:
+  ArrheniusThermalScaling(std::shared_ptr<Interpolate> Q,
+                          double R, double Tref);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  /// The thermal ratio
+  virtual double value(double T) const;
+
+ private:
+  /// The actual Arrhenius function
+  double arr_(double T) const;
+
+ private:
+  std::shared_ptr<Interpolate> Q_;
+  double R_;
+  double T_ref_;
+};
+
+static Register<ArrheniusThermalScaling> regArrheniusThermalScaling;
 
 /// Helper struct for the below
 struct State {

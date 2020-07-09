@@ -55,6 +55,15 @@ PYBIND11_MODULE(walker, m) {
     .def("dphi", &SofteningModel::dphi)
     ;
 
+  py::class_<WalkerSofteningModel, SofteningModel, std::shared_ptr<WalkerSofteningModel>>(m,
+                                                              "WalkerSofteningModel")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<WalkerSofteningModel>(
+            args, kwargs, {"phi_0", "phi_1"});
+      }))
+    ;
+
   py::class_<ThermalScaling, std::shared_ptr<ThermalScaling>>(m,
                                                               "ThermalScaling")
     .def(py::init([](py::args args, py::kwargs kwargs)
@@ -62,6 +71,15 @@ PYBIND11_MODULE(walker, m) {
         return create_object_python<ThermalScaling>(args, kwargs, {});
       }))
     .def("value", &ThermalScaling::value)
+    ;
+
+  py::class_<ArrheniusThermalScaling, ThermalScaling, std::shared_ptr<ArrheniusThermalScaling>>(m,
+                                                              "ArrheniusThermalScaling")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<ArrheniusThermalScaling>(
+            args, kwargs, {"Q", "R", "T_ref"});
+      }))
     ;
 
   py::class_<State, std::shared_ptr<State>>(m, "State")

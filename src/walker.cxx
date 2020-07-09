@@ -459,6 +459,47 @@ double SofteningModel::dphi(double alpha, double T) const
   return 0.0;
 }
 
+WalkerSofteningModel::WalkerSofteningModel(std::shared_ptr<Interpolate> phi0,
+                                           std::shared_ptr<Interpolate> phi1) :
+    phi_0_(phi0), phi_1_(phi1)
+{
+
+}
+
+std::string WalkerSofteningModel::type()
+{
+  return "WalkerSofteningModel";
+}
+
+std::unique_ptr<NEMLObject> WalkerSofteningModel::initialize(ParameterSet & params)
+{
+  return neml::make_unique<WalkerSofteningModel>(
+      params.get_object_parameter<Interpolate>("phi_0"),
+      params.get_object_parameter<Interpolate>("phi_1")
+      ); 
+}
+
+ParameterSet WalkerSofteningModel::parameters()
+{
+  ParameterSet pset(WalkerSofteningModel::type());
+
+  pset.add_parameter<NEMLObject>("phi_0");
+  pset.add_parameter<NEMLObject>("phi_1");
+
+  return pset;
+}
+
+double WalkerSofteningModel::phi(double alpha, double T) const
+{
+  return 1.0 + phi_0_->value(T) * std::pow(alpha, phi_1_->value(T));
+}
+
+double WalkerSofteningModel::dphi(double alpha, double T) const
+{
+  return phi_1_->value(T) * phi_0_->value(T) * std::pow(alpha, phi_1_->value(T)
+                                                        - 1.0);
+}
+
 ThermalScaling::ThermalScaling()
 {
 
@@ -484,6 +525,48 @@ ParameterSet ThermalScaling::parameters()
 double ThermalScaling::value(double T) const
 {
   return 1.0;
+}
+
+ArrheniusThermalScaling::ArrheniusThermalScaling(std::shared_ptr<Interpolate> Q,
+                                                 double R, double T_ref) :
+    Q_(Q), R_(R), T_ref_(T_ref)
+{
+
+}
+
+std::string ArrheniusThermalScaling::type()
+{
+  return "ArrheniusThermalScaling";
+}
+
+std::unique_ptr<NEMLObject> ArrheniusThermalScaling::initialize(ParameterSet & params)
+{
+  return neml::make_unique<ArrheniusThermalScaling>(
+      params.get_object_parameter<Interpolate>("Q"),
+      params.get_parameter<double>("R"),
+      params.get_parameter<double>("T_ref")
+      ); 
+}
+
+ParameterSet ArrheniusThermalScaling::parameters()
+{
+  ParameterSet pset(ArrheniusThermalScaling::type());
+
+  pset.add_parameter<NEMLObject>("Q");
+  pset.add_parameter<double>("R");
+  pset.add_parameter<double>("T_ref");
+
+  return pset;
+}
+
+double ArrheniusThermalScaling::value(double T) const
+{
+  return arr_(T) / arr_(T_ref_);
+}
+
+double ArrheniusThermalScaling::arr_(double T) const
+{
+  return std::exp(-Q_->value(T) / (R_ * T));
 }
 
 WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule() :

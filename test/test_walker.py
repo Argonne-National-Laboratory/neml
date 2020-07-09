@@ -85,7 +85,7 @@ class CommonSofteningModel(object):
     numerical = differentiate(lambda a: self.model.phi(a, self.T), self.a)
     actual = self.model.dphi(self.a, self.T)
 
-    self.assertAlmostEqual(numerical, actual)
+    self.assertAlmostEqual(numerical, actual, delta = 1.0e-5)
 
 class TestNoSoftening(unittest.TestCase, CommonSofteningModel):
   def setUp(self):
@@ -97,6 +97,20 @@ class TestNoSoftening(unittest.TestCase, CommonSofteningModel):
   def test_phi(self):
     self.assertAlmostEqual(self.model.phi(self.a, self.T), 1)
 
+class TestWalkerSoftening(unittest.TestCase, CommonSofteningModel):
+  def setUp(self):
+    self.a = 0.1
+    self.T = 300.0
+
+    self.phi0 = 0.1
+    self.phi1 = 2.1
+
+    self.model = walker.WalkerSofteningModel(self.phi0, self.phi1)
+
+  def test_phi(self):
+    self.assertAlmostEqual(self.model.phi(self.a, self.T), 
+        1.0 + self.phi0 * self.a**self.phi1)
+
 class CommonThermalScaling(object):
   pass
 
@@ -107,6 +121,21 @@ class TestNoScaling(unittest.TestCase, CommonThermalScaling):
 
   def test_value(self):
     self.assertAlmostEqual(self.model.value(self.T), 1.0)
+
+class TestArrheniusThermalScaling(unittest.TestCase, CommonThermalScaling):
+  def setUp(self):
+    self.Q = 64000.0
+    self.R = 8.314
+    self.T_ref = 300.0
+
+    self.model = walker.ArrheniusThermalScaling(self.Q, self.R, self.T_ref)
+
+    self.T = 523.0
+
+  def test_value(self):
+    should = np.exp(-self.Q/(self.R*self.T)) / np.exp(-self.Q/(self.R*self.T_ref))
+    actual = self.model.value(self.T)
+    self.assertAlmostEqual(should, actual)
 
 class CommonWrappedFlow(object):
   def test_dy_ds(self):
