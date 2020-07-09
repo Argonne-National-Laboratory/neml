@@ -220,7 +220,7 @@ int WalkerKremplSwitchRule::a(const double * const s, const double * const alpha
 
   ier = flow_->h_time(s, alpha, T, temp);
   if (ier != SUCCESS) return ier;
-  for (size_t i=0; i<nhist(); i++) adot[i] += temp[i];
+  for (size_t i=0; i<nhist(); i++) adot[i] += (temp[i] * kap);
 
   return 0;
 
@@ -265,7 +265,7 @@ int WalkerKremplSwitchRule::da_ds(const double * const s, const double * const a
 
   ier = flow_->dh_ds_time(s, alpha, T, t3);
   if (ier != SUCCESS) return ier;
-  for (int i=0; i<sz; i++) d_adot[i] += t3[i];
+  for (int i=0; i<sz; i++) d_adot[i] += t3[i] * kap;
 
   return 0;
   
@@ -313,7 +313,7 @@ int WalkerKremplSwitchRule::da_da(const double * const s, const double * const a
 
   ier = flow_->dh_da_time(s, alpha, T, t3);
   if (ier != SUCCESS) return ier;
-  for (int i=0; i<sz; i++) d_adot[i] += t3[i];
+  for (int i=0; i<sz; i++) d_adot[i] += t3[i] * kap;
 
   return 0;
 }
@@ -338,6 +338,11 @@ int WalkerKremplSwitchRule::da_de(const double * const s, const double * const a
   for (int i = 0; i < nh; i++) hr[i] *= dg;
 
   outer_vec(hr, nh, dkap, 6, d_adot);
+
+  ier = flow_->h_time(s, alpha, T, hr);
+  if (ier != SUCCESS) return 0;
+  outer_update(hr, nh, dkap, 6, d_adot);
+
   delete [] hr;
 
   return 0;
