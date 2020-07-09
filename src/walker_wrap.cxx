@@ -45,6 +45,25 @@ PYBIND11_MODULE(walker, m) {
            }, "Derivative of the kappa function wrt strain rate.")
       ;
 
+  py::class_<SofteningModel, std::shared_ptr<SofteningModel>>(m,
+                                                              "SofteningModel")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<SofteningModel>(args, kwargs, {});
+      }))
+    .def("phi", &SofteningModel::phi)
+    .def("dphi", &SofteningModel::dphi)
+    ;
+
+  py::class_<ThermalScaling, std::shared_ptr<ThermalScaling>>(m,
+                                                              "ThermalScaling")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<ThermalScaling>(args, kwargs, {});
+      }))
+    .def("value", &ThermalScaling::value)
+    ;
+
   py::class_<State, std::shared_ptr<State>>(m, "State")
     .def(py::init<Symmetric, History, double>())
     .def_readwrite("S", &State::S)

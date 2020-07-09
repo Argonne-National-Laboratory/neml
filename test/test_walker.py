@@ -80,6 +80,34 @@ class TestRateSwitch(unittest.TestCase, CommonGeneralFlow):
   def gen_Tdot(self, T, t):
     return (T - self.T_n) / self.gen_dt(t)
 
+class CommonSofteningModel(object):
+  def test_dphi(self):
+    numerical = differentiate(lambda a: self.model.phi(a, self.T), self.a)
+    actual = self.model.dphi(self.a, self.T)
+
+    self.assertAlmostEqual(numerical, actual)
+
+class TestNoSoftening(unittest.TestCase, CommonSofteningModel):
+  def setUp(self):
+    self.a = 0.1
+    self.T = 300.0
+
+    self.model = walker.SofteningModel()
+
+  def test_phi(self):
+    self.assertAlmostEqual(self.model.phi(self.a, self.T), 1)
+
+class CommonThermalScaling(object):
+  pass
+
+class TestNoScaling(unittest.TestCase, CommonThermalScaling):
+  def setUp(self):
+    self.model = walker.ThermalScaling()
+    self.T = 300.0
+
+  def test_value(self):
+    self.assertAlmostEqual(self.model.value(self.T), 1.0)
+
 class CommonWrappedFlow(object):
   def test_dy_ds(self):
     numerical = diff_scalar_symmetric(lambda s: self.model.y_wrap(self.make_state(s, self.h, self.T)), self.stress)
