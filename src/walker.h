@@ -6,6 +6,8 @@
 #include "general_flow.h"
 #include "visco_flow.h"
 
+#include "internalvariable.h" // Mostly ABCs for the "fancy" history classes
+
 #include "windows.h"
 
 namespace neml {

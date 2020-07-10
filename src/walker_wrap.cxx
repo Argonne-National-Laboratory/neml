@@ -2,6 +2,7 @@
 
 #include "walker.h"
 
+#include "objects.h"
 #include "nemlerror.h"
 
 namespace py = pybind11;
@@ -80,6 +81,80 @@ PYBIND11_MODULE(walker, m) {
         return create_object_python<ArrheniusThermalScaling>(
             args, kwargs, {"Q", "R", "T_ref"});
       }))
+    ;
+
+  py::class_<ScalarInternalVariable::VariableState,
+      std::shared_ptr<ScalarInternalVariable::VariableState>>(m,
+                                                              "ScalarInternalVariableState")
+    .def_readwrite("h", &ScalarInternalVariable::VariableState::h)
+    .def_readwrite("a", &ScalarInternalVariable::VariableState::a)
+    .def_readwrite("adot", &ScalarInternalVariable::VariableState::adot)
+    .def_readwrite("s", &ScalarInternalVariable::VariableState::s)
+    .def_readwrite("g", &ScalarInternalVariable::VariableState::g)
+    .def_readwrite("T", &ScalarInternalVariable::VariableState::T)
+    ;
+
+  py::class_<ScalarInternalVariable, NEMLObject,
+      std::shared_ptr<ScalarInternalVariable>>(m, "ScalarInternalVariable")
+    .def("initial_value", &ScalarInternalVariable::initial_value)
+
+    .def("ratep", &ScalarInternalVariable::ratep)
+    .def("d_ratep_d_h", &ScalarInternalVariable::d_ratep_d_h)
+    .def("d_ratep_d_a", &ScalarInternalVariable::d_ratep_d_a)
+    .def("d_ratep_d_adot", &ScalarInternalVariable::d_ratep_d_adot)
+    .def("d_ratep_d_s", &ScalarInternalVariable::d_ratep_d_s)
+    .def("d_ratep_d_g", &ScalarInternalVariable::d_ratep_d_g)
+
+    .def("ratet", &ScalarInternalVariable::ratet)
+    .def("d_ratet_d_h", &ScalarInternalVariable::d_ratet_d_h)
+    .def("d_ratet_d_a", &ScalarInternalVariable::d_ratet_d_a)
+    .def("d_ratet_d_adot", &ScalarInternalVariable::d_ratet_d_adot)
+    .def("d_ratet_d_s", &ScalarInternalVariable::d_ratet_d_s)
+    .def("d_ratet_d_g", &ScalarInternalVariable::d_ratet_d_g)
+
+    .def("rateT", &ScalarInternalVariable::rateT)
+    .def("d_rateT_d_h", &ScalarInternalVariable::d_rateT_d_h)
+    .def("d_rateT_d_a", &ScalarInternalVariable::d_rateT_d_a)
+    .def("d_rateT_d_adot", &ScalarInternalVariable::d_rateT_d_adot)
+    .def("d_rateT_d_s", &ScalarInternalVariable::d_rateT_d_s)
+    .def("d_rateT_d_g", &ScalarInternalVariable::d_rateT_d_g)
+    ;
+
+  py::class_<SymmetricInternalVariable::VariableState,
+      std::shared_ptr<SymmetricInternalVariable::VariableState>>(m,
+                                                              "SymmetricInternalVariableState")
+    .def_readwrite("h", &SymmetricInternalVariable::VariableState::h)
+    .def_readwrite("a", &SymmetricInternalVariable::VariableState::a)
+    .def_readwrite("adot", &SymmetricInternalVariable::VariableState::adot)
+    .def_readwrite("s", &SymmetricInternalVariable::VariableState::s)
+    .def_readwrite("g", &SymmetricInternalVariable::VariableState::g)
+    .def_readwrite("T", &SymmetricInternalVariable::VariableState::T)
+    ;
+
+  py::class_<SymmetricInternalVariable, NEMLObject,
+      std::shared_ptr<SymmetricInternalVariable>>(m, "SymmetricInternalVariable")
+    .def("initial_value", &SymmetricInternalVariable::initial_value)
+
+    .def("ratep", &SymmetricInternalVariable::ratep)
+    .def("d_ratep_d_h", &SymmetricInternalVariable::d_ratep_d_h)
+    .def("d_ratep_d_a", &SymmetricInternalVariable::d_ratep_d_a)
+    .def("d_ratep_d_adot", &SymmetricInternalVariable::d_ratep_d_adot)
+    .def("d_ratep_d_s", &SymmetricInternalVariable::d_ratep_d_s)
+    .def("d_ratep_d_g", &SymmetricInternalVariable::d_ratep_d_g)
+
+    .def("ratet", &SymmetricInternalVariable::ratet)
+    .def("d_ratet_d_h", &SymmetricInternalVariable::d_ratet_d_h)
+    .def("d_ratet_d_a", &SymmetricInternalVariable::d_ratet_d_a)
+    .def("d_ratet_d_adot", &SymmetricInternalVariable::d_ratet_d_adot)
+    .def("d_ratet_d_s", &SymmetricInternalVariable::d_ratet_d_s)
+    .def("d_ratet_d_g", &SymmetricInternalVariable::d_ratet_d_g)
+
+    .def("rateT", &SymmetricInternalVariable::rateT)
+    .def("d_rateT_d_h", &SymmetricInternalVariable::d_rateT_d_h)
+    .def("d_rateT_d_a", &SymmetricInternalVariable::d_rateT_d_a)
+    .def("d_rateT_d_adot", &SymmetricInternalVariable::d_rateT_d_adot)
+    .def("d_rateT_d_s", &SymmetricInternalVariable::d_rateT_d_s)
+    .def("d_rateT_d_g", &SymmetricInternalVariable::d_rateT_d_g)
     ;
 
   py::class_<State, std::shared_ptr<State>>(m, "State")
