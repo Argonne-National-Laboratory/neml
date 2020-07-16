@@ -4,8 +4,6 @@
 
 #include "nemlerror.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -24,7 +22,7 @@ PYBIND11_MODULE(larsonmiller, m) {
                     {
                       return create_object_python<LarsonMillerRelation>(args, kwargs, {"function", "C"});
                     }))
-      .def("sR", 
+      .def("sR",
            [](LarsonMillerRelation & m, double t, double T) -> double
            {
             double s;
@@ -32,7 +30,7 @@ PYBIND11_MODULE(larsonmiller, m) {
             py_error(ier);
             return s;
            }, "The rupture stress as a function of time and temperature.")
-      .def("tR", 
+      .def("tR",
            [](LarsonMillerRelation & m, double s, double T) -> double
            {
             double t;
@@ -40,7 +38,7 @@ PYBIND11_MODULE(larsonmiller, m) {
             py_error(ier);
             return t;
            }, "The rupture time as a function of stress and temperature.")
-      .def("dtR_ds", 
+      .def("dtR_ds",
            [](LarsonMillerRelation & m, double s, double T) -> double
            {
             double dt;

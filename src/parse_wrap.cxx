@@ -2,15 +2,13 @@
 
 #include "parse.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
 PYBIND11_MODULE(parse, m) {
   m.doc() = "Python wrapper to read XML input files.";
-  
+
   m.def("parse_xml", &parse_xml);
   m.def("parse_string", &parse_string);
 

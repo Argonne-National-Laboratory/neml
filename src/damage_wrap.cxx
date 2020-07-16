@@ -4,8 +4,6 @@
 
 #include "nemlerror.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -66,7 +64,7 @@ PYBIND11_MODULE(damage, m) {
                      t_np1, t_n, arr2ptr<double>(ddamage));
             py_error(ier);
             return ddamage;
-           }, "The derivative of the damage evolution equation wrt. strain.") 
+           }, "The derivative of the damage evolution equation wrt. strain.")
       .def("ddamage_ds",
            [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> py::array_t<double>
            {
@@ -77,7 +75,7 @@ PYBIND11_MODULE(damage, m) {
                      t_np1, t_n, arr2ptr<double>(ddamage));
             py_error(ier);
             return ddamage;
-           }, "The derivative of the damage evolution equation wrt. stress.") 
+           }, "The derivative of the damage evolution equation wrt. stress.")
       .def("make_trial_state",
            [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::unique_ptr<SDTrialState>
            {
@@ -110,7 +108,7 @@ PYBIND11_MODULE(damage, m) {
           return create_object_python<ClassicalCreepDamageModel_sd>(args, kwargs,
                                                                     {"elastic",
                                                                     "A", "xi",
-                                                                    "phi", 
+                                                                    "phi",
                                                                     "base"});
         }))
       ;
@@ -182,7 +180,7 @@ PYBIND11_MODULE(damage, m) {
           return create_object_python<ModularCreepDamageModel_sd>(args, kwargs,
                                                                     {"elastic",
                                                                     "A", "xi",
-                                                                    "phi", "estress", 
+                                                                    "phi", "estress",
                                                                     "base"});
         }))
       ;
@@ -193,7 +191,7 @@ PYBIND11_MODULE(damage, m) {
           return create_object_python<LarsonMillerCreepDamageModel_sd>(args, kwargs,
                                                                     {"elastic",
                                                                     "lmr",
-                                                                    "estress", 
+                                                                    "estress",
                                                                     "base"});
         }))
       ;
@@ -205,7 +203,7 @@ PYBIND11_MODULE(damage, m) {
             double fv;
             int ier = m.f(arr2ptr<double>(s_np1), d_np1, T_np1, fv);
             py_error(ier);
-            
+
             return fv;
            }, "The damage evolution function.")
       .def("df_ds",
@@ -223,7 +221,7 @@ PYBIND11_MODULE(damage, m) {
             double dfv;
             int ier = m.df_dd(arr2ptr<double>(s_np1), d_np1, T_np1, dfv);
             py_error(ier);
-            
+
             return dfv;
            }, "The derivative of the damage function wrt. damage")
 
@@ -232,7 +230,7 @@ PYBIND11_MODULE(damage, m) {
   py::class_<NEMLPowerLawDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<NEMLPowerLawDamagedModel_sd>(args, kwargs, 
+          return create_object_python<NEMLPowerLawDamagedModel_sd>(args, kwargs,
                                                                    {"elastic",
                                                                    "A", "a",
                                                                    "base"});

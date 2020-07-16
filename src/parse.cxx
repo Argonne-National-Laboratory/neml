@@ -101,6 +101,37 @@ std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname
   }
 }
 
+std::string get_string(const rapidxml::xml_node<> * node)
+{
+  std::string sval = node->first_node()->value();
+
+  if (sval != "")
+    return sval;
+  else
+    throw InvalidType(node->name(), get_type_of_node(node), "string");
+}
+
+double get_double(const rapidxml::xml_node<> * node) {
+  try {
+    std::string text = get_string(node);
+    return std::stod(text);
+  }
+  catch (std::exception & e) {
+    throw InvalidType(node->name(), get_type_of_node(node), "double");
+  }
+}
+
+std::vector<double> get_vector_double(const rapidxml::xml_node<> * node)
+{
+  try {
+    std::string text = get_string(node);
+    return split_string(text);
+  }
+  catch (std::exception & e) {
+    throw InvalidType(node->name(), get_type_of_node(node), "vector<double>");
+  }
+}
+
 std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node) {
   // Special case: could be a ConstantInterpolate
   std::string type = get_type_of_node(node);
@@ -153,45 +184,10 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
 
     if (name == "text") continue;
 
-    if (not pset.is_parameter(name)) {
+    if (not pset.is_parameter(name))
       throw UnknownParameterXML(node->name(), name);
-    }
 
-    switch (pset.get_object_type(name)) {
-      case TYPE_DOUBLE:
-        pset.assign_parameter(name, get_double(child));
-        break;
-      case TYPE_INT:
-        pset.assign_parameter(name, get_int(child));
-        break;
-      case TYPE_BOOL:
-        pset.assign_parameter(name, get_bool(child));
-        break;
-      case TYPE_VEC_DOUBLE:
-        pset.assign_parameter(name, get_vector_double(child));
-        break;
-      case TYPE_NEML_OBJECT:
-        pset.assign_parameter(name, get_object(child));
-        break;
-      case TYPE_VEC_NEML_OBJECT:
-        pset.assign_parameter(name, get_vector_object(child));
-        break;
-      case TYPE_STRING:
-        pset.assign_parameter(name, get_string(child));
-        break;
-      case TYPE_SLIP:
-        pset.assign_parameter(name, get_slip(child));
-        break;
-      case TYPE_SIZE_TYPE:
-        pset.assign_parameter(name, get_size_type(child));
-        break;
-      case TYPE_VEC_SIZE_TYPE:
-        pset.assign_parameter(name, get_vector_size_type(child));
-        break;
-      default:
-        throw std::runtime_error("Unrecognized object type!");
-        break;
-    }
+    pset.get_base_parameter(name)->setFromXML(child);
   }
 
   return pset;
@@ -204,7 +200,7 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
 
   // A somewhat dangerous shortcut -- a list of text values should be
   // interpreted as a list of ConstantInterpolates
-  if ((rapidxml::count_children(const_cast<rapidxml::xml_node<>*>(node))==1) and 
+  if ((rapidxml::count_children(const_cast<rapidxml::xml_node<>*>(node))==1) and
       (node->first_node()->type() == rapidxml::node_data)) {
     std::vector<double> data = get_vector_double(node);
     for (auto v : data) {
@@ -222,66 +218,56 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
   return joined;
 }
 
-// Need to find a way to replace node->get_line() in the throw exception
-double get_double(const rapidxml::xml_node<> * node)
+
+template<>
+void ParamValue<double>::setFromXML(rapidxml::xml_node<> * node)
 {
-  try {
-    std::string text = get_string(node);
-    return std::stod(text);
-  }
-  catch (std::exception & e) {
-    throw InvalidType(node->name(), get_type_of_node(node), "double");
-  }
+  assign(get_double(node));
 }
 
-int get_int(const rapidxml::xml_node<> * node)
+template<>
+void ParamValue<int>::setFromXML(rapidxml::xml_node<> * node)
 {
   try {
     std::string text = get_string(node);
-    return std::stoi(text);
+    assign(std::stoi(text));
   }
   catch (std::exception & e) {
     throw InvalidType(node->name(), get_type_of_node(node), "int");
   }
 }
 
-std::vector<double> get_vector_double(const rapidxml::xml_node<> * node)
-{
-  try {
-    std::string text = get_string(node);
-    return split_string(text);
-  }
-  catch (std::exception & e) {
-    throw InvalidType(node->name(), get_type_of_node(node), "vector<double>");
-  }
-}
-
-bool get_bool(const rapidxml::xml_node<> * node)
+template<>
+void ParamValue<bool>::setFromXML(rapidxml::xml_node<> * node)
 {
   std::string text = get_string(node);
 
   if ((text == "true") || (text == "True") || (text == "T") || (text == "1")) {
-    return true;
+    assign(true);
   }
   else if ((text == "false") || (text == "False") || (text == "F") || (text == "0")) {
-    return false;
+    assign(false);
   }
   else {
     throw InvalidType(node->name(), get_type_of_node(node), "bool");
   }
 }
 
-std::string get_string(const rapidxml::xml_node<> * node)
+template<>
+void ParamValue<std::string>::setFromXML(rapidxml::xml_node<> * node)
 {
-  std::string sval = node->first_node()->value();
-
-  if (sval != "")
-    return sval;
-  else
-    throw InvalidType(node->name(), get_type_of_node(node), "string");
+  assign(get_string(node));
 }
 
-list_systems get_slip( const rapidxml::xml_node<> * node)
+
+template<>
+void ParamValue<std::vector<double>>::setFromXML(rapidxml::xml_node<> * node)
+{
+  assign(get_vector_double(node));
+}
+
+template<>
+void ParamValue<list_systems>::setFromXML(rapidxml::xml_node<> * node)
 {
   list_systems groups;
 
@@ -311,30 +297,45 @@ list_systems get_slip( const rapidxml::xml_node<> * node)
     groups.push_back(make_pair(d,n));
   }
 
-  return groups;
+  assign(groups);
 }
 
-size_t get_size_type(const rapidxml::xml_node<> * node)
+template<>
+void ParamValue<std::size_t>::setFromXML(rapidxml::xml_node<> * node)
 {
   try {
     std::string text = get_string(node);
-    return size_t(std::stoul(text));
+    assign(std::stoul(text));
   }
   catch (std::exception & e) {
     throw InvalidType(node->name(), get_type_of_node(node), "size_t");
   }
 }
 
-std::vector<size_t> get_vector_size_type(const rapidxml::xml_node<> * node)
+template<>
+void ParamValue<std::vector<size_t>>::setFromXML(rapidxml::xml_node<> * node)
 {
   try {
     std::string text = get_string(node);
-    return split_string_size_type(text);
+    assign(split_string_size_type(text));
   }
   catch (std::exception & e) {
     throw InvalidType(node->name(), get_type_of_node(node), "vector<double>");
   }
 }
+
+template<>
+void ParamValue<std::shared_ptr<NEMLObject>>::setFromXML(rapidxml::xml_node<> * node)
+{
+  assign(get_object(node));
+}
+
+template<>
+void ParamValue<std::vector<std::shared_ptr<NEMLObject>>>::setFromXML(rapidxml::xml_node<> * node)
+{
+  assign(get_vector_object(node));
+}
+
 
 std::string get_type_of_node(const rapidxml::xml_node<> * node)
 {
@@ -395,7 +396,7 @@ std::vector<int> split_string_int(std::string sval)
 
 std::string & strip(std::string & s)
 {
-  auto noblank = [](char c) { return !std::isspace(c);}; 
+  auto noblank = [](char c) { return !std::isspace(c);};
 
   s.erase(s.begin(), std::find_if(s.begin(), s.end(), noblank));
   s.erase(std::find_if(s.rbegin(), s.rend(), noblank).base(), s.end());

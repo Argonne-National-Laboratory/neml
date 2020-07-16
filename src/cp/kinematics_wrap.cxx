@@ -2,15 +2,13 @@
 
 #include "kinematics.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
 PYBIND11_MODULE(kinematics, m) {
   m.doc() = "Kinematic models for crystal plasticity";
-  
+
   py::class_<KinematicModel, NEMLObject, std::shared_ptr<KinematicModel>>(m,
                                                               "KinematicModel")
       .def("populate_history", &KinematicModel::populate_history)

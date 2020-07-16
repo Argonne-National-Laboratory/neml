@@ -4,8 +4,6 @@
 
 #include "nemlerror.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -78,7 +76,7 @@ PYBIND11_MODULE(creep, m) {
             return dfv;
            }, "Evaluate creep rate derivative wrt temperature.")
 
-      
+
       .def("make_trial_state",
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::unique_ptr<CreepModelTrialState>
            {
@@ -146,7 +144,7 @@ PYBIND11_MODULE(creep, m) {
             return gv;
            }, "Evaluate creep rate wrt temperature.")
       ;
-  
+
   py::class_<PowerLawCreep, ScalarCreepRule, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {

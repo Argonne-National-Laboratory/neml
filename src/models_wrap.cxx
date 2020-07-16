@@ -4,8 +4,6 @@
 
 #include "nemlerror.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -15,7 +13,7 @@ PYBIND11_MODULE(models, m) {
   py::module::import("neml.solvers");
 
   m.doc() = "Base class for all material models.";
-  
+
   py::class_<NEMLModel, NEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
       .def("init_store",
@@ -195,7 +193,7 @@ PYBIND11_MODULE(models, m) {
   py::class_<GeneralIntegrator, SubstepModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<GeneralIntegrator>(args, kwargs, 
+          return create_object_python<GeneralIntegrator>(args, kwargs,
                                                          {"elastic", "rule"});
         }))
 
@@ -218,7 +216,7 @@ PYBIND11_MODULE(models, m) {
   py::class_<KMRegimeModel, NEMLModel_sd, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<KMRegimeModel>(args, kwargs, 
+          return create_object_python<KMRegimeModel>(args, kwargs,
                                                      {"elastic", "models",
                                                      "gs", "kboltz",
                                                      "b", "eps0"});

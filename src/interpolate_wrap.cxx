@@ -4,8 +4,6 @@
 
 #include "nemlerror.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -14,11 +12,11 @@ PYBIND11_MODULE(interpolate, m) {
   py::module::import("neml.objects");
 
   m.doc() = "Interpolation schemes used to define model parameters.";
-  
+
   py::class_<Interpolate, NEMLObject, std::shared_ptr<Interpolate>>(m, "Interpolate")
       .def("value", &Interpolate::value, "Interpolate to x")
       .def("derivative", &Interpolate::derivative, "Derivative at x")
-      .def("__call__", 
+      .def("__call__",
            [](Interpolate & m, double x) -> double
            {
             return m(x);
@@ -29,7 +27,7 @@ PYBIND11_MODULE(interpolate, m) {
   py::class_<PolynomialInterpolate, Interpolate, std::shared_ptr<PolynomialInterpolate>>(m, "PolynomialInterpolate")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<PolynomialInterpolate>(args, kwargs, 
+          return create_object_python<PolynomialInterpolate>(args, kwargs,
                                                              {"coefs"});
         }))
       ;
@@ -75,7 +73,7 @@ PYBIND11_MODULE(interpolate, m) {
   py::class_<MTSShearInterpolate, Interpolate, std::shared_ptr<MTSShearInterpolate>>(m, "MTSShearInterpolate")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<MTSShearInterpolate>(args, kwargs, 
+          return create_object_python<MTSShearInterpolate>(args, kwargs,
                                                            {"V0", "D", "T0"});
         }))
       ;

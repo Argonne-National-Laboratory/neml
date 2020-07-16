@@ -2,8 +2,6 @@
 
 #include "crystallography.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -12,7 +10,7 @@ PYBIND11_MODULE(crystallography, m) {
   py::module::import("neml.objects");
 
   m.doc() = "Various routines for crystallography";
-  
+
   m.def("symmetry_rotations", &symmetry_rotations);
 
   py::class_<SymmetryGroup, NEMLObject, std::shared_ptr<SymmetryGroup>>(m, "SymmetryGroup")

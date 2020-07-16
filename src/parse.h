@@ -38,34 +38,7 @@ NEML_EXPORT std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_no
 std::shared_ptr<NEMLObject> get_object(const rapidxml::xml_node<> * node);
 
 /// Actually get a valid parameter set from a node
- ParameterSet get_parameters(const rapidxml::xml_node<> * node);
-
-/// Extract a vector of NEMLObjects from an xml node
-std::vector<std::shared_ptr<NEMLObject>> get_vector_object(const rapidxml::xml_node<> * node);
-
-/// Extract a double from an xml node
-double get_double(const rapidxml::xml_node<> * node);
-
-/// Extract an integer parameter
-int get_int(const rapidxml::xml_node<> * node);
-
-/// Extract a vector of doubles from an xml node
-std::vector<double> get_vector_double(const rapidxml::xml_node<> * node);
-
-/// Extract a bool from an xml node
-bool get_bool(const rapidxml::xml_node<> * node);
-
-/// Extract a string from an xml node
-std::string get_string(const rapidxml::xml_node<> * node);
-
-/// Extract a slip system from an xml node
-list_systems get_slip(const rapidxml::xml_node<> * node);
-
-/// Extract a size_type from an xml node
-size_t get_size_type(const rapidxml::xml_node<> * node);
-
-/// Extract a vector of size types from an xml node
-std::vector<size_t> get_vector_size_type(const rapidxml::xml_node<> * node);
+ParameterSet get_parameters(const rapidxml::xml_node<> * node);
 
 // Helpers
 /// Get a node with a given name

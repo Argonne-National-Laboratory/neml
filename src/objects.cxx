@@ -2,21 +2,38 @@
 
 namespace neml {
 
+// for debug purposes
+template <>
+std::string ParamValue<bool>::typeString() { return "bool"; }
+template <>
+std::string ParamValue<int>::typeString() { return "int"; }
+template <>
+std::string ParamValue<double>::typeString() { return "double"; }
+template <>
+std::string ParamValue<size_t>::typeString() { return "size_t"; }
+template <>
+std::string ParamValue<NEMLObject>::typeString() { return "NEMLObject"; }
+template <>
+std::string ParamValue<std::shared_ptr<NEMLObject>>::typeString() { return "std::shared_ptr<NEMLObject>"; }
+template <>
+std::string ParamValue<std::vector<std::shared_ptr<NEMLObject>>>::typeString() { return "std::vector<std::shared_ptr<NEMLObject>>"; }
+template <>
+std::string ParamValue<std::vector<NEMLObject>>::typeString() { return "std::vector<NEMLObject>"; }
+template <>
+std::string ParamValue<std::vector<double>>::typeString() { return "std::vector<double>"; }
+template <>
+std::string ParamValue<list_systems>::typeString() { return "list_systems"; }
+template <>
+std::string ParamValue<std::string>::typeString() { return "std::string"; }
+
 ParameterSet::ParameterSet() :
     type_("invalid")
 {
-
 }
 
 ParameterSet::ParameterSet(std::string type) :
     type_(type)
 {
-
-}
-
-ParameterSet::~ParameterSet()
-{
-
 }
 
 const std::string & ParameterSet::type() const
@@ -24,20 +41,14 @@ const std::string & ParameterSet::type() const
   return type_;
 }
 
-void ParameterSet::assign_defered_parameter(std::string name, ParameterSet value)
+void ParameterSet::assign_defered_parameter(std::string name, const ParameterSet & value)
 {
   defered_params_[name] = value;
 }
 
-ParamType ParameterSet::get_object_type(std::string name)
-{
-  return param_types_[name];
-}
-
 bool ParameterSet::is_parameter(std::string name) const
 {
-  return std::find(param_names_.begin(), param_names_.end(), name) != 
-      param_names_.end();
+  return params_.find(name) != params_.end();
 }
 
 std::vector<std::string> ParameterSet::unassigned_parameters()
@@ -46,11 +57,9 @@ std::vector<std::string> ParameterSet::unassigned_parameters()
 
   std::vector<std::string> uparams;
 
-  for (auto it = param_names_.begin(); it != param_names_.end(); ++it) {
-    if (params_.find(*it) == params_.end()) {
-      uparams.push_back(*it);
-    }
-  }
+  for (const auto & p : params_)
+    if (!p.second->isSet())
+      uparams.push_back(p.first);
 
   return uparams;
 }
@@ -58,19 +67,18 @@ std::vector<std::string> ParameterSet::unassigned_parameters()
 bool ParameterSet::fully_assigned()
 {
   resolve_objects_();
-  
-  for (auto it = param_names_.begin(); it != param_names_.end(); ++it) {
-    if (params_.find(*it) == params_.end()) return false;
-  }
+
+  for (const auto & p : params_)
+    if (!p.second->isSet())
+      return false;
 
   return true;
 }
 
 void ParameterSet::resolve_objects_()
 {
-  for (auto it = defered_params_.begin(); it != defered_params_.end(); ++it) {
-    params_[it->first] = Factory::Creator()->create(it->second);
-  }
+  for (auto & p : defered_params_)
+    add_optional_parameter<NEMLObject>(p.first, Factory::Creator()->create(p.second));
   defered_params_.clear();
 }
 
@@ -84,12 +92,25 @@ ParameterSet Factory::provide_parameters(std::string type)
   }
 }
 
+// as a shorthand std::shared_ptr<NEMLObject> parameters are declared as NEMLObject parameters
+template<>
+void ParameterSet::add_parameter<NEMLObject>(std::string name)
+{
+  add_parameter<std::shared_ptr<NEMLObject>>(name);
+}
+
+// as a shorthand std::vector<std::shared_ptr<NEMLObject>> parameters are declared as std::vector<NEMLObject> parameters
+template<>
+void ParameterSet::add_parameter<std::vector<NEMLObject>>(std::string name)
+{
+  add_parameter<std::vector<std::shared_ptr<NEMLObject>>>(name);
+}
+
 std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
 {
-  if (not params.fully_assigned()) {
+  if (not params.fully_assigned())
     throw UndefinedParameters(params.type(), params.unassigned_parameters());
-  }
-  
+
   try {
     return creators_[params.type()](params);
   }
@@ -100,15 +121,14 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
 
 std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
 {
-  if (not params.fully_assigned()) {
+  if (not params.fully_assigned())
     throw UndefinedParameters(params.type(), params.unassigned_parameters());
-  }
 
   try {
     return creators_[params.type()](params);
   }
   catch (std::out_of_range & e) {
-      throw UnregisteredError(params.type());
+    throw UnregisteredError(params.type());
   }
 }
 

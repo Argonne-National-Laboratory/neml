@@ -2,8 +2,6 @@
 
 #include "polycrystal.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -12,10 +10,10 @@ PYBIND11_MODULE(polycrystal, m) {
   py::module::import("neml.cp.singlecrystal");
 
   m.doc() = "Polycrystal constitutive models";
-  
+
   py::class_<PolycrystalModel, NEMLModel_ldi, std::shared_ptr<PolycrystalModel>>(m, "PolycrystalModel")
       .def_property_readonly("n", &PolycrystalModel::n)
-      .def("orientations", 
+      .def("orientations",
            [](PolycrystalModel & m, py::array_t<double, py::array::c_style> h) -> std::vector<Orientation>
            {
             return m.orientations(arr2ptr<double>(h));

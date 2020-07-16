@@ -4,8 +4,6 @@
 
 #include "nemlerror.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -25,7 +23,7 @@ PYBIND11_MODULE(hardening, m) {
             m.init_hist(arr2ptr<double>(v));
             return v;
            }, "Initialize history.")
-        
+
       .def("q",
            [](const HardeningRule & m, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
@@ -42,7 +40,7 @@ PYBIND11_MODULE(hardening, m) {
             return D;
            }, "Gradient of map")
       ;
-  
+
   py::class_<IsotropicHardeningRule, HardeningRule, std::shared_ptr<IsotropicHardeningRule>>(m, "IsotropicHardeningRule")
       ;
 
@@ -54,7 +52,7 @@ PYBIND11_MODULE(hardening, m) {
                                                                          kwargs,
                                                                          {"s0",
                                                                          "K"});
-                    }))      
+                    }))
       .def("s0", &LinearIsotropicHardeningRule::s0)
       .def("K", &LinearIsotropicHardeningRule::K)
       ;
@@ -138,7 +136,7 @@ PYBIND11_MODULE(hardening, m) {
             py_error(ier);
             return v;
            }, "Initialize history.")
-        
+
       .def("q",
            [](const NonAssociativeHardening & m, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {

@@ -11,8 +11,7 @@
 #include <algorithm>
 
 #include "windows.h"
-
-#include "boost/variant.hpp"
+#include "parameters.h"
 
 namespace neml {
 
@@ -32,65 +31,12 @@ class NEML_EXPORT NEMLObject {
   virtual ~NEMLObject() {};
 };
 
-// This version supports the following types of objects as parameters:
-//    double
-//    int
-//    bool
-//    vector<double>
-//    NEMLObject
-//    vector<NEMLObject>
-//    string
-//    vector<pair<vector<int>,vector<int>>, i.e. groups of slip systems
-//    size_t
-//    vector<size_t>
-
-/// This black magic lets us store parameters in a unified map
-typedef boost::variant<double, int, bool, std::vector<double>,
-        std::shared_ptr<NEMLObject>,std::vector<std::shared_ptr<NEMLObject>>,
-        std::string, list_systems, size_t, std::vector<size_t>> param_type;
-/// This is the enum name we assign to each type for the "external" interfaces
-/// to use in reconstructing a type from data
-enum ParamType {
-  TYPE_DOUBLE           = 0,
-  TYPE_INT              = 1,
-  TYPE_BOOL             = 2,
-  TYPE_VEC_DOUBLE       = 3,
-  TYPE_NEML_OBJECT      = 4,
-  TYPE_VEC_NEML_OBJECT  = 5,
-  TYPE_STRING           = 6,
-  TYPE_SLIP             = 7,
-  TYPE_SIZE_TYPE        = 8,
-  TYPE_VEC_SIZE_TYPE    = 9
-};
-// This black magic lets us map the actual type of each parameter to the enum
-template <class T> constexpr ParamType GetParamType();
-template <> constexpr ParamType GetParamType<double>() {return TYPE_DOUBLE;}
-template <> constexpr ParamType GetParamType<int>() {return TYPE_INT;}
-template <> constexpr ParamType GetParamType<bool>() {return TYPE_BOOL;}
-template <> constexpr ParamType GetParamType<std::vector<double>>()
-{return TYPE_VEC_DOUBLE;}
-template <> constexpr ParamType GetParamType<std::shared_ptr<NEMLObject>>()
-{return TYPE_NEML_OBJECT;}
-template <> constexpr ParamType GetParamType<NEMLObject>()
-{return TYPE_NEML_OBJECT;}
-template <> constexpr ParamType GetParamType<std::vector<std::shared_ptr<NEMLObject>>>()
-{return TYPE_VEC_NEML_OBJECT;}
-template <> constexpr ParamType GetParamType<std::vector<NEMLObject>>()
-{return TYPE_VEC_NEML_OBJECT;}
-template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
-template <> constexpr ParamType GetParamType<list_systems>()
-{return TYPE_SLIP;}
-template <> constexpr ParamType GetParamType<size_t>() {return TYPE_SIZE_TYPE;}
-template <> constexpr ParamType GetParamType<std::vector<size_t>>() {return
-TYPE_VEC_SIZE_TYPE;}
-
 /// Error if you ask for a parameter that an object doesn't recognize
 class NEML_EXPORT UnknownParameter: public std::exception {
  public:
   UnknownParameter(std::string object, std::string name) :
       object_(object), name_(name)
   {
-
   }
 
   const char* what() const throw()
@@ -130,37 +76,37 @@ class NEML_EXPORT ParameterSet {
  public:
   /// Default constructor, needed to push onto stack
   ParameterSet();
+
   /// Constructor giving object type
   ParameterSet(std::string type);
-
-  virtual ~ParameterSet();
 
   /// Return the type of object you're supposed to create
   const std::string & type() const;
 
   /// Add a generic parameter with no default
   template<typename T>
-  void add_parameter(std::string name)
-  {
-    param_names_.push_back(name);
-    param_types_[name] = GetParamType<T>();
-  }
+  void add_parameter(std::string name);
 
   /// Immediately assign an input of the right type to a parameter
-  void assign_parameter(std::string name, param_type value)
-  {
-    if (std::find(param_names_.begin(), param_names_.end(), name) == param_names_.end()) {
-      throw UnknownParameter(type(), name);
-    }
-    params_[name] = value;
-  }
+  template <typename T>
+  void assign_parameter(std::string name, const T & value);
 
   /// Add a generic parameter with a default
   template<typename T>
-  void add_optional_parameter(std::string name, param_type value)
+  void add_optional_parameter(std::string name, const T & value);
+
+  template<typename T>
+  void add_optional_parameter(std::string name, const std::shared_ptr<T> & value);
+
+  template<typename T>
+  void add_optional_parameter(std::string name, const std::vector<std::shared_ptr<typename T::value_type>> & value);
+
+  /// Add a generic parameter with a string literal value
+  template<typename T>
+  void add_optional_parameter(std::string name, const char * value)
   {
     add_parameter<T>(name);
-    assign_parameter(name, value);
+    assign_parameter<T>(name, std::string(value));
   }
 
   /// Get a parameter of the given name and type
@@ -168,49 +114,53 @@ class NEML_EXPORT ParameterSet {
   T get_parameter(std::string name)
   {
     resolve_objects_();
-    return boost::get<T>(params_[name]);
+    auto it = params_.find(name);
+    if (it == params_.end())
+      throw UnknownParameter(type(), name);
+    auto res = std::dynamic_pointer_cast<ParamValue<T>>(it->second);
+    if (!res)
+      throw UnknownParameter(type(), name);
+    return res->get();
+  }
+
+  const std::shared_ptr<ParamBase> & get_base_parameter(std::string name)
+  {
+    resolve_objects_();
+    auto it = params_.find(name);
+    if (it == params_.end())
+      throw UnknownParameter(type(), name);
+    return it->second;
   }
 
   /// Assign a parameter set to be used to create an object later
-  void assign_defered_parameter(std::string name, ParameterSet value);
+  void assign_defered_parameter(std::string name, const ParameterSet & value);
 
   /// Helper method to get a NEMLObject and cast it to subtype in one go
   template<typename T>
   std::shared_ptr<T> get_object_parameter(std::string name)
   {
     auto res = std::dynamic_pointer_cast<T>(get_parameter<std::shared_ptr<NEMLObject>>(name));
-    if (res == nullptr) {
+    if (!res)
       throw WrongTypeError();
-    }
-    else {
-      return res;
-    }
+    return res;
   }
 
   /// Helper to get a vector of NEMLObjects and cast them to subtype in one go
   template<typename T>
   std::vector<std::shared_ptr<T>> get_object_parameter_vector(std::string name)
   {
-    std::vector<std::shared_ptr<NEMLObject>> ov =
-        get_parameter<std::vector<std::shared_ptr<NEMLObject>>>(name);
+    auto ov = get_parameter<std::vector<std::shared_ptr<NEMLObject>>>(name);
     std::vector<std::shared_ptr<T>> nv(ov.size());
     std::transform(std::begin(ov), std::end(ov), std::begin(nv),
                           [](std::shared_ptr<NEMLObject> const & v)
                           {
                             auto res = std::dynamic_pointer_cast<T>(v);
-
-                            if (res == nullptr) {
+                            if (res == nullptr)
                               throw WrongTypeError();
-                            }
-                            else {
-                              return res;
-                            }
+                            return res;
                           });
     return nv;
   }
-
-  /// Get the type of parameter
-  ParamType get_object_type(std::string name);
 
   /// Check if this is an actual parameter
   bool is_parameter(std::string name) const;
@@ -221,17 +171,113 @@ class NEML_EXPORT ParameterSet {
   /// Check to make sure this parameter set is ready to go
   bool fully_assigned();
 
- private:
+protected:
+  template <typename T>
+  void assign_parameter_helper(const std::shared_ptr<ParamBase> & p, const T & value);
+
+  template <typename T>
+  void assign_parameter_helper(const std::shared_ptr<ParamBase> & p, const std::shared_ptr<T> & value);
+
+  template <typename T>
+  void assign_parameter_helper(const std::shared_ptr<ParamBase> & p, const std::vector<std::shared_ptr<T>> & value);
+
+private:
   /// Run down the chain of deferred objects and actually construct them
   void resolve_objects_();
 
   std::string type_;
 
-  std::vector<std::string> param_names_;
-  std::map<std::string, ParamType> param_types_;
-  std::map<std::string, param_type> params_;
+  std::map<std::string, std::shared_ptr<ParamBase>> params_;
   std::map<std::string, ParameterSet> defered_params_;
 };
+
+template<typename T>
+void ParameterSet::add_parameter(std::string name)
+{
+  params_[name] = std::make_shared<ParamValue<T>>();
+}
+
+// farward declare specializations that permit dropping the std::shared_ptr for convenience
+template<>
+void ParameterSet::add_parameter<NEMLObject>(std::string name);
+template<>
+void ParameterSet::add_parameter<std::vector<NEMLObject>>(std::string name);
+
+template <typename T>
+void ParameterSet::assign_parameter(std::string name, const T & value)
+{
+  auto it = params_.find(name);
+  if (it == params_.end() || !it->second->isType<T>())
+    throw UnknownParameter(type(), name);
+
+  assign_parameter_helper<T>(it->second, value);
+}
+
+template <typename T>
+void ParameterSet::add_optional_parameter(std::string name, const T & value)
+{
+  add_parameter<T>(name);
+  assign_parameter<T>(name, value);
+}
+
+template <typename T>
+void ParameterSet::add_optional_parameter(std::string name, const std::shared_ptr<T> & value)
+{
+  add_optional_parameter<std::shared_ptr<NEMLObject>>(name, value);
+}
+
+template <typename T>
+void ParameterSet::add_optional_parameter(std::string name, const std::vector<std::shared_ptr<typename T::value_type>> & value)
+{
+  add_optional_parameter<std::vector<std::shared_ptr<NEMLObject>>>(name, value);
+}
+
+// generic template will work for POD types
+template <typename T>
+void ParameterSet::assign_parameter_helper(const std::shared_ptr<ParamBase> & p, const T & value)
+{
+  auto pv = std::dynamic_pointer_cast<ParamValue<T>>(p);
+  if (!pv)
+    throw WrongTypeError();
+  pv->assign(value);
+}
+
+// neml object smart pointer overload
+template <typename T>
+void ParameterSet::assign_parameter_helper(const std::shared_ptr<ParamBase> & p, const std::shared_ptr<T> & value)
+{
+  // check if we can cast to a std::shared_ptr<NEMLObject>
+  auto res = std::dynamic_pointer_cast<NEMLObject>(value);
+  if (!res)
+    throw WrongTypeError();
+  // see if we can hold this value type
+  auto pv = std::dynamic_pointer_cast<ParamValue<std::shared_ptr<NEMLObject>>>(p);
+  if (!pv)
+    throw WrongTypeError();
+  pv->assign(res);
+}
+
+// neml object smart pointer overload
+template <typename T>
+void ParameterSet::assign_parameter_helper(const std::shared_ptr<ParamBase> & p, const std::vector<std::shared_ptr<T>> & value)
+{
+  // see if we can hold this value type
+  auto pv = std::dynamic_pointer_cast<ParamValue<std::vector<std::shared_ptr<NEMLObject>>>>(p);
+  if (!pv)
+    throw WrongTypeError();
+
+  // up-cast to NEMLObject pointers
+  std::vector<std::shared_ptr<NEMLObject>> nv(value.size());
+  std::transform(std::begin(value), std::end(value), std::begin(nv),
+                        [](const std::shared_ptr<T> & v)
+                        {
+                          auto res = std::dynamic_pointer_cast<NEMLObject>(v);
+                          if (!res)
+                            throw WrongTypeError();
+                          return res;
+                        });
+  pv->assign(nv);
+}
 
 /// Factory that produces NEMLObjects from ParameterSets
 class NEML_EXPORT Factory {
@@ -290,7 +336,7 @@ class NEML_EXPORT Register {
  public:
   Register()
   {
-    Factory::Creator()->register_type(T::type(), &T::initialize, &T::parameters);
+     Factory::Creator()->register_type(T::type(), &T::initialize, &T::parameters);
   }
 };
 
@@ -325,22 +371,17 @@ class NEML_EXPORT UndefinedParameters: public std::exception {
 class NEML_EXPORT UnregisteredError: public std::exception {
  public:
   UnregisteredError(std::string name) :
-      name_(name)
-  {
-
-  };
+      name_(name), what_("Object named " + name_ + " not registered with factory!")
+  {};
 
   const char * what() const throw ()
   {
-    std::stringstream ss;
-
-    ss << "Object named " << name_ << " not registered with factory!";
-
-    return ss.str().c_str();
+    return what_.c_str();
   };
 
  private:
-  std::string name_;
+   std::string name_;
+   std::string what_;
 };
 
 } //namespace neml

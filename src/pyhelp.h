@@ -16,6 +16,7 @@
 #include "objects.h"
 #include "interpolate.h"
 #include "nemlerror.h"
+#include "parameters.h"
 
 namespace py = pybind11;
 
@@ -75,73 +76,55 @@ template<class T> py::array_t<T> alloc_3d(size_t m, size_t n, size_t o)
   return arr;
 }
 
+template<typename T>
+PYBIND11_EXPORT void ParamValue<T>::setFromPY(py::object & value)
+{
+  assign(py::cast<T>(value));
+}
+
+template<>
+PYBIND11_EXPORT void ParamValue<std::shared_ptr<NEMLObject>>::setFromPY(py::object & value)
+{
+  // If it's a double then we actually want a ConstantInterpolate
+  // I hate using exceptions here, but what I actually want is:
+  //  "is this something that can be cast to a double"
+  // and not
+  //  "is this actually a c++ double"
+  try {
+    double v = py::cast<double>(value);
+    assign(std::make_shared<ConstantInterpolate>(v));
+    return;
+  }
+  catch (py::cast_error & e) {}
+
+  assign(py::cast<std::shared_ptr<NEMLObject>>(value));
+}
+
+template<>
+PYBIND11_EXPORT void ParamValue<std::vector<std::shared_ptr<NEMLObject>>>::setFromPY(py::object & value)
+{
+  // If it's a vector<double> then we actually want a vector of
+  // ConstantInterpolates
+  try {
+    std::vector<double> v = py::cast<std::vector<double>>(value);
+    std::vector<std::shared_ptr<NEMLObject>> vect;
+    for (auto it = v.begin(); it != v.end(); ++it) {
+      vect.push_back(std::make_shared<ConstantInterpolate>(*it));
+    }
+    assign(vect);
+    return;
+  }
+  catch (py::cast_error & e) {}
+
+  assign(py::cast<std::vector<std::shared_ptr<NEMLObject>>>(value));
+}
 /// Map a python object into a parameter from a set
 void assign_python_parameter(ParameterSet & pset, std::string name,
                              py::object value)
 {
-  switch (pset.get_object_type(name)) {
-    case TYPE_DOUBLE:
-      pset.assign_parameter(name, py::cast<double>(value));
-      break;
-    case TYPE_INT:
-      pset.assign_parameter(name, py::cast<int>(value));
-      break;
-    case TYPE_BOOL:
-      pset.assign_parameter(name, py::cast<bool>(value));
-      break;
-    case TYPE_VEC_DOUBLE:
-      pset.assign_parameter(name, py::cast<std::vector<double>>(value));
-      break;
-    case TYPE_NEML_OBJECT:
-      // If it's a double then we actually want a ConstantInterpolate
-      // I hate using exceptions here, but what I actually want is:
-      //  "is this something that can be cast to a double"
-      // and not
-      //  "is this actually a c++ double"
-      try {
-        double v = py::cast<double>(value);
-        pset.assign_parameter(name, std::make_shared<ConstantInterpolate>(v));
-        break;
-      }
-      catch (py::cast_error & e) {
-
-      }
-      pset.assign_parameter(name, py::cast<std::shared_ptr<NEMLObject>>(value));
-      break;
-    case TYPE_VEC_NEML_OBJECT:
-      // If it's a vector<double> then we actually want a vector of
-      // ConstantInterpolates
-      try {
-        std::vector<double> v = py::cast<std::vector<double>>(value);
-        std::vector<std::shared_ptr<NEMLObject>> vect;
-        for (auto it = v.begin(); it != v.end(); ++it) {
-          vect.push_back(std::make_shared<ConstantInterpolate>(*it));
-        }
-        pset.assign_parameter(name, vect);
-        break;
-      }
-      catch (py::cast_error & e) {
-
-      }
-      pset.assign_parameter(name, py::cast<std::vector<std::shared_ptr<NEMLObject>>>(value));
-      break;
-    case TYPE_STRING:
-      pset.assign_parameter(name, py::cast<std::string>(value));
-      break;
-    case TYPE_SLIP:
-      pset.assign_parameter(name, py::cast<list_systems>(value));
-      break;
-    case TYPE_SIZE_TYPE:
-      pset.assign_parameter(name, py::cast<size_t>(value));
-      break;
-    case TYPE_VEC_SIZE_TYPE:
-      pset.assign_parameter(name, py::cast<std::vector<size_t>>(value));
-      break;
-    default:
-      throw std::runtime_error("Unrecognized object type!");
-      break;
-  }
+  pset.get_base_parameter(name)->setFromPY(value);
 }
+
 
 /// Create an object from args and kwargs
 template<typename T>
@@ -166,6 +149,24 @@ std::shared_ptr<T> create_object_python(py::args args, py::kwargs kwargs,
 
   return Factory::Creator()->create<T>(pset);
 }
+
+// explicit instantiations
+template
+PYBIND11_EXPORT void ParamValue<bool>::setFromPY(py::object & value);
+template
+PYBIND11_EXPORT void ParamValue<int>::setFromPY(py::object & value);
+template
+PYBIND11_EXPORT void ParamValue<double>::setFromPY(py::object & value);
+template
+PYBIND11_EXPORT void ParamValue<std::vector<double>>::setFromPY(py::object & value);
+template
+PYBIND11_EXPORT void ParamValue<std::string>::setFromPY(py::object & value);
+template
+PYBIND11_EXPORT void ParamValue<size_t>::setFromPY(py::object & value);
+template
+PYBIND11_EXPORT void ParamValue<std::vector<size_t>>::setFromPY(py::object & value);
+template
+PYBIND11_EXPORT void ParamValue<list_systems>::setFromPY(py::object & value);
 
 } // namespace neml
 

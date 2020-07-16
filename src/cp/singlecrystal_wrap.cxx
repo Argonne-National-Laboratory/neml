@@ -2,8 +2,6 @@
 
 #include "singlecrystal.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -20,7 +18,7 @@ PYBIND11_MODULE(singlecrystal, m) {
   py::class_<SingleCrystalModel, NEMLModel_ldi, Solvable, std::shared_ptr<SingleCrystalModel>>(m, "SingleCrystalModel")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
-                      return create_object_python<SingleCrystalModel>(args, 
+                      return create_object_python<SingleCrystalModel>(args,
                                                                       kwargs,
                                                                       {"kinematics", "lattice"});
                     }))
@@ -32,30 +30,30 @@ PYBIND11_MODULE(singlecrystal, m) {
             return m.strength(arr2ptr<double>(h), T);
            }, "Return an effective strength for the model")
       .def("Fe",
-           [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> stress, py::array_t<double, py::array::c_style> hist, double T) -> py::array_t<double> 
+           [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> stress, py::array_t<double, py::array::c_style> hist, double T) -> py::array_t<double>
            {
             auto Fe = alloc_mat<double>(3,3);
             m.Fe(arr2ptr<double>(stress), arr2ptr<double>(hist), T, arr2ptr<double>(Fe));
             return Fe;
            }, "Return the elastic deformation gradient.")
-      .def("get_passive_orientation", 
+      .def("get_passive_orientation",
            [](SingleCrystalModel & m, const History & hist) -> Orientation
            {
             return m.get_passive_orientation(hist);
            }, "Get the orientation as an passive rotation (sample -> crystal)")
-      .def("get_passive_orientation", 
+      .def("get_passive_orientation",
            [](SingleCrystalModel & m, py::array_t<double, py::array::c_style>
               hist) -> Orientation
            {
             return m.get_passive_orientation(arr2ptr<double>(hist));
            }, "Get the orientation as an passive rotation (sample -> crystal)")
 
-      .def("get_active_orientation", 
+      .def("get_active_orientation",
            [](SingleCrystalModel & m, const History & hist) -> Orientation
            {
             return m.get_active_orientation(hist);
            }, "Get the orientation as an active rotation (crystal -> sample)")
-      .def("get_active_orientation", 
+      .def("get_active_orientation",
            [](SingleCrystalModel & m, py::array_t<double, py::array::c_style>
               hist) -> Orientation
            {

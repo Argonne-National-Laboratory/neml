@@ -4,8 +4,6 @@
 
 #include "nemlerror.h"
 
-namespace py = pybind11;
-
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
@@ -29,9 +27,9 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(6);
-            int ier = m.s(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.s(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
-                          Tdot, 
+                          Tdot,
                           arr2ptr<double>(f));
             py_error(ier);
             return f;
@@ -40,7 +38,7 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(6,6);
-            int ier = m.ds_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.ds_ds(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
                           Tdot, arr2ptr<double>(f));
             py_error(ier);
@@ -50,7 +48,7 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(6,m.nhist());
-            int ier = m.ds_da(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.ds_da(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
                           Tdot,  arr2ptr<double>(f));
             py_error(ier);
@@ -60,7 +58,7 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(6,6);
-            int ier = m.ds_de(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.ds_de(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
                           Tdot,  arr2ptr<double>(f));
             py_error(ier);
@@ -72,9 +70,9 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(m.nhist());
-            int ier = m.a(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.a(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
-                          Tdot, 
+                          Tdot,
                           arr2ptr<double>(f));
             py_error(ier);
             return f;
@@ -83,7 +81,7 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),6);
-            int ier = m.da_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.da_ds(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
                           Tdot, arr2ptr<double>(f));
             py_error(ier);
@@ -93,7 +91,7 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),m.nhist());
-            int ier = m.da_da(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.da_da(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
                           Tdot,  arr2ptr<double>(f));
             py_error(ier);
@@ -103,18 +101,18 @@ PYBIND11_MODULE(general_flow, m) {
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),6);
-            int ier = m.da_de(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.da_de(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
                           Tdot,  arr2ptr<double>(f));
             py_error(ier);
             return f;
            }, "History rate derivative with respect to strain.")
-      
+
       .def("work_rate",
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> double
            {
             double pi;
-            int ier = m.work_rate(arr2ptr<double>(s), arr2ptr<double>(alpha), 
+            int ier = m.work_rate(arr2ptr<double>(s), arr2ptr<double>(alpha),
                           arr2ptr<double>(edot), T,
                           Tdot,  pi);
             py_error(ier);
