@@ -46,7 +46,7 @@ PYBIND11_MODULE(walker, m) {
            }, "Derivative of the kappa function wrt strain rate.")
       ;
 
-  py::class_<SofteningModel, std::shared_ptr<SofteningModel>>(m,
+  py::class_<SofteningModel, NEMLObject, std::shared_ptr<SofteningModel>>(m,
                                                               "SofteningModel")
     .def(py::init([](py::args args, py::kwargs kwargs)
       {
@@ -65,7 +65,7 @@ PYBIND11_MODULE(walker, m) {
       }))
     ;
 
-  py::class_<ThermalScaling, std::shared_ptr<ThermalScaling>>(m,
+  py::class_<ThermalScaling, NEMLObject, std::shared_ptr<ThermalScaling>>(m,
                                                               "ThermalScaling")
     .def(py::init([](py::args args, py::kwargs kwargs)
       {
@@ -155,6 +155,32 @@ PYBIND11_MODULE(walker, m) {
       {
         return create_object_python<WalkerIsotropicHardening>(
             args, kwargs, {"r0", "Rinf", "R0", "r1", "r2"});
+      }))
+    ;
+
+  py::class_<DragStress, ScalarInternalVariable,
+      std::shared_ptr<DragStress>>(m, "DragStress")
+      .def("set_scaling", &DragStress::set_scaling)
+      .def("D_xi", &DragStress::D_xi)
+      .def("D_0", &DragStress::D_0)
+    ;
+
+  py::class_<ConstantDragStress, DragStress,
+      std::shared_ptr<ConstantDragStress>>(m, "ConstantDragStress")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<ConstantDragStress>(
+            args, kwargs, {"value"});
+      }))
+    ;
+
+  py::class_<WalkerDragStress, DragStress,
+      std::shared_ptr<WalkerDragStress>>(m, "WalkerDragStress")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<WalkerDragStress>(
+            args, kwargs, {"d0", "d1", "d2", "D_xi",
+            "D_0", "softening"});
       }))
     ;
 

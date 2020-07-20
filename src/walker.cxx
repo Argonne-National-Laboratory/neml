@@ -827,6 +827,291 @@ Symmetric WalkerIsotropicHardening::d_ratet_d_g(VariableState & state)
   return Symmetric();
 }
 
+DragStress::DragStress(std::string name, 
+                                       std::shared_ptr<ThermalScaling> scale) :
+    ScalarInternalVariable(name), scale_(scale)
+{}
+
+/// Return zero for time rate by default 
+double DragStress::ratet(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+double DragStress::d_ratet_d_h(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+double DragStress::d_ratet_d_a(VariableState & state) 
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+double DragStress::d_ratet_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+Symmetric DragStress::d_ratet_d_s(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the time rate derivatives by default
+Symmetric DragStress::d_ratet_d_g(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for temperature rate by default 
+double DragStress::rateT(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double DragStress::d_rateT_d_h(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double DragStress::d_rateT_d_a(VariableState & state) 
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double DragStress::d_rateT_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+Symmetric DragStress::d_rateT_d_s(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+Symmetric DragStress::d_rateT_d_g(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+ConstantDragStress::ConstantDragStress(double value,
+    std::shared_ptr<ThermalScaling> scale) :
+      DragStress("D", scale), value_(value)
+{
+
+}
+
+std::string ConstantDragStress::type()
+{
+  return "ConstantDragStress";
+}
+
+ParameterSet ConstantDragStress::parameters()
+{
+  ParameterSet pset(ConstantDragStress::type());
+  
+  pset.add_parameter<double>("value");
+  pset.add_optional_parameter<NEMLObject>("scaling", 
+                                          std::make_shared<ThermalScaling>());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ConstantDragStress::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<ConstantDragStress>(
+      params.get_parameter<double>("value"),
+      params.get_object_parameter<ThermalScaling>("scaling")
+      ); 
+}
+
+double ConstantDragStress::initial_value()
+{
+  return value_;
+}
+
+double ConstantDragStress::D_xi(double T)
+{
+  return 1; // Can be an arbitrary value for this model
+}
+
+double ConstantDragStress::D_0(double T)
+{
+  return value_; // Straightforward!
+}
+
+double ConstantDragStress::ratep(VariableState & state)
+{
+  return 0;
+}
+
+double ConstantDragStress::d_ratep_d_h(VariableState & state)
+{
+  return 0;
+}
+
+double ConstantDragStress::d_ratep_d_a(VariableState & state)
+{
+  return 0;
+}
+
+double ConstantDragStress::d_ratep_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+Symmetric ConstantDragStress::d_ratep_d_s(VariableState & state)
+{
+  return Symmetric();
+}
+
+Symmetric ConstantDragStress::d_ratep_d_g(VariableState & state)
+{
+  return Symmetric();
+}
+
+WalkerDragStress::WalkerDragStress(
+    std::shared_ptr<Interpolate> d0, std::shared_ptr<Interpolate> d1,
+    std::shared_ptr<Interpolate> d2, std::shared_ptr<Interpolate> D_xi,
+    double D_0, std::shared_ptr<SofteningModel> softening,
+    std::shared_ptr<ThermalScaling> scale) :
+      DragStress("D", scale), d0_(d0), d1_(d1), d2_(d2),
+      D_xi_(D_xi), D_0_(D_0), softening_(softening)
+{
+
+}
+
+std::string WalkerDragStress::type()
+{
+  return "WalkerDragStress";
+}
+
+ParameterSet WalkerDragStress::parameters()
+{
+  ParameterSet pset(WalkerDragStress::type());
+  
+  pset.add_parameter<NEMLObject>("d0");
+  pset.add_parameter<NEMLObject>("d1");
+  pset.add_parameter<NEMLObject>("d2");
+  pset.add_parameter<NEMLObject>("D_xi");
+  pset.add_parameter<double>("D_0");
+  pset.add_parameter<NEMLObject>("softening");
+  pset.add_optional_parameter<NEMLObject>("scaling", 
+                                          std::make_shared<ThermalScaling>());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> WalkerDragStress::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<WalkerDragStress>(
+      params.get_object_parameter<Interpolate>("d0"),
+      params.get_object_parameter<Interpolate>("d1"),
+      params.get_object_parameter<Interpolate>("d2"),
+      params.get_object_parameter<Interpolate>("D_xi"),
+      params.get_parameter<double>("D_0"),
+      params.get_object_parameter<SofteningModel>("softening"),
+      params.get_object_parameter<ThermalScaling>("scaling")
+      ); 
+}
+
+double WalkerDragStress::initial_value()
+{
+  return D_0_;
+}
+
+double WalkerDragStress::D_xi(double T)
+{
+  return D_xi_->value(T); // Explicit parameter
+}
+
+double WalkerDragStress::D_0(double T)
+{
+  return D_0_; // Straightforward!
+}
+
+double WalkerDragStress::ratep(VariableState & state)
+{
+  return d0_->value(state.T) * (1.0 - state.h / D_xi_->value(state.T));
+}
+
+double WalkerDragStress::d_ratep_d_h(VariableState & state)
+{
+  return -d0_->value(state.T) / D_xi_->value(state.T);
+}
+
+double WalkerDragStress::d_ratep_d_a(VariableState & state)
+{
+  return 0;
+}
+
+double WalkerDragStress::d_ratep_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+Symmetric WalkerDragStress::d_ratep_d_s(VariableState & state)
+{
+  return Symmetric();
+}
+
+Symmetric WalkerDragStress::d_ratep_d_g(VariableState & state)
+{
+  return Symmetric();
+}
+
+double WalkerDragStress::ratet(VariableState & state)
+{
+  return -scale_->value(state.T) * softening_->phi(state.a, state.T) * 
+      d1_->value(state.T) * std::pow(state.h, d2_->value(state.T));
+}
+
+double WalkerDragStress::d_ratet_d_h(VariableState & state)
+{
+  return -d2_->value(state.T) * scale_->value(state.T) * softening_->phi(state.a, state.T) * 
+      d1_->value(state.T) * std::pow(state.h, d2_->value(state.T) - 1.0);
+}
+
+double WalkerDragStress::d_ratet_d_a(VariableState & state)
+{
+  return -scale_->value(state.T) * softening_->dphi(state.a, state.T) * 
+      d1_->value(state.T) * std::pow(state.h, d2_->value(state.T));
+}
+
+double WalkerDragStress::d_ratet_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+Symmetric WalkerDragStress::d_ratet_d_s(VariableState & state)
+{
+  return Symmetric();
+}
+
+Symmetric WalkerDragStress::d_ratet_d_g(VariableState & state)
+{
+  return Symmetric();
+}
+
+
+
+
+
+
+
+
 WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule() :
     stored_hist_(false)
 {

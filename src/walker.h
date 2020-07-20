@@ -291,6 +291,117 @@ class WalkerIsotropicHardening: public IsotropicHardening {
 
 static Register<WalkerIsotropicHardening> regWalkerIsotropicHardening;
 
+class DragStress: public ScalarInternalVariable {
+ public:
+  DragStress(std::string name, 
+             std::shared_ptr<ThermalScaling> scale);
+
+  void set_scaling(std::shared_ptr<ThermalScaling> scale) {scale_ = scale;};
+  
+  /// Report the value of D_xi
+  virtual double D_xi(double T) = 0;
+  /// Report the value of D_0
+  virtual double D_0(double T) = 0;
+
+  virtual double ratet(VariableState & state);
+  virtual double d_ratet_d_h(VariableState & state);
+  virtual double d_ratet_d_a(VariableState & state);
+  virtual double d_ratet_d_adot(VariableState & state);
+  virtual Symmetric d_ratet_d_s(VariableState & state);
+  virtual Symmetric d_ratet_d_g(VariableState & state);
+
+  virtual double rateT(VariableState & state);
+  virtual double d_rateT_d_h(VariableState & state);
+  virtual double d_rateT_d_a(VariableState & state);
+  virtual double d_rateT_d_adot(VariableState & state);
+  virtual Symmetric d_rateT_d_s(VariableState & state);
+  virtual Symmetric d_rateT_d_g(VariableState & state);
+
+ protected:
+  std::shared_ptr<ThermalScaling> scale_;
+};
+
+class ConstantDragStress: public DragStress {
+ public:
+  ConstantDragStress(double value,
+                     std::shared_ptr<ThermalScaling> scale = 
+                     std::make_shared<ThermalScaling>());
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  virtual double initial_value();
+
+  /// Report the value of D_xi
+  virtual double D_xi(double T);
+  /// Report the value of D_0
+  virtual double D_0(double T);
+
+  virtual double ratep(VariableState & state);
+  virtual double d_ratep_d_h(VariableState & state);
+  virtual double d_ratep_d_a(VariableState & state);
+  virtual double d_ratep_d_adot(VariableState & state);
+  virtual Symmetric d_ratep_d_s(VariableState & state);
+  virtual Symmetric d_ratep_d_g(VariableState & state);
+
+ private:
+  double value_;
+};
+
+static Register<ConstantDragStress> regConstantDragStress;
+
+class WalkerDragStress: public DragStress {
+ public:
+  WalkerDragStress(std::shared_ptr<Interpolate> d0,
+                   std::shared_ptr<Interpolate> d1,
+                   std::shared_ptr<Interpolate> d2,
+                   std::shared_ptr<Interpolate> D_xi,
+                   double D_0,
+                   std::shared_ptr<SofteningModel> softening,
+                   std::shared_ptr<ThermalScaling> scale = 
+                   std::make_shared<ThermalScaling>());
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+  
+  /// Initial value of drag stress
+  virtual double initial_value();
+
+  /// Report the value of D_xi
+  virtual double D_xi(double T);
+  /// Report the value of D_0
+  virtual double D_0(double T);
+
+  virtual double ratep(VariableState & state);
+  virtual double d_ratep_d_h(VariableState & state);
+  virtual double d_ratep_d_a(VariableState & state);
+  virtual double d_ratep_d_adot(VariableState & state);
+  virtual Symmetric d_ratep_d_s(VariableState & state);
+  virtual Symmetric d_ratep_d_g(VariableState & state);
+
+  virtual double ratet(VariableState & state);
+  virtual double d_ratet_d_h(VariableState & state);
+  virtual double d_ratet_d_a(VariableState & state);
+  virtual double d_ratet_d_adot(VariableState & state);
+  virtual Symmetric d_ratet_d_s(VariableState & state);
+  virtual Symmetric d_ratet_d_g(VariableState & state);
+
+ private:
+  std::shared_ptr<Interpolate> d0_, d1_, d2_, D_xi_;
+  double D_0_;
+  std::shared_ptr<SofteningModel> softening_;
+};
+
+static Register<WalkerDragStress> regWalkerDragStress;
+
 /// Helper struct for the below
 struct State {
   State(Symmetric S, History h, double T) :
