@@ -574,6 +574,259 @@ double ArrheniusThermalScaling::arr_(double T) const
   return std::exp(-Q_->value(T) / (R_ * T));
 }
 
+IsotropicHardening::IsotropicHardening(std::string name, 
+                                       std::shared_ptr<ThermalScaling> scale) :
+    ScalarInternalVariable(name), scale_(scale)
+{}
+
+/// Return zero for time rate by default 
+double IsotropicHardening::ratet(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+double IsotropicHardening::d_ratet_d_h(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+double IsotropicHardening::d_ratet_d_a(VariableState & state) 
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+double IsotropicHardening::d_ratet_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+Symmetric IsotropicHardening::d_ratet_d_s(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the time rate derivatives by default
+Symmetric IsotropicHardening::d_ratet_d_g(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for temperature rate by default 
+double IsotropicHardening::rateT(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double IsotropicHardening::d_rateT_d_h(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double IsotropicHardening::d_rateT_d_a(VariableState & state) 
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double IsotropicHardening::d_rateT_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+Symmetric IsotropicHardening::d_rateT_d_s(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+Symmetric IsotropicHardening::d_rateT_d_g(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+
+ConstantIsotropicHardening::ConstantIsotropicHardening(
+    std::shared_ptr<ThermalScaling> scale) :
+      IsotropicHardening("R", scale)
+{
+
+}
+
+std::string ConstantIsotropicHardening::type()
+{
+  return "ConstantIsotropicHardening";
+}
+
+ParameterSet ConstantIsotropicHardening::parameters()
+{
+  ParameterSet pset(ConstantIsotropicHardening::type());
+
+  pset.add_optional_parameter<NEMLObject>("scaling", 
+                                          std::make_shared<ThermalScaling>());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ConstantIsotropicHardening::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<ConstantIsotropicHardening>(
+      params.get_object_parameter<ThermalScaling>("scaling")
+      ); 
+}
+
+double ConstantIsotropicHardening::initial_value()
+{
+  return 0;
+}
+
+double ConstantIsotropicHardening::ratep(VariableState & state)
+{
+  return 0;
+}
+
+double ConstantIsotropicHardening::d_ratep_d_h(VariableState & state)
+{
+  return 0;
+}
+
+double ConstantIsotropicHardening::d_ratep_d_a(VariableState & state)
+{
+  return 0;
+}
+
+double ConstantIsotropicHardening::d_ratep_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+Symmetric ConstantIsotropicHardening::d_ratep_d_s(VariableState & state)
+{
+  return Symmetric();
+}
+
+Symmetric ConstantIsotropicHardening::d_ratep_d_g(VariableState & state)
+{
+  return Symmetric();
+}
+
+
+WalkerIsotropicHardening::WalkerIsotropicHardening(
+    std::shared_ptr<Interpolate> r0, std::shared_ptr<Interpolate> Rinf,
+    std::shared_ptr<Interpolate> R0, std::shared_ptr<Interpolate> r1,
+    std::shared_ptr<Interpolate> r2, std::shared_ptr<ThermalScaling> scale) :
+      IsotropicHardening("R", scale), r0_(r0), Rinf_(Rinf), R0_(R0), r1_(r1), 
+      r2_(r2)
+{
+
+}
+
+std::string WalkerIsotropicHardening::type()
+{
+  return "WalkerIsotropicHardening";
+}
+
+ParameterSet WalkerIsotropicHardening::parameters()
+{
+  ParameterSet pset(WalkerIsotropicHardening::type());
+
+  pset.add_parameter<NEMLObject>("r0");
+  pset.add_parameter<NEMLObject>("Rinf");
+  pset.add_parameter<NEMLObject>("R0");
+  pset.add_parameter<NEMLObject>("r1");
+  pset.add_parameter<NEMLObject>("r2");
+  pset.add_optional_parameter<NEMLObject>("scaling", 
+                                          std::make_shared<ThermalScaling>());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> WalkerIsotropicHardening::initialize(ParameterSet & params)
+{
+  return neml::make_unique<WalkerIsotropicHardening>(
+      params.get_object_parameter<Interpolate>("r0"),
+      params.get_object_parameter<Interpolate>("Rinf"),
+      params.get_object_parameter<Interpolate>("R0"),
+      params.get_object_parameter<Interpolate>("r1"),
+      params.get_object_parameter<Interpolate>("r2"),
+      params.get_object_parameter<ThermalScaling>("scaling")
+      ); 
+}
+
+double WalkerIsotropicHardening::initial_value()
+{
+  return 0;
+}
+
+double WalkerIsotropicHardening::ratep(VariableState & state)
+{
+  return r0_->value(state.T) * (Rinf_->value(state.T) - state.h);
+}
+
+double WalkerIsotropicHardening::d_ratep_d_h(VariableState & state)
+{
+  return -r0_->value(state.T);
+}
+
+double WalkerIsotropicHardening::d_ratep_d_a(VariableState & state)
+{
+  return 0;
+}
+
+double WalkerIsotropicHardening::d_ratep_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+Symmetric WalkerIsotropicHardening::d_ratep_d_s(VariableState & state)
+{
+  return Symmetric();
+}
+
+Symmetric WalkerIsotropicHardening::d_ratep_d_g(VariableState & state)
+{
+  return Symmetric();
+}
+
+double WalkerIsotropicHardening::ratet(VariableState & state)
+{
+  double d = R0_->value(state.T) - state.h;
+  return r1_->value(state.T) * d * std::pow(std::fabs(d), r2_->value(state.T) - 1.0);
+}
+
+double WalkerIsotropicHardening::d_ratet_d_h(VariableState & state)
+{
+  return -r1_->value(state.T) * r2_->value(state.T) * 
+      std::pow(std::fabs(R0_->value(state.T) - state.h), r2_->value(state.T) - 1.0);
+}
+
+double WalkerIsotropicHardening::d_ratet_d_a(VariableState & state)
+{
+  return 0;
+}
+
+double WalkerIsotropicHardening::d_ratet_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+Symmetric WalkerIsotropicHardening::d_ratet_d_s(VariableState & state)
+{
+  return Symmetric();
+}
+
+Symmetric WalkerIsotropicHardening::d_ratet_d_g(VariableState & state)
+{
+  return Symmetric();
+}
+
 WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule() :
     stored_hist_(false)
 {

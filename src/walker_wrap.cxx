@@ -86,6 +86,19 @@ PYBIND11_MODULE(walker, m) {
   py::class_<ScalarInternalVariable::VariableState,
       std::shared_ptr<ScalarInternalVariable::VariableState>>(m,
                                                               "ScalarInternalVariableState")
+    .def(py::init([](double h, double a, double adot, Symmetric s, Symmetric g,
+                     double T)
+                  {
+                    ScalarInternalVariable::VariableState state;
+                    state.h = h;
+                    state.a = a;
+                    state.adot = adot;
+                    state.s = s;
+                    state.g = g;
+                    state.T = T;
+
+                    return state;
+                  }))
     .def_readwrite("h", &ScalarInternalVariable::VariableState::h)
     .def_readwrite("a", &ScalarInternalVariable::VariableState::a)
     .def_readwrite("adot", &ScalarInternalVariable::VariableState::adot)
@@ -118,6 +131,31 @@ PYBIND11_MODULE(walker, m) {
     .def("d_rateT_d_adot", &ScalarInternalVariable::d_rateT_d_adot)
     .def("d_rateT_d_s", &ScalarInternalVariable::d_rateT_d_s)
     .def("d_rateT_d_g", &ScalarInternalVariable::d_rateT_d_g)
+    ;
+
+  py::class_<IsotropicHardening, ScalarInternalVariable,
+      std::shared_ptr<IsotropicHardening>>(m, "IsotropicHardening")
+      .def("set_scaling", &IsotropicHardening::set_scaling)
+    ;
+
+  py::class_<ConstantIsotropicHardening, IsotropicHardening,
+      std::shared_ptr<ConstantIsotropicHardening>>(m,
+                                                   "ConstantIsotropicHardening")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<ConstantIsotropicHardening>(
+            args, kwargs, {});
+      }))
+    ;
+
+  py::class_<WalkerIsotropicHardening, IsotropicHardening,
+      std::shared_ptr<WalkerIsotropicHardening>>(m,
+                                                   "WalkerIsotropicHardening")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<WalkerIsotropicHardening>(
+            args, kwargs, {"r0", "Rinf", "R0", "r1", "r2"});
+      }))
     ;
 
   py::class_<SymmetricInternalVariable::VariableState,

@@ -198,6 +198,99 @@ class ArrheniusThermalScaling: public ThermalScaling {
 
 static Register<ArrheniusThermalScaling> regArrheniusThermalScaling;
 
+class IsotropicHardening: public ScalarInternalVariable {
+ public:
+  IsotropicHardening(std::string name, 
+                     std::shared_ptr<ThermalScaling> scale);
+
+  void set_scaling(std::shared_ptr<ThermalScaling> scale) {scale_ = scale;};
+
+  virtual double ratet(VariableState & state);
+  virtual double d_ratet_d_h(VariableState & state);
+  virtual double d_ratet_d_a(VariableState & state);
+  virtual double d_ratet_d_adot(VariableState & state);
+  virtual Symmetric d_ratet_d_s(VariableState & state);
+  virtual Symmetric d_ratet_d_g(VariableState & state);
+
+  virtual double rateT(VariableState & state);
+  virtual double d_rateT_d_h(VariableState & state);
+  virtual double d_rateT_d_a(VariableState & state);
+  virtual double d_rateT_d_adot(VariableState & state);
+  virtual Symmetric d_rateT_d_s(VariableState & state);
+  virtual Symmetric d_rateT_d_g(VariableState & state);
+
+ protected:
+  std::shared_ptr<ThermalScaling> scale_;
+};
+
+class ConstantIsotropicHardening: public IsotropicHardening {
+ public:
+  ConstantIsotropicHardening(std::shared_ptr<ThermalScaling> scale = 
+                             std::make_shared<ThermalScaling>());
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  virtual double initial_value();
+
+  virtual double ratep(VariableState & state);
+  virtual double d_ratep_d_h(VariableState & state);
+  virtual double d_ratep_d_a(VariableState & state);
+  virtual double d_ratep_d_adot(VariableState & state);
+  virtual Symmetric d_ratep_d_s(VariableState & state);
+  virtual Symmetric d_ratep_d_g(VariableState & state);
+};
+
+static Register<ConstantIsotropicHardening> regConstantIsotropicHardening;
+
+/// The actual hardening model used in Walker's A617 viscoplastic model
+class WalkerIsotropicHardening: public IsotropicHardening {
+ public:
+  WalkerIsotropicHardening(std::shared_ptr<Interpolate> r0,
+                           std::shared_ptr<Interpolate> Rinf,
+                           std::shared_ptr<Interpolate> R0,
+                           std::shared_ptr<Interpolate> r1,
+                           std::shared_ptr<Interpolate> r2,
+                           std::shared_ptr<ThermalScaling> scale = 
+                           std::make_shared<ThermalScaling>());
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  virtual double initial_value();
+
+  virtual double ratep(VariableState & state);
+  virtual double d_ratep_d_h(VariableState & state);
+  virtual double d_ratep_d_a(VariableState & state);
+  virtual double d_ratep_d_adot(VariableState & state);
+  virtual Symmetric d_ratep_d_s(VariableState & state);
+  virtual Symmetric d_ratep_d_g(VariableState & state);
+
+  virtual double ratet(VariableState & state);
+  virtual double d_ratet_d_h(VariableState & state);
+  virtual double d_ratet_d_a(VariableState & state);
+  virtual double d_ratet_d_adot(VariableState & state);
+  virtual Symmetric d_ratet_d_s(VariableState & state);
+  virtual Symmetric d_ratet_d_g(VariableState & state);
+
+ private:
+  std::shared_ptr<Interpolate> r0_;
+  std::shared_ptr<Interpolate> Rinf_;
+  std::shared_ptr<Interpolate> R0_;
+  std::shared_ptr<Interpolate> r1_;
+  std::shared_ptr<Interpolate> r2_;
+};
+
+static Register<WalkerIsotropicHardening> regWalkerIsotropicHardening;
+
 /// Helper struct for the below
 struct State {
   State(Symmetric S, History h, double T) :
