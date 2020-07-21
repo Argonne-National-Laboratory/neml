@@ -258,6 +258,16 @@ PYBIND11_MODULE(walker, m) {
       }))
     ;
 
+  py::class_<WalkerKinematicHardening, KinematicHardening,
+      std::shared_ptr<WalkerKinematicHardening>>(m, "WalkerKinematicHardening")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<WalkerKinematicHardening>(
+            args, kwargs, {"c0", "c1", "c2", "l0", "l1", "l",
+            "b0", "x0", "x1", "softening"});
+      }))
+    ;
+
   py::class_<State, std::shared_ptr<State>>(m, "State")
     .def(py::init<Symmetric, History, double>())
     .def_readwrite("S", &State::S)

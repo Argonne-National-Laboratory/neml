@@ -469,6 +469,64 @@ class FAKinematicHardening: public KinematicHardening {
 
 static Register<FAKinematicHardening> regFAKinematicHardening;
 
+/// Walker's kinematic hardening model
+class WalkerKinematicHardening: public KinematicHardening {
+ public:
+  WalkerKinematicHardening(std::shared_ptr<Interpolate> c0,
+                           std::shared_ptr<Interpolate> c1,
+                           std::shared_ptr<Interpolate> c2,
+                           std::shared_ptr<Interpolate> l0,
+                           std::shared_ptr<Interpolate> l1,
+                           std::shared_ptr<Interpolate> l,
+                           std::shared_ptr<Interpolate> b0,
+                           std::shared_ptr<Interpolate> x0,
+                           std::shared_ptr<Interpolate> x1,
+                           std::shared_ptr<SofteningModel> softening,
+                           std::shared_ptr<ThermalScaling> scale);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  virtual Symmetric initial_value();
+
+  virtual Symmetric ratep(VariableState & state);
+  virtual SymSymR4 d_ratep_d_h(VariableState & state);
+  virtual Symmetric d_ratep_d_a(VariableState & state);
+  virtual Symmetric d_ratep_d_adot(VariableState & state);
+  virtual Symmetric d_ratep_d_D(VariableState & state);
+  virtual SymSymR4 d_ratep_d_s(VariableState & state);
+  virtual SymSymR4 d_ratep_d_g(VariableState & state);
+
+  virtual Symmetric ratet(VariableState & state);
+  virtual SymSymR4 d_ratet_d_h(VariableState & state);
+  virtual Symmetric d_ratet_d_a(VariableState & state);
+  virtual Symmetric d_ratet_d_adot(VariableState & state);
+  virtual Symmetric d_ratet_d_D(VariableState & state);
+  virtual SymSymR4 d_ratet_d_s(VariableState & state);
+  virtual SymSymR4 d_ratet_d_g(VariableState & state);
+ 
+ private:
+  double c_(VariableState & state);
+  double dc_(VariableState & state);
+  double L_(VariableState & state);
+  double dL_(VariableState & state);
+  Symmetric n_(VariableState & state);
+  Symmetric b_(VariableState & state);
+  SymSymR4 dN_(VariableState & state);
+  SymSymR4 db_ds_(VariableState & state);
+  SymSymR4 db_dx_(VariableState & state);
+
+ private:
+  std::shared_ptr<Interpolate> c0_, c1_, c2_, l0_, l1_, l_, b0_, x0_, x1_;
+  std::shared_ptr<SofteningModel> softening_;
+};
+
+static Register<WalkerKinematicHardening> regWalkerKinematicHardening;
+
 /// Helper struct for the below
 struct State {
   State(Symmetric S, History h, double T) :

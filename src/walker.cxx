@@ -1315,6 +1315,223 @@ SymSymR4 FAKinematicHardening::d_ratep_d_g(VariableState & state)
   return 2.0/3.0 * c_->value(state.T) * SymSymR4::id();
 }
 
+
+WalkerKinematicHardening::WalkerKinematicHardening(
+    std::shared_ptr<Interpolate> c0, std::shared_ptr<Interpolate> c1, 
+    std::shared_ptr<Interpolate> c2, std::shared_ptr<Interpolate> l0,
+    std::shared_ptr<Interpolate> l1, std::shared_ptr<Interpolate> l,
+    std::shared_ptr<Interpolate> b0, std::shared_ptr<Interpolate> x0,
+    std::shared_ptr<Interpolate> x1, std::shared_ptr<SofteningModel> softening,
+    std::shared_ptr<ThermalScaling> scale) : 
+      KinematicHardening("X", scale), c0_(c0), c1_(c1), c2_(c2), l0_(l0), l1_(l1),
+      l_(l), b0_(b0), x0_(x0), x1_(x1), softening_(softening)
+{
+
+}
+
+std::string WalkerKinematicHardening::type()
+{
+  return "WalkerKinematicHardening";
+}
+
+ParameterSet WalkerKinematicHardening::parameters()
+{
+  ParameterSet pset(WalkerKinematicHardening::type());
+  
+  pset.add_parameter<NEMLObject>("c0");
+  pset.add_parameter<NEMLObject>("c1");
+  pset.add_parameter<NEMLObject>("c2");
+  pset.add_parameter<NEMLObject>("l0");
+  pset.add_parameter<NEMLObject>("l1");
+  pset.add_parameter<NEMLObject>("l");
+  pset.add_parameter<NEMLObject>("b0");
+  pset.add_parameter<NEMLObject>("x0");
+  pset.add_parameter<NEMLObject>("x1");
+  pset.add_parameter<NEMLObject>("softening");
+
+  pset.add_optional_parameter<NEMLObject>("scaling", 
+                                          std::make_shared<ThermalScaling>());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> WalkerKinematicHardening::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<WalkerKinematicHardening>(
+      params.get_object_parameter<Interpolate>("c0"),
+      params.get_object_parameter<Interpolate>("c1"),
+      params.get_object_parameter<Interpolate>("c2"),
+      params.get_object_parameter<Interpolate>("l0"),
+      params.get_object_parameter<Interpolate>("l1"),
+      params.get_object_parameter<Interpolate>("l"),
+      params.get_object_parameter<Interpolate>("b0"),
+      params.get_object_parameter<Interpolate>("x0"),
+      params.get_object_parameter<Interpolate>("x1"),
+      params.get_object_parameter<SofteningModel>("softening"),
+      params.get_object_parameter<ThermalScaling>("scaling")
+      ); 
+}
+
+Symmetric WalkerKinematicHardening::initial_value()
+{
+  return Symmetric::zero();
+}
+
+Symmetric WalkerKinematicHardening::ratep(VariableState & state)
+{
+  return c_(state) * (2.0/3.0 * state.g - b_(state) / L_(state));
+}
+
+SymSymR4 WalkerKinematicHardening::d_ratep_d_h(VariableState & state)
+{
+  return -c_(state) * db_dx_(state) / L_(state);
+}
+
+Symmetric WalkerKinematicHardening::d_ratep_d_a(VariableState & state) 
+{
+  return c_(state) * b_(state) / std::pow(L_(state), 2.0) * dL_(state);
+}
+
+Symmetric WalkerKinematicHardening::d_ratep_d_adot(VariableState & state)
+{
+  return dc_(state) * (2.0/3.0 * state.g - b_(state) / L_(state));;
+}
+
+Symmetric WalkerKinematicHardening::d_ratep_d_D(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+SymSymR4 WalkerKinematicHardening::d_ratep_d_s(VariableState & state)
+{
+  return -c_(state) * db_ds_(state) / L_(state);
+}
+
+SymSymR4 WalkerKinematicHardening::d_ratep_d_g(VariableState & state)
+{
+  return c_(state) * 2.0/3.0 * SymSymR4::id();
+}
+
+Symmetric WalkerKinematicHardening::ratet(VariableState & state)
+{
+  return -scale_->value(state.T) * x0_->value(state.T) * 
+      softening_->phi(state.a, state.T) * 
+      std::pow(std::sqrt(3.0/2) * state.h.norm() / state.D, x1_->value(state.T))
+      * state.h / (state.h.norm() * std::sqrt(3.0/2));
+}
+
+SymSymR4 WalkerKinematicHardening::d_ratet_d_h(VariableState & state)
+{
+  Symmetric d = state.h / state.h.norm();
+  SymSymR4 dd = 1.0 / (std::sqrt(3.0/2.0) * state.h.norm()) * (SymSymR4::id() - 
+                                                               douter(d, d));
+  return -scale_->value(state.T) * x0_->value(state.T) * 
+      softening_->phi(state.a, state.T) * 
+      (x1_->value(state.T)/state.D * std::pow(std::sqrt(3.0/2) * state.h.norm() / state.D,
+                               x1_->value(state.T) - 1.0)  * douter(d,d)
+       + std::pow(std::sqrt(3.0/2) * state.h.norm() / state.D,
+                  x1_->value(state.T)) * dd);
+}
+
+Symmetric WalkerKinematicHardening::d_ratet_d_a(VariableState & state) 
+{
+  return -scale_->value(state.T) * x0_->value(state.T) * 
+      softening_->dphi(state.a, state.T) * 
+      std::pow(std::sqrt(3.0/2) * state.h.norm() / state.D, x1_->value(state.T))
+      * state.h / (state.h.norm() * std::sqrt(3.0/2));
+}
+
+Symmetric WalkerKinematicHardening::d_ratet_d_adot(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+Symmetric WalkerKinematicHardening::d_ratet_d_D(VariableState & state)
+{
+  return scale_->value(state.T) * x0_->value(state.T) * 
+      softening_->phi(state.a, state.T) * x1_->value(state.T) *
+      std::pow(std::sqrt(3.0/2) * state.h.norm() / state.D,
+               x1_->value(state.T)-1.0)
+      * state.h / (state.h.norm() * std::sqrt(3.0/2))
+      * std::sqrt(3.0/2) * state.h.norm() / (state.D*state.D);
+}
+
+SymSymR4 WalkerKinematicHardening::d_ratet_d_s(VariableState & state)
+{
+  return SymSymR4::zero();
+}
+
+SymSymR4 WalkerKinematicHardening::d_ratet_d_g(VariableState & state)
+{
+  return SymSymR4::zero();
+}
+
+double WalkerKinematicHardening::c_(VariableState & state)
+{
+  return c0_->value(state.T) + c1_->value(state.T) * 
+      std::pow(state.adot, 1.0/c2_->value(state.T));
+}
+
+double WalkerKinematicHardening::dc_(VariableState & state)
+{
+  return c1_->value(state.T)/c2_->value(state.T) * 
+      std::pow(state.adot, 1.0/c2_->value(state.T)-1.0);
+}
+
+double WalkerKinematicHardening::L_(VariableState & state)
+{
+  return l_->value(state.T) * (l1_->value(state.T) + (1.0 - l1_->value(state.T))
+                               * std::exp(-l0_->value(state.T) * state.a));
+}
+
+double WalkerKinematicHardening::dL_(VariableState & state)
+{
+  return -l0_->value(state.T) * l_->value(state.T) * (1.0 - l1_->value(state.T))
+                               * std::exp(-l0_->value(state.T) * state.a);
+}
+
+Symmetric WalkerKinematicHardening::n_(VariableState & state)
+{
+  return (3.0/2.0) * (state.s.dev() - state.h) / 
+      (std::sqrt(3.0/2.0) * (state.s.dev() - state.h).norm());
+}
+
+Symmetric WalkerKinematicHardening::b_(VariableState & state)
+{
+  Symmetric n = n_(state);
+  return (1.0 - b0_->value(state.T)) * state.h + 2.0/3.0 * b0_->value(state.T) *
+      douter(n,n).dot(state.h);
+}
+
+SymSymR4 WalkerKinematicHardening::db_ds_(VariableState & state)
+{
+  SymSymR4 Nbar = dN_(state).dot(SymSymR4::id_dev());
+  Symmetric n = n_(state);
+
+  return 2.0/3.0 * b0_->value(state.T) * (Nbar * n.contract(state.h) + 
+                                          douter(n,
+                                                 Nbar.dot(state.h).transpose()));
+}
+
+SymSymR4 WalkerKinematicHardening::db_dx_(VariableState & state)
+{
+  Symmetric n = n_(state);
+  SymSymR4 N = dN_(state);
+  return (1.0 - b0_->value(state.T)) * SymSymR4::id() 
+      + 2.0/3.0 * b0_->value(state.T) * douter(n,n)
+      - 2.0/3.0 * b0_->value(state.T) * (N * n.contract(state.h) + 
+                                         douter(n, 
+                                                N.dot(state.h).transpose()));
+}
+
+SymSymR4 WalkerKinematicHardening::dN_(VariableState & state)
+{
+  Symmetric d = state.s.dev() - state.h;
+  double dn = d.norm();
+  return std::sqrt(3.0/2.0) / dn * (SymSymR4::id() - douter(d/dn,d/dn));
+}
+
 WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule() :
     stored_hist_(false)
 {

@@ -677,12 +677,12 @@ class CommonKinematicHardening(object):
         self.adot)
     self.assertEqual(av, nv)
 
-  def test_d_ratep_d_D(self):
+  def test_d_ratet_d_D(self):
     av = self.model.d_ratet_d_D(self.state)
     nv =  diff_symmetric_scalar(lambda D: 
         self.model.ratet(
           self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
-        self.adot)
+        self.D)
     self.assertEqual(av, nv)
 
   def test_d_ratet_d_s(self):
@@ -762,7 +762,7 @@ class TestFAKinematicHardening(unittest.TestCase, CommonKinematicHardening):
     self.h = tensors.Symmetric([
       [-100.0,200.0,10.0],
       [200.0,150.0,80.0],
-      [10.0,80.0,-10.0]])
+      [10.0,80.0,-10.0]]).dev()
     self.a = 0.1
     self.adot = 2.0
     self.s = tensors.Symmetric([
@@ -781,8 +781,75 @@ class TestFAKinematicHardening(unittest.TestCase, CommonKinematicHardening):
     self.assertEqual(self.model.initial_value(), tensors.Symmetric([[0,0,0],[0,0,0],[0,0,0]]))
 
   def test_ratep(self):
-    self.assertTrue(self.model.ratep(self.state), 
+    self.assertEqual(self.model.ratep(self.state), 
         2.0/3.0 * self.c * self.g - self.gamma * self.h)
+
+class TestWalkerKinematicHardening(unittest.TestCase, CommonKinematicHardening):
+  def setUp(self):
+    self.c0 = 1.723e5
+    self.c1 = 3.153e6
+    self.c2 = 1.691
+
+    self.l0 = 14.0
+    self.l1 = 0.7
+    self.l = 6.165e1
+
+    self.b0 = 0.5    # 0.0?
+    self.x0 = 4.658e2
+    self.x1 = 1.691e0
+
+    self.phi0 = 0.5    # 0
+    self.phi1 = 0.35
+
+    self.Q = 3.65e5
+    self.R = 8.314
+    self.T0 = 950+273.15
+
+    self.softening = walker.WalkerSofteningModel(self.phi0, self.phi1)
+    self.scaling = walker.ArrheniusThermalScaling(self.Q, self.R, self.T0)
+
+    self.model = walker.WalkerKinematicHardening(self.c0, self.c1, self.c2,
+        self.l0, self.l1, self.l, self.b0, self.x0, self.x1, self.softening,
+        scaling = self.scaling)
+
+    self.h = tensors.Symmetric([
+      [-100.0,200.0,10.0],
+      [200.0,150.0,80.0],
+      [10.0,80.0,-10.0]]).dev()
+    self.a = 0.1
+    self.adot = 2.0
+    self.s = tensors.Symmetric([
+      [300.0,50.0,25.0],
+      [50.0,150.0,-20.0],
+      [25.0,-20.0,-100.0]])
+    self.g = self.s / self.s.norm()
+    self.T = 900 + 273.15
+
+    self.D = 75.0
+
+    self.state = self.make_state(self.h, self.a, self.adot, self.D,
+        self.s, self.g, self.T)
+
+  def test_initial_value(self):
+    self.assertEqual(self.model.initial_value(), tensors.Symmetric([[0,0,0],[0,0,0],[0,0,0]]))
+
+  def test_ratep(self):
+    c = self.c0 + self.c1 * self.adot**(1.0/self.c2)
+    L = self.l * (self.l1 + (1.0-self.l1) * np.exp(-self.l0 * self.a))
+    
+    s = self.s.dev()
+    n = 3.0/2.0 * (s - self.h) / (np.sqrt(3.0/2) * (s - self.h).norm())
+    b = (1.0-self.b0) * self.h + 2.0/3.0 * self.b0 * tensors.douter(n, n).dot(self.h)
+
+    self.assertEqual(self.model.ratep(self.state), 
+        2.0/3.0 * c * self.g - c / L * b)
+
+  def test_ratet(self):
+    X = self.scaling.value(self.T)
+    P = self.softening.phi(self.a, self.T)
+
+    self.assertEqual(self.model.ratet(self.state),
+        -X * self.x0 * P * (np.sqrt(3.0/2) * self.h.norm() / self.D)**self.x1 * self.h / (np.sqrt(3.0/2) * self.h.norm()))
 
 class CommonWrappedFlow(object):
   def test_dy_ds(self):
