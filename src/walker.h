@@ -402,6 +402,60 @@ class WalkerDragStress: public DragStress {
 
 static Register<WalkerDragStress> regWalkerDragStress;
 
+class KinematicHardening: public SymmetricInternalVariable {
+ public:
+  KinematicHardening(std::string name, 
+                     std::shared_ptr<ThermalScaling> scale);
+
+  void set_scaling(std::shared_ptr<ThermalScaling> scale) {scale_ = scale;};
+
+  virtual Symmetric ratet(VariableState & state);
+  virtual SymSymR4 d_ratet_d_h(VariableState & state);
+  virtual Symmetric d_ratet_d_a(VariableState & state);
+  virtual Symmetric d_ratet_d_adot(VariableState & state);
+  virtual SymSymR4 d_ratet_d_s(VariableState & state);
+  virtual SymSymR4 d_ratet_d_g(VariableState & state);
+
+  virtual Symmetric rateT(VariableState & state);
+  virtual SymSymR4 d_rateT_d_h(VariableState & state);
+  virtual Symmetric d_rateT_d_a(VariableState & state);
+  virtual Symmetric d_rateT_d_adot(VariableState & state);
+  virtual SymSymR4 d_rateT_d_s(VariableState & state);
+  virtual SymSymR4 d_rateT_d_g(VariableState & state);
+
+ protected:
+  std::shared_ptr<ThermalScaling> scale_;
+};
+
+/// Standard Frederick-Armstrong hardening
+class FAKinematicHardening: public KinematicHardening {
+ public:
+  FAKinematicHardening(std::shared_ptr<Interpolate> c,
+                       std::shared_ptr<Interpolate> g,
+                       std::shared_ptr<ThermalScaling> scale);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Return default parameters
+  static ParameterSet parameters();
+
+  virtual Symmetric initial_value();
+
+  virtual Symmetric ratep(VariableState & state);
+  virtual SymSymR4 d_ratep_d_h(VariableState & state);
+  virtual Symmetric d_ratep_d_a(VariableState & state);
+  virtual Symmetric d_ratep_d_adot(VariableState & state);
+  virtual SymSymR4 d_ratep_d_s(VariableState & state);
+  virtual SymSymR4 d_ratep_d_g(VariableState & state);
+
+ private:
+  std::shared_ptr<Interpolate> c_, g_;
+};
+
+static Register<FAKinematicHardening> regFAKinematicHardening;
+
 /// Helper struct for the below
 struct State {
   State(Symmetric S, History h, double T) :

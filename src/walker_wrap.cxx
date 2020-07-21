@@ -187,6 +187,19 @@ PYBIND11_MODULE(walker, m) {
   py::class_<SymmetricInternalVariable::VariableState,
       std::shared_ptr<SymmetricInternalVariable::VariableState>>(m,
                                                               "SymmetricInternalVariableState")
+    .def(py::init([](Symmetric h, double a, double adot, Symmetric s, Symmetric g,
+                     double T)
+                  {
+                    SymmetricInternalVariable::VariableState state;
+                    state.h = h;
+                    state.a = a;
+                    state.adot = adot;
+                    state.s = s;
+                    state.g = g;
+                    state.T = T;
+
+                    return state;
+                  }))
     .def_readwrite("h", &SymmetricInternalVariable::VariableState::h)
     .def_readwrite("a", &SymmetricInternalVariable::VariableState::a)
     .def_readwrite("adot", &SymmetricInternalVariable::VariableState::adot)
@@ -219,6 +232,20 @@ PYBIND11_MODULE(walker, m) {
     .def("d_rateT_d_adot", &SymmetricInternalVariable::d_rateT_d_adot)
     .def("d_rateT_d_s", &SymmetricInternalVariable::d_rateT_d_s)
     .def("d_rateT_d_g", &SymmetricInternalVariable::d_rateT_d_g)
+    ;
+
+  py::class_<KinematicHardening, SymmetricInternalVariable,
+      std::shared_ptr<KinematicHardening>>(m, "KinematicHardening")
+      .def("set_scaling", &KinematicHardening::set_scaling)
+    ;
+
+  py::class_<FAKinematicHardening, KinematicHardening,
+      std::shared_ptr<FAKinematicHardening>>(m, "FAKinematicHardening")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<FAKinematicHardening>(
+            args, kwargs, {"c", "g"});
+      }))
     ;
 
   py::class_<State, std::shared_ptr<State>>(m, "State")

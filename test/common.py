@@ -272,7 +272,7 @@ def differentiate(fn, x0, eps = 1.5e-6):
       xp[index] = diff
 
     fp = fn(xp+x0)
-
+    
     D[index] = (fp - f0) / diff
   
   Df = np.zeros(tshape)

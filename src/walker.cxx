@@ -1105,12 +1105,153 @@ Symmetric WalkerDragStress::d_ratet_d_g(VariableState & state)
   return Symmetric();
 }
 
+KinematicHardening::KinematicHardening(std::string name, 
+                                       std::shared_ptr<ThermalScaling> scale) :
+    SymmetricInternalVariable(name), scale_(scale)
+{}
 
+/// Return zero for time rate by default 
+Symmetric KinematicHardening::ratet(VariableState & state)
+{
+  return Symmetric::zero();
+}
 
+/// Return zero for the time rate derivatives by default
+SymSymR4 KinematicHardening::d_ratet_d_h(VariableState & state)
+{
+  return SymSymR4::zero();
+}
 
+/// Return zero for the time rate derivatives by default
+Symmetric KinematicHardening::d_ratet_d_a(VariableState & state) 
+{
+  return Symmetric::zero();
+}
 
+/// Return zero for the time rate derivatives by default
+Symmetric KinematicHardening::d_ratet_d_adot(VariableState & state)
+{
+  return Symmetric::zero();
+}
 
+/// Return zero for the time rate derivatives by default
+SymSymR4 KinematicHardening::d_ratet_d_s(VariableState & state)
+{
+  return SymSymR4::zero();
+}
 
+/// Return zero for the time rate derivatives by default
+SymSymR4 KinematicHardening::d_ratet_d_g(VariableState & state)
+{
+  return SymSymR4::zero();
+}
+
+/// Return zero for temperature rate by default 
+Symmetric KinematicHardening::rateT(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+SymSymR4 KinematicHardening::d_rateT_d_h(VariableState & state)
+{
+  return SymSymR4::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+Symmetric KinematicHardening::d_rateT_d_a(VariableState & state) 
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+Symmetric KinematicHardening::d_rateT_d_adot(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+SymSymR4 KinematicHardening::d_rateT_d_s(VariableState & state)
+{
+  return SymSymR4::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+SymSymR4 KinematicHardening::d_rateT_d_g(VariableState & state)
+{
+  return SymSymR4::zero();
+}
+
+FAKinematicHardening::FAKinematicHardening(std::shared_ptr<Interpolate> c,
+                                           std::shared_ptr<Interpolate> g,
+                                           std::shared_ptr<ThermalScaling>
+                                           scale) : 
+    KinematicHardening("X", scale), c_(c), g_(g)
+{
+
+}
+
+std::string FAKinematicHardening::type()
+{
+  return "FAKinematicHardening";
+}
+
+ParameterSet FAKinematicHardening::parameters()
+{
+  ParameterSet pset(FAKinematicHardening::type());
+  
+  pset.add_parameter<NEMLObject>("c");
+  pset.add_parameter<NEMLObject>("g");
+  pset.add_optional_parameter<NEMLObject>("scaling", 
+                                          std::make_shared<ThermalScaling>());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> FAKinematicHardening::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<FAKinematicHardening>(
+      params.get_object_parameter<Interpolate>("c"),
+      params.get_object_parameter<Interpolate>("g"),
+      params.get_object_parameter<ThermalScaling>("scaling")
+      ); 
+}
+
+Symmetric FAKinematicHardening::initial_value()
+{
+  return Symmetric::zero();
+}
+
+Symmetric FAKinematicHardening::ratep(VariableState & state)
+{
+  return 2.0/3.0 * c_->value(state.T) * state.g - g_->value(state.T) * state.h;
+}
+
+SymSymR4 FAKinematicHardening::d_ratep_d_h(VariableState & state)
+{
+  return -g_->value(state.T) * SymSymR4::id();
+}
+
+Symmetric FAKinematicHardening::d_ratep_d_a(VariableState & state) 
+{
+  return Symmetric::zero();
+}
+
+Symmetric FAKinematicHardening::d_ratep_d_adot(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+SymSymR4 FAKinematicHardening::d_ratep_d_s(VariableState & state)
+{
+  return SymSymR4::zero();
+}
+
+SymSymR4 FAKinematicHardening::d_ratep_d_g(VariableState & state)
+{
+  return 2.0/3.0 * c_->value(state.T) * SymSymR4::id();
+}
 
 WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule() :
     stored_hist_(false)

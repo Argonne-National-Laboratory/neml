@@ -541,6 +541,167 @@ class TestWalkerDragStress(CommonDragStress, unittest.TestCase):
   def test_D_0(self):
     self.assertAlmostEqual(self.model.D_0(self.T), self.D_0)
 
+class CommonKinematicHardening(object):
+  def make_state(self, h, a, adot, s, g, T):
+    return walker.SymmetricInternalVariableState(
+        h, a, adot, s, g, T)
+
+  def test_d_ratep_d_h(self):
+    av = self.model.d_ratep_d_h(self.state)
+    nv = diff_symmetric_symmetric(lambda h: 
+        self.model.ratep(
+          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+        self.h)
+    self.assertEqual(av, nv)
+
+  def test_d_ratep_d_a(self):
+    av = self.model.d_ratep_d_a(self.state)
+    nv = diff_symmetric_scalar(lambda a: 
+        self.model.ratep(
+          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+        self.a)
+    self.assertEqual(av, nv)
+
+  def test_d_ratep_d_adot(self):
+    av = self.model.d_ratep_d_adot(self.state)
+    nv =  diff_symmetric_scalar(lambda ad: 
+        self.model.ratep(
+          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+        self.adot)
+    self.assertEqual(av, nv)
+
+  def test_d_ratep_d_s(self):
+    av = self.model.d_ratep_d_s(self.state)
+    nv = diff_symmetric_symmetric(lambda s: 
+        self.model.ratep(
+          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+        self.s)
+    self.assertEqual(av, nv)
+
+  def test_d_ratep_d_g(self):
+    av = self.model.d_ratep_d_g(self.state)
+    nv = diff_symmetric_symmetric(lambda g: 
+        self.model.ratep(
+          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+        self.g)
+    self.assertEqual(av, nv)
+
+  def test_ratet(self):
+    self.assertEqual(self.model.ratet(self.state), tensors.Symmetric([[0,0,0],[0,0,0],[0,0,0]]))
+
+  def test_d_ratet_d_h(self):
+    av = self.model.d_ratet_d_h(self.state)
+    nv = diff_symmetric_symmetric(lambda h: 
+        self.model.ratet(
+          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+        self.h)
+    self.assertEqual(av, nv)
+
+  def test_d_ratet_d_a(self):
+    av = self.model.d_ratet_d_a(self.state)
+    nv =  diff_symmetric_scalar(lambda a: 
+        self.model.ratet(
+          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+        self.a)
+    self.assertEqual(av, nv)
+
+  def test_d_ratet_d_adot(self):
+    av = self.model.d_ratet_d_adot(self.state)
+    nv =  diff_symmetric_scalar(lambda ad: 
+        self.model.ratet(
+          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+        self.adot)
+    self.assertEqual(av, nv)
+
+  def test_d_ratet_d_s(self):
+    av = self.model.d_ratet_d_s(self.state)
+    nv = diff_symmetric_symmetric(lambda s: 
+        self.model.ratet(
+          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+        self.s)
+    self.assertEqual(av, nv)
+
+  def test_d_ratet_d_g(self):
+    av = self.model.d_ratet_d_g(self.state)
+    nv = diff_symmetric_symmetric(lambda g: 
+        self.model.ratet(
+          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+        self.g)
+    self.assertEqual(av, nv)
+
+  def test_rateT(self):
+    self.assertEqual(self.model.rateT(self.state), tensors.Symmetric([[0,0,0],[0,0,0],[0,0,0]]))
+
+  def test_d_rateT_d_h(self):
+    av = self.model.d_rateT_d_h(self.state)
+    nv = diff_symmetric_symmetric(lambda h: 
+        self.model.rateT(
+          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+        self.h)
+    self.assertAlmostEqual(av, nv)
+
+  def test_d_rateT_d_a(self):
+    av = self.model.d_rateT_d_a(self.state)
+    nv =  diff_symmetric_scalar(lambda a: 
+        self.model.rateT(
+          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+        self.a)
+    self.assertEqual(av, nv)
+
+  def test_d_rateT_d_adot(self):
+    av = self.model.d_rateT_d_adot(self.state)
+    nv =  diff_symmetric_scalar(lambda ad: 
+        self.model.rateT(
+          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+        self.adot)
+    self.assertEqual(av, nv)
+
+  def test_d_rateT_d_s(self):
+    av = self.model.d_rateT_d_s(self.state)
+    nv = diff_symmetric_symmetric(lambda s: 
+        self.model.rateT(
+          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+        self.s)
+    self.assertEqual(av, nv)
+
+  def test_d_rateT_d_g(self):
+    av = self.model.d_rateT_d_g(self.state)
+    nv = diff_symmetric_symmetric(lambda g: 
+        self.model.rateT(
+          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+        self.g)
+    self.assertEqual(av, nv)
+
+class TestFAKinematicHardening(unittest.TestCase, CommonKinematicHardening):
+  def setUp(self):
+    self.c = 1000.0
+    self.gamma = 2.1
+
+    self.model = walker.FAKinematicHardening(self.c, self.gamma)
+
+    self.h = tensors.Symmetric([
+      [-100.0,200.0,10.0],
+      [200.0,150.0,80.0],
+      [10.0,80.0,-10.0]])
+    self.a = 0.1
+    self.adot = 2.0
+    self.s = tensors.Symmetric([
+      [300.0,50.0,25.0],
+      [50.0,150.0,-20.0],
+      [25.0,-20.0,-100.0]])
+    self.g = self.s / self.s.norm()
+    self.T = 900 + 273.15
+
+    self.state = self.make_state(self.h, self.a, self.adot,
+        self.s, self.g, self.T)
+
+  def test_initial_value(self):
+    self.assertEqual(self.model.initial_value(), tensors.Symmetric([[0,0,0],[0,0,0],[0,0,0]]))
+
+  def test_ratep(self):
+    self.assertTrue(self.model.ratep(self.state), 
+        2.0/3.0 * self.c * self.g - self.gamma * self.h)
+
 class CommonWrappedFlow(object):
   def test_dy_ds(self):
     numerical = diff_scalar_symmetric(lambda s: self.model.y_wrap(self.make_state(s, self.h, self.T)), self.stress)
