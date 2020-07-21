@@ -138,15 +138,15 @@ class TestArrheniusThermalScaling(unittest.TestCase, CommonThermalScaling):
     self.assertAlmostEqual(should, actual)
 
 class CommonIsotropicHardening(object):
-  def make_state(self, h, a, adot, s, g, T):
+  def make_state(self, h, a, adot, D, s, g, T):
     return walker.ScalarInternalVariableState(
-        h, a, adot, s, g, T)
+        h, a, adot, D, s, g, T)
 
   def test_d_ratep_d_h(self):
     av = self.model.d_ratep_d_h(self.state)
     nv = differentiate(lambda h: 
         self.model.ratep(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertAlmostEqual(av, nv, places = 5)
 
@@ -154,7 +154,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratep_d_a(self.state)
     nv = differentiate(lambda a: 
         self.model.ratep(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertAlmostEqual(av, nv)
 
@@ -162,7 +162,15 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratep_d_adot(self.state)
     nv = differentiate(lambda ad: 
         self.model.ratep(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertAlmostEqual(av, nv)
+
+  def test_d_ratep_d_D(self):
+    av = self.model.d_ratep_d_D(self.state)
+    nv = differentiate(lambda D: 
+        self.model.ratep(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
         self.adot)
     self.assertAlmostEqual(av, nv)
 
@@ -170,7 +178,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratep_d_s(self.state)
     nv = diff_scalar_symmetric(lambda s: 
         self.model.ratep(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -178,7 +186,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratep_d_g(self.state)
     nv = diff_scalar_symmetric(lambda g: 
         self.model.ratep(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -189,7 +197,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratet_d_h(self.state)
     nv = differentiate(lambda h: 
         self.model.ratet(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertAlmostEqual(av, nv, places = 5)
 
@@ -197,7 +205,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratet_d_a(self.state)
     nv = differentiate(lambda a: 
         self.model.ratet(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertAlmostEqual(av, nv, places = 5)
 
@@ -205,15 +213,23 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratet_d_adot(self.state)
     nv = differentiate(lambda ad: 
         self.model.ratet(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
         self.adot)
     self.assertAlmostEqual(av, nv, places = 5)
+
+  def test_d_ratet_d_D(self):
+    av = self.model.d_ratet_d_D(self.state)
+    nv = differentiate(lambda D: 
+        self.model.ratet(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertAlmostEqual(av, nv)
 
   def test_d_ratet_d_s(self):
     av = self.model.d_ratet_d_s(self.state)
     nv = diff_scalar_symmetric(lambda s: 
         self.model.ratet(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -221,7 +237,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_ratet_d_g(self.state)
     nv = diff_scalar_symmetric(lambda g: 
         self.model.ratet(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -232,7 +248,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_rateT_d_h(self.state)
     nv = differentiate(lambda h: 
         self.model.rateT(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertAlmostEqual(av, nv)
 
@@ -240,7 +256,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_rateT_d_a(self.state)
     nv = differentiate(lambda a: 
         self.model.rateT(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertAlmostEqual(av, nv)
 
@@ -248,7 +264,15 @@ class CommonIsotropicHardening(object):
     av = self.model.d_rateT_d_adot(self.state)
     nv = differentiate(lambda ad: 
         self.model.rateT(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertAlmostEqual(av, nv)
+
+  def test_d_ratet_d_D(self):
+    av = self.model.d_rateT_d_D(self.state)
+    nv = differentiate(lambda D: 
+        self.model.rateT(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
         self.adot)
     self.assertAlmostEqual(av, nv)
 
@@ -256,7 +280,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_rateT_d_s(self.state)
     nv = diff_scalar_symmetric(lambda s: 
         self.model.rateT(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -264,7 +288,7 @@ class CommonIsotropicHardening(object):
     av = self.model.d_rateT_d_g(self.state)
     nv = diff_scalar_symmetric(lambda g: 
         self.model.rateT(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -282,7 +306,9 @@ class TestConstantIsotropicHardening(unittest.TestCase,CommonIsotropicHardening)
     self.g = self.s / self.s.norm()
     self.T = 350.0
 
-    self.state = self.make_state(self.h, self.a, self.adot,
+    self.D = 10.0
+
+    self.state = self.make_state(self.h, self.a, self.adot, self.D,
         self.s, self.g, self.T)
 
   def test_initial_value(self):
@@ -312,7 +338,9 @@ class TestWalkerIsotropicHardening(unittest.TestCase,CommonIsotropicHardening):
     self.g = self.s / self.s.norm()
     self.T = 350.0
 
-    self.state = self.make_state(self.h, self.a, self.adot,
+    self.D = 10.0
+
+    self.state = self.make_state(self.h, self.a, self.adot, self.D,
         self.s, self.g, self.T)
 
   def test_initial_value(self):
@@ -327,15 +355,15 @@ class TestWalkerIsotropicHardening(unittest.TestCase,CommonIsotropicHardening):
         self.r1 * (self.R0 - self.h) * np.abs(self.R0 - self.h)**(self.r2-1.0))
 
 class CommonDragStress(object):
-  def make_state(self, h, a, adot, s, g, T):
+  def make_state(self, h, a, adot, D, s, g, T):
     return walker.ScalarInternalVariableState(
-        h, a, adot, s, g, T)
+        h, a, adot, D, s, g, T)
 
   def test_d_ratep_d_h(self):
     av = self.model.d_ratep_d_h(self.state)
     nv = differentiate(lambda h: 
         self.model.ratep(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertAlmostEqual(av, nv, places = 5)
 
@@ -343,7 +371,7 @@ class CommonDragStress(object):
     av = self.model.d_ratep_d_a(self.state)
     nv = differentiate(lambda a: 
         self.model.ratep(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertAlmostEqual(av, nv)
 
@@ -351,7 +379,15 @@ class CommonDragStress(object):
     av = self.model.d_ratep_d_adot(self.state)
     nv = differentiate(lambda ad: 
         self.model.ratep(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertAlmostEqual(av, nv)
+
+  def test_d_ratep_d_D(self):
+    av = self.model.d_ratep_d_D(self.state)
+    nv = differentiate(lambda D: 
+        self.model.ratep(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
         self.adot)
     self.assertAlmostEqual(av, nv)
 
@@ -359,7 +395,7 @@ class CommonDragStress(object):
     av = self.model.d_ratep_d_s(self.state)
     nv = diff_scalar_symmetric(lambda s: 
         self.model.ratep(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -367,7 +403,7 @@ class CommonDragStress(object):
     av = self.model.d_ratep_d_g(self.state)
     nv = diff_scalar_symmetric(lambda g: 
         self.model.ratep(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -378,7 +414,7 @@ class CommonDragStress(object):
     av = self.model.d_ratet_d_h(self.state)
     nv = differentiate(lambda h: 
         self.model.ratet(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertAlmostEqual(av, nv, places = 5)
 
@@ -386,7 +422,7 @@ class CommonDragStress(object):
     av = self.model.d_ratet_d_a(self.state)
     nv = differentiate(lambda a: 
         self.model.ratet(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertAlmostEqual(av, nv, places = 5)
 
@@ -394,15 +430,23 @@ class CommonDragStress(object):
     av = self.model.d_ratet_d_adot(self.state)
     nv = differentiate(lambda ad: 
         self.model.ratet(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
         self.adot)
     self.assertAlmostEqual(av, nv, places = 5)
+
+  def test_d_ratet_d_D(self):
+    av = self.model.d_ratet_d_D(self.state)
+    nv = differentiate(lambda D: 
+        self.model.ratet(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertAlmostEqual(av, nv)
 
   def test_d_ratet_d_s(self):
     av = self.model.d_ratet_d_s(self.state)
     nv = diff_scalar_symmetric(lambda s: 
         self.model.ratet(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -410,7 +454,7 @@ class CommonDragStress(object):
     av = self.model.d_ratet_d_g(self.state)
     nv = diff_scalar_symmetric(lambda g: 
         self.model.ratet(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -421,7 +465,7 @@ class CommonDragStress(object):
     av = self.model.d_rateT_d_h(self.state)
     nv = differentiate(lambda h: 
         self.model.rateT(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertAlmostEqual(av, nv)
 
@@ -429,7 +473,7 @@ class CommonDragStress(object):
     av = self.model.d_rateT_d_a(self.state)
     nv = differentiate(lambda a: 
         self.model.rateT(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertAlmostEqual(av, nv)
 
@@ -437,7 +481,15 @@ class CommonDragStress(object):
     av = self.model.d_rateT_d_adot(self.state)
     nv = differentiate(lambda ad: 
         self.model.rateT(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertAlmostEqual(av, nv)
+
+  def test_d_rateT_d_D(self):
+    av = self.model.d_rateT_d_D(self.state)
+    nv = differentiate(lambda D: 
+        self.model.rateT(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
         self.adot)
     self.assertAlmostEqual(av, nv)
 
@@ -445,7 +497,7 @@ class CommonDragStress(object):
     av = self.model.d_rateT_d_s(self.state)
     nv = diff_scalar_symmetric(lambda s: 
         self.model.rateT(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -453,7 +505,7 @@ class CommonDragStress(object):
     av = self.model.d_rateT_d_g(self.state)
     nv = diff_scalar_symmetric(lambda g: 
         self.model.rateT(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -472,7 +524,9 @@ class TestConstantDragStress(CommonDragStress, unittest.TestCase):
     self.g = self.s / self.s.norm()
     self.T = 350.0
 
-    self.state = self.make_state(self.h, self.a, self.adot,
+    self.D = self.h
+
+    self.state = self.make_state(self.h, self.a, self.adot, self.D,
         self.s, self.g, self.T)
 
   def test_initial_value(self):
@@ -520,7 +574,9 @@ class TestWalkerDragStress(CommonDragStress, unittest.TestCase):
     self.g = self.s / self.s.norm()
     self.T = 900 + 273.15
 
-    self.state = self.make_state(self.h, self.a, self.adot,
+    self.D = self.h
+
+    self.state = self.make_state(self.h, self.a, self.adot, self.D,
         self.s, self.g, self.T)
 
   def test_initial_value(self):
@@ -542,15 +598,15 @@ class TestWalkerDragStress(CommonDragStress, unittest.TestCase):
     self.assertAlmostEqual(self.model.D_0(self.T), self.D_0)
 
 class CommonKinematicHardening(object):
-  def make_state(self, h, a, adot, s, g, T):
+  def make_state(self, h, a, adot, D, s, g, T):
     return walker.SymmetricInternalVariableState(
-        h, a, adot, s, g, T)
+        h, a, adot, D, s, g, T)
 
   def test_d_ratep_d_h(self):
     av = self.model.d_ratep_d_h(self.state)
     nv = diff_symmetric_symmetric(lambda h: 
         self.model.ratep(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertEqual(av, nv)
 
@@ -558,7 +614,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratep_d_a(self.state)
     nv = diff_symmetric_scalar(lambda a: 
         self.model.ratep(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertEqual(av, nv)
 
@@ -566,7 +622,15 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratep_d_adot(self.state)
     nv =  diff_symmetric_scalar(lambda ad: 
         self.model.ratep(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertEqual(av, nv)
+
+  def test_d_ratep_d_D(self):
+    av = self.model.d_ratep_d_D(self.state)
+    nv =  diff_symmetric_scalar(lambda D: 
+        self.model.ratep(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
         self.adot)
     self.assertEqual(av, nv)
 
@@ -574,7 +638,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratep_d_s(self.state)
     nv = diff_symmetric_symmetric(lambda s: 
         self.model.ratep(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -582,7 +646,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratep_d_g(self.state)
     nv = diff_symmetric_symmetric(lambda g: 
         self.model.ratep(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -593,7 +657,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratet_d_h(self.state)
     nv = diff_symmetric_symmetric(lambda h: 
         self.model.ratet(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertEqual(av, nv)
 
@@ -601,7 +665,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratet_d_a(self.state)
     nv =  diff_symmetric_scalar(lambda a: 
         self.model.ratet(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertEqual(av, nv)
 
@@ -609,7 +673,15 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratet_d_adot(self.state)
     nv =  diff_symmetric_scalar(lambda ad: 
         self.model.ratet(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertEqual(av, nv)
+
+  def test_d_ratep_d_D(self):
+    av = self.model.d_ratet_d_D(self.state)
+    nv =  diff_symmetric_scalar(lambda D: 
+        self.model.ratet(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
         self.adot)
     self.assertEqual(av, nv)
 
@@ -617,7 +689,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratet_d_s(self.state)
     nv = diff_symmetric_symmetric(lambda s: 
         self.model.ratet(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -625,7 +697,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_ratet_d_g(self.state)
     nv = diff_symmetric_symmetric(lambda g: 
         self.model.ratet(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -636,7 +708,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_rateT_d_h(self.state)
     nv = diff_symmetric_symmetric(lambda h: 
         self.model.rateT(
-          self.make_state(h, self.a, self.adot, self.s, self.g, self.T)),
+          self.make_state(h, self.a, self.adot, self.D, self.s, self.g, self.T)),
         self.h)
     self.assertAlmostEqual(av, nv)
 
@@ -644,7 +716,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_rateT_d_a(self.state)
     nv =  diff_symmetric_scalar(lambda a: 
         self.model.rateT(
-          self.make_state(self.h, a, self.adot, self.s, self.g, self.T)),
+          self.make_state(self.h, a, self.adot, self.D, self.s, self.g, self.T)),
         self.a)
     self.assertEqual(av, nv)
 
@@ -652,7 +724,15 @@ class CommonKinematicHardening(object):
     av = self.model.d_rateT_d_adot(self.state)
     nv =  diff_symmetric_scalar(lambda ad: 
         self.model.rateT(
-          self.make_state(self.h, self.a, ad, self.s, self.g, self.T)),
+          self.make_state(self.h, self.a, ad, self.D, self.s, self.g, self.T)),
+        self.adot)
+    self.assertEqual(av, nv)
+
+  def test_d_rateT_d_D(self):
+    av = self.model.d_rateT_d_D(self.state)
+    nv =  diff_symmetric_scalar(lambda D: 
+        self.model.rateT(
+          self.make_state(self.h, self.a, self.adot, D, self.s, self.g, self.T)),
         self.adot)
     self.assertEqual(av, nv)
 
@@ -660,7 +740,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_rateT_d_s(self.state)
     nv = diff_symmetric_symmetric(lambda s: 
         self.model.rateT(
-          self.make_state(self.h, self.a, self.adot, s, self.g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, s, self.g, self.T)),
         self.s)
     self.assertEqual(av, nv)
 
@@ -668,7 +748,7 @@ class CommonKinematicHardening(object):
     av = self.model.d_rateT_d_g(self.state)
     nv = diff_symmetric_symmetric(lambda g: 
         self.model.rateT(
-          self.make_state(self.h, self.a, self.adot, self.s, g, self.T)),
+          self.make_state(self.h, self.a, self.adot, self.D, self.s, g, self.T)),
         self.g)
     self.assertEqual(av, nv)
 
@@ -692,7 +772,9 @@ class TestFAKinematicHardening(unittest.TestCase, CommonKinematicHardening):
     self.g = self.s / self.s.norm()
     self.T = 900 + 273.15
 
-    self.state = self.make_state(self.h, self.a, self.adot,
+    self.D = 10.0
+
+    self.state = self.make_state(self.h, self.a, self.adot, self.D,
         self.s, self.g, self.T)
 
   def test_initial_value(self):

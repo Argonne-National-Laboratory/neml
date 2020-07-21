@@ -46,6 +46,7 @@ class InternalVariable : public NEMLObject {
     V h;
     double a;
     double adot;
+    double D;
     Symmetric s;
     Symmetric g;
     double T;
@@ -63,6 +64,7 @@ class InternalVariable : public NEMLObject {
   virtual VV d_ratep_d_h(VariableState & state) = 0;
   virtual Vs d_ratep_d_a(VariableState & state) = 0;
   virtual Vs d_ratep_d_adot(VariableState & state) = 0;
+  virtual Vs d_ratep_d_D(VariableState & state) = 0;
   virtual VS d_ratep_d_s(VariableState & state) = 0;
   virtual VS d_ratep_d_g(VariableState & state) = 0;
 
@@ -70,6 +72,7 @@ class InternalVariable : public NEMLObject {
   virtual VV d_ratet_d_h(VariableState & state) = 0;
   virtual Vs d_ratet_d_a(VariableState & state) = 0;
   virtual Vs d_ratet_d_adot(VariableState & state) = 0;
+  virtual Vs d_ratet_d_D(VariableState & state) = 0;
   virtual VS d_ratet_d_s(VariableState & state) = 0;
   virtual VS d_ratet_d_g(VariableState & state) = 0;
 
@@ -77,6 +80,7 @@ class InternalVariable : public NEMLObject {
   virtual VV d_rateT_d_h(VariableState & state) = 0;
   virtual Vs d_rateT_d_a(VariableState & state) = 0;
   virtual Vs d_rateT_d_adot(VariableState & state) = 0;
+  virtual Vs d_rateT_d_D(VariableState & state) = 0;
   virtual VS d_rateT_d_s(VariableState & state) = 0;
   virtual VS d_rateT_d_g(VariableState & state) = 0;
 

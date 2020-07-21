@@ -604,6 +604,12 @@ double IsotropicHardening::d_ratet_d_adot(VariableState & state)
 }
 
 /// Return zero for the time rate derivatives by default
+double IsotropicHardening::d_ratet_d_D(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
 Symmetric IsotropicHardening::d_ratet_d_s(VariableState & state)
 {
   return Symmetric::zero();
@@ -635,6 +641,12 @@ double IsotropicHardening::d_rateT_d_a(VariableState & state)
 
 /// Return zero for the temperature rate derivatives by default
 double IsotropicHardening::d_rateT_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double IsotropicHardening::d_rateT_d_D(VariableState & state)
 {
   return 0;
 }
@@ -703,6 +715,11 @@ double ConstantIsotropicHardening::d_ratep_d_a(VariableState & state)
 }
 
 double ConstantIsotropicHardening::d_ratep_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+double ConstantIsotropicHardening::d_ratep_d_D(VariableState & state)
 {
   return 0;
 }
@@ -785,6 +802,11 @@ double WalkerIsotropicHardening::d_ratep_d_adot(VariableState & state)
   return 0;
 }
 
+double WalkerIsotropicHardening::d_ratep_d_D(VariableState & state)
+{
+  return 0;
+}
+
 Symmetric WalkerIsotropicHardening::d_ratep_d_s(VariableState & state)
 {
   return Symmetric();
@@ -817,6 +839,11 @@ double WalkerIsotropicHardening::d_ratet_d_adot(VariableState & state)
   return 0;
 }
 
+double WalkerIsotropicHardening::d_ratet_d_D(VariableState & state)
+{
+  return 0;
+}
+
 Symmetric WalkerIsotropicHardening::d_ratet_d_s(VariableState & state)
 {
   return Symmetric();
@@ -831,6 +858,12 @@ DragStress::DragStress(std::string name,
                                        std::shared_ptr<ThermalScaling> scale) :
     ScalarInternalVariable(name), scale_(scale)
 {}
+
+/// Makes no sense in this context
+double DragStress::d_ratep_d_D(VariableState & state)
+{
+  return 0;
+}
 
 /// Return zero for time rate by default 
 double DragStress::ratet(VariableState & state)
@@ -852,6 +885,12 @@ double DragStress::d_ratet_d_a(VariableState & state)
 
 /// Return zero for the time rate derivatives by default
 double DragStress::d_ratet_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the time rate derivatives by default
+double DragStress::d_ratet_d_D(VariableState & state)
 {
   return 0;
 }
@@ -888,6 +927,12 @@ double DragStress::d_rateT_d_a(VariableState & state)
 
 /// Return zero for the temperature rate derivatives by default
 double DragStress::d_rateT_d_adot(VariableState & state)
+{
+  return 0;
+}
+
+/// Return zero for the temperature rate derivatives by default
+double DragStress::d_rateT_d_D(VariableState & state)
 {
   return 0;
 }
@@ -1135,6 +1180,12 @@ Symmetric KinematicHardening::d_ratet_d_adot(VariableState & state)
 }
 
 /// Return zero for the time rate derivatives by default
+Symmetric KinematicHardening::d_ratet_d_D(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the time rate derivatives by default
 SymSymR4 KinematicHardening::d_ratet_d_s(VariableState & state)
 {
   return SymSymR4::zero();
@@ -1166,6 +1217,12 @@ Symmetric KinematicHardening::d_rateT_d_a(VariableState & state)
 
 /// Return zero for the temperature rate derivatives by default
 Symmetric KinematicHardening::d_rateT_d_adot(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+/// Return zero for the temperature rate derivatives by default
+Symmetric KinematicHardening::d_rateT_d_D(VariableState & state)
 {
   return Symmetric::zero();
 }
@@ -1239,6 +1296,11 @@ Symmetric FAKinematicHardening::d_ratep_d_a(VariableState & state)
 }
 
 Symmetric FAKinematicHardening::d_ratep_d_adot(VariableState & state)
+{
+  return Symmetric::zero();
+}
+
+Symmetric FAKinematicHardening::d_ratep_d_D(VariableState & state)
 {
   return Symmetric::zero();
 }

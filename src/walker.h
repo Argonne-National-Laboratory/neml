@@ -209,6 +209,7 @@ class IsotropicHardening: public ScalarInternalVariable {
   virtual double d_ratet_d_h(VariableState & state);
   virtual double d_ratet_d_a(VariableState & state);
   virtual double d_ratet_d_adot(VariableState & state);
+  virtual double d_ratet_d_D(VariableState & state);
   virtual Symmetric d_ratet_d_s(VariableState & state);
   virtual Symmetric d_ratet_d_g(VariableState & state);
 
@@ -216,6 +217,7 @@ class IsotropicHardening: public ScalarInternalVariable {
   virtual double d_rateT_d_h(VariableState & state);
   virtual double d_rateT_d_a(VariableState & state);
   virtual double d_rateT_d_adot(VariableState & state);
+  virtual double d_rateT_d_D(VariableState & state);
   virtual Symmetric d_rateT_d_s(VariableState & state);
   virtual Symmetric d_rateT_d_g(VariableState & state);
 
@@ -241,6 +243,7 @@ class ConstantIsotropicHardening: public IsotropicHardening {
   virtual double d_ratep_d_h(VariableState & state);
   virtual double d_ratep_d_a(VariableState & state);
   virtual double d_ratep_d_adot(VariableState & state);
+  virtual double d_ratep_d_D(VariableState & state);
   virtual Symmetric d_ratep_d_s(VariableState & state);
   virtual Symmetric d_ratep_d_g(VariableState & state);
 };
@@ -271,6 +274,7 @@ class WalkerIsotropicHardening: public IsotropicHardening {
   virtual double d_ratep_d_h(VariableState & state);
   virtual double d_ratep_d_a(VariableState & state);
   virtual double d_ratep_d_adot(VariableState & state);
+  virtual double d_ratep_d_D(VariableState & state);
   virtual Symmetric d_ratep_d_s(VariableState & state);
   virtual Symmetric d_ratep_d_g(VariableState & state);
 
@@ -278,6 +282,7 @@ class WalkerIsotropicHardening: public IsotropicHardening {
   virtual double d_ratet_d_h(VariableState & state);
   virtual double d_ratet_d_a(VariableState & state);
   virtual double d_ratet_d_adot(VariableState & state);
+  virtual double d_ratet_d_D(VariableState & state);
   virtual Symmetric d_ratet_d_s(VariableState & state);
   virtual Symmetric d_ratet_d_g(VariableState & state);
 
@@ -302,11 +307,15 @@ class DragStress: public ScalarInternalVariable {
   virtual double D_xi(double T) = 0;
   /// Report the value of D_0
   virtual double D_0(double T) = 0;
+  
+  /// Makes no sense in this context!
+  virtual double d_ratep_d_D(VariableState & state);
 
   virtual double ratet(VariableState & state);
   virtual double d_ratet_d_h(VariableState & state);
   virtual double d_ratet_d_a(VariableState & state);
   virtual double d_ratet_d_adot(VariableState & state);
+  virtual double d_ratet_d_D(VariableState & state);
   virtual Symmetric d_ratet_d_s(VariableState & state);
   virtual Symmetric d_ratet_d_g(VariableState & state);
 
@@ -314,6 +323,7 @@ class DragStress: public ScalarInternalVariable {
   virtual double d_rateT_d_h(VariableState & state);
   virtual double d_rateT_d_a(VariableState & state);
   virtual double d_rateT_d_adot(VariableState & state);
+  virtual double d_rateT_d_D(VariableState & state);
   virtual Symmetric d_rateT_d_s(VariableState & state);
   virtual Symmetric d_rateT_d_g(VariableState & state);
 
@@ -413,6 +423,7 @@ class KinematicHardening: public SymmetricInternalVariable {
   virtual SymSymR4 d_ratet_d_h(VariableState & state);
   virtual Symmetric d_ratet_d_a(VariableState & state);
   virtual Symmetric d_ratet_d_adot(VariableState & state);
+  virtual Symmetric d_ratet_d_D(VariableState & state);
   virtual SymSymR4 d_ratet_d_s(VariableState & state);
   virtual SymSymR4 d_ratet_d_g(VariableState & state);
 
@@ -420,6 +431,7 @@ class KinematicHardening: public SymmetricInternalVariable {
   virtual SymSymR4 d_rateT_d_h(VariableState & state);
   virtual Symmetric d_rateT_d_a(VariableState & state);
   virtual Symmetric d_rateT_d_adot(VariableState & state);
+  virtual Symmetric d_rateT_d_D(VariableState & state);
   virtual SymSymR4 d_rateT_d_s(VariableState & state);
   virtual SymSymR4 d_rateT_d_g(VariableState & state);
 
@@ -447,6 +459,7 @@ class FAKinematicHardening: public KinematicHardening {
   virtual SymSymR4 d_ratep_d_h(VariableState & state);
   virtual Symmetric d_ratep_d_a(VariableState & state);
   virtual Symmetric d_ratep_d_adot(VariableState & state);
+  virtual Symmetric d_ratep_d_D(VariableState & state);
   virtual SymSymR4 d_ratep_d_s(VariableState & state);
   virtual SymSymR4 d_ratep_d_g(VariableState & state);
 

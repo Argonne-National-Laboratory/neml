@@ -86,13 +86,14 @@ PYBIND11_MODULE(walker, m) {
   py::class_<ScalarInternalVariable::VariableState,
       std::shared_ptr<ScalarInternalVariable::VariableState>>(m,
                                                               "ScalarInternalVariableState")
-    .def(py::init([](double h, double a, double adot, Symmetric s, Symmetric g,
+    .def(py::init([](double h, double a, double adot, double D, Symmetric s, Symmetric g,
                      double T)
                   {
                     ScalarInternalVariable::VariableState state;
                     state.h = h;
                     state.a = a;
                     state.adot = adot;
+                    state.D = D;
                     state.s = s;
                     state.g = g;
                     state.T = T;
@@ -102,6 +103,7 @@ PYBIND11_MODULE(walker, m) {
     .def_readwrite("h", &ScalarInternalVariable::VariableState::h)
     .def_readwrite("a", &ScalarInternalVariable::VariableState::a)
     .def_readwrite("adot", &ScalarInternalVariable::VariableState::adot)
+    .def_readwrite("D", &ScalarInternalVariable::VariableState::D)
     .def_readwrite("s", &ScalarInternalVariable::VariableState::s)
     .def_readwrite("g", &ScalarInternalVariable::VariableState::g)
     .def_readwrite("T", &ScalarInternalVariable::VariableState::T)
@@ -115,6 +117,7 @@ PYBIND11_MODULE(walker, m) {
     .def("d_ratep_d_h", &ScalarInternalVariable::d_ratep_d_h)
     .def("d_ratep_d_a", &ScalarInternalVariable::d_ratep_d_a)
     .def("d_ratep_d_adot", &ScalarInternalVariable::d_ratep_d_adot)
+    .def("d_ratep_d_D", &ScalarInternalVariable::d_ratep_d_D)
     .def("d_ratep_d_s", &ScalarInternalVariable::d_ratep_d_s)
     .def("d_ratep_d_g", &ScalarInternalVariable::d_ratep_d_g)
 
@@ -122,6 +125,7 @@ PYBIND11_MODULE(walker, m) {
     .def("d_ratet_d_h", &ScalarInternalVariable::d_ratet_d_h)
     .def("d_ratet_d_a", &ScalarInternalVariable::d_ratet_d_a)
     .def("d_ratet_d_adot", &ScalarInternalVariable::d_ratet_d_adot)
+    .def("d_ratet_d_D", &ScalarInternalVariable::d_ratet_d_D)
     .def("d_ratet_d_s", &ScalarInternalVariable::d_ratet_d_s)
     .def("d_ratet_d_g", &ScalarInternalVariable::d_ratet_d_g)
 
@@ -129,6 +133,7 @@ PYBIND11_MODULE(walker, m) {
     .def("d_rateT_d_h", &ScalarInternalVariable::d_rateT_d_h)
     .def("d_rateT_d_a", &ScalarInternalVariable::d_rateT_d_a)
     .def("d_rateT_d_adot", &ScalarInternalVariable::d_rateT_d_adot)
+    .def("d_rateT_d_D", &ScalarInternalVariable::d_rateT_d_D)
     .def("d_rateT_d_s", &ScalarInternalVariable::d_rateT_d_s)
     .def("d_rateT_d_g", &ScalarInternalVariable::d_rateT_d_g)
     ;
@@ -187,13 +192,14 @@ PYBIND11_MODULE(walker, m) {
   py::class_<SymmetricInternalVariable::VariableState,
       std::shared_ptr<SymmetricInternalVariable::VariableState>>(m,
                                                               "SymmetricInternalVariableState")
-    .def(py::init([](Symmetric h, double a, double adot, Symmetric s, Symmetric g,
+    .def(py::init([](Symmetric h, double a, double adot, double D, Symmetric s, Symmetric g,
                      double T)
                   {
                     SymmetricInternalVariable::VariableState state;
                     state.h = h;
                     state.a = a;
                     state.adot = adot;
+                    state.D = D;
                     state.s = s;
                     state.g = g;
                     state.T = T;
@@ -203,6 +209,7 @@ PYBIND11_MODULE(walker, m) {
     .def_readwrite("h", &SymmetricInternalVariable::VariableState::h)
     .def_readwrite("a", &SymmetricInternalVariable::VariableState::a)
     .def_readwrite("adot", &SymmetricInternalVariable::VariableState::adot)
+    .def_readwrite("D", &SymmetricInternalVariable::VariableState::D)
     .def_readwrite("s", &SymmetricInternalVariable::VariableState::s)
     .def_readwrite("g", &SymmetricInternalVariable::VariableState::g)
     .def_readwrite("T", &SymmetricInternalVariable::VariableState::T)
@@ -216,6 +223,7 @@ PYBIND11_MODULE(walker, m) {
     .def("d_ratep_d_h", &SymmetricInternalVariable::d_ratep_d_h)
     .def("d_ratep_d_a", &SymmetricInternalVariable::d_ratep_d_a)
     .def("d_ratep_d_adot", &SymmetricInternalVariable::d_ratep_d_adot)
+    .def("d_ratep_d_D", &SymmetricInternalVariable::d_ratep_d_D)
     .def("d_ratep_d_s", &SymmetricInternalVariable::d_ratep_d_s)
     .def("d_ratep_d_g", &SymmetricInternalVariable::d_ratep_d_g)
 
@@ -223,6 +231,7 @@ PYBIND11_MODULE(walker, m) {
     .def("d_ratet_d_h", &SymmetricInternalVariable::d_ratet_d_h)
     .def("d_ratet_d_a", &SymmetricInternalVariable::d_ratet_d_a)
     .def("d_ratet_d_adot", &SymmetricInternalVariable::d_ratet_d_adot)
+    .def("d_ratet_d_D", &SymmetricInternalVariable::d_ratet_d_D)
     .def("d_ratet_d_s", &SymmetricInternalVariable::d_ratet_d_s)
     .def("d_ratet_d_g", &SymmetricInternalVariable::d_ratet_d_g)
 
@@ -230,6 +239,7 @@ PYBIND11_MODULE(walker, m) {
     .def("d_rateT_d_h", &SymmetricInternalVariable::d_rateT_d_h)
     .def("d_rateT_d_a", &SymmetricInternalVariable::d_rateT_d_a)
     .def("d_rateT_d_adot", &SymmetricInternalVariable::d_rateT_d_adot)
+    .def("d_rateT_d_D", &SymmetricInternalVariable::d_rateT_d_D)
     .def("d_rateT_d_s", &SymmetricInternalVariable::d_rateT_d_s)
     .def("d_rateT_d_g", &SymmetricInternalVariable::d_rateT_d_g)
     ;
