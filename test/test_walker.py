@@ -1117,7 +1117,7 @@ class TestWalkerFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
     self.h.set_scalar("D", self.D)
     self.h.set_symmetric("X0", self.X1)
     self.h.set_symmetric("X1", self.X2)
-    self.T = 950.0+273.15
+    self.T = 900.0+273.15
 
     self.state = self.make_state(self.stress, self.h, self.T)
 
