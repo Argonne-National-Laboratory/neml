@@ -358,4 +358,34 @@ History & History::reorder(std::vector<std::string> vars)
   return *this;
 }
 
+size_t History::size_of_entry(std::string name) const
+{
+  return storage_size.at(type_.at(name));
+}
+
+void History::unravel_hh(const History & base, double * const array)
+{
+  // This assumes storage was correctly allocated
+
+  // Row/col size
+  size_t m = base.size();
+
+  for (auto n1 : base.get_order()) {
+    size_t s1 = base.size_of_entry(n1);
+    size_t o1 = base.get_loc().at(n1);
+    for (auto n2: base.get_order()) {
+      size_t s2 = base.size_of_entry(n2);
+      size_t o2 = base.get_loc().at(n2);
+      size_t k = 0;
+      size_t start = loc_.at(n1 + "_" + n2);
+      for (size_t i = 0; i < s1; i++) {
+        for (size_t j = 0; j < s2; j++) {
+          array[CINDEX(o1+i,o2+j,m)] = storage_[start + k];
+          k++;
+        }
+      }
+    }
+  }
+}
+
 } // namespace neml

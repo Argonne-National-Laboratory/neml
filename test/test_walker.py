@@ -543,7 +543,6 @@ class TestConstantDragStress(CommonDragStress, unittest.TestCase):
 
 class TestWalkerDragStress(CommonDragStress, unittest.TestCase):
   def setUp(self):
-
     self.d0 = 4.856e6
     self.d1 = 8.55e-7
     self.d2 = 2.866
@@ -852,55 +851,78 @@ class TestWalkerKinematicHardening(unittest.TestCase, CommonKinematicHardening):
         -X * self.x0 * P * (np.sqrt(3.0/2) * self.h.norm() / self.D)**self.x1 * self.h / (np.sqrt(3.0/2) * self.h.norm()))
 
 class CommonWrappedFlow(object):
-  def test_dy_ds(self):
+  def test_dy_ds_wrap(self):
     numerical = diff_scalar_symmetric(lambda s: self.model.y_wrap(self.make_state(s, self.h, self.T)), self.stress)
     actual = self.model.dy_ds_wrap(self.state)
     self.assertEqual(numerical, actual)
 
-  def test_dy_dh(self):
+  def test_dy_dh_wrap(self):
     numerical = diff_history_scalar(lambda s: self.model.y_wrap(self.make_state(self.stress, s, self.T)), self.h)
     actual = self.model.dy_da_wrap(self.state)
+      
     self.assertTrue(np.allclose(np.array(numerical), np.array(actual)))
 
-  def test_dg_ds(self):
+  def test_dg_ds_wrap(self):
     numerical = diff_symmetric_symmetric(lambda s: self.model.g_wrap(self.make_state(s, self.h, self.T)), self.stress)
     actual = self.model.dg_ds_wrap(self.state)
     self.assertEqual(numerical, actual)
 
-  def test_dg_dh(self):
-    numerical = diff_symmetric_history(lambda h: self.model.g_wrap(self.make_state(self.stress, h, self.T)), self.h)
-    actual= np.array(self.model.dg_da_wrap(self.state))
-    self.assertTrue(np.allclose(np.array(numerical).reshape(actual.shape), actual))
+  def test_dg_dh_wrap(self):
+    shape = (6, self.model.nhist)
 
-  def test_dh_ds(self):
-    numerical = diff_history_symmetric(lambda s: self.model.h_wrap(self.make_state(s, self.h, self.T)), self.stress)
-    actual = np.array(self.model.dh_ds_wrap(self.state))
-    self.assertTrue(np.allclose(np.array(numerical).reshape(actual.shape), actual))
+    numerical = diff_symmetric_history(
+        lambda h: self.model.g_wrap(self.make_state(self.stress, h, self.T)), self.h).reshape(shape)
+    actual= np.array(self.model.dg_da_wrap(self.state)).reshape(shape[::-1]).T
 
-  def test_dh_dh(self):
-    numerical = diff_history_history(lambda h: self.model.h_wrap(self.make_state(self.stress, h, self.T)), self.h)
-    actual = np.array(self.model.dh_da_wrap(self.state))
-    self.assertTrue(np.allclose(np.array(numerical).reshape(actual.shape), actual))
+    self.assertTrue(np.allclose(numerical, actual))
 
-  def test_dh_ds_time(self):
-    numerical = diff_history_symmetric(lambda s: self.model.h_time_wrap(self.make_state(s, self.h, self.T)), self.stress)
-    actual = np.array(self.model.dh_ds_time_wrap(self.state))
-    self.assertTrue(np.allclose(np.array(numerical).reshape(actual.shape), actual))
+  def test_dh_ds_wrap(self):
+    shape = (self.model.nhist, 6)
 
-  def test_dh_dh_time(self):
-    numerical = diff_history_history(lambda h: self.model.h_time_wrap(self.make_state(self.stress, h, self.T)), self.h)
-    actual = np.array(self.model.dh_da_time_wrap(self.state))
-    self.assertTrue(np.allclose(np.array(numerical).reshape(actual.shape), actual))
+    numerical = diff_history_symmetric(lambda s: self.model.h_wrap(self.make_state(s, self.h, self.T)), self.stress).reshape(shape)
+    actual = np.array(self.model.dh_ds_wrap(self.state)).reshape(shape)
 
-  def test_dh_ds_temp(self):
-    numerical = diff_history_symmetric(lambda s: self.model.h_temp_wrap(self.make_state(s, self.h, self.T)), self.stress)
-    actual = np.array(self.model.dh_ds_temp_wrap(self.state))
-    self.assertTrue(np.allclose(np.array(numerical).reshape(actual.shape), actual))
+    self.assertTrue(np.allclose(numerical, actual, rtol = 1e-3)) # HMM
 
-  def test_dh_dh_temp(self):
-    numerical = diff_history_history(lambda h: self.model.h_temp_wrap(self.make_state(self.stress, h, self.T)), self.h)
-    actual = np.array(self.model.dh_da_temp_wrap(self.state))
-    self.assertTrue(np.allclose(np.array(numerical).reshape(actual.shape), actual))
+  def test_dh_dh_wrap(self):
+    shape = (self.model.nhist, self.model.nhist)
+
+    numerical = diff_history_history(lambda h: self.model.h_wrap(self.make_state(self.stress, h, self.T)), self.h).reshape(shape)
+    actual = self.model.dh_da_wrap(self.state).unravel_hh(self.h)
+    
+    self.assertTrue(np.allclose(numerical, actual, rtol = 1e-3))
+
+  def test_dh_ds_time_wrap(self):
+    shape = (self.model.nhist, 6)
+
+    numerical = diff_history_symmetric(lambda s: self.model.h_time_wrap(self.make_state(s, self.h, self.T)), self.stress).reshape(shape)
+    actual = np.array(self.model.dh_ds_time_wrap(self.state)).reshape(shape)
+
+    self.assertTrue(np.allclose(numerical, actual, rtol = 1e-3)) # HMM
+
+  def test_dh_dh_time_wrap(self):
+    shape = (self.model.nhist, self.model.nhist)
+
+    numerical = diff_history_history(lambda h: self.model.h_time_wrap(self.make_state(self.stress, h, self.T)), self.h).reshape(shape)
+    actual = self.model.dh_da_time_wrap(self.state).unravel_hh(self.h)
+    
+    self.assertTrue(np.allclose(numerical, actual, rtol = 1e-3))
+
+  def test_dh_ds_temp_wrap(self):
+    shape = (self.model.nhist, 6)
+
+    numerical = diff_history_symmetric(lambda s: self.model.h_temp_wrap(self.make_state(s, self.h, self.T)), self.stress).reshape(shape)
+    actual = np.array(self.model.dh_ds_temp_wrap(self.state)).reshape(shape)
+
+    self.assertTrue(np.allclose(numerical, actual, rtol = 1e-3)) # HMM
+
+  def test_dh_dh_temp_wrap(self):
+    shape = (self.model.nhist, self.model.nhist)
+
+    numerical = diff_history_history(lambda h: self.model.h_temp_wrap(self.make_state(self.stress, h, self.T)), self.h).reshape(shape)
+    actual = self.model.dh_da_temp_wrap(self.state).unravel_hh(self.h)
+    
+    self.assertTrue(np.allclose(numerical, actual, rtol = 1e-3))
 
 class TestTestFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
   def setUp(self):
@@ -971,4 +993,273 @@ class TestTestFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
 
   def test_h_temp(self):
     self.assertTrue(np.allclose(np.array(self.model.h_temp_wrap(self.state)), np.zeros((2,))))
+
+
+class TestWalkerFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
+  def setUp(self):
+    # Thermal scaling model
+    self.Q = 3.65e5
+    self.R = 8.314
+    self.T0 = 950+273.15
+    self.scaling = walker.ArrheniusThermalScaling(self.Q, self.R, self.T0)
+
+    # Main softening model
+    self.phi0 = 0.75  
+    self.phi1 = 0.45
+    self.Phi = walker.WalkerSofteningModel(self.phi0, self.phi1)
+
+    # Reference strain rate
+    self.eps0 = 1.0e-4
+
+    # Rate sensitivity
+    self.n = 6.1
+
+    # Initial threshold
+    self.k = 50.0
+
+    # Switching function rate
+    self.m = 1.2
+
+    # Isotropic hardening
+    self.r0 = 0.1
+    self.r1 = 0.2
+    self.r2 = 1.1
+    self.Rinf = 0.25
+    self.R0 = 0.01
+
+    self.iso = walker.WalkerIsotropicHardening(
+        self.r0, self.Rinf, self.R0, self.r1, self.r2)
+
+    # Drag stress
+    self.d0 = 4.856e6
+    self.d1 = 8.55e-7
+    self.d2 = 2.866
+    self.D_xi = 121.6
+    self.D_0 = 139.9 
+
+    self.phi0_d = 1.0    
+    self.phi1_d = 0.35
+
+    self.softening_d = walker.WalkerSofteningModel(self.phi0_d, self.phi1_d)
+
+    self.drag = walker.WalkerDragStress(self.d0,
+        self.d1, self.d2, self.D_xi, self.D_0, 
+        self.softening_d)
+
+    # First back stress
+    self.c01 = 1.723e5
+    self.c11 = 3.153e6
+    self.c21 = 1.691
+
+    self.l01 = 14.0
+    self.l11 = 0.7
+    self.l1 = 6.165e1
+
+    self.b01 = 0.5    # 0.0?
+    self.x01 = 4.658e2
+    self.x11 = 1.691e0
+
+    self.phi01 = 0.5    # 0
+    self.phi11 = 0.35
+
+    self.softening1 = walker.WalkerSofteningModel(self.phi01, self.phi11)
+
+    self.back1 = walker.WalkerKinematicHardening(self.c01, self.c11, self.c21,
+        self.l01, self.l11, self.l1, self.b01, self.x01, self.x11, self.softening1)
+
+    # Second back stress
+    self.c02 = 2.723e5
+    self.c12 = 1.153e6
+    self.c22 = 2.691
+
+    self.l02 = 12.0
+    self.l12 = 0.8
+    self.l2 = 4.165e1
+
+    self.b02 = 0.6    # 0.0?
+    self.x02 = 3.658e2
+    self.x12 = 2.691e0
+
+    self.phi02 = 0.8    # 0
+    self.phi12 = 0.2
+
+    self.softening2 = walker.WalkerSofteningModel(self.phi02, self.phi12)
+
+    self.back2 = walker.WalkerKinematicHardening(self.c02, self.c12, self.c22,
+        self.l02, self.l12, self.l2, self.b02, self.x02, self.x12, self.softening2)
+
+    self.model = walker.WalkerFlowRule(self.eps0, self.Phi, self.scaling,
+        self.n, self.k, self.m, self.iso, self.drag,  [self.back1, self.back2])
+
+    self.stress = tensors.Symmetric([
+      [300.0,50.0,25.0],
+      [50.0,150.0,-20.0],
+      [25.0,-20.0,-100.0]])
+    
+    self.a = 0.1
+    self.R = 10.0
+    self.D = 150.0
+
+    self.X1 = tensors.Symmetric([
+      [32.0,-10.0,18.0],
+      [-10.0,25.0,-8.0],
+      [18.0,-8.0,-10.0]]).dev()
+    self.X2 = tensors.Symmetric([
+      [-15.0,30.0,12.0],
+      [30.0,-50.0,18.0],
+      [12.0, 18.0,50.0]]).dev()
+
+    self.X = self.X1 + self.X2
+
+    self.h = self.model.populate_hist()
+    self.h.set_scalar("alpha", self.a)
+    self.h.set_scalar("R", self.R)
+    self.h.set_scalar("D", self.D)
+    self.h.set_symmetric("X0", self.X1)
+    self.h.set_symmetric("X1", self.X2)
+    self.T = 950.0+273.15
+
+    self.state = self.make_state(self.stress, self.h, self.T)
+
+    self.hist0 = np.array([0.0, 0.0, self.D_0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+    self.szero = tensors.Symmetric([
+      [0,0,0],
+      [0.0,0,0],
+      [0,0,0]])
+
+    self.nhist = 15
+
+  def gen_hist(self):
+    return np.array([self.a, self.R, self.D, 9.07407407, 5.18518519, -14.25925926, -6.28539361, 14.14213562,
+      -7.85674201, -8.33333333, -37.5, 45.83333333,  21.21320344, 14.14213562,  35.35533906])
+
+  def make_state(self, S, h, T):
+    return walker.State(S, h, T)
+
+  def test_nhist(self):
+    self.assertEqual(self.model.nhist, self.nhist)
+
+  def test_setup_hist(self):
+    hobj = self.model.populate_hist()
+    self.assertEqual(hobj.size, self.nhist)
+    self.assertTrue(hobj.items, ["alpha", "R", "D", "X0", "X1"])
+
+  def test_initialize_hist(self):
+    h = self.model.initialize_hist()
+    self.assertAlmostEqual(h.get_scalar("alpha"), 0.0)
+    self.assertAlmostEqual(h.get_scalar("R"), 0.0)
+    self.assertAlmostEqual(h.get_scalar("D"), self.D_0)
+    self.assertTrue(h.get_symmetric("X0"), self.szero)
+    self.assertTrue(h.get_symmetric("X1"), self.szero)
+
+  def test_y(self):
+    mval = self.model.y_wrap(self.state)
+
+    xi = (self.D - self.D_0) / self.D_xi
+    Y = (self.k + self.R) * xi**self.m
+
+    d = self.stress.dev() - self.X
+    h = (np.sqrt(3.0/2) * d.norm() - Y) / self.D
+
+    F = h**self.n
+
+    a = self.eps0 * self.Phi.phi(self.a, self.T) * self.scaling.value(self.T)
+
+    sval = a * F
+
+    self.assertAlmostEqual(sval, mval)
+
+  def test_g(self):
+    mval = self.model.g_wrap(self.state)
+    d = self.stress.dev() - self.X
+    d = 3.0/2 * d / (np.sqrt(3.0/2.0) * d.norm())
+    
+    self.assertEqual(mval,d)
+
+  def test_h(self):
+    mval = self.model.h_wrap(self.state)
+    sval = self.model.populate_hist()
+    
+    # All this for alpha...
+    xi = (self.D - self.D_0) / self.D_xi
+    Y = (self.k + self.R) * xi**self.m
+
+    d = self.stress.dev() - self.X
+    h = (np.sqrt(3.0/2) * d.norm() - Y) / self.D
+
+    F = h**self.n
+
+    a = self.eps0 * self.Phi.phi(self.a, self.T) * self.scaling.value(self.T)
+
+    alpha = a * F
+    
+    sval.set_scalar("alpha", 1.0)
+
+    # Need g....
+    g = self.stress.dev() - self.X
+    g = 3.0/2 * d / (np.sqrt(3.0/2.0) * d.norm())
+
+    # R
+    sval.set_scalar("R", self.iso.ratep(walker.ScalarInternalVariableState(
+      self.R, self.a, alpha, self.D, self.stress, g, self.T)))
+
+    # D
+    sval.set_scalar("D", self.drag.ratep(walker.ScalarInternalVariableState(
+      self.D, self.a, alpha, self.D, self.stress, g, self.T)))
+
+    # X1
+    sval.set_symmetric("X0", self.back1.ratep(walker.SymmetricInternalVariableState(
+      self.X1, self.a, alpha, self.D, self.stress, g, self.T)))
+
+    # X2
+    sval.set_symmetric("X1", self.back2.ratep(walker.SymmetricInternalVariableState(
+      self.X2, self.a, alpha, self.D, self.stress, g, self.T)))
+    
+    self.assertTrue(np.allclose(np.array(sval), np.array(mval)))
+
+  def test_h_time(self):
+    mval = self.model.h_time_wrap(self.state)
+    sval = self.model.populate_hist()
+    
+    # All this for alpha...
+    xi = (self.D - self.D_0) / self.D_xi
+    Y = (self.k + self.R) * xi**self.m
+
+    d = self.stress.dev() - self.X
+    h = (np.sqrt(3.0/2) * d.norm() - Y) / self.D
+
+    F = h**self.n
+
+    a = self.eps0 * self.Phi.phi(self.a, self.T) * self.scaling.value(self.T)
+
+    alpha = a * F
+    
+    # Time rate...
+    sval.set_scalar("alpha", 0.0)
+
+    # Need g....
+    g = self.stress.dev() - self.X
+    g = 3.0/2 * d / (np.sqrt(3.0/2.0) * d.norm())
+
+    # R
+    sval.set_scalar("R", self.iso.ratet(walker.ScalarInternalVariableState(
+      self.R, self.a, alpha, self.D, self.stress, g, self.T)))
+
+    # D
+    sval.set_scalar("D", self.drag.ratet(walker.ScalarInternalVariableState(
+      self.D, self.a, alpha, self.D, self.stress, g, self.T)))
+
+    # X1
+    sval.set_symmetric("X0", self.back1.ratet(walker.SymmetricInternalVariableState(
+      self.X1, self.a, alpha, self.D, self.stress, g, self.T)))
+
+    # X2
+    sval.set_symmetric("X1", self.back2.ratet(walker.SymmetricInternalVariableState(
+      self.X2, self.a, alpha, self.D, self.stress, g, self.T)))
+    
+    self.assertTrue(np.allclose(np.array(sval), np.array(mval)))
+
+  def test_h_temp(self):
+    self.assertTrue(np.allclose(np.array(self.model.h_temp_wrap(self.state)), np.zeros((self.nhist,))))
 

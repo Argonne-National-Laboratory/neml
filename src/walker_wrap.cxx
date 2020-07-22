@@ -413,6 +413,16 @@ PYBIND11_MODULE(walker, m) {
                                                               "s0", "K"});
                   }))
     ;
+
+  py::class_<WalkerFlowRule, WrappedViscoPlasticFlowRule,
+      std::shared_ptr<WalkerFlowRule>>(m, "WalkerFlowRule")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+          {
+            return create_object_python<WalkerFlowRule>(args, kwargs,
+                    {"eps0", "softening", "scaling", "n", "k", "m", "R",
+                    "D", "X"});
+          }))
+    ;
 }
 
 } // namespace neml

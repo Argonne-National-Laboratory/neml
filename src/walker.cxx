@@ -1663,8 +1663,15 @@ int WrappedViscoPlasticFlowRule::dh_ds(const double * const s, const double * co
 int WrappedViscoPlasticFlowRule::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  History res = gather_derivative_<History>(dhv);
+  // Very messed up
+  double * temp = new double[nhist() * nhist()];
+  History res = gather_derivative_<History>(temp);
+
   dh_da(make_state_(s, alpha, T), res);
+
+  res.unravel_hh(blank_hist_(), dhv);
+
+  delete [] temp;
   return 0;
 }
 
@@ -1698,8 +1705,15 @@ void WrappedViscoPlasticFlowRule::dh_ds_time(const State & state, History & res)
 int WrappedViscoPlasticFlowRule::dh_da_time(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  History res = gather_derivative_<History>(dhv);
+  // Very messed up
+  double * temp = new double[nhist() * nhist()];
+  History res = gather_derivative_<History>(temp);
+
   dh_da_time(make_state_(s, alpha, T), res);
+
+  res.unravel_hh(blank_hist_(), dhv);
+
+  delete [] temp;
   return 0;
 }
 
@@ -1866,6 +1880,551 @@ void TestFlowRule::dh_ds(const State & state, History & res) const
 void TestFlowRule::dh_da(const State & state, History & res) const
 {
   res.zero();
+}
+
+WalkerFlowRule::WalkerFlowRule(
+    std::shared_ptr<Interpolate> eps0, std::shared_ptr<SofteningModel> softening,
+    std::shared_ptr<ThermalScaling> scaling, std::shared_ptr<Interpolate> n,
+    std::shared_ptr<Interpolate> k, std::shared_ptr<Interpolate> m,
+    std::shared_ptr<IsotropicHardening> R, std::shared_ptr<DragStress> D,
+    std::vector<std::shared_ptr<KinematicHardening>> X)
+    : WrappedViscoPlasticFlowRule(), eps0_(eps0), softening_(softening),
+      scaling_(scaling), n_(n), k_(k), m_(m), R_(R), D_(D), X_(X)
+{
+  // The variable names to something canonical
+  R->set_name("R");
+  D->set_name("D");
+  int i = 0;
+  for (auto X : X_) {
+    X->set_name("X" + std::to_string(i));
+    i++;
+  }
+
+  populate_hist(stored_hist_);
+}
+
+std::string WalkerFlowRule::type()
+{
+  return "WalkerFlowRule";
+}
+
+std::unique_ptr<NEMLObject> WalkerFlowRule::initialize(ParameterSet & params)
+{
+  return neml::make_unique<WalkerFlowRule>(
+      params.get_object_parameter<Interpolate>("eps0"),
+      params.get_object_parameter<SofteningModel>("softening"),
+      params.get_object_parameter<ThermalScaling>("scaling"),
+      params.get_object_parameter<Interpolate>("n"),
+      params.get_object_parameter<Interpolate>("k"),
+      params.get_object_parameter<Interpolate>("m"),
+      params.get_object_parameter<IsotropicHardening>("R"),
+      params.get_object_parameter<DragStress>("D"),
+      params.get_object_parameter_vector<KinematicHardening>("X")
+      );
+}
+
+ParameterSet WalkerFlowRule::parameters()
+{
+  ParameterSet pset(WalkerFlowRule::type());
+
+  pset.add_parameter<NEMLObject>("eps0");
+  pset.add_parameter<NEMLObject>("softening");
+  pset.add_parameter<NEMLObject>("scaling");
+  pset.add_parameter<NEMLObject>("n");
+  pset.add_parameter<NEMLObject>("k");
+  pset.add_parameter<NEMLObject>("m");
+  pset.add_parameter<NEMLObject>("R");
+  pset.add_parameter<NEMLObject>("D");
+  pset.add_parameter<std::vector<NEMLObject>>("X");
+
+  return pset;
+}
+
+void WalkerFlowRule::populate_hist(History & h) const
+{
+  h.add<double>("alpha");
+  h.add<double>(R_->name());
+  h.add<double>(D_->name());
+  for (auto X : X_) {
+    h.add<Symmetric>(X->name());
+  }
+}
+
+void WalkerFlowRule::initialize_hist(History & h) const
+{
+  h.get<double>("alpha") = 0.0;
+  h.get<double>(R_->name()) = R_->initial_value();
+  h.get<double>(D_->name()) = D_->initial_value();
+  for (auto X : X_) {
+    h.get<Symmetric>(X->name()) = X->initial_value();
+  }
+}
+
+void WalkerFlowRule::y(const State & state, double & res) const
+{
+
+  res = prefactor_(state) * flow_(state);
+}
+
+void WalkerFlowRule::dy_ds(const State & state, Symmetric & res) const
+{
+  Symmetric d = state.S.dev() - TX_(state);
+  res = prefactor_(state) * dflow_(state) * 
+      std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * 
+      SymSymR4::id_dev().dot(d);
+}
+
+void WalkerFlowRule::dy_da(const State & state, History & res) const
+{
+  // These are very annoying because it covers all the history variables...
+  
+  // alpha
+  res.get<double>("alpha") = eps0_->value(state.T) * 
+      softening_->dphi(state.h.get<double>("alpha"), state.T) * 
+      scaling_->value(state.T) * flow_(state);
+
+  // R
+  double D = state.h.get<double>("D");
+  double D0 = D_->D_0(state.T);
+  double Dx = D_->D_xi(state.T);
+  double m = m_->value(state.T);
+
+  res.get<double>("R") = -prefactor_(state) * dflow_(state) * 
+      std::pow((D-D0)/Dx, m) / D;
+
+  // D
+  Symmetric d = state.S.dev() - TX_(state);
+  double k = k_->value(state.T);
+  double R = state.h.get<double>("R");
+  double p1 = -(k + R) * m * std::pow((D-D0)/Dx, m-1.0) / (Dx*D);
+  double p2 = -(std::sqrt(3.0/2.0) * d.norm() - (k + R) * std::pow((D-D0)/Dx, m)) / (D*D);
+
+  res.get<double>("D") = prefactor_(state) * dflow_(state) * 
+      (p1 + p2);
+
+  // The backstresses
+  for (auto X : X_)
+    res.get<Symmetric>(X->name()) = -prefactor_(state) * dflow_(state) * 
+        std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * d;
+}
+
+void WalkerFlowRule::g(const State & state, Symmetric & res) const
+{
+  Symmetric d = state.S.dev() - TX_(state);
+  res = 3.0/2.0 * d / (std::sqrt(3.0/2.0) * d.norm());
+}
+
+void WalkerFlowRule::dg_ds(const State & state, SymSymR4 & res) const
+{
+  SymSymR4 G = G_(state);
+  res = G.dot(SymSymR4::id_dev());
+}
+
+void WalkerFlowRule::dg_da(const State & state, History & res) const
+{
+  res.get<Symmetric>("alpha") = Symmetric::zero();
+  res.get<Symmetric>("R") = Symmetric::zero();
+  res.get<Symmetric>("D") = Symmetric::zero();
+
+  SymSymR4 G = G_(state);
+  for (auto X : X_)
+    res.get<SymSymR4>(X->name()) = -G;
+}
+
+void WalkerFlowRule::h(const State & state, History & res) const
+{
+  // Scalar variables
+  res.get<double>("alpha") = 1.0;
+  auto ss = scalar_state_(state);
+  ss.h = state.h.get<double>("R");
+  res.get<double>("R") = R_->ratep(ss);
+  ss.h = state.h.get<double>("D");
+  res.get<double>("D") = D_->ratep(ss);
+  
+  // Backstresses
+  auto Ss = symmetric_state_(state);
+  for (auto X : X_) {
+    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
+    res.get<Symmetric>(X->name()) = X->ratep(Ss);
+  }
+}
+
+void WalkerFlowRule::dh_ds(const State & state, History & res) const
+{
+  // Again highly annoying, but at least there's a pattern here
+  // Alpha
+  res.get<Symmetric>("alpha") = Symmetric::zero();
+  
+  // Common junk
+  Symmetric dy;
+  dy_ds(state, dy);
+  SymSymR4 dg;
+  dg_ds(state, dg);
+
+  auto ss = scalar_state_(state);  
+
+  // R
+  ss.h = state.h.get<double>("R");
+  res.get<Symmetric>("R") = 
+        R_->d_ratep_d_s(ss) 
+      + R_->d_ratep_d_adot(ss) * dy
+      + dg.dot(R_->d_ratep_d_g(ss)).transpose();
+
+  // D
+  ss.h = state.h.get<double>("D");
+  res.get<Symmetric>("D") = 
+        D_->d_ratep_d_s(ss) 
+      + D_->d_ratep_d_adot(ss) * dy
+      + dg.dot(D_->d_ratep_d_g(ss)).transpose();
+
+  // Backstresses
+  auto Ss = symmetric_state_(state);
+  for (auto X : X_) {
+    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
+    res.get<SymSymR4>(X->name()) = 
+          X->d_ratep_d_s(Ss)
+        + douter(X->d_ratep_d_adot(Ss), dy)
+        + X->d_ratep_d_g(Ss).dot(dg);
+  }
+}
+
+void WalkerFlowRule::dh_da(const State & state, History & res) const
+{
+  // Well this is the worst...
+  
+  // Common stuff we need...
+  History dy = blank_derivative_<double>();
+  dy_da(state, dy);
+
+  History dg = blank_derivative_<Symmetric>();
+  dg_da(state, dg);
+
+  // Make sure the result starts out as zero
+  res.zero();
+
+  // Scalar variables
+  auto ss = scalar_state_(state);
+
+  // Alpha
+  // (zero)
+
+  // R
+  ss.h = state.h.get<double>("R");
+  // a
+  res.get<double>("R_alpha") =
+        R_->d_ratep_d_a(ss)
+      + R_->d_ratep_d_adot(ss) * dy.get<double>("alpha")
+      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+  // R
+  res.get<double>("R_R") =
+        R_->d_ratep_d_h(ss)
+      + R_->d_ratep_d_adot(ss) * dy.get<double>("R")
+      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("R"));
+  // D
+  res.get<double>("R_D") =
+        R_->d_ratep_d_D(ss)
+      + R_->d_ratep_d_adot(ss) * dy.get<double>("D")
+      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("D"));
+  // backstresses
+  for (auto X: X_) {
+    res.get<Symmetric>("R_" + X->name()) = 
+          R_->d_ratep_d_adot(ss) * dy.get<Symmetric>(X->name())
+        + dg.get<SymSymR4>(X->name()).dot(R_->d_ratep_d_g(ss)).transpose();
+  }
+
+  // D
+  ss.h = state.h.get<double>("D");
+  // a
+  res.get<double>("D_alpha") =
+        D_->d_ratep_d_a(ss)
+      + D_->d_ratep_d_adot(ss) * dy.get<double>("alpha")
+      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+  // R
+  res.get<double>("D_R") =
+        D_->d_ratep_d_adot(ss) * dy.get<double>("R")
+      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("R"));
+  // D
+  res.get<double>("D_D") =
+        D_->d_ratep_d_h(ss)
+      + D_->d_ratep_d_adot(ss) * dy.get<double>("D")
+      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("D"));
+  // backstresses
+  for (auto X: X_) {
+    res.get<Symmetric>("D_" + X->name()) = 
+          D_->d_ratep_d_adot(ss) * dy.get<Symmetric>(X->name())
+        + dg.get<SymSymR4>(X->name()).dot(D_->d_ratep_d_g(ss)).transpose();
+  }
+
+  // And the backstresses...
+  auto Ss = symmetric_state_(state);
+  for (auto X : X_) {
+    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data()); 
+    // a
+    res.get<Symmetric>(X->name() + "_alpha") = 
+          X->d_ratep_d_a(Ss)
+        + X->d_ratep_d_adot(Ss) * dy.get<double>("alpha")
+        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>("alpha"));
+
+    // R
+    res.get<Symmetric>(X->name() + "_R") = 
+        X->d_ratep_d_adot(Ss) * dy.get<double>("R")
+        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>("R"));
+
+    // D
+    res.get<Symmetric>(X->name() + "_D") = 
+          X->d_ratep_d_D(Ss)
+        + X->d_ratep_d_adot(Ss) * dy.get<double>("D")
+        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>("D"));
+
+    // backstresses
+    for (auto Y : X_) {
+      if (Y->name() == X->name()) {
+        res.get<SymSymR4>(X->name() + "_" + Y->name()) = X->d_ratep_d_h(Ss);
+      }
+      res.get<SymSymR4>(X->name() + "_" + Y->name()) += 
+            douter(X->d_ratep_d_adot(Ss), dy.get<Symmetric>(Y->name()))
+          + X->d_ratep_d_g(Ss).dot(dg.get<SymSymR4>(Y->name()));
+    }
+  }
+}
+
+void WalkerFlowRule::h_time(const State & state, History & res) const
+{
+  // Scalar variables
+  res.get<double>("alpha") = 0.0;
+  auto ss = scalar_state_(state);
+  ss.h = state.h.get<double>("R");
+  res.get<double>("R") = R_->ratet(ss);
+  ss.h = state.h.get<double>("D");
+  res.get<double>("D") = D_->ratet(ss);
+  
+  // Backstresses
+  auto Ss = symmetric_state_(state);
+  for (auto X : X_) {
+    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
+    res.get<Symmetric>(X->name()) = X->ratet(Ss);
+  }
+}
+
+void WalkerFlowRule::dh_ds_time(const State & state, History & res) const
+{
+  // Again highly annoying, but at least there's a pattern here
+  // Alpha
+  res.get<Symmetric>("alpha") = Symmetric::zero();
+  
+  // Common junk
+  Symmetric dy;
+  dy_ds(state, dy);
+  SymSymR4 dg;
+  dg_ds(state, dg);
+
+  auto ss = scalar_state_(state);  
+
+  // R
+  ss.h = state.h.get<double>("R");
+  res.get<Symmetric>("R") = 
+        R_->d_ratet_d_s(ss) 
+      + R_->d_ratet_d_adot(ss) * dy
+      + dg.dot(R_->d_ratet_d_g(ss)).transpose();
+
+  // D
+  ss.h = state.h.get<double>("D");
+  res.get<Symmetric>("D") = 
+        D_->d_ratet_d_s(ss) 
+      + D_->d_ratet_d_adot(ss) * dy
+      + dg.dot(D_->d_ratet_d_g(ss)).transpose();
+
+  // Backstresses
+  auto Ss = symmetric_state_(state);
+  for (auto X : X_) {
+    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
+    res.get<SymSymR4>(X->name()) = 
+          X->d_ratet_d_s(Ss)
+        + douter(X->d_ratet_d_adot(Ss), dy)
+        + X->d_ratet_d_g(Ss).dot(dg);
+  }
+}
+
+void WalkerFlowRule::dh_da_time(const State & state, History & res) const
+{
+  // Well this is the worst...
+  
+  // Common stuff we need...
+  History dy = blank_derivative_<double>();
+  dy_da(state, dy);
+
+  History dg = blank_derivative_<Symmetric>();
+  dg_da(state, dg);
+
+  // Make sure the result starts out as zero
+  res.zero();
+
+  // Scalar variables
+  auto ss = scalar_state_(state);
+
+  // Alpha
+  // (zero)
+
+  // R
+  ss.h = state.h.get<double>("R");
+  // a
+  res.get<double>("R_alpha") =
+        R_->d_ratet_d_a(ss)
+      + R_->d_ratet_d_adot(ss) * dy.get<double>("alpha")
+      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+  // R
+  res.get<double>("R_R") =
+        R_->d_ratet_d_h(ss)
+      + R_->d_ratet_d_adot(ss) * dy.get<double>("R")
+      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("R"));
+  // D
+  res.get<double>("R_D") =
+        R_->d_ratet_d_D(ss)
+      + R_->d_ratet_d_adot(ss) * dy.get<double>("D")
+      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("D"));
+  // backstresses
+  for (auto X: X_) {
+    res.get<Symmetric>("R_" + X->name()) = 
+          R_->d_ratet_d_adot(ss) * dy.get<Symmetric>(X->name())
+        + dg.get<SymSymR4>(X->name()).dot(R_->d_ratet_d_g(ss)).transpose();
+  }
+
+  // D
+  ss.h = state.h.get<double>("D");
+  // a
+  res.get<double>("D_alpha") =
+        D_->d_ratet_d_a(ss)
+      + D_->d_ratet_d_adot(ss) * dy.get<double>("alpha")
+      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+  // R
+  res.get<double>("D_R") =
+        D_->d_ratet_d_adot(ss) * dy.get<double>("R")
+      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("R"));
+  // D
+  res.get<double>("D_D") =
+        D_->d_ratet_d_h(ss)
+      + D_->d_ratet_d_adot(ss) * dy.get<double>("D")
+      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("D"));
+  // backstresses
+  for (auto X: X_) {
+    res.get<Symmetric>("D_" + X->name()) = 
+          D_->d_ratet_d_adot(ss) * dy.get<Symmetric>(X->name())
+        + dg.get<SymSymR4>(X->name()).dot(D_->d_ratet_d_g(ss)).transpose();
+  }
+
+  // And the backstresses...
+  auto Ss = symmetric_state_(state);
+  for (auto X : X_) {
+    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data()); 
+    // a
+    res.get<Symmetric>(X->name() + "_alpha") = 
+          X->d_ratet_d_a(Ss)
+        + X->d_ratet_d_adot(Ss) * dy.get<double>("alpha")
+        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>("alpha"));
+
+    // R
+    res.get<Symmetric>(X->name() + "_R") = 
+        X->d_ratet_d_adot(Ss) * dy.get<double>("R")
+        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>("R"));
+
+    // D
+    res.get<Symmetric>(X->name() + "_D") = 
+          X->d_ratet_d_D(Ss)
+        + X->d_ratet_d_adot(Ss) * dy.get<double>("D")
+        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>("D"));
+
+    // backstresses
+    for (auto Y : X_) {
+      if (Y->name() == X->name()) {
+        res.get<SymSymR4>(X->name() + "_" + Y->name()) = X->d_ratet_d_h(Ss);
+      }
+      res.get<SymSymR4>(X->name() + "_" + Y->name()) += 
+            douter(X->d_ratet_d_adot(Ss), dy.get<Symmetric>(Y->name()))
+          + X->d_ratet_d_g(Ss).dot(dg.get<SymSymR4>(Y->name()));
+    }
+  }
+}
+
+Symmetric WalkerFlowRule::TX_(const State & state) const
+{
+  Symmetric res = Symmetric::zero();
+  for (auto X : X_)
+    res += state.h.get<Symmetric>(X->name());
+  return res;
+}
+
+ScalarInternalVariable::VariableState WalkerFlowRule::scalar_state_(
+    const State & state) const
+{
+  ScalarInternalVariable::VariableState vstate;
+
+  vstate.a = state.h.get<double>("alpha");
+  y(state, vstate.adot);
+  vstate.D = state.h.get<double>("D");
+  vstate.s = state.S;
+  g(state, vstate.g);
+  vstate.T = state.T;
+
+  return vstate;
+}
+
+SymmetricInternalVariable::VariableState WalkerFlowRule::symmetric_state_(
+    const State & state) const
+{
+  SymmetricInternalVariable::VariableState vstate;
+  
+  vstate.a = state.h.get<double>("alpha");
+  y(state, vstate.adot);
+  vstate.D = state.h.get<double>("D");
+  vstate.s = state.S;
+  g(state, vstate.g);
+  vstate.T = state.T;
+
+  return vstate;
+}
+
+double WalkerFlowRule::prefactor_(const State & state) const
+{
+  return eps0_->value(state.T) * 
+      softening_->phi(state.h.get<double>("alpha"), state.T) * 
+      scaling_->value(state.T);
+}
+
+double WalkerFlowRule::flow_(const State & state) const
+{
+  Symmetric d = state.S.dev() - TX_(state);
+  double Y = Y_(state);
+  double h = (std::sqrt(3.0/2.0) * d.norm() - Y) / state.h.get<double>("D");
+  if (h <= 0.0)
+    return 0.0;
+  else
+    return std::pow(std::fabs(h), n_->value(state.T));
+}
+
+double WalkerFlowRule::dflow_(const State & state) const
+{
+  Symmetric d = state.S.dev() - TX_(state);
+  double Y = Y_(state);
+  double h = (std::sqrt(3.0/2.0) * d.norm() - Y) / state.h.get<double>("D");
+  if (h <= 0.0)
+    return 0.0;
+  else
+    return n_->value(state.T) * std::pow(std::fabs(h), n_->value(state.T)-1.0);
+}
+
+double WalkerFlowRule::Y_(const State & state) const
+{
+  double xi = (state.h.get<double>("D") - D_->D_0(state.T)) / D_->D_xi(state.T);
+  return (k_->value(state.T) + state.h.get<double>("R")) * std::pow(xi,
+                                                                    m_->value(state.T));
+}
+
+SymSymR4 WalkerFlowRule::G_(const State & state) const
+{
+  Symmetric d = state.S.dev() - TX_(state);
+  double nd = d.norm();
+
+  return std::sqrt(3.0/2.0) / nd * (SymSymR4::id() - douter(d/nd, d/nd));
 }
 
 }

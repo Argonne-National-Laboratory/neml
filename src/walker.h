@@ -703,4 +703,94 @@ class TestFlowRule: public WrappedViscoPlasticFlowRule
 
 static Register<TestFlowRule> regTestFlowRule;
 
+/// Full Walker flow rule
+class WalkerFlowRule: public WrappedViscoPlasticFlowRule
+{
+ public:
+  WalkerFlowRule(
+      std::shared_ptr<Interpolate> eps0, 
+      std::shared_ptr<SofteningModel> softening,
+      std::shared_ptr<ThermalScaling> scaling,
+      std::shared_ptr<Interpolate> n,
+      std::shared_ptr<Interpolate> k,
+      std::shared_ptr<Interpolate> m,
+      std::shared_ptr<IsotropicHardening> R,
+      std::shared_ptr<DragStress> D,
+      std::vector<std::shared_ptr<KinematicHardening>> X);
+
+  /// String type for the object system
+  static std::string type();
+  /// Return default parameters
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Initialize from parameter set
+  static ParameterSet parameters();
+
+  /// Populate a history object
+  virtual void populate_hist(History & h) const;
+  virtual void initialize_hist(History & h) const;
+
+  // Scalar inelastic strain rate
+  virtual void y(const State & state, double & res) const;
+  /// Derivative of y wrt stress
+  virtual void dy_ds(const State & state, Symmetric & res) const;
+  /// Derivative of y wrt history
+  virtual void dy_da(const State & state, History & res) const;
+
+  /// Flow rule proportional to the scalar strain rate
+  virtual void g(const State & state, Symmetric & res) const;
+  /// Derivative of g wrt stress
+  virtual void dg_ds(const State & state, SymSymR4 & res) const;
+  /// Derivative of g wrt history
+  virtual void dg_da(const State & state, History & res) const;
+
+  /// Hardening rule proportional to the scalar strain rate
+  virtual void h(const State & state, History & res) const;
+  /// Derivative of h wrt stress
+  virtual void dh_ds(const State & state, History & res) const;
+  /// Derivative of h wrt history
+  virtual void dh_da(const State & state, History & res) const;
+
+  /// Hardening rule proportional to time
+  virtual void h_time(const State & state, History & res) const;
+  /// Derivative of h_time wrt stress
+  virtual void dh_ds_time(const State & state, History & res) const;
+  /// Derivative of h_time wrt history
+  virtual void dh_da_time(const State & state, History & res) const;
+
+ protected:
+  /// Sum of the backstresses
+  Symmetric TX_(const State & state) const;
+  /// Make a scalar state object (helper for history)
+  ScalarInternalVariable::VariableState scalar_state_(
+      const State & state) const;
+  /// Make a Symmetric state object (helper for history)
+  SymmetricInternalVariable::VariableState symmetric_state_(
+      const State & state) const;
+  
+  /// The prefactor part of the scalar flow rate (Walker's alpha)
+  double prefactor_(const State & state) const;
+  /// The flow rule (Waklker's h)
+  double flow_(const State & state) const;
+  /// The derivative of the flow rule
+  double dflow_(const State & state) const;
+  /// The actual threshold stress (Walker's Y)
+  double Y_(const State & state) const;
+
+  /// Derivative of the flow direction wrt S - X
+  SymSymR4 G_(const State & state) const;
+
+ private:
+  std::shared_ptr<Interpolate> eps0_;
+  std::shared_ptr<SofteningModel> softening_;
+  std::shared_ptr<ThermalScaling> scaling_;
+  std::shared_ptr<Interpolate> n_;
+  std::shared_ptr<Interpolate> k_;
+  std::shared_ptr<Interpolate> m_;
+  std::shared_ptr<IsotropicHardening> R_;
+  std::shared_ptr<DragStress> D_;
+  std::vector<std::shared_ptr<KinematicHardening>> X_;
+};
+
+static Register<WalkerFlowRule> regWalkerFlowRule;
+
 }
