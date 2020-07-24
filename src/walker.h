@@ -98,6 +98,9 @@ class NEML_EXPORT WalkerKremplSwitchRule : public GeneralFlowRule {
   /// Derivative of kappa wrt the strain rate (public for testing)
   int dkappa(const double * const edot, double T, double * const dkap);
 
+  /// Override initial guess
+  virtual void override_guess(double * const x);
+
  private:
   std::shared_ptr<LinearElasticModel> elastic_;
   std::shared_ptr<ViscoPlasticFlowRule> flow_;
@@ -148,6 +151,7 @@ class NEML_EXPORT WalkerSofteningModel: public SofteningModel {
  private:
   std::shared_ptr<Interpolate> phi_0_;
   std::shared_ptr<Interpolate> phi_1_;
+  double ainc_ = 1.0e-3;
 };
 
 static Register<WalkerSofteningModel> regWalkerSoftening;
@@ -628,11 +632,12 @@ class NEML_EXPORT WrappedViscoPlasticFlowRule : public ViscoPlasticFlowRule {
     return blank_hist_().derivative<T>(); 
   }
 
- private:
+ protected:
   /// Make a state object
   State make_state_(const double * const s, const double * const alpha, double
                    T) const;
 
+ private:
   /// Make a history object
   History gather_hist_(double * const h) const;
   History gather_hist_(const double * const h) const;
@@ -756,6 +761,9 @@ class WalkerFlowRule: public WrappedViscoPlasticFlowRule
   virtual void dh_ds_time(const State & state, History & res) const;
   /// Derivative of h_time wrt history
   virtual void dh_da_time(const State & state, History & res) const;
+
+  /// Override initial guess
+  virtual void override_guess(double * const x);
 
  protected:
   /// Sum of the backstresses

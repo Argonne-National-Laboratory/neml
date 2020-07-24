@@ -1348,10 +1348,10 @@ GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic
                                      std::shared_ptr<Interpolate> alpha,
                                      bool truesdell, double tol, int miter,
                                      bool verbose, int max_divide,
-                                     bool force_divide) :
+                                     bool force_divide, bool skip_first) :
     SubstepModel_sd(elastic, alpha, truesdell, tol, miter, verbose, max_divide,
                     force_divide),
-    rule_(rule)
+    rule_(rule), skip_first_(skip_first)
 {
 
 }
@@ -1377,6 +1377,7 @@ ParameterSet GeneralIntegrator::parameters()
   pset.add_optional_parameter<bool>("verbose", false);
   pset.add_optional_parameter<int>("max_divide", 4);
   pset.add_optional_parameter<bool>("force_divide", false);
+  pset.add_optional_parameter<bool>("skip_first_step", false);
 
   return pset;
 }
@@ -1392,7 +1393,8 @@ std::unique_ptr<NEMLObject> GeneralIntegrator::initialize(ParameterSet & params)
       params.get_parameter<int>("miter"),
       params.get_parameter<bool>("verbose"),
       params.get_parameter<int>("max_divide"),
-      params.get_parameter<bool>("force_divide")
+      params.get_parameter<bool>("force_divide"),
+      params.get_parameter<bool>("skip_first_step")
       ); 
 }
 
@@ -1533,6 +1535,8 @@ int GeneralIntegrator::init_x(double * const x, TrialState * ts)
   std::copy(tss->s_guess, tss->s_guess+6, x);
   std::copy(tss->h_n.begin(), tss->h_n.end(), &x[6]);
 
+  rule_->override_guess(x);
+
   return 0;
 }
 
@@ -1651,6 +1655,10 @@ int GeneralIntegrator::make_trial_state(
   sub_vec(e_np1, e_n, 6, de);
   mat_vec(C, 6, de, 6, ts.s_guess);
   add_vec(ts.s_guess, s_n, 6, ts.s_guess);
+
+  // Special logic...
+  if ((t_n == 0.0) && (skip_first_))
+    std::copy(s_n, s_n+6, ts.s_guess);
 
   return 0;
 }

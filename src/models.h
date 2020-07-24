@@ -628,7 +628,7 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
                     std::shared_ptr<GeneralFlowRule> rule,
                     std::shared_ptr<Interpolate> alpha,
                     bool truesdell, double tol, int miter, bool verbose,
-                    int max_divide, bool force_divide);
+                    int max_divide, bool force_divide, bool skip_first);
 
   /// Type for the object system
   static std::string type();
@@ -708,6 +708,7 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
 
  private:
   std::shared_ptr<GeneralFlowRule> rule_;
+  bool skip_first_;
 };
 
 static Register<GeneralIntegrator> regGeneralIntegrator;

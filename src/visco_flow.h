@@ -91,6 +91,9 @@ class NEML_EXPORT ViscoPlasticFlowRule: public NEMLObject {
   /// Derivative of h_temp wrt history
   virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
+
+  /// Optional method to give a better initial guess
+  virtual void override_guess(double * const guess);
 };
 
 /// The "g" function in the Perzyna model -- often a power law

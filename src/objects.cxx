@@ -79,7 +79,7 @@ void ParameterSet::resolve_objects_()
 Factory::Factory()
 {
   // Good spot to place global things
-  //feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO);
+  // feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO);
 }
 
 ParameterSet Factory::provide_parameters(std::string type)

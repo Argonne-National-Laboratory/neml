@@ -582,12 +582,12 @@ class TestWalkerDragStress(CommonDragStress, unittest.TestCase):
     self.assertAlmostEqual(self.model.initial_value(), self.D_0)
 
   def test_ratep(self):
-    should = self.d0 - self.d0 / self.D_xi * self.h
+    should = self.d0 * (1.0 - (self.h-self.D_0) / self.D_xi)
     self.assertAlmostEqual(self.model.ratep(self.state), should)
 
   def test_ratet(self):
     should = -self.scaling.value(self.T) * self.softening.phi(self.a, self.T
-        ) * self.d1 * self.h**(self.d2)
+        ) * self.d1 * (self.h-self.D_0)**(self.d2)
     self.assertAlmostEqual(self.model.ratet(self.state), should)
 
   def test_D_xi(self):

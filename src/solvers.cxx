@@ -33,7 +33,7 @@ int newton(Solvable * system, double * x, TrialState * ts,
 {
   int n = system->nparams();
   system->init_x(x, ts);
-  
+
   bool local_R = (R==nullptr);
   bool local_J = (J==nullptr);
 

@@ -424,12 +424,23 @@ int WalkerKremplSwitchRule::dkappa(const double * const edot, double T,
   std::copy(edot, edot+6, dkap);
   dev_vec(dkap);
 
+  if (norm2_vec(dkap, 6) == 0.0) {
+    for (size_t i = 0; i < 6; i++)
+      dkap[i] = 0.0;
+    return 0;
+  }
+
   double fact = lambda_->value(T)  / eps0_ * std::sqrt(2.0/3.0) / norm2_vec(dkap, 6);
 
   for (size_t i = 0; i < 6; i++)
     dkap[i] *= fact;
 
   return 0;
+}
+
+void WalkerKremplSwitchRule::override_guess(double * const x)
+{
+  flow_->override_guess(x);
 }
 
 SofteningModel::SofteningModel()
@@ -496,16 +507,29 @@ ParameterSet WalkerSofteningModel::parameters()
 
 double WalkerSofteningModel::phi(double alpha, double T) const
 {
-  return 1.0 + phi_0_->value(T) * std::pow(alpha, phi_1_->value(T));
+  if (alpha <= 0.0) {
+    return 1.0;
+  }
+  else if (alpha < ainc_) {
+    return phi_0_->value(T) * std::pow(ainc_, phi_1_->value(T)) / ainc_ * alpha +
+        1.0;
+  }
+  else {
+    return 1.0 + phi_0_->value(T) * std::pow(alpha, phi_1_->value(T));
+  }
 }
 
 double WalkerSofteningModel::dphi(double alpha, double T) const
 {
-  if (alpha == 0.0) 
-    return 0.0;
-  else
-    return phi_1_->value(T) * phi_0_->value(T) * std::pow(alpha, phi_1_->value(T)
-                                                         - 1.0);
+  if (alpha <= 0.0) {
+    return phi_0_->value(T) * std::pow(ainc_, phi_1_->value(T)) / ainc_;;
+  }
+  else if (alpha < ainc_) {
+    return phi_0_->value(T) * std::pow(ainc_, phi_1_->value(T)) / ainc_;
+  }
+  else {
+    return phi_1_->value(T) * phi_0_->value(T) * std::pow(alpha, phi_1_->value(T) - 1.0);
+  }
 }
 
 ThermalScaling::ThermalScaling()
@@ -1092,7 +1116,7 @@ double WalkerDragStress::D_0(double T)
 
 double WalkerDragStress::ratep(VariableState & state)
 {
-  return d0_->value(state.T) * (1.0 - state.h / D_xi_->value(state.T));
+  return d0_->value(state.T) * (1.0 - (state.h - D_0_) / D_xi_->value(state.T));
 }
 
 double WalkerDragStress::d_ratep_d_h(VariableState & state)
@@ -1122,20 +1146,29 @@ Symmetric WalkerDragStress::d_ratep_d_g(VariableState & state)
 
 double WalkerDragStress::ratet(VariableState & state)
 {
-  return -scale_->value(state.T) * softening_->phi(state.a, state.T) * 
-      d1_->value(state.T) * std::pow(state.h, d2_->value(state.T));
+  if ((state.h-D_0_) <= 0.0)
+    return 0;
+  else
+    return -scale_->value(state.T) * softening_->phi(state.a, state.T) * 
+        d1_->value(state.T) * std::pow(state.h - D_0_, d2_->value(state.T));
 }
 
 double WalkerDragStress::d_ratet_d_h(VariableState & state)
 {
-  return -d2_->value(state.T) * scale_->value(state.T) * softening_->phi(state.a, state.T) * 
-      d1_->value(state.T) * std::pow(state.h, d2_->value(state.T) - 1.0);
+  if ((state.h-D_0_) <= 0.0)
+    return 1;
+  else
+    return -d2_->value(state.T) * scale_->value(state.T) * softening_->phi(state.a, state.T) * 
+        d1_->value(state.T) * std::pow(state.h - D_0_, d2_->value(state.T) - 1.0);
 }
 
 double WalkerDragStress::d_ratet_d_a(VariableState & state)
 {
-  return -scale_->value(state.T) * softening_->dphi(state.a, state.T) * 
-      d1_->value(state.T) * std::pow(state.h, d2_->value(state.T));
+  if ((state.h-D_0_) <= 0.0)
+    return 1;
+  else
+    return -scale_->value(state.T) * softening_->dphi(state.a, state.T) * 
+        d1_->value(state.T) * std::pow(state.h - D_0_, d2_->value(state.T));
 }
 
 double WalkerDragStress::d_ratet_d_adot(VariableState & state)
@@ -1418,20 +1451,20 @@ SymSymR4 WalkerKinematicHardening::d_ratep_d_g(VariableState & state)
 
 Symmetric WalkerKinematicHardening::ratet(VariableState & state)
 {
-  if (state.h.norm() == 0.0) {
+  if ((state.h.norm() == 0.0) || (state.D <= 0.0)) {
     return Symmetric::zero();
   }
   else {
     return -scale_->value(state.T) * x0_->value(state.T) * 
         softening_->phi(state.a, state.T) * 
-        std::pow(std::sqrt(3.0/2) * state.h.norm() / state.D, x1_->value(state.T))
+        std::pow(std::sqrt(3.0/2.0) * state.h.norm() / state.D, x1_->value(state.T))
         * state.h / (state.h.norm() * std::sqrt(3.0/2));
   }
 }
 
 SymSymR4 WalkerKinematicHardening::d_ratet_d_h(VariableState & state)
 {
-  if (state.h.norm() == 0) {
+  if ((state.h.norm() == 0) || (state.D <= 0.0)) {
     return SymSymR4::zero();
   }
   else {
@@ -1449,7 +1482,7 @@ SymSymR4 WalkerKinematicHardening::d_ratet_d_h(VariableState & state)
 
 Symmetric WalkerKinematicHardening::d_ratet_d_a(VariableState & state) 
 {
-  if (state.h.norm() == 0)
+  if ((state.h.norm() == 0) || (state.D <= 0.0))
     return Symmetric::zero();
   else
     return -scale_->value(state.T) * x0_->value(state.T) * 
@@ -1465,7 +1498,7 @@ Symmetric WalkerKinematicHardening::d_ratet_d_adot(VariableState & state)
 
 Symmetric WalkerKinematicHardening::d_ratet_d_D(VariableState & state)
 {
-  if (state.h.norm() == 0)
+  if ((state.h.norm() == 0) || (state.D <= 0.0))
     return Symmetric::zero();
   else
     return scale_->value(state.T) * x0_->value(state.T) * 
@@ -1488,32 +1521,43 @@ SymSymR4 WalkerKinematicHardening::d_ratet_d_g(VariableState & state)
 
 double WalkerKinematicHardening::c_(VariableState & state)
 {
-  return c0_->value(state.T) + c1_->value(state.T) * 
-      std::pow(state.adot, 1.0/c2_->value(state.T));
+  if (state.adot <= 0.0)
+    return c0_->value(state.T);
+  else
+    return c0_->value(state.T) + c1_->value(state.T) * 
+        std::pow(state.adot, 1.0/c2_->value(state.T));
 }
 
 double WalkerKinematicHardening::dc_(VariableState & state)
 {
-  return c1_->value(state.T)/c2_->value(state.T) * 
-      std::pow(state.adot, 1.0/c2_->value(state.T)-1.0);
+  if (state.adot <= 0.0)
+    return 0.0;
+  else
+    return c1_->value(state.T)/c2_->value(state.T) * 
+        std::pow(state.adot, 1.0/c2_->value(state.T)-1.0);
 }
 
 double WalkerKinematicHardening::L_(VariableState & state)
 {
-  return l_->value(state.T) * (l1_->value(state.T) + (1.0 - l1_->value(state.T))
+  if (state.a <= 0.0) return l1_->value(state.T) + 1.0;
+  else return l_->value(state.T) * (l1_->value(state.T) + (1.0 - l1_->value(state.T))
                                * std::exp(-l0_->value(state.T) * state.a));
 }
 
 double WalkerKinematicHardening::dL_(VariableState & state)
 {
-  return -l0_->value(state.T) * l_->value(state.T) * (1.0 - l1_->value(state.T))
-                               * std::exp(-l0_->value(state.T) * state.a);
+  if (state.a <= 0.0) return -l0_->value(state.T) * l_->value(state.T);
+  else return -l0_->value(state.T) * l_->value(state.T) * (1.0 - l1_->value(state.T))
+                                * std::exp(-l0_->value(state.T) * state.a);
 }
 
 Symmetric WalkerKinematicHardening::n_(VariableState & state)
 {
-  return (3.0/2.0) * (state.s.dev() - state.h) / 
-      (std::sqrt(3.0/2.0) * (state.s.dev() - state.h).norm());
+  if ((state.s.dev() - state.h).norm() == 0.0) 
+    return Symmetric::zero();
+  else
+    return (3.0/2.0) * (state.s.dev() - state.h) / 
+        (std::sqrt(3.0/2.0) * (state.s.dev() - state.h).norm());
 }
 
 Symmetric WalkerKinematicHardening::b_(VariableState & state)
@@ -1548,7 +1592,10 @@ SymSymR4 WalkerKinematicHardening::dN_(VariableState & state)
 {
   Symmetric d = state.s.dev() - state.h;
   double dn = d.norm();
-  return std::sqrt(3.0/2.0) / dn * (SymSymR4::id() - douter(d/dn,d/dn));
+  if (dn == 0.0)
+    return SymSymR4::id();
+  else
+    return std::sqrt(3.0/2.0) / dn * (SymSymR4::id() - douter(d/dn,d/dn));
 }
 
 WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule() :
@@ -1919,6 +1966,13 @@ WalkerFlowRule::WalkerFlowRule(
     i++;
   }
 
+  // Set the thermal scaling models to be the same
+  R_->set_scaling(scaling_);
+  D_->set_scaling(scaling_);
+  for (auto X : X_) {
+    X->set_scaling(scaling_);
+  }
+
   populate_hist(stored_hist_);
 }
 
@@ -1971,7 +2025,7 @@ void WalkerFlowRule::populate_hist(History & h) const
 
 void WalkerFlowRule::initialize_hist(History & h) const
 {
-  h.get<double>("alpha") = 0.0;
+  h.get<double>("alpha") = 0;
   h.get<double>(R_->name()) = R_->initial_value();
   h.get<double>(D_->name()) = D_->initial_value();
   for (auto X : X_) {
@@ -1988,9 +2042,12 @@ void WalkerFlowRule::y(const State & state, double & res) const
 void WalkerFlowRule::dy_ds(const State & state, Symmetric & res) const
 {
   Symmetric d = state.S.dev() - TX_(state);
-  res = prefactor_(state) * dflow_(state) * 
-      std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * 
-      SymSymR4::id_dev().dot(d);
+  if (d.norm() == 0)
+    res = Symmetric::zero();
+  else
+    res = prefactor_(state) * dflow_(state) * 
+        std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * 
+        SymSymR4::id_dev().dot(d);
 }
 
 void WalkerFlowRule::dy_da(const State & state, History & res) const
@@ -2008,7 +2065,7 @@ void WalkerFlowRule::dy_da(const State & state, History & res) const
   double Dx = D_->D_xi(state.T);
   double m = m_->value(state.T);
 
-  double Dr = 0.0;
+  double Dr = 1.0e-8;
   if ((D - D0) > 0) Dr = (D-D0)/Dx;
   
   res.get<double>("R") = -prefactor_(state) * dflow_(state) * 
@@ -2449,8 +2506,22 @@ SymSymR4 WalkerFlowRule::G_(const State & state) const
 {
   Symmetric d = state.S.dev() - TX_(state);
   double nd = d.norm();
+  if (nd == 0.0)
+    return SymSymR4::id();
+  else
+    return std::sqrt(3.0/2.0) / nd * (SymSymR4::id() - douter(d/nd, d/nd));
+}
 
-  return std::sqrt(3.0/2.0) / nd * (SymSymR4::id() - douter(d/nd, d/nd));
+void WalkerFlowRule::override_guess(double * const x)
+{
+  double sn = norm2_vec(x, 6);
+  if (sn == 0.0) {
+    x[0] += 1.0e-3;
+  }
+  if (x[6] < 1.0e-2) {
+    x[6] += 1.0e-3;
+  }
+  return;
 }
 
 }
