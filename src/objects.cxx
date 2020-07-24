@@ -2,30 +2,6 @@
 
 namespace neml {
 
-// for debug purposes
-template <>
-std::string ParamValue<bool>::typeString() { return "bool"; }
-template <>
-std::string ParamValue<int>::typeString() { return "int"; }
-template <>
-std::string ParamValue<double>::typeString() { return "double"; }
-template <>
-std::string ParamValue<size_t>::typeString() { return "size_t"; }
-template <>
-std::string ParamValue<NEMLObject>::typeString() { return "NEMLObject"; }
-template <>
-std::string ParamValue<std::shared_ptr<NEMLObject>>::typeString() { return "std::shared_ptr<NEMLObject>"; }
-template <>
-std::string ParamValue<std::vector<std::shared_ptr<NEMLObject>>>::typeString() { return "std::vector<std::shared_ptr<NEMLObject>>"; }
-template <>
-std::string ParamValue<std::vector<NEMLObject>>::typeString() { return "std::vector<NEMLObject>"; }
-template <>
-std::string ParamValue<std::vector<double>>::typeString() { return "std::vector<double>"; }
-template <>
-std::string ParamValue<list_systems>::typeString() { return "list_systems"; }
-template <>
-std::string ParamValue<std::string>::typeString() { return "std::string"; }
-
 ParameterSet::ParameterSet() :
     type_("invalid")
 {

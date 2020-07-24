@@ -32,8 +32,6 @@ public:
   virtual void setFromXML(rapidxml::xml_node<char> *) = 0;
   virtual void setFromPY(pybind11::object &) = 0;
 
-  virtual std::string typeString() = 0;
-
 protected:
   bool set_;
 
@@ -66,8 +64,6 @@ public:
 
   virtual void setFromXML(rapidxml::xml_node<char> *);
   virtual void setFromPY(pybind11::object &);
-
-  virtual std::string typeString() { return "<Unknown>"; };
 
 private:
   T value_;
