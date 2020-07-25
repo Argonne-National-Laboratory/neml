@@ -3,9 +3,10 @@
 #include <memory>
 #include <type_traits>
 
-#include "rapidxml.hpp"
-#include "rapidxml_utils.hpp"
-
+namespace rapidxml {
+template <class Ch>
+class xml_node;
+}
 namespace pybind11
 {
 class object;

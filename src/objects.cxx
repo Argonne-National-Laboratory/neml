@@ -30,24 +30,19 @@ bool ParameterSet::is_parameter(std::string name) const
 std::vector<std::string> ParameterSet::unassigned_parameters()
 {
   resolve_objects_();
-
   std::vector<std::string> uparams;
-
   for (const auto & p : params_)
     if (!p.second->isSet())
       uparams.push_back(p.first);
-
   return uparams;
 }
 
 bool ParameterSet::fully_assigned()
 {
   resolve_objects_();
-
   for (const auto & p : params_)
     if (!p.second->isSet())
       return false;
-
   return true;
 }
 

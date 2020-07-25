@@ -105,8 +105,7 @@ class NEML_EXPORT ParameterSet {
   template<typename T>
   void add_optional_parameter(std::string name, const char * value)
   {
-    add_parameter<T>(name);
-    assign_parameter<T>(name, std::string(value));
+    add_optional_parameter(name, std::string(value));
   }
 
   /// Get a parameter of the given name and type
@@ -114,10 +113,7 @@ class NEML_EXPORT ParameterSet {
   T get_parameter(std::string name)
   {
     resolve_objects_();
-    auto it = params_.find(name);
-    if (it == params_.end())
-      throw UnknownParameter(type(), name);
-    auto res = std::dynamic_pointer_cast<ParamValue<T>>(it->second);
+    auto res = std::dynamic_pointer_cast<ParamValue<T>>(get_base_parameter(name));
     if (!res)
       throw UnknownParameter(type(), name);
     return res->get();
@@ -206,11 +202,7 @@ void ParameterSet::add_parameter<std::vector<NEMLObject>>(std::string name);
 template <typename T>
 void ParameterSet::assign_parameter(std::string name, const T & value)
 {
-  auto it = params_.find(name);
-  if (it == params_.end() || !it->second->isType<T>())
-    throw UnknownParameter(type(), name);
-
-  assign_parameter_helper<T>(it->second, value);
+  assign_parameter_helper<T>(get_base_parameter(name), value);
 }
 
 template <typename T>

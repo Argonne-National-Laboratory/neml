@@ -11,17 +11,12 @@ std::shared_ptr<NEMLModel> parse_string(std::string input)
   // The model is the root node
   const rapidxml::xml_node<> * found = doc.first_node();
 
-  // Get the NEMLObject
-  std::shared_ptr<NEMLObject> obj = get_object(found);
-
-  // Do a dangerous cast
+  // Get the NEMLObject and try casting it to a NEMLModel
+  auto obj = get_object(found);
   auto res = std::dynamic_pointer_cast<NEMLModel>(obj);
-  if (res == nullptr) {
+  if (!res)
     throw InvalidType(found->name(), get_type_of_node(found), "NEMLModel");
-  }
-  else {
-    return res;
-  }
+  return res;
 }
 
 std::unique_ptr<NEMLModel> parse_string_unique(std::string input, std::string mname)
@@ -36,17 +31,12 @@ std::unique_ptr<NEMLModel> parse_string_unique(std::string input, std::string mn
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
 
-  // Get the NEMLObject
-  std::unique_ptr<NEMLObject> obj = get_object_unique(found);
-
-  // Do a dangerous cast
+  // Get the NEMLObject unique pointer and try casting it to a NEMLModel unique pointer
+  auto obj = get_object_unique(found);
   auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel *>(obj.release()));
-  if (res == nullptr) {
+  if (!res)
     throw InvalidType(found->name(), get_type_of_node(found), "NEMLModel");
-  }
-  else {
-    return res;
-  }
+  return res;
 }
 
 std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
@@ -62,17 +52,12 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
 
-  // Get the NEMLObject
-  std::shared_ptr<NEMLObject> obj = get_object(found);
-
-  // Do a dangerous cast
+  // Get the NEMLObject and try casting it to a NEMLModel
+  auto obj = get_object(found);
   auto res = std::dynamic_pointer_cast<NEMLModel>(obj);
-  if (res == nullptr) {
+  if (!res)
     throw InvalidType(found->name(), get_type_of_node(found), "NEMLModel");
-  }
-  else {
-    return res;
-  }
+  return res;
 }
 
 std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname)
@@ -88,17 +73,12 @@ std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
 
-  // Get the NEMLObject
-  std::unique_ptr<NEMLObject> obj = get_object_unique(found);
-
-  // Do a dangerous cast
+  // Get the NEMLObject unique pointer and try casting it to a NEMLModel unique pointer
+  auto obj = get_object_unique(found);
   auto res = std::unique_ptr<NEMLModel>(dynamic_cast<NEMLModel*>(obj.release()));
-  if (res == nullptr) {
+  if (!res)
     throw InvalidType(found->name(), get_type_of_node(found), "NEMLModel");
-  }
-  else {
-    return res;
-  }
+  return res;
 }
 
 std::string get_string(const rapidxml::xml_node<> * node)
@@ -167,9 +147,8 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
   std::string type = get_type_of_node(node);
 
   // Needs to have a type at this point
-  if (type == "none") {
+  if (type == "none")
     throw InvalidType(node->name(), type, "NEMLObject");
-  }
 
   ParameterSet pset;
   try {
@@ -181,7 +160,6 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
 
   for (rapidxml::xml_node<> * child = node->first_node(); child; child = child->next_sibling()) {
     std::string name = (child)->name();
-
     if (name == "text") continue;
 
     if (not pset.is_parameter(name))
@@ -200,12 +178,11 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
 
   // A somewhat dangerous shortcut -- a list of text values should be
   // interpreted as a list of ConstantInterpolates
-  if ((rapidxml::count_children(const_cast<rapidxml::xml_node<>*>(node))==1) and
+  if ((rapidxml::count_children(const_cast<rapidxml::xml_node<>*>(node)) == 1) and
       (node->first_node()->type() == rapidxml::node_data)) {
     std::vector<double> data = get_vector_double(node);
-    for (auto v : data) {
+    for (auto v : data)
       joined.push_back(neml::make_unique<ConstantInterpolate>(v));
-    }
     return joined;
   }
 
@@ -240,17 +217,13 @@ void ParamValue<int>::setFromXML(rapidxml::xml_node<> * node)
 template<>
 void ParamValue<bool>::setFromXML(rapidxml::xml_node<> * node)
 {
-  std::string text = get_string(node);
-
-  if ((text == "true") || (text == "True") || (text == "T") || (text == "1")) {
+  const std::string text = get_string(node);
+  if ((text == "true") || (text == "True") || (text == "T") || (text == "1"))
     assign(true);
-  }
-  else if ((text == "false") || (text == "False") || (text == "F") || (text == "0")) {
+  else if ((text == "false") || (text == "False") || (text == "F") || (text == "0"))
     assign(false);
-  }
-  else {
+  else
     throw InvalidType(node->name(), get_type_of_node(node), "bool");
-  }
 }
 
 template<>
@@ -270,9 +243,7 @@ template<>
 void ParamValue<list_systems>::setFromXML(rapidxml::xml_node<> * node)
 {
   list_systems groups;
-
   std::string text = get_string(node);
-
   std::stringstream ss(text);
   std::string to;
 
@@ -341,7 +312,6 @@ std::string get_type_of_node(const rapidxml::xml_node<> * node)
 {
   for (auto attributes = node->first_attribute(); attributes; attributes = attributes->next_attribute())
   {
-
     std::string attr_name = attributes->name();
     if (attr_name == "type")
       return attributes->value();
