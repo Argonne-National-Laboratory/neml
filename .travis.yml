@@ -88,8 +88,8 @@ matrix:
 
 before_install:
       - eval "$(MATRIX_EVAL)"
-      - if [ "$TO_TEST" = "BINDINGS" ]; then sudo apt-get install -y build-essential cmake libboost-dev libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose; fi
-      - if [ "$TO_TEST" = "NOBINDINGS" ]; then sudo apt-get install -y build-essential cmake libboost-dev libblas-dev liblapack-dev; fi
+      - if [ "$TO_TEST" = "BINDINGS" ]; then sudo apt-get install -y build-essential cmake libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose; fi
+      - if [ "$TO_TEST" = "NOBINDINGS" ]; then sudo apt-get install -y build-essential cmake libblas-dev liblapack-dev; fi
 install:
       - eval "$(MATRIX_EVAL)"
       - if [ "$TO_TEST" = "BINDINGS" ]; then cmake -DPYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.5 -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.5.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.5 -D WRAP_PYTHON=ON -D BUILD_UTILS=ON .; fi
