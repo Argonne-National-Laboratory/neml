@@ -14,7 +14,7 @@ matrix:
             - cmake
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-        - TEST=BINDINGS
+        - TO_TEST=BINDINGS
 
     - os: linux
       compiler:
@@ -28,7 +28,7 @@ matrix:
             - cmake
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-        - TEST=BINDINGS
+        - TO_TEST=BINDINGS
 
     - os: linux
       compiler:
@@ -42,15 +42,16 @@ matrix:
             - cmake
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
-        - TEST=BINDINGS
+        - TO_TEST=BINDINGS
 
 before_install:
       - eval "$(MATRIX_EVAL)"
-      - if ["$TEST" = "BINDINGS"]; then sudo apt-get install -y build-essential cmake libboost-dev libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose; fi
+      - echo "$TO_TEST"
+      - if ["$TO_TEST" = "BINDINGS"]; then sudo apt-get install -y build-essential cmake libboost-dev libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose; fi
 install:
       - eval "$(MATRIX_EVAL)"
-      - if ["$TEST" = "BINDINGS"]; then cmake -DPYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.5 -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.5.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.5 -D WRAP_PYTHON=ON -D BUILD_UTILS=ON .; fi
+      - if ["$TO_TEST" = "BINDINGS"]; then cmake -DPYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.5 -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.5.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.5 -D WRAP_PYTHON=ON -D BUILD_UTILS=ON .; fi
       - make -j 2
 script:
-      - if ["$TEST" = "BINDINGS"]; then nosetests3; fi
+      - if ["$TO_TEST" = "BINDINGS"]; then nosetests3; fi
       - test/drivers/test_drivers.sh
