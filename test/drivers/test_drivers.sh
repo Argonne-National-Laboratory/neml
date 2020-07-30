@@ -14,7 +14,7 @@ do
       printf "\tTesting c driver..."
       ../../util/c_interface/csimple ../regression/reference.xml "$line" 0.02 100.0 20 300
       printf " done\n"
-      printf "\tTesting c driver..."
+      printf "\tTesting fortran driver..."
       ../../util/f_interface/fsimple ../regression/reference.xml "$line" 0.02 100.0 20 300
       printf " done\n"
       echo ""

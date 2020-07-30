@@ -31,10 +31,6 @@ else()
       message("Unknown solver")
 endif()
 
-### Need Boost (only variant.hpp really) ###
-FIND_PACKAGE(Boost REQUIRED)
-INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
-
 ### Configure standard-ish libraries ###
 set(BLAS_VENDOR Generic)
 set(BLA_VENDOR Generic)
