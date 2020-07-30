@@ -18,7 +18,8 @@ before_install:
 install:
       - export CC=gcc-7
       - export CXX=g++-7
-      - cmake -DPYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.5 -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.5.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.5 -D WRAP_PYTHON=ON .
+      - cmake -DPYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.5 -DPYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.5.so -DPYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.5 -D WRAP_PYTHON=ON -D BUILD_UTILS=ON .
       - make -j 2
 script:
       - nosetests3
+      - test/drivers/test_drivers.sh
