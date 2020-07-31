@@ -41,6 +41,7 @@ Implementations
    modular
    standard
    larsonmiller
+   work
 
 Class description
 -----------------
