@@ -116,6 +116,9 @@ int SingleCrystalModel::update_ld_inc(
    double & u_np1, double u_n,
    double & p_np1, double p_n)
 {
+  // Shut up a pointless memory error
+  std::fill(h_np1, h_np1+nhist(), 0.0);
+
   // Setup everything in the appropriate wrappers
   const Symmetric D_np1(d_np1);
   const Skew W_np1(w_np1);
@@ -218,7 +221,6 @@ int SingleCrystalModel::update_ld_inc(
         else {
           HF_np1.get<Orientation>("rotation") = Q_n;
         }
-        //HF_np1.get<Orientation>("rotation0") = HF_n.get<Orientation>("rotation0");
       }
 
     }
@@ -248,6 +250,7 @@ size_t SingleCrystalModel::nhist() const
 
 int SingleCrystalModel::init_hist(double * const hist) const
 {
+  std::fill(hist, hist+nhist(), 0.0); // Shuts it up about initialized memory
   History h = gather_history_(hist);
   init_history(h);
   return 0;
@@ -481,133 +484,165 @@ void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
 
   size_t nh = nparams() - 6;
 
-  double * J11 = new double[6*6];
-  double * J12 = new double[6*nh];
-  double * J21 = new double[nh*6];
-  double * J22 = new double[nh*nh];
+  if (nh > 0) {
+    double * J11 = new double[6*6];
+    double * J12 = new double[6*nh];
+    double * J21 = new double[nh*6];
+    double * J22 = new double[nh*nh];
 
-  for (size_t i=0; i<6; i++) {
-    for (size_t j=0; j<6; j++) {
-      J11[CINDEX(i,j,6)] = J[CINDEX(i,j,nparams())];
+    for (size_t i=0; i<6; i++) {
+      for (size_t j=0; j<6; j++) {
+        J11[CINDEX(i,j,6)] = J[CINDEX(i,j,nparams())];
+      }
     }
-  }
 
-  for (size_t i=0; i<6; i++) {
-    for (size_t j=0; j<nh; j++) {
-      J12[CINDEX(i,j,nh)] = J[CINDEX(i,(j+6),nparams())];
+    for (size_t i=0; i<6; i++) {
+      for (size_t j=0; j<nh; j++) {
+        J12[CINDEX(i,j,nh)] = J[CINDEX(i,(j+6),nparams())];
+      }
     }
-  }
- 
-  for (size_t i=0; i<nh; i++) {
-    for (size_t j=0; j<6; j++) {
-      J21[CINDEX(i,j,6)] = J[CINDEX((i+6),j,nparams())];
+   
+    for (size_t i=0; i<nh; i++) {
+      for (size_t j=0; j<6; j++) {
+        J21[CINDEX(i,j,6)] = J[CINDEX((i+6),j,nparams())];
+      }
     }
-  }
 
-  for (size_t i=0; i<nh; i++) {
-    for (size_t j=0; j<nh; j++) {
-      J22[CINDEX(i,j,nh)] = J[CINDEX((i+6),(j+6),nparams())];
+    for (size_t i=0; i<nh; i++) {
+      for (size_t j=0; j<nh; j++) {
+        J22[CINDEX(i,j,nh)] = J[CINDEX((i+6),(j+6),nparams())];
+      }
     }
-  }
 
-  delete [] R;
-  delete [] J;
+    delete [] R;
+    delete [] J;
 
-  // Let the games begin
-  // J22 inverse
-  invert_mat(J22, nh);
+    // Let the games begin
+    // J22 inverse
+    invert_mat(J22, nh);
 
-  // J12 J22_inv
-  double * M1 = new double [6*nh];
-  mat_mat(6, nh, nh, J12, J22, M1);
+    // J12 J22_inv
+    double * M1 = new double [6*nh];
+    mat_mat(6, nh, nh, J12, J22, M1);
 
-  // J12 J22_inv J21
-  double * M2 = new double[6*6];
-  mat_mat(6, 6, nh, M1, J21, M2);
+    // J12 J22_inv J21
+    double * M2 = new double[6*6];
+    mat_mat(6, 6, nh, M1, J21, M2);
 
-  // J11 - J12 J22_inv J21
-  for (size_t i = 0; i < 36; i++) {
-    M2[i] = J11[i] - M2[i];
-  }
-
-  // Inverse of J11 - J12 J22_inv J21
-  invert_mat(M2, 6);
-
-  delete [] J11;
-  delete [] J12;
-  delete [] J21;
-  delete [] J22;
-  
-  // Do D
-  History & fixed = ts->fixed;
-  // Get the extra matrices
-  SymSymR4 sd = kinematics_->d_stress_rate_d_d(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T, fixed) 
-      + kinematics_->d_stress_rate_d_d_decouple(S, ts->d, ts->w,
-                                                ts->Q, H,
-                                                ts->lattice, ts->T, fixed);
-  History hd = kinematics_->d_history_rate_d_d(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T, fixed);
-  hd += kinematics_->d_history_rate_d_d_decouple(S, ts->d, ts->w,
-                                                ts->Q, H,
-                                                ts->lattice, ts->T, fixed);
-  // hd is stored column major...
-  double * hdt = new double[nh*6];
-  for (size_t i = 0; i < nh; i++) {
-    for (size_t j = 0; j < 6; j++) {
-      hdt[CINDEX(i,j,6)] = hd.rawptr()[CINDEX(j,i,nh)];
+    // J11 - J12 J22_inv J21
+    for (size_t i = 0; i < 36; i++) {
+      M2[i] = J11[i] - M2[i];
     }
-  }
 
+    // Inverse of J11 - J12 J22_inv J21
+    invert_mat(M2, 6);
 
-  // Sadly need one more intermediate
-  double * I1 = new double[36];
-  mat_mat(6, 6, nh, M1, hdt, I1);
-  delete [] hdt;
-  for (size_t i=0; i<36; i++) {
-    I1[i] = (sd.data()[i] - I1[i]); // Would mult by dt if things were sane
-  }
-
-  // Alright, do the final multiplication
-  mat_mat(6,6,6, M2, I1, A);
-
-  delete [] I1;
-
-  // Do W
-  SymSkewR4 sw = kinematics_->d_stress_rate_d_w(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T, fixed);
-  sw += kinematics_->d_stress_rate_d_w_decouple(S, ts->d, ts->w,
-                                                ts->Q, H,
-                                                ts->lattice, ts->T, fixed);
-
-  History hw = kinematics_->d_history_rate_d_w(S, ts->d, ts->w, ts->Q, 
-                                             H, ts->lattice, ts->T, fixed);
-  hw += kinematics_->d_history_rate_d_w_decouple(S, ts->d, ts->w,
-                                                 ts->Q, H,
-                                                 ts->lattice, ts->T, fixed);
-  // This is transposed
-  double * hwt = new double [nh*3];
-  for (size_t i = 0; i < nh; i++) {
-    for (size_t j = 0; j < 3; j++) {
-      hwt[CINDEX(i,j,3)] = hw.rawptr()[CINDEX(j,i,nh)];
+    delete [] J11;
+    delete [] J12;
+    delete [] J21;
+    delete [] J22;
+    
+    // Do D
+    History & fixed = ts->fixed;
+    // Get the extra matrices
+    SymSymR4 sd = kinematics_->d_stress_rate_d_d(S, ts->d, ts->w, ts->Q, 
+                                               H, ts->lattice, ts->T, fixed) 
+        + kinematics_->d_stress_rate_d_d_decouple(S, ts->d, ts->w,
+                                                  ts->Q, H,
+                                                  ts->lattice, ts->T, fixed);
+    History hd = kinematics_->d_history_rate_d_d(S, ts->d, ts->w, ts->Q, 
+                                               H, ts->lattice, ts->T, fixed);
+    hd += kinematics_->d_history_rate_d_d_decouple(S, ts->d, ts->w,
+                                                  ts->Q, H,
+                                                  ts->lattice, ts->T, fixed);
+    // hd is stored column major...
+    double * hdt = new double[nh*6];
+    for (size_t i = 0; i < nh; i++) {
+      for (size_t j = 0; j < 6; j++) {
+        hdt[CINDEX(i,j,6)] = hd.rawptr()[CINDEX(j,i,nh)];
+      }
     }
+
+
+    // Sadly need one more intermediate
+    double * I1 = new double[36];
+    mat_mat(6, 6, nh, M1, hdt, I1);
+    delete [] hdt;
+    for (size_t i=0; i<36; i++) {
+      I1[i] = (sd.data()[i] - I1[i]); // Would mult by dt if things were sane
+    }
+
+    // Alright, do the final multiplication
+    mat_mat(6,6,6, M2, I1, A);
+
+    delete [] I1;
+
+    // Do W
+    SymSkewR4 sw = kinematics_->d_stress_rate_d_w(S, ts->d, ts->w, ts->Q, 
+                                               H, ts->lattice, ts->T, fixed);
+    sw += kinematics_->d_stress_rate_d_w_decouple(S, ts->d, ts->w,
+                                                  ts->Q, H,
+                                                  ts->lattice, ts->T, fixed);
+
+    History hw = kinematics_->d_history_rate_d_w(S, ts->d, ts->w, ts->Q, 
+                                               H, ts->lattice, ts->T, fixed);
+    hw += kinematics_->d_history_rate_d_w_decouple(S, ts->d, ts->w,
+                                                   ts->Q, H,
+                                                   ts->lattice, ts->T, fixed);
+    // This is transposed
+    double * hwt = new double [nh*3];
+    for (size_t i = 0; i < nh; i++) {
+      for (size_t j = 0; j < 3; j++) {
+        hwt[CINDEX(i,j,3)] = hw.rawptr()[CINDEX(j,i,nh)];
+      }
+    }
+
+    // Sadly need one more intermediate
+    double * I2 = new double[18];
+    mat_mat(6, 3, nh, M1, hwt, I2);
+    delete [] hwt;
+    for (size_t i=0; i<18; i++) {
+      I2[i] = (sw.data()[i] - I2[i]); // Would mult by dt if things were sane
+    }
+
+    // Alright, do the final multiplication
+    mat_mat(6,3,6, M2, I2, B);
+
+    delete [] I2;
+
+    delete [] M1;
+    delete [] M2;
   }
+  // This is much simpler!
+  else {
+    delete [] R;
 
-  // Sadly need one more intermediate
-  double * I2 = new double[18];
-  mat_mat(6, 3, nh, M1, hwt, I2);
-  delete [] hwt;
-  for (size_t i=0; i<18; i++) {
-    I2[i] = (sw.data()[i] - I2[i]); // Would mult by dt if things were sane
+    invert_mat(J, 6);
+
+    // Do D
+    History & fixed = ts->fixed;
+    // Get the extra matrices
+    SymSymR4 sd = kinematics_->d_stress_rate_d_d(S, ts->d, ts->w, ts->Q, 
+                                               H, ts->lattice, ts->T, fixed) 
+        + kinematics_->d_stress_rate_d_d_decouple(S, ts->d, ts->w,
+                                                  ts->Q, H,
+                                                  ts->lattice, ts->T, fixed);
+    
+    // Multiply
+    mat_mat(6,6,6, J, sd.data(), A);
+
+    // Do W
+    SymSkewR4 sw = kinematics_->d_stress_rate_d_w(S, ts->d, ts->w, ts->Q, 
+                                               H, ts->lattice, ts->T, fixed);
+    sw += kinematics_->d_stress_rate_d_w_decouple(S, ts->d, ts->w,
+                                                  ts->Q, H,
+                                                  ts->lattice, ts->T, fixed);
+
+    // Multiply
+    mat_mat(6,3,6,J,sw.data(), B);
+
+    delete [] J;
   }
-
-  // Alright, do the final multiplication
-  mat_mat(6,3,6, M2, I2, B);
-
-  delete [] I2;
-
-  delete [] M1;
-  delete [] M2;
 }
 
 Orientation SingleCrystalModel::update_rot_(Symmetric & S_np1, History & H_np1,

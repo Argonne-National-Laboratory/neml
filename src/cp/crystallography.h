@@ -90,7 +90,9 @@ class NEML_EXPORT Lattice: public NEMLObject {
 
   /// Add a slip system given the Miller direction and plane
   void add_slip_system(std::vector<int> d, std::vector<int> p);
-
+  
+  /// Number of total slip systems
+  size_t ntotal() const;
   /// Number of groups of slip systems
   size_t ngroup() const;
   /// Number of slip systems in group g

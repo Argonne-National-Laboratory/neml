@@ -48,6 +48,7 @@ PYBIND11_MODULE(crystallography, m) {
       .def("equivalent_vectors_bidirectional", &Lattice::equivalent_vectors_bidirectional)
 
       .def("add_slip_system", &Lattice::add_slip_system)
+      .def_property_readonly("ntotal", &Lattice::ntotal)
       .def_property_readonly("ngroup", &Lattice::ngroup)
       .def("nslip", &Lattice::nslip)
       .def("M", &Lattice::M)

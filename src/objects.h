@@ -12,8 +12,6 @@
 
 #include "windows.h"
 
-#include "boost/variant.hpp"
-
 namespace neml {
 
 /// Typedef for slip systems
@@ -32,20 +30,42 @@ class NEML_EXPORT NEMLObject {
   virtual ~NEMLObject() {};
 };
 
-// This version supports the following types of objects as parameters:
-//    double
-//    int
-//    bool
-//    vector<double>
-//    NEMLObject
-//    vector<NEMLObject>
-//    string
-//    vector<pair<vector<int>,vector<int>>, i.e. groups of slip systems
+/// This black magic lets us store parameters in a unified map (note that this is a replacement for boost::variant
+/// to get rid of a boost dependency which is causing us grief due to spurious memory leaks in boost)
+class param_type
+{
+public:
+  template <typename T>
+  T get() { return data<T>(); }
 
-/// This black magic lets us store parameters in a unified map
-typedef boost::variant<double, int, bool, std::vector<double>,
-        std::shared_ptr<NEMLObject>,std::vector<std::shared_ptr<NEMLObject>>,
-        std::string, list_systems> param_type;
+  param_type() {}
+  param_type(const char * val);
+  template <typename T>
+  param_type(const T & val) { data<T>() = val; }
+  template <typename T>
+  param_type(const std::shared_ptr<T> & val) { data<std::shared_ptr<NEMLObject>>() = val; }
+
+  template <typename T>
+  const param_type & operator = (const T & val) { data<T>() = val; return *this; }
+
+protected:
+  template <typename T>
+  T & data();
+
+private:
+  // it'd be tempting to use a union here, but then the compiler generated copy constructor would not work anymore
+  double double_;
+  int int_;
+  bool bool_;
+  std::vector<double> vec_double_;
+  std::shared_ptr<NEMLObject> neml_object_;
+  std::vector<std::shared_ptr<NEMLObject>> vec_neml_object_;
+  std::string string_;
+  list_systems list_systems_;
+  std::size_t size_t_;
+  std::vector<std::size_t> vec_size_t_;
+};
+
 /// This is the enum name we assign to each type for the "external" interfaces
 /// to use in reconstructing a type from data
 enum ParamType {
@@ -56,7 +76,9 @@ enum ParamType {
   TYPE_NEML_OBJECT      = 4,
   TYPE_VEC_NEML_OBJECT  = 5,
   TYPE_STRING           = 6,
-  TYPE_SLIP             = 7
+  TYPE_SLIP             = 7,
+  TYPE_SIZE_TYPE        = 8,
+  TYPE_VEC_SIZE_TYPE    = 9
 };
 // This black magic lets us map the actual type of each parameter to the enum
 template <class T> constexpr ParamType GetParamType();
@@ -76,6 +98,9 @@ template <> constexpr ParamType GetParamType<std::vector<NEMLObject>>()
 template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
 template <> constexpr ParamType GetParamType<list_systems>()
 {return TYPE_SLIP;}
+template <> constexpr ParamType GetParamType<size_t>() {return TYPE_SIZE_TYPE;}
+template <> constexpr ParamType GetParamType<std::vector<size_t>>() {return
+TYPE_VEC_SIZE_TYPE;}
 
 /// Error if you ask for a parameter that an object doesn't recognize
 class NEML_EXPORT UnknownParameter: public std::exception {
@@ -161,7 +186,7 @@ class NEML_EXPORT ParameterSet {
   T get_parameter(std::string name)
   {
     resolve_objects_();
-    return boost::get<T>(params_[name]);
+    return params_[name].get<T>();
   }
 
   /// Assign a parameter set to be used to create an object later

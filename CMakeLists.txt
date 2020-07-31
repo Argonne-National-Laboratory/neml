@@ -31,10 +31,6 @@ else()
       message("Unknown solver")
 endif()
 
-### Need Boost (only variant.hpp really) ###
-FIND_PACKAGE(Boost REQUIRED)
-INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
-
 ### Configure standard-ish libraries ###
 set(BLAS_VENDOR Generic)
 set(BLA_VENDOR Generic)
@@ -51,8 +47,8 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
       set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -pg")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Werror -D_GLIBCXX_DEBUG")
-      set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -Wextra -Wall -Wno-unused-parameter")
-      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -pedantic -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -pedantic -Wextra -Wall -Wno-unused-parameter")
+      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -march=native -g -pedantic -Wextra -Wall -Wno-unused-parameter")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
       set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Werror -Wno-unused-private-field -Wno-self-assign-overloaded")
       set(CMAKE_CXX_FLAGS_RELEASE "-O2 -pedantic -Wextra -Wall -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-private-field")

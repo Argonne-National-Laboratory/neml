@@ -379,6 +379,32 @@ So for
 
 \end_layout
 
+\begin_layout Standard
+If we don't have history this degenerates to 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathbf{A}=\left(\mathbf{J}_{11}\right)^{-1}:\left(\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{d}}\right)\Delta t
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathbf{B}=\left(\mathbf{J}_{11}\right)^{-1}:\left(\frac{\partial\dot{\bm{\sigma}}}{\partial\bm{w}}\right)\Delta t
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 Specific models
 \end_layout

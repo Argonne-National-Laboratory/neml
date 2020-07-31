@@ -763,8 +763,10 @@ int Chaboche::dh_ds(const double * const s, const double * const alpha, double T
   outer_update_minus(iv, 6, jv, 6, nn);
 
   outer_update_minus(n, 6, n, 6, nn);
-  for (int i=0; i<36; i++) {
-    nn[i] /= nv;
+  if (nv != 0.0) {
+    for (int i=0; i<36; i++) {
+      nn[i] /= nv;
+    }
   }
   
   // Fill in...
@@ -806,8 +808,10 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
   }
   
   outer_update_minus(n, 6, n, 6, ss);
-  for (int i=0; i<36; i++) {
-    ss[i] /= nv;
+  if (nv != 0.0) {
+    for (int i=0; i<36; i++) {
+      ss[i] /= nv;
+    }
   }
   
   // Fill in the gamma part

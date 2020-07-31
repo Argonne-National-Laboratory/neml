@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from neml import history, interpolate
-from neml.math import tensors, rotations
+from neml.math import tensors, rotations, matrix
 from neml.cp import crystallography, slipharden, sliprules
 
 from common import differentiate
@@ -23,17 +23,167 @@ class CommonSlipHardening():
       self.fixed))
     nd = diff_history_history(lambda h: self.model.hist(self.S, self.Q, h, self.L, self.T,
       self.sliprule, self.fixed), self.H)
-    
+
     print(d)
     print(nd)
+
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
   def test_d_hist_to_tau_d_hist(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.T, self.fixed), self.H)
-        d = self.model.d_hist_to_tau(g, i, self.H, self.T, self.fixed)
+        nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.L, self.T, self.fixed), self.H)
+        d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
+
+class TestConstantHardening(unittest.TestCase, CommonSlipHardening):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.nslip = self.L.ntotal
+
+    self.static = 20.0
+
+    self.H = history.History()
+
+    self.T = 300.0
+
+    self.s0 = [self.static]*self.nslip
+
+    self.model = slipharden.FixedStrengthHardening(self.s0)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        should = self.static
+        self.assertAlmostEqual(model, should)
+
+  def test_definition(self):
+    hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,
+        self.fixed)
+    exact = np.array([])
+    self.assertTrue(np.allclose(hrate, exact))
+
+class TestGeneralLinearHardeningNoAbs(unittest.TestCase, CommonSlipHardening):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.nslip = self.L.ntotal
+
+    self.static = 20.0
+    self.current = 25.0
+
+    self.H = history.History()
+    for i in range(self.nslip):
+      self.H.add_scalar("strength"+str(i))
+      self.H.set_scalar("strength"+str(i), self.current)
+
+    self.T = 300.0
+
+    self.M = matrix.SquareMatrix(self.nslip, type = "block", 
+        data = [0.1,0.2,0.3,0.4], blocks = [6,6])
+
+    self.s0 = [self.static]*self.nslip
+
+    self.model = slipharden.GeneralLinearHardening(self.M, self.s0, 
+        absval = False)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        should = self.static + self.current
+        self.assertAlmostEqual(model, should)
+
+  def test_definition(self):
+    hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,
+        self.fixed)
+    srates = [self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, self.T, 
+      self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))]
+    exact = np.dot(np.array(self.M), srates)
+    self.assertTrue(np.allclose(hrate, exact))
+
+class TestGeneralLinearHardeningAbs(unittest.TestCase, CommonSlipHardening):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.nslip = self.L.ntotal
+
+    self.static = 20.0
+    self.current = 25.0
+
+    self.H = history.History()
+    for i in range(self.nslip):
+      self.H.add_scalar("strength"+str(i))
+      self.H.set_scalar("strength"+str(i), self.current)
+
+    self.T = 300.0
+
+    self.M = matrix.SquareMatrix(self.nslip, type = "block", 
+        data = [0.1,0.2,0.3,0.4], blocks = [6,6])
+
+    self.s0 = [self.static]*self.nslip
+
+    self.model = slipharden.GeneralLinearHardening(self.M, self.s0, 
+        absval = True)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        should = self.static + self.current
+        self.assertAlmostEqual(model, should)
+
+  def test_definition(self):
+    hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,
+        self.fixed)
+    srates = [np.abs(self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, self.T, 
+      self.fixed)) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))]
+    exact = np.dot(np.array(self.M), srates)
+    self.assertTrue(np.allclose(hrate, exact))
 
 class CommonSlipSingleHardening():
   def test_d_hist_map(self):
@@ -46,7 +196,7 @@ class CommonSlipSingleHardening():
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         self.assertTrue(np.isclose(self.strength + self.static + self.nye_part, 
-          self.model.hist_to_tau(g, i, self.H, self.T, self.fixed)))
+          self.model.hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)))
 
 class CommonSlipSingleStrengthHardening():
   def test_hist_map(self):
@@ -55,7 +205,7 @@ class CommonSlipSingleStrengthHardening():
 
   def test_hist(self):
     h = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule, self.fixed)
-    self.assertTrue(np.isclose(h.get_scalar("strength"), self.model.hist_rate(
+    self.assertTrue(np.isclose(h.get_scalar(self.vname), self.model.hist_rate(
       self.S, self.Q, self.H, self.L, self.T, self.sliprule, self.fixed)))
 
   def test_d_hist_rate_d_stress(self):
@@ -74,7 +224,8 @@ class CommonSlipSingleStrengthHardening():
     d = self.model.d_hist_rate_d_hist(self.S, self.Q, self.H, self.L,
         self.T, self.sliprule, self.fixed)
     
-    self.assertTrue(np.isclose(d.get_scalar("strength"), nd.get_scalar("strength")))
+    self.assertTrue(np.isclose(d.get_scalar(self.vname), 
+      nd.get_scalar(self.vname)))
 
   def test_nye_parts_match(self):
     self.assertTrue(np.isclose(self.model.nye_part(self.nye, self.T), 
@@ -93,7 +244,7 @@ class CommonPlasticSlipHardening():
     ss = self.sum_slip()
 
     self.assertTrue(np.isclose(self.model.hist_rate(self.S, self.Q, self.H,
-      self.L, self.T, self.sliprule, self.fixed), self.model.hist_factor(self.H.get_scalar("strength"), 
+      self.L, self.T, self.sliprule, self.fixed), self.model.hist_factor(self.H.get_scalar(self.vname), 
         self.L, self.T, self.fixed) * ss))
 
   def test_d_factor(self):
@@ -106,6 +257,8 @@ class CommonPlasticSlipHardening():
 class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening, 
     CommonSlipSingleStrengthHardening, CommonSlipSingleHardening, CommonSlipHardening):
   def setUp(self):
+    self.vname = "strength"
+
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
     
@@ -163,6 +316,8 @@ class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening,
 class TestNyeVoceHardening(unittest.TestCase, CommonPlasticSlipHardening, 
     CommonSlipSingleStrengthHardening, CommonSlipSingleHardening, CommonSlipHardening):
   def setUp(self):
+    self.vname = "strength"
+
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
     
@@ -214,12 +369,69 @@ class TestNyeVoceHardening(unittest.TestCase, CommonPlasticSlipHardening,
       self.model.hist_factor(self.strength, self.L, self.T, self.fixed),
       self.b * (self.tau_sat - self.strength)))
 
+class TestVoceHardeningMoveVar(unittest.TestCase, CommonPlasticSlipHardening, 
+    CommonSlipSingleStrengthHardening, CommonSlipSingleHardening, CommonSlipHardening):
+  def setUp(self):
+    self.vname = "wee"
+    
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    self.strength = 35.0
+    self.H = history.History()
+    self.H.add_scalar(self.vname)
+    self.H.set_scalar(self.vname, self.strength)
+
+    self.T = 300.0
+
+    self.tau0 = 10.0
+    self.tau_sat = 50.0
+    self.b = 2.5
+
+    self.static = self.tau0
+
+    self.model = slipharden.VoceSlipHardening(self.tau_sat, self.b, self.tau0)
+    
+    self.model.set_varnames([self.vname])
+    
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
+
+    self.nye = tensors.RankTwo([[1.1,1.2,1.3],[2.1,2.2,2.3],[3.1,3.2,3.3]])
+
+    self.nye_part = 0.0
+
+  def test_get_vnames(self):
+    self.assertEqual(self.model.varnames, [self.vname])
+
+  def test_initialize_hist(self):
+    H = history.History()
+    self.model.populate_history(H)
+    self.model.init_history(H)
+    self.assertTrue(np.isclose(H.get_scalar(self.vname), 0.0))
+
+  def test_static_strength(self):
+    self.assertTrue(np.isclose(self.model.static_strength(self.T), self.tau0))
+  
+  def test_factor(self):
+    self.assertTrue(np.isclose(
+      self.model.hist_factor(self.strength, self.L, self.T, self.fixed),
+      self.b * (self.tau_sat - self.strength)))
+
   def test_nye_factor(self):
     self.assertTrue(np.isclose(
       self.model.nye_part(self.nye, self.T), self.nye_part))
 
   def test_use_nye(self):
-    self.assertTrue(self.model.use_nye)
+    self.assertFalse(self.model.use_nye)
 
 class TestMultiVoceHardening(unittest.TestCase, 
     CommonSlipSingleHardening, CommonSlipHardening):
@@ -294,6 +506,8 @@ class TestMultiVoceHardening(unittest.TestCase,
 class TestLinearSlipHardening(unittest.TestCase, CommonPlasticSlipHardening, 
     CommonSlipSingleStrengthHardening, CommonSlipSingleHardening, CommonSlipHardening):
   def setUp(self):
+    self.vname = "strength"
+
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
     

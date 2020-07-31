@@ -8,8 +8,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
-
-#include "boost/functional/hash.hpp"
+#include <functional>
 
 namespace neml {
 
@@ -228,7 +227,8 @@ size_t Quaternion::hash() const
   size_t key = 0;
 
   for (size_t i = 0; i<4; i++) {
-    boost::hash_combine<double>(key, quat_[i]);
+    // One-liner from boost
+    key ^= (std::hash<double>{}(quat_[i]) + 0x9e3779b9 + (key<<6) + (key>>2));
   }
 
   return key;
@@ -831,6 +831,14 @@ Orientation Orientation::pow(double w) const
 void Orientation::normalize_()
 {
   double nv = this->norm();
+  // I'm debating not handling this case...
+  if (nv == 0) {
+    for (int i=0; i<3; i++) {
+      quat_[i] = 0.0;
+    }
+    quat_[3] = 1.0;
+    return;
+  }
   for (int i=0; i<4; i++) {
     quat_[i] /= nv;
   }

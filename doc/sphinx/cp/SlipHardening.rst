@@ -1,3 +1,5 @@
+.. _slip-hardening:
+
 SlipHardening
 =============
 
@@ -24,6 +26,8 @@ Implementations
    :maxdepth: 2
 
    sliphardening/SlipSingleHardening
+   sliphardening/FixedStrengthHardening
+   sliphardening/GeneralLinearHardening
 
 
 Class description

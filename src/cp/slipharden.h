@@ -10,6 +10,7 @@
 
 #include "../math/tensors.h"
 #include "../math/rotations.h"
+#include "../math/matrix.h"
 
 #include "../windows.h"
 
@@ -25,6 +26,11 @@ class SlipRule; // Why would we need a forward declaration?
 class NEML_EXPORT SlipHardening: public NEMLObject
 {
  public:
+  /// Report your variable names
+  virtual std::vector<std::string> varnames() const = 0;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars) = 0;
+
   /// Request whatever history you will need
   virtual void populate_history(History & history) const = 0;
   /// Setup history
@@ -32,11 +38,17 @@ class NEML_EXPORT SlipHardening: public NEMLObject
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             Lattice & L, 
                              double T, const History & fixed) const = 0;
-  /// Derivative of the map wrt to history
+  /// Derivative of the map wrt to history, model variables
   virtual History
-      d_hist_to_tau(size_t g, size_t i, const History & history,
+      d_hist_to_tau(size_t g, size_t i, const History & history, Lattice & L,
                     double T, const History & fixed) const = 0;
+  /// Derivative of the map wrt to history, external variables
+  virtual History
+      d_hist_to_tau_ext(size_t g, size_t i, const History & history, 
+                        Lattice & L, double T, const History & fixed,
+                        std::vector<std::string> ext) const;
 
   /// The rate of the history
   virtual History hist(const Symmetric & stress,
@@ -49,7 +61,7 @@ class NEML_EXPORT SlipHardening: public NEMLObject
                              Lattice & L, double T,
                              const SlipRule & R,
                              const History & fixed) const = 0;
-  /// Derivative of the history wrt the history
+  /// Derivative of the history wrt the history, model variables
   virtual History
       d_hist_d_h(const Symmetric & stress,
                  const Orientation & Q,
@@ -57,10 +69,168 @@ class NEML_EXPORT SlipHardening: public NEMLObject
                  Lattice & L,
                  double T, const SlipRule & R,
                  const History & fixed) const = 0;
+  /// Derivative of this history wrt the history, external variables
+  virtual History
+      d_hist_d_h_ext(const Symmetric & stress,
+                     const Orientation & Q,
+                     const History & history,
+                     Lattice & L,
+                     double T, const SlipRule & R,
+                     const History & fixed,
+                     std::vector<std::string> ext) const;
+
 
   /// Whether this particular model uses the Nye tensor
   virtual bool use_nye() const;
+  
+  /// Helper providing a blank (zero) history
+  History blank_hist() const {return cache(CacheType::BLANK);};
+
+  enum class CacheType {BLANK, DOUBLE};
+
+  /// Helper accessing cached objects
+  History cache(CacheType type) const;
+
+ protected:
+  void init_cache_();
+  std::unique_ptr<History> blank_, double_;
 };
+
+/// Fixed strength
+class NEML_EXPORT FixedStrengthHardening: public SlipHardening
+{
+  public:
+   FixedStrengthHardening(std::vector<std::shared_ptr<Interpolate>> strengths);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Report your variable names
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
+
+  /// Request whatever history you will need
+  virtual void populate_history(History & history) const;
+  /// Setup history
+  virtual void init_history(History & history) const;
+
+  /// Map the set of history variables to the slip system hardening
+  virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             Lattice & L,
+                             double T, const History & fixed) const;
+  /// Derivative of the map wrt to history
+  virtual History
+      d_hist_to_tau(size_t g, size_t i, const History & history, Lattice & L,
+                    double T, const History & fixed) const;
+
+  /// The rate of the history
+  virtual History hist(const Symmetric & stress,
+                     const Orientation & Q, const History & history,
+                     Lattice & L, double T, const SlipRule & R,
+                     const History & fixed) const;
+  /// Derivative of the history wrt stress
+  virtual History d_hist_d_s(const Symmetric & stress,
+                             const Orientation & Q, const History & history,
+                             Lattice & L, double T,
+                             const SlipRule & R,
+                             const History & fixed) const;
+  /// Derivative of the history wrt the history
+  virtual History
+      d_hist_d_h(const Symmetric & stress,
+                 const Orientation & Q,
+                 const History & history,
+                 Lattice & L,
+                 double T, const SlipRule & R,
+                 const History & fixed) const;
+
+  private:
+   std::vector<std::shared_ptr<Interpolate>> strengths_;
+};
+
+static Register<FixedStrengthHardening> regFixedStrengthHardening;
+
+/// Generic linear  hardening of the form tau_i = tau_0_i + H.gamma
+class NEML_EXPORT GeneralLinearHardening: public SlipHardening
+{
+ public:
+  GeneralLinearHardening(std::shared_ptr<SquareMatrix> M, 
+                         std::vector<double> tau_0,
+                         bool absval,
+                         std::string varprefix);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Report your variable names
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
+
+  /// Request whatever history you will need
+  virtual void populate_history(History & history) const;
+  /// Setup history
+  virtual void init_history(History & history) const;
+
+  /// Map the set of history variables to the slip system hardening
+  virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             Lattice & L,
+                             double T, const History & fixed) const;
+  /// Derivative of the map wrt to history
+  virtual History
+      d_hist_to_tau(size_t g, size_t i, const History & history, Lattice & L,
+                    double T, const History & fixed) const;
+
+  /// The rate of the history
+  virtual History hist(const Symmetric & stress,
+                     const Orientation & Q, const History & history,
+                     Lattice & L, double T, const SlipRule & R,
+                     const History & fixed) const;
+  /// Derivative of the history wrt stress
+  virtual History d_hist_d_s(const Symmetric & stress,
+                             const Orientation & Q, const History & history,
+                             Lattice & L, double T,
+                             const SlipRule & R,
+                             const History & fixed) const;
+  /// Derivative of the history wrt the history
+  virtual History
+      d_hist_d_h(const Symmetric & stress,
+                 const Orientation & Q,
+                 const History & history,
+                 Lattice & L,
+                 double T, const SlipRule & R,
+                 const History & fixed) const;
+  /// Derivative of this history wrt the history, external variables
+  virtual History
+      d_hist_d_h_ext(const Symmetric & stress,
+                     const Orientation & Q,
+                     const History & history,
+                     Lattice & L,
+                     double T, const SlipRule & R,
+                     const History & fixed,
+                     std::vector<std::string> ext) const;
+
+ protected:
+  size_t size() const {return tau_0_.size();};
+  void consistency(Lattice & L) const;
+
+ private:
+  std::shared_ptr<SquareMatrix> M_;
+  std::vector<double> tau_0_;
+  bool absval_;
+  std::string varprefix_;
+  std::vector<std::string> varnames_;
+};
+
+static Register<GeneralLinearHardening> regGeneralLinearHardening;
 
 /// Slip strength rules where all systems share the same strength
 class NEML_EXPORT SlipSingleHardening: public SlipHardening
@@ -68,10 +238,11 @@ class NEML_EXPORT SlipSingleHardening: public SlipHardening
  public:
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             Lattice & L,
                              double T, const History & fixed) const;
   /// Derivative of the map wrt to history
   virtual History
-      d_hist_to_tau(size_t g, size_t i, const History & history,
+      d_hist_to_tau(size_t g, size_t i, const History & history, Lattice & L,
                     double T, const History & fixed) const;
 
   /// The scalar map
@@ -87,6 +258,11 @@ class NEML_EXPORT SlipSingleStrengthHardening: public SlipSingleHardening
 {
  public:
   SlipSingleStrengthHardening(std::string var_name = "strength");
+
+  /// Report varnames
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
   virtual void populate_history(History & history) const;
@@ -112,6 +288,16 @@ class NEML_EXPORT SlipSingleStrengthHardening: public SlipSingleHardening
                  Lattice & L,
                  double T, const SlipRule & R,
                  const History & fixed) const;
+
+  /// Derivative of this history wrt the history, external variables
+  virtual History
+      d_hist_d_h_ext(const Symmetric & stress,
+                     const Orientation & Q,
+                     const History & history,
+                     Lattice & L,
+                     double T, const SlipRule & R,
+                     const History & fixed,
+                     std::vector<std::string> ext) const;
 
   /// The scalar map
   virtual double hist_map(const History & history, double T, 
@@ -152,7 +338,14 @@ class NEML_EXPORT SlipSingleStrengthHardening: public SlipSingleHardening
                                      Lattice & L, double T,
                                      const SlipRule & R, 
                                      const History & fixed) const = 0;
-
+  /// Derivative of the scalar law wrt all others
+  virtual History d_hist_rate_d_hist_ext(const Symmetric & stress,
+                                         const Orientation & Q,
+                                         const History & history,
+                                         Lattice & L, double T,
+                                         const SlipRule & R, 
+                                         const History & fixed,
+                                         std::vector<std::string> ext) const = 0;
  protected:
   std::string var_name_;
 };
@@ -165,6 +358,11 @@ class NEML_EXPORT SumSlipSingleStrengthHardening: public SlipSingleHardening
   /// Initialize with a list of models
   SumSlipSingleStrengthHardening(std::vector<std::shared_ptr<SlipSingleStrengthHardening>>
                                  models);
+
+  /// Report varnames
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
 
   /// String type for the object system
   static std::string type();
@@ -197,6 +395,16 @@ class NEML_EXPORT SumSlipSingleStrengthHardening: public SlipSingleHardening
                  Lattice & L,
                  double T, const SlipRule & R,
                  const History & fixed) const;
+
+  /// Derivative of this history wrt the history, external variables
+  virtual History
+      d_hist_d_h_ext(const Symmetric & stress,
+                     const Orientation & Q,
+                     const History & history,
+                     Lattice & L,
+                     double T, const SlipRule & R,
+                     const History & fixed,
+                     std::vector<std::string> ext) const;
 
   /// The scalar map
   virtual double hist_map(const History & history, double T,
@@ -235,6 +443,15 @@ class NEML_EXPORT PlasticSlipHardening: public SlipSingleStrengthHardening
                                      const History & history, Lattice & L, double T,
                                      const SlipRule & R, 
                                      const History & fixed) const;
+  
+  /// Derivative of the scalar law wrt all other scalars
+  virtual History d_hist_rate_d_hist_ext(const Symmetric & stress, 
+                                         const Orientation & Q,
+                                         const History & history,
+                                         Lattice & L, double T,
+                                         const SlipRule & R, 
+                                         const History & fixed,
+                                         std::vector<std::string> ext) const;
 
   /// Prefactor
   virtual double hist_factor(double strength, Lattice & L, double T, 

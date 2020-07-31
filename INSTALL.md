@@ -12,7 +12,7 @@ These instructions assuming you are building in the source directory.
 To compile just the base library:
 
 ```
-apt-get install build-essential cmake libboost-dev libblas-dev liblapack-dev
+apt-get install build-essential cmake libblas-dev liblapack-dev
 cmake .
 make
 ```
@@ -20,7 +20,7 @@ make
 To compile both the base library and the python bindings:
 
 ```
-apt-get install build-essential cmake libboost-dev libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
+apt-get install build-essential cmake libblas-dev liblapack-dev python-dev python-networkx python-numpy python-scipy python-matplotlib python-nose
 cmake -D WRAP_PYTHON=ON .
 make
 ```

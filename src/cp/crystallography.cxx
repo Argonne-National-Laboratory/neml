@@ -351,6 +351,17 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
   }
 }
 
+size_t Lattice::ntotal() const
+{
+  size_t total = 0;
+  
+  for (size_t i = 0; i < ngroup(); i++) {
+    total += nslip(i);
+  }
+
+  return total;
+}
+
 size_t Lattice::ngroup() const
 {
   return slip_planes_.size();

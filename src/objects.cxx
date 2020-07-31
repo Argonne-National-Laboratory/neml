@@ -2,6 +2,19 @@
 
 namespace neml {
 
+template <> double & param_type::data<double>() { return double_; }
+template <> int & param_type::data<int>() { return int_; }
+template <> bool & param_type::data<bool>() { return bool_; }
+template <> std::vector<double> & param_type::data<std::vector<double>>() { return vec_double_; }
+template <> std::shared_ptr<NEMLObject> & param_type::data<std::shared_ptr<NEMLObject>>() { return neml_object_; }
+template <> std::vector<std::shared_ptr<NEMLObject>> & param_type::data<std::vector<std::shared_ptr<NEMLObject>>>() { return vec_neml_object_; }
+template <> std::string & param_type::data<std::string>() { return string_; }
+template <> list_systems & param_type::data<list_systems>() { return list_systems_; }
+template <> std::size_t & param_type::data<std::size_t>() { return size_t_; }
+template <> std::vector<std::size_t> & param_type::data<std::vector<std::size_t>>() { return vec_size_t_; }
+
+param_type::param_type(const char * val) { data<std::string>() = *val; }
+
 ParameterSet::ParameterSet() :
     type_("invalid")
 {
@@ -36,7 +49,7 @@ ParamType ParameterSet::get_object_type(std::string name)
 
 bool ParameterSet::is_parameter(std::string name) const
 {
-  return std::find(param_names_.begin(), param_names_.end(), name) != 
+  return std::find(param_names_.begin(), param_names_.end(), name) !=
       param_names_.end();
 }
 
@@ -58,7 +71,7 @@ std::vector<std::string> ParameterSet::unassigned_parameters()
 bool ParameterSet::fully_assigned()
 {
   resolve_objects_();
-  
+
   for (auto it = param_names_.begin(); it != param_names_.end(); ++it) {
     if (params_.find(*it) == params_.end()) return false;
   }
@@ -89,11 +102,11 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
   if (not params.fully_assigned()) {
     throw UndefinedParameters(params.type(), params.unassigned_parameters());
   }
-  
+
   try {
     return creators_[params.type()](params);
   }
-  catch (std::exception & e) {
+  catch (std::out_of_range & e) {
     throw UnregisteredError(params.type());
   }
 }
@@ -107,7 +120,7 @@ std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
   try {
     return creators_[params.type()](params);
   }
-  catch (std::exception & e) {
+  catch (std::out_of_range & e) {
       throw UnregisteredError(params.type());
   }
 }
