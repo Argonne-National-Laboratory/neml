@@ -14,8 +14,8 @@ It implements the stress update function
       \bm{\varepsilon}_{n+1}, \bm{\varepsilon}_{n},
       T_{n+1}, T_{n},
       t_{n+1}, t_{n},
-      \bm{\sigma}_{n} / (1 - \omega_{n+1},
-      \bm{\alpha}_{n},
+      \bm{\sigma}_{n} / (1 - \omega_{n}),
+      \bm{\alpha}_{n+1},
       \bm{\alpha}_{n},
       u_n, p_n
       \right)
@@ -41,6 +41,7 @@ Implementations
    modular
    standard
    larsonmiller
+   work
 
 Class description
 -----------------

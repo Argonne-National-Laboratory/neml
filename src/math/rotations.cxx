@@ -8,8 +8,7 @@
 #include <iostream>
 #include <random>
 #include <chrono>
-
-#include "boost/functional/hash.hpp"
+#include <functional>
 
 namespace neml {
 
@@ -228,7 +227,8 @@ size_t Quaternion::hash() const
   size_t key = 0;
 
   for (size_t i = 0; i<4; i++) {
-    boost::hash_combine<double>(key, quat_[i]);
+    // One-liner from boost
+    key ^= (std::hash<double>{}(quat_[i]) + 0x9e3779b9 + (key<<6) + (key>>2));
   }
 
   return key;

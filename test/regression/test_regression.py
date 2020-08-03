@@ -13,6 +13,9 @@ strain_rate = 1.0e-4
 def test_all_regression():
   names = [line.strip() for line in open(models)]
   for model in names:
+    # Too expensive
+    if model == "linearcp":
+      continue
     yield check_regression, model
 
 def check_regression(model):
