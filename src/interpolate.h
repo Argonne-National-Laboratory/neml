@@ -127,11 +127,11 @@ class NEML_EXPORT PiecewiseLogLinearInterpolate: public Interpolate {
 static Register<PiecewiseLogLinearInterpolate> regPiecewiseLogLinearInterpolate;
 
 /// Piecewise semiloglinear interpolation
-class NEML_EXPORT PiecewiseSemiLogLinearInterpolate: public Interpolate {
+class NEML_EXPORT PiecewiseSemiLogXLinearInterpolate: public Interpolate {
  public:
   /// Similar to piecewise linear interpolation except the interpolation is done
   /// in log space
-  PiecewiseSemiLogLinearInterpolate(const std::vector<double> points,
+  PiecewiseSemiLogXLinearInterpolate(const std::vector<double> points,
                              const std::vector<double> values);
 
   /// Type for the object system
@@ -149,7 +149,7 @@ class NEML_EXPORT PiecewiseSemiLogLinearInterpolate: public Interpolate {
   std::vector<double> values_;
 };
 
-static Register<PiecewiseSemiLogLinearInterpolate> regPiecewiseSemiLogLinearInterpolate;
+static Register<PiecewiseSemiLogXLinearInterpolate> regPiecewiseSemiLogXLinearInterpolate;
 
 /// A constant value
 class NEML_EXPORT ConstantInterpolate : public Interpolate {

@@ -1331,8 +1331,8 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
   return {'time': np.copy(time), 'strain': np.copy(strain),
       'stress': np.copy(stress), 'rtime': np.copy(rtime[:-1]),
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1]),
-      'tstrain': np.copy(strain[ri:-1]), 'failed': failed,
-      'history': np.array(driver.stored_int)}
+      'tstrain': np.copy(strain[ri:-1]),
+      'history': np.array(driver.stored_int), 'failed': failed}
 
 def thermomechanical_strain_raw(model, time, temperature, strain,
     sdir = np.array([1,0,0,0,0,0.0]), verbose = False, substep = 1):

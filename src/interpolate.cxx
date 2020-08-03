@@ -311,7 +311,7 @@ double PiecewiseLogLinearInterpolate::derivative(double x) const
   }
 }
 
-PiecewiseSemiLogLinearInterpolate::PiecewiseSemiLogLinearInterpolate(
+PiecewiseSemiLogXLinearInterpolate::PiecewiseSemiLogXLinearInterpolate(
     const std::vector<double> points,
     const std::vector<double> values) :
       Interpolate(), points_(points), values_(values)
@@ -332,14 +332,14 @@ PiecewiseSemiLogLinearInterpolate::PiecewiseSemiLogLinearInterpolate(
   }
 }
 
-std::string PiecewiseSemiLogLinearInterpolate::type()
+std::string PiecewiseSemiLogXLinearInterpolate::type()
 {
-  return "PiecewiseSemiLogLinearInterpolate";
+  return "PiecewiseSemiLogXLinearInterpolate";
 }
 
-ParameterSet PiecewiseSemiLogLinearInterpolate::parameters()
+ParameterSet PiecewiseSemiLogXLinearInterpolate::parameters()
 {
-  ParameterSet pset(PiecewiseSemiLogLinearInterpolate::type());
+  ParameterSet pset(PiecewiseSemiLogXLinearInterpolate::type());
 
   pset.add_parameter<std::vector<double>>("points");
   pset.add_parameter<std::vector<double>>("values");
@@ -347,15 +347,15 @@ ParameterSet PiecewiseSemiLogLinearInterpolate::parameters()
   return pset;
 }
 
-std::unique_ptr<NEMLObject> PiecewiseSemiLogLinearInterpolate::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> PiecewiseSemiLogXLinearInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PiecewiseSemiLogLinearInterpolate>(
+  return neml::make_unique<PiecewiseSemiLogXLinearInterpolate>(
       params.get_parameter<std::vector<double>>("points"),
       params.get_parameter<std::vector<double>>("values")
       ); 
 }
 
-double PiecewiseSemiLogLinearInterpolate::value(double x) const
+double PiecewiseSemiLogXLinearInterpolate::value(double x) const
 {
   if (x <= points_.front()) {
     return values_.front();
@@ -378,7 +378,7 @@ double PiecewiseSemiLogLinearInterpolate::value(double x) const
   }
 }
 
-double PiecewiseSemiLogLinearInterpolate::derivative(double x) const
+double PiecewiseSemiLogXLinearInterpolate::derivative(double x) const
 {
   if (x <= points_.front()) {
     return 0.0;
@@ -397,7 +397,7 @@ double PiecewiseSemiLogLinearInterpolate::derivative(double x) const
     double y1 = values_[ind-1];
     double y2 = values_[ind];
 
-    return (y2-y1)/(log10(x2)-log10(x1)) / (x * log(10));
+    return (y2-y1)/(std::log10(x2)-std::log10(x1)) / (x * std::log(10));
   }
 }
 
@@ -508,12 +508,12 @@ std::unique_ptr<NEMLObject> PowerLawInterpolate::initialize(ParameterSet & param
 
 double PowerLawInterpolate::value(double x) const
 {
-  return A_ * pow(x, B_);
+  return A_ * std::pow(x, B_);
 }
 
 double PowerLawInterpolate::derivative(double x) const
 {
-  return A_ * B_ * pow(x, B_-1.0);
+  return A_ * B_ * std::pow(x, B_-1.0);
 }
 
 MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :

@@ -112,14 +112,14 @@ class TestPiecewiseLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
     ys2 = np.exp(yp)
     self.assertTrue(np.allclose(ys1, ys2))
 
-class TestPiecewiseSemiLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
+class TestPiecewiseSemiLogXLinearInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.validx = [1e-2, 0.5, 1.0, 2.0, 5.0, 15.0]
     self.points = [10,20,30,40,50,60]
 
     self.x = 7.5
 
-    self.interpolate = interpolate.PiecewiseSemiLogLinearInterpolate(self.validx, 
+    self.interpolate = interpolate.PiecewiseSemiLogXLinearInterpolate(self.validx, 
         self.points)
 
   def test_interpolate(self):

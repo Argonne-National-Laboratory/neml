@@ -121,6 +121,9 @@ int NEMLScalarDamagedModel_sd::init_x(double * const x, TrialState * ts)
 {
   SDTrialState * tss = static_cast<SDTrialState *>(ts);
   std::copy(tss->s_n, tss->s_n+6, x);
+  // This provides a way for a particular model give a better guess at 
+  // the initial damage for the first step.  Some models can be singular
+  // for w = 0
   if (tss->w_n == 0.0) {
     x[6] = d_guess();
   }
@@ -1436,7 +1439,6 @@ NEMLWorkDamagedModel_sd::NEMLWorkDamagedModel_sd(
                                         verbose, truesdell, false, 0, 1), 
       Wcrit_(Wcrit), n_(n), eps_(eps)
 {
-
 }
 
 std::string NEMLWorkDamagedModel_sd::type()
@@ -1490,12 +1492,13 @@ int NEMLWorkDamagedModel_sd::damage(double d_np1, double d_n,
                    double * const dd) const
 {
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
-                          fabs(d_np1), d_n);
+                          std::fabs(d_np1), d_n);
   double dt = t_np1 - t_n;
 
   double val = Wcrit_->value(wrate);
 
-  *dd = d_n + n_ * pow(fabs(d_np1), (n_-1.0)/n_) * wrate * dt / val;
+  *dd = d_n + n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) * 
+      wrate * dt / val;
   
   return 0;
 }
@@ -1508,7 +1511,7 @@ int NEMLWorkDamagedModel_sd::ddamage_dd(double d_np1, double d_n,
                    double * const dd) const
 {
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
-                          fabs(d_np1), d_n);
+                          std::fabs(d_np1), d_n);
   double val = Wcrit_->value(wrate);
   double deriv = Wcrit_->derivative(wrate);
   double dt = t_np1 - t_n;
@@ -1518,11 +1521,13 @@ int NEMLWorkDamagedModel_sd::ddamage_dd(double d_np1, double d_n,
   double e[6];
   mat_vec(S, 6, s_np1, 6, e);
   double f = dot_vec(s_np1, e, 6);
-  double x = -wrate / (1.0 - fabs(d_np1)) + (1.0 - fabs(d_np1)) * f / dt;
+  double x = -wrate / (1.0 - std::fabs(d_np1)) + 
+      (1.0 - std::fabs(d_np1)) * f / dt;
 
-  double other = n_*pow(fabs(d_np1), (n_-1.0)/n_) * dt / val * (1.0 - wrate / val *
-                                                          deriv) * x;
-  *dd = (n_-1.0)*pow(fabs(d_np1), -1.0/n_) * wrate * dt / val + other;
+  double other = n_*std::pow(fabs(d_np1), (n_-1.0)/n_) * 
+      dt / val * (1.0 - wrate / val *deriv) * x;
+  *dd = (n_-1.0)*std::pow(std::fabs(d_np1), -1.0/n_) *
+      wrate * dt / val + other;
 
   return 0;
 }
@@ -1534,19 +1539,21 @@ int NEMLWorkDamagedModel_sd::ddamage_de(double d_np1, double d_n,
                    double t_np1, double t_n,
                    double * const dd) const
 {
+  // Provide a sensible answer if Newton's method gives us a garbage 
+  // value of the history variable.
   if (d_np1 <= 0.0) {
     std::fill(dd, dd+6, 0.0);
     return 0;
   }
 
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
-                          fabs(d_np1), d_n);
+                          std::fabs(d_np1), d_n);
 
   double val = Wcrit_->value(wrate);
   double dval = Wcrit_->derivative(wrate);
 
-  double fact = n_ * pow(fabs(d_np1), (n_-1.0)/n_) / val * (1.0 - wrate / val * dval)
-      * (1.0 - fabs(d_np1));
+  double fact = n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) / val * 
+      (1.0 - wrate / val * dval) * (1.0 - std::fabs(d_np1));
 
   for (size_t i = 0; i < 6; i++) {
     dd[i] = fact * s_np1[i];
@@ -1563,7 +1570,7 @@ int NEMLWorkDamagedModel_sd::ddamage_ds(double d_np1, double d_n,
                    double * const dd) const
 {
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
-                          fabs(d_np1), d_n);
+                          std::fabs(d_np1), d_n);
 
   double val = Wcrit_->value(wrate);
   double dval = Wcrit_->derivative(wrate);
@@ -1584,11 +1591,11 @@ int NEMLWorkDamagedModel_sd::ddamage_ds(double d_np1, double d_n,
   double e[6];
   mat_vec(S, 6, s_np1, 6, e);
 
-  double fact = n_ * pow(fabs(d_np1), (n_-1.0)/n_) / val * (1.0 - wrate / val *
-                                                      dval)*(1.0-fabs(d_np1));
+  double fact = n_ * std::pow(fabs(d_np1), (n_-1.0)/n_) / val * 
+      (1.0 - wrate / val * dval)*(1.0-std::fabs(d_np1));
 
   for (size_t i = 0; i < 6; i++) {
-    dd[i] = fact * (de[i] - dee[i] - (1.0-fabs(d_np1))*e[i]);
+    dd[i] = fact * (de[i] - dee[i] - (1.0-std::fabs(d_np1))*e[i]);
   }
 
   return 0;
