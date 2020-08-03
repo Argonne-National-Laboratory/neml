@@ -110,8 +110,26 @@ class TestPiecewiseLogLinearInterpolate(unittest.TestCase, BaseInterpolate):
     yp[xs < self.validx[0]] = np.log(self.points[0])
     yp[xs > self.validx[-1]] = np.log(self.points[-1])
     ys2 = np.exp(yp)
-    print(ys1)
-    print(ys2)
+    self.assertTrue(np.allclose(ys1, ys2))
+
+class TestPiecewiseSemiLogXLinearInterpolate(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.validx = [1e-2, 0.5, 1.0, 2.0, 5.0, 15.0]
+    self.points = [10,20,30,40,50,60]
+
+    self.x = 7.5
+
+    self.interpolate = interpolate.PiecewiseSemiLogXLinearInterpolate(self.validx, 
+        self.points)
+
+  def test_interpolate(self):
+    testinter = inter.interp1d(np.log10(self.validx), self.points,
+        bounds_error = False)
+    xs = np.linspace(1e-3,20.0,500)
+    ys1 = [self.interpolate(x) for x in xs]
+    ys2 = testinter(np.log10(xs))
+    ys2[xs < self.validx[0]] = self.points[0]
+    ys2[xs > self.validx[-1]] = self.points[-1]
     self.assertTrue(np.allclose(ys1, ys2))
 
 class TestConstantInterpolate(unittest.TestCase, BaseInterpolate):
@@ -132,6 +150,17 @@ class TestExpInterpolate(unittest.TestCase, BaseInterpolate):
 
   def test_interpolate(self):
     self.assertTrue(np.isclose(self.A * np.exp(self.B/self.x),
+      self.interpolate(self.x)))
+
+class TestPowerLawInterpolate(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.A = 5.1
+    self.B = 0.3
+    self.interpolate = interpolate.PowerLawInterpolate(self.A, self.B)
+    self.x = 2.1
+
+  def test_interpolate(self):
+    self.assertTrue(np.isclose(self.A * self.x**self.B, 
       self.interpolate(self.x)))
 
 class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):

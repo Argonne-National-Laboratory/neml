@@ -8,6 +8,8 @@
 #include <vector>
 #include <memory>
 
+#include <iostream>
+
 namespace neml {
 
 /// Base class for interpolation functions
@@ -124,6 +126,31 @@ class NEML_EXPORT PiecewiseLogLinearInterpolate: public Interpolate {
 
 static Register<PiecewiseLogLinearInterpolate> regPiecewiseLogLinearInterpolate;
 
+/// Piecewise semiloglinear interpolation
+class NEML_EXPORT PiecewiseSemiLogXLinearInterpolate: public Interpolate {
+ public:
+  /// Similar to piecewise linear interpolation except the interpolation is done
+  /// in log space
+  PiecewiseSemiLogXLinearInterpolate(const std::vector<double> points,
+                             const std::vector<double> values);
+
+  /// Type for the object system
+  static std::string type();
+  /// Create parameters for the object system
+  static ParameterSet parameters();
+  /// Create object from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual double value(double x) const;
+  virtual double derivative(double x) const;
+
+ private:
+  const std::vector<double> points_;
+  std::vector<double> values_;
+};
+
+static Register<PiecewiseSemiLogXLinearInterpolate> regPiecewiseSemiLogXLinearInterpolate;
+
 /// A constant value
 class NEML_EXPORT ConstantInterpolate : public Interpolate {
  public:
@@ -167,6 +194,28 @@ class NEML_EXPORT ExpInterpolate : public Interpolate {
 };
 
 static Register<ExpInterpolate> regExpInterpolate;
+
+/// A*x**B
+class NEML_EXPORT PowerLawInterpolate : public Interpolate {
+ public:
+  /// The parameter is the constant value!
+  PowerLawInterpolate(double A, double B);
+
+  /// Type for the object system
+  static std::string type();
+  /// Create parameters for the object system
+  static ParameterSet parameters();
+  /// Create object from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual double value(double x) const;
+  virtual double derivative(double x) const;
+
+ private:
+  const double A_, B_;
+};
+
+static Register<PowerLawInterpolate> regPowerLawInterpolate;
 
 /// The MTS shear modulus function proposed in the original paper
 class NEML_EXPORT MTSShearInterpolate : public Interpolate {

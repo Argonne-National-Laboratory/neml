@@ -430,7 +430,8 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   return {'strain': strain, 'stress': stress,
       'energy_density': np.copy(driver.u),
       'plastic_work': np.copy(driver.p),
-      'youngs': E, 'yield': sY, 'poissons': nu}
+      'youngs': E, 'yield': sY, 'poissons': nu,
+      'history': driver.stored_int[-1]}
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,
@@ -1330,7 +1331,8 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
   return {'time': np.copy(time), 'strain': np.copy(strain),
       'stress': np.copy(stress), 'rtime': np.copy(rtime[:-1]),
       'rrate': np.copy(rrate), 'rstrain': np.copy(rstrain[:-1]),
-      'tstrain': np.copy(strain[ri:-1]), 'failed': failed}
+      'tstrain': np.copy(strain[ri:-1]),
+      'history': np.array(driver.stored_int), 'failed': failed}
 
 def thermomechanical_strain_raw(model, time, temperature, strain,
     sdir = np.array([1,0,0,0,0,0.0]), verbose = False, substep = 1):

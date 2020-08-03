@@ -115,6 +115,17 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
+  py::class_<NEMLWorkDamagedModel_sd, NEMLScalarDamagedModel_sd,
+      std::shared_ptr<NEMLWorkDamagedModel_sd>>(m, "NEMLWorkDamagedModel_sd")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<NEMLWorkDamagedModel_sd>(args, kwargs,
+                                                                    {"elastic",
+                                                                    "Wcrit", "n",
+                                                                    "base"});
+        }))
+      ;
+
   py::class_<EffectiveStress, NEMLObject, std::shared_ptr<EffectiveStress>>(m, "EffectiveStress")
       .def("effective",
            [](EffectiveStress & m, py::array_t<double, py::array::c_style> s) -> double

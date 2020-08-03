@@ -58,6 +58,15 @@ PYBIND11_MODULE(interpolate, m) {
         }))
       ;
 
+  py::class_<PiecewiseSemiLogXLinearInterpolate, Interpolate,
+      std::shared_ptr<PiecewiseSemiLogXLinearInterpolate>>(m, "PiecewiseSemiLogXLinearInterpolate")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PiecewiseSemiLogXLinearInterpolate>(args, kwargs,
+                                                                  {"points", "values"});
+        }))
+      ;
+
   py::class_<ConstantInterpolate, Interpolate, std::shared_ptr<ConstantInterpolate>>(m, "ConstantInterpolate")
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
@@ -69,6 +78,14 @@ PYBIND11_MODULE(interpolate, m) {
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<ExpInterpolate>(args, kwargs, {"A","B"});
+        }))
+      ;
+
+  py::class_<PowerLawInterpolate, Interpolate,
+      std::shared_ptr<PowerLawInterpolate>>(m, "PowerLawInterpolate")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<PowerLawInterpolate>(args, kwargs, {"A","B"});
         }))
       ;
 
