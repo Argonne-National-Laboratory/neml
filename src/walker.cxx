@@ -2035,7 +2035,6 @@ void WalkerFlowRule::initialize_hist(History & h) const
 
 void WalkerFlowRule::y(const State & state, double & res) const
 {
-
   res = prefactor_(state) * flow_(state);
 }
 
@@ -2083,8 +2082,13 @@ void WalkerFlowRule::dy_da(const State & state, History & res) const
 
   // The backstresses
   for (auto X : X_)
-    res.get<Symmetric>(X->name()) = -prefactor_(state) * dflow_(state) * 
-        std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * d;
+    if (d.norm() == 0) {
+      res.get<Symmetric>(X->name()) = Symmetric::zero();
+    }
+    else {
+      res.get<Symmetric>(X->name()) = -prefactor_(state) * dflow_(state) * 
+          std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * d;
+    }
 }
 
 void WalkerFlowRule::g(const State & state, Symmetric & res) const
