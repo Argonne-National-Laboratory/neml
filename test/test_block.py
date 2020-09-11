@@ -56,9 +56,6 @@ class TestBlockEvaluate(unittest.TestCase):
           sym(e_np1[i]), sym(e_n[i]), T_np1[i], T_n[i], 
           t_np1, t_n, sym(s_n[i]), h_n[i], u_n[i], 
           p_n[i])
-      print(e_np1[i])
-      print(usym(s))
-      print(s_np1[i])
       self.assertTrue(np.allclose(usym(s), s_np1[i]))
       self.assertTrue(np.allclose(h, h_np1[i]))
       self.assertTrue(np.allclose(ms2ts(A), A_np1[i]))
