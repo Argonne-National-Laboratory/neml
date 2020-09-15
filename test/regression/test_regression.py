@@ -5,8 +5,10 @@ import os.path
 import unittest, pickle
 import numpy as np
 
-xml = "test/regression/reference.xml"
-models = "test/regression/models.txt"
+from common import *
+
+xml = localize("regression/reference.xml")
+models = localize("regression/models.txt")
 
 strain_rate = 1.0e-4
 
