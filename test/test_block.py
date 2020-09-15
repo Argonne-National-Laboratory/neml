@@ -62,9 +62,53 @@ class TestBlockEvaluate(unittest.TestCase):
       self.assertTrue(np.isclose(u_np1[i], u))
       self.assertTrue(np.isclose(p_np1[i], p))
 
+mandel = ((0,0),(1,1),(2,2),(1,2),(0,2),(0,1))
+mandel_mults = (1,1,1,np.sqrt(2),np.sqrt(2),np.sqrt(2))
+
+# Make the Mandel -> tensor array
+def make_M2T():
+  R = np.zeros((3,3,3,3,6,6))
+  for a in range(6):
+    for b in range(6):
+      ind_a = itertools.permutations(mandel[a], r=2)
+      ind_b = itertools.permutations(mandel[b], r=2)
+      ma = mandel_mults[a]
+      mb = mandel_mults[b]
+      indexes = tuple(ai+bi for ai, bi in itertools.product(ind_a, ind_b))
+      for ind in indexes:
+        R[ind+(a,b)] = 1.0 / (ma*mb)
+
+  return R
+
+def make_usym():
+  R = np.zeros((3,3,6))
+  for a in range(6):
+    R[mandel[a][0],mandel[a][1],a] = 1.0/ mandel_mults[a]
+    R[mandel[a][1],mandel[a][0],a] = 1.0/mandel_mults[a]
+  
+  return R
+
 class TestBlockConverters(unittest.TestCase):
   def setUp(self):
-    self.n = 100
+    self.n = 10
+
+  def test_t2m_array(self):
+    M1 = block.t2m_array()
+    M2 = make_usym()
+
+    self.assertTrue(np.allclose(M1,M2))
+
+  def test_m2t_array(self):
+    M1 = block.m2t_array()
+    M2 = make_usym().transpose((2,0,1))
+
+    self.assertTrue(np.allclose(M1,M2))
+
+  def test_m42t4_array(self):
+    M1 = block.m42t4_array()
+    M2 = make_M2T().transpose(4,5,0,1,2,3)
+
+    self.assertTrue(np.allclose(M1,M2))
 
   def test_t2m(self):
     T = ra.random((self.n,3,3))

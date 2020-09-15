@@ -15,6 +15,37 @@ PYBIND11_MODULE(block, m) {
 
   m.doc() = "Functions for evaluating whole blocks of models at once";
 
+  m.def("t2m_array",
+        []() -> py::array_t<double>
+        {
+          auto array = alloc_tensor<double>({3,3,6});
+          auto ptr = arr2ptr<double>(array);
+
+          std::copy(t2m_array, t2m_array+54, ptr);
+
+          return array;
+        }, "Static tensor to Mandel array");
+  m.def("m2t_array",
+        []() -> py::array_t<double>
+        {
+          auto array = alloc_tensor<double>({6,3,3,});
+          auto ptr = arr2ptr<double>(array);
+
+          std::copy(m2t_array, m2t_array+54, ptr);
+
+          return array;
+        }, "Static Mandel to tensor array");
+  m.def("m42t4_array",
+        []() -> py::array_t<double>
+        {
+          auto array = alloc_tensor<double>({6,6,3,3,3,3});
+          auto ptr = arr2ptr<double>(array);
+
+          std::copy(m42t4_array, m42t4_array+2916, ptr);
+
+          return array;
+        }, "Static Mandel rank 4 to full rank 4 array");
+
   m.def("block_evaluate",
         [](std::shared_ptr<NEMLModel> model, 
            py::array_t<double, py::array::c_style> e_np1,
