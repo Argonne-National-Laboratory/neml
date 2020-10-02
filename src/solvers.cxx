@@ -19,16 +19,15 @@ int solve(Solvable * system, double * x, TrialState * ts,
   return nox(system, x, ts, p.atol, p.miter, p.verbose, R, J);
 #elif SOLVER_NEWTON
   // Actually selected the newton solver
-  return newton(system, x, ts, p.atol, p.miter, p.verbose, false, R, J);
+  return newton(system, x, ts, p, R, J);
 #else
   // Default solver: plain NR
-  return newton(system, x, ts, p.atol, p.miter, p.verbose, false, R, J);
+  return newton(system, x, ts, p, R, J);
 #endif
 }
 
-int newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative,
-          double * R, double * J)
+int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, double * R,
+           double * J)
 {
   int n = system->nparams();
   system->init_x(x, ts);
@@ -52,7 +51,7 @@ int newton(Solvable * system, double * x, TrialState * ts,
   double nR0 = nR;
   int i = 0;
 
-  if (verbose) {
+  if (p.verbose) {
     std::cout << "Iter.\tnR\t\tJe\t\tcn" << std::endl;
     double Jf = diff_jac_check(system, x, ts, J);
     double cn = condition(J, system->nparams());
@@ -63,11 +62,10 @@ int newton(Solvable * system, double * x, TrialState * ts,
         << std::endl;
   }
 
-  while ((nR > tol) && (i < miter))
+  while (true)
   {
-    if (relative) {
-      if ((nR / nR0) < tol) break;
-    }
+    if ((nR < p.atol) || ((nR / nR0) < p.rtol)) break;
+
     solve_mat(J, n, R);
 
     for (int j=0; j<n; j++) x[j] -= R[j];
@@ -76,14 +74,16 @@ int newton(Solvable * system, double * x, TrialState * ts,
     nR = norm2_vec(R, n);
     i++;
 
-    if (verbose) {
+    if (p.verbose) {
       double Jf = diff_jac_check(system, x, ts, J);
       double cn = condition(J, system->nparams());
       std::cout << i << "\t" << nR << "\t" << Jf << "\t" << cn << std::endl;
     }
+
+    if (i >= p.miter) break;
   }
 
-  if (verbose) {
+  if (p.verbose) {
     std::cout << std::endl;
   }
 
@@ -97,7 +97,7 @@ int newton(Solvable * system, double * x, TrialState * ts,
 
   if (ier != SUCCESS) return ier;
 
-  if (i == miter) return MAX_ITERATIONS;
+  if (i == p.miter) return MAX_ITERATIONS;
 
   return SUCCESS;
 }

@@ -1484,7 +1484,7 @@ ParameterSet NEMLWorkDamagedModel_sd::parameters()
 
   pset.add_optional_parameter<NEMLObject>("alpha",
                                           std::make_shared<ConstantInterpolate>(0.0));
-  pset.add_optional_parameter<double>("rtol", 1.0e-6);
+  pset.add_optional_parameter<double>("rtol", 1.0e-14);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
@@ -1694,7 +1694,7 @@ ParameterSet NEMLPowerLawDamagedModel_sd::parameters()
 
   pset.add_optional_parameter<NEMLObject>("alpha",
                                           std::make_shared<ConstantInterpolate>(0.0));
-  pset.add_optional_parameter<double>("rtol", 1.0e-6);
+  pset.add_optional_parameter<double>("rtol", 1.0e-10);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
@@ -1801,7 +1801,7 @@ ParameterSet NEMLExponentialWorkDamagedModel_sd::parameters()
 
   pset.add_optional_parameter<NEMLObject>("alpha",
                                           std::make_shared<ConstantInterpolate>(0.0));
-  pset.add_optional_parameter<double>("rtol", 1.0e-8);
+  pset.add_optional_parameter<double>("rtol", 1.0e-10);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);

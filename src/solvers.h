@@ -52,8 +52,7 @@ int NEML_EXPORT solve(Solvable * system, double * x, TrialState * ts,
 
 /// Default solver: plain NR
 int NEML_EXPORT newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative,
-          double * R, double * J);
+          SolverParameters p, double * R, double * J);
 
 #ifdef SOLVER_NOX
 /// NOX object-oriented interface

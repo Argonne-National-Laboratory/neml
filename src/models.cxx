@@ -1125,7 +1125,7 @@ ParameterSet SmallStrainCreepPlasticity::parameters()
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
   pset.add_optional_parameter<double>("sf", 1.0e6);
-  pset.add_optional_parameter<double>("rtol", 1.0e-8);
+  pset.add_optional_parameter<double>("rtol", 1.0e-12);
   pset.add_optional_parameter<bool>("linesearch", true); // Note this
 
   pset.add_optional_parameter<bool>("truesdell", true);
