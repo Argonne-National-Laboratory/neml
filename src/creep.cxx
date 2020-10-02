@@ -661,8 +661,10 @@ int GenericCreep::dg_de(double seq, double eeq, double t, double T, double & dg)
 }
 
 // Setup for solve
-CreepModel::CreepModel(double tol, int miter, bool verbose) :
-    tol_(tol), miter_(miter), verbose_(verbose)
+CreepModel::CreepModel(double rtol, double atol, int miter, bool verbose,
+                       bool linesearch) :
+    rtol_(rtol), atol_(atol), miter_(miter), verbose_(verbose), 
+    linesearch_(linesearch)
 {
 
 }
@@ -699,7 +701,7 @@ int CreepModel::update(const double * const s_np1,
   // Solve for the new creep strain
   std::vector<double> xv(nparams());
   double * x = &xv[0];
-  ier = solve(this, x, &ts, tol_, miter_, verbose_);
+  ier = solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, linesearch_});
   if (ier != SUCCESS) return ier;
   
   // Extract
@@ -879,8 +881,9 @@ const PiecewiseLinearInterpolate MinCreep225Cr1MoCreep::U  = PiecewiseLinearInte
 
 // Implementation of J2 creep
 J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
-                           double tol, int miter, bool verbose) :
-    CreepModel(tol, miter, verbose), rule_(rule)
+                           double rtol, double atol, int miter, bool verbose,
+                           bool linesearch) :
+    CreepModel(rtol, atol, miter, verbose, linesearch), rule_(rule)
 {
 
 }
@@ -896,9 +899,11 @@ ParameterSet J2CreepModel::parameters()
 
   pset.add_parameter<NEMLObject>("rule");
   
-  pset.add_optional_parameter<double>("tol", 1.0e-10);
+  pset.add_optional_parameter<double>("rtol", 1.0e-8);
+  pset.add_optional_parameter<double>("atol", 1.0e-10);
   pset.add_optional_parameter<int>("miter", 25);
   pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<bool>("linesearch", false);
 
   return pset;
 }
@@ -907,9 +912,11 @@ std::unique_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
 {
   return neml::make_unique<J2CreepModel>(
       params.get_object_parameter<ScalarCreepRule>("rule"),
-      params.get_parameter<double>("tol"),
+      params.get_parameter<double>("rtol"),
+      params.get_parameter<double>("atol"),
       params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose")
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("linesearch")
       ); 
 }
 

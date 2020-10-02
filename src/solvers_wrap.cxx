@@ -41,18 +41,20 @@ PYBIND11_MODULE(solvers, m) {
       ;
 
   m.def("solve",
-        [](std::shared_ptr<Solvable> system, TrialState & ts, double tol, int miter, bool verbose) -> py::array_t<double>
+        [](std::shared_ptr<Solvable> system, TrialState & ts, double rtol,
+           double atol, int miter, bool verbose, bool linesearch) -> py::array_t<double>
         {
           auto x = alloc_vec<double>(system->nparams());
           
-          int ier = solve(system.get(), arr2ptr<double>(x), &ts, tol, miter, verbose);
+          int ier = solve(system.get(), arr2ptr<double>(x), &ts, 
+                          {rtol, atol, miter, verbose, linesearch});
           py_error(ier);
 
           return x;
         }, "Solve a nonlinear system", 
-        py::arg("solvable"), py::arg("trial_state"), py::arg("tol") = 1.0e-8,
+        py::arg("solvable"), py::arg("trial_state"), py::arg("rtol") = 1.0e-6, py::arg("atol") = 1.0e-8,
         py::arg("miter") = 50,
-        py::arg("verbose") = false);
+        py::arg("verbose") = false, py::arg("linesearch") = false);
 }
 
 } // namespace neml

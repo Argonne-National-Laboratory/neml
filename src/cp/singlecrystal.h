@@ -47,8 +47,8 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
                      std::shared_ptr<Orientation> initial_angle,
                      std::shared_ptr<Interpolate> alpha,
                      bool update_rotation,
-                     double tol, int miter, bool verbose,
-                     int max_divide);
+                     double rtol, double atol, int miter, bool verbose,
+                     bool linesearch, int max_divide);
   /// Destructor
   virtual ~SingleCrystalModel();
 
@@ -156,9 +156,9 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   std::shared_ptr<Orientation> q0_;
   std::shared_ptr<Interpolate> alpha_;
   bool update_rotation_;
-  double tol_;
+  double rtol_, atol_;
   int miter_;
-  bool verbose_;
+  bool verbose_, linesearch_;
   int max_divide_;
 
   History stored_hist_;

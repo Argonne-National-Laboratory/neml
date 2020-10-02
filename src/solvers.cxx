@@ -13,17 +13,16 @@ namespace neml {
 
 // This function is configured by the build
 int solve(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative,
-          double * R, double * J)
+          SolverParameters p, double * R, double * J)
 {
 #ifdef SOLVER_NOX
-  return nox(system, x, ts, tol, miter, verbose, R, J);
+  return nox(system, x, ts, p.atol, p.miter, p.verbose, R, J);
 #elif SOLVER_NEWTON
   // Actually selected the newton solver
-  return newton(system, x, ts, tol, miter, verbose, relative, R, J);
+  return newton(system, x, ts, p.atol, p.miter, p.verbose, false, R, J);
 #else
   // Default solver: plain NR
-  return newton(system, x, ts, tol, miter, verbose, relative, R, J);
+  return newton(system, x, ts, p.atol, p.miter, p.verbose, false, R, J);
 #endif
 }
 
