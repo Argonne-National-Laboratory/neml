@@ -29,6 +29,8 @@ int solve(Solvable * system, double * x, TrialState * ts,
 int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, double * R,
            double * J)
 {
+  int mline = 10;
+
   int n = system->nparams();
   system->init_x(x, ts);
   
@@ -50,16 +52,21 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
   double nR = norm2_vec(R, n);
   double nR0 = nR;
   int i = 0;
+  double alpha = 1.0;
 
   if (p.verbose) {
-    std::cout << "Iter.\tnR\t\tJe\t\tcn" << std::endl;
+    std::cout << "Iter.\tnR\t\tJe\t\tcn" ;
+    if (p.linesearch) std::cout << "\t\talpha";
+    std::cout << std::endl;
     double Jf = diff_jac_check(system, x, ts, J);
     double cn = condition(J, system->nparams());
     std::cout << std::setw(6) << std::left << i 
         << "\t" << std::setw(8) << std::left << std::scientific << nR 
         << "\t" << std::setw(8) << std::left << std::scientific << Jf
-        << "\t" << std::setw(8) << std::left << std::scientific << cn
-        << std::endl;
+        << "\t" << std::setw(8) << std::left << std::scientific << cn;
+    if (p.linesearch) std::cout << "\t" << std::setw(8) << std::left << std::scientific << alpha;
+
+    std::cout << std::endl;
   }
 
   while (true)
@@ -68,16 +75,43 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
 
     solve_mat(J, n, R);
 
-    for (int j=0; j<n; j++) x[j] -= R[j];
-
-    system->RJ(x, ts, R, J);
-    nR = norm2_vec(R, n);
+    if (p.linesearch) {
+      int nsearch = 0;
+      alpha = 1.0;
+      double * x_orig = new double [n];
+      std::copy(x, x+n, x_orig);
+      double * dir = new double [n];
+      std::copy(R, R+n, dir);
+      double nRt = 0.0;
+      while (nsearch < mline) {
+        for (int j=0; j<n; j++) x[j] = x_orig[j] - alpha * dir[j];
+        system->RJ(x, ts, R, J);
+        nRt = norm2_vec(R, n);
+        if (nRt < nR) break;
+        alpha /= 2.0;
+        nsearch += 1;
+      }
+      delete [] x_orig;
+      delete [] dir;
+      nR = nRt;
+      if (nsearch == mline) {
+        ier = MAX_ITERATIONS;
+        break;
+      }
+    }
+    else {
+      for (int j=0; j<n; j++) x[j] -= R[j];
+      system->RJ(x, ts, R, J);
+      nR = norm2_vec(R, n);
+    }
     i++;
 
     if (p.verbose) {
       double Jf = diff_jac_check(system, x, ts, J);
       double cn = condition(J, system->nparams());
-      std::cout << i << "\t" << nR << "\t" << Jf << "\t" << cn << std::endl;
+      std::cout << i << "\t" << nR << "\t" << Jf << "\t" << cn;
+      if (p.linesearch) std::cout << "\t" << alpha;
+      std::cout << std::endl;
     }
 
     if (i >= p.miter) break;

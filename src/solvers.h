@@ -24,11 +24,16 @@ class TrialState {
 // I debated several options, but basically I just provide a common set
 // for all models and don't use those that the solvers don't require
 struct SolverParameters {
+  SolverParameters(double rtol, double atol, int miter, bool verbose, 
+                   bool linesearch) : 
+      rtol(rtol), atol(atol), miter(miter), verbose(verbose), 
+      linesearch(linesearch){};
   double rtol;
   double atol;
   int miter;
   bool verbose;
   bool linesearch;
+  int mline;
 };
 
 /// Generic nonlinear solver interface
