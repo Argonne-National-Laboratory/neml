@@ -95,6 +95,20 @@ int NEML_EXPORT diff_jac(Solvable * system, const double * const x, TrialState *
 double NEML_EXPORT diff_jac_check(Solvable * system, const double * const x, TrialState * ts,
                       const double * const J);
 
+// Test functions
+class TestPower: public Solvable {
+ public:
+  TestPower(double A, double n, double b, double x0);
+
+  size_t nparams() const;
+  int init_x(double * const x, TrialState * ts);
+  int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J);
+
+ private:
+  double A_, n_, b_, x0_;
+};
+
 } // namespace neml
 
 #endif // SOLVERS_H

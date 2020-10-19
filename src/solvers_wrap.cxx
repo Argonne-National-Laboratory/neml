@@ -17,6 +17,17 @@ PYBIND11_MODULE(solvers, m) {
       .def(py::init<>())
       ;
 
+  py::class_<SolverParameters, std::shared_ptr<SolverParameters>>(m,
+                                                                  "SolverParameters")
+      .def(py::init<double, double, int, bool, bool>())
+      .def_readwrite("rtol", &SolverParameters::rtol)
+      .def_readwrite("atol", &SolverParameters::atol)
+      .def_readwrite("miter", &SolverParameters::miter)
+      .def_readwrite("verbose", &SolverParameters::verbose)
+      .def_readwrite("linesearch", &SolverParameters::linesearch)
+      .def_readwrite("mline", &SolverParameters::mline)
+    ;
+
   py::class_<Solvable, std::shared_ptr<Solvable>>(m, "Solvable")
       .def_property_readonly("nparams", &Solvable::nparams, "Number of variables in nonlinear equations.")
       .def("init_x",
@@ -55,6 +66,10 @@ PYBIND11_MODULE(solvers, m) {
         py::arg("solvable"), py::arg("trial_state"), py::arg("rtol") = 1.0e-6, py::arg("atol") = 1.0e-8,
         py::arg("miter") = 50,
         py::arg("verbose") = false, py::arg("linesearch") = false);
+
+  py::class_<TestPower, Solvable, std::shared_ptr<TestPower>>(m, "TestPower")
+      .def(py::init<double, double, double, double>())
+      ;
 }
 
 } // namespace neml

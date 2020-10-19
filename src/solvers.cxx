@@ -355,4 +355,31 @@ int nox(Solvable * system, double * x, TrialState * ts,
 }
 
 #endif
+
+TestPower::TestPower(double A, double n, double b, double x0) :
+    A_(A), n_(n), b_(b), x0_(x0)
+{
+
+}
+
+size_t TestPower::nparams() const
+{
+  return 1;
+}
+
+int TestPower::init_x(double * const x, TrialState * ts)
+{
+  x[0] = x0_;
+  return 0;
+}
+
+int TestPower::RJ(const double * const x, TrialState * ts, double * const R, 
+       double * const J)
+{
+  R[0] = A_ * std::pow(x[0], n_) + b_;
+  J[0] = A_ * n_ * std::pow(x[0], n_-1.0);
+  return 0;
+}
+
+
 } // namespace neml
