@@ -73,7 +73,8 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
   {
     if ((nR < p.atol) || ((nR / nR0) < p.rtol)) break;
 
-    solve_mat(J, n, R);
+    ier = solve_mat(J, n, R);
+    if (ier != SUCCESS) break;
 
     if (p.linesearch) {
       int nsearch = 0;
@@ -83,9 +84,14 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
       double * dir = new double [n];
       std::copy(R, R+n, dir);
       double nRt = 0.0;
+      bool linesearch_error = false;
       while (nsearch < mline) {
         for (int j=0; j<n; j++) x[j] = x_orig[j] - alpha * dir[j];
-        system->RJ(x, ts, R, J);
+        ier = system->RJ(x, ts, R, J);
+        if (ier != SUCCESS) {
+          linesearch_error = true;
+          break;
+        }
         nRt = norm2_vec(R, n);
         if (nRt < nR) break;
         alpha /= 2.0;
@@ -93,6 +99,9 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
       }
       delete [] x_orig;
       delete [] dir;
+      if (linesearch_error) {
+        break;
+      }
       nR = nRt;
       if (nsearch == mline) {
         ier = MAX_ITERATIONS;
@@ -101,7 +110,8 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
     }
     else {
       for (int j=0; j<n; j++) x[j] -= R[j];
-      system->RJ(x, ts, R, J);
+      ier = system->RJ(x, ts, R, J);
+      if (ier != SUCCESS) break;
       nR = norm2_vec(R, n);
     }
     i++;
