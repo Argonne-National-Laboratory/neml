@@ -18,7 +18,8 @@ class LMTrialState: public TrialState {
 class NEML_EXPORT LarsonMillerRelation: public NEMLObject, public Solvable {
  public:
   LarsonMillerRelation(std::shared_ptr<Interpolate> fn, double C,
-                       double tol, int miter, bool verbose);
+                       double rtol, double atol, int miter, bool verbose,
+                       bool linesearch);
 
   /// Type for the object system
   static std::string type();
@@ -48,9 +49,9 @@ class NEML_EXPORT LarsonMillerRelation: public NEMLObject, public Solvable {
  protected:
   std::shared_ptr<Interpolate> fn_;
   double C_;
-  double tol_;
+  double rtol_, atol_;
   int miter_;
-  bool verbose_;
+  bool verbose_, linesearch_;
 };
 
 static Register<LarsonMillerRelation> regLarsonMillerRelation;
