@@ -64,7 +64,7 @@ class BarModel(nx.MultiGraph):
     self.sign = [-1.0,1.0]
 
   def solve(self, dt, ndiv = 4, dfact = 2, verbose = False,
-      extrapolate = False):
+      extrapolate = False, rtol = 1.0e-6, atol = 1.0e-8):
     """
       Solve the next time increment
 
@@ -94,7 +94,8 @@ class BarModel(nx.MultiGraph):
       d_guess = self.make_guess(free_nodes, extrapolate = extrapolate,
           value = ef)   
       try:
-        d = newton(solveme, d_guess, verbose = verbose, fail_iter = True)
+        d = newton(solveme, d_guess, verbose = verbose, fail_iter = True, 
+            rtol = rtol, atol = atol)
         step_curr += step_attempt
       except Exception as e:
         dtried += 1

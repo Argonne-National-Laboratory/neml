@@ -13,24 +13,24 @@ namespace neml {
 
 // This function is configured by the build
 int solve(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative,
-          double * R, double * J)
+          SolverParameters p, double * R, double * J)
 {
 #ifdef SOLVER_NOX
-  return nox(system, x, ts, tol, miter, verbose, R, J);
+  return nox(system, x, ts, p.atol, p.miter, p.verbose, R, J);
 #elif SOLVER_NEWTON
   // Actually selected the newton solver
-  return newton(system, x, ts, tol, miter, verbose, relative, R, J);
+  return newton(system, x, ts, p, R, J);
 #else
   // Default solver: plain NR
-  return newton(system, x, ts, tol, miter, verbose, relative, R, J);
+  return newton(system, x, ts, p, R, J);
 #endif
 }
 
-int newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative,
-          double * R, double * J)
+int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, double * R,
+           double * J)
 {
+  int mline = 10;
+
   int n = system->nparams();
   system->init_x(x, ts);
 
@@ -52,39 +52,82 @@ int newton(Solvable * system, double * x, TrialState * ts,
   double nR = norm2_vec(R, n);
   double nR0 = nR;
   int i = 0;
+  double alpha = 1.0;
 
-  if (verbose) {
-    std::cout << "Iter.\tnR\t\tJe\t\tcn" << std::endl;
+  if (p.verbose) {
+    std::cout << "Iter.\tnR\t\tJe\t\tcn" ;
+    if (p.linesearch) std::cout << "\t\talpha";
+    std::cout << std::endl;
     double Jf = diff_jac_check(system, x, ts, J);
     double cn = condition(J, system->nparams());
     std::cout << std::setw(6) << std::left << i 
         << "\t" << std::setw(8) << std::left << std::scientific << nR 
         << "\t" << std::setw(8) << std::left << std::scientific << Jf
-        << "\t" << std::setw(8) << std::left << std::scientific << cn
-        << std::endl;
+        << "\t" << std::setw(8) << std::left << std::scientific << cn;
+    if (p.linesearch) std::cout << "\t" << std::setw(8) << std::left << std::scientific << alpha;
+
+    std::cout << std::endl;
   }
 
-  while ((nR > tol) && (i < miter))
+  while (true)
   {
-    if (relative) {
-      if ((nR / nR0) < tol) break;
+    if ((nR < p.atol) || ((nR / nR0) < p.rtol)) break;
+
+    ier = solve_mat(J, n, R);
+    if (ier != SUCCESS) break;
+
+    if (p.linesearch) {
+      int nsearch = 0;
+      alpha = 1.0;
+      double * x_orig = new double [n];
+      std::copy(x, x+n, x_orig);
+      double * dir = new double [n];
+      std::copy(R, R+n, dir);
+      double nRt = 0.0;
+      bool linesearch_error = false;
+      while (nsearch < mline) {
+        for (int j=0; j<n; j++) x[j] = x_orig[j] - alpha * dir[j];
+        ier = system->RJ(x, ts, R, J);
+        if (ier != SUCCESS) {
+          linesearch_error = true;
+          break;
+        }
+        nRt = norm2_vec(R, n);
+        if (nRt < nR) break;
+        alpha /= 2.0;
+        nsearch += 1;
+      }
+      delete [] x_orig;
+      delete [] dir;
+      if (linesearch_error) {
+        break;
+      }
+      nR = nRt;
+      if (nsearch == mline) {
+        ier = MAX_ITERATIONS;
+        break;
+      }
     }
-    solve_mat(J, n, R);
-
-    for (int j=0; j<n; j++) x[j] -= R[j];
-
-    system->RJ(x, ts, R, J);
-    nR = norm2_vec(R, n);
+    else {
+      for (int j=0; j<n; j++) x[j] -= R[j];
+      ier = system->RJ(x, ts, R, J);
+      if (ier != SUCCESS) break;
+      nR = norm2_vec(R, n);
+    }
     i++;
 
-    if (verbose) {
+    if (p.verbose) {
       double Jf = diff_jac_check(system, x, ts, J);
       double cn = condition(J, system->nparams());
-      std::cout << i << "\t" << nR << "\t" << Jf << "\t" << cn << std::endl;
+      std::cout << i << "\t" << nR << "\t" << Jf << "\t" << cn;
+      if (p.linesearch) std::cout << "\t" << alpha;
+      std::cout << std::endl;
     }
+
+    if (i >= p.miter) break;
   }
 
-  if (verbose) {
+  if (p.verbose) {
     std::cout << std::endl;
   }
 
@@ -98,7 +141,7 @@ int newton(Solvable * system, double * x, TrialState * ts,
 
   if (ier != SUCCESS) return ier;
 
-  if (i == miter) return MAX_ITERATIONS;
+  if (i == p.miter) return MAX_ITERATIONS;
 
   return SUCCESS;
 }
@@ -312,4 +355,31 @@ int nox(Solvable * system, double * x, TrialState * ts,
 }
 
 #endif
+
+TestPower::TestPower(double A, double n, double b, double x0) :
+    A_(A), n_(n), b_(b), x0_(x0)
+{
+
+}
+
+size_t TestPower::nparams() const
+{
+  return 1;
+}
+
+int TestPower::init_x(double * const x, TrialState * ts)
+{
+  x[0] = x0_;
+  return 0;
+}
+
+int TestPower::RJ(const double * const x, TrialState * ts, double * const R, 
+       double * const J)
+{
+  R[0] = A_ * std::pow(x[0], n_) + b_;
+  J[0] = A_ * n_ * std::pow(x[0], n_-1.0);
+  return 0;
+}
+
+
 } // namespace neml

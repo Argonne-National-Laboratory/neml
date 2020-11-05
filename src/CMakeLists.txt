@@ -31,6 +31,7 @@ add_library(neml
       history.cxx
       larsonmiller.cxx
       walker.cxx
+      block.cxx
       )
 add_subdirectory(math)
 add_subdirectory(cp)
@@ -60,4 +61,5 @@ if (WRAP_PYTHON)
       pybind(history)
       pybind(larsonmiller)
       pybind(walker)
+      pybind(block)
 endif()

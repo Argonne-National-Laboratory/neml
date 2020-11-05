@@ -179,7 +179,8 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
  public:
   SubstepModel_sd(std::shared_ptr<LinearElasticModel> emodel,
                   std::shared_ptr<Interpolate> alpha,
-                  bool truesdell, double tol, int miter, bool verbose,
+                  bool truesdell, double rtol, double atol,
+                  int miter, bool verbose, bool linesearch,
                   int max_divide, bool force_divide);
 
   /// Complete substep update
@@ -252,9 +253,9 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
       double & p_np1, double p_n) = 0;
 
  protected:
-  double tol_;
+  double rtol_, atol_;
   int miter_;
-  bool verbose_;
+  bool verbose_, linesearch_;
   int max_divide_;
   bool force_divide_;
 };
@@ -354,8 +355,8 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
                                std::shared_ptr<YieldSurface> surface,
                                std::shared_ptr<Interpolate> ys,
                                std::shared_ptr<Interpolate> alpha,
-                               double tol, int miter,
-                               bool verbose,
+                               double rtol, double atol, int miter,
+                               bool verbose, bool linesearch,
                                int max_divide,
                                bool force_divide,
                                bool truesdell);
@@ -456,7 +457,8 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
                                        std::shared_ptr<RateIndependentFlowRule> flow,
                                        std::shared_ptr<Interpolate> alpha, bool truesdell,
-                                       double tol, int miter, bool verbose,
+                                       double rtol, double atol, int miter,
+                                       bool verbose, bool linesearch,
                                        int max_divide, bool force_divide);
 
   /// Type for the object system
@@ -556,8 +558,8 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
                              std::shared_ptr<NEMLModel_sd> plastic,
                              std::shared_ptr<CreepModel> creep,
                              std::shared_ptr<Interpolate> alpha,
-                             double tol, int miter,
-                             bool verbose, double sf,
+                             double rtol, double atol, int miter,
+                             bool verbose, bool linesearch, double sf,
                              bool truesdell);
 
   /// Type for the object system
@@ -608,9 +610,9 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
   std::shared_ptr<NEMLModel_sd> plastic_;
   std::shared_ptr<CreepModel> creep_;
 
-  double tol_, sf_;
+  double rtol_, atol_, sf_;
   int miter_;
-  bool verbose_;
+  bool verbose_, linesearch_;
 };
 
 static Register<SmallStrainCreepPlasticity> regSmallStrainCreepPlasticity;
@@ -627,8 +629,10 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
                     std::shared_ptr<GeneralFlowRule> rule,
                     std::shared_ptr<Interpolate> alpha,
-                    bool truesdell, double tol, int miter, bool verbose,
-                    int max_divide, bool force_divide, bool skip_first);
+                    bool truesdell, double rtol, double atol,
+                    int miter, bool verbose, bool linesearch,
+                    int max_divide, bool force_divide,
+                    bool skip_first);
 
   /// Type for the object system
   static std::string type();

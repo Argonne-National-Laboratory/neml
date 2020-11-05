@@ -2,12 +2,16 @@ from __future__ import division
 
 import numpy as np
 import itertools
+import os.path
 
 mandel = ((0,0),(1,1),(2,2),(1,2),(0,2),(0,1))
 mandel_mults = (1,1,1,np.sqrt(2),np.sqrt(2),np.sqrt(2))
 
 skew_inds = ((1,2),(0,2),(0,1))
 skew_mults = (-1.0,1.0,-1.0)
+
+def localize(fname):
+  return os.path.join(os.path.dirname(__file__), fname)
 
 def piece_together_fourth(Dp, Wp):
   """
