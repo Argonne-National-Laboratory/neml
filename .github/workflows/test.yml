@@ -1,12 +1,27 @@
-name: test-bindings
+name: tests
 on: [push, pull_request]
 jobs:
-      test-gcc-7:
+      test-bindings:
             runs-on: ubuntu-latest
+            strategy:
+                  matrix:
+                        btype: [Release, Debug]
             steps:
             - uses: actions/checkout@v2
             - run: python --version
             - run: sudo apt install build-essential cmake libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose
-            - run: cmake -D WRAP_PYTHON=ON .
+            - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON .
             - run: make -j 2
             - run: nosetests3
+      test-base:
+            runs-on: ubuntu-latest
+            strategy:
+                  matrix:
+                        btype: [Release, Debug]
+            steps:
+            - uses: actions/checkout@v2
+            - run: python --version
+            - run: sudo apt install build-essential cmake libblas-dev liblapack-dev
+            - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D BUILD_UTILS=ON
+            - run: make -j 2
+            - run: test/drivers/test_drivers.sh
