@@ -28,7 +28,7 @@ jobs:
             steps:
             - uses: actions/checkout@v2
             - run: brew install cmake openblas superlu python
-            - run: pip3 install networkx numpy scipy matplotlib nose
+            - run: pip3 install --user networkx numpy scipy matplotlib nose
             - run: cmake -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.9 -D PYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.9.dylib -D PYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.9 -D USE_OPENMP=OFF .
             - run: make -j 2
             - run: nosetests
