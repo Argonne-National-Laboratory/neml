@@ -1,27 +1,34 @@
 name: tests
 on: [push, pull_request]
 jobs:
-      test-bindings:
+      test-bindings-linux:
             runs-on: ubuntu-latest
             strategy:
                   matrix:
                         btype: [Release, Debug]
             steps:
             - uses: actions/checkout@v2
-            - run: python --version
             - run: sudo apt install build-essential cmake libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON .
             - run: make -j 2
             - run: nosetests3
-      test-base:
+      test-base-linux:
             runs-on: ubuntu-latest
             strategy:
                   matrix:
                         btype: [Release, Debug]
             steps:
             - uses: actions/checkout@v2
-            - run: python --version
             - run: sudo apt install build-essential cmake libblas-dev liblapack-dev
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D BUILD_UTILS=ON
             - run: make -j 2
             - run: test/drivers/test_drivers.sh
+      test-bindings-mac:
+            runs-on: macos-latest
+            steps:
+            - uses: actions/checkout@v2
+            - run: brew install cmake openblas superlu python
+            - run: pip3 install networkx numpy scipy matplotlib nose
+            - run: cmake -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python-config --prefix)/bin/python3.9 -D PYTHON_LIBRARY=$(python-config --prefix)/lib/libpython3.9.dylib -D PYTHON_INCLUDE_DIR=$(python-config --prefix)/include/python3.9 -D USE_OPENMP=OFF .
+            - run: make -j 2
+            - run: nosetests
