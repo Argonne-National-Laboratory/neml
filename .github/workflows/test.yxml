@@ -1,5 +1,5 @@
 name: test-bindings
-on: [push,pullrequest]
+on: [push, pullrequest]
 jobs:
       test-gcc-7:
             runs-on: ubuntu-latest
