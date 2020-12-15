@@ -42,7 +42,7 @@ jobs:
                         btype: [Release, Debug]
             steps:
             - uses: actions/checkout@v2
-            - run: brew install cmake openblas superlu python
+            - run: brew install cmake openblas superlu python gfortran
             - run: pip3 install --user networkx numpy scipy matplotlib nose
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
             - run: make -j 2
