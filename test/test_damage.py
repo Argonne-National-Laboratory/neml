@@ -198,11 +198,11 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
     
-    self.fn = interpolate.PolynomialInterpolate([0.1,5.0, 0])
+    self.fn = interpolate.PolynomialInterpolate([0.1,5.0, 1e-8])
     self.n = 2.1
 
     self.model = damage.NEMLWorkDamagedModel_sd(
-        self.elastic, self.fn, self.n, self.bmodel)
+        self.elastic, self.fn, self.n, self.bmodel, verbose = False)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0]) * 0.75
     self.T = 100.0
@@ -232,7 +232,7 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
 
     self.nsteps = 10
     self.etarget = np.array([0.1,-0.025,0.02,0.015,-0.02,-0.05])
-    self.ttarget = 10.0
+    self.ttarget = 2.0
 
     self.ee = np.dot(self.elastic.S(self.T_np1), self.s_np1*(1.0-self.d_np1) - self.s_n*(1.0-self.d_n))
     self.de = self.e_np1 - self.e_n

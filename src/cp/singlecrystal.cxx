@@ -7,11 +7,12 @@ SingleCrystalModel::SingleCrystalModel(
     std::shared_ptr<Lattice> lattice,
     std::shared_ptr<Orientation> initial_angle,
     std::shared_ptr<Interpolate> alpha,
-    bool update_rotation, double tol, int miter, bool verbose, 
-    int max_divide) :
+    bool update_rotation, double rtol, double atol, int miter, bool verbose, 
+    bool linesearch, int max_divide) :
       kinematics_(kinematics), lattice_(lattice), q0_(initial_angle), alpha_(alpha),
-      update_rotation_(update_rotation), tol_(tol), miter_(miter),
-      verbose_(verbose), max_divide_(max_divide), stored_hist_(false)
+      update_rotation_(update_rotation), rtol_(rtol), atol_(atol), miter_(miter),
+      verbose_(verbose), linesearch_(linesearch),
+      max_divide_(max_divide), stored_hist_(false)
 {
   populate_history(stored_hist_);
 }
@@ -37,9 +38,11 @@ ParameterSet SingleCrystalModel::parameters()
   pset.add_optional_parameter<NEMLObject>("alpha",
                                           std::make_shared<ConstantInterpolate>(0.0));
   pset.add_optional_parameter<bool>("update_rotation", true);
-  pset.add_optional_parameter<double>("tol", 1.0e-6);
+  pset.add_optional_parameter<double>("rtol", 1.0e-8);
+  pset.add_optional_parameter<double>("atol", 1.0e-6);
   pset.add_optional_parameter<int>("miter", 30);
   pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<bool>("linesearch", false);
   pset.add_optional_parameter<int>("max_divide", 6);
 
   return pset;
@@ -53,9 +56,11 @@ std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params
       params.get_object_parameter<Orientation>("initial_rotation"),
       params.get_object_parameter<Interpolate>("alpha"),
       params.get_parameter<bool>("update_rotation"),
-      params.get_parameter<double>("tol"),
+      params.get_parameter<double>("rtol"),
+      params.get_parameter<double>("atol"),
       params.get_parameter<int>("miter"),
       params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("linesearch"),
       params.get_parameter<int>("max_divide"));
 }
 
@@ -683,7 +688,7 @@ int SingleCrystalModel::solve_substep_(SCTrialState * ts,
 {
   std::vector<double> xv(nparams());
   double * x = &xv[0];
-  int ier = solve(this, x, ts, tol_, miter_, verbose_);
+  int ier = solve(this, x, ts, {rtol_, atol_, miter_, verbose_, linesearch_});
 
   // Only dump into new stress and hist if we pass
   if (ier != 0) return ier;

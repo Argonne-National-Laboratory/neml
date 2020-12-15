@@ -59,7 +59,7 @@ template<class T> py::array_t<T> alloc_mat(size_t m, size_t n)
   return arr;
 }
 
-// Allocate a new, zeroed matrix
+// Allocate a new, zeroed rank 3
 template<class T> py::array_t<T> alloc_3d(size_t m, size_t n, size_t o)
 {
   auto arr = py::array(py::buffer_info(
@@ -72,6 +72,29 @@ template<class T> py::array_t<T> alloc_3d(size_t m, size_t n, size_t o)
           ));
   auto ptr = arr2ptr<T>(arr);
   std::fill(ptr, ptr + m * n * o, 0);
+  return arr;
+}
+
+/// Allocate an array of arbitrary size
+template<class T> py::array_t<T> alloc_tensor(std::vector<size_t> shape)
+{
+  std::vector<size_t> stride(shape.size());
+  stride[shape.size()-1] = sizeof(T);
+  size_t ntotal = shape[shape.size() - 1];
+  for (int i = shape.size() - 2; i >= 0; i--) {
+    stride[i] = stride[i+1] * shape[i+1];
+    ntotal *= shape[i];
+  }
+
+  auto arr = py::array(py::buffer_info(
+          nullptr,
+          sizeof(T),
+          py::format_descriptor<T>::value,
+          shape.size(),
+          shape,
+          stride));
+  auto ptr = arr2ptr<T>(arr);
+  std::fill(ptr, ptr + ntotal, 0);
   return arr;
 }
 

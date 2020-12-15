@@ -37,6 +37,7 @@ go :doc:`here <about>` to learn more about the structure of the library.
    creep
    damage
    larsonmiller
+   block
    crystal_plasticity
    python
    advanced

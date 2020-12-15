@@ -71,8 +71,8 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   NEMLScalarDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
-                            double tol, int miter,
-                            bool verbose, bool truesdell,
+                            double rtol, double atol, int miter,
+                            bool verbose, bool lineseach, bool truesdell,
                             bool ekill, double dkill, double sfact);
 
   /// Stress update using the scalar damage model
@@ -151,9 +151,11 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
                     double & p_np1, double p_n);
 
  protected:
-  double tol_;
+  double rtol_;
+  double atol_;
   int miter_;
   bool verbose_;
+  bool linesearch_;
   bool ekill_;
   double dkill_;
   double sfact_;
@@ -169,8 +171,8 @@ class NEML_EXPORT CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
       std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
-      double tol, int miter,
-      bool verbose, bool truesdell);
+      double rtol, double atol, int miter,
+      bool verbose, bool linesearch, bool truesdell);
 
   /// String type for the object system
   static std::string type();
@@ -230,8 +232,8 @@ class NEML_EXPORT ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd
                             std::shared_ptr<Interpolate> phi,
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
-                            double tol, int miter,
-                            bool verbose, bool truesdell);
+                            double rtol, double atol, int miter,
+                            bool verbose, bool linesearch, bool truesdell);
 
   /// String type for the object system
   static std::string type();
@@ -430,8 +432,8 @@ class NEML_EXPORT ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
                             std::shared_ptr<EffectiveStress> estress,
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
-                            double tol, int miter,
-                            bool verbose, bool truesdell,
+                            double rtol, double atol, int miter,
+                            bool verbose, bool linesearch, bool truesdell,
                             bool ekill, double dkill,
                             double sfact);
 
@@ -489,8 +491,8 @@ class NEML_EXPORT LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel
                             std::shared_ptr<EffectiveStress> estress,
                             std::shared_ptr<NEMLModel_sd> base,
                             std::shared_ptr<Interpolate> alpha,
-                            double tol, int miter,
-                            bool verbose, bool truesdell, 
+                            double rtol, double atol, int miter,
+                            bool verbose, bool linesearch, bool truesdell, 
                             bool ekill, double dkill,
                             double sfact);
   
@@ -546,8 +548,8 @@ class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedMod
       std::shared_ptr<LinearElasticModel> elastic,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
-      double tol, int miter,
-      bool verbose, bool truesdell);
+      double rtol, double atol, int miter,
+      bool verbose, bool linesearch, bool truesdell);
 
   /// Damage, now only proportional to the inelastic effective strain
   virtual int damage(double d_np1, double d_n,
@@ -606,8 +608,8 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
       double n,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
-      double tol, int miter,
-      bool verbose, bool truesdell,
+      double rtol, double atol, int miter,
+      bool verbose, bool linesearch, bool truesdell,
       double eps);
 
   /// String type for the object system
@@ -675,8 +677,8 @@ class NEML_EXPORT NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedM
       std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> a,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
-      double tol, int miter,
-      bool verbose, bool truesdell);
+      double rtol, double atol, int miter,
+      bool verbose, bool linesearch, bool truesdell);
 
   /// String type for the object system
   static std::string type();
@@ -717,8 +719,8 @@ class NEML_EXPORT NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarD
       std::shared_ptr<Interpolate> af,
       std::shared_ptr<NEMLModel_sd> base,
       std::shared_ptr<Interpolate> alpha,
-      double tol, int miter,
-      bool verbose, bool truesdell);
+      double rtol, double atol, int miter,
+      bool verbose, bool linesearch, bool truesdell);
 
   /// String type for the object system
   static std::string type();

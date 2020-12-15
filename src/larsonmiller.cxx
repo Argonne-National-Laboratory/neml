@@ -5,9 +5,11 @@
 namespace neml {
 
 LarsonMillerRelation::LarsonMillerRelation(std::shared_ptr<Interpolate> fn, 
-                                           double C, double tol, int miter,
-                                           bool verbose) :
-    fn_(fn), C_(C), tol_(tol), miter_(miter), verbose_(verbose)
+                                           double C, double rtol, double atol,
+                                           int miter, bool verbose, 
+                                           bool linesearch) :
+    fn_(fn), C_(C), rtol_(rtol), atol_(atol), miter_(miter), verbose_(verbose),
+    linesearch_(linesearch)
 {
 
 }
@@ -23,9 +25,11 @@ ParameterSet LarsonMillerRelation::parameters()
 
   pset.add_parameter<NEMLObject>("function");
   pset.add_parameter<double>("C");
-  pset.add_optional_parameter<double>("tol", 1e-6);
+  pset.add_optional_parameter<double>("rtol", 1.0e-6);
+  pset.add_optional_parameter<double>("atol", 1e-6);
   pset.add_optional_parameter<int>("miter", 20);
   pset.add_optional_parameter<bool>("verbose", false);
+  pset.add_optional_parameter<bool>("linesearch", false);
 
   return pset;
 }
@@ -36,9 +40,11 @@ std::unique_ptr<NEMLObject> LarsonMillerRelation::initialize(
   return neml::make_unique<LarsonMillerRelation>(
       params.get_object_parameter<Interpolate>("function"),
       params.get_parameter<double>("C"),
-      params.get_parameter<double>("tol"),
+      params.get_parameter<double>("rtol"),
+      params.get_parameter<double>("atol"),
       params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose")
+      params.get_parameter<bool>("verbose"),
+      params.get_parameter<bool>("linesearch")
       ); 
 }
 
@@ -54,7 +60,8 @@ int LarsonMillerRelation::tR(double s, double T, double & t)
   LMTrialState ts;
   ts.stress = s;
   double x[1];
-  int ier = solve(this, x, &ts, tol_, miter_, verbose_);
+  int ier = solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, 
+                  linesearch_});
   if (ier != 0) return ier;
 
   // x has LMP
@@ -68,7 +75,8 @@ int LarsonMillerRelation::dtR_ds(double s, double T, double & dt)
   LMTrialState ts;
   ts.stress = s;
   double x[1];
-  int ier = solve(this, x, &ts, tol_, miter_, verbose_);
+  int ier = solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, 
+                  linesearch_});
   if (ier != 0) return ier;
   
   double LMP = x[0];

@@ -3,10 +3,12 @@ from neml import solvers, interpolate, models, elasticity, ri_flow, hardening, s
 import unittest
 import numpy as np
 
+from common import *
+
 class TestErrors(unittest.TestCase):
   def test_badobject(self):
     with self.assertRaises(RuntimeError):
-      test = parse.parse_xml("test/examples.xml", "test_badobject")
+      test = parse.parse_xml(localize("examples.xml"), "test_badobject")
 
 class CompareMats(object):
   def test_same(self):
@@ -56,7 +58,7 @@ class CompareMats(object):
 
 class TestPowerLawDamage(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_powerdamage")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_powerdamage")
 
     E = 92000.0
     nu = 0.3
@@ -137,7 +139,7 @@ class TestJ2Iso(CompareMats, unittest.TestCase):
 
 class TestJ2Isocomb(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_j2isocomb")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_j2isocomb")
   
     E = 150000.0
     nu = 0.3
@@ -165,7 +167,7 @@ class TestJ2Isocomb(CompareMats, unittest.TestCase):
 
 class TestCreepPlasticity(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_creep_plasticity")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_creep_plasticity")
   
     A = 1.85e-10
     n = 2.5
@@ -195,7 +197,7 @@ class TestCreepPlasticity(CompareMats, unittest.TestCase):
 
 class TestJ2Combined(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_j2comb")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_j2comb")
   
     mu = 40000.0
     K = 84000.0
@@ -224,7 +226,7 @@ class TestJ2Combined(CompareMats, unittest.TestCase):
 
 class TestRIChaboche(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_nonassri")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_nonassri")
   
     mu = 40000.0
     K = 84000.0
@@ -257,7 +259,7 @@ class TestRIChaboche(CompareMats, unittest.TestCase):
 
 class TestYaguchi(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_yaguchi")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_yaguchi")
   
     mu_poly = [-0.11834615, 115.5, 48807.69]
     K_poly = [-0.256417, 250.25, 105750.0]
@@ -280,7 +282,7 @@ class TestYaguchi(CompareMats, unittest.TestCase):
 
 class TestRDChaboche(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_rd_chaboche")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_rd_chaboche")
   
     mu = 60384.61
     K = 130833.3
@@ -320,7 +322,7 @@ class TestRDChaboche(CompareMats, unittest.TestCase):
 
 class TestPerzyna(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_perzyna")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_perzyna")
   
     mu = 40000.0
     K = 84000.0
@@ -357,7 +359,7 @@ class TestPerzyna(CompareMats, unittest.TestCase):
 
 class TestPerfect(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_perfect")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_perfect")
 
     E = [-100, 100000]
     nu = 0.3
@@ -386,7 +388,7 @@ class TestPerfect(CompareMats, unittest.TestCase):
 
 class TestPerfectCreep(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml("test/examples.xml", "test_pcreep")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_pcreep")
 
     E = [-100, 100000]
     nu = 0.3

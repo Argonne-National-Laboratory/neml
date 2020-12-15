@@ -352,7 +352,7 @@ class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
  public:
   /// Parameters are a solver tolerance, the maximum allowable iterations,
   /// and a verbosity flag
-  CreepModel(double tol, int miter, bool verbose);
+  CreepModel(double rtol, double atol, int miter, bool verbose, bool linesearch);
 
   /// Use the creep rate function to update the creep strain
   int update(const double * const s_np1,
@@ -397,9 +397,9 @@ class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
                     double * const A_np1);
 
  protected:
-  const double tol_;
+  const double rtol_, atol_;
   const int miter_;
-  const bool verbose_;
+  const bool verbose_, linesearch_;
 };
 
 /// J2 creep based on a scalar creep rule
@@ -408,7 +408,8 @@ class NEML_EXPORT J2CreepModel: public CreepModel {
   /// Parameters: scalar creep rule, nonlinear tolerance, maximum solver
   /// iterations, and a verbosity flag
   J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
-               double tol, int miter, bool verbose);
+               double rtol, double atol, int miter, bool verbose, 
+               bool linesearch);
 
   /// String type for the object system
   static std::string type();

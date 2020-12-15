@@ -20,6 +20,22 @@ class TrialState {
   virtual ~TrialState() {};
 };
 
+/// Nonlinear solver parameters
+// I debated several options, but basically I just provide a common set
+// for all models and don't use those that the solvers don't require
+struct SolverParameters {
+  SolverParameters(double rtol, double atol, int miter, bool verbose, 
+                   bool linesearch) : 
+      rtol(rtol), atol(atol), miter(miter), verbose(verbose), 
+      linesearch(linesearch){};
+  double rtol;
+  double atol;
+  int miter;
+  bool verbose;
+  bool linesearch;
+  int mline;
+};
+
 /// Generic nonlinear solver interface
 class NEML_EXPORT Solvable {
  public:
@@ -36,14 +52,12 @@ class NEML_EXPORT Solvable {
 
 /// Call the built-in solver
 int NEML_EXPORT solve(Solvable * system, double * x, TrialState * ts,
-          double tol = 1.0e-8, int miter = 50,
-          bool verbose = false, bool relative = false,
-          double * R = nullptr, double * J = nullptr);
+                      SolverParameters p, double * R = nullptr,
+                      double * J = nullptr);
 
 /// Default solver: plain NR
 int NEML_EXPORT newton(Solvable * system, double * x, TrialState * ts,
-          double tol, int miter, bool verbose, bool relative,
-          double * R, double * J);
+          SolverParameters p, double * R, double * J);
 
 #ifdef SOLVER_NOX
 /// NOX object-oriented interface
@@ -69,7 +83,8 @@ class NEML_EXPORT NOXSolver: public NOX::LAPACK::Interface {
 
 /// Interface to nox
 int NEML_EXPORT nox(Solvable * system, double * x, TrialState * ts,
-        double tol, int miter, bool verbose, double * R, double * J);
+        double tol, int miter, bool verbose, double * R,
+        double * J);
 
 #endif
 
@@ -79,6 +94,20 @@ int NEML_EXPORT diff_jac(Solvable * system, const double * const x, TrialState *
 /// Helper to get checksum
 double NEML_EXPORT diff_jac_check(Solvable * system, const double * const x, TrialState * ts,
                       const double * const J);
+
+// Test functions
+class TestPower: public Solvable {
+ public:
+  TestPower(double A, double n, double b, double x0);
+
+  size_t nparams() const;
+  int init_x(double * const x, TrialState * ts);
+  int RJ(const double * const x, TrialState * ts, double * const R,
+                 double * const J);
+
+ private:
+  double A_, n_, b_, x0_;
+};
 
 } // namespace neml
 
