@@ -348,6 +348,7 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
     slip_directions_.push_back(directions);
     slip_planes_.push_back(normals);
     offsets_.push_back(offsets_.back() + burgers.size());
+    update_normals_(normals);
   }
 }
 
@@ -406,6 +407,21 @@ const std::shared_ptr<SymmetryGroup> Lattice::symmetry()
   return symmetry_;
 }
 
+const std::vector<Vector> Lattice::unique_planes() const
+{
+  return normals_;
+}
+
+size_t Lattice::nplanes() const
+{
+  return normals_.size();
+}
+
+size_t Lattice::plane_index(size_t g, size_t i) const
+{
+  return normal_map_[g][i];
+}
+
 void Lattice::make_reciprocal_lattice_()
 {
   b1_ = a2_.cross(a3_) / a1_.dot(a2_.cross(a3_));
@@ -439,6 +455,26 @@ void Lattice::cache_rot_(const Orientation & Q)
                                      slip_planes_[g][i])));
     }
   }
+}
+
+void Lattice::update_normals_(const std::vector<Vector> & new_planes)
+{
+  std::vector<size_t> new_indices;
+
+  for (size_t i = 0; i < new_planes.size(); i++) {
+    size_t j = 0;
+    for (; j < normals_.size(); j++) {
+      if (isclose(fabs(normals_[j].dot(new_planes[i])), 1)) {
+        new_indices.push_back(j);
+        break;
+      }
+    }
+    if (j == normals_.size()) {
+      normals_.push_back(new_planes[i]);
+      new_indices.push_back(normals_.size()-1);
+    }
+  }
+  normal_map_.push_back(new_indices);
 }
 
 CubicLattice::CubicLattice(double a,
