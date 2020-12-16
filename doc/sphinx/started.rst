@@ -34,4 +34,5 @@ Directions for each operating system follow below.
    :maxdepth: 1
 
    install/linux
+   install/mac
    install/windows
