@@ -33,6 +33,25 @@ PYBIND11_MODULE(slipharden, m) {
                     }))
     ;
 
+  py::class_<VocePerSystemHardening, SlipHardening,
+      std::shared_ptr<VocePerSystemHardening>>(m, "VocePerSystemHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<VocePerSystemHardening>(
+                          args, kwargs, {"initial", "k", "saturation",
+                          "m"});
+                    }))
+    ;
+
+  py::class_<FASlipHardening, SlipHardening,
+      std::shared_ptr<FASlipHardening>>(m, "FASlipHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<FASlipHardening>(
+                          args, kwargs, {"k", "saturation"});
+                    }))
+    ;
+
   py::class_<GeneralLinearHardening, SlipHardening, std::shared_ptr<GeneralLinearHardening>>(m, "GeneralLinearHardening")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
