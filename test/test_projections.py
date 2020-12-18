@@ -55,6 +55,7 @@ class TestProjectionsOnR2(unittest.TestCase):
     C = emodel.C_tensor(0)
     
     n = tensors.Vector([1.0,-1,1]).normalize()
+
     P = projections.normal_projection_ss(n)
     PP = tensors.SymSymR4.id() - P
     PC = PP.dot(C)
@@ -62,6 +63,13 @@ class TestProjectionsOnR2(unittest.TestCase):
     val = stress.dot(n).dot(n)
 
     self.assertAlmostEqual(val, 0)
+
+    # Some random orthogonal direction
+    s = n.cross(tensors.Vector([1,0.0,0])).normalize()
+    val = stress.dot(s).dot(s)
+    val2 = C.dot(strain).dot(s).dot(s)
+    self.assertAlmostEqual(val,val2)
+
 
   def test_shear_usecase(self):
     """
@@ -89,4 +97,13 @@ class TestProjectionsOnR2(unittest.TestCase):
     extra = (s+t).normalize()
     v3 = stress.dot(n).dot(extra)
     self.assertAlmostEqual(v3,0)
+    
+    # IDK, i guess check normal on a different plane
+    vn1 = stress.dot(n).dot(n)
+    vn2 = C.dot(strain).dot(n).dot(n)
+    self.assertAlmostEqual(vn1,vn2)
 
+    # IDK, i guess check shear on a different plane
+    vn1 = stress.dot(s).dot(t)
+    vn2 = C.dot(strain).dot(s).dot(t)
+    self.assertAlmostEqual(vn1,vn2)
