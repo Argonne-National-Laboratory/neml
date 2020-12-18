@@ -110,6 +110,9 @@ class TestRankTwo(unittest.TestCase):
 
     self.s = 2.1
 
+  def test_id(self):
+    self.assertTrue(tensors.RankTwo.id(), tensors.RankTwo(np.eye(3)))
+
   def test_norm(self):
     self.assertTrue(np.isclose(self.TA.norm(), np.sqrt(np.sum(self.A*self.A))))
 

@@ -136,6 +136,9 @@ class NEML_EXPORT RankTwo: public Tensor {
   RankTwo inverse() const;
   RankTwo transpose() const;
 
+  static RankTwo id() { return
+    RankTwo(std::vector<double>({1.0,0,0,0,1,0,0,0,1}));};
+
   double norm() const;
 
   double contract(const RankTwo & other) const;

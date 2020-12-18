@@ -158,6 +158,8 @@ PYBIND11_MODULE(tensors, m) {
       .def(py::self - Skew())
       .def(Skew() - py::self)
 
+      .def_static("id", &Symmetric::id)
+
       .def("__getitem__", [](const RankTwo & M, std::tuple<size_t,size_t> ind) {
            size_t i = std::get<0>(ind);
            size_t j = std::get<1>(ind);
@@ -310,6 +312,7 @@ PYBIND11_MODULE(tensors, m) {
       .def("inverse", &Symmetric::inverse)
       .def("transpose", &Symmetric::transpose)
       .def("norm", &Symmetric::norm)
+      .def("to_full", &Symmetric::to_full)
       ;
 
   py::class_<Skew, Tensor, std::shared_ptr<Skew>>(m, "Skew")
