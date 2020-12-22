@@ -7,6 +7,7 @@ import common
 import unittest
 import numpy as np
 import numpy.linalg as la
+import numpy.random as ra
 
 class TestVector(unittest.TestCase):
   def setUp(self):
@@ -980,3 +981,71 @@ class TestCPSpeciality(unittest.TestCase):
     A2 = tensors.SymSkewR4(common.ts2sww(A2_ten))
 
     self.assertEqual(A1, A2)
+
+class TestSymSymSymR6(unittest.TestCase):
+  def setUp(self):
+    self.SS = np.array([
+      [ 5.99159801, -2.24342348,  0.26667281, -0.95466199,  3.98931478, -0.10846981],
+      [ 1.86468226, -4.32391908, -7.82738638, -7.45008989,  5.89874777, 0.45820648],
+      [-5.92565398,  2.4862829 , -6.02112389,  6.75455965,  4.65183463, 9.96900579],
+      [ 0.60378883, -3.72189328, -7.63388446, -5.76559403, -0.3119789 , -1.1527258 ],
+      [ 4.56813135, -6.06783828, -6.18341368,  8.06169686, -9.56928844, 9.08114655],
+      [-8.25516614,  6.30663846,  7.2084381 , -7.38280703, -5.96279902, 8.9935982 ]])
+    self.SS_full = common.ms2ts(self.SS)
+    self.TSS = tensors.SymSymR4(self.SS)
+
+    self.S = np.array([[ 6.19999242, -6.95811611, -6.02901899],
+           [ 8.38508084,  6.01607694,  6.79839425],
+           [-4.4214246 , -2.36795313, -8.84070728]])
+    self.S = 0.5*(self.S+self.S.T)
+    self.TS = tensors.Symmetric(self.S)
+
+    self.FS = ra.random((6,6,6))
+    self.FS_full = common.m62t6(self.FS)
+    self.TFS = tensors.SymSymSymR6(self.FS)
+
+  def test_dot_i(self):
+    full = np.einsum('ijklmn,ij', self.FS_full, self.S)
+    vec = self.TFS.dot_i(self.TS)
+    vec2f = common.ms2ts(vec.data.reshape(6,6))
+
+    self.assertTrue(np.allclose(full,vec2f))
+
+  def test_dot_j(self):
+    full = np.einsum('ijklmn,kl', self.FS_full, self.S)
+    vec = self.TFS.dot_j(self.TS)
+    vec2f = common.ms2ts(vec.data.reshape(6,6))
+
+    self.assertTrue(np.allclose(full,vec2f))
+
+  def test_dot_k(self):
+    full = np.einsum('ijklmn,mn', self.FS_full, self.S)
+    vec = self.TFS.dot_k(self.TS)
+    vec2f = common.ms2ts(vec.data.reshape(6,6))
+
+    self.assertTrue(np.allclose(full,vec2f))
+
+  def test_outer_project(self):
+    full = np.einsum('ijkl,mn', self.SS_full, self.S)
+
+    vec = tensors.outer_product_k(self.TSS, self.TS)
+    vec2f = common.m62t6(vec.data.reshape((6,6,6)))
+    
+    self.assertTrue(np.allclose(full, vec2f))
+
+  def test_add(self):
+    self.assertTrue(np.allclose((self.TFS+self.TFS).data, (2*self.FS).flatten()))
+
+  def test_subtract(self):
+    self.assertTrue(np.allclose((self.TFS-self.TFS).data, np.zeros((6,6,6)).flatten()))
+
+  def test_negate(self):
+    self.assertTrue(np.allclose((-self.TFS).data, -self.FS.flatten()))
+
+  def test_scalar_mult(self):
+    self.assertTrue(np.allclose((2.0*self.TFS).data, 2*self.FS.flatten()))
+    self.assertTrue(np.allclose((self.TFS*2.0).data, 2*self.FS.flatten()))
+
+  def test_scalar_divide(self):
+    self.assertTrue(np.allclose((self.TFS/2.0).data, self.FS.flatten()/2))
+
