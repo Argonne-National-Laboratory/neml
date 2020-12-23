@@ -1130,6 +1130,14 @@ double & SymSymR4::operator()(size_t i, size_t j)
   return s_[i*6+j];
 }
 
+SymSymR4 SymSymR4::inverse() const
+{
+  SymSymR4 res(*this);
+  invert_mat(res.s(), 6);
+
+  return res;
+}
+
 const double & SymSymR4::operator()(size_t i, size_t j) const
 {
   return s_[i*6+j];

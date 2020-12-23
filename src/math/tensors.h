@@ -356,6 +356,8 @@ class NEML_EXPORT SymSymR4: public Tensor {
   double & operator()(size_t i, size_t j);
   const double & operator()(size_t i, size_t j) const;
 
+  SymSymR4 inverse() const;
+
   // Various multiplication
   RankFour dot(const RankFour & other) const;
   SymSymR4 dot(const SymSymR4 & other) const;
