@@ -117,4 +117,81 @@ class NilDamageModel: public CrystalDamageModel {
 
 static Register<NilDamageModel> regNilDamageModel;
 
+/// Slip plane damage functions
+class SlipPlaneDamage : public NEMLObject {
+ public:
+  /// Initial value
+  virtual double setup() const = 0;
+
+  /// Damage rate
+  virtual double damage_rate(const std::vector<double> & shears,
+                             const std::vector<double> & sliprates,
+                             double normal_stress,
+                             double damage) = 0;
+  /// Derivative wrt shears
+  virtual std::vector<double> d_damage_rate_d_shear(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage) = 0;
+
+  /// Derivative wrt slip rates
+  virtual std::vector<double> d_damage_rate_d_slip(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage) = 0;
+
+  /// Derivative wrt the normal stress
+  virtual double d_damage_rate_d_normal(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage) = 0;
+
+  /// Derivative wrt the damage variable
+  virtual double d_damage_rate_d_damage(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage) = 0;
+};
+
+/// Accumulated work
+class WorkPlaneDamage : public SlipPlaneDamage
+{
+ public:
+  WorkPlaneDamage();
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Initial value
+  virtual double setup() const;
+
+  /// Damage rate
+  virtual double damage_rate(const std::vector<double> & shears,
+                             const std::vector<double> & sliprates,
+                             double normal_stress,
+                             double damage);
+  /// Derivative wrt shears
+  virtual std::vector<double> d_damage_rate_d_shear(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage);
+
+  /// Derivative wrt slip rates
+  virtual std::vector<double> d_damage_rate_d_slip(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage);
+
+  /// Derivative wrt the normal stress
+  virtual double d_damage_rate_d_normal(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage);
+
+  /// Derivative wrt the damage variable
+  virtual double d_damage_rate_d_damage(
+      const std::vector<double> & shears, const std::vector<double> & sliprates,
+      double normal_stress, double damage);
+};
+
+static Register<WorkPlaneDamage> regWorkPlaneDamage;
+
+
 } // namespace neml

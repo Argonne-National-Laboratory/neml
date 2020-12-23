@@ -98,3 +98,55 @@ class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
     self.assertEqual(rate.size, 1)
     self.assertEqual(rate.items, ["whatever"])
     self.assertAlmostEqual(rate.get_scalar("whatever"), 0)
+
+class CommonSlipDamage:
+  def test_damage_shear(self):
+    act = self.model.d_damage_rate_d_shear(self.shear, self.sliprate,
+        self.normal, self.damage)
+    
+    dfn = lambda s: self.model.damage_rate(list(s), self.sliprate, self.normal,
+        self.damage)
+    res = differentiate(dfn, np.array(self.shear))[0]
+
+    self.assertTrue(np.allclose(act,res))
+
+  def test_damage_slip(self):
+    act = self.model.d_damage_rate_d_slip(self.shear, self.sliprate,
+        self.normal, self.damage)
+    
+    dfn = lambda s: self.model.damage_rate(self.shear, list(s), self.normal,
+        self.damage)
+    res = differentiate(dfn, np.array(self.sliprate))[0]
+
+    self.assertTrue(np.allclose(act,res))
+
+  def test_damage_normal(self):
+    act = self.model.d_damage_rate_d_normal(self.shear, self.sliprate,
+        self.normal, self.damage)
+    res = differentiate(lambda n: self.model.damage_rate(self.shear,
+      self.sliprate, n, self.damage), self.normal)
+    self.assertAlmostEqual(act, res)
+
+  def test_damage_damage(self):
+    act = self.model.d_damage_rate_d_damage(self.shear, self.sliprate,
+        self.normal, self.damage)
+    res = differentiate(lambda d: self.model.damage_rate(self.shear,
+      self.sliprate, self.normal, d), self.damage)
+    self.assertAlmostEqual(act, res)
+    
+class TestWorkSlipDamage(CommonSlipDamage, unittest.TestCase):
+  def setUp(self):
+    self.shear = [200.0,400.0,-400.0,150.0]
+    self.sliprate = [1.0e-3,5.0e-2,-1.0e-1,1.0e-3]
+    self.normal = 100.0
+    self.damage = 0.5
+
+    self.model = crystaldamage.WorkPlaneDamage()
+
+  def test_damage_rate(self):
+    drate = self.model.damage_rate(self.shear, self.sliprate, self.normal,
+        self.damage)
+    
+    should = np.sum(np.array(self.shear) * np.array(self.sliprate))
+
+    self.assertAlmostEqual(drate, should)

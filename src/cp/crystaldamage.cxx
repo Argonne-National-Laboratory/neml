@@ -128,4 +128,79 @@ History NilDamageModel::d_damage_d_history(const Symmetric & stress,
   return res;
 }
 
+WorkPlaneDamage::WorkPlaneDamage() :
+    SlipPlaneDamage()
+{
+
+}
+
+std::string WorkPlaneDamage::type()
+{
+  return "WorkPlaneDamage";
+}
+
+std::unique_ptr<NEMLObject> WorkPlaneDamage::initialize(ParameterSet & params)
+{
+  return neml::make_unique<WorkPlaneDamage>();
+}
+
+ParameterSet WorkPlaneDamage::parameters()
+{
+  ParameterSet pset(WorkPlaneDamage::type());
+
+  return pset;
+}
+
+double WorkPlaneDamage::setup() const
+{
+  return 0;
+}
+
+double WorkPlaneDamage::damage_rate(
+    const std::vector<double> & shears, const std::vector<double> & sliprates,
+    double normal_stress, double damage)
+{
+  double rate = 0;
+  for (size_t i = 0; i < shears.size(); i++) 
+    rate += shears[i] * sliprates[i];
+
+  return rate;
+}
+
+std::vector<double> WorkPlaneDamage::d_damage_rate_d_shear(
+    const std::vector<double> & shears, const std::vector<double> & sliprates,
+    double normal_stress, double damage)
+{
+  std::vector<double> deriv;
+  deriv.resize(shears.size());
+  for (size_t i = 0; i < shears.size(); i++)
+    deriv[i] = sliprates[i];
+  return deriv;
+}
+
+std::vector<double> WorkPlaneDamage::d_damage_rate_d_slip(
+    const std::vector<double> & shears, const std::vector<double> & sliprates,
+    double normal_stress, double damage)
+{
+  std::vector<double> deriv;
+  deriv.resize(shears.size());
+  for (size_t i = 0; i < shears.size(); i++)
+    deriv[i] = shears[i];
+  return deriv;
+}
+
+double WorkPlaneDamage::d_damage_rate_d_normal(
+    const std::vector<double> & shears, const std::vector<double> & sliprates,
+    double normal_stress, double damage)
+{
+  return 0;
+}
+
+double WorkPlaneDamage::d_damage_rate_d_damage(
+    const std::vector<double> & shears, const std::vector<double> & sliprates,
+    double normal_stress, double damage)
+{
+  return 0;
+}
+
 } // namespace neml

@@ -35,6 +35,26 @@ PYBIND11_MODULE(crystaldamage, m) {
                   }))
   ;
 
+  py::class_<SlipPlaneDamage, NEMLObject,
+      std::shared_ptr<SlipPlaneDamage>>(m, "SlipPlaneDamage")
+    .def("setup", &SlipPlaneDamage::setup)
+    .def("damage_rate", &SlipPlaneDamage::damage_rate)
+    .def("d_damage_rate_d_shear", &SlipPlaneDamage::d_damage_rate_d_shear)
+    .def("d_damage_rate_d_slip", &SlipPlaneDamage::d_damage_rate_d_slip)
+    .def("d_damage_rate_d_normal", &SlipPlaneDamage::d_damage_rate_d_normal)
+    .def("d_damage_rate_d_damage", &SlipPlaneDamage::d_damage_rate_d_damage)
+  ;
+
+  py::class_<WorkPlaneDamage, SlipPlaneDamage,
+      std::shared_ptr<WorkPlaneDamage>>(m, "WorkPlaneDamage")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+                  {
+                    return create_object_python<WorkPlaneDamage>(args, kwargs,
+                                                                 {});
+                  }))
+  ;
+
+
 } // PYBIND11_MODULE
 
 } // namespace neml

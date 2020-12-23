@@ -281,7 +281,6 @@ DamagedStandardKinematicModel::DamagedStandardKinematicModel(
     std::shared_ptr<CrystalDamageModel> dmodel) :
       StandardKinematicModel(emodel, imodel), dmodel_(dmodel), amodel_(imodel)
 {
-  // Need to get a call to the setup function here somehow
 }
 
 DamagedStandardKinematicModel::~DamagedStandardKinematicModel()
