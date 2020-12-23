@@ -74,7 +74,6 @@ class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
     self.T = 300.0
 
     self.model = crystaldamage.NilDamageModel()
-    self.model.setup(self.L)
 
     self.huse = history.History()
     self.model.populate_history(self.huse)

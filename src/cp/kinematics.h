@@ -137,6 +137,7 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
 
   /// Helper to calculate elastic strains
   virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    Lattice & lattice,
                                     const Orientation & Q,
                                     const History & history,
                                     double T) = 0;
@@ -257,6 +258,7 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
 
   /// Helper to calculate elastic strains
   virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    Lattice & lattice,
                                     const Orientation & Q,
                                     const History & history,
                                     double T);
@@ -354,6 +356,7 @@ class NEML_EXPORT DamagedStandardKinematicModel: public StandardKinematicModel {
 
   /// Helper to calculate elastic strains
   virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    Lattice & lattice,
                                     const Orientation & Q,
                                     const History & history,
                                     double T);

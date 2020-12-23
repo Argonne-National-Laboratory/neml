@@ -103,7 +103,7 @@ void SingleCrystalModel::Fe(double * const stress, double * const hist,
   Orientation Q0 = h.get<Orientation>("rotation0").deepcopy();
  
   Orientation Re = Q * Q0.inverse();
-  Symmetric estrain = kinematics_->elastic_strains(stress, Q, h, T);
+  Symmetric estrain = kinematics_->elastic_strains(stress, *lattice_, Q, h, T);
   RankTwo RR;
   Re.to_matrix(RR.s());
 
@@ -275,7 +275,7 @@ int SingleCrystalModel::elastic_strains(
 
   const History h = gather_history_(h_np1);
   
-  Symmetric estrain = kinematics_->elastic_strains(stress, 
+  Symmetric estrain = kinematics_->elastic_strains(stress, *lattice_,
                                                    h.get<Orientation>("rotation"), 
                                                    h, T_np1);
   std::copy(estrain.data(), estrain.data()+6, e_np1);
@@ -674,8 +674,9 @@ double SingleCrystalModel::calc_work_inc_(
 {
   double dU = calc_energy_inc_(D_np1, D_n, S_np1, S_n);
 
-  Symmetric e_np1 = kinematics_->elastic_strains(S_np1, Q_np1, H_np1, T_np1);
-  Symmetric e_n = kinematics_->elastic_strains(S_n, Q_n, H_n, T_n);
+  Symmetric e_np1 = kinematics_->elastic_strains(S_np1, *lattice_, Q_np1,
+                                                 H_np1, T_np1);
+  Symmetric e_n = kinematics_->elastic_strains(S_n, *lattice_, Q_n, H_n, T_n);
 
   double dE = (S_np1 - S_n).contract(e_np1 - e_n) / 2.0;
 

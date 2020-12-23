@@ -16,7 +16,6 @@ PYBIND11_MODULE(crystaldamage, m) {
     .def_property_readonly("nvars", &CrystalDamageModel::nvars)
     .def_property_readonly("varnames", &CrystalDamageModel::varnames)
     .def("set_varnames", &CrystalDamageModel::set_varnames)
-    .def("setup", &CrystalDamageModel::setup)
     .def("populate_history", &CrystalDamageModel::populate_history)
     .def("init_history", &CrystalDamageModel::init_history)
     .def("projection", &CrystalDamageModel::projection)

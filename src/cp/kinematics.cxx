@@ -263,7 +263,7 @@ Skew StandardKinematicModel::spin(
 }
 
 Symmetric StandardKinematicModel::elastic_strains(
-    const Symmetric & stress, const Orientation & Q,
+    const Symmetric & stress, Lattice & lattice, const Orientation & Q,
     const History & history, double T)
 {
   SymSymR4 S = emodel_->S(T,Q);
@@ -532,14 +532,13 @@ Skew DamagedStandardKinematicModel::spin(
 }
 
 Symmetric DamagedStandardKinematicModel::elastic_strains(
-    const Symmetric & stress, const Orientation & Q,
+    const Symmetric & stress, Lattice & lattice, const Orientation & Q,
     const History & history, double T)
 {
   SymSymR4 S = emodel_->S(T,Q);
-  // Need to update...
-  //SymSymR4 P = dmodel_->projection(stress, history, Q, lattice,
-  //                                 amodel_->slip_rule(), T);
-  return S.dot(stress);
+  SymSymR4 P = dmodel_->projection(stress, history, Q, lattice,
+                                   amodel_->slip_rule(), T);
+  return S.dot(P.inverse().dot(stress));
 }
 
 std::vector<std::string> DamagedStandardKinematicModel::inames_() const

@@ -25,11 +25,6 @@ void CrystalDamageModel::set_varnames(std::vector<std::string> names)
   varnames_ = names;
 }
 
-void CrystalDamageModel::setup(Lattice & lattice)
-{
-  return;
-}
-
 void CrystalDamageModel::populate_history(History & history) const
 {
   for (auto name : varnames_)

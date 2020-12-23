@@ -26,9 +26,6 @@ class NEML_EXPORT CrystalDamageModel: public NEMLObject {
   /// Set the internal variables to new names
   virtual void set_varnames(std::vector<std::string> names);
 
-  /// Handle any setup that involves the lattice
-  virtual void setup(Lattice & lattice);
-
   /// Setup whatever history variables the model requires
   virtual void populate_history(History & history) const;
   /// Initialize history
