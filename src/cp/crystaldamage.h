@@ -172,6 +172,11 @@ class PlanarDamageModel: public CrystalDamageModel {
       const Orientation & Q, Lattice & lattice,
       const SlipRule & slip, double T, const History & fixed) const;
 
+ protected:
+  History damage_history_(const History & total) const;
+  History inelastic_history_(const History & total) const;
+
+
  private:
   std::shared_ptr<SlipPlaneDamage> damage_;
   std::shared_ptr<TransformationFunction> shear_transform_;

@@ -289,7 +289,7 @@ History PlanarDamageModel::damage_rate(
     const Orientation & Q, Lattice & lattice, const SlipRule & slip,
     double T, const History & fixed) const
 {
-  History imodel = history.split(varnames_, false);
+  History imodel = inelastic_history_(history);
 
   History res;
 
@@ -325,7 +325,7 @@ History PlanarDamageModel::d_damage_d_stress(const Symmetric & stress,
                                           const SlipRule & slip, double T,
                                           const History & fixed) const
 {
-  History imodel = history.split(varnames_, false);
+  History imodel = inelastic_history_(history);
 
   History res = history.subset(varnames_).derivative<Symmetric>();
   
@@ -376,8 +376,8 @@ History PlanarDamageModel::d_damage_d_history(const Symmetric & stress,
                                            double T,
                                            const History & fixed) const
 {
-  History imodel = history.split(varnames_, false);
-  History dvars = history.subset(varnames_);
+  History imodel = inelastic_history_(history);
+  History dvars = damage_history_(history);
   History res = dvars.history_derivative(history);
   res.zero();
 
@@ -422,6 +422,20 @@ History PlanarDamageModel::d_damage_d_history(const Symmetric & stress,
   return res;
 }
 
+History PlanarDamageModel::damage_history_(const History & total) const
+{
+  return total.subset(varnames_);
+}
+
+History PlanarDamageModel::inelastic_history_(const History & total) const
+{
+  auto names = total.items();
+  for (auto name : varnames_) {
+    names.erase(std::remove(names.begin(), names.end(), name), names.end());
+  }
+
+  return total.subset(names);
+}
 
 WorkPlaneDamage::WorkPlaneDamage() :
     SlipPlaneDamage()

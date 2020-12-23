@@ -23,8 +23,8 @@ class CommonCrystalDamageModel():
   def test_projection_history(self):
     dfn = lambda h: self.model.projection(self.S, h, self.Q,
         self.L, self.sliprule, self.T)
-    res = diff_symsym_history(dfn, self.huse)
-    act = np.array(self.model.d_projection_d_history(self.S, self.huse, self.Q,
+    res = diff_symsym_history(dfn, self.hdmg)
+    act = np.array(self.model.d_projection_d_history(self.S, self.hdmg, self.Q,
         self.L, self.sliprule, self.T))
     self.assertTrue(np.allclose(res.flatten(), act))
 
@@ -37,11 +37,70 @@ class CommonCrystalDamageModel():
     self.assertTrue(np.allclose(dd.flatten(), d))
 
   def test_history_history(self):
+    nbase = len(np.array(self.hbase))
+    ndmg = len(np.array(self.hdmg))
+    ntotal = nbase + ndmg
+
     d = np.array(self.model.d_damage_d_history(self.S, self.huse, self.Q,
-      self.L, self.sliprule, self.T, self.fixed))
+      self.L, self.sliprule, self.T, self.fixed)).reshape(ndmg,ntotal).flatten()
     nd = diff_history_history(lambda h: self.model.damage_rate(
       self.S, h, self.Q, self.L, self.sliprule, self.T, self.fixed), self.huse)
     self.assertTrue(np.allclose(d, nd.flatten()))
+
+class TestPlanarDamageModel(unittest.TestCase, CommonCrystalDamageModel):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+
+    self.nslip = self.L.ntotal
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.static = 20.0
+    self.s0 = [self.static]*self.nslip
+
+    self.k = 1000.0
+    self.sat = 40.0
+    self.m = 1.5
+
+    self.hmodel = slipharden.VocePerSystemHardening(
+        self.s0, [self.k]*self.nslip, [self.sat]*self.nslip,
+        [self.m]*self.nslip)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.hmodel, self.g0, self.n)
+
+    self.T = 300.0
+
+    self.c = 10.0
+    self.beta  = 2.0
+
+    self.dmodel = crystaldamage.WorkPlaneDamage()
+    self.nfunc  = crystaldamage.SigmoidTransformation(self.c, self.beta)
+    self.sfunc  = crystaldamage.SigmoidTransformation(self.c, self.beta)
+
+    self.model = crystaldamage.PlanarDamageModel(self.dmodel, self.sfunc,
+        self.nfunc, self.L)
+
+    self.huse = history.History()
+    self.hmodel.populate_history(self.huse)
+    self.model.populate_history(self.huse)
+
+    for i in range(12):
+      self.huse.set_scalar("strength"+str(i), 25.0)
+    
+    for j in range(4):
+      self.huse.set_scalar("slip_damage_"+str(j), self.c*0.4) 
+
+    self.hbase = self.huse.subset(["strength"+str(i) for i in range(12)])
+    self.hdmg  = self.huse.subset(["slip_damage_"+str(i) for i in range(4)])
+
+    self.fixed = history.History()
 
 class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
   def setUp(self):
@@ -76,8 +135,16 @@ class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
     self.model = crystaldamage.NilDamageModel()
 
     self.huse = history.History()
+    self.hmodel.populate_history(self.huse)
     self.model.populate_history(self.huse)
+
+    for i in range(12):
+      self.huse.set_scalar("strength"+str(i), 25.0)
+
     self.huse.set_scalar("whatever", 0.5)
+
+    self.hbase = self.huse.subset(["strength"+str(i) for i in range(12)])
+    self.hdmg  = self.huse.subset(["whatever"])
 
     self.fixed = history.History()
 
