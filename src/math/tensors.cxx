@@ -2107,6 +2107,40 @@ SymSymR4 SymSymSymR6::dot_k(const Symmetric & other) const
   return res;
 }
 
+SymSymSymR6 SymSymSymR6::middle_dot_after(const SymSymR4 & other) const
+{
+  SymSymSymR6 res;
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        for (size_t l = 0; l < 6; l++) {
+          res(i,j,k) += (*this)(i,j,l) * other(j,k);
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+SymSymSymR6 SymSymSymR6::middle_dot_before(const SymSymR4 & other) const
+{
+  SymSymSymR6 res;
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        for (size_t l = 0; l < 6; l++) {
+          res(i,j,k) += other(i,j) * (*this)(j,k,l);
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
 // Last index outer product
 SymSymSymR6 outer_product_k(const SymSymR4 & A, const Symmetric & B)
 {

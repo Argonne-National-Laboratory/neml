@@ -93,7 +93,8 @@ History NilDamageModel::d_projection_d_history(const Symmetric & stress,
 History NilDamageModel::damage_rate(const Symmetric & stress,
                                     const History & history, 
                                     const Orientation & Q, Lattice & lattice, 
-                                    const SlipRule & slip, double T) const
+                                    const SlipRule & slip, double T,
+                                    const History & fixed) const
 {
   History res;
   res.add<double>("whatever");
@@ -106,7 +107,8 @@ History NilDamageModel::d_damage_d_stress(const Symmetric & stress,
                                           const History & history, 
                                           const Orientation & Q,
                                           Lattice & lattice, 
-                                          const SlipRule & slip, double T) const
+                                          const SlipRule & slip, double T,
+                                          const History & fixed) const
 {
   History res;
   res.add<Symmetric>("whatever");
@@ -120,13 +122,228 @@ History NilDamageModel::d_damage_d_history(const Symmetric & stress,
                                            const Orientation & Q,
                                            Lattice & lattice,
                                            const SlipRule & slip, 
-                                           double T) const
+                                           double T, 
+                                           const History & fixed) const
 {
-  History res;
-  res.add<double>("whatever_whatever");
+  History dvars = history.subset(varnames_);
+  History res = dvars.history_derivative(history);
+  
   res.zero();
+
   return res;
 }
+
+PlanarDamageModel::PlanarDamageModel(
+    std::shared_ptr<SlipPlaneDamage> damage,
+    std::shared_ptr<TransformationFunction> shear_transform,
+    std::shared_ptr<TransformationFunction> normal_transform,
+    std::shared_ptr<Lattice> lattice) :
+      CrystalDamageModel({}), damage_(damage), shear_transform_(shear_transform),
+      normal_transform_(normal_transform), lattice_(lattice)
+{
+  std::vector<std::string> varnames;
+  for (size_t i = 0; i < lattice_->nplanes(); i++)
+    varnames.push_back("slip_damage_"+std::to_string(i));
+  set_varnames(varnames);
+}
+
+std::string PlanarDamageModel::type()
+{
+  return "PlanarDamageModel";
+}
+
+std::unique_ptr<NEMLObject> PlanarDamageModel::initialize(ParameterSet & params)
+{
+  return neml::make_unique<PlanarDamageModel>(
+      params.get_object_parameter<SlipPlaneDamage>("damage"),
+      params.get_object_parameter<TransformationFunction>("shear_transform"),
+      params.get_object_parameter<TransformationFunction>("normal_transform"),
+      params.get_object_parameter<Lattice>("lattice")
+      );
+}
+
+ParameterSet PlanarDamageModel::parameters()
+{
+  ParameterSet pset(PlanarDamageModel::type());
+
+  pset.add_parameter<NEMLObject>("damage");
+  pset.add_parameter<NEMLObject>("shear_transform");
+  pset.add_parameter<NEMLObject>("normal_transform");
+  pset.add_parameter<NEMLObject>("lattice");
+
+  return pset;
+}
+
+void PlanarDamageModel::init_history(History & history) const
+{
+  for (auto vn : varnames_)
+    history.get<double>(vn) = damage_->setup();
+}
+
+SymSymR4 PlanarDamageModel::projection(const Symmetric & stress,
+                                    const History & damage, 
+                                    const Orientation & Q, Lattice & lattice,
+                                    const SlipRule & slip, double T)
+{
+  SymSymR4 P = SymSymR4::id();
+  for (size_t i = 0; i < lattice.nplanes(); i++) {
+    Vector n = Q.apply(lattice.unique_planes()[i]); // ...
+    
+    SymSymR4 P_s = shear_projection_ss(n);
+    SymSymR4 P_n = normal_projection_ss(n);
+    
+    double ns = stress.dot(n).dot(n);
+    double d = damage.get<double>(varnames_[i]);
+    double ds = shear_transform_->map(d, ns);
+    double dn = normal_transform_->map(d, ns);
+
+    P.dot(SymSymR4::id() - ds * P_s - dn * P_n);
+  }
+  return P;
+}
+
+SymSymSymR6 PlanarDamageModel::d_projection_d_stress(const Symmetric & stress,
+                                                  const History & damage,
+                                                  const Orientation & Q,
+                                                  Lattice & lattice, 
+                                                  const SlipRule & slip,
+                                                  double T)
+{
+  SymSymSymR6 Pd;
+  
+  for (size_t i = 0; i < lattice.nplanes(); i++) {
+    SymSymR4 before = SymSymR4::id();
+    SymSymSymR6 middle;
+    SymSymR4 after = SymSymR4::id();
+    for (size_t j = 0; j < lattice.nplanes(); j++) {
+      Vector n = Q.apply(lattice.unique_planes()[j]); // ...
+      
+      SymSymR4 P_s = shear_projection_ss(n);
+      SymSymR4 P_n = normal_projection_ss(n);
+      
+      double ns = stress.dot(n).dot(n);
+      double d = damage.get<double>(varnames_[j]);
+      double ds = shear_transform_->map(d, ns);
+      double dn = normal_transform_->map(d, ns);
+      
+      if (i < j) {
+        before.dot(SymSymR4::id() - ds * P_s - dn * P_n);
+      }
+      else if (i == j) {
+        middle = -outer_product_k(P_s, 
+                                  shear_transform_->d_map_d_normal(d, ns) *
+                                  Symmetric(n.outer(n)))
+            - outer_product_k(P_n,
+                              normal_transform_->d_map_d_normal(d, ns) *
+                              Symmetric(n.outer(n)));
+      }
+      else {
+        after.dot(SymSymR4::id() - ds * P_s - dn * P_n);
+      }
+    }
+    Pd += middle.middle_dot_after(after).middle_dot_before(before);
+  }
+
+  return Pd;
+}
+
+History PlanarDamageModel::d_projection_d_history(const Symmetric & stress,
+                                               const History & damage, 
+                                               const Orientation & Q,
+                                               Lattice & lattice, 
+                                               const SlipRule & slip, double T)
+{
+  History res;
+  
+  for (size_t i = 0; i < lattice.nplanes(); i++) {
+    res.add<SymSymR4>(varnames_[i]);
+    res.get<SymSymR4>(varnames_[i]) = SymSymR4::id();
+    for (size_t j = 0; j < lattice.nplanes(); j++) {
+      Vector n = Q.apply(lattice.unique_planes()[j]); // ...
+      
+      SymSymR4 P_s = shear_projection_ss(n);
+      SymSymR4 P_n = normal_projection_ss(n);
+      
+      double ns = stress.dot(n).dot(n);
+      double d = damage.get<double>(varnames_[j]);
+      double ds = shear_transform_->map(d, ns);
+      double dn = normal_transform_->map(d, ns);
+      
+      if (i != j) {
+        res.get<SymSymR4>(varnames_[i]).dot(SymSymR4::id() - 
+                                            ds * P_s - dn * P_n);
+      }
+      else {
+        res.get<SymSymR4>(varnames_[i]).dot(
+            -P_s * shear_transform_->d_map_d_damage(d, ns)
+            - P_n * normal_transform_->d_map_d_normal(d, ns));
+      }
+    }
+  }
+
+  return res;
+}
+
+History PlanarDamageModel::damage_rate(
+    const Symmetric & stress, const History & history, 
+    const Orientation & Q, Lattice & lattice, const SlipRule & slip,
+    double T, const History & fixed) const
+{
+  History res;
+
+  for (size_t i = 0; i < lattice.nplanes(); i++) {
+    res.add<double>(varnames_[i]);
+
+    Vector n = Q.apply(lattice.unique_planes()[i]);
+    auto systems = lattice.plane_systems(i);
+    std::vector<double> taus(systems.size());
+    std::vector<double> gammas(systems.size());
+
+    for (size_t k = 0; k < systems.size(); k++) {
+      size_t g = systems[k].first;
+      size_t ii = systems[k].second;
+
+      taus[k] = lattice.shear(g, ii, Q, stress);
+      gammas[k] = slip.slip(g, ii, stress, Q, history, lattice, T, fixed);
+    }
+    
+    double ns = stress.dot(n).dot(n);
+    double d = history.get<double>(varnames_[i]);
+
+    res.get<double>(varnames_[i]) = damage_->damage_rate(taus, gammas, ns, d);
+  }
+  return res;
+}
+
+/// Derivative of each damage with respect to stress
+History PlanarDamageModel::d_damage_d_stress(const Symmetric & stress,
+                                          const History & history, 
+                                          const Orientation & Q,
+                                          Lattice & lattice, 
+                                          const SlipRule & slip, double T,
+                                          const History & fixed) const
+{
+  History res = history.subset(varnames_).derivative<Symmetric>();
+
+
+  return res;
+}
+
+/// Derivative of damage with respect to history
+History PlanarDamageModel::d_damage_d_history(const Symmetric & stress,
+                                           const History & history,
+                                           const Orientation & Q,
+                                           Lattice & lattice,
+                                           const SlipRule & slip, 
+                                           double T,
+                                           const History & fixed) const
+{
+  History dvars = history.subset(varnames_);
+  History res = dvars.history_derivative(history);
+
+  return res;
+}
+
 
 WorkPlaneDamage::WorkPlaneDamage() :
     SlipPlaneDamage()

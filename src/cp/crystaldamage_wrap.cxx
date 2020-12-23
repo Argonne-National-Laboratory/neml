@@ -35,6 +35,16 @@ PYBIND11_MODULE(crystaldamage, m) {
                   }))
   ;
 
+  py::class_<PlanarDamageModel, CrystalDamageModel, 
+      std::shared_ptr<PlanarDamageModel>>(m, "PlanarDamageModel")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+                  {
+                    return create_object_python<PlanarDamageModel>(
+                        args, kwargs, {"damage", "shear_transform",
+                        "normal_transform", "lattice"});
+                  }))
+  ;
+
   py::class_<SlipPlaneDamage, NEMLObject,
       std::shared_ptr<SlipPlaneDamage>>(m, "SlipPlaneDamage")
     .def("setup", &SlipPlaneDamage::setup)

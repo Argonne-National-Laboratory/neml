@@ -437,8 +437,8 @@ History DamagedStandardKinematicModel::history_rate(
   History dhist = dhist_(history);
 
   History base = imodel_->history_rate(stress, Q, ihist, lattice, T, fixed);
-  base.add_union(dmodel_->damage_rate(stress, dhist, Q, lattice, 
-                                      amodel_->slip_rule(), T));
+  base.add_union(dmodel_->damage_rate(stress, history, Q, lattice, 
+                                      amodel_->slip_rule(), T, fixed));
   return base;
 }
 
@@ -452,8 +452,8 @@ History DamagedStandardKinematicModel::d_history_rate_d_stress(
   History dhist = dhist_(history);
 
   History base = imodel_->d_history_rate_d_stress(stress, Q, ihist, lattice, T, fixed);
-  base.add_union(dmodel_->d_damage_d_stress(stress, dhist, Q, lattice,
-                                            amodel_->slip_rule(), T));
+  base.add_union(dmodel_->d_damage_d_stress(stress, history, Q, lattice,
+                                            amodel_->slip_rule(), T, fixed));
   return base;
 }
 
@@ -470,18 +470,16 @@ History DamagedStandardKinematicModel::d_history_rate_d_history(
   std::vector<std::string> tnames(ihist.items());
   tnames.insert(tnames.end(), dhist.items().begin(), dhist.items().end());
 
-  // This assumes the variables are disjoint (uhh, this may be a problem)
+  // This assumes the *inelastic* variables are disjoint from the *damage*
+  // variables but NOT the other way around
   History base =  imodel_->d_history_rate_d_history(stress, Q, ihist, lattice, T, fixed);
-  base.add_union(dmodel_->d_damage_d_history(stress, dhist, Q, lattice,
-                                            amodel_->slip_rule(), T));
+  base.add_union(dmodel_->d_damage_d_history(stress, history, Q, lattice,
+                                            amodel_->slip_rule(), T, fixed));
   
   // Add zeros for the cross terms
   History id = ihist.history_derivative(dhist);
   id.zero();
   base.add_union(id);
-  History di = dhist.history_derivative(ihist);
-  di.zero();
-  base.add_union(di);
 
   // Out of order now...
   std::vector<std::string> names;

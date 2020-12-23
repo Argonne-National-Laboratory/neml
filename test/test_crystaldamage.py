@@ -31,16 +31,16 @@ class CommonCrystalDamageModel():
   def test_history_stress(self):
     dd = diff_history_symmetric(
         lambda s: self.model.damage_rate(s, self.huse, self.Q,
-        self.L, self.sliprule, self.T), self.S)
+        self.L, self.sliprule, self.T, self.fixed), self.S)
     d = np.array(self.model.d_damage_d_stress(self.S, self.huse, self.Q,
-      self.L, self.sliprule, self.T))
+      self.L, self.sliprule, self.T, self.fixed))
     self.assertTrue(np.allclose(dd.flatten(), d))
 
   def test_history_history(self):
     d = np.array(self.model.d_damage_d_history(self.S, self.huse, self.Q,
-      self.L, self.sliprule, self.T))
+      self.L, self.sliprule, self.T, self.fixed))
     nd = diff_history_history(lambda h: self.model.damage_rate(
-      self.S, h, self.Q, self.L, self.sliprule, self.T), self.huse)
+      self.S, h, self.Q, self.L, self.sliprule, self.T, self.fixed), self.huse)
     self.assertTrue(np.allclose(d, nd.flatten()))
 
 class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
@@ -79,6 +79,8 @@ class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
     self.model.populate_history(self.huse)
     self.huse.set_scalar("whatever", 0.5)
 
+    self.fixed = history.History()
+
   def test_hist(self):
     test = history.History()
     self.model.populate_history(test)
@@ -94,7 +96,7 @@ class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
 
   def test_damage_rate(self):
     rate = self.model.damage_rate(self.S, self.huse, self.Q, self.L,
-        self.sliprule, self.T)
+        self.sliprule, self.T, self.fixed)
     self.assertEqual(rate.size, 1)
     self.assertEqual(rate.items, ["whatever"])
     self.assertAlmostEqual(rate.get_scalar("whatever"), 0)

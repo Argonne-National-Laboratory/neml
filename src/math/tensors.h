@@ -532,6 +532,10 @@ NEML_EXPORT SymSymR4 SymSkewR4Sym_SkewSymR4SymR4(const SkewSymR4 & S, const Symm
 /// Specialty operator for Skew part C_ijkb e_ka - C_ijal e_bl
 NEML_EXPORT SymSkewR4 SpecialSymSymR4Sym(const SymSymR4 & S, const Symmetric & D);
 
+/// Hopefully the only outer product I'll need...
+NEML_EXPORT SymSymSymR6 outer_product_k(const SymSymR4 & A, const Symmetric & B);
+
+/// Rank six where all adjacent indices have minor symmetry
 class NEML_EXPORT SymSymSymR6: public Tensor {
  public:
   SymSymSymR6();
@@ -552,6 +556,9 @@ class NEML_EXPORT SymSymSymR6: public Tensor {
   SymSymR4 dot_i(const Symmetric & other) const;
   SymSymR4 dot_j(const Symmetric & other) const;
   SymSymR4 dot_k(const Symmetric & other) const;
+
+  SymSymSymR6 middle_dot_after(const SymSymR4 & other) const;
+  SymSymSymR6 middle_dot_before(const SymSymR4 & other) const;
 };
 
 // Binary operators with scalars
@@ -562,9 +569,6 @@ NEML_EXPORT SymSymSymR6 operator/(const SymSymSymR6 & v, double s);
 // Various forms of addition
 NEML_EXPORT SymSymSymR6 operator+(const SymSymSymR6 & a, const SymSymSymR6 & b);
 NEML_EXPORT SymSymSymR6 operator-(const SymSymSymR6 & a, const SymSymSymR6 & b);
-
-/// Hopefully the only outer product I'll need...
-NEML_EXPORT SymSymSymR6 outer_product_k(const SymSymR4 & A, const Symmetric & B);
 
 } // namespace neml
 

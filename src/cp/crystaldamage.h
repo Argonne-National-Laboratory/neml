@@ -12,6 +12,10 @@
 
 namespace neml {
 
+// Forward declarations
+class SlipPlaneDamage;
+class TransformationFunction;
+
 /// Abstract base class for slip plane damage models
 class NEML_EXPORT CrystalDamageModel: public NEMLObject {
  public:
@@ -51,17 +55,17 @@ class NEML_EXPORT CrystalDamageModel: public NEMLObject {
   virtual History damage_rate(
       const Symmetric & stress, const History & history, 
       const Orientation & Q, Lattice & lattice, 
-      const SlipRule & slip, double T) const = 0;
+      const SlipRule & slip, double T, const History & fixed) const = 0;
   /// Derivative of each damage with respect to stress
   virtual History d_damage_d_stress(
       const Symmetric & stress, const History & history, 
       const Orientation & Q, Lattice & lattice,
-      const SlipRule & slip, double T) const = 0;
+      const SlipRule & slip, double T, const History & fixed) const = 0;
   /// Derivative of damage with respect to history
   virtual History d_damage_d_history(
       const Symmetric & stress, const History & history,
       const Orientation & Q, Lattice & lattice,
-      const SlipRule & slip, double T) const = 0;
+      const SlipRule & slip, double T, const History & fixed) const = 0;
 
  protected:
   std::vector<std::string> varnames_;
@@ -102,20 +106,80 @@ class NilDamageModel: public CrystalDamageModel {
   virtual History damage_rate(
       const Symmetric & stress, const History & history, 
       const Orientation & Q, Lattice & lattice, 
-      const SlipRule & slip, double T) const;
+      const SlipRule & slip, double T, const History & fixed) const;
   /// Derivative of each damage with respect to stress
   virtual History d_damage_d_stress(
       const Symmetric & stress, const History & history, 
       const Orientation & Q, Lattice & lattice,
-      const SlipRule & slip, double T) const;
+      const SlipRule & slip, double T, const History & fixed) const;
   /// Derivative of damage with respect to history
   virtual History d_damage_d_history(
       const Symmetric & stress, const History & history,
       const Orientation & Q, Lattice & lattice,
-      const SlipRule & slip, double T) const;
+      const SlipRule & slip, double T, const History & fixed) const;
 };
 
 static Register<NilDamageModel> regNilDamageModel;
+
+/// Project damage on each plane proportional to some damage measure on the
+/// plane
+class PlanarDamageModel: public CrystalDamageModel {
+ public:
+  PlanarDamageModel(std::shared_ptr<SlipPlaneDamage> damage,
+                    std::shared_ptr<TransformationFunction> shear_transform,
+                    std::shared_ptr<TransformationFunction> normal_transform,
+                    std::shared_ptr<Lattice> lattice);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Initialize history
+  virtual void init_history(History & history) const;
+
+  /// Returns the current projection operator
+  virtual SymSymR4 projection(
+      const Symmetric & stress, const History & damage, 
+      const Orientation & Q, Lattice & lattice,
+      const SlipRule & slip, double T);
+  /// Return the derivative of the projection operator wrt to the stress
+  virtual SymSymSymR6 d_projection_d_stress(
+      const Symmetric & stress, const History & damage,
+      const Orientation & Q, Lattice & lattice,
+      const SlipRule & slip, double T);
+  /// Return the derivative of the projection operator wrt to the damage vars
+  virtual History d_projection_d_history(
+      const Symmetric & stress, const History & damage,
+      const Orientation & Q, Lattice & lattice,
+      const SlipRule & slip, double T);
+
+  /// Damage along each slip plane
+  virtual History damage_rate(
+      const Symmetric & stress, const History & history, 
+      const Orientation & Q, Lattice & lattice, 
+      const SlipRule & slip, double T, const History & fixed) const;
+  /// Derivative of each damage with respect to stress
+  virtual History d_damage_d_stress(
+      const Symmetric & stress, const History & history, 
+      const Orientation & Q, Lattice & lattice,
+      const SlipRule & slip, double T, const History & fixed) const;
+  /// Derivative of damage with respect to history
+  virtual History d_damage_d_history(
+      const Symmetric & stress, const History & history,
+      const Orientation & Q, Lattice & lattice,
+      const SlipRule & slip, double T, const History & fixed) const;
+
+ private:
+  std::shared_ptr<SlipPlaneDamage> damage_;
+  std::shared_ptr<TransformationFunction> shear_transform_;
+  std::shared_ptr<TransformationFunction> normal_transform_;
+  std::shared_ptr<Lattice> lattice_;
+};
+
+static Register<PlanarDamageModel> regPlanarDamageModel;
 
 /// Slip plane damage functions
 class SlipPlaneDamage : public NEMLObject {

@@ -123,6 +123,8 @@ class NEML_EXPORT Lattice: public NEMLObject {
   size_t nplanes() const;
   /// Given a slip system return the index into the unique slip planes
   size_t plane_index(size_t g, size_t i) const;
+  /// Given the unique slip plane index return the vector of (g,i) tuples
+  std::vector<std::pair<size_t,size_t>> plane_systems(size_t i) const;
 
  private:
   void make_reciprocal_lattice_();

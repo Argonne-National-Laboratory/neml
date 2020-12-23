@@ -422,6 +422,17 @@ size_t Lattice::plane_index(size_t g, size_t i) const
   return normal_map_[g][i];
 }
 
+std::vector<std::pair<size_t,size_t>> Lattice::plane_systems(size_t i) const
+{
+  std::vector<std::pair<size_t,size_t>> res;
+  for (size_t g = 0; g < ngroup(); g++) {
+    for (size_t j = 0; j < nslip(g); j++) {
+      if (plane_index(g,j) == i) res.push_back(std::make_pair(g,j));
+    }
+  }
+  return res;
+}
+
 void Lattice::make_reciprocal_lattice_()
 {
   b1_ = a2_.cross(a3_) / a1_.dot(a2_.cross(a3_));
