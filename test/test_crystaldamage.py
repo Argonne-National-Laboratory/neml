@@ -150,3 +150,38 @@ class TestWorkSlipDamage(CommonSlipDamage, unittest.TestCase):
     should = np.sum(np.array(self.shear) * np.array(self.sliprate))
 
     self.assertAlmostEqual(drate, should)
+
+class CommonTransferFunctions:
+  def test_map_damage(self):
+    for v in self.vals:
+      exact = self.function.d_map_d_damage(v, self.n)
+      num = differentiate(lambda x: self.function.map(x, self.n), v)
+      self.assertAlmostEqual(exact, num)
+
+  def test_map_normal(self):
+    for v in self.vals:
+      exact = self.function.d_map_d_normal(v, self.n)
+      num = differentiate(lambda x: self.function.map(v, x), self.n)
+      self.assertAlmostEqual(exact, num)
+
+class TestSigmoidTransfer(CommonTransferFunctions, unittest.TestCase):
+  def setUp(self):
+    self.c = 70.0
+    self.beta = 2.1
+    
+    self.vals = np.array([1.0e-4,0.5*self.c,self.c,1.2*self.c])
+
+    self.function = crystaldamage.SigmoidTransformation(self.c, self.beta)
+
+    self.n = 100.0
+
+  def test_value(self):
+    x = np.array([self.function.map(v, self.n) for v in self.vals])
+    y = np.piecewise(self.vals,
+        [self.vals < self.c, self.vals >= self.c],
+        [
+          lambda x: 1.0/(1.0+(x/(self.c-x))**(-self.beta)),
+          lambda x: 0.0*x+1.0
+        ])
+
+    self.assertTrue(np.allclose(x, y))

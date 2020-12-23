@@ -193,5 +193,36 @@ class WorkPlaneDamage : public SlipPlaneDamage
 
 static Register<WorkPlaneDamage> regWorkPlaneDamage;
 
+/// Transformation functions: map the damage variable + ancillary info into 
+/// the range [0,1]
+class TransformationFunction: public NEMLObject {
+ public:
+  virtual double map(double damage, double normal_stress) = 0;
+  virtual double d_map_d_damage(double damage, double normal_stress) = 0;
+  virtual double d_map_d_normal(double damage, double normal_stress) = 0;
+};
+
+/// Sigmoid function.  x=0 -> y=0, x=c -> y=1, beta controls smoothing
+class SigmoidTransformation: public TransformationFunction {
+ public:
+  SigmoidTransformation(double c, double beta);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  virtual double map(double damage, double normal_stress);
+  virtual double d_map_d_damage(double damage, double normal_stress);
+  virtual double d_map_d_normal(double damage, double normal_stress);
+
+ private:
+  double c_;
+  double beta_;
+};
+
+static Register<SigmoidTransformation> regSigmoidTransformation;
 
 } // namespace neml

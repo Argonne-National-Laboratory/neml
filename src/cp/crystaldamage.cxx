@@ -203,4 +203,53 @@ double WorkPlaneDamage::d_damage_rate_d_damage(
   return 0;
 }
 
+SigmoidTransformation::SigmoidTransformation(double c, double beta) :
+    c_(c), beta_(beta)
+{
+
+}
+
+std::string SigmoidTransformation::type()
+{
+  return "SigmoidTransformation";
+}
+
+std::unique_ptr<NEMLObject> SigmoidTransformation::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<SigmoidTransformation>(
+      params.get_parameter<double>("c"),
+      params.get_parameter<double>("beta"));
+}
+
+ParameterSet SigmoidTransformation::parameters()
+{
+  ParameterSet pset(SigmoidTransformation::type());
+  
+  pset.add_parameter<double>("c");
+  pset.add_parameter<double>("beta");
+
+  return pset;
+}
+
+double SigmoidTransformation::map(double damage, double normal_stress)
+{
+  if (damage < c_)
+    return 1.0/(1.0 + std::pow(damage / (c_ - damage), -beta_));
+  return 1.0;
+}
+
+double SigmoidTransformation::d_map_d_damage(double damage, double normal_stress)
+{
+  if (damage < c_)
+    return beta_*c_*std::pow(damage,beta_-1)*std::pow(1.0/(c_-damage),beta_+1)
+        / pow(std::pow(damage/(c_-damage),beta_)+1.0,2.0);
+  return 0;
+}
+
+double SigmoidTransformation::d_map_d_normal(double damage, double normal_stress)
+{
+  return 0;
+}
+
 } // namespace neml

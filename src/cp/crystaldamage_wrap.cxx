@@ -54,6 +54,22 @@ PYBIND11_MODULE(crystaldamage, m) {
                   }))
   ;
 
+  py::class_<TransformationFunction, NEMLObject,
+      std::shared_ptr<TransformationFunction>>(m, "TransformationFunction")
+    .def("map", &TransformationFunction::map)
+    .def("d_map_d_damage", &TransformationFunction::d_map_d_damage)
+    .def("d_map_d_normal", &TransformationFunction::d_map_d_normal)
+  ;
+
+  py::class_<SigmoidTransformation, TransformationFunction,
+      std::shared_ptr<SigmoidTransformation>>(m, "SigmoidTransformation")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+                  {
+                    return create_object_python<SigmoidTransformation>(
+                        args, kwargs, {"c", "beta"});
+                  }))
+  ;
+
 
 } // PYBIND11_MODULE
 
