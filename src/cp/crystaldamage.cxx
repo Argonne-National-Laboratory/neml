@@ -289,6 +289,8 @@ History PlanarDamageModel::damage_rate(
     const Orientation & Q, Lattice & lattice, const SlipRule & slip,
     double T, const History & fixed) const
 {
+  History imodel = history.split(varnames_, false);
+
   History res;
 
   for (size_t i = 0; i < lattice.nplanes(); i++) {
@@ -304,7 +306,7 @@ History PlanarDamageModel::damage_rate(
       size_t ii = systems[k].second;
 
       taus[k] = lattice.shear(g, ii, Q, stress);
-      gammas[k] = slip.slip(g, ii, stress, Q, history, lattice, T, fixed);
+      gammas[k] = slip.slip(g, ii, stress, Q, imodel, lattice, T, fixed);
     }
     
     double ns = stress.dot(n).dot(n);
@@ -323,8 +325,44 @@ History PlanarDamageModel::d_damage_d_stress(const Symmetric & stress,
                                           const SlipRule & slip, double T,
                                           const History & fixed) const
 {
-  History res = history.subset(varnames_).derivative<Symmetric>();
+  History imodel = history.split(varnames_, false);
 
+  History res = history.subset(varnames_).derivative<Symmetric>();
+  
+  for (size_t i = 0; i < lattice.nplanes(); i++) {
+    Vector n = Q.apply(lattice.unique_planes()[i]);
+    auto systems = lattice.plane_systems(i);
+    std::vector<double> taus(systems.size());
+    std::vector<double> gammas(systems.size());
+
+    for (size_t k = 0; k < systems.size(); k++) {
+      size_t g = systems[k].first;
+      size_t ii = systems[k].second;
+
+      taus[k] = lattice.shear(g, ii, Q, stress);
+      gammas[k] = slip.slip(g, ii, stress, Q, imodel, lattice, T, fixed);
+    }
+    
+    double ns = stress.dot(n).dot(n);
+    double d = history.get<double>(varnames_[i]);
+
+    Symmetric ndir = Symmetric(n.outer(n));
+
+    res.get<Symmetric>(varnames_[i]) = 
+        damage_->d_damage_rate_d_normal(taus, gammas, ns, d) * ndir;
+    
+    auto dshear = damage_->d_damage_rate_d_shear(taus, gammas, ns, d);
+    auto dslip  = damage_->d_damage_rate_d_slip(taus, gammas, ns, d);
+
+    for (size_t k = 0; k < systems.size(); k++) {
+      size_t g = systems[k].first;
+      size_t ii = systems[k].second;
+      res.get<Symmetric>(varnames_[i]) += 
+          dshear[k] * lattice.d_shear(g, ii, Q, stress)
+        + dslip[k] * slip.d_slip_d_s(g, ii, stress, Q, imodel, lattice,
+                                     T, fixed);
+    }
+  }
 
   return res;
 }
@@ -338,8 +376,48 @@ History PlanarDamageModel::d_damage_d_history(const Symmetric & stress,
                                            double T,
                                            const History & fixed) const
 {
+  History imodel = history.split(varnames_, false);
   History dvars = history.subset(varnames_);
   History res = dvars.history_derivative(history);
+  res.zero();
+
+  for (size_t i = 0; i < lattice.nplanes(); i++) {
+    Vector n = Q.apply(lattice.unique_planes()[i]);
+    auto systems = lattice.plane_systems(i);
+    std::vector<double> taus(systems.size());
+    std::vector<double> gammas(systems.size());
+
+    for (size_t k = 0; k < systems.size(); k++) {
+      size_t g = systems[k].first;
+      size_t ii = systems[k].second;
+
+      taus[k] = lattice.shear(g, ii, Q, stress);
+      gammas[k] = slip.slip(g, ii, stress, Q, imodel, lattice, T, fixed);
+    }
+    
+    double ns = stress.dot(n).dot(n);
+    double d = history.get<double>(varnames_[i]);
+
+    Symmetric ndir = Symmetric(n.outer(n));
+
+    // The damage model terms arise only from the object itself
+    res.get<double>(varnames_[i]+"_"+varnames_[i]) = 
+        damage_->d_damage_rate_d_damage(taus, gammas, ns, d);
+    
+    // The cross terms come through the gamma_dot dependence
+    auto dg = damage_->d_damage_rate_d_slip(taus, gammas, ns, d);
+
+    for (size_t k = 0; k < systems.size(); k++) {
+      size_t g = systems[k].first;
+      size_t ii = systems[k].second;
+      History sd = slip.d_slip_d_h(g, ii, stress, Q, imodel, lattice, 
+                                   T, fixed);
+      for (auto other : sd.items()) {
+        res.get<double>(varnames_[i]+"_"+other) += dg[k] *
+            sd.get<double>(other);
+      }
+    }
+  }
 
   return res;
 }
