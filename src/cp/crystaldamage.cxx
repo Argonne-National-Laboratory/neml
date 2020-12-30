@@ -274,9 +274,10 @@ History PlanarDamageModel::d_projection_d_history(const Symmetric & stress,
                                             ds * P_s - dn * P_n);
       }
       else {
+        std::cout << shear_transform_->d_map_d_damage(d,ns) << std::endl;
         res.get<SymSymR4>(varnames_[i]).dot(
             -P_s * shear_transform_->d_map_d_damage(d, ns)
-            - P_n * normal_transform_->d_map_d_normal(d, ns));
+            - P_n * normal_transform_->d_map_d_damage(d, ns));
       }
     }
   }
