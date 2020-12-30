@@ -24,4 +24,4 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PIPY_PASSWORD }}
       run: |
         python setup.py sdist
-        twine upload --verbose dist/*
+        twine upload dist/*
