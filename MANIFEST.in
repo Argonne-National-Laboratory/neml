@@ -12,3 +12,4 @@ prune lib
 prune profiling
 prune util
 prune verification
+exclude CMakeCache.txt
