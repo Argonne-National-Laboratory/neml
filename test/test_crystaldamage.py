@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from neml import history, interpolate
-from neml.math import tensors, rotations, matrix
+from neml.math import tensors, rotations, matrix, projections
 from neml.cp import crystallography, sliprules, crystaldamage, slipharden
 
 from common import differentiate
@@ -19,10 +19,6 @@ class CommonCrystalDamageModel():
     R2 = self.model.d_projection_d_stress(self.S, self.huse, self.Q,
         self.L, self.sliprule, self.T)
 
-    print(R1)
-    print(R2)
-    self.assertTrue(False)
-
     self.assertEqual(R1,R2)
 
   def test_projection_history(self):
@@ -31,8 +27,10 @@ class CommonCrystalDamageModel():
     res = diff_symsym_history(dfn, self.hdmg)
     act = np.array(self.model.d_projection_d_history(self.S, self.hdmg, self.Q,
         self.L, self.sliprule, self.T))
+    
+    shape = res.shape[::-1]
 
-    self.assertTrue(np.allclose(res.flatten(), act))
+    self.assertTrue(np.allclose(res, act.reshape(shape).T)) # Transpose?
 
   def test_history_stress(self):
     dd = diff_history_symmetric(
@@ -40,6 +38,7 @@ class CommonCrystalDamageModel():
         self.L, self.sliprule, self.T, self.fixed), self.S)
     d = np.array(self.model.d_damage_d_stress(self.S, self.huse, self.Q,
       self.L, self.sliprule, self.T, self.fixed))
+
     self.assertTrue(np.allclose(dd.flatten(), d))
 
   def test_history_history(self):
@@ -51,6 +50,7 @@ class CommonCrystalDamageModel():
       self.L, self.sliprule, self.T, self.fixed)).reshape(ndmg,ntotal).flatten()
     nd = diff_history_history(lambda h: self.model.damage_rate(
       self.S, h, self.Q, self.L, self.sliprule, self.T, self.fixed), self.huse)
+
     self.assertTrue(np.allclose(d, nd.flatten()))
 
 class TestPlanarDamageModel(unittest.TestCase, CommonCrystalDamageModel):
@@ -101,12 +101,33 @@ class TestPlanarDamageModel(unittest.TestCase, CommonCrystalDamageModel):
       self.huse.set_scalar("strength"+str(i), 2.0)
     
     for j in range(4):
-      self.huse.set_scalar("slip_damage_"+str(j), self.c*0.6) 
+      self.huse.set_scalar("slip_damage_"+str(j), self.c*0.4) 
 
     self.hbase = self.huse.subset(["strength"+str(i) for i in range(12)])
     self.hdmg  = self.huse.subset(["slip_damage_"+str(i) for i in range(4)])
 
     self.fixed = history.History()
+
+  def test_projection(self):
+    should = tensors.SymSymR4.id()
+    
+    for i in range(self.L.nplanes):
+      n = self.Q.apply(self.L.unique_planes[i])
+      
+      Pn = projections.normal_projection_ss(n)
+      Ps = projections.shear_projection_ss(n)
+
+      ns = self.S.dot(n).dot(n)
+      d = self.huse.get_scalar("slip_damage_"+str(i))
+
+      N = self.nfunc.map(d, ns)
+      S = self.sfunc.map(d, ns)
+      
+      should = should.dot(tensors.SymSymR4.id() - N*Pn - S*Ps)
+
+    actual = self.model.projection(self.S, self.huse, self.Q,
+        self.L, self.sliprule, self.T)
+    self.assertTrue(np.allclose(actual.data,should.data))
 
 class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
   def setUp(self):

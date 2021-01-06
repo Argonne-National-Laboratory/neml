@@ -197,7 +197,7 @@ SymSymR4 PlanarDamageModel::projection(const Symmetric & stress,
     double ds = shear_transform_->map(d, ns);
     double dn = normal_transform_->map(d, ns);
 
-    P.dot(SymSymR4::id() - ds * P_s - dn * P_n);
+    P = P.dot(SymSymR4::id() - ds * P_s - dn * P_n);
   }
   return P;
 }
@@ -227,7 +227,7 @@ SymSymSymR6 PlanarDamageModel::d_projection_d_stress(const Symmetric & stress,
       double dn = normal_transform_->map(d, ns);
       
       if (i < j) {
-        before.dot(SymSymR4::id() - ds * P_s - dn * P_n);
+        before = before.dot(SymSymR4::id() - ds * P_s - dn * P_n);
       }
       else if (i == j) {
         middle = -outer_product_k(P_s, 
@@ -238,7 +238,7 @@ SymSymSymR6 PlanarDamageModel::d_projection_d_stress(const Symmetric & stress,
                               Symmetric(n.outer(n)));
       }
       else {
-        after.dot(SymSymR4::id() - ds * P_s - dn * P_n);
+        after = after.dot(SymSymR4::id() - ds * P_s - dn * P_n);
       }
     }
     Pd += middle.middle_dot_after(after).middle_dot_before(before);
@@ -270,13 +270,13 @@ History PlanarDamageModel::d_projection_d_history(const Symmetric & stress,
       double dn = normal_transform_->map(d, ns);
       
       if (i != j) {
-        res.get<SymSymR4>(varnames_[i]).dot(SymSymR4::id() - 
-                                            ds * P_s - dn * P_n);
+        res.get<SymSymR4>(varnames_[i]) = 
+            res.get<SymSymR4>(varnames_[i]).dot(SymSymR4::id() - 
+                                                ds * P_s - dn * P_n);
       }
       else {
-        std::cout << shear_transform_->d_map_d_damage(d,ns) << std::endl;
-        res.get<SymSymR4>(varnames_[i]).dot(
-            -P_s * shear_transform_->d_map_d_damage(d, ns)
+        res.get<SymSymR4>(varnames_[i]) = res.get<SymSymR4>(varnames_[i]).dot(
+            -P_s * shear_transform_->d_map_d_damage(d, ns) 
             - P_n * normal_transform_->d_map_d_damage(d, ns));
       }
     }
