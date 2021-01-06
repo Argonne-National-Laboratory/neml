@@ -562,4 +562,52 @@ double SigmoidTransformation::d_map_d_normal(double damage, double normal_stress
   return 0;
 }
 
+SwitchTransformation::SwitchTransformation(
+    std::shared_ptr<TransformationFunction> base) :
+      base_(base)
+{
+
+}
+
+std::string SwitchTransformation::type()
+{
+  return "SwitchTransformation";
+}
+
+std::unique_ptr<NEMLObject> SwitchTransformation::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<SwitchTransformation>(
+      params.get_object_parameter<TransformationFunction>("base"));
+}
+
+ParameterSet SwitchTransformation::parameters()
+{
+  ParameterSet pset(SwitchTransformation::type());
+  
+  pset.add_parameter<NEMLObject>("base");
+
+  return pset;
+}
+
+double SwitchTransformation::map(double damage, double normal_stress)
+{
+  if (normal_stress >= 0.0)
+    return base_->map(damage, normal_stress);
+  return 0;
+}
+
+double SwitchTransformation::d_map_d_damage(double damage, double normal_stress)
+{
+  if (normal_stress >= 0.0)
+    return base_->d_map_d_damage(damage, normal_stress);
+  return 0;
+}
+
+double SwitchTransformation::d_map_d_normal(double damage, double normal_stress)
+{
+  return 0;
+}
+
+
 } // namespace neml

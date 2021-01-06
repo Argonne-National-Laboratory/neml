@@ -281,3 +281,44 @@ class TestSigmoidTransfer(CommonTransferFunctions, unittest.TestCase):
         ])
 
     self.assertTrue(np.allclose(x, y))
+
+class TestSigmoidTransferP(CommonTransferFunctions, unittest.TestCase):
+  def setUp(self):
+    self.c = 70.0
+    self.beta = 2.1
+    
+    self.vals = np.array([1.0e-4,0.5*self.c,self.c,1.2*self.c])
+
+    self.function1 = crystaldamage.SigmoidTransformation(self.c, self.beta)
+    self.function = crystaldamage.SwitchTransformation(self.function1)
+
+    self.n = 100.0
+
+  def test_value(self):
+    x = np.array([self.function.map(v, self.n) for v in self.vals])
+    y = np.piecewise(self.vals,
+        [self.vals < self.c, self.vals >= self.c],
+        [
+          lambda x: 1.0/(1.0+(x/(self.c-x))**(-self.beta)),
+          lambda x: 0.0*x+1.0
+        ])
+
+    self.assertTrue(np.allclose(x, y))
+
+class TestSigmoidTransferN(CommonTransferFunctions, unittest.TestCase):
+  def setUp(self):
+    self.c = 70.0
+    self.beta = 2.1
+    
+    self.vals = np.array([1.0e-4,0.5*self.c,self.c,1.2*self.c])
+
+    self.function1 = crystaldamage.SigmoidTransformation(self.c, self.beta)
+    self.function = crystaldamage.SwitchTransformation(self.function1)
+
+    self.n = -1
+
+  def test_value(self):
+    x = np.array([self.function.map(v, self.n) for v in self.vals])
+    y = np.array([0 for v in self.vals])
+
+    self.assertTrue(np.allclose(x, y))

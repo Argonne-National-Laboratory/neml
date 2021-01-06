@@ -294,4 +294,26 @@ class SigmoidTransformation: public TransformationFunction {
 
 static Register<SigmoidTransformation> regSigmoidTransformation;
 
+/// Normal stress switch: don't damage compression
+class SwitchTransformation: public TransformationFunction {
+ public:
+  SwitchTransformation(std::shared_ptr<TransformationFunction> base);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  virtual double map(double damage, double normal_stress);
+  virtual double d_map_d_damage(double damage, double normal_stress);
+  virtual double d_map_d_normal(double damage, double normal_stress);
+
+ private:
+  std::shared_ptr<TransformationFunction> base_;
+};
+
+static Register<SwitchTransformation> regSwitchTransformation;
+
 } // namespace neml

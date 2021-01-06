@@ -80,6 +80,14 @@ PYBIND11_MODULE(crystaldamage, m) {
                   }))
   ;
 
+  py::class_<SwitchTransformation, TransformationFunction,
+      std::shared_ptr<SwitchTransformation>>(m, "SwitchTransformation")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+                  {
+                    return create_object_python<SwitchTransformation>(
+                        args, kwargs, {"base"});
+                  }))
+  ;
 
 } // PYBIND11_MODULE
 
