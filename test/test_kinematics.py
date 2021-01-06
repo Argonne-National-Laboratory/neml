@@ -75,6 +75,9 @@ class CommonKinematics(object):
     nd = diff_symmetric_history(lambda h: self.model.stress_rate(self.S, self.d,
       self.w, self.Q, h, self.L, self.T, self.fixed), self.H)
 
+    print(np.array(d).reshape(nd.shape, order = 'F'))
+    print(nd)
+
     self.assertTrue(np.allclose(nd, np.array(d).reshape(nd.shape, order = 'F')))
 
   def test_d_history_rate_d_stress(self):
@@ -135,11 +138,9 @@ class CommonKinematics(object):
     nd = diff_history_history(lambda h: self.model.history_rate(self.S, self.d,
       self.w, self.Q, h, self.L, self.T, self.fixed), self.H)
 
-    print(nd)
 
     d = np.array(self.model.d_history_rate_d_history(self.S, self.d, self.w,
       self.Q, self.H, self.L, self.T, self.fixed))
-    print(d)
 
     self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
 
@@ -330,7 +331,6 @@ class TestStandardKinematicsComplicated(unittest.TestCase, CommonKinematics):
     self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T,
         history.History())
 
-
 class TestDamagedStandardKinematics(unittest.TestCase, CommonKinematics):
   def setUp(self):
     self.strength = 35.0
@@ -391,3 +391,85 @@ class TestDamagedStandardKinematics(unittest.TestCase, CommonKinematics):
     self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T,
         history.History())
 
+class TestDamagedStandardKinematicsComplex(unittest.TestCase, CommonKinematics):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+
+    self.nslip = self.L.ntotal
+
+    self.strength = 35.0
+    self.c = 10.0
+    self.beta  = 2.0
+
+    self.H = history.History()
+
+    for i in range(12):
+      self.H.add_scalar("strength"+str(i))
+      self.H.set_scalar("strength"+str(i), self.strength)
+    
+    for j in range(4):
+      self.H.add_scalar("slip_damage_"+str(j))
+      self.H.set_scalar("slip_damage_"+str(j), self.c*0.4) 
+
+    self.static = 20.0
+    self.s0 = [self.static]*self.nslip
+
+    self.k = 1000.0
+    self.sat = 40.0
+    self.m = 1.5
+
+    self.strengthmodel = slipharden.VocePerSystemHardening(
+        self.s0, [self.k]*self.nslip, [self.sat]*self.nslip,
+        [self.m]*self.nslip)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.slipmodel = sliprules.PowerLawSlipRule(self.strengthmodel, self.g0, self.n)
+
+    self.imodel = inelasticity.AsaroInelasticity(self.slipmodel)
+
+
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+
+    self.T = 300.0
+
+    self.mu = 29000.0
+    self.E = 120000.0
+    self.nu = 0.3
+
+    self.emodel = elasticity.CubicLinearElasticModel(self.E, 
+        self.nu, self.mu, "moduli")
+
+    self.dn = np.array([[4.1,2.8,-1.2],[3.1,7.1,0.2],[4,2,3]])
+    self.dn = 0.5*(self.dn + self.dn.T)
+    self.d = tensors.Symmetric(self.dn)
+
+    self.wn = np.array([[-9.36416517,  2.95527444,  8.70983194],
+           [-1.54693052,  8.7905658 , -5.10895168],
+           [-8.52740468, -0.7741642 ,  2.89544992]])
+    self.wn = 0.5 * (self.wn - self.wn.T)
+    self.w = tensors.Skew(self.wn)
+
+    self.dmodel = crystaldamage.WorkPlaneDamage()
+    self.nfunc  = crystaldamage.SigmoidTransformation(self.c, self.beta)
+    self.sfunc  = crystaldamage.SigmoidTransformation(self.c, self.beta)
+
+    self.dmodel = crystaldamage.PlanarDamageModel(self.dmodel, self.nfunc, self.sfunc,
+        self.L)
+
+    self.model = kinematics.DamagedStandardKinematicModel(self.emodel, self.imodel,
+        self.dmodel)
+    
+    self.fspin = self.model.spin(self.S, self.d, self.w, self.Q, self.H,
+        self.L, self.T, history.History())
+
+    self.fixed = self.model.decouple(self.S, self.d, self.w, self.Q, self.H, self.L, self.T,
+        history.History())
+
+     

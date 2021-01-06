@@ -421,7 +421,8 @@ History DamagedStandardKinematicModel::d_stress_rate_d_history(
                                                   Q, lattice,
                                                   amodel_->slip_rule(), T);
   for (auto hvar : dhist.items()) {
-    res.get<Symmetric>(hvar) = pdhist.get<SymSymR4>(hvar).dot(rate);
+    res.get<Symmetric>(hvar) =
+        pdhist.get<SymSymR4>(hvar).dot(fixed.get<SymSymR4>("C").dot(rate));
   }
 
   return res;
