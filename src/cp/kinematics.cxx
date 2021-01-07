@@ -340,6 +340,8 @@ Symmetric DamagedStandardKinematicModel::stress_rate(
 
   Symmetric net = Symmetric(stress*O_s - O_s*stress);
 
+  std::cout << P << std::endl;
+
   return P.dot(fixed.get<SymSymR4>("C").dot(d - dp)) - net;
 }
 

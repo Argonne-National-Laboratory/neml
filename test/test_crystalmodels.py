@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from neml import models, interpolate, elasticity, history
-from neml.cp import crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal
+from neml.cp import crystallography, slipharden, sliprules, inelasticity, kinematics, singlecrystal, crystaldamage
 from neml.math import rotations, tensors
 
 import unittest
@@ -401,3 +401,107 @@ class TestNyeStuffCrystal(unittest.TestCase):
     self.assertTrue(np.allclose(h[8:17], np.zeros((3,3)).flatten()))
     self.model.update_nye(h, self.nye)
     self.assertTrue(np.allclose(h[8:17], self.nye.flatten()))
+
+class TestFakeDamagedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
+  def setUp(self):
+    self.tau0_0 = 10.0
+    self.tau_sat_0 = 50.0
+    self.b_0 = 2.5
+
+    self.tau0_1 = 15.0
+    self.tau_sat_1 = 25.0
+    self.b_1 = 1.0
+
+    self.strengthmodel = slipharden.SumSlipSingleStrengthHardening(
+        [
+          slipharden.VoceSlipHardening(self.tau_sat_0, self.b_0, self.tau0_0),
+          slipharden.VoceSlipHardening(self.tau_sat_1, self.b_1, self.tau0_1)
+          ])
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.slipmodel = sliprules.PowerLawSlipRule(self.strengthmodel, self.g0, self.n)
+
+    self.imodel = inelasticity.AsaroInelasticity(self.slipmodel)
+
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+
+    self.mu = 29000.0
+    self.E = 120000.0
+    self.nu = 0.3
+
+    self.emodel = elasticity.CubicLinearElasticModel(self.E, 
+        self.nu, self.mu, "moduli")
+    self.dmodel = crystaldamage.NilDamageModel()
+
+    self.kmodel = kinematics.DamagedStandardKinematicModel(self.emodel, 
+        self.imodel, self.dmodel)
+
+    self.model = singlecrystal.SingleCrystalModel(self.kmodel, self.L, 
+        initial_rotation = self.Q)
+    self.model_no_rot = singlecrystal.SingleCrystalModel(self.kmodel, self.L,
+        initial_rotation = self.Q, update_rotation = False, verbose = False)
+
+    self.T = 300.0
+    self.stress_n = np.array([120.0,-60.0,170.0,35.0,80.0,-90.0])
+    self.stress_np1 = np.array([15.0,-40.0,120.0,70.0,-10.0,-50.0])
+
+    self.d = np.array([0.1,-0.2,0.25,0.11,-0.05,0.075])
+    self.w = np.array([0.1,0.2,-0.2])
+
+    self.strength_n = 25.0
+    self.strength_np1 = 30.0
+
+    self.S_np1 = tensors.Symmetric(common.usym(self.stress_np1))
+    self.S_n = tensors.Symmetric(common.usym(self.stress_n))
+
+    self.D = tensors.Symmetric(common.usym(self.d))
+    self.W = tensors.Skew(common.uskew(self.w))
+
+    self.strength_n_0 = 25.0
+    self.strength_np1_0 = 30.0
+    self.strength_n_1 = 15.0
+    self.strength_np1_1 = 17.5
+
+    self.whatever_n = 0.1
+    self.whatever_np1 = 0.2
+
+    self.H_n = history.History()
+    self.H_n.add_scalar("strength0")
+    self.H_n.set_scalar("strength0", self.strength_n_0)
+    self.H_n.add_scalar("strength1")
+    self.H_n.set_scalar("strength1", self.strength_n_1)
+    self.H_n.add_scalar("whatever")
+    self.H_n.set_scalar("whatever", self.whatever_n)
+
+    self.H_np1 = history.History()
+    self.H_np1.add_scalar("strength0")
+    self.H_np1.set_scalar("strength0", self.strength_np1_0)
+    self.H_np1.add_scalar("strength1")
+    self.H_np1.set_scalar("strength1", self.strength_np1_1)
+    self.H_np1.add_scalar("whatever")
+    self.H_np1.set_scalar("whatever", self.whatever_np1)
+
+    self.dt = 2.0
+
+    self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, self.H_n, self.L, self.T,
+        history.History())
+
+    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
+        self.fixed)
+
+    self.x = np.zeros((self.model.nparams,))
+    self.x[:6] = self.stress_np1
+    self.x[6] = self.strength_np1
+
+    self.Ddir = np.array([0.01,-0.005,-0.003,0.01,0.02,-0.003]) * 2
+    self.Wdir = np.array([0.02,-0.03,0.01]) * 2
+
+    self.nsteps = 10
+
+  def test_nhist(self):
+    self.assertEqual(self.model.nstore, 11)
+

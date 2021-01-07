@@ -199,6 +199,7 @@ SymSymR4 PlanarDamageModel::projection(const Symmetric & stress,
 
     P = P.dot(SymSymR4::id() - ds * P_s - dn * P_n);
   }
+
   return P;
 }
 
@@ -544,14 +545,18 @@ ParameterSet SigmoidTransformation::parameters()
 
 double SigmoidTransformation::map(double damage, double normal_stress)
 {
-  if (damage < c_)
+  if (damage < 0)
+    return 0;
+  else if (damage < c_)
     return 1.0/(1.0 + std::pow(damage / (c_ - damage), -beta_));
   return 1.0;
 }
 
 double SigmoidTransformation::d_map_d_damage(double damage, double normal_stress)
 {
-  if (damage < c_)
+  if (damage < 0)
+    return 0;
+  else if (damage < c_)
     return beta_*c_*std::pow(damage,beta_-1)*std::pow(1.0/(c_-damage),beta_+1)
         / pow(std::pow(damage/(c_-damage),beta_)+1.0,2.0);
   return 0;
