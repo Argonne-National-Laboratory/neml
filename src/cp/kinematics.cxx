@@ -335,12 +335,13 @@ Symmetric DamagedStandardKinematicModel::stress_rate(
 
   SymSymR4 P = dmodel_->projection(stress, dhist, Q, lattice, 
                                    amodel_->slip_rule(), T);
-  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress, Q, ihist, lattice, T, fixed);
-  Symmetric dp = imodel_->d_p(stress, Q, ihist, lattice, T, fixed);
+  SymSymR4 Pi = P.inverse();
+  Symmetric stress_p = Pi.dot(stress);
 
-  Symmetric net = Symmetric(stress*O_s - O_s*stress);
+  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress_p, Q, ihist, lattice, T, fixed);
+  Symmetric dp = imodel_->d_p(stress_p, Q, ihist, lattice, T, fixed);
 
-  std::cout << P << std::endl;
+  Symmetric net = Symmetric(stress_p*O_s - O_s*stress_p);
 
   return P.dot(fixed.get<SymSymR4>("C").dot(d - dp)) - net;
 }
@@ -354,24 +355,29 @@ SymSymR4 DamagedStandardKinematicModel::d_stress_rate_d_stress(
   History ihist = ihist_(history);
   History dhist = dhist_(history);
 
-  SymSymSymR6 Pp = dmodel_->d_projection_d_stress(stress, dhist, Q, lattice,
-                                                  amodel_->slip_rule(), T);
-  Symmetric dp = imodel_->d_p(stress, Q, ihist, lattice, T, fixed);
-
-
   SymSymR4 P = dmodel_->projection(stress, dhist, Q, lattice, 
                                    amodel_->slip_rule(), T);
+  SymSymSymR6 Pp = dmodel_->d_projection_d_stress(stress, dhist, Q, lattice,
+                                                  amodel_->slip_rule(), T);
 
-  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress, Q, ihist, lattice, T, fixed);
+  SymSymR4 Pi = P.inverse();
+  Symmetric stress_p = Pi.dot(stress);
 
-  SymSymR4 D1 = imodel_->d_d_p_d_stress(stress, Q, ihist, lattice, T, fixed);
+  Symmetric dp = imodel_->d_p(stress_p, Q, ihist, lattice, T, fixed);
+
+  Skew O_s = fixed.get<Skew>("espin") + imodel_->w_p(stress_p, Q, ihist, lattice, T, fixed);
+
+  SymSymR4 D1 = imodel_->d_d_p_d_stress(stress_p, Q, ihist, lattice, T,
+                                        fixed);
   SymSymR4 D2 = SymSymR4Skew_SkewSymR4SymR4(SymSymR4::id(), O_s);
+  
+  SkewSymR4 DW = imodel_->d_w_p_d_stress(stress_p, Q, ihist, lattice, T,
+                                         fixed);
 
-  SkewSymR4 DW = imodel_->d_w_p_d_stress(stress, Q, ihist, lattice, T, fixed);
+  SymSymR4 D3 = SymSkewR4Sym_SkewSymR4SymR4(DW, stress_p);
 
-  SymSymR4 D3 = SymSkewR4Sym_SkewSymR4SymR4(DW, stress);
-
-  return Pp.dot_k(d-dp) - (P.dot(fixed.get<SymSymR4>("C")) * D1 + D2 + D3);
+  return (Pp.dot_k(d-dp) - (P.dot(fixed.get<SymSymR4>("C")) * D1 + D2 +
+                            D3)).dot(Pi);
 }
 
 SymSymR4 DamagedStandardKinematicModel::d_stress_rate_d_d(
@@ -402,26 +408,29 @@ History DamagedStandardKinematicModel::d_stress_rate_d_history(
   // Gets all the variables
   History res = history.derivative<Symmetric>();
 
-  // imodel internal variables
-  History dD = imodel_->d_d_p_d_history(stress, Q, ihist, lattice, T, fixed);
-  History dW = imodel_->d_w_p_d_history(stress, Q, ihist, lattice, T, fixed);
-
   SymSymR4 P = dmodel_->projection(stress, dhist, Q, lattice, 
                                    amodel_->slip_rule(), T);
-
-  for (auto hvar : inames) {
-    res.get<Symmetric>(hvar) = -P.dot(fixed.get<SymSymR4>("C")) * (
-        dD.get<Symmetric>(hvar)) - Symmetric(stress*dW.get<Skew>(hvar) -
-                                             dW.get<Skew>(hvar) * stress);
-  }
-
-  // dmodel internal variables
-  Symmetric dp = imodel_->d_p(stress, Q, ihist, lattice, T, fixed);
-  Symmetric rate = d - dp;
-
   History pdhist = dmodel_->d_projection_d_history(stress, dhist,
                                                   Q, lattice,
                                                   amodel_->slip_rule(), T);
+
+  SymSymR4 Pi = P.inverse();
+  Symmetric stress_p = Pi.dot(stress);
+
+  // imodel internal variables
+  History dD = imodel_->d_d_p_d_history(stress_p, Q, ihist, lattice, T, fixed);
+  History dW = imodel_->d_w_p_d_history(stress_p, Q, ihist, lattice, T, fixed);
+
+  for (auto hvar : inames) {
+    res.get<Symmetric>(hvar) = -P.dot(fixed.get<SymSymR4>("C")) * (
+        dD.get<Symmetric>(hvar)) - Symmetric(stress_p*dW.get<Skew>(hvar) -
+                                             dW.get<Skew>(hvar) * stress_p);
+  }
+
+  // dmodel internal variables
+  Symmetric dp = imodel_->d_p(stress_p, Q, ihist, lattice, T, fixed);
+  Symmetric rate = d - dp;
+
   for (auto hvar : dhist.items()) {
     res.get<Symmetric>(hvar) =
         pdhist.get<SymSymR4>(hvar).dot(fixed.get<SymSymR4>("C").dot(rate));
@@ -439,8 +448,13 @@ History DamagedStandardKinematicModel::history_rate(
   History ihist = ihist_(history);
   History dhist = dhist_(history);
 
-  History base = imodel_->history_rate(stress, Q, ihist, lattice, T, fixed);
-  base.add_union(dmodel_->damage_rate(stress, history, Q, lattice, 
+  SymSymR4 P = dmodel_->projection(stress, dhist, Q, lattice, 
+                                   amodel_->slip_rule(), T);
+  SymSymR4 Pi = P.inverse();
+  Symmetric stress_p = Pi.dot(stress);
+
+  History base = imodel_->history_rate(stress_p, Q, ihist, lattice, T, fixed);
+  base.add_union(dmodel_->damage_rate(stress_p, history, Q, lattice, 
                                       amodel_->slip_rule(), T, fixed));
   return base;
 }
@@ -454,9 +468,15 @@ History DamagedStandardKinematicModel::d_history_rate_d_stress(
   History ihist = ihist_(history);
   History dhist = dhist_(history);
 
-  History base = imodel_->d_history_rate_d_stress(stress, Q, ihist, lattice, T, fixed);
-  base.add_union(dmodel_->d_damage_d_stress(stress, history, Q, lattice,
+  SymSymR4 P = dmodel_->projection(stress, dhist, Q, lattice, 
+                                   amodel_->slip_rule(), T);
+  SymSymR4 Pi = P.inverse();
+  Symmetric stress_p = Pi.dot(stress);
+
+  History base = imodel_->d_history_rate_d_stress(stress_p, Q, ihist, lattice, T, fixed);
+  base.add_union(dmodel_->d_damage_d_stress(stress_p, history, Q, lattice,
                                             amodel_->slip_rule(), T, fixed));
+  // Need to postmultiply by Pi ...
   return base;
 }
 
@@ -473,10 +493,15 @@ History DamagedStandardKinematicModel::d_history_rate_d_history(
   std::vector<std::string> tnames(ihist.items());
   tnames.insert(tnames.end(), dhist.items().begin(), dhist.items().end());
 
+  SymSymR4 P = dmodel_->projection(stress, dhist, Q, lattice, 
+                                   amodel_->slip_rule(), T);
+  SymSymR4 Pi = P.inverse();
+  Symmetric stress_p = Pi.dot(stress);
+
   // This assumes the *inelastic* variables are disjoint from the *damage*
   // variables but NOT the other way around
-  History base =  imodel_->d_history_rate_d_history(stress, Q, ihist, lattice, T, fixed);
-  base.add_union(dmodel_->d_damage_d_history(stress, history, Q, lattice,
+  History base =  imodel_->d_history_rate_d_history(stress_p, Q, ihist, lattice, T, fixed);
+  base.add_union(dmodel_->d_damage_d_history(stress_p, history, Q, lattice,
                                             amodel_->slip_rule(), T, fixed));
   
   // Add zeros for the cross terms
@@ -505,7 +530,13 @@ SymSkewR4 DamagedStandardKinematicModel::d_stress_rate_d_w_decouple(
     const History & history, Lattice & lattice,
     double T, const History & fixed)
 {
-  return -2.0 * SpecialSymSymR4Sym(SymSymR4::id(), stress);
+  History dhist = dhist_(history);
+  SymSymR4 P = dmodel_->projection(stress, dhist, Q, lattice, 
+                                   amodel_->slip_rule(), T);
+  SymSymR4 Pi = P.inverse();
+  Symmetric stress_p = Pi.dot(stress);
+
+  return -2.0 * SpecialSymSymR4Sym(SymSymR4::id(), stress_p);
 }
 
 // Not done

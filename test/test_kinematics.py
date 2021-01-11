@@ -20,7 +20,9 @@ class CommonKinematics(object):
     d = self.model.d_stress_rate_d_stress(self.S, self.d, self.w, self.Q, 
         self.H, self.L, self.T, self.fixed)
 
-    self.assertEqual(d, nd)
+    print(d)
+
+    self.assertTrue(d, nd)
 
   def test_d_stress_rate_d_d(self):
     def dfn(d):
@@ -75,10 +77,12 @@ class CommonKinematics(object):
     nd = diff_symmetric_history(lambda h: self.model.stress_rate(self.S, self.d,
       self.w, self.Q, h, self.L, self.T, self.fixed), self.H)
 
-    print(np.array(d).reshape(nd.shape, order = 'F'))
+    T = np.array(d).reshape(nd.shape, order = 'F')
+    print(T)
     print(nd)
+    print(T-nd)
 
-    self.assertTrue(np.allclose(nd, np.array(d).reshape(nd.shape, order = 'F')))
+    self.assertTrue(np.allclose(nd, T))
 
   def test_d_history_rate_d_stress(self):
     nd = diff_history_symmetric(lambda s: self.model.history_rate(s, self.d,
