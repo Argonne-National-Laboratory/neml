@@ -32,9 +32,9 @@ else()
 endif()
 
 ### Limits designed to make bad updates fail gracefully ###
-set(STRESS_LIMIT "1.0e10" CACHE STRING "Limit on stress values -- NEML may return an error if a stress grows beyond this value")
-mark_as_advanced(STRESS_LIMIT)
-add_definitions(-DSTRESS_LIMIT=${STRESS_LIMIT})
+set(STRAIN_RATE_LIMIT "1.0e10" CACHE STRING "Limit on strain rate -- NEML may return an error if a strain rate grows beyond this value")
+mark_as_advanced(STRAIN_RATE_LIMIT)
+add_definitions(-DSTRAIN_RATE_LIMIT=${STRAIN_RATE_LIMIT})
 
 ### Configure standard-ish libraries ###
 set(BLAS_VENDOR Generic)
