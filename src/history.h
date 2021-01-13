@@ -210,6 +210,9 @@ class NEML_EXPORT History {
   inline bool contains(std::string name) const { return loc_.find(name) !=
     loc_.end();};
 
+  /// Postmultiply by various objects
+  History postmultiply(const SymSymR4 & T);
+
  private:
   void error_if_exists_(std::string name) const;
   void error_if_not_exists_(std::string name) const;

@@ -1138,6 +1138,17 @@ SymSymR4 SymSymR4::inverse() const
   return res;
 }
 
+SymSymR4 SymSymR4::transpose() const
+{
+  SymSymR4 res;
+  for (size_t i = 0; i<6; i++) {
+    for (size_t j = 0; j<6; j++) {
+      res(i,j) = (*this)(j,i);
+    }
+  }
+  return res;
+}
+
 const double & SymSymR4::operator()(size_t i, size_t j) const
 {
   return s_[i*6+j];

@@ -78,11 +78,8 @@ class CommonKinematics(object):
       self.w, self.Q, h, self.L, self.T, self.fixed), self.H)
 
     T = np.array(d).reshape(nd.shape, order = 'F')
-    print(T)
-    print(nd)
-    print(T-nd)
 
-    self.assertTrue(np.allclose(nd, T))
+    self.assertTrue(np.allclose(T, nd, rtol = 1.0e-3))
 
   def test_d_history_rate_d_stress(self):
     nd = diff_history_symmetric(lambda s: self.model.history_rate(s, self.d,
@@ -146,7 +143,9 @@ class CommonKinematics(object):
     d = np.array(self.model.d_history_rate_d_history(self.S, self.d, self.w,
       self.Q, self.H, self.L, self.T, self.fixed))
 
-    self.assertTrue(np.allclose(nd, d.reshape(nd.shape)))
+    T = d.reshape(nd.shape)
+    
+    self.assertTrue(np.allclose(nd, T))
 
 class TestStandardKinematics(unittest.TestCase, CommonKinematics):
   def setUp(self):

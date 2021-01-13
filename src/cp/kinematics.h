@@ -370,6 +370,12 @@ class NEML_EXPORT DamagedStandardKinematicModel: public StandardKinematicModel {
   History ihist_(const History & hist) const;
   /// The damage model internal variables
   History dhist_(const History & hist) const;
+  /// Partial derivative wrt stress^\prime
+  SymSymR4 d_stress_partial(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
 
  protected:
   std::shared_ptr<CrystalDamageModel> dmodel_;
