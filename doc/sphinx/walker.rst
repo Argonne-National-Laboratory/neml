@@ -42,7 +42,7 @@ identity tensor.
 The model definition reuses several common functions. These functions
 appear several places in the formulation, occasionally with the same
 parameters and occasionally with different parameters depending on the
-location. Where needed this exposition differentiates the parameters
+location. Where needed this exposition distinguishes the function parameters
 using parenthetical superscripts, e.g. :math:`x^{\left(a\right)}`.
 
 Temperature scaling function
@@ -50,9 +50,9 @@ Temperature scaling function
 
 The temperature scaling function:
 
-.. math:: \chi\left(T\right)=\frac{\exp\left(-\frac{Q}{RT}\right)}{\exp\left(-\frac{Q}{RT_{ref}}\right)}
+.. math:: \chi\left(T\right)=\frac{\exp\left(-\frac{Q}{R_{gas}T}\right)}{\exp\left(-\frac{Q}{R_{gas}T_{ref}}\right)}
 
-with :math:`Q` an activation energy, :math:`R` the gas constant, and
+with :math:`Q` an activation energy, :math:`R_{gas}` the gas constant, and
 :math:`T_{ref}` a reference temperature, with temperature in Kelvin, is
 reused several places in the model. The thermal scaling constants
 :math:`Q` and :math:`T_{ref}` remain the same with each appearance and
@@ -111,7 +111,7 @@ parameter, :math:`\left\langle \right\rangle` the Macaulay brackets, and
 .. math:: Y=\left(k+R\right)\left(\frac{D-D_{0}}{D_{\xi}}\right)^{m}
 
 with :math:`k`, :math:`D_{0}`, :math:`D_{\xi}`, and :math:`m`
-parameters and :math:`R` and internal variable defined below.
+parameters and :math:`R` an internal variable defined below.
 
 Isotropic hardening
 ^^^^^^^^^^^^^^^^^^^

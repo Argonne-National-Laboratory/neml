@@ -4,7 +4,7 @@ Walker-Krempl rate sensitivity modification
 Overview
 --------
 
-This class modifies an existing :doc:`viscoplastic`  to scale
+This class modifies an existing :doc:`viscoplastic` to scale
 between a rate sensitive response (given by the base model) and a 
 rate insensitive response based on a temperature-dependent
 parameter :math:`\lambda`.
@@ -30,8 +30,8 @@ keeping the flow direction the same.  The scaling function is
 where :math:`\dot{\varepsilon}_{ref}` is a parameter and 
 :math:`\left\Vert \dot{\boldsymbol{e}}\right\Vert` is the total (not inelastic) deviatoric strain rate.
 
-For :math:`\lambda = 0` the model returns the underlying viscoplastic model
-flow rate.  For :math:`\lambda \rightarrow 1` the model returns an equivalent rate
+In the limit :math:`\lambda = 0` the model returns the rate sensitive, viscoplastic flow response from the underlying model.
+In the limit :math:`\lambda \rightarrow 1` the model returns an equivalent rate
 insensitive flow rate, asymptotically approximating an equivalent rate
 independent model.  An interpolation function can change the value of
 :math:`\lambda` as a function of temperature, for example to transition

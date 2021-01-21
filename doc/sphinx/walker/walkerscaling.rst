@@ -16,7 +16,7 @@ Base class
 Walker's specific model
 -----------------------
 
-The specific model described in :doc:`../walker`.
+The specific scaling model described in :doc:`../walker`.
 
 Parameters
 ^^^^^^^^^^

@@ -38,7 +38,7 @@ Class description
 Walker's specific model
 -----------------------
 
-The specific model described in :doc:`../walker`.
+The specific drag stress evolution model described in :doc:`../walker`.
 
 Parameters
 ^^^^^^^^^^

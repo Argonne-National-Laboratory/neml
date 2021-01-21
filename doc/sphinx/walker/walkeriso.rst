@@ -37,7 +37,7 @@ Class description
 Walker's specific model
 -----------------------
 
-The specific model described in :doc:`../walker`.
+The specific isotropic hardening model described in :doc:`../walker`.
 
 Parameters
 ^^^^^^^^^^

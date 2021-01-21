@@ -507,29 +507,24 @@ ParameterSet WalkerSofteningModel::parameters()
 
 double WalkerSofteningModel::phi(double alpha, double T) const
 {
-  if (alpha <= 0.0) {
+  if (alpha <= 0.0) 
     return 1.0;
-  }
-  else if (alpha < ainc_) {
+  else if (alpha < ainc_) 
     return phi_0_->value(T) * std::pow(ainc_, phi_1_->value(T)) / ainc_ * alpha +
         1.0;
-  }
-  else {
+  else 
     return 1.0 + phi_0_->value(T) * std::pow(alpha, phi_1_->value(T));
-  }
+  
 }
 
 double WalkerSofteningModel::dphi(double alpha, double T) const
 {
-  if (alpha <= 0.0) {
-    return phi_0_->value(T) * std::pow(ainc_, phi_1_->value(T)) / ainc_;;
-  }
-  else if (alpha < ainc_) {
+  if (alpha <= 0.0) 
+   return phi_0_->value(T) * std::pow(ainc_, phi_1_->value(T)) / ainc_;
+  else if (alpha < ainc_) 
     return phi_0_->value(T) * std::pow(ainc_, phi_1_->value(T)) / ainc_;
-  }
-  else {
+  else 
     return phi_1_->value(T) * phi_0_->value(T) * std::pow(alpha, phi_1_->value(T) - 1.0);
-  }
 }
 
 ThermalScaling::ThermalScaling()
@@ -1451,15 +1446,13 @@ SymSymR4 WalkerKinematicHardening::d_ratep_d_g(VariableState & state)
 
 Symmetric WalkerKinematicHardening::ratet(VariableState & state)
 {
-  if ((state.h.norm() == 0.0) || (state.D <= 0.0)) {
+  if ((state.h.norm() == 0.0) || (state.D <= 0.0)) 
     return Symmetric::zero();
-  }
-  else {
+  else 
     return -scale_->value(state.T) * x0_->value(state.T) * 
         softening_->phi(state.a, state.T) * 
         std::pow(std::sqrt(3.0/2.0) * state.h.norm() / state.D, x1_->value(state.T))
         * state.h / (state.h.norm() * std::sqrt(3.0/2));
-  }
 }
 
 SymSymR4 WalkerKinematicHardening::d_ratet_d_h(VariableState & state)
