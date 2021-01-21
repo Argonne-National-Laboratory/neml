@@ -154,8 +154,6 @@ class CommonFlowRule(object):
     num = differentiate(dfn, hist)
     exact = self.model.dh_da(stress, hist, self.T)
 
-    #print(np.abs(exact))
-
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dh_ds_time(self):

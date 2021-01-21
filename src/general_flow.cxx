@@ -25,6 +25,11 @@ int GeneralFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel>
   return 0;
 }
 
+void GeneralFlowRule::override_guess(double * const x)
+{
+  return;
+}
+
 TVPFlowRule::TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
             std::shared_ptr<ViscoPlasticFlowRule> flow) :
     elastic_(elastic), flow_(flow)
@@ -379,6 +384,11 @@ int TVPFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
   return 0;
+}
+
+void TVPFlowRule::override_guess(double * const x)
+{
+  flow_->override_guess(x);
 }
 
 } // namespace neml

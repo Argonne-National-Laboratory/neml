@@ -73,6 +73,9 @@ class NEML_EXPORT GeneralFlowRule: public NEMLObject {
 
   /// Set a new elastic model
   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+
+  /// Optional method for modifying the initial guess
+  virtual void override_guess(double * const x);
 };
 
 /// Thermo-visco-plasticity
@@ -149,6 +152,9 @@ class NEML_EXPORT TVPFlowRule : public GeneralFlowRule {
 
   /// Set a new elastic model
   virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+
+  /// Override the initial guess
+  virtual void override_guess(double * const x);
 
  private:
   std::shared_ptr<LinearElasticModel> elastic_;

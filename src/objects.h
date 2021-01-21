@@ -255,6 +255,8 @@ class NEML_EXPORT ParameterSet {
 /// Factory that produces NEMLObjects from ParameterSets
 class NEML_EXPORT Factory {
  public:
+  Factory();
+
   /// Provide a valid parameter set for the object type
   ParameterSet provide_parameters(std::string type);
 

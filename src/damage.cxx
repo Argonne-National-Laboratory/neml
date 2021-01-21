@@ -1522,8 +1522,18 @@ int NEMLWorkDamagedModel_sd::damage(double d_np1, double d_n,
                    double t_np1, double t_n,
                    double * const dd) const
 {
+  if (d_np1 == 0.0) {
+    *dd = d_n;
+    return 0;
+  }
+
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           std::fabs(d_np1), d_n);
+  if (wrate == 0.0) {
+    *dd = d_n;
+    return 0;
+  }
+
   double dt = t_np1 - t_n;
 
   double val = Wcrit_->value(wrate);
@@ -1541,8 +1551,18 @@ int NEMLWorkDamagedModel_sd::ddamage_dd(double d_np1, double d_n,
                    double t_np1, double t_n,
                    double * const dd) const
 {
+  if (d_np1 == 0.0) {
+    *dd = d_n;
+    return 0;
+  }
+
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           std::fabs(d_np1), d_n);
+  if (wrate == 0.0) {
+    *dd = d_n;
+    return 0;
+  }
+
   double val = Wcrit_->value(wrate);
   double deriv = Wcrit_->derivative(wrate);
   double dt = t_np1 - t_n;
@@ -1570,15 +1590,15 @@ int NEMLWorkDamagedModel_sd::ddamage_de(double d_np1, double d_n,
                    double t_np1, double t_n,
                    double * const dd) const
 {
+  double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
+                          std::fabs(d_np1), d_n);
+
   // Provide a sensible answer if Newton's method gives us a garbage 
   // value of the history variable.
-  if (d_np1 <= 0.0) {
+  if ((d_np1 <= 0.0) || (wrate == 0.0)) {
     std::fill(dd, dd+6, 0.0);
     return 0;
   }
-
-  double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
-                          std::fabs(d_np1), d_n);
 
   double val = Wcrit_->value(wrate);
   double dval = Wcrit_->derivative(wrate);
@@ -1602,6 +1622,11 @@ int NEMLWorkDamagedModel_sd::ddamage_ds(double d_np1, double d_n,
 {
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           std::fabs(d_np1), d_n);
+
+  if ((d_np1 <= 0.0) || (wrate == 0.0)) {
+    std::fill(dd, dd+6, 0.0);
+    return 0;
+  }
 
   double val = Wcrit_->value(wrate);
   double dval = Wcrit_->derivative(wrate);

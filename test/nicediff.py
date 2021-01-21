@@ -44,6 +44,13 @@ def diff_symmetric_history(fn, h0):
 
   return nd
 
+def diff_symmetric_scalar(fn, s0):
+  dfn = lambda s: fn(s).data
+
+  res = differentiate(dfn, np.array([s0]))
+
+  return tensors.Symmetric(usym(res[:,0]))
+
 def diff_scalar_symmetric(fn, S0):
   dfn = lambda s: fn(tensors.Symmetric(s))
   

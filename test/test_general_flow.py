@@ -49,7 +49,7 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.s(s_np1, h_np1, x, T_np1, T_dot)
-    num = differentiate(dfn, e_dot, eps = 1.0e-3)
+    num = differentiate(dfn, e_dot, eps = self.eps)
     should = self.model.ds_de(s_np1, h_np1, e_dot, T_np1, T_dot)
 
     self.assertTrue(np.allclose(num, should, rtol = 1.0e-3))
@@ -94,7 +94,7 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.a(s_np1, h_np1, x, T_np1, T_dot)
-    num = differentiate(dfn, e_dot, eps = 1.0e-3)
+    num = differentiate(dfn, e_dot, eps = self.eps)
     should = self.model.da_de(s_np1, h_np1, e_dot, T_np1, T_dot)
 
     self.assertTrue(np.allclose(num, should, rtol = 1.0e-3))
@@ -192,6 +192,8 @@ class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     self.t_n = 0.0
     self.h_n = np.zeros((1+6*self.m,))
 
+    self.eps = 1.0e-3
+
   def gen_hist(self):
     h = np.array([0.1,50,-30,40,60,-80,-30,-100,-15,-30,-50,100,50,60,-60,50,
       30,90,40])
@@ -241,6 +243,8 @@ class TestTVPYaguchi(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     self.e_n = np.zeros((6,))
     self.t_n = 0.0
     self.h_n = np.zeros((2+12,))
+
+    self.eps = 1.0e-3
 
   def gen_hist(self):
     h = np.array([50,-30,40,60,-80,-30,-100,-15,-30,-50,100,50,5,2.5])

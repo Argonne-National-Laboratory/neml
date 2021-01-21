@@ -194,6 +194,8 @@ class NEML_EXPORT Symmetric: public Tensor {
 
   static Symmetric id() { return
     Symmetric(std::vector<double>({1,1,1,0,0,0}));};
+  static Symmetric zero() { return
+    Symmetric(std::vector<double>({0,0,0,0,0,0}));};
   Symmetric inverse() const;
   Symmetric transpose() const;
 
@@ -378,6 +380,14 @@ class NEML_EXPORT SymSymR4: public Tensor {
               {0.0,0.0,0.0,0.0,0.0,1.0}
               }
               ));};
+  static SymSymR4 zero() {return
+    SymSymR4(std::vector<std::vector<double>>({
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0}}));};
 };
 
 // Binary operators with scalars
