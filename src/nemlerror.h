@@ -26,7 +26,8 @@ typedef enum Error {
   UNKNOWN_ERROR = -13,
   INCOMPATIBLE_KM = -14,
   DUMMY_ELASTIC = -15,
-  INCOMPATIBLE_VECTORS = -16
+  INCOMPATIBLE_VECTORS = -16,
+  EXCEEDS_STRAIN_RATE_LIMIT = -17
 } Error;
 
 /// Translate an error code to an exception

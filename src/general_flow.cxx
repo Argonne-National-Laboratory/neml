@@ -85,6 +85,7 @@ int TVPFlowRule::s(const double * const s, const double * const alpha,
   if (ier != SUCCESS) return ier;
   ier = flow_->y(s, alpha, T, yv);
   if (ier != SUCCESS) return ier;
+  if (yv > NEML_STRAIN_RATE_LIMIT) return EXCEEDS_STRAIN_RATE_LIMIT;
   
   for (int i=0; i<6; i++) {
     erate[i] -= yv * temp[i];

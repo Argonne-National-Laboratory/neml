@@ -4,8 +4,7 @@ Getting started
 Installing NEML
 ---------------
 
-Compiling NEML requires the NEML source, a C++ compiler,
-and the `Boost <https://www.boost.org/>`_ library.
+Compiling NEML requires the NEML source, and a C++ compiler.
 Additionally, you will need `BLAS <http://www.netlib.org/blas/>`_ and
 `LAPACK <http://www.netlib.org/lapack/>`_.
 
@@ -32,6 +31,28 @@ Directions for each operating system follow below.
 
 .. toctree::
    :maxdepth: 1
-
+   
    install/linux
+   install/mac
    install/windows
+
+Python package
+--------------
+
+An easier way to install NEML if you are only interested in the python bindings
+is to use the package uploaded to `pypi <https://pypi.org/>`_.
+Currently only a source package is available, but the python install scripts
+simplify the process of compiling and linking the package.  You still
+need a working compiler, the python development headers, and development
+versions of BLAS and LAPACK.  These can be installed on Ubuntu, for example,
+with 
+
+.. code-block:: console
+
+   sudo apt-get install python3-dev python3-pip cmake libboost-dev libblas-dev liblapack-dev
+
+After that a python package manger, such as pip, can be used to install NEML
+
+.. code-block:: console
+
+   sudo pip3 install neml
