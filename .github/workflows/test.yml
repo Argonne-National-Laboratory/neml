@@ -44,8 +44,8 @@ jobs:
                         btype: [Release, Debug]
             steps:
             - uses: actions/checkout@v2
-            - run: brew install cmake openblas superlu
-            - run: brew install gfortran
+            - run: brew install cmake openblas superlu gfortran
+            - run: which gfortran
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
             - run: make -j 2
             - run: test/drivers/test_drivers.sh
