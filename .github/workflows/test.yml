@@ -32,6 +32,7 @@ jobs:
                         btype: [Release, Debug]
             steps:
             - uses: actions/checkout@v2
+            - run: brew update
             - run: brew install cmake openblas superlu python
             - run: pip3 install --user networkx numpy scipy matplotlib nose
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python3-config --prefix)/bin/python3.9 -D PYTHON_LIBRARY=$(python3-config --prefix)/lib/libpython3.9.dylib -D PYTHON_INCLUDE_DIR=$(python3-config --prefix)/include/python3.9 -D USE_OPENMP=OFF .
@@ -44,6 +45,7 @@ jobs:
                         btype: [Release, Debug]
             steps:
             - uses: actions/checkout@v2
+            - run: brew update
             - run: brew install cmake openblas superlu gfortran
             - run: which gfortran
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
