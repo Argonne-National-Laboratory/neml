@@ -1,3 +1,6 @@
+cpdmg
+walker
+walker_switch
 perfectplasticity
 j2
 nonassociative

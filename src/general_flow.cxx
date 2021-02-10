@@ -25,6 +25,11 @@ int GeneralFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel>
   return 0;
 }
 
+void GeneralFlowRule::override_guess(double * const x)
+{
+  return;
+}
+
 TVPFlowRule::TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
             std::shared_ptr<ViscoPlasticFlowRule> flow) :
     elastic_(elastic), flow_(flow)
@@ -80,6 +85,7 @@ int TVPFlowRule::s(const double * const s, const double * const alpha,
   if (ier != SUCCESS) return ier;
   ier = flow_->y(s, alpha, T, yv);
   if (ier != SUCCESS) return ier;
+  if (yv > NEML_STRAIN_RATE_LIMIT) return EXCEEDS_STRAIN_RATE_LIMIT;
   
   for (int i=0; i<6; i++) {
     erate[i] -= yv * temp[i];
@@ -378,6 +384,11 @@ int TVPFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
   return 0;
+}
+
+void TVPFlowRule::override_guess(double * const x)
+{
+  flow_->override_guess(x);
 }
 
 } // namespace neml

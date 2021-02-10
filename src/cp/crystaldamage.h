@@ -266,8 +266,11 @@ static Register<WorkPlaneDamage> regWorkPlaneDamage;
 /// the range [0,1]
 class TransformationFunction: public NEMLObject {
  public:
+  /// Map from damage and the normal stress to [0,1]
   virtual double map(double damage, double normal_stress) = 0;
+  /// Derivative of the map with respect to the damage
   virtual double d_map_d_damage(double damage, double normal_stress) = 0;
+  /// Derivative of the map with respect to the normal stress
   virtual double d_map_d_normal(double damage, double normal_stress) = 0;
 };
 
@@ -282,9 +285,12 @@ class SigmoidTransformation: public TransformationFunction {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-
+  
+  /// Map from damage and the normal stress to [0,1]
   virtual double map(double damage, double normal_stress);
+  /// Derivative of the map with respect to damage
   virtual double d_map_d_damage(double damage, double normal_stress);
+  /// Derivative of the map with respect to the normal stress
   virtual double d_map_d_normal(double damage, double normal_stress);
 
  private:
@@ -306,8 +312,11 @@ class SwitchTransformation: public TransformationFunction {
   /// Default parameters
   static ParameterSet parameters();
 
+  /// Map from damage and the normal stress to [0,1]  
   virtual double map(double damage, double normal_stress);
+  /// Derivative of the map with respect to damage
   virtual double d_map_d_damage(double damage, double normal_stress);
+  /// Derivative of the map with respect to the normal stress
   virtual double d_map_d_normal(double damage, double normal_stress);
 
  private:

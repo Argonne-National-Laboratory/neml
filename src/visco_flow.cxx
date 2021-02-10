@@ -107,6 +107,11 @@ int ViscoPlasticFlowRule::dh_da_temp(const double * const s,
   return 0;
 }
 
+void ViscoPlasticFlowRule::override_guess(double * const guess)
+{
+  return;
+}
+
 // Various g(s) implementations
 GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n, 
                      std::shared_ptr<Interpolate> eta) :

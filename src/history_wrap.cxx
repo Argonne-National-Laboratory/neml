@@ -85,7 +85,6 @@ PYBIND11_MODULE(history, m) {
            {
             m.get<RankTwo>(name) = v;
            }, "Set a general tensor")
-
       .def("add_symmetric", 
            [](History & m, std::string name)
            {
@@ -131,6 +130,16 @@ PYBIND11_MODULE(history, m) {
            {
             m.get<Orientation>(name) = v;
            }, "Set an orientation")
+      .def("get_symsym",
+           [](History & m, std::string name) -> SymSymR4
+           {
+            return m.get<SymSymR4>(name);
+           }, "Get SymSym")
+      .def("set_symsym",
+           [](History & m, std::string name, SymSymR4 s)
+           {
+            m.get<SymSymR4>(name) = s;
+           }, "Set a SymSym")
         .def("scalar_multiply", &History::scalar_multiply)
         .def(py::self += py::self)
         .def("zero", &History::zero)
@@ -139,6 +148,13 @@ PYBIND11_MODULE(history, m) {
         .def("contains", &History::contains)
         .def("subset", &History::subset)
         .def("reorder", &History::reorder)
+        .def("unravel_hh",
+             [](History & m, const History & base) -> py::array_t<double>
+             {
+              auto mat = alloc_mat<double>(base.size(), base.size());
+              m.unravel_hh(base, arr2ptr<double>(mat));
+              return mat;
+             }, "Unravel to c-style array")
       ;
 }
 

@@ -31,6 +31,7 @@ Implementations
 .. toctree::
 
    general_flow/viscoplastic
+   general_flow/walkerkrempl
 
 Class description
 -----------------

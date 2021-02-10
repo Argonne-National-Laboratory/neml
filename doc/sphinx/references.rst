@@ -1,6 +1,12 @@
 References
 ==========
 
+.. [MS2020] Messner, M. C. and T.-L. Sham. `Initial High Temperature Inelastic Constitutive Model for Alloy 617`.  Argonne National Laboratory technical report ANL-ART-195 (2020).
+
+.. [SW2008] Sham, T.-L. and Kevin P. Walker. "Preliminary Development of a Unified Viscoplastic Constitutive Model for Alloy 617 with Special Reference to Long Term Creep Behavior." In the proceedings of the `Fourth International Topical Meeting on High Temperature Reactor Technology` pp. 81-89 (2008).
+
+.. [WK1978] Walker, K. P. and E. Krempl. "An implicit functional representation of stress-strain behavior." `Mechanics Research Communications`, 5(4): pp. 185-190 (1978).
+
 .. [MTS1999] Goto, D. M., Garrett, R. K., Bingert, J., Chen, Shuh-Rong, and George T. Gray. `Mechanical Threshold Stress Constitutive Strength Model Description of HY-100 Steel,` Indian Head Division, Naval Surface Warefare Center Technical Report IHTR 2168 (1999).
 
 .. [KM2003] Kocks, U. and H. Mecking. "Physics and phenomenology of strain hardening: The FCC case," `Progress in Materials Science,` 48(3): pp. 171-273 (2003).
