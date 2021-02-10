@@ -35,7 +35,7 @@ jobs:
             - run: brew update
             - run: brew install cmake openblas superlu python
             - run: pip3 install --user networkx numpy scipy matplotlib nose
-            - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python3-config --prefix)/bin/python3.9 -D PYTHON_LIBRARY=$(python3-config --prefix)/lib/libpython3.9.dylib -D PYTHON_INCLUDE_DIR=$(python3-config --prefix)/include/python3.9 -D USE_OPENMP=OFF .
+            - run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_FORTRAN_COMPILER=/usr/bin/gfortran -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python3-config --prefix)/bin/python3.9 -D PYTHON_LIBRARY=$(python3-config --prefix)/lib/libpython3.9.dylib -D PYTHON_INCLUDE_DIR=$(python3-config --prefix)/include/python3.9 -D USE_OPENMP=OFF .
             - run: make -j 2
             - run: ~/Library/Python/3.9/bin/nosetests
       test-base-mac:
