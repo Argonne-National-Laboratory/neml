@@ -47,6 +47,7 @@ jobs:
             - uses: actions/checkout@v2
             - run: brew update
             - run: brew install cmake openblas superlu gfortran
+            - run: which gfortran
             - run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_Fortran_COMPILER=/usr/bin/gfortran -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
             - run: make -j 2
             - run: test/drivers/test_drivers.sh
