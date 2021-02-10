@@ -49,6 +49,6 @@ jobs:
             - run: brew install cmake openblas superlu gfortran
             - run: brew reinstall gcc
             - run: which gfortran
-            - run: cmake -D CMAKE_CXX_COMPILER=/usr/local/bin/g++ -D CMAKE_C_COMPILER=/usr/local/bin/gcc -D CMAKE_Fortran_COMPILER=/usr/local/bin/gfortran -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
+            - run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_Fortran_COMPILER=/usr/local/bin/gfortran -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
             - run: make -j 2
             - run: test/drivers/test_drivers.sh
