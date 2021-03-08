@@ -270,6 +270,15 @@ Symmetric StandardKinematicModel::elastic_strains(
   return S.dot(stress);
 }
 
+Symmetric StandardKinematicModel::stress_increment(
+    const Symmetric & stress,
+    const Symmetric & D, double dt, Lattice & lattice, const Orientation & Q,
+    const History & history, double T)
+{
+  SymSymR4 C = emodel_->C(T,Q);
+  return C.dot(D*dt);
+}
+
 bool StandardKinematicModel::use_nye() const
 {
   return imodel_->use_nye();
@@ -587,6 +596,17 @@ Symmetric DamagedStandardKinematicModel::elastic_strains(
   SymSymR4 P = dmodel_->projection(stress, history, Q, lattice,
                                    amodel_->slip_rule(), T);
   return S.dot(P.inverse().dot(stress));
+}
+
+Symmetric DamagedStandardKinematicModel::stress_increment(
+    const Symmetric & stress,
+    const Symmetric & D, double dt, Lattice & lattice, const Orientation & Q,
+    const History & history, double T)
+{
+  SymSymR4 C = emodel_->C(T,Q);
+  SymSymR4 P = dmodel_->projection(stress, history, Q, lattice,
+                                   amodel_->slip_rule(), T);
+  return P.dot(C.dot(D*dt));
 }
 
 std::vector<std::string> DamagedStandardKinematicModel::inames_() const

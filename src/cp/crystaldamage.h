@@ -277,7 +277,7 @@ class TransformationFunction: public NEMLObject {
 /// Sigmoid function.  x=0 -> y=0, x=c -> y=1, beta controls smoothing
 class SigmoidTransformation: public TransformationFunction {
  public:
-  SigmoidTransformation(double c, double beta);
+  SigmoidTransformation(double c, double beta, double cut);
 
   /// String type for the object system
   static std::string type();
@@ -296,6 +296,7 @@ class SigmoidTransformation: public TransformationFunction {
  private:
   double c_;
   double beta_;
+  double cut_;
 };
 
 static Register<SigmoidTransformation> regSigmoidTransformation;

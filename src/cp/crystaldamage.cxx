@@ -514,8 +514,8 @@ double WorkPlaneDamage::d_damage_rate_d_damage(
   return 0;
 }
 
-SigmoidTransformation::SigmoidTransformation(double c, double beta) :
-    c_(c), beta_(beta)
+SigmoidTransformation::SigmoidTransformation(double c, double beta, double cut) :
+    c_(c), beta_(beta), cut_(cut)
 {
 
 }
@@ -530,7 +530,8 @@ std::unique_ptr<NEMLObject> SigmoidTransformation::initialize(
 {
   return neml::make_unique<SigmoidTransformation>(
       params.get_parameter<double>("c"),
-      params.get_parameter<double>("beta"));
+      params.get_parameter<double>("beta"),
+      params.get_parameter<double>("cut"));
 }
 
 ParameterSet SigmoidTransformation::parameters()
@@ -539,6 +540,7 @@ ParameterSet SigmoidTransformation::parameters()
   
   pset.add_parameter<double>("c");
   pset.add_parameter<double>("beta");
+  pset.add_optional_parameter<double>("cut", 1.0);
 
   return pset;
 }
@@ -548,17 +550,28 @@ double SigmoidTransformation::map(double damage, double normal_stress)
   if (damage < 0)
     return 0;
   else if (damage < c_)
-    return 1.0/(1.0 + std::pow(damage / (c_ - damage), -beta_));
-  return 1.0;
+  {
+    double dtrial = 1.0/(1.0 + std::pow(damage / (c_ - damage), -beta_));
+    if (dtrial > cut_) 
+      return cut_;
+    else
+      return dtrial;
+  }
+  return cut_;
 }
 
 double SigmoidTransformation::d_map_d_damage(double damage, double normal_stress)
 {
   if (damage < 0)
     return 0;
-  else if (damage < c_)
-    return beta_*c_*std::pow(damage,beta_-1)*std::pow(1.0/(c_-damage),beta_+1)
-        / pow(std::pow(damage/(c_-damage),beta_)+1.0,2.0);
+  else if (damage < c_) {
+    double dtrial = 1.0/(1.0 + std::pow(damage / (c_ - damage), -beta_));
+    if (dtrial > cut_)
+      return 0;
+    else
+      return beta_*c_*std::pow(damage,beta_-1)*std::pow(1.0/(c_-damage),beta_+1)
+          / pow(std::pow(damage/(c_-damage),beta_)+1.0,2.0);
+  }
   return 0;
 }
 

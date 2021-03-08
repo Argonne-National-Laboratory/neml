@@ -142,6 +142,14 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
                                     const History & history,
                                     double T) = 0;
 
+  /// Helper to predict an elastic stress increment
+  virtual Symmetric stress_increment(const Symmetric & stress,
+                                     const Symmetric & D, double dt, 
+                                     Lattice & lattice,
+                                     const Orientation & Q,
+                                     const History & history,
+                                     double T) = 0;
+
   /// Whether this model uses the Nye tensor
   virtual bool use_nye() const;
 };
@@ -262,6 +270,14 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
                                     const Orientation & Q,
                                     const History & history,
                                     double T);
+  
+  /// Helper to predict an elastic stress increment
+  virtual Symmetric stress_increment(const Symmetric & stress,
+                                     const Symmetric & D, double dt, 
+                                     Lattice & lattice,
+                                     const Orientation & Q,
+                                     const History & history,
+                                     double T);
 
   /// Whether this model uses the Nye tensor
   virtual bool use_nye() const;
@@ -360,6 +376,14 @@ class NEML_EXPORT DamagedStandardKinematicModel: public StandardKinematicModel {
                                     const Orientation & Q,
                                     const History & history,
                                     double T);
+
+  /// Helper to predict an elastic stress increment
+  virtual Symmetric stress_increment(const Symmetric & stress,
+                                     const Symmetric & D, double dt, 
+                                     Lattice & lattice,
+                                     const Orientation & Q,
+                                     const History & history,
+                                     double T);
 
  protected:
   /// Names of the inelastic model internal variables

@@ -121,6 +121,34 @@ int SingleCrystalModel::update_ld_inc(
    double & u_np1, double u_n,
    double & p_np1, double p_n)
 {
+  int ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                T_np1, T_n, t_np1, t_n,
+                                s_np1, s_n, h_np1, h_n, 
+                                A_np1, B_np1, u_np1, u_n,
+                                p_np1, p_n, 0);
+  if (ier != 0) {
+    ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                    T_np1, T_n, t_np1, t_n,
+                                    s_np1, s_n, h_np1, h_n, 
+                                    A_np1, B_np1, u_np1, u_n,
+                                    p_np1, p_n, 1);
+  }
+
+  return ier;
+
+}
+
+int SingleCrystalModel::attempt_update_ld_inc_(
+   const double * const d_np1, const double * const d_n,
+   const double * const w_np1, const double * const w_n,
+   double T_np1, double T_n,
+   double t_np1, double t_n,
+   double * const s_np1, const double * const s_n,
+   double * const h_np1, const double * const h_n,
+   double * const A_np1, double * const B_np1,
+   double & u_np1, double u_n,
+   double & p_np1, double p_n, int trial_type)
+{
   // Shut up a pointless memory error
   std::fill(h_np1, h_np1+nhist(), 0.0);
 
@@ -176,10 +204,21 @@ int SingleCrystalModel::update_ld_inc(
     History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
                                           local_lattice, T_n + dT *
                                           step, F_n);
+    
+    Symmetric strial;
+    if (trial_type == 1) {
+      // Predict the elastic unload
+      strial = S_np1 + kinematics_->stress_increment(S_np1, D, dt * step,
+                                                             local_lattice, Q_n,
+                                                             H_np1, T_n+dT*step);
+    }
+    else {
+      strial = S_np1;
+    }
 
     // Set the trial state
     SCTrialState trial(D, W,
-                       S_np1, H_np1, // Yes, really
+                       strial, H_np1, // Yes, really
                        Q_n, local_lattice,
                        T_n + dT * step, dt * step,
                        fixed);
