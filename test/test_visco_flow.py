@@ -428,6 +428,153 @@ class TestChebocheFlow(unittest.TestCase):
     self.assertTrue(np.allclose(dX, dX_calc))
 
 
+class TestChabocheFlowWithPrefactor(unittest.TestCase):
+  def setUp(self):
+    self.n = 20.0
+    self.eta = 108.0
+    self.sY = 89.0
+    self.prefactor = np.asarray([2.])
+    self.prefactor = 2.
+
+    self.Q = 165.0
+    self.b = 12.0
+
+    self.m = 3
+
+    C1 = 80.0e3
+    C2 = 14.02e3
+    C3 = 3.333e3
+
+    y1 = 0.9e3
+    y2 = 1.5e3
+    y3 = 1.0
+
+    surface = surfaces.IsoKinJ2()
+    self.iso = hardening.VoceIsotropicHardeningRule(self.sY, self.Q, self.b)
+    self.cs = [C1, C2, C3]
+    self.gs = [y1, y2, y3]
+    self.As = [0.0, 0.0, 0.0]
+    self.ns = [1.0, 1.0, 1.0]
+    self.gmodels = [hardening.ConstantGamma(g) for g in self.gs]
+    self.hmodel = hardening.Chaboche(self.iso, self.cs, self.gmodels,
+        self.As, self.ns)
+
+    self.fluidity = visco_flow.ConstantFluidity(self.eta)
+
+    self.hist0 = np.zeros((19,))
+    self.T = 300.0
+
+    self.model = visco_flow.ChabocheFlowRule(
+        surface, self.hmodel, self.fluidity, self.n, prefactor = self.prefactor)
+
+  def gen_stress(self):
+    return np.array([300.0,-200.0,100.0,50.0,150.0,300.0])
+
+  def gen_hist(self):
+    h = np.array(range(1,self.m*6+2)) / (self.m*7)
+    h[1:self.m*6+1] = (2.0 * h[1:self.m*6+1] - 1.0) * 200
+    for i in range(self.m):
+      h[1+i*6:1+(i+1)*6] = make_dev(h[1+i*6:1+(i+1)*6])
+    return h
+
+  def test_y(self):
+    s = self.gen_stress()
+    h = self.gen_hist()
+    y = self.model.y(s, h, self.T)
+
+    sdev = make_dev(s)
+    X = sum(h[1+i*6:1+(i+1)*6] for i in range(self.m))
+    ih = self.iso.q(h[0:1], self.T)[0]
+
+    tv = np.sqrt(3.0/2.0) * la.norm(sdev + X) + ih
+
+    if tv > 0.0:
+      pd = self.prefactor*(tv / self.eta)**self.n
+    else:
+      pd = 0.0
+
+    gd = pd / np.sqrt(2.0/3.0)
+
+    self.assertTrue(np.isclose(gd, y))
+
+  def test_ep(self):
+    s = self.gen_stress()
+    h = self.gen_hist()
+    y = self.model.y(s, h, self.T)
+
+    ep_model = self.model.g(s, h, self.T) * y
+
+    sdev = make_dev(s)
+    X = sum(h[1+i*6:1+(i+1)*6] for i in range(self.m))
+    ih = self.iso.q(h[0:1], self.T)[0]
+
+    tv = np.sqrt(3.0/2.0) * la.norm(sdev + X) + ih
+
+    if tv > 0.0:
+      pd = self.prefactor*(tv / self.eta)**self.n
+    else:
+      pd = 0.0
+
+    ep_calc = 3.0/2.0 * pd * (sdev + X) / (np.sqrt(3.0/2.0) * la.norm(sdev+X))
+
+    self.assertTrue(np.allclose(ep_calc, ep_model))
+
+  def test_rdot(self):
+    s = self.gen_stress()
+    h = self.gen_hist()
+    y = self.model.y(s, h, self.T)
+    adot = self.model.h(s,h,self.T)[0] * y
+    dr = -self.b * np.exp(-self.b * h[0]) * self.Q * adot
+
+    sdev = make_dev(s)
+    X = sum(h[1+i*6:1+(i+1)*6] for i in range(self.m))
+    ih = self.iso.q(h[0:1], self.T)[0]
+
+    tv = np.sqrt(3.0/2.0) * la.norm(sdev + X) + ih
+
+    if tv > 0.0:
+      pd = self.prefactor*(tv / self.eta)**self.n
+    else:
+      pd = 0.0
+
+    q = self.hmodel.q(h, self.T)
+
+    Rtot = -self.sY - self.Q * (1.0 - np.exp(-self.b*h[0]))
+
+    self.assertTrue(np.isclose(Rtot, q[0]))
+
+    R_act = -(Rtot + self.sY)
+
+    dr_direct = -self.b*(self.Q - R_act) * pd
+
+    self.assertTrue(np.isclose(dr_direct, dr))
+
+  def test_Xdot(self):
+    s = self.gen_stress()
+    h = self.gen_hist()
+    y = self.model.y(s, h, self.T)
+    dX = self.model.h(s, h, self.T)[1:] * y
+
+    sdev = make_dev(s)
+    X = sum(h[1+i*6:1+(i+1)*6] for i in range(self.m))
+    ih = self.iso.q(h[0:1], self.T)[0]
+
+    tv = np.sqrt(3.0/2.0) * la.norm(sdev + X) + ih
+
+    if tv > 0.0:
+      pd = self.prefactor*(tv / self.eta)**self.n
+    else:
+      pd = 0.0
+
+    ep_calc = 3.0/2.0 * pd * (sdev + X) / (np.sqrt(3.0/2.0) * la.norm(sdev+X))
+
+    dX_calc = np.zeros((6*self.m,))
+
+    for i in range(self.m):
+      dX_calc[i*6:(i+1)*6] = -2.0/3.0 * self.cs[i] * ep_calc - self.gs[i] * h[1+i*6:1+(i+1)*6] * pd
+
+    self.assertTrue(np.allclose(dX, dX_calc))
+
 class CommonFluidity(object):
   """
     Common fluidity model tests
