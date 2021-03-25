@@ -282,7 +282,7 @@ class TestChabocheModel(unittest.TestCase, CommonFlowRule):
     h[13:19] = make_dev(h[13:19])
     return h
 
-class TestChebocheFlow(unittest.TestCase):
+class TestChabocheFlow(unittest.TestCase):
   def setUp(self):
     self.n = 20.0
     self.eta = 108.0
@@ -574,6 +574,52 @@ class TestChabocheFlowWithPrefactor(unittest.TestCase):
       dX_calc[i*6:(i+1)*6] = -2.0/3.0 * self.cs[i] * ep_calc - self.gs[i] * h[1+i*6:1+(i+1)*6] * pd
 
     self.assertTrue(np.allclose(dX, dX_calc))
+
+class TestChabocheModelWithFactor(unittest.TestCase, CommonFlowRule):
+  def setUp(self):
+    n = 20.0
+    eta = 108.0
+    sY = 89.0
+
+    Q = 165.0
+    b = 12.0
+    
+    self.m = 3
+
+    C1 = 80.0e3
+    C2 = 14.02e3
+    C3 = 3.333e3
+
+    y1 = 0.9e3
+    y2 = 1.5e3
+    y3 = 1.0
+
+    surface = surfaces.IsoKinJ2()
+    iso = hardening.VoceIsotropicHardeningRule(sY, Q, b)
+    cs = [C1, C2, C3]
+    gs = [y1, y2, y3]
+    gmodels = [hardening.ConstantGamma(g) for g in gs]
+    A = [0.0, 0.0, 0.0]
+    ae = [1.0, 1.0, 1.0]
+
+    self.prefactor = 2.0
+
+    hmodel = hardening.Chaboche(iso, cs, gmodels, A, ae)
+
+    fluidity = visco_flow.ConstantFluidity(eta)
+
+    self.hist0 = np.zeros((19,))
+    self.T = 300.0
+
+    self.model = visco_flow.ChabocheFlowRule(
+        surface, hmodel, fluidity, n, prefactor = self.prefactor)
+
+  def gen_hist(self):
+    h = np.array([0.05,20,-30,40.0,5.0,2.0,40.0,-10,-20,10,50,30,10,-50,60,70,15,-15,10])
+    h[1:7] = make_dev(h[1:7])
+    h[7:13] = make_dev(h[7:13])
+    h[13:19] = make_dev(h[13:19])
+    return h
 
 class CommonFluidity(object):
   """
