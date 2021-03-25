@@ -476,41 +476,39 @@ double SaturatingFluidity::deta(double a, double T) const
   return A * b * exp(-b * a);
 }
 
-ChabocheFlowRule::ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
-                                   std::shared_ptr<NonAssociativeHardening> hardening,
-                                   std::shared_ptr<FluidityModel> fluidity,
-                                   std::shared_ptr<Interpolate> n) :
-    surface_(surface), hardening_(hardening), fluidity_(fluidity), n_(n),
-    recovery_(false)
-{
-  
-}
+ChabocheFlowRule::ChabocheFlowRule(
+    std::shared_ptr<YieldSurface> surface,
+    std::shared_ptr<NonAssociativeHardening> hardening,
+    std::shared_ptr<FluidityModel> fluidity, std::shared_ptr<Interpolate> n,
+    std::shared_ptr<Interpolate> prefactor)
+    : surface_(surface), hardening_(hardening), fluidity_(fluidity), n_(n),
+      prefactor_(prefactor), recovery_(false) {}
 
 std::string ChabocheFlowRule::type()
 {
   return "ChabocheFlowRule";
 }
 
-ParameterSet ChabocheFlowRule::parameters()
-{
+ParameterSet ChabocheFlowRule::parameters() {
   ParameterSet pset(ChabocheFlowRule::type());
 
   pset.add_parameter<NEMLObject>("surface");
   pset.add_parameter<NEMLObject>("hardening");
   pset.add_parameter<NEMLObject>("fluidity");
   pset.add_parameter<NEMLObject>("n");
+  pset.add_optional_parameter<NEMLObject>(
+      "prefactor", std::make_shared<ConstantInterpolate>(1.0));
 
   return pset;
 }
 
-std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params)
-{
+std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet &params) {
   return neml::make_unique<ChabocheFlowRule>(
       params.get_object_parameter<YieldSurface>("surface"),
       params.get_object_parameter<NonAssociativeHardening>("hardening"),
       params.get_object_parameter<FluidityModel>("fluidity"),
-      params.get_object_parameter<Interpolate>("n")
-      ); 
+      params.get_object_parameter<Interpolate>("n"),
+      params.get_object_parameter<Interpolate>("prefactor"));
 }
 
 size_t ChabocheFlowRule::nhist() const
@@ -540,10 +538,9 @@ int ChabocheFlowRule::y(const double* const s, const double* const alpha, double
   if (ier != SUCCESS) return ier;
 
   if (fv > 0.0) {
-    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
-    yv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T));
-  }
-  else {
+    double eta = sqrt(2.0 / 3.0) * fluidity_->eta(alpha[0], T);
+    yv = sqrt(3.0 / 2.0) * pow(fv / eta, n_->value(T)) * prefactor_->value(T);
+  } else {
     yv = 0.0;
   }
 
@@ -566,10 +563,13 @@ int ChabocheFlowRule::dy_ds(const double* const s, const double* const alpha, do
 
   if (fv > 0.0) {
     ier = surface_->df_ds(s, q, T, dyv);
-    if (ier != SUCCESS) return ier;
-    double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
-    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / eta;
-    for (int i=0; i<6; i++) dyv[i] *= mv;
+    if (ier != SUCCESS)
+      return ier;
+    double eta = sqrt(2.0 / 3.0) * fluidity_->eta(alpha[0], T);
+    double mv = sqrt(3.0 / 2.0) * pow(fv / eta, n_->value(T) - 1.0) *
+                n_->value(T) / eta * prefactor_->value(T);
+    for (int i = 0; i < 6; i++)
+      dyv[i] *= mv;
   }
 
   return 0;
@@ -604,10 +604,14 @@ int ChabocheFlowRule::dy_da(const double* const s, const double* const alpha, do
     if (ier != SUCCESS) return ier;
 
     double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
-    double mv = sqrt(3.0/2.0) * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / eta;
-    for (size_t i=0; i<nhist(); i++) dyv[i] *= mv;
+    double mv = sqrt(3.0 / 2.0) * pow(fv / eta, n_->value(T) - 1.0) *
+                n_->value(T) / eta * prefactor_->value(T);
+    for (size_t i = 0; i < nhist(); i++)
+      dyv[i] *= mv;
 
-    double mv2 = -sqrt(3.0/2.0) * fv * pow(fv/eta, n_->value(T) - 1.0) * n_->value(T) / (eta * eta);
+    double mv2 = -sqrt(3.0 / 2.0) * fv * pow(fv / eta, n_->value(T) - 1.0) *
+                 n_->value(T) / (eta * eta) * prefactor_->value(T);
+
     double deta = sqrt(2.0/3.0) * fluidity_->deta(alpha[0], T);
     dyv[0] += deta * mv2;
   }
