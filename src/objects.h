@@ -283,7 +283,7 @@ class NEML_EXPORT Factory {
   template<typename T>
   std::unique_ptr<T> create_unique(ParameterSet & params)
   {
-    auto res = std::unique_ptr<T>(dynamic_cast<T*>(create_unique(params).release()));
+    auto res = std::unique_ptr<T>(dynamic_cast<T*>(create(params).release()));
     if (res == nullptr) {
       throw WrongTypeError();
     }
@@ -350,7 +350,7 @@ class NEML_EXPORT UnregisteredError: public std::exception {
       name_(name)
   {
     std::stringstream ss;
-    ss << "Object named " << name_ << " not registered with factory!";   
+    ss << "Object named " << name_ << " not registered with factory!";
     message_ = ss.str();
   };
 
