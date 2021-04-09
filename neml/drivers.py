@@ -360,7 +360,8 @@ class Driver_sd(Driver):
 def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
     sdir = np.array([1,0,0,0,0,0]), verbose = False,
     offset = 0.2/100.0, history = None, tdir = np.array([0,1,0,0,0,0]),
-    rtol = 1e-6, atol = 1e-10, miter = 25):
+    rtol = 1e-6, atol = 1e-10, miter = 25,
+    full_results = False):
   """
     Make a uniaxial stress/strain curve
 
@@ -426,12 +427,18 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
     sY = tfn(sYe)
   except Exception:
     sY = np.inf
-
-  return {'strain': strain, 'stress': stress,
-      'energy_density': np.copy(driver.u),
-      'plastic_work': np.copy(driver.p),
-      'youngs': E, 'yield': sY, 'poissons': nu,
-      'history': driver.stored_int[-1]}
+  
+  if full_results:
+    return {'time': driver.t_int,
+        'strain': driver.mechanical_strain_int,
+        'temperature': driver.T_int,
+        'stress': driver.stress_int }
+  else:
+    return {'strain': strain, 'stress': stress,
+        'energy_density': np.copy(driver.u),
+        'plastic_work': np.copy(driver.p),
+        'youngs': E, 'yield': sY, 'poissons': nu,
+        'history': driver.stored_int[-1]}
 
 def strain_cyclic(model, emax, R, erate, ncycles, T = 300.0, nsteps = 50,
     sdir = np.array([1,0,0,0,0,0]), hold_time = None, n_hold = 25,

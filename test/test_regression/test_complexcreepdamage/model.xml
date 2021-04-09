@@ -1,0 +1,59 @@
+<material>
+  <model type="ModularCreepDamageModel_sd">
+    <verbose>false</verbose>
+    <linesearch>true</linesearch>
+    <estress type="VonMisesEffectiveStress"/>
+    <ekill>true</ekill>
+    <dkill>0.8</dkill>
+
+    <atol>1.0e-6</atol>    
+
+    <A>800.75</A>
+    <xi>6.7</xi>
+    <phi>9.267</phi>
+
+    <elastic type="IsotropicLinearElasticModel">
+      <m1>156000</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.31</m2>
+      <m2_type>poissons</m2_type>
+    </elastic>
+    <base type="SmallStrainCreepPlasticity">
+      <atol>1.0e-6</atol>
+      <linesearch>true</linesearch>
+      <elastic type="IsotropicLinearElasticModel">
+        <m1>156000</m1>
+        <m1_type>youngs</m1_type>
+        <m2>0.31</m2>
+        <m2_type>poissons</m2_type>
+      </elastic>
+      <plastic type="SmallStrainRateIndependentPlasticity">
+        <atol>1.0e-6</atol>     
+        <verbose>false</verbose>
+        <linesearch>true</linesearch>      
+        <elastic type="IsotropicLinearElasticModel">
+          <m1>156000</m1>
+          <m1_type>youngs</m1_type>
+          <m2>0.31</m2>
+          <m2_type>poissons</m2_type>
+        </elastic>
+        <flow type="RateIndependentAssociativeFlow">
+          <surface type="IsoJ2"/>
+          <hardening type="VoceIsotropicHardeningRule">
+            <s0>237.4</s0>
+            <R>182.2</R>
+            <d>100.0</d>
+          </hardening>
+        </flow>
+      </plastic>
+      <creep type="J2CreepModel">
+        <verbose>false</verbose>
+        <linesearch>true</linesearch>
+        <rule type="PowerLawCreep">
+          <A>4.67e-22</A>
+          <n>7.75</n>
+        </rule>
+      </creep>
+    </base>
+  </model>
+</material>
