@@ -86,4 +86,5 @@ if __name__ == "__main__":
       nsteps = args.nsteps)
   
   outfile = os.path.join(args.directory, default_result_name)
-  np.savetxt(outfile, result, delimiter = ',')
+  np.savetxt(outfile, result, delimiter = ',', 
+      header = "time,temperature,strain_11,strain_22,strain_33,strain_23,strain_13,strain_12,stress_11,stress_22,stress_33,stress_23,stress_13,stress_12")

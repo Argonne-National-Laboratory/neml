@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from regressiontools import rtt
 
 def test_all_regression():
-  tests = glob.glob(os.path.join(os.path.dirname(__file__),"test*"))
+  tests = glob.glob(os.path.join(os.path.dirname(__file__),"test_*"))
   npe = glob.glob(os.path.join(os.path.dirname(__file__),"test*.py"))
   for n in npe:
     tests.remove(n)
