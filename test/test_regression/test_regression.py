@@ -15,6 +15,8 @@ from regressiontools import rtt
 def test_all_regression():
   tests = glob.glob(os.path.join(os.path.dirname(__file__),"test_*"))
   npe = glob.glob(os.path.join(os.path.dirname(__file__),"test*.py"))
+  # This removes the files test_*.py, which are unfortunately how I have
+  # to name the python files for nose to find them
   for n in npe:
     tests.remove(n)
 

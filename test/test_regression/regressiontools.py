@@ -45,6 +45,10 @@ def run_compare_test(model, target_times, target_temps, target_strains):
   return data
 
 def rtt(tdir):
+  """
+    Load a model from tdir, load the time, temperature, and strain data
+    from the csv file, run the test, and compare the stresses
+  """
   model = parse.parse_xml(os.path.join(tdir, default_xml_file),
       default_model_name)
   input_data = np.loadtxt(os.path.join(tdir, default_result_name), delimiter = ',')
