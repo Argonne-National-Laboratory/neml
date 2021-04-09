@@ -270,7 +270,8 @@ class NEML_EXPORT ChabocheFlowRule: public ViscoPlasticFlowRule {
   ChabocheFlowRule(std::shared_ptr<YieldSurface> surface,
                    std::shared_ptr<NonAssociativeHardening> hardening,
                    std::shared_ptr<FluidityModel> fluidity,
-                   std::shared_ptr<Interpolate> n);
+                   std::shared_ptr<Interpolate> n,
+                   std::shared_ptr<Interpolate> prefactor);
 
   /// String type for the object system
   static std::string type();
@@ -339,6 +340,7 @@ class NEML_EXPORT ChabocheFlowRule: public ViscoPlasticFlowRule {
   std::shared_ptr<NonAssociativeHardening> hardening_;
   std::shared_ptr<FluidityModel> fluidity_;
   const std::shared_ptr<const Interpolate> n_;
+  const std::shared_ptr<const Interpolate> prefactor_;
   const bool recovery_;
 };
 
