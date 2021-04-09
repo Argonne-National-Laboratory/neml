@@ -1,0 +1,10 @@
+<materials>
+  <model type="SmallStrainElasticity">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1_type>youngs</m1_type>
+      <m1>288000.0</m1>
+      <m2_type>poissons</m2_type>
+      <m2>0.29</m2>
+    </elastic>
+  </model>
+</materials>

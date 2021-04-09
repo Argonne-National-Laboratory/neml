@@ -1,0 +1,14 @@
+<materials>
+  <model type="SmallStrainPerfectPlasticity">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1>100000.0</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.3</m2>
+      <m2_type>poissons</m2_type>
+    </elastic>
+
+    <surface type="IsoJ2"/>
+
+    <ys>300.0</ys>
+  </model>
+</materials>

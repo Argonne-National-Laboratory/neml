@@ -1,0 +1,29 @@
+<materials>
+  <model type="GeneralIntegrator">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1 type="PolynomialInterpolate">
+        <coefs>-0.11834615 115.5 48807.69</coefs>
+      </m1>
+      <m1_type>shear</m1_type>
+      <m2 type="PolynomialInterpolate">
+        <coefs>-0.256417 250.25 105750.0</coefs>
+      </m2>
+      <m2_type>bulk</m2_type>
+    </elastic>
+
+    <rule type="TVPFlowRule">
+      <elastic type="IsotropicLinearElasticModel">
+        <m1 type="PolynomialInterpolate">
+          <coefs>-0.11834615 115.5 48807.69</coefs>
+        </m1>
+        <m1_type>shear</m1_type>
+        <m2 type="PolynomialInterpolate">
+          <coefs>-0.256417 250.25 105750.0</coefs>
+        </m2>
+        <m2_type>bulk</m2_type>
+      </elastic>
+
+      <flow type="YaguchiGr91FlowRule"/>
+    </rule>
+  </model>
+</materials>
