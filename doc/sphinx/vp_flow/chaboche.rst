@@ -14,12 +14,11 @@ The model is defined by:
 
    \dot{\gamma} = \dot{\gamma}_0 \sqrt{\frac{3}{2}} \left\langle \frac{f\left(\bm{\sigma}, \mathbf{q}\left(\bm{\alpha}\right), T\right)}{\sqrt{2/3}\eta\left(\bar{\varepsilon}_{vp}, T\right)}\right\rangle^n
 
-   \mathbf{g}_{\gamma} = \frac{\partial f}{\partial \bm{\sigma}}
-      \left( \bm{\sigma}, \mathbf{q}\left(\bm{\alpha}\right), T  \right)
+   \mathbf{g}_{\gamma} = \frac{\partial f}{\partial \bm{\sigma}} \left( \bm{\sigma}, \mathbf{q}\left(\bm{\alpha}\right), T  \right)
 
 The time and temperature rate contributions to the flow function are zero.
 The rate sensitivity exponent is generally temperature dependent; the prefactor
-:math:`\dot_{\gamma}_0` can be temperature dependent; the
+:math:`\dot{\gamma}_0` can be temperature dependent; the
 :ref:`fluidity-model` :math:`\eta` can depend on both temperature and inelastic strain.
 The hardening model is defined by a NonassociativeHardening model.
 The time and temperature rate contributions can be non-zero.
