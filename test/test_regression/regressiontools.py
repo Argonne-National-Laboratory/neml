@@ -51,7 +51,8 @@ def rtt(tdir):
   """
   model = parse.parse_xml(os.path.join(tdir, default_xml_file),
       default_model_name)
-  input_data = np.loadtxt(os.path.join(tdir, default_result_name), delimiter = ',')
+  input_data = np.loadtxt(os.path.join(tdir, default_result_name), delimiter = ',',
+      skiprows = 1)
 
   output_data = run_compare_test(model, input_data[:,0], input_data[:,1], 
       input_data[:,2:8])
@@ -90,5 +91,5 @@ if __name__ == "__main__":
       nsteps = args.nsteps)
   
   outfile = os.path.join(args.directory, default_result_name)
-  np.savetxt(outfile, result, delimiter = ',', 
+  np.savetxt(outfile, result, delimiter = ',', comments = '',
       header = "time,temperature,strain_11,strain_22,strain_33,strain_23,strain_13,strain_12,stress_11,stress_22,stress_33,stress_23,stress_13,stress_12")
