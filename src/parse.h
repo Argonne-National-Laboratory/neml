@@ -201,6 +201,29 @@ class UnregisteredXML: public std::exception {
 
 };
 
+/// The model isn't in the file
+class ModelNotFound: public std::exception {
+ public:
+  ModelNotFound(std::string name) :
+      name_(name)
+  {
+    std::stringstream ss;
+
+    ss << "Model named " << name_ << " is not in the XML file!";
+
+    message_ = ss.str();
+  };
+
+  const char * what() const throw ()
+  {
+    return message_.c_str();
+  };
+
+ private:
+  std::string name_, message_;
+
+};
+
 } // namespace neml
 
 #endif // PARSE_H
