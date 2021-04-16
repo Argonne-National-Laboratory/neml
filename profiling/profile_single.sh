@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ifile="../test/regression/models.txt"
+ifile="models.txt"
 
 if [[ $# -ne 1 ]]; then
     echo "Script takes a single parameter, the model name"
@@ -12,4 +12,4 @@ if [[ $# -ne 1 ]]; then
     exit 2
 fi
 
-valgrind --tool=callgrind ../util/cxx_interface/cxxsimple ../test/regression/reference.xml "$1" 0.02 100.0 20 300
+valgrind --tool=callgrind ../util/cxx_interface/cxxsimple reference.xml "$1" 0.02 100.0 20 300
