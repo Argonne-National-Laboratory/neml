@@ -1,0 +1,17 @@
+<models>
+  <test_j2iso type="SmallStrainRateIndependentPlasticity">
+    <elastic type="IsotropicLinearElasticModel">
+      <m1>103561.64383561644</m1>
+      <m1_type>youngs</m1_type>
+      <m2>0.2945205479452055</m2>
+      <m2_type>poissons</m2_type>
+    </elastic>
+    
+    <flow type="RateIndependentAssociativeFlow">
+      <surface type="IsoJ2"/>
+      <hardening type="LinearIsotropicHardeningRule">
+        <s0>100.0</s0>
+        <K>1000.0</K>
+      </hardening>
+    </flow>
+</models>
