@@ -78,7 +78,7 @@ class NEML_EXPORT SlipRule: public NEMLObject
   virtual bool use_nye() const;
 };
 
-/// Class relying on multiple strength models (each of which is a function of 
+/// Class relying on multiple strength models (each of which is a function of
 /// some history variables with corresponding evolution laws)
 class NEML_EXPORT SlipMultiStrengthSlipRule: public SlipRule
 {
@@ -96,7 +96,7 @@ class NEML_EXPORT SlipMultiStrengthSlipRule: public SlipRule
   virtual void init_history(History & history) const;
 
   /// Helper for models that want an average strength
-  virtual double strength(const History & history, Lattice & L, double T, 
+  virtual double strength(const History & history, Lattice & L, double T,
                           const History & fixed) const;
 
   /// Slip rate on group g, system i
@@ -132,10 +132,10 @@ class NEML_EXPORT SlipMultiStrengthSlipRule: public SlipRule
 
   /// The slip rate on group g, system i given the resolved shear, the strength,
   /// and temperature
-  virtual double sslip(size_t g, size_t i, double tau, 
+  virtual double sslip(size_t g, size_t i, double tau,
                        std::vector<double> strengths, double T) const = 0;
   /// Derivative of slip rate with respect to the resolved shear
-  virtual double d_sslip_dtau(size_t g, size_t i, double tau, 
+  virtual double d_sslip_dtau(size_t g, size_t i, double tau,
                               std::vector<double> strengths,
                               double T) const = 0;
   /// Derivative of the slip rate with respect to the strengths
@@ -168,10 +168,10 @@ class NEML_EXPORT KinematicPowerLawSlipRule: public SlipMultiStrengthSlipRule
 
   /// The slip rate on group g, system i given the resolved shear, the strength,
   /// and temperature
-  virtual double sslip(size_t g, size_t i, double tau, 
+  virtual double sslip(size_t g, size_t i, double tau,
                        std::vector<double> strengths, double T) const;
   /// Derivative of slip rate with respect to the resolved shear
-  virtual double d_sslip_dtau(size_t g, size_t i, double tau, 
+  virtual double d_sslip_dtau(size_t g, size_t i, double tau,
                               std::vector<double> strengths,
                               double T) const;
   /// Derivative of the slip rate with respect to the strengths
@@ -196,10 +196,10 @@ class NEML_EXPORT SlipStrengthSlipRule: public SlipMultiStrengthSlipRule
 
   /// The slip rate on group g, system i given the resolved shear, the strength,
   /// and temperature
-  virtual double sslip(size_t g, size_t i, double tau, 
+  virtual double sslip(size_t g, size_t i, double tau,
                        std::vector<double> strengths, double T) const;
   /// Derivative of slip rate with respect to the resolved shear
-  virtual double d_sslip_dtau(size_t g, size_t i, double tau, 
+  virtual double d_sslip_dtau(size_t g, size_t i, double tau,
                               std::vector<double> strengths,
                               double T) const;
   /// Derivative of the slip rate with respect to the strengths
@@ -211,12 +211,48 @@ class NEML_EXPORT SlipStrengthSlipRule: public SlipMultiStrengthSlipRule
   virtual double scalar_sslip(size_t g, size_t i, double tau, double strength,
                               double T) const = 0;
   /// Derivative of slip rate with respect to the resolved shear
-  virtual double scalar_d_sslip_dtau(size_t g, size_t i, double tau, 
+  virtual double scalar_d_sslip_dtau(size_t g, size_t i, double tau,
                                      double strength, double T) const = 0;
   /// Derivative of the slip rate with respect to the strength
   virtual double scalar_d_sslip_dstrength(size_t g, size_t i, double tau,
                                           double strength, double T) const = 0;
 };
+
+
+/// The standard power law slip strength/rate relation
+class NEML_EXPORT HuCocksSlipRule: public SlipStrengthSlipRule
+{
+ public:
+  /// Initialize with the strength object, the reference strain rate, and the
+  /// rate sensitivity
+  HuCocksSlipRule(std::shared_ptr<SlipHardening> strength,
+                   std::shared_ptr<Interpolate> gamma0,
+                   std::shared_ptr<Interpolate> n);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// The slip rate definition
+  virtual double scalar_sslip(size_t g, size_t i, double tau, double strength,
+                              double T) const;
+  /// Derivative of slip rate with respect to the resolved shear
+  virtual double scalar_d_sslip_dtau(size_t g, size_t i, double tau,
+                                     double strength, double T) const;
+  /// Derivative of the slip rate with respect to the strength
+  virtual double scalar_d_sslip_dstrength(size_t g, size_t i, double tau,
+                                          double strength, double T) const;
+
+ private:
+  std::shared_ptr<Interpolate> gamma0_;
+  std::shared_ptr<Interpolate> n_;
+};
+
+static Register<HuCocksSlipRule> regHuCocksSlipRule;
+
 
 /// The standard power law slip strength/rate relation
 class NEML_EXPORT PowerLawSlipRule: public SlipStrengthSlipRule
@@ -239,7 +275,7 @@ class NEML_EXPORT PowerLawSlipRule: public SlipStrengthSlipRule
   virtual double scalar_sslip(size_t g, size_t i, double tau, double strength,
                               double T) const;
   /// Derivative of slip rate with respect to the resolved shear
-  virtual double scalar_d_sslip_dtau(size_t g, size_t i, double tau, 
+  virtual double scalar_d_sslip_dtau(size_t g, size_t i, double tau,
                                      double strength, double T) const;
   /// Derivative of the slip rate with respect to the strength
   virtual double scalar_d_sslip_dstrength(size_t g, size_t i, double tau,

@@ -52,6 +52,16 @@ PYBIND11_MODULE(sliprules, m) {
            &SlipStrengthSlipRule::scalar_d_sslip_dstrength)
       ;
 
+  py::class_<HuCocksSlipRule, SlipStrengthSlipRule,
+            std::shared_ptr<HuCocksSlipRule>>(m, "HuCocksSlipRule")
+          .def(py::init([](py::args args, py::kwargs kwargs)
+                        {
+                          return create_object_python<HuCocksSlipRule>(
+                              args, kwargs, {"resistance", "gamma0", "n"});
+                        }))
+          ;
+
+
   py::class_<PowerLawSlipRule, SlipStrengthSlipRule,
         std::shared_ptr<PowerLawSlipRule>>(m, "PowerLawSlipRule")
       .def(py::init([](py::args args, py::kwargs kwargs)

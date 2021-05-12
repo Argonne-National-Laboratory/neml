@@ -2,8 +2,8 @@
 
 namespace neml {
 
-double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q, 
-                          const History & history, Lattice & L, 
+double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q,
+                          const History & history, Lattice & L,
                           double T, const History & fixed) const
 {
   double dg = 0.0;
@@ -16,10 +16,10 @@ double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q,
   return dg;
 }
 
-Symmetric SlipRule::d_sum_slip_d_stress(const Symmetric & stress, 
-                                        const Orientation & Q, 
+Symmetric SlipRule::d_sum_slip_d_stress(const Symmetric & stress,
+                                        const Orientation & Q,
                                         const History & history,
-                                        Lattice & L, double T, 
+                                        Lattice & L, double T,
                                         const History & fixed) const
 {
   Symmetric ds;
@@ -35,7 +35,7 @@ Symmetric SlipRule::d_sum_slip_d_stress(const Symmetric & stress,
 }
 
 History SlipRule::d_sum_slip_d_hist(const Symmetric & stress,
-                                    const Orientation & Q, 
+                                    const Orientation & Q,
                                     const History & history, Lattice & L,
                                     double T, const History & fixed) const
 {
@@ -111,7 +111,7 @@ double SlipMultiStrengthSlipRule::strength(const History & history,
   return val / num;
 }
 
-double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & stress, 
+double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & stress,
                     const Orientation & Q, const History & history,
                     Lattice & L, double T, const History & fixed) const
 {
@@ -125,11 +125,11 @@ double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & str
   return sslip(g, i, tau, strengths, T);
 }
 
-Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmetric & stress, 
+Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmetric & stress,
                              const Orientation & Q, const History & history,
                              Lattice & L, double T, const History & fixed) const
 {
-  double tau = L.shear(g, i, Q, stress);  
+  double tau = L.shear(g, i, Q, stress);
   Symmetric dtau = L.d_shear(g, i, Q, stress);
 
   std::vector<double> strengths(nstrength());
@@ -140,11 +140,11 @@ Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmet
   return d_sslip_dtau(g, i, tau, strengths, T) * dtau;
 }
 
-History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetric & stress, 
+History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetric & stress,
                    const Orientation & Q, const History & history,
                    Lattice & L, double T, const History & fixed) const
 {
-  double tau = L.shear(g, i, Q, stress);  
+  double tau = L.shear(g, i, Q, stress);
   Symmetric dtau = L.d_shear(g, i, Q, stress);
 
   std::vector<double> strengths(nstrength());
@@ -158,13 +158,13 @@ History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetri
   for (size_t i = 0; i < nstrength(); i++) {
     History deriv = strengths_[i]->d_hist_to_tau(g, i, history, L, T, fixed);
     deriv.scalar_multiply(dtb[i]);
-    dhist.add_union(deriv); 
+    dhist.add_union(deriv);
   }
 
   return dhist;
 }
 
-History SlipMultiStrengthSlipRule::hist_rate(const Symmetric & stress, 
+History SlipMultiStrengthSlipRule::hist_rate(const Symmetric & stress,
                     const Orientation & Q, const History & history,
                     Lattice & L, double T, const History & fixed) const
 {
@@ -175,7 +175,7 @@ History SlipMultiStrengthSlipRule::hist_rate(const Symmetric & stress,
   return res;
 }
 
-History SlipMultiStrengthSlipRule::d_hist_rate_d_stress(const Symmetric & stress, 
+History SlipMultiStrengthSlipRule::d_hist_rate_d_stress(const Symmetric & stress,
                     const Orientation & Q, const History & history,
                     Lattice & L, double T, const History & fixed) const
 {
@@ -186,7 +186,7 @@ History SlipMultiStrengthSlipRule::d_hist_rate_d_stress(const Symmetric & stress
   return dhist;
 }
 
-History SlipMultiStrengthSlipRule::d_hist_rate_d_hist(const Symmetric & stress, 
+History SlipMultiStrengthSlipRule::d_hist_rate_d_hist(const Symmetric & stress,
                     const Orientation & Q, const History & history,
                     Lattice & L, double T, const History & fixed) const
 {
@@ -206,7 +206,7 @@ History SlipMultiStrengthSlipRule::d_hist_rate_d_hist(const Symmetric & stress,
       }
     }
   }
-  
+
   // Most regrettably this is now entirely out of order.  Need to fix up so
   // things are row-major
   std::vector<std::string> order;
@@ -259,7 +259,7 @@ std::unique_ptr<NEMLObject> KinematicPowerLawSlipRule::initialize(
 ParameterSet KinematicPowerLawSlipRule::parameters()
 {
   ParameterSet pset(KinematicPowerLawSlipRule::type());
-  
+
   pset.add_parameter<NEMLObject>("backstrength");
   pset.add_parameter<NEMLObject>("isostrength");
   pset.add_parameter<NEMLObject>("flowresistance");
@@ -269,8 +269,8 @@ ParameterSet KinematicPowerLawSlipRule::parameters()
   return pset;
 }
 
-double KinematicPowerLawSlipRule::sslip(size_t g, size_t i, double tau, 
-                                        std::vector<double> strengths, 
+double KinematicPowerLawSlipRule::sslip(size_t g, size_t i, double tau,
+                                        std::vector<double> strengths,
                                         double T) const
 {
   double bs = strengths[0];
@@ -288,7 +288,7 @@ double KinematicPowerLawSlipRule::sslip(size_t g, size_t i, double tau,
   }
 }
 
-double KinematicPowerLawSlipRule::d_sslip_dtau(size_t g, size_t i, double tau, 
+double KinematicPowerLawSlipRule::d_sslip_dtau(size_t g, size_t i, double tau,
                                                std::vector<double> strengths,
                                                double T) const
 {
@@ -303,12 +303,12 @@ double KinematicPowerLawSlipRule::d_sslip_dtau(size_t g, size_t i, double tau,
     return 0.0;
   }
   else {
-    return g0 * n * std::pow((std::fabs(tau - bs) - is) / fr, n-1) / fr; 
+    return g0 * n * std::pow((std::fabs(tau - bs) - is) / fr, n-1) / fr;
   }
 }
 
 std::vector<double> KinematicPowerLawSlipRule::d_sslip_dstrength(
-    size_t g, size_t i, double tau, std::vector<double> strengths, 
+    size_t g, size_t i, double tau, std::vector<double> strengths,
     double T) const
 {
   double bs = strengths[0];
@@ -333,24 +333,24 @@ SlipStrengthSlipRule::SlipStrengthSlipRule(
     std::shared_ptr<SlipHardening> strength) :
       SlipMultiStrengthSlipRule({strength})
 {
-  
+
 }
 
-double SlipStrengthSlipRule::sslip(size_t g, size_t i, double tau, 
+double SlipStrengthSlipRule::sslip(size_t g, size_t i, double tau,
                                    std::vector<double> strengths, double T) const
 {
   return scalar_sslip(g, i, tau, strengths[0], T);
 }
 
-double SlipStrengthSlipRule::d_sslip_dtau(size_t g, size_t i, double tau, 
+double SlipStrengthSlipRule::d_sslip_dtau(size_t g, size_t i, double tau,
                                           std::vector<double> strengths,
                                           double T) const
 {
   return scalar_d_sslip_dtau(g, i, tau, strengths[0], T);
 }
 
-std::vector<double> SlipStrengthSlipRule::d_sslip_dstrength(size_t g, 
-                                                            size_t i, 
+std::vector<double> SlipStrengthSlipRule::d_sslip_dstrength(size_t g,
+                                                            size_t i,
                                                             double tau,
                                                             std::vector<double> strengths,
                                                             double T) const
@@ -358,8 +358,110 @@ std::vector<double> SlipStrengthSlipRule::d_sslip_dstrength(size_t g,
   return {scalar_d_sslip_dstrength(g, i, tau, strengths[0], T)};
 }
 
+
+HuCocksSlipRule::HuCocksSlipRule(std::shared_ptr<SlipHardening> strength,
+                                   std::shared_ptr<Interpolate> gamma0,
+                                   std::shared_ptr<Interpolate> n) :
+    SlipStrengthSlipRule(strength), gamma0_(gamma0), n_(n)
+{
+
+}
+
+std::string HuCocksSlipRule::type()
+{
+  return "HuCocksSlipRule";
+}
+
+std::unique_ptr<NEMLObject> HuCocksSlipRule::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<HuCocksSlipRule>(
+      params.get_object_parameter<SlipHardening>("resistance"),
+      params.get_object_parameter<Interpolate>("gamma0"),
+      params.get_object_parameter<Interpolate>("n"));
+}
+
+ParameterSet HuCocksSlipRule::parameters()
+{
+  ParameterSet pset(HuCocksSlipRule::type());
+
+  pset.add_parameter<NEMLObject>("resistance");
+  pset.add_parameter<NEMLObject>("gamma0");
+  pset.add_parameter<NEMLObject>("n");
+
+  return pset;
+}
+
+double HuCocksSlipRule::scalar_sslip(size_t g, size_t i, double tau,
+                                      double strength, double T) const
+{
+
+  double g0 = gamma0_->value(T);
+  double n = n_->value(T);
+  double Fo = 0.5 * 15.625 * std::pow(10,-30) * 79.3 * std::pow(10,9);
+  double k = 1.38 * std::pow(10,-23);
+  double Temp = 1200;
+  double C = Fo/k/Temp;
+  //tau = 1;
+  double tau_in = 1;
+ // return g0 * tau / strength * std::pow(std::fabs(tau/strength), n-1.0);
+  return g0 * std::exp(-C * std::pow(1 - std::pow((tau + tau_in) / strength,1),1)) * (tau+tau_in)/std::abs(tau+tau_in);
+//  return g0 * (tau+tau_in) / strength * std::pow(std::fabs(tau/strength), n-1.0);
+//  return 0.01*std::exp(-C * std::pow(1 - std::pow(std::abs((tau + tau_in)/strength),1),1))
+//  * (tau/std::abs(tau));
+
+}
+
+double HuCocksSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau,
+                                             double strength, double T) const
+{
+  double g0 = gamma0_->value(T);
+  double n = n_->value(T);
+  double Fo = 0.5 * 15.625 * std::pow(10,-30) * 79.3 * std::pow(10,9);
+  double k = 1.38 * std::pow(10,-23);
+  double Temp = 1200;
+  double C = Fo/k/Temp;
+  //tau = 1;
+  double tau_in = 1;
+//  return C * g0 * std::pow(tau/strength,0.75) * std::pow(1 - std::pow(tau/strength,0.75),0.33)
+//  * std::exp(-C * std::pow(1 - std::pow(tau/strength,0.75),1.33))/tau;
+  return C * g0 * std::exp(-C * (1 - (tau + tau_in)/strength))/strength  * (tau+tau_in)/std::abs(tau+tau_in);
+  // return g0 * n * std::pow(std::fabs(tau/strength), n-1.0) / strength;
+//  return 0;
+//  return g0*C*std::pow((tau + tau_in)/strength,0.75)*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),
+//  0.33)*std::exp(-C*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),1.33))/(tau + tau_in);
+
+}
+
+double HuCocksSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i,
+                                                  double tau,
+                                                  double strength,
+                                                  double T) const
+{
+  double g0 = gamma0_->value(T);
+  double n = n_->value(T);
+  double Fo = 0.65 * 15.625 * std::pow(10,-30) * 79.3 * std::pow(10,9);
+  double k = 1.38 * std::pow(10,-23);
+  double Temp = 1200;
+  double C = Fo/k/Temp;
+  //tau = 1;
+  double tau_in = 1;
+
+//  return 0;
+//  return -C * g0 * std::pow(tau/strength,1) * std::pow(1 - std::pow(tau/strength,1),1) *
+//  std::exp(-C * std::pow(1 - std::pow(tau/strength,1), 1))/strength;
+//  return -C * g0 * std::pow(tau/strength,0.75) * std::pow(1 - std::pow(tau/strength,0.75),0.33)
+//  * std::exp(-C * std::pow(1 - std::pow(tau/strength,0.75),1.33))/strength;
+  return -C * g0 * (tau + tau_in) * std::exp(-C * (1 - (tau + tau_in)/strength))/ std::pow(strength,2) * (tau+tau_in)/std::abs(tau+tau_in);
+  // return -n * g0 * tau * std::pow(std::fabs(tau), n -1.0) / std::pow(strength, n + 1.0);
+//  return -g0*C*std::pow((tau + tau_in)/strength,0.75)*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),
+//  0.33)*std::exp(-C*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),1.33))/strength;
+
+}
+
+
 PowerLawSlipRule::PowerLawSlipRule(std::shared_ptr<SlipHardening> strength,
-                                   std::shared_ptr<Interpolate> gamma0, 
+                                   std::shared_ptr<Interpolate> gamma0,
                                    std::shared_ptr<Interpolate> n) :
     SlipStrengthSlipRule(strength), gamma0_(gamma0), n_(n)
 {
@@ -383,7 +485,7 @@ std::unique_ptr<NEMLObject> PowerLawSlipRule::initialize(
 ParameterSet PowerLawSlipRule::parameters()
 {
   ParameterSet pset(PowerLawSlipRule::type());
-  
+
   pset.add_parameter<NEMLObject>("resistance");
   pset.add_parameter<NEMLObject>("gamma0");
   pset.add_parameter<NEMLObject>("n");
@@ -391,7 +493,7 @@ ParameterSet PowerLawSlipRule::parameters()
   return pset;
 }
 
-double PowerLawSlipRule::scalar_sslip(size_t g, size_t i, double tau, 
+double PowerLawSlipRule::scalar_sslip(size_t g, size_t i, double tau,
                                       double strength, double T) const
 {
   double g0 = gamma0_->value(T);
@@ -400,7 +502,7 @@ double PowerLawSlipRule::scalar_sslip(size_t g, size_t i, double tau,
   return g0 * tau / strength * std::pow(std::fabs(tau/strength), n-1.0);
 }
 
-double PowerLawSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau, 
+double PowerLawSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau,
                                              double strength, double T) const
 {
   double g0 = gamma0_->value(T);
@@ -409,15 +511,15 @@ double PowerLawSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau,
   return g0 * n * std::pow(std::fabs(tau/strength), n-1.0) / strength;
 }
 
-double PowerLawSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i, 
-                                                  double tau, 
+double PowerLawSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i,
+                                                  double tau,
                                                   double strength,
                                                   double T) const
 {
   double g0 = gamma0_->value(T);
   double n = n_->value(T);
 
-  return -n * g0 * tau * std::pow(std::fabs(tau), n -1.0) / std::pow(strength, n + 1.0); 
+  return -n * g0 * tau * std::pow(std::fabs(tau), n -1.0) / std::pow(strength, n + 1.0);
 }
 
 } // namespace neml
