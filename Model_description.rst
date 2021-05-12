@@ -13,6 +13,9 @@ Key features of the 316H stainless steel microstructure are noted below:
 Flow Rule
 -------------
 The deformation kinetics on a given slip system is given by the following expression
+:math:`\dot{\gamma} = \dot{\gamma_0}\left|\frac{\tau+\tau_{in}}{\tau_{cr}}\right|^p sgn(\tau+\tau_{in})`
+
+..
 :math:`\dot{\gamma} = \dot{\gamma_0} \exp \left( -\frac{\Delta F_0}{kT} \left(1-\left|\frac{\tau + \tau_{in}}{(1+F_{sol})\tau_{cr}}\right|^{3/4}\right)^{4/3} \right) sgn(\tau)`
 
 
