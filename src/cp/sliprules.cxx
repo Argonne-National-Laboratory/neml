@@ -397,18 +397,12 @@ double HuCocksSlipRule::scalar_sslip(size_t g, size_t i, double tau,
 {
 
   double g0 = gamma0_->value(T);
-  double n = n_->value(T);
   double Fo = 0.5 * 15.625 * std::pow(10,-30) * 79.3 * std::pow(10,9);
   double k = 1.38 * std::pow(10,-23);
   double Temp = 1200;
   double C = Fo/k/Temp;
-  //tau = 1;
   double tau_in = 1;
- // return g0 * tau / strength * std::pow(std::fabs(tau/strength), n-1.0);
   return g0 * std::exp(-C * std::pow(1 - std::pow((tau + tau_in) / strength,1),1)) * (tau+tau_in)/std::abs(tau+tau_in);
-//  return g0 * (tau+tau_in) / strength * std::pow(std::fabs(tau/strength), n-1.0);
-//  return 0.01*std::exp(-C * std::pow(1 - std::pow(std::abs((tau + tau_in)/strength),1),1))
-//  * (tau/std::abs(tau));
 
 }
 
@@ -416,21 +410,12 @@ double HuCocksSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau,
                                              double strength, double T) const
 {
   double g0 = gamma0_->value(T);
-  double n = n_->value(T);
   double Fo = 0.5 * 15.625 * std::pow(10,-30) * 79.3 * std::pow(10,9);
   double k = 1.38 * std::pow(10,-23);
   double Temp = 1200;
   double C = Fo/k/Temp;
-  //tau = 1;
   double tau_in = 1;
-//  return C * g0 * std::pow(tau/strength,0.75) * std::pow(1 - std::pow(tau/strength,0.75),0.33)
-//  * std::exp(-C * std::pow(1 - std::pow(tau/strength,0.75),1.33))/tau;
   return C * g0 * std::exp(-C * (1 - (tau + tau_in)/strength))/strength  * (tau+tau_in)/std::abs(tau+tau_in);
-  // return g0 * n * std::pow(std::fabs(tau/strength), n-1.0) / strength;
-//  return 0;
-//  return g0*C*std::pow((tau + tau_in)/strength,0.75)*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),
-//  0.33)*std::exp(-C*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),1.33))/(tau + tau_in);
-
 }
 
 double HuCocksSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i,
@@ -439,23 +424,12 @@ double HuCocksSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i,
                                                   double T) const
 {
   double g0 = gamma0_->value(T);
-  double n = n_->value(T);
   double Fo = 0.65 * 15.625 * std::pow(10,-30) * 79.3 * std::pow(10,9);
   double k = 1.38 * std::pow(10,-23);
   double Temp = 1200;
   double C = Fo/k/Temp;
-  //tau = 1;
   double tau_in = 1;
-
-//  return 0;
-//  return -C * g0 * std::pow(tau/strength,1) * std::pow(1 - std::pow(tau/strength,1),1) *
-//  std::exp(-C * std::pow(1 - std::pow(tau/strength,1), 1))/strength;
-//  return -C * g0 * std::pow(tau/strength,0.75) * std::pow(1 - std::pow(tau/strength,0.75),0.33)
-//  * std::exp(-C * std::pow(1 - std::pow(tau/strength,0.75),1.33))/strength;
   return -C * g0 * (tau + tau_in) * std::exp(-C * (1 - (tau + tau_in)/strength))/ std::pow(strength,2) * (tau+tau_in)/std::abs(tau+tau_in);
-  // return -n * g0 * tau * std::pow(std::fabs(tau), n -1.0) / std::pow(strength, n + 1.0);
-//  return -g0*C*std::pow((tau + tau_in)/strength,0.75)*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),
-//  0.33)*std::exp(-C*std::pow(1 - std::pow((tau + tau_in)/strength,0.75),1.33))/strength;
 
 }
 

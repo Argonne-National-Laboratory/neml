@@ -1217,7 +1217,170 @@ double VoceSlipHardening::nye_part(const RankTwo & nye, double T) const
   return k_->value(T) * sqrt(nye.norm());
 }
 
-// Hu and Cocks hardening with homogenized description for the dislocation component of hardening
+
+
+/*
+
+HuCocksHardening::HuCocksHardening(
+    std::vector<double> initial,
+    std::vector<std::shared_ptr<Interpolate>> r_p,
+    std::vector<std::shared_ptr<Interpolate>> f_v,
+    std::vector<std::shared_ptr<Interpolate>> c,
+    std::string varprefix) :
+      initial_(initial), r_p_(r_p), f_v_(f_v), c_(c), varprefix_(varprefix)
+{
+  varnames_.resize(size_());
+  for (size_t i = 0; i < size_(); i++) {
+    varnames_[i] = varprefix_+std::to_string(i);
+  }
+
+  init_cache_();
+}
+
+std::string HuCocksHardening::type()
+{
+  return "HuCocksHardening";
+}
+
+std::unique_ptr<NEMLObject> HuCocksHardening::initialize(ParameterSet & params)
+{
+  return neml::make_unique<HuCocksHardening>(
+      params.get_parameter<std::vector<double>>("initial"),
+      params.get_object_parameter_vector<Interpolate>("r_p"),
+      params.get_object_parameter_vector<Interpolate>("f_v"),
+      params.get_object_parameter_vector<Interpolate>("c"),
+      params.get_parameter<std::string>("varprefix"));
+}
+
+ParameterSet HuCocksHardening::parameters()
+{
+  ParameterSet pset(HuCocksHardening::type());
+
+  pset.add_parameter<std::vector<double>>("initial");
+  pset.add_parameter<std::vector<NEMLObject>>("r_p");
+  pset.add_parameter<std::vector<NEMLObject>>("f_v");
+  pset.add_parameter<std::vector<NEMLObject>>("c");
+  pset.add_optional_parameter<std::string>("varprefix",
+                                           std::string("strength"));
+
+  return pset;
+}
+
+std::vector<std::string> HuCocksHardening::varnames() const
+{
+  return varnames_;
+}
+
+void HuCocksHardening::set_varnames(std::vector<std::string> vars)
+{
+  if (vars.size() != size_())
+    throw std::logic_error("New and old varname sizes do not match");
+  varnames_ = vars;
+  init_cache_();
+}
+
+void HuCocksHardening::populate_history(History & history) const
+{
+  for (auto vn : varnames_) {
+    history.add<double>(vn);
+  }
+}
+
+void HuCocksHardening::init_history(History & history) const
+{
+  size_t i = 0;
+  for (auto vn : varnames_) {
+    history.get<double>(vn) = initial_[i];
+    i++;
+  }
+}
+
+double HuCocksHardening::hist_to_tau(size_t g, size_t i,
+                                           const History & history,
+                                           Lattice & L,
+                                           double T, const History & fixed) const
+{
+  consistency_(L);
+  return history.get<double>(varnames_[L.flat(g,i)]);
+}
+
+History HuCocksHardening::d_hist_to_tau(size_t g, size_t i,
+                                              const History & history,
+                                              Lattice & L,
+                                              double T,
+                                              const History & fixed) const
+{
+  History res = cache(CacheType::DOUBLE);
+  // This works because the above zeros out the vector
+  res.get<double>(varnames_[L.flat(g,i)]) = 1.0;
+  return res;
+}
+
+History HuCocksHardening::hist(const Symmetric & stress,
+                                     const Orientation & Q,
+                                     const History & history,
+                                     Lattice & L, double T, const SlipRule & R,
+                                     const History & fixed) const
+{
+  consistency_(L);
+
+  History res = blank_hist();
+
+  for (size_t i = 0; i < L.nslip(g); i++) {
+    double sumslip = 0;
+    for (size_t j = 0; j < L.nslip(g); j++) {
+      if (i != j) {
+        sumslip += R.slip(g, j, stress, Q, history, L, T, fixed);
+      }
+    }
+
+    double b = 2.5*std::pow(10,-10);
+    double Ns = std::pow(10,13) * 0.1;
+    double k = 1.38 * std::pow(10,-23);
+    double C1 = J1 * R.slip(g, i, stress, Q, history, L, T, fixed) + J2 * sumslip;
+    double L_d = std::pow((std::sqrt(2*K*C1 + 4) - 2)/C1,0.33);
+    double r_p = 0.1/r_p->value(T) + 0.2 * (rc - r_p->value(T));
+    double f_v = (1 - f_v->value(T)) * Ns * std::exp(-Gs/k/1000) * 4*3.14/3 * std::pow(0.01*T,3);
+    double c = Ns * std::exp(-Gs/k/1000) * 4*3.14/3 * std::pow(0.01*T,3) * (c->value(T) - 0.02)/(1 - f_v->value(T));
+
+
+    double L_p = r_p * std::sqrt(2*3.14/3/f_v);
+    double L_s = std::sqrt(1/c/b);
+
+    double G = 79.3 * std::pow(10,9);
+    double al_d = 0.35;
+    double al_p = 0.84;
+    double al_s = 0.000457;
+
+    double tau_d = G * b * al_d/L_d;
+    double tau_p = G * b * al_p/L_p;
+    double tau_s = G * b * al_s/L_s;
+
+
+  }
+
+  return std::sqrt(std::pow(tau_d,2) + std::pow(tau_p,2)) + tau_s;
+
+}
+
+History HuCocksHardening::d_hist_d_s(const Symmetric & stress,
+                                           const Orientation & Q,
+                                           const History & history,
+                                           Lattice & L, double T,
+                                           const SlipRule & R,
+                                           const History & fixed) const
+{
+  return 1;
+}
+
+void HuCocksHardening::consistency_(Lattice & L) const
+{
+  if (L.ntotal() != size_())
+    throw std::logic_error("Hardening model size not consistent with lattice!");
+}
+
+
+*/
 
 HuCocksHardening::HuCocksHardening(std::shared_ptr<Interpolate> tau_sat,
                                      std::shared_ptr<Interpolate> b,
@@ -1298,6 +1461,7 @@ double HuCocksHardening::hist_factor(double strength, Lattice & L,
   double tau_p = al_p * G * burg / L_p;
   double tau_s = al_s * G * burg / L_s;
 
+//  return std::pow(tau_d,2) + tau_s;
   return std::sqrt(std::pow(tau_d,2) + std::pow(tau_p,2)) + tau_s;
 }
 
@@ -1305,7 +1469,7 @@ double HuCocksHardening::d_hist_factor(double strength, Lattice & L, double T,
                                         const History & fixed) const
 {
   double b = b_->value(T);
-  return -b; // note that the other two terms are independent of the shearing rate
+  return -b;
 }
 
 bool HuCocksHardening::use_nye() const
