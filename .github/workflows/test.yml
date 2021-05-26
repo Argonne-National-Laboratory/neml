@@ -63,4 +63,11 @@ jobs:
                     cd ..
                     git clone https://github.com/Microsoft/vcpkg.git
                     ./vcpkg/bootstrap-vcpkg.sh
+            - name: Install packages with vcpkg
+              run : vcpkg install blas lapack
+            - name: Compile library
+              run : |
+                    cd ${{ github.workspace }}
+                    ls
+                    cmake -D CMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/../vcpkg/scripts/buildsystems/vcpkg.cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D BUILD_UTILS=ON .
 
