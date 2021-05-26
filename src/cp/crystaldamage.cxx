@@ -551,7 +551,7 @@ double SigmoidTransformation::map(double damage, double normal_stress)
     return 0;
   else if (damage < c_)
   {
-    double dtrial = 1.0/(1.0 + std::pow(damage / (c_ - damage), -beta_));
+    double dtrial = 1.0/(1.0 + std::pow(c_ / damage - 1.0, beta_));
     if (dtrial > cut_) 
       return cut_;
     else
@@ -565,7 +565,7 @@ double SigmoidTransformation::d_map_d_damage(double damage, double normal_stress
   if (damage < 0)
     return 0;
   else if (damage < c_) {
-    double dtrial = 1.0/(1.0 + std::pow(damage / (c_ - damage), -beta_));
+    double dtrial = 1.0/(1.0 + std::pow(c_ / damage - 1.0, beta_));
     if (dtrial > cut_)
       return 0;
     else
