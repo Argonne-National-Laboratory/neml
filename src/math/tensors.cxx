@@ -766,6 +766,16 @@ double Symmetric::contract(const Symmetric & other) const
   return sum;
 }
 
+double & Symmetric::operator()(size_t i)
+{
+  return s_[i];
+}
+
+const double & Symmetric::operator()(size_t i) const
+{
+  return s_[i];
+}
+
 Symmetric operator*(double s, const Symmetric & v)
 {
   Symmetric cpy(v);
@@ -1118,6 +1128,25 @@ SkewSymR4 RankFour::to_skewsym() const
 double & SymSymR4::operator()(size_t i, size_t j)
 {
   return s_[i*6+j];
+}
+
+SymSymR4 SymSymR4::inverse() const
+{
+  SymSymR4 res(*this);
+  invert_mat(res.s(), 6);
+
+  return res;
+}
+
+SymSymR4 SymSymR4::transpose() const
+{
+  SymSymR4 res;
+  for (size_t i = 0; i<6; i++) {
+    for (size_t j = 0; j<6; j++) {
+      res(i,j) = (*this)(j,i);
+    }
+  }
+  return res;
 }
 
 const double & SymSymR4::operator()(size_t i, size_t j) const
@@ -1921,6 +1950,220 @@ SymSkewR4 SpecialSymSymR4Sym(const SymSymR4 & S, const Symmetric & D)
   SymSkewR4 res;
 
   SpecialSymSymR4Sym(D.data(), S.data(), res.s());
+
+  return res;
+}
+
+/* Start SymSymSymR6 Tensor */
+SymSymSymR6::SymSymSymR6() :
+    Tensor(216)
+{
+  std::fill(s_, s_+216, 0.0);
+}
+
+SymSymSymR6::SymSymSymR6(const std::vector<double> v) :
+    Tensor(v)
+{
+  if (v.size() != 216) {
+    throw std::invalid_argument("Input to SymSymSymR6 must have size 216!");
+  }
+}
+
+SymSymSymR6::SymSymSymR6(const std::vector<std::vector<std::vector<double>>> A) :
+    Tensor(216)
+{
+  if (A.size() != 6) {
+    throw std::invalid_argument("SymSymSymR6 must be initiated with a 6x6x6 array!");
+  }
+  for (auto vi : A) {
+    if (vi.size() != 6) {
+      throw std::invalid_argument("SymSymSymR6 must be initiated with a 6x6x6 array!");
+    }
+    for (auto vk : vi) {
+      if (vk.size() !=6) {
+        throw std::invalid_argument("SymSymSymR6 must be initiated with a 6x6x6 array!");
+      }
+    }
+  }
+
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        s_[i*36+j*6+k] = A[i][j][k];
+      }
+    }
+  }
+}
+
+SymSymSymR6::SymSymSymR6(double * v) :
+    Tensor(v, 216)
+{
+}
+
+SymSymSymR6::SymSymSymR6(const double * v) :
+    Tensor(v, 216)
+{
+}
+
+SymSymSymR6 SymSymSymR6::opposite() const
+{
+  SymSymSymR6 cpy(*this);
+  cpy.negate_();
+  return cpy;
+}
+
+SymSymSymR6 SymSymSymR6::operator-() const
+{
+  return opposite();
+}
+
+SymSymSymR6 & SymSymSymR6::operator+=(const SymSymSymR6 & other)
+{
+  add_(other);
+  return *this;
+}
+
+SymSymSymR6 & SymSymSymR6::operator-=(const SymSymSymR6 & other)
+{
+  return this->operator+=(-other);
+}
+
+double & SymSymSymR6::operator()(size_t i, size_t j, size_t k)
+{
+  return s_[i*36+j*6+k];
+}
+
+const double & SymSymSymR6::operator()(size_t i, size_t j, size_t k) const
+{
+  return s_[i*36+j*6+k];
+}
+
+// Binary operators with scalars
+SymSymSymR6 operator*(double s, const SymSymSymR6 & v)
+{
+  SymSymSymR6 cpy(v);
+  cpy *= s;
+  return cpy;
+}
+
+SymSymSymR6 operator*(const SymSymSymR6 & v, double s)
+{
+  return operator*(s, v);
+}
+
+SymSymSymR6 operator/(const SymSymSymR6 & v, double s)
+{
+  SymSymSymR6 cpy(v);
+  cpy /= s;
+  return cpy;
+}
+
+// Various forms of addition
+SymSymSymR6 operator+(const SymSymSymR6 & a, const SymSymSymR6 & b)
+{
+  SymSymSymR6 cpy(a);
+  cpy += b;
+  return cpy;
+}
+
+SymSymSymR6 operator-(const SymSymSymR6 & a, const SymSymSymR6 & b)
+{
+  SymSymSymR6 cpy(a);
+  cpy -= b;
+  return cpy;
+}
+
+SymSymR4 SymSymSymR6::dot_i(const Symmetric & other) const
+{
+  SymSymR4 res;
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        res(j,k) += (*this)(i,j,k) * other(i);
+      }
+    }
+  }
+
+  return res;
+}
+
+SymSymR4 SymSymSymR6::dot_j(const Symmetric & other) const
+{
+  SymSymR4 res;
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        res(i,k) += (*this)(i,j,k) * other(j);
+      }
+    }
+  }
+
+  return res;
+}
+
+SymSymR4 SymSymSymR6::dot_k(const Symmetric & other) const
+{
+  SymSymR4 res;
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        res(i,j) += (*this)(i,j,k) * other(k);
+      }
+    }
+  }
+
+  return res;
+}
+
+SymSymSymR6 SymSymSymR6::middle_dot_after(const SymSymR4 & other) const
+{
+  SymSymSymR6 res;
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        for (size_t l = 0; l < 6; l++) {
+          res(i,j,k) += (*this)(i,j,l) * other(j,k);
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+SymSymSymR6 SymSymSymR6::middle_dot_before(const SymSymR4 & other) const
+{
+  SymSymSymR6 res;
+  
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        for (size_t l = 0; l < 6; l++) {
+          res(i,j,k) += other(i,j) * (*this)(j,k,l);
+        }
+      }
+    }
+  }
+
+  return res;
+}
+
+// Last index outer product
+SymSymSymR6 outer_product_k(const SymSymR4 & A, const Symmetric & B)
+{
+  SymSymSymR6 res;
+
+  for (size_t i = 0; i < 6; i++) {
+    for (size_t j = 0; j < 6; j++) {
+      for (size_t k = 0; k < 6; k++) {
+        res(i,j,k) += A(i,j) * B(k);
+      }
+    }
+  }
 
   return res;
 }

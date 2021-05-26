@@ -214,6 +214,9 @@ class NEML_EXPORT History {
   inline bool contains(std::string name) const { return loc_.find(name) !=
     loc_.end();};
 
+  /// Postmultiply by various objects
+  History postmultiply(const SymSymR4 & T);
+
   /// This unravels a history derivative into row major storage
   void unravel_hh(const History & base, double * const array);
 

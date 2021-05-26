@@ -1,4 +1,55 @@
 <materials>
+  <cpdmg type="SingleCrystalModel">
+    <initial_rotation type="Orientation">
+      <angles>2.867 1.000 0.7527</angles>
+      <angle_type>radians</angle_type>
+    </initial_rotation>
+    <kinematics type="DamagedStandardKinematicModel">
+      <emodel type="CubicLinearElasticModel">
+        <m1>120000.0</m1>
+        <m2>0.3</m2>
+        <m3>29000.0</m3>
+        <method>moduli</method>
+      </emodel>
+      <imodel type="AsaroInelasticity">
+        <rule type="PowerLawSlipRule">
+          <resistance type="VoceSlipHardening">
+            <tau_sat>50.0</tau_sat>
+            <b>10.0</b>
+            <tau_0>100.0</tau_0>
+          </resistance>
+          <gamma0>1.0e-4</gamma0>
+          <n>6.0</n>
+        </rule>
+      </imodel>
+      <dmodel type="PlanarDamageModel">
+        <damage type="WorkPlaneDamage"/>
+        <shear_transform type="SigmoidTransformation">
+          <c>100</c>
+          <beta>2.0</beta>
+        </shear_transform>
+        <normal_transform type="SwitchTransformation">
+          <base type="SigmoidTransformation">
+            <c>100</c>
+            <beta>2.0</beta>
+          </base>
+        </normal_transform>
+        <lattice type="CubicLattice">
+          <a>1.0</a>
+          <slip_systems>
+            1 1 0 ; 1 1 1
+          </slip_systems>
+        </lattice>
+      </dmodel>
+    </kinematics>
+    <lattice type="CubicLattice">
+      <a>1.0</a>
+      <slip_systems>
+        1 1 0 ; 1 1 1
+      </slip_systems>
+    </lattice>
+  </cpdmg>
+
   <walker type="GeneralIntegrator">
     <elastic type="IsotropicLinearElasticModel">
       <m1>100000.0</m1>

@@ -54,6 +54,17 @@ PYBIND11_MODULE(kinematics, m) {
            }))
       ;
 
+  py::class_<DamagedStandardKinematicModel, StandardKinematicModel,
+      std::shared_ptr<DamagedStandardKinematicModel>>(m, "DamagedStandardKinematicModel")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+           {
+            return create_object_python<DamagedStandardKinematicModel>(args, kwargs,
+                                                                {"emodel",
+                                                                "imodel",
+                                                                "dmodel"});
+           }))
+      ;
+
 } // PYBIND11_MODULE
 
 } // namespace neml

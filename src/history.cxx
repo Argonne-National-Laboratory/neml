@@ -358,6 +358,25 @@ History & History::reorder(std::vector<std::string> vars)
   return *this;
 }
 
+History History::postmultiply(const SymSymR4 & T)
+{
+  // This is not a guarantee that this object has the right form,
+  // but is better than nothing
+  if (size_ % 6 != 0)
+    throw std::runtime_error("History object does not appear to be suitable "
+                             "for postmultiplication by a SymSymR4!");
+
+  History nhist = this->deepcopy();
+  double * data = new double [size_];
+  std::copy(storage_, storage_+size_, data);
+  
+  mat_mat(size_ / 6, 6, 6, data, T.data(), nhist.rawptr());
+
+  delete [] data;
+
+  return nhist;
+}
+
 size_t History::size_of_entry(std::string name) const
 {
   return storage_size.at(type_.at(name));

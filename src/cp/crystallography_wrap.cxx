@@ -55,6 +55,10 @@ PYBIND11_MODULE(crystallography, m) {
       .def("N", &Lattice::N)
       .def("shear", &Lattice::shear)
       .def("d_shear", &Lattice::d_shear)
+
+      .def_property_readonly("unique_planes", &Lattice::unique_planes)
+      .def_property_readonly("nplanes", &Lattice::nplanes)
+      .def("plane_index", &Lattice::plane_index)
       ;
 
   py::class_<CubicLattice, Lattice, std::shared_ptr<CubicLattice>>(m, "CubicLattice")

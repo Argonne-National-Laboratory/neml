@@ -222,6 +222,20 @@ accordingly.
 To help with this calculation, the model provides the inverse elastic
 tensor :math:`\mathbf{F}^{e-1}` as an available output.
 
+Crystal plasticity continuum damage
+-----------------------------------
+
+NEML has the capability to supplement this general kinematic framework with a
+continuum damage model that degrades the elastic properties of the material
+in response to one or more damage variable, evolving as a function of internal
+history variables and the stress state.  The details of the damage subsystem
+are described in their own section in the manual.
+
+.. toctree::
+   :maxdepth: 1
+
+   cp/crystaldamage
+
 Mathematical operations
 -----------------------
 

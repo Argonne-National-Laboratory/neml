@@ -920,14 +920,15 @@ Orientation operator/(const Orientation & lhs, const Orientation & rhs)
 
 Vector Orientation::apply(const Vector & a) const
 {
-  double qv[4];
+  std::vector<double> qv(4);
   qv[0] = 0.0;
   qv[1] = a.data()[0];
   qv[2] = a.data()[1];
   qv[3] = a.data()[2];
 
   Quaternion q(qv);
-  Quaternion base = static_cast<Quaternion>(*this);
+
+  Quaternion base = Quaternion(std::vector<double>(quat_,quat_+4));
   Quaternion rv = base * q * base.conj();
 
   Vector res;

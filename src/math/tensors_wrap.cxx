@@ -158,6 +158,8 @@ PYBIND11_MODULE(tensors, m) {
       .def(py::self - Skew())
       .def(Skew() - py::self)
 
+      .def_static("id", &Symmetric::id)
+
       .def("__getitem__", [](const RankTwo & M, std::tuple<size_t,size_t> ind) {
            size_t i = std::get<0>(ind);
            size_t j = std::get<1>(ind);
@@ -310,6 +312,7 @@ PYBIND11_MODULE(tensors, m) {
       .def("inverse", &Symmetric::inverse)
       .def("transpose", &Symmetric::transpose)
       .def("norm", &Symmetric::norm)
+      .def("to_full", &Symmetric::to_full)
       ;
 
   py::class_<Skew, Tensor, std::shared_ptr<Skew>>(m, "Skew")
@@ -837,6 +840,77 @@ PYBIND11_MODULE(tensors, m) {
   m.def("SymSymR4Skew_SkewSymR4SymR4", &SymSymR4Skew_SkewSymR4SymR4);
   m.def("SymSkewR4Sym_SkewSymR4SymR4", &SymSkewR4Sym_SkewSymR4SymR4);
   m.def("SpecialSymSymR4Sym", &SpecialSymSymR4Sym);
+
+  py::class_<SymSymSymR6, Tensor, std::shared_ptr<SymSymSymR6>>(m, "SymSymSymR6")
+      // Start standard
+      .def(py::init<const std::vector<std::vector<std::vector<double>>>>(), py::arg("data"))
+
+      .def("__repr__",
+           [](SymSymSymR6 & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "SymSymSymR6(array([";
+              for (size_t i=0; i<6; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<6; j++) {
+                ss << "[";
+                  for (size_t k=0; k<6; k++) {
+                    ss << me.data()[i*36+j*6+k] << " ";
+                  }
+                  ss << "]" << std::endl;
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]))";
+
+              return ss.str();
+           }, "python __repr__")
+
+      .def("__str__",
+           [](SymSymSymR6 & me) -> std::string
+           {
+              std::ostringstream ss;
+
+              ss << "[";
+              for (size_t i=0; i<6; i++) {
+                ss << "[";
+
+                for (size_t j=0; j<6; j++) {
+                  ss << "[";
+                  for (size_t k=0; k<6; k++) {
+                    ss << me.data()[i*36+j*6+k] << " ";
+                  }
+                  ss << "]" << std::endl;
+                }
+                ss << "]" << std::endl;
+              }
+              ss << "]";
+
+              return ss.str();
+           }, "python __str__")
+
+      .def("opposite", &SymSymSymR6::opposite)
+      .def("__neg__", &SymSymSymR6::opposite)
+
+      .def(double() * py::self)
+      .def(py::self * double())
+
+      .def(py::self / double())
+
+      .def(py::self += py::self)
+      .def(py::self + py::self)
+
+      .def(py::self -= py::self)
+      .def(py::self - py::self)
+
+      .def("dot_i", &SymSymSymR6::dot_i)
+      .def("dot_j", &SymSymSymR6::dot_j)
+      .def("dot_k", &SymSymSymR6::dot_k)
+      ;
+
+      m.def("outer_product_k", &outer_product_k);
 
 } // PYBIND11_MODULE(tensors, m)
 

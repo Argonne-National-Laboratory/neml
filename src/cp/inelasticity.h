@@ -253,6 +253,9 @@ class NEML_EXPORT AsaroInelasticity: public InelasticModel {
   /// Whether this model uses the Nye tensor
   virtual bool use_nye() const;
 
+  /// Access to the slip rule for other models to get detailed slip information
+  const SlipRule & slip_rule() const {return *rule_;};
+
  private:
   std::shared_ptr<SlipRule> rule_;
 };
