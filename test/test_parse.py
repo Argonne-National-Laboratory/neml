@@ -10,6 +10,18 @@ class TestErrors(unittest.TestCase):
     with self.assertRaises(RuntimeError):
       test = parse.parse_xml(localize("examples.xml"), "test_badobject")
 
+  def test_nomodel(self):
+    with self.assertRaises(RuntimeError):
+      test = parse.parse_xml(localize("examples.xml"), "not_in_file")
+
+  def test_malformed(self):
+    with self.assertRaises(RuntimeError):
+      test = parse.parse_xml(localize("malformed.xml"), "test_j2iso")
+
+  def test_nofiles(self):
+    with self.assertRaises(RuntimeError):
+      test = parse.parse_xml(localize("nothere.xml"), "idk")
+
 class CompareMats(object):
   def test_same(self):
     t_n = 0.0

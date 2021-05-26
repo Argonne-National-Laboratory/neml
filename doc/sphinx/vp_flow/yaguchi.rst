@@ -1,6 +1,11 @@
 Yaguchi & Takahashi viscoplastic model for Grade 91 steel
 =========================================================
 
+.. warning::
+   This model has been depreciated.  It produces inconistent results
+   because of the time-dependent parts of the formulation.  Use at your
+   own risk!
+
 Overview
 --------
 
