@@ -51,3 +51,16 @@ jobs:
             - run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_Fortran_COMPILER=/usr/local/bin/gfortran -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
             - run: make -j 2
             - run: test/drivers/test_drivers.sh
+      test-base-windows:
+            runs-on: windows-latest
+            strategy:
+                  matrix:
+                        btype: [Release, Debug]
+            steps:
+            - uses: actions/checkout@v2
+            - name: Installing vcpkg
+              run : |
+                    cd ..
+                    git clone https://github.com/Microsoft/vcpkg.git
+                    ./vcpkg/bootstrap-vcpkg.sh
+
