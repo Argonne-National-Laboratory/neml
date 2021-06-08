@@ -122,6 +122,26 @@ def ms2ts(C):
 
   return Ct
 
+def m62t6(C):
+  """
+    Convert a Mandel type 6x6x6 to a full tensor
+  """
+  Ct = np.zeros((3,3,3,3,3,3))
+  for a in range(6):
+    for b in range(6):
+      for c in range(6):
+        ind_a = itertools.permutations(mandel[a], r=2)
+        ind_b = itertools.permutations(mandel[b], r=2)
+        ind_c = itertools.permutations(mandel[c], r=2)
+        ma = mandel_mults[a]
+        mb = mandel_mults[b]
+        mc = mandel_mults[c]
+        indexes = tuple(ai+bi+ci for ai,bi,ci in itertools.product(ind_a,ind_b,ind_c))
+        for ind in indexes:
+          Ct[ind] = C[a,b,c] / (ma*mb*mc)
+
+  return Ct
+
 def ts2ms(C):
   """
     Convert a stiffness tensor into a Mandel notation stiffness matrix
@@ -276,7 +296,7 @@ def differentiate(fn, x0, eps = 1.5e-6):
       xp[index] = diff
 
     fp = fn(xp+x0)
-
+    
     D[index] = (fp - f0) / diff
   
   Df = np.zeros(tshape)

@@ -1,5 +1,7 @@
 #include "objects.h"
 
+// #include <fenv.h>
+
 namespace neml {
 
 template <> double & param_type::data<double>() { return double_; }
@@ -85,6 +87,12 @@ void ParameterSet::resolve_objects_()
     params_[it->first] = Factory::Creator()->create(it->second);
   }
   defered_params_.clear();
+}
+
+Factory::Factory()
+{
+  // Good spot to place global things
+  // feenableexcept(FE_INVALID | FE_OVERFLOW | FE_DIVBYZERO);
 }
 
 ParameterSet Factory::provide_parameters(std::string type)

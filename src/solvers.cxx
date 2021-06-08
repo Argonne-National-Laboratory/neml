@@ -33,7 +33,7 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
 
   int n = system->nparams();
   system->init_x(x, ts);
-  
+
   bool local_R = (R==nullptr);
   bool local_J = (J==nullptr);
 
@@ -104,8 +104,9 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
       }
       nR = nRt;
       if (nsearch == mline) {
-        ier = MAX_ITERATIONS;
-        break;
+        // Arguably it's better to let it fall through
+        // ier = MAX_ITERATIONS;
+        // break;
       }
     }
     else {

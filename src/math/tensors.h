@@ -19,6 +19,7 @@ class RankFour;
 class SymSymR4;
 class SymSkewR4;
 class SkewSymR4;
+class SymSymSymR6;
 
 class NEML_EXPORT Tensor {
  public:
@@ -136,6 +137,9 @@ class NEML_EXPORT RankTwo: public Tensor {
   RankTwo inverse() const;
   RankTwo transpose() const;
 
+  static RankTwo id() { return
+    RankTwo(std::vector<double>({1.0,0,0,0,1,0,0,0,1}));};
+
   double norm() const;
 
   double contract(const RankTwo & other) const;
@@ -194,6 +198,8 @@ class NEML_EXPORT Symmetric: public Tensor {
 
   static Symmetric id() { return
     Symmetric(std::vector<double>({1,1,1,0,0,0}));};
+  static Symmetric zero() { return
+    Symmetric(std::vector<double>({0,0,0,0,0,0}));};
   Symmetric inverse() const;
   Symmetric transpose() const;
 
@@ -210,6 +216,9 @@ class NEML_EXPORT Symmetric: public Tensor {
   double contract(const RankTwo & other) const;
   double contract(const Symmetric & other) const;
   double contract(const Skew & other) const;
+
+  double & operator()(size_t i);
+  const double & operator()(size_t i) const;
 };
 
 // Binary operators with scalars
@@ -349,6 +358,9 @@ class NEML_EXPORT SymSymR4: public Tensor {
   double & operator()(size_t i, size_t j);
   const double & operator()(size_t i, size_t j) const;
 
+  SymSymR4 inverse() const;
+  SymSymR4 transpose() const;
+
   // Various multiplication
   RankFour dot(const RankFour & other) const;
   SymSymR4 dot(const SymSymR4 & other) const;
@@ -378,6 +390,14 @@ class NEML_EXPORT SymSymR4: public Tensor {
               {0.0,0.0,0.0,0.0,0.0,1.0}
               }
               ));};
+  static SymSymR4 zero() {return
+    SymSymR4(std::vector<std::vector<double>>({
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0}}));};
 };
 
 // Binary operators with scalars
@@ -522,6 +542,44 @@ NEML_EXPORT SymSymR4 SymSkewR4Sym_SkewSymR4SymR4(const SkewSymR4 & S, const Symm
 
 /// Specialty operator for Skew part C_ijkb e_ka - C_ijal e_bl
 NEML_EXPORT SymSkewR4 SpecialSymSymR4Sym(const SymSymR4 & S, const Symmetric & D);
+
+/// Hopefully the only outer product I'll need...
+NEML_EXPORT SymSymSymR6 outer_product_k(const SymSymR4 & A, const Symmetric & B);
+
+/// Rank six where all adjacent indices have minor symmetry
+class NEML_EXPORT SymSymSymR6: public Tensor {
+ public:
+  SymSymSymR6();
+  SymSymSymR6(const std::vector<double> v);
+  SymSymSymR6(const std::vector<std::vector<std::vector<double>>> A);
+  SymSymSymR6(double * v);
+  SymSymSymR6(const double * v);
+
+  SymSymSymR6 opposite() const;
+  SymSymSymR6 operator-() const;
+
+  SymSymSymR6 & operator+=(const SymSymSymR6 & other);
+  SymSymSymR6 & operator-=(const SymSymSymR6 & other);
+
+  double & operator()(size_t i, size_t j, size_t k);
+  const double & operator()(size_t i, size_t j, size_t k) const;
+
+  SymSymR4 dot_i(const Symmetric & other) const;
+  SymSymR4 dot_j(const Symmetric & other) const;
+  SymSymR4 dot_k(const Symmetric & other) const;
+
+  SymSymSymR6 middle_dot_after(const SymSymR4 & other) const;
+  SymSymSymR6 middle_dot_before(const SymSymR4 & other) const;
+};
+
+// Binary operators with scalars
+NEML_EXPORT SymSymSymR6 operator*(double s, const SymSymSymR6 & v);
+NEML_EXPORT SymSymSymR6 operator*(const SymSymSymR6 & v, double s);
+NEML_EXPORT SymSymSymR6 operator/(const SymSymSymR6 & v, double s);
+
+// Various forms of addition
+NEML_EXPORT SymSymSymR6 operator+(const SymSymSymR6 & a, const SymSymSymR6 & b);
+NEML_EXPORT SymSymSymR6 operator-(const SymSymSymR6 & a, const SymSymSymR6 & b);
 
 } // namespace neml
 

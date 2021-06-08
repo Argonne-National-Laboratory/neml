@@ -3,6 +3,7 @@
 
 #include "inelasticity.h"
 #include "crystallography.h"
+#include "crystaldamage.h"
 
 #include "../objects.h"
 #include "../history.h"
@@ -136,9 +137,18 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
 
   /// Helper to calculate elastic strains
   virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    Lattice & lattice,
                                     const Orientation & Q,
                                     const History & history,
                                     double T) = 0;
+
+  /// Helper to predict an elastic stress increment
+  virtual Symmetric stress_increment(const Symmetric & stress,
+                                     const Symmetric & D, double dt, 
+                                     Lattice & lattice,
+                                     const Orientation & Q,
+                                     const History & history,
+                                     double T) = 0;
 
   /// Whether this model uses the Nye tensor
   virtual bool use_nye() const;
@@ -256,19 +266,148 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
 
   /// Helper to calculate elastic strains
   virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    Lattice & lattice,
                                     const Orientation & Q,
                                     const History & history,
                                     double T);
+  
+  /// Helper to predict an elastic stress increment
+  virtual Symmetric stress_increment(const Symmetric & stress,
+                                     const Symmetric & D, double dt, 
+                                     Lattice & lattice,
+                                     const Orientation & Q,
+                                     const History & history,
+                                     double T);
 
   /// Whether this model uses the Nye tensor
   virtual bool use_nye() const;
 
- private:
+ protected:
   std::shared_ptr<LinearElasticModel> emodel_;
   std::shared_ptr<InelasticModel> imodel_;
 };
 
 static Register<StandardKinematicModel> regStandardKinematicModel;
+
+/// My standard kinematic assumptions with damage
+class NEML_EXPORT DamagedStandardKinematicModel: public StandardKinematicModel {
+ public:
+  /// Initialize with elastic and inelastic models
+  DamagedStandardKinematicModel(std::shared_ptr<LinearElasticModel> emodel,
+                                std::shared_ptr<AsaroInelasticity> imodel,
+                                std::shared_ptr<CrystalDamageModel> dmodel);
+  /// Destructor
+  virtual ~DamagedStandardKinematicModel();
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Populate a history object with the correct variables
+  virtual void populate_history(History & history) const;
+  /// Initialize the history object with the starting values
+  virtual void init_history(History & history) const;
+
+  /// Stress rate
+  virtual Symmetric stress_rate(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+  /// Derivative of stress rate with respect to stress
+  virtual SymSymR4 d_stress_rate_d_stress(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+  /// Derivative of the stress rate with respect to the deformation rate
+  virtual SymSymR4 d_stress_rate_d_d(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+  /// Derivative of the stress rate with respect to the history
+  virtual History d_stress_rate_d_history(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+
+  /// History rate
+  virtual History history_rate(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+  /// Derivative of the history rate with respect to the stress
+  virtual History d_history_rate_d_stress(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+  /// Derivative of the history rate with respect to the history
+  virtual History d_history_rate_d_history(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+
+  /// Derivative of the stress rate with respect to the vorticity keeping
+  /// fixed variables fixed
+  virtual SymSkewR4 d_stress_rate_d_w_decouple(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed);
+
+  /// The spin rate
+  virtual Skew spin(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+
+  /// Helper to calculate elastic strains
+  virtual Symmetric elastic_strains(const Symmetric & stress,
+                                    Lattice & lattice,
+                                    const Orientation & Q,
+                                    const History & history,
+                                    double T);
+
+  /// Helper to predict an elastic stress increment
+  virtual Symmetric stress_increment(const Symmetric & stress,
+                                     const Symmetric & D, double dt, 
+                                     Lattice & lattice,
+                                     const Orientation & Q,
+                                     const History & history,
+                                     double T);
+
+ protected:
+  /// Names of the inelastic model internal variables
+  std::vector<std::string> inames_() const;
+  /// Names of the damage model internal variables
+  std::vector<std::string> dnames_() const;
+  /// The inelastic model internal variables
+  History ihist_(const History & hist) const;
+  /// The damage model internal variables
+  History dhist_(const History & hist) const;
+  /// Partial derivative wrt stress^\prime
+  SymSymR4 d_stress_partial(
+      const Symmetric & stress, const Symmetric & d,
+      const Skew & w, const Orientation & Q,
+      const History & history, Lattice & lattice,
+      double T, const History & fixed) const;
+
+ protected:
+  std::shared_ptr<CrystalDamageModel> dmodel_;
+  std::shared_ptr<AsaroInelasticity> amodel_;
+};
+
+static Register<DamagedStandardKinematicModel> regDamagedStandardKinematicModel;
+
 
 } // namespace neml
 

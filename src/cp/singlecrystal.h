@@ -131,6 +131,17 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   void update_nye(double * const hist, const double * const nye) const;
 
  private:
+  int attempt_update_ld_inc_(
+       const double * const d_np1, const double * const d_n,
+       const double * const w_np1, const double * const w_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       double * const s_np1, const double * const s_n,
+       double * const h_np1, const double * const h_n,
+       double * const A_np1, double * const B_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n, int trial_type);
+
   History gather_history_(double * data) const;
   History gather_history_(const double * data) const;
   History gather_blank_history_() const;

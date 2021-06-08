@@ -313,6 +313,13 @@ class TestCubicFCC(unittest.TestCase, LTests, ShearTests):
     for b in self.lattice.burgers_vectors[0]:
       self.assertAlmostEqual(b.norm(), np.sqrt(2.0) * self.a)
 
+  def test_planes(self):
+    self.assertEqual(self.lattice.nplanes, 4)
+    for i in range(12):
+      from_normals = self.lattice.unique_planes[self.lattice.plane_index(0, i)]
+      from_direct = self.lattice.slip_planes[0][i]
+      self.assertAlmostEqual(np.abs(from_normals.dot(from_direct)), 1.0)
+
 class TestCubicBCC(unittest.TestCase, LTests, ShearTests):
   def setUp(self):
     self.a = 1.3
@@ -348,4 +355,10 @@ class TestCubicBCC(unittest.TestCase, LTests, ShearTests):
       for b in bg:
         self.assertAlmostEqual(b.norm(), np.sqrt(3.0) * self.a)
 
-
+  def test_planes(self):
+    self.assertEqual(self.lattice.nplanes, 42)
+    for g in range(self.lattice.ngroup):
+      for i in range(self.lattice.nslip(g)):
+        from_normals = self.lattice.unique_planes[self.lattice.plane_index(g, i)]
+        from_direct = self.lattice.slip_planes[g][i]
+        self.assertAlmostEqual(np.abs(from_normals.dot(from_direct)), 1.0)

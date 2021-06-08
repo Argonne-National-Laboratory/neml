@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 project(NEML LANGUAGES CXX)
 
 ### Version ###
-set(NEML_version 1.1.0)
+set(NEML_version 1.3.5)
 
 ### Setup modules ###
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -30,6 +30,11 @@ elseif (${SOLVER} MATCHES "nox")
 else()
       message("Unknown solver")
 endif()
+
+### Limits designed to make bad updates fail gracefully ###
+set(STRAIN_RATE_LIMIT "1.0e10" CACHE STRING "Limit on strain rate -- NEML may return an error if a strain rate grows beyond this value")
+mark_as_advanced(STRAIN_RATE_LIMIT)
+add_definitions(-DNEML_STRAIN_RATE_LIMIT=${STRAIN_RATE_LIMIT})
 
 ### Configure standard-ish libraries ###
 set(BLAS_VENDOR Generic)

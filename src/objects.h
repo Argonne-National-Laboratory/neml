@@ -108,21 +108,21 @@ class NEML_EXPORT UnknownParameter: public std::exception {
   UnknownParameter(std::string object, std::string name) :
       object_(object), name_(name)
   {
-
-  }
-
-  const char* what() const throw()
-  {
     std::stringstream ss;
 
     ss << "Object of type " << object_ << " has no parameter "
         << name_ << "!";
 
-    return ss.str().c_str();
+    message_ = ss.str();
+  }
+
+  const char* what() const throw()
+  {
+    return message_.c_str();
   }
 
  private:
-  std::string object_, name_;
+  std::string object_, name_, message_;
 };
 
 /// Error to call if you try a bad cast
@@ -130,17 +130,18 @@ class NEML_EXPORT WrongTypeError: public std::exception {
  public:
   WrongTypeError()
   {
-
+    std::stringstream ss;
+    ss << "Cannot convert object to the correct type!";
+    message_ = ss.str();
   };
 
   const char * what() const throw ()
   {
-    std::stringstream ss;
-
-    ss << "Cannot convert object to the correct type!";
-
-    return ss.str().c_str();
+    return message_.c_str();
   }
+
+ private:
+  std::string message_;
 };
 
 /// Parameters for objects created through the NEMLObject interface
@@ -254,6 +255,8 @@ class NEML_EXPORT ParameterSet {
 /// Factory that produces NEMLObjects from ParameterSets
 class NEML_EXPORT Factory {
  public:
+  Factory();
+
   /// Provide a valid parameter set for the object type
   ParameterSet provide_parameters(std::string type);
 
@@ -318,11 +321,6 @@ class NEML_EXPORT UndefinedParameters: public std::exception {
   UndefinedParameters(std::string name, std::vector<std::string> unassigned) :
       name_(name), unassigned_(unassigned)
   {
-
-  };
-
-  const char* what() const throw()
-  {
     std::stringstream ss;
 
     ss << "Parameter set for object " << name_ << " has undefined parameters:" << std::endl;
@@ -331,12 +329,18 @@ class NEML_EXPORT UndefinedParameters: public std::exception {
       ss << "\t" << *it << " ";
     }
 
-    return ss.str().c_str();
+    message_ = ss.str();
+  };
+
+  const char* what() const throw()
+  {
+    return message_.c_str();
   }
 
  private:
   std::string name_;
   std::vector<std::string> unassigned_;
+  std::string message_;
 };
 
 /// Error to throw if the class isn't registered
@@ -345,20 +349,19 @@ class NEML_EXPORT UnregisteredError: public std::exception {
   UnregisteredError(std::string name) :
       name_(name)
   {
-
+    std::stringstream ss;
+    ss << "Object named " << name_ << " not registered with factory!";   
+    message_ = ss.str();
   };
 
   const char * what() const throw ()
   {
-    std::stringstream ss;
-
-    ss << "Object named " << name_ << " not registered with factory!";
-
-    return ss.str().c_str();
+    return message_.c_str();
   };
 
  private:
   std::string name_;
+  std::string message_;
 };
 
 } //namespace neml

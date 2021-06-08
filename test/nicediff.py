@@ -7,6 +7,11 @@ from common import *
 from neml.math import tensors
 from neml import history
 
+def diff_symsym_sym(fn, s0):
+    dfn = lambda s: fn(tensors.Symmetric(usym(s))).data
+
+    return tensors.SymSymSymR6(differentiate(dfn, s0.data).reshape(6,6,6))
+
 def diff_skew_symmetric(fn, s0):
   dfn = lambda s: fn(tensors.Symmetric(usym(s))).data
 
@@ -32,6 +37,18 @@ def diff_symmetric_skew(fn, w0):
 
   return tensors.SymSkewR4(differentiate(dfn, w0.data))
 
+def diff_symsym_history(fn, h0):
+  vec = np.copy(np.array(h0))
+
+  def dfn(x):
+    H = h0.deepcopy()
+    H.copy_data(x)
+    return fn(H).data
+
+  nd = differentiate(dfn, vec)
+
+  return nd
+
 def diff_symmetric_history(fn, h0):
   vec = np.copy(np.array(h0))
 
@@ -43,6 +60,13 @@ def diff_symmetric_history(fn, h0):
   nd = differentiate(dfn, vec)
 
   return nd
+
+def diff_symmetric_scalar(fn, s0):
+  dfn = lambda s: fn(s).data
+
+  res = differentiate(dfn, np.array([s0]))
+
+  return tensors.Symmetric(usym(res[:,0]))
 
 def diff_scalar_symmetric(fn, S0):
   dfn = lambda s: fn(tensors.Symmetric(s))

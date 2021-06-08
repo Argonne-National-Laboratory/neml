@@ -53,7 +53,11 @@ const std::unordered_map<StorageType,const std::unordered_map<StorageType,Storag
        {TYPE_RANKTWO,   TYPE_RANKTWO},
        {TYPE_SYMMETRIC, TYPE_SYMMETRIC},
        {TYPE_SKEW,      TYPE_SKEW},
-       {TYPE_ROT,       TYPE_ROT}}}
+       {TYPE_ROT,       TYPE_ROT}}},
+
+    {TYPE_SYMMETRIC,
+      {{TYPE_SCALAR,    TYPE_SYMMETRIC},
+       {TYPE_SYMMETRIC, TYPE_SYMSYM}}}
   };
 
 class NEML_EXPORT History {
@@ -139,7 +143,7 @@ class NEML_EXPORT History {
   const std::vector<std::string> & items() const {return get_order();};
 
   /// Helper to get the size of a particular object
-  size_t size_of_entry(std::string name);
+  size_t size_of_entry(std::string name) const;
 
   /// Resize method
   void resize(size_t inc);
@@ -209,6 +213,12 @@ class NEML_EXPORT History {
   /// Quick function to check to see if something is in the vector
   inline bool contains(std::string name) const { return loc_.find(name) !=
     loc_.end();};
+
+  /// Postmultiply by various objects
+  History postmultiply(const SymSymR4 & T);
+
+  /// This unravels a history derivative into row major storage
+  void unravel_hh(const History & base, double * const array);
 
  private:
   void error_if_exists_(std::string name) const;

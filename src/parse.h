@@ -93,22 +93,21 @@ class NodeNotFound: public std::exception {
   NodeNotFound(std::string node_name, int line) :
       node_name_(node_name), line_(line)
   {
-
+    std::stringstream ss;
+    ss << "Node with name " << node_name_
+        << " was not found near line " << line_ << "!";
+    message_ = ss.str();
   };
 
   const char * what() const throw ()
   {
-    std::stringstream ss;
-
-    ss << "Node with name " << node_name_
-        << " was not found near line " << line_ << "!";
-
-    return ss.str().c_str();
+    return message_.c_str();
   };
 
  private:
   std::string node_name_;
   int line_;
+  std::string message_;
 };
 
 /// If a node is not unique (and it should be)
@@ -117,21 +116,20 @@ class DuplicateNode: public std::exception {
   DuplicateNode(std::string node_name, int line) :
       node_name_(node_name), line_(line)
   {
-
+      std::stringstream ss;
+      ss << "Multiple nodes with name " << node_name_ << " were found!";
+      message_ = ss.str();
   };
 
     const char * what() const throw ()
     {
-      std::stringstream ss;
-
-      ss << "Multiple nodes with name " << node_name_ << " were found!";
-
-      return ss.str().c_str();
+      return message_.c_str();
     };
 
   private:
     std::string node_name_;
     int line_;
+    std::string message_;
 };
 
 /// If the object can't be converted
@@ -140,21 +138,21 @@ class InvalidType: public std::exception {
   InvalidType(std::string name, std::string type, std::string ctype) :
       name_(name), type_(type), ctype_(ctype)
   {
-
-  };
-
-  const char * what() const throw ()
-  {
     std::stringstream ss;
 
     ss << "Node with name " << name_ << " and type " << type_
         << "cannot be converted to the correct type " << ctype_ << "!";
 
-    return ss.str().c_str();
+    message_ = ss.str();
+  };
+
+  const char * what() const throw ()
+  {
+    return message_.c_str();
   };
 
  private:
-  const std::string name_, type_, ctype_;
+  std::string name_, type_, ctype_, message_;
 };
 
 /// If a parameter doesn't exist
@@ -163,20 +161,20 @@ class UnknownParameterXML: public std::exception {
   UnknownParameterXML(std::string name, std::string param) :
       name_(name), param_(param)
   {
-
-  };
-
-  const char * what() const throw ()
-  {
     std::stringstream ss;
 
     ss << "Object " << name_ << " does not have a parameter called " << param_ << "!";
 
-    return ss.str().c_str();
+    message_ = ss.str();
+  };
+
+  const char * what() const throw ()
+  {
+    return message_.c_str();
   };
 
  private:
-  const std::string name_, param_;
+  std::string name_, param_, message_;
 
 };
 
@@ -186,20 +184,43 @@ class UnregisteredXML: public std::exception {
   UnregisteredXML(std::string name, std::string type) :
       name_(name), type_(type)
   {
-
-  };
-
-  const char * what() const throw ()
-  {
     std::stringstream ss;
 
     ss << "Node named " << name_ << " has an unregistered type of " << type_ << "!";
 
-    return ss.str().c_str();
+    message_ = ss.str();
+  };
+
+  const char * what() const throw ()
+  {
+    return message_.c_str();
   };
 
  private:
-  const std::string name_, type_;
+  std::string name_, type_, message_;
+
+};
+
+/// The model isn't in the file
+class ModelNotFound: public std::exception {
+ public:
+  ModelNotFound(std::string name) :
+      name_(name)
+  {
+    std::stringstream ss;
+
+    ss << "Model named " << name_ << " is not in the XML file!";
+
+    message_ = ss.str();
+  };
+
+  const char * what() const throw ()
+  {
+    return message_.c_str();
+  };
+
+ private:
+  std::string name_, message_;
 
 };
 

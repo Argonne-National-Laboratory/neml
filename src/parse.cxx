@@ -35,6 +35,7 @@ std::unique_ptr<NEMLModel> parse_string_unique(std::string input, std::string mn
 
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
+  if (found == 0) throw ModelNotFound(mname);
 
   // Get the NEMLObject
   std::unique_ptr<NEMLObject> obj = get_object_unique(found);
@@ -61,6 +62,7 @@ std::shared_ptr<NEMLModel> parse_xml(std::string fname, std::string mname)
 
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
+  if (found == 0) throw ModelNotFound(mname);
 
   // Get the NEMLObject
   std::shared_ptr<NEMLObject> obj = get_object(found);
@@ -87,6 +89,7 @@ std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname
 
   // Find the node with the right name
   const rapidxml::xml_node<> * found = root->first_node(mname.c_str());
+  if (found == 0) throw ModelNotFound(mname);
 
   // Get the NEMLObject
   std::unique_ptr<NEMLObject> obj = get_object_unique(found);

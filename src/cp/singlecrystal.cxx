@@ -103,7 +103,7 @@ void SingleCrystalModel::Fe(double * const stress, double * const hist,
   Orientation Q0 = h.get<Orientation>("rotation0").deepcopy();
  
   Orientation Re = Q * Q0.inverse();
-  Symmetric estrain = kinematics_->elastic_strains(stress, Q, h, T);
+  Symmetric estrain = kinematics_->elastic_strains(stress, *lattice_, Q, h, T);
   RankTwo RR;
   Re.to_matrix(RR.s());
 
@@ -120,6 +120,34 @@ int SingleCrystalModel::update_ld_inc(
    double * const A_np1, double * const B_np1,
    double & u_np1, double u_n,
    double & p_np1, double p_n)
+{
+  int ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                T_np1, T_n, t_np1, t_n,
+                                s_np1, s_n, h_np1, h_n, 
+                                A_np1, B_np1, u_np1, u_n,
+                                p_np1, p_n, 0);
+  if (ier != 0) {
+    ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                    T_np1, T_n, t_np1, t_n,
+                                    s_np1, s_n, h_np1, h_n, 
+                                    A_np1, B_np1, u_np1, u_n,
+                                    p_np1, p_n, 1);
+  }
+
+  return ier;
+
+}
+
+int SingleCrystalModel::attempt_update_ld_inc_(
+   const double * const d_np1, const double * const d_n,
+   const double * const w_np1, const double * const w_n,
+   double T_np1, double T_n,
+   double t_np1, double t_n,
+   double * const s_np1, const double * const s_n,
+   double * const h_np1, const double * const h_n,
+   double * const A_np1, double * const B_np1,
+   double & u_np1, double u_n,
+   double & p_np1, double p_n, int trial_type)
 {
   // Shut up a pointless memory error
   std::fill(h_np1, h_np1+nhist(), 0.0);
@@ -176,10 +204,21 @@ int SingleCrystalModel::update_ld_inc(
     History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
                                           local_lattice, T_n + dT *
                                           step, F_n);
+    
+    Symmetric strial;
+    if (trial_type == 1) {
+      // Predict the elastic unload
+      strial = S_np1 + kinematics_->stress_increment(S_np1, D, dt * step,
+                                                             local_lattice, Q_n,
+                                                             H_np1, T_n+dT*step);
+    }
+    else {
+      strial = S_np1;
+    }
 
     // Set the trial state
     SCTrialState trial(D, W,
-                       S_np1, H_np1, // Yes, really
+                       strial, H_np1, // Yes, really
                        Q_n, local_lattice,
                        T_n + dT * step, dt * step,
                        fixed);
@@ -275,7 +314,7 @@ int SingleCrystalModel::elastic_strains(
 
   const History h = gather_history_(h_np1);
   
-  Symmetric estrain = kinematics_->elastic_strains(stress, 
+  Symmetric estrain = kinematics_->elastic_strains(stress, *lattice_,
                                                    h.get<Orientation>("rotation"), 
                                                    h, T_np1);
   std::copy(estrain.data(), estrain.data()+6, e_np1);
@@ -674,8 +713,9 @@ double SingleCrystalModel::calc_work_inc_(
 {
   double dU = calc_energy_inc_(D_np1, D_n, S_np1, S_n);
 
-  Symmetric e_np1 = kinematics_->elastic_strains(S_np1, Q_np1, H_np1, T_np1);
-  Symmetric e_n = kinematics_->elastic_strains(S_n, Q_n, H_n, T_n);
+  Symmetric e_np1 = kinematics_->elastic_strains(S_np1, *lattice_, Q_np1,
+                                                 H_np1, T_np1);
+  Symmetric e_n = kinematics_->elastic_strains(S_n, *lattice_, Q_n, H_n, T_n);
 
   double dE = (S_np1 - S_n).contract(e_np1 - e_n) / 2.0;
 

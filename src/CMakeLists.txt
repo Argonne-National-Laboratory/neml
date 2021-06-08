@@ -30,12 +30,14 @@ add_library(neml
       damage.cxx
       history.cxx
       larsonmiller.cxx
+      walker.cxx
       block.cxx
       )
 add_subdirectory(math)
 add_subdirectory(cp)
 target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
 generate_export_header(neml)
+generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_SOURCE_DIR}/src/neml_export.h)
 
 ### python bindings in neml ###
 if (WRAP_PYTHON)
@@ -59,5 +61,6 @@ if (WRAP_PYTHON)
       pybind(damage)
       pybind(history)
       pybind(larsonmiller)
+      pybind(walker)
       pybind(block)
 endif()

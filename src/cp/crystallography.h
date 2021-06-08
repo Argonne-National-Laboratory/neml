@@ -75,7 +75,7 @@ class NEML_EXPORT Lattice: public NEMLObject {
   const std::vector<std::vector<Vector>> & burgers_vectors() {return burgers_vectors_;};
   /// Return the list of normalized slip directions
   const std::vector<std::vector<Vector>> & slip_directions() {return slip_directions_;};
-  /// Return the last of normalize slip normals
+  /// Return the list of normalize slip normals
   const std::vector<std::vector<Vector>> & slip_planes() {return slip_planes_;};
 
   /// Convert Miller directions to cartesian vectors
@@ -117,11 +117,22 @@ class NEML_EXPORT Lattice: public NEMLObject {
   /// Access the symmetry operations
   const std::shared_ptr<SymmetryGroup> symmetry();
 
+  /// Return a list of Cartesian vectors giving the unique slip planes
+  const std::vector<Vector> unique_planes() const;
+  /// The number of unique slip planes
+  size_t nplanes() const;
+  /// Given a slip system return the index into the unique slip planes
+  size_t plane_index(size_t g, size_t i) const;
+  /// Given the unique slip plane index return the vector of (g,i) tuples
+  std::vector<std::pair<size_t,size_t>> plane_systems(size_t i) const;
+
  private:
   void make_reciprocal_lattice_();
   static void assert_miller_(std::vector<int> m);
 
   void cache_rot_(const Orientation & Q);
+
+  void update_normals_(const std::vector<Vector> & new_planes);
 
  private:
   Vector a1_, a2_, a3_, b1_, b2_, b3_;
@@ -138,6 +149,10 @@ class NEML_EXPORT Lattice: public NEMLObject {
   size_t hash_;
   std::vector<std::vector<Symmetric>> Ms_;
   std::vector<std::vector<Skew>> Ns_;
+
+  // Used for the normal damage system
+  std::vector<Vector> normals_;
+  std::vector<std::vector<size_t>> normal_map_;
 };
 
 class NEML_EXPORT CubicLattice: public Lattice {
