@@ -1,5 +1,5 @@
 from neml import models, interpolate, elasticity, history
-from neml.cp import hucocks
+from neml.cp import hucocks, crystallography, sliprules
 from neml.math import rotations, tensors
 
 import unittest
@@ -7,6 +7,7 @@ import numpy as np
 import scipy.interpolate as inter
 
 from common import differentiate_new
+from test_slipharden import CommonSlipHardening 
 
 class PrecipitationModel:
   """
@@ -87,8 +88,6 @@ class PrecipitationModel:
         c:      vector of current concentrations
         T:      temperature
     """
-    print(c)
-    print(self.kboltz, T, self.vm, np.prod(c), np.prod(self.ceq(T)))
     return -self.kboltz * T / self.vm * np.log(np.prod(c) / np.prod(self.ceq(T)))
 
   def c(self, f, T):
@@ -616,3 +615,72 @@ class TestPercipitationModel(unittest.TestCase):
 
     print(num, exact)
     self.assertTrue(np.isclose(num, exact, rtol=1e-5))
+
+class TestDislocationSpacingHardening(unittest.TestCase, CommonSlipHardening):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.nslip = self.L.ntotal
+
+    self.current = 1.15e-7
+
+    self.H = history.History()
+    for i in range(self.nslip):
+      self.H.add_scalar("spacing_"+str(i))
+      self.H.set_scalar("spacing_"+str(i), self.current)
+
+    self.T = 600 + 273.15
+    
+    self.J1 = 2e14
+    self.J2 = 3.3e14
+    self.K = 2.56e-30
+    self.L0 = 3.1623e-7
+    self.b = 2.5e-10
+    self.a = 0.35
+    self.G = 57633.58
+    
+    self.model = hucocks.DislocationSpacingHardening(self.J1, self.J2, self.K, self.L0, self.a, 
+        self.b, self.G, self.L)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        should = self.a * self.G * self.b / self.current
+        self.assertAlmostEqual(model, should)
+
+
+  def test_definition(self):
+    hrate = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule,
+        self.fixed)
+    should = np.zeros((self.nslip,))
+
+    for i in range(self.nslip):
+      for g in range(self.L.ngroup):
+        for k in range(self.L.nslip(g)):
+          j = self.L.flat(g,k)
+          if i == j:
+            c = self.J1
+          else:
+            c = self.J2
+          should[i] -= self.current**3.0 * c * np.abs(
+              self.sliprule.slip(g, k, self.S, self.Q, self.H, self.L, self.T, self.fixed))
+      should[i] += self.K / self.current**3.0
+    
+    self.assertTrue(np.allclose(hrate, should))
+
+

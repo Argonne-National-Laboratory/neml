@@ -10,6 +10,7 @@ namespace neml {
 
 PYBIND11_MODULE(hucocks, m) {
   py::module::import("neml.objects");
+  py::module::import("neml.cp.slipharden");
 
   m.doc() = "Objects for the Hu & Cocks 316H model";
 
@@ -44,6 +45,15 @@ PYBIND11_MODULE(hucocks, m) {
     .def("Gv", &HuCocksPrecipitationModel::Gv)
     .def("dG_df", &HuCocksPrecipitationModel::dG_df)
     ;
+
+  py::class_<DislocationSpacingHardening, SlipHardening, std::shared_ptr<DislocationSpacingHardening>>(m, "DislocationSpacingHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<DislocationSpacingHardening>(
+                          args, kwargs, {"J1", "J2", "K", "L0", "a", "b", "G",
+                          "L"});
+                    }))
+      ;
 
 } // PYBIND!!_MODULE
 

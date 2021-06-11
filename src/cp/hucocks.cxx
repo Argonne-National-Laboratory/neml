@@ -397,4 +397,255 @@ bool HuCocksPrecipitationModel::nucleation_(const std::vector<double> & c,
   return true;
 }
 
+DislocationSpacingHardening::DislocationSpacingHardening(std::shared_ptr<Interpolate> J1, 
+                                                         std::shared_ptr<Interpolate> J2,
+                                                         std::shared_ptr<Interpolate> K, 
+                                                         double L0,
+                                                         double a, double b,
+                                                         std::shared_ptr<Interpolate> G,
+                                                         std::shared_ptr<Lattice> L,
+                                                         std::string varprefix) :
+    J1_(J1), J2_(J2), K_(K), L0_(L0), a_(a), b_(b), G_(G), L_(L),
+    varprefix_(varprefix)
+{
+  varnames_.resize(L_->ntotal());
+  for (size_t i = 0; i < size(); i++)
+    varnames_[i] = varprefix_+"_"+std::to_string(i);
+
+  init_cache_();
+}
+
+std::string DislocationSpacingHardening::type()
+{
+  return "DislocationSpacingHardening";
+}
+
+std::unique_ptr<NEMLObject> DislocationSpacingHardening::initialize(ParameterSet & params)
+{
+  return neml::make_unique<DislocationSpacingHardening>(
+      params.get_object_parameter<Interpolate>("J1"),
+      params.get_object_parameter<Interpolate>("J2"),
+      params.get_object_parameter<Interpolate>("K"),
+      params.get_parameter<double>("L0"),
+      params.get_parameter<double>("a"),
+      params.get_parameter<double>("b"),
+      params.get_object_parameter<Interpolate>("G"),
+      params.get_object_parameter<Lattice>("L"),
+      params.get_parameter<std::string>("varprefix"));
+}
+
+ParameterSet DislocationSpacingHardening::parameters()
+{
+  ParameterSet pset(DislocationSpacingHardening::type());
+
+  pset.add_parameter<NEMLObject>("J1");
+  pset.add_parameter<NEMLObject>("J2");
+  pset.add_parameter<NEMLObject>("K");
+  pset.add_parameter<double>("L0");
+  pset.add_parameter<double>("a");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<NEMLObject>("G");
+  pset.add_parameter<NEMLObject>("L");
+
+  pset.add_optional_parameter<std::string>("varprefix", 
+                                           std::string("spacing"));
+
+  return pset;
+}
+
+std::vector<std::string> DislocationSpacingHardening::varnames() const
+{
+  return varnames_;
+}
+
+void DislocationSpacingHardening::set_varnames(std::vector<std::string> vars)
+{
+  varnames_ = vars;
+  init_cache_();
+}
+
+void DislocationSpacingHardening::populate_history(History & history) const
+{
+  for (auto vn : varnames_) {
+    history.add<double>(vn);
+  }
+}
+
+void DislocationSpacingHardening::init_history(History & history) const
+{
+  for (auto vn : varnames_) {
+    history.get<double>(vn) = L0_;
+  }
+}
+
+double DislocationSpacingHardening::hist_to_tau(size_t g, size_t i, 
+                                           const History & history,
+                                           Lattice & L,
+                                           double T, const History & fixed) const
+{
+  return a_ * G_->value(T) * b_ / history.get<double>(varnames_[L.flat(g,i)]);
+}
+
+History DislocationSpacingHardening::d_hist_to_tau(size_t g, size_t i, 
+                                              const History & history,
+                                              Lattice & L,
+                                              double T, 
+                                              const History & fixed) const
+{
+  History res = cache(CacheType::DOUBLE);
+  // This works because the above zeros out the vector
+  res.get<double>(varnames_[L.flat(g,i)]) = -a_ * G_->value(T) * b_ / 
+      std::pow(history.get<double>(varnames_[L.flat(g,i)]), 2.0);
+  return res;
+}
+
+History DislocationSpacingHardening::hist(const Symmetric & stress, 
+                                     const Orientation & Q,
+                                     const History & history, 
+                                     Lattice & L, double T, const SlipRule & R, 
+                                     const History & fixed) const
+{
+
+  // Vector of results
+  History res = blank_hist().zero();
+  
+  for (size_t i = 0; i < size(); i++) {
+    double Li = history.get<double>(varnames_[i]);
+    double Li3 = std::pow(Li, 3);
+    for (size_t g = 0; g < L.ngroup(); g++) {
+      for (size_t k = 0; k < L.nslip(g); k++) {
+        size_t j = L.flat(g, k);
+        double c;
+        if (i == j)
+          c = J1_->value(T);
+        else
+          c = J2_->value(T);
+        res.get<double>(varnames_[i]) -= Li3 * c * 
+            std::fabs(R.slip(g, k, stress, Q, history, L, T, fixed));
+      }
+    }
+    res.get<double>(varnames_[i]) += K_->value(T) / Li3;
+  }
+
+
+  return res;
+}
+
+History DislocationSpacingHardening::d_hist_d_s(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history,
+                                           Lattice & L, double T, 
+                                           const SlipRule & R,
+                                           const History & fixed) const
+{
+  History res = blank_hist().derivative<Symmetric>().zero();
+
+  for (size_t i = 0; i < size(); i++) {
+    double Li = history.get<double>(varnames_[i]);
+    double Li3 = std::pow(Li, 3);
+    for (size_t g = 0; g < L.ngroup(); g++) {
+      for (size_t k = 0; k < L.nslip(g); k++) {
+        size_t j = L.flat(g, k);
+        double c;
+        if (i == j)
+          c = J1_->value(T);
+        else
+          c = J2_->value(T);
+        
+        double si = R.slip(g, k, stress, Q, history, L, T, fixed);
+        double sgn = std::copysign(1.0, si);
+        Symmetric dsi = R.d_slip_d_s(g, k, stress, Q, history, L, T, fixed);
+        
+        res.get<Symmetric>(varnames_[i]) -= Li3 * c * sgn * dsi;
+      }
+    }
+  }
+
+  return res;
+}
+
+History DislocationSpacingHardening::d_hist_d_h(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history, 
+                                           Lattice & L,
+                                           double T, const SlipRule & R, 
+                                           const History & fixed) const
+{
+  auto res = blank_hist().derivative<History>().zero();
+
+  // There is both an effect on the diagonal caused by the Ldi in the equation
+  // and an effect from the slip rule
+  for (size_t i = 0; i < size(); i++) {
+    double Li = history.get<double>(varnames_[i]);
+    double Li3 = std::pow(Li, 3);
+    for (size_t g = 0; g < L.ngroup(); g++) {
+      for (size_t k = 0; k < L.nslip(g); k++) {
+        size_t j = L.flat(g, k);
+        double c;
+        if (i == j)
+          c = J1_->value(T);
+        else
+          c = J2_->value(T);
+        
+        double si = R.slip(g, k, stress, Q, history, L, T, fixed);
+        double sgn = std::copysign(1.0, si);
+        History dsi = R.d_slip_d_h(g, k, stress, Q, history, L, T, fixed);
+
+        res.get<double>(varnames_[i]+"_"+varnames_[i]) -= 
+            3.0 * std::pow(Li,2.0) * c * std::fabs(si);
+        
+        for (auto vn : varnames_)
+          res.get<double>(varnames_[i]+"_"+vn) -=
+              Li3 * c * sgn * dsi.get<double>(vn);
+      }
+    }
+    res.get<double>(varnames_[i]+"_"+varnames_[i]) -= 3.0*K_->value(T) /
+        std::pow(Li,4.0);    
+  }
+
+  return res;
+}
+
+History DislocationSpacingHardening::d_hist_d_h_ext(const Symmetric & stress, 
+                                               const Orientation & Q,
+                                               const History & history,
+                                               Lattice & L, double T, const SlipRule & R,
+                                               const History & fixed, 
+                                               std::vector<std::string> ext) const
+{
+  History res = blank_hist().history_derivative(history.subset(ext)).zero();
+
+  for (size_t i = 0; i < size(); i++) {
+    double Li = history.get<double>(varnames_[i]);
+    double Li3 = std::pow(Li, 3);
+    for (size_t g = 0; g < L.ngroup(); g++) {
+      for (size_t k = 0; k < L.nslip(g); k++) {
+        size_t j = L.flat(g, k);
+        double c;
+        if (i == j)
+          c = J1_->value(T);
+        else
+          c = J2_->value(T);
+        
+        double si = R.slip(g, k, stress, Q, history, L, T, fixed);
+        double sgn = std::copysign(1.0, si);
+        History dsi = R.d_slip_d_h(g, k, stress, Q, history, L, T, fixed);
+
+        for (auto vn : ext)
+          if (dsi.contains(vn)) {
+            res.get<double>(varnames_[i]+"_"+vn) -=
+                Li3 * c * sgn * dsi.get<double>(vn);
+          }
+      }
+    }
+  }
+
+  return res;
+}
+
+size_t DislocationSpacingHardening::size() const
+{
+  return varnames_.size();
+}
+
 }

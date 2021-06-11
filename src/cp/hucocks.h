@@ -115,5 +115,87 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
 
 static Register<HuCocksPrecipitationModel> regHuCocksPrecipitationModel;
 
+/// Standard dislocation density model, here evolving the spacing
+//    See Hu and Cocks, 2020 for more details
+class NEML_EXPORT DislocationSpacingHardening: public SlipHardening
+{
+ public:
+  DislocationSpacingHardening(std::shared_ptr<Interpolate> J1,
+                              std::shared_ptr<Interpolate> J2,
+                              std::shared_ptr<Interpolate> K, 
+                              double L0,
+                              double a, double b,
+                              std::shared_ptr<Interpolate> G,
+                              std::shared_ptr<Lattice> L,
+                              std::string varprefix);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Report your variable names
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
+
+  /// Request whatever history you will need
+  virtual void populate_history(History & history) const;
+  /// Setup history
+  virtual void init_history(History & history) const;
+
+  /// Map the set of history variables to the slip system hardening
+  virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             Lattice & L,
+                             double T, const History & fixed) const;
+  /// Derivative of the map wrt to history
+  virtual History
+      d_hist_to_tau(size_t g, size_t i, const History & history, Lattice & L,
+                    double T, const History & fixed) const;
+
+  /// The rate of the history
+  virtual History hist(const Symmetric & stress,
+                     const Orientation & Q, const History & history,
+                     Lattice & L, double T, const SlipRule & R,
+                     const History & fixed) const;
+  /// Derivative of the history wrt stress
+  virtual History d_hist_d_s(const Symmetric & stress,
+                             const Orientation & Q, const History & history,
+                             Lattice & L, double T,
+                             const SlipRule & R,
+                             const History & fixed) const;
+  /// Derivative of the history wrt the history
+  virtual History
+      d_hist_d_h(const Symmetric & stress,
+                 const Orientation & Q,
+                 const History & history,
+                 Lattice & L,
+                 double T, const SlipRule & R,
+                 const History & fixed) const;
+  /// Derivative of this history wrt the history, external variables
+  virtual History
+      d_hist_d_h_ext(const Symmetric & stress,
+                     const Orientation & Q,
+                     const History & history,
+                     Lattice & L,
+                     double T, const SlipRule & R,
+                     const History & fixed,
+                     std::vector<std::string> ext) const;
+
+  /// Number of slip systems contributing
+  size_t size() const;
+
+ private:
+  std::shared_ptr<Interpolate> J1_, J2_, K_;
+  double L0_, a_, b_;
+  std::shared_ptr<Interpolate> G_;
+  std::shared_ptr<Lattice> L_;
+  std::string varprefix_;
+  std::vector<std::string> varnames_;
+};
+
+static Register<DislocationSpacingHardening> regDislocationSpacingHardening;
 
 } // namespace neml
