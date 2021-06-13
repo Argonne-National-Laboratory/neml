@@ -727,6 +727,7 @@ void HuCocksHardening::populate_history(History & history) const
 
 void HuCocksHardening::init_history(History & history) const
 {
+  history.zero();
   dmodel_->init_history(history);
   for (auto pmodel : pmodels_)
     pmodel->init_history(history);
