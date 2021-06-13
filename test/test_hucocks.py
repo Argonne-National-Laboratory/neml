@@ -801,8 +801,13 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
     self.model.init_history(H1)
 
     self.assertEqual(len(np.array(H1)), 12+3+3)
-    self.assertTrue(np.allclose(np.array(H1), 
-      np.array([self.L0]*12+[0, 1.0e-20, 1.0e-6]*2)))
+    
+    should = np.array([self.L0]*12+[0, 1.0e-20, 1.0e-6]*2) 
+    
+    print(np.array(H1))
+    print(should)
+
+    self.assertTrue(np.allclose(np.array(H1), should))
 
   def test_hist_to_tau(self):
     for g in range(self.L.ngroup):
