@@ -44,6 +44,7 @@ PYBIND11_MODULE(hucocks, m) {
     .def("dc_df", &HuCocksPrecipitationModel::dc_df)
     .def("Gv", &HuCocksPrecipitationModel::Gv)
     .def("dG_df", &HuCocksPrecipitationModel::dG_df)
+    .def_property_readonly("vm", &HuCocksPrecipitationModel::vm)
     ;
 
   py::class_<DislocationSpacingHardening, SlipHardening, std::shared_ptr<DislocationSpacingHardening>>(m, "DislocationSpacingHardening")
@@ -52,6 +53,15 @@ PYBIND11_MODULE(hucocks, m) {
                       return create_object_python<DislocationSpacingHardening>(
                           args, kwargs, {"J1", "J2", "K", "L0", "a", "b", "G",
                           "L"});
+                    }))
+      ;
+
+  py::class_<HuCocksHardening, SlipHardening, std::shared_ptr<HuCocksHardening>>(m, "HuCocksHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<HuCocksHardening>(
+                          args, kwargs, {"dmodel", "pmodels", "ap", "ac", "b",
+                          "G"});
                     }))
       ;
 

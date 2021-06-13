@@ -683,4 +683,156 @@ class TestDislocationSpacingHardening(unittest.TestCase, CommonSlipHardening):
     
     self.assertTrue(np.allclose(hrate, should))
 
+class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
+  def setUp(self):
+    Ts = np.array([500.0,550.0,600.0,650.0]) + 273.15
 
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+
+    self.T = 600 + 273.15
+    
+    self.J1 = 2e14
+    self.J2 = 3.3e14
+    self.K = 2.56e-30
+    self.L0 = 3.1623e-7
+    self.b = 2.5e-10
+    self.ad = 0.35
+    self.G = interpolate.PiecewiseLinearInterpolate(
+        list(Ts),
+        [61068, 59541.0, 57633.6, 55725.2])
+    
+    self.dmodel = hucocks.DislocationSpacingHardening(self.J1, self.J2, self.K, self.L0, self.ad, 
+        self.b, self.G, self.L)
+
+    # Setup for [Cr,C] <-> M23C6
+    self.am_car = 3.6e-10
+    self.N0_car = 1.0e13
+    self.Vm_car = 6e-6
+    self.chi_car = 0.3
+    self.D0_car = 1.5e-4
+    self.Q0_car = 240e3
+    self.c0_car = [interpolate.ConstantInterpolate(16.25/100.0),
+        interpolate.ConstantInterpolate(0.0375/100.0)]
+    self.cp_car = [interpolate.PiecewiseLinearInterpolate(list(Ts),
+      [69.85/100, 69.05/100, 68.32/100, 67.52/100]),
+      interpolate.PiecewiseLinearInterpolate(list(Ts),
+        [5.13/100, 5.13/100, 5.13/100, 5.13/100])]
+    self.ceq_car = [interpolate.PiecewiseLinearInterpolate(list(Ts),
+      [15.64/100,15.69/100,15.75,100,15.83/100]),
+      interpolate.PiecewiseLinearInterpolate(list(Ts),
+        [7.25e-6/100, 2.92e-5/100, 9.48e-5/100, 2.97e-4/100])]
+    self.Cf_car = interpolate.PiecewiseLinearInterpolate(list(Ts), 
+        [1.0, 1.0, 0.3, 0.03])
+
+    self.carbide = hucocks.HuCocksPrecipitationModel(self.c0_car, self.cp_car, self.ceq_car, 
+        self.am_car, self.N0_car, self.Vm_car, self.chi_car, self.D0_car,
+        self.Q0_car, self.Cf_car) 
+
+    self.am_laves = 3.6e-10
+    self.N0_laves = 5e14
+    self.Vm_laves = 2e-6
+    self.chi_laves = 0.25
+    self.D0_laves = 7.4e-4
+    self.Q0_laves = 283e3
+    self.c0_laves = [2.33/100.0]
+    self.cp_laves = [50.0/100.0]
+    self.ceq_laves = [interpolate.PiecewiseLinearInterpolate(list(Ts),
+      [0.25/100,0.46/100.0,0.76/100.0,1.16/100.0])]
+    self.Cf_laves = 1.0
+
+    self.laves = hucocks.HuCocksPrecipitationModel(self.c0_laves, self.cp_laves, self.ceq_laves, 
+        self.am_laves, self.N0_laves, self.Vm_laves, self.chi_laves, self.D0_laves,
+        self.Q0_laves, self.Cf_laves) 
+
+    self.ap = 0.84
+    self.ac = 0.000457
+
+    self.model = hucocks.HuCocksHardening(self.dmodel, [self.carbide, self.laves], self.ap, self.ac, self.b,
+        self.G)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+    
+    self.nslip = self.L.ntotal
+
+    self.current = 1.15e-7
+    self.f_carbide = 0.073
+    self.r_carbide = 95e-9
+    self.N_carbide = self.f_carbide / (4.0/3.0*np.pi*self.r_carbide**3.0)
+    self.f_laves = 0.00962
+    self.r_laves = 41.2e-9
+    self.N_laves = self.f_laves / (4.0/3.0*np.pi*self.r_laves**3.0) 
+
+    self.H = history.History()
+    for i in range(self.nslip):
+      self.H.add_scalar("spacing_"+str(i))
+      self.H.set_scalar("spacing_"+str(i), self.current)
+    
+    self.H.add_scalar("f_0")
+    self.H.set_scalar("f_0", self.f_carbide)
+    self.H.add_scalar("r_0")
+    self.H.set_scalar("r_0", self.r_carbide)
+    self.H.add_scalar("N_0")
+    self.H.set_scalar("N_0", self.N_carbide)
+
+    self.H.add_scalar("f_1")
+    self.H.set_scalar("f_1", self.f_laves)
+    self.H.add_scalar("r_1")
+    self.H.set_scalar("r_1", self.r_laves)
+    self.H.add_scalar("N_1")
+    self.H.set_scalar("N_1", self.N_laves)
+
+    self.fixed = history.History()
+
+  def test_history(self):
+    """
+      Paranoid check on the history state, given this is a kinda complicated model
+    """
+    H1 = history.History()
+    self.model.populate_history(H1)
+    self.model.init_history(H1)
+
+    self.assertEqual(len(np.array(H1)), 12+3+3)
+    self.assertTrue(np.allclose(np.array(H1), 
+      np.array([self.L0]*12+[0, 1.0e-20, 1.0e-6]*2)))
+
+  def test_hist_to_tau(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        model = self.model.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+
+        tau_d = self.dmodel.hist_to_tau(g, i, self.H, self.L, self.T,
+            self.fixed)
+        Na = 2.0*self.H.get_scalar("r_0") * self.H.get_scalar("N_0") + 2.0*self.H.get_scalar("r_1") * self.H.get_scalar("N_1") 
+        c = np.sum(self.carbide.c(self.H.get_scalar("f_0"), self.T))/self.carbide.vm + np.sum(
+            self.laves.c(self.H.get_scalar("f_1"), self.T)) / self.laves.vm
+        tau_p = self.ap * self.G.value(self.T) * self.b * np.sqrt(Na)
+        tau_c = self.ac * self.G.value(self.T) * self.b * np.sqrt(c*self.b)
+        should = np.sqrt(tau_d**2.0 + tau_p**2.0) + tau_c
+        self.assertAlmostEqual(model, should)
+
+  def test_definition(self):
+    """
+      All concatenated together
+    """
+    assem = np.array(list(np.array(self.dmodel.hist(self.S, self.Q, self.H, 
+      self.L, self.T, self.sliprule, self.fixed))) + [
+          self.carbide.f_rate(self.H, self.T),
+          self.carbide.r_rate(self.H, self.T),
+          self.carbide.N_rate(self.H, self.T),
+          self.laves.f_rate(self.H, self.T),
+          self.laves.r_rate(self.H, self.T),
+          self.laves.N_rate(self.H, self.T)])
+    fmodel = self.model.hist(self.S, self.Q, self.H, self.L, self.T,
+        self.sliprule, self.fixed)
+
+    self.assertTrue(np.allclose(assem, fmodel))

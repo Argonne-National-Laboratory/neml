@@ -219,6 +219,10 @@ class NEML_EXPORT History {
 
   /// This unravels a history derivative into row major storage
   void unravel_hh(const History & base, double * const array);
+  
+  /// Starting location of an entry
+  double * start_loc(std::string name);
+
 
  private:
   void error_if_exists_(std::string name) const;

@@ -388,6 +388,11 @@ double HuCocksPrecipitationModel::dG_df(double f, double T) const
   return -kboltz_ * T / vm_ * dc_eff / c_eff;
 }
 
+double HuCocksPrecipitationModel::vm() const
+{
+  return vm_;
+}
+
 bool HuCocksPrecipitationModel::nucleation_(const std::vector<double> & c,
                                             double T) const
 {
@@ -571,7 +576,7 @@ History DislocationSpacingHardening::d_hist_d_h(const Symmetric & stress,
                                            double T, const SlipRule & R, 
                                            const History & fixed) const
 {
-  auto res = blank_hist().derivative<History>().zero();
+  auto res = blank_hist().history_derivative(history).zero();
 
   // There is both an effect on the diagonal caused by the Ldi in the equation
   // and an effect from the slip rule
@@ -594,7 +599,7 @@ History DislocationSpacingHardening::d_hist_d_h(const Symmetric & stress,
         res.get<double>(varnames_[i]+"_"+varnames_[i]) -= 
             3.0 * std::pow(Li,2.0) * c * std::fabs(si);
         
-        for (auto vn : varnames_)
+        for (auto vn : dsi.get_order())
           res.get<double>(varnames_[i]+"_"+vn) -=
               Li3 * c * sgn * dsi.get<double>(vn);
       }
@@ -646,6 +651,300 @@ History DislocationSpacingHardening::d_hist_d_h_ext(const Symmetric & stress,
 size_t DislocationSpacingHardening::size() const
 {
   return varnames_.size();
+}
+
+HuCocksHardening::HuCocksHardening(std::shared_ptr<SlipHardening> dmodel,
+                                   std::vector<std::shared_ptr<HuCocksPrecipitationModel>> pmodels,
+                                   double ap, double ac, double b, std::shared_ptr<Interpolate> G) :
+    dmodel_(dmodel), pmodels_(pmodels), ap_(ap), ac_(ac), b_(b), G_(G)
+{
+  // Alter the varnames of the pmodels...
+  size_t i = 0;
+  for (auto pmodel : pmodels_) {
+    std::vector<std::string> new_varnames;
+    for (auto vn : pmodel->varnames()) {
+      new_varnames.push_back(vn + "_" + std::to_string(i));
+    }
+    pnames_.push_back(new_varnames);
+    pmodel->set_varnames(new_varnames);
+    i++;
+  }
+  init_cache_();
+}
+
+std::string HuCocksHardening::type()
+{
+  return "HuCocksHardening";
+}
+
+std::unique_ptr<NEMLObject> HuCocksHardening::initialize(ParameterSet & params)
+{
+  return neml::make_unique<HuCocksHardening>(
+      params.get_object_parameter<SlipHardening>("dmodel"),
+      params.get_object_parameter_vector<HuCocksPrecipitationModel>("pmodels"),
+      params.get_parameter<double>("ap"),
+      params.get_parameter<double>("ac"),
+      params.get_parameter<double>("b"),
+      params.get_object_parameter<Interpolate>("G"));
+}
+
+ParameterSet HuCocksHardening::parameters()
+{
+  ParameterSet pset(HuCocksHardening::type());
+
+  pset.add_parameter<NEMLObject>("dmodel");
+  pset.add_parameter<std::vector<NEMLObject>>("pmodels");
+  pset.add_parameter<double>("ap");
+  pset.add_parameter<double>("ac");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<NEMLObject>("G");
+
+  return pset;
+}
+
+std::vector<std::string> HuCocksHardening::varnames() const
+{
+  std::vector<std::string> names = dmodel_->varnames();
+  for (auto pmodel : pmodels_) {
+    auto pn = pmodel->varnames();
+    names.insert(names.end(), pn.begin(), pn.end());
+  }
+
+  return names;
+}
+
+void HuCocksHardening::set_varnames(std::vector<std::string> vars)
+{
+  throw std::runtime_error("Cannot override varnames for HuCocksHardening");
+}
+
+void HuCocksHardening::populate_history(History & history) const
+{
+  dmodel_->populate_history(history);
+  for (auto pmodel : pmodels_)
+    pmodel->populate_history(history);
+}
+
+void HuCocksHardening::init_history(History & history) const
+{
+  dmodel_->init_history(history);
+  for (auto pmodel : pmodels_)
+    pmodel->init_history(history);
+}
+
+double HuCocksHardening::hist_to_tau(size_t g, size_t i, 
+                                           const History & history,
+                                           Lattice & L,
+                                           double T, const History & fixed) const
+{
+  double tau_d = dmodel_->hist_to_tau(g, i, history, L, T, fixed);
+  double c = c_eff_(history, T);
+  double NA = NA_eff_(history, T); 
+
+  double tau_p = ap_ * G_->value(T) * b_ * std::sqrt(NA);
+  double tau_c = ac_ * G_->value(T) * b_ * std::sqrt(c * b_);
+
+  return std::sqrt(tau_d*tau_d + tau_p*tau_p) + tau_c;
+}
+
+History HuCocksHardening::d_hist_to_tau(size_t g, size_t i, 
+                                              const History & history,
+                                              Lattice & L,
+                                              double T, 
+                                              const History & fixed) const
+{
+  History res = cache(CacheType::DOUBLE).zero();
+
+  // Commonly-used things
+  double tau_d = dmodel_->hist_to_tau(g, i, history, L, T, fixed);
+  double c = c_eff_(history, T);
+  double NA = NA_eff_(history, T); 
+
+  double tau_p = ap_ * G_->value(T) * b_ * std::sqrt(NA);
+
+  // First block: dislocation terms
+  History dd = dmodel_->d_hist_to_tau(g, i, history, L, T, fixed);
+  dd.scalar_multiply(tau_d / std::sqrt(tau_p * tau_p + tau_d * tau_d));
+  std::copy(dd.rawptr(), dd.rawptr()+dd.size(), res.rawptr());
+  
+  // For each precipitation model
+  for (size_t i = 0; i < pmodels_.size(); i++) {
+    // Second block: f
+    auto dc = pmodels_[i]->dc_df(history.get<double>(pnames_[i][0]),T);
+    for (auto dci: dc)
+      res.get<double>(pnames_[i][0]) += ac_ * G_->value(T) * b_ * b_ / (2.0 *
+                                                                       std::sqrt(c
+                                                                                 * b_))
+          * dci / pmodels_[i]->vm();
+
+    // Third block: r
+    res.get<double>(pnames_[i][1]) = tau_p / std::sqrt(tau_p * tau_p + tau_d *
+                                                       tau_d) * ap_ *
+        G_->value(T) * b_ * history.get<double>(pnames_[i][2]) / std::sqrt(NA);
+
+    // Fourth block: N
+    res.get<double>(pnames_[i][2]) = tau_p / std::sqrt(tau_p * tau_p + tau_d *
+                                                       tau_d) * ap_ *
+        G_->value(T) * b_ * history.get<double>(pnames_[i][1]) / std::sqrt(NA);
+  }
+
+  return res;
+}
+
+History HuCocksHardening::hist(const Symmetric & stress, 
+                                     const Orientation & Q,
+                                     const History & history, 
+                                     Lattice & L, double T, const SlipRule & R, 
+                                     const History & fixed) const
+{
+
+  // Vector of results
+  History res = blank_hist().zero();
+  
+  // History is easy, we just concatenate the dislocation model hardening
+  // followed by each precipitation hardening
+  auto h1 = dmodel_->hist(stress, Q, history, L, T, R, fixed);
+  std::copy(h1.rawptr(), h1.rawptr() + h1.size(), 
+            res.start_loc(dmodel_->varnames()[0]));
+  for (size_t i = 0; i < pmodels_.size(); i++) {
+    res.get<double>(pnames_[i][0]) = pmodels_[i]->f_rate(history, T);
+    res.get<double>(pnames_[i][1]) = pmodels_[i]->r_rate(history, T);
+    res.get<double>(pnames_[i][2]) = pmodels_[i]->N_rate(history, T);
+  }
+
+  return res;
+}
+
+History HuCocksHardening::d_hist_d_s(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history,
+                                           Lattice & L, double T, 
+                                           const SlipRule & R,
+                                           const History & fixed) const
+{
+  // This could be non-zero
+  History res = dmodel_->d_hist_d_s(stress, Q, history, L, T, R, fixed);
+
+  // These are zero
+  for (size_t i = 0; i < pmodels_.size(); i++) {
+    History pm;
+    pmodels_[i]->populate_history(pm);
+    History zero = pm.derivative<Symmetric>().zero();
+    res.add_union(zero);
+  }
+
+  return res;
+}
+
+History HuCocksHardening::d_hist_d_h(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history, 
+                                           Lattice & L,
+                                           double T, const SlipRule & R, 
+                                           const History & fixed) const
+{
+  // Cache some useful objects
+  std::vector<History> phists;
+  for (auto pmodel : pmodels_) {
+    History pm;
+    pmodel->populate_history(pm);
+    phists.push_back(pm.zero());
+  }
+
+  // Start with the self-derivative
+  auto res = dmodel_->d_hist_d_h(stress, Q, history, L, T, R, fixed);
+
+  // Deal with both cross and actual terms
+  for (size_t i = 0; i < pmodels_.size(); i++) {
+    // dmodel/pmodel cross term
+    //res.add_union(dmodel_->blank_hist().history_derivative(phists[i]).zero());
+    // pmodel/dmodel cross term
+    res.add_union(phists[i].history_derivative(dmodel_->blank_hist()).zero());
+    // pmodel/other pmodel cross terms
+    for (size_t j = 0; j < pmodels_.size(); j++) {
+      if (i != j)
+        res.add_union(phists[i].history_derivative(phists[j]).zero());
+    }
+    // actual non-zeros
+    res.add<double>(pnames_[i][0]+"_"+pnames_[i][0]);
+    res.get<double>(pnames_[i][0]+"_"+pnames_[i][0]) = 
+        pmodels_[i]->df_df(history, T);
+    res.add<double>(pnames_[i][0]+"_"+pnames_[i][1]);
+    res.get<double>(pnames_[i][0]+"_"+pnames_[i][1]) = 
+        pmodels_[i]->df_dr(history, T);
+    res.add<double>(pnames_[i][0]+"_"+pnames_[i][2]);
+    res.get<double>(pnames_[i][0]+"_"+pnames_[i][2]) = 
+        pmodels_[i]->df_dN(history, T);
+
+    res.add<double>(pnames_[i][1]+"_"+pnames_[i][0]);
+    res.get<double>(pnames_[i][1]+"_"+pnames_[i][0]) = 
+        pmodels_[i]->dr_df(history, T);
+    res.add<double>(pnames_[i][1]+"_"+pnames_[i][1]);
+    res.get<double>(pnames_[i][1]+"_"+pnames_[i][1]) = 
+        pmodels_[i]->dr_dr(history, T);
+    res.add<double>(pnames_[i][1]+"_"+pnames_[i][2]);
+    res.get<double>(pnames_[i][1]+"_"+pnames_[i][2]) = 
+        pmodels_[i]->dr_dN(history, T);
+
+    res.add<double>(pnames_[i][2]+"_"+pnames_[i][0]);  
+    res.get<double>(pnames_[i][2]+"_"+pnames_[i][0]) = 
+        pmodels_[i]->dN_df(history, T);
+    res.add<double>(pnames_[i][2]+"_"+pnames_[i][1]);
+    res.get<double>(pnames_[i][2]+"_"+pnames_[i][1]) = 
+        pmodels_[i]->dN_dr(history, T);
+    res.add<double>(pnames_[i][2]+"_"+pnames_[i][2]);
+    res.get<double>(pnames_[i][2]+"_"+pnames_[i][2]) = 
+        pmodels_[i]->dN_dN(history, T);
+  }
+
+  // Reorder...
+  std::vector<std::string> order;
+  for (auto n1 :  varnames()) {
+    for (auto n2 : varnames()) {
+      order.push_back(n1 + "_" + n2);
+    }
+  }
+  res.reorder(order);
+
+  return res;
+}
+
+History HuCocksHardening::d_hist_d_h_ext(const Symmetric & stress, 
+                                               const Orientation & Q,
+                                               const History & history,
+                                               Lattice & L, double T, const SlipRule & R,
+                                               const History & fixed, 
+                                               std::vector<std::string> ext) const
+{
+  History res = blank_hist().history_derivative(history.subset(ext)).zero();
+
+  // The only potential non-zero is from the dmodel
+  History h1 = dmodel_->d_hist_d_h_ext(stress, Q, history, L, T, R, 
+                                         fixed, ext);
+  std::copy(h1.rawptr(), h1.rawptr() + h1.size(), res.rawptr());
+
+  return res;
+}
+
+double HuCocksHardening::c_eff_(const History & history, double T) const
+{
+  double res = 0.0;
+  for (size_t i = 0; i < pmodels_.size(); i++) {
+    auto c = pmodels_[i]->c(history.get<double>(pnames_[i][0]), T);
+    for (auto ci : c)
+      res += ci / pmodels_[i]->vm();
+  }
+  return res;
+}
+
+double HuCocksHardening::NA_eff_(const History & history, double T) const
+{
+  double res = 0.0;
+  for (size_t i = 0; i < pmodels_.size(); i++) {
+    res += 2.0 * history.get<double>(pnames_[i][1]) *
+        history.get<double>(pnames_[i][2]);
+  }
+  return res;
 }
 
 }
