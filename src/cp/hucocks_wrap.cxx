@@ -11,6 +11,7 @@ namespace neml {
 PYBIND11_MODULE(hucocks, m) {
   py::module::import("neml.objects");
   py::module::import("neml.cp.slipharden");
+  py::module::import("neml.cp.sliprules");
 
   m.doc() = "Objects for the Hu & Cocks 316H model";
 
@@ -62,6 +63,15 @@ PYBIND11_MODULE(hucocks, m) {
                       return create_object_python<HuCocksHardening>(
                           args, kwargs, {"dmodel", "pmodels", "ap", "ac", "b",
                           "G"});
+                    }))
+      ;
+  py::class_<ArrheniusSlipRule, SlipStrengthSlipRule,
+        std::shared_ptr<ArrheniusSlipRule>>(m, "ArrheniusSlipRule")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<ArrheniusSlipRule>(
+                          args, kwargs, {"resistance", "g0", "A",
+                          "B", "b", "a0", "G0"});
                     }))
       ;
 

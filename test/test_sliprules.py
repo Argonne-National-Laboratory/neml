@@ -4,7 +4,7 @@ from neml import history, interpolate
 from neml.math import tensors, rotations, matrix
 from neml.cp import crystallography, slipharden, sliprules
 
-from common import differentiate
+from common import differentiate, differentiate_new
 from nicediff import *
 
 import unittest
@@ -26,7 +26,7 @@ class CommonSlipRule(object):
         d = np.array(self.model.d_slip_d_h(g, i, self.S, self.Q, self.H, self.L, self.T, self.fixed))
         nd = np.array(diff_history_scalar(lambda h: self.model.slip(g, i, self.S, self.Q, h,
           self.L, self.T, self.fixed), self.H))
-        self.assertTrue(np.allclose(nd.reshape(d.shape), d))
+        self.assertTrue(np.allclose(nd.reshape(d.shape), d, rtol = 1.0e-4))
 
   def test_d_hist_rate_d_stress(self):
     d = np.array(self.model.d_hist_rate_d_stress(self.S, self.Q, self.H, self.L, self.T, self.fixed))
@@ -41,10 +41,7 @@ class CommonSlipRule(object):
     d = d.reshape(nd.shape)
     print(d)
     print(nd)
-    np.set_printoptions(precision = 3, suppress = True)
-    print(d[:12,:12])
-    print(nd[:12,:12])
-    self.assertTrue(np.allclose(nd.reshape(d.shape), d))
+    self.assertTrue(np.allclose(nd.reshape(d.shape), d, rtol = 1.0e-4))
 
 class CommonSlipMultiStrengthSlipRule(object):
   def test_setup_history(self):
@@ -82,21 +79,21 @@ class CommonSlipMultiStrengthSlipRule(object):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         rs = self.L.shear(g, i, self.Q, self.S)
-        nd = differentiate(lambda t: self.model.sslip(g, i, t, self.strength_values, self.T),
+        nd = differentiate_new(lambda t: self.model.sslip(g, i, t, self.strength_values, self.T),
             rs)
         d = self.model.d_sslip_dtau(g, i, rs, self.strength_values, self.T)
 
-        self.assertTrue(np.isclose(d, nd, rtol = 1e-4))
+        self.assertTrue(np.isclose(d, nd, rtol = 1.0e-4))
 
   def test_slip_strength(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
         rs = self.L.shear(g, i, self.Q, self.S)
 
-        nd = differentiate(lambda s: self.model.sslip(g, i, rs, s, self.T), np.array(self.strength_values))
+        nd = differentiate_new(lambda s: self.model.sslip(g, i, rs, s, self.T), np.array(self.strength_values))
         d = self.model.d_sslip_dstrength(g, i, rs, self.strength_values, self.T)
 
-        self.assertTrue(np.allclose(nd,d))
+        self.assertTrue(np.allclose(nd,d, rtol = 1.0e-4))
 
 class TestKinematicPowerLawSlip(unittest.TestCase, CommonSlipRule, CommonSlipMultiStrengthSlipRule):
   def setUp(self):
@@ -237,17 +234,17 @@ class CommonSlipStrengthSlipRule(CommonSlipMultiStrengthSlipRule):
   def test_d_sslip_d_tau(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        nd = differentiate(lambda t: self.model.scalar_sslip(g, i, t, self.strength, self.T),
+        nd = differentiate_new(lambda t: self.model.scalar_sslip(g, i, t, self.strength, self.T),
             self.tau)
         d = self.model.scalar_d_sslip_dtau(g, i, self.tau, self.strength, self.T)
-        self.assertTrue(np.isclose(nd,d))
+        self.assertTrue(np.isclose(nd,d, rtol = 1.0e-4))
 
   def test_d_sslip_d_strength(self):
     for g in range(self.L.ngroup):
       for i in range(self.L.nslip(g)):
-        nd = differentiate(lambda s: self.model.scalar_sslip(g, i, self.tau, s, self.T), self.strength)
+        nd = differentiate_new(lambda s: self.model.scalar_sslip(g, i, self.tau, s, self.T), self.strength)
         d = self.model.scalar_d_sslip_dstrength(g, i, self.tau, self.strength, self.T)
-        self.assertTrue(np.isclose(nd, d))
+        self.assertTrue(np.isclose(nd, d, rtol = 1.0e-4))
 
 class TestPowerLawSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRule):
   def setUp(self):

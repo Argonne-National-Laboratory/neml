@@ -1,5 +1,5 @@
 from neml import models, interpolate, elasticity, history
-from neml.cp import hucocks, crystallography, sliprules
+from neml.cp import hucocks, crystallography, sliprules, slipharden
 from neml.math import rotations, tensors
 
 import unittest
@@ -7,7 +7,8 @@ import numpy as np
 import scipy.interpolate as inter
 
 from common import differentiate_new
-from test_slipharden import CommonSlipHardening 
+from test_slipharden import CommonSlipHardening
+from test_sliprules import CommonSlipStrengthSlipRule, CommonSlipRule
 
 class PrecipitationModel:
   """
@@ -841,3 +842,58 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
         self.sliprule, self.fixed)
 
     self.assertTrue(np.allclose(assem, fmodel))
+
+class TestArrheniusSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRule):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))/1.5
+    self.strength = 36.0
+    self.H = history.History()
+    self.H.add_scalar("strength")
+    self.H.set_scalar("strength", self.strength)
+
+    self.T = 600.0 + 273.15
+
+    self.tau0 = 10.0
+    self.tau_sat = 50.0
+    self.d = 2.5
+
+    self.strengthmodel = slipharden.VoceSlipHardening(self.tau_sat, self.d, self.tau0)
+    self.strengths = [self.strengthmodel]
+
+    self.static = self.tau0
+
+    self.strength_values = [self.strength + self.static]
+    
+    self.b = 2.5e-10
+    self.g0 = 2.0
+    self.a0 = 0.5
+    self.G0 = 77000.0e6
+    self.A = 3.0/4.0
+    self.B = 4.0 / 3.0
+
+    self.model = hucocks.ArrheniusSlipRule(self.strengthmodel, self.g0, self.A, self.B, self.b,
+        self.a0, self.G0)
+
+    self.tau = -35.0
+
+    self.fixed = history.History()
+
+    self.kboltz = 1.380649e-23
+
+  def test_scalar_rate(self):
+    P = self.a0 * self.G0 * self.b**3.0 / (self.kboltz * self.T)
+
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        should = self.g0 * np.exp(-P * (1.0 - np.abs(self.tau / self.strength)**self.A)**self.B
+            ) * np.sign(self.tau)
+        actual = self.model.scalar_sslip(g, i, self.tau, self.strength, self.T)
+        self.assertTrue(np.isclose(should, actual))
+

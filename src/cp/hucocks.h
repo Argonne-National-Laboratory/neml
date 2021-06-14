@@ -281,4 +281,38 @@ class NEML_EXPORT HuCocksHardening: public SlipHardening
 
 static Register<HuCocksHardening> regHuCocksHardening;
 
+/// An Arrhenius slip rule ala Hu and Cocks
+class NEML_EXPORT ArrheniusSlipRule: public SlipStrengthSlipRule
+{
+ public:
+  /// Initialize with the strength object, the reference strain rate, and the
+  /// rate sensitivity
+  ArrheniusSlipRule(std::shared_ptr<SlipHardening> strength,
+                    double g0, double A, double B, double b,
+                    double a0, double G0, double k);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// The slip rate definition
+  virtual double scalar_sslip(size_t g, size_t i, double tau, double strength,
+                              double T) const;
+  /// Derivative of slip rate with respect to the resolved shear
+  virtual double scalar_d_sslip_dtau(size_t g, size_t i, double tau, 
+                                     double strength, double T) const;
+  /// Derivative of the slip rate with respect to the strength
+  virtual double scalar_d_sslip_dstrength(size_t g, size_t i, double tau,
+                                          double strength, double T) const;
+
+ private:
+  double g0_, A_, B_, b_, a0_, G0_, k_;
+};
+
+static Register<ArrheniusSlipRule> regArrheniusSlipRule;
+
+
 } // namespace neml

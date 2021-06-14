@@ -948,4 +948,90 @@ double HuCocksHardening::NA_eff_(const History & history, double T) const
   return res;
 }
 
+ArrheniusSlipRule::ArrheniusSlipRule(std::shared_ptr<SlipHardening> strength,
+                                     double g0, double A, double B, double b,
+                                     double a0, double G0, double k) :
+    SlipStrengthSlipRule(strength), g0_(g0), A_(A), B_(B), b_(b), a0_(a0),
+    G0_(G0), k_(k)
+{
+
+}
+
+std::string ArrheniusSlipRule::type()
+{
+  return "ArrheniusSlipRule";
+}
+
+std::unique_ptr<NEMLObject> ArrheniusSlipRule::initialize(
+    ParameterSet & params)
+{
+  return neml::make_unique<ArrheniusSlipRule>(
+      params.get_object_parameter<SlipHardening>("resistance"),
+      params.get_parameter<double>("g0"),
+      params.get_parameter<double>("A"),
+      params.get_parameter<double>("B"),
+      params.get_parameter<double>("b"),
+      params.get_parameter<double>("a0"),
+      params.get_parameter<double>("G0"),
+      params.get_parameter<double>("k"));
+}
+
+ParameterSet ArrheniusSlipRule::parameters()
+{
+  ParameterSet pset(ArrheniusSlipRule::type());
+  
+  pset.add_parameter<NEMLObject>("resistance");
+  pset.add_parameter<double>("g0");
+  pset.add_parameter<double>("A");
+  pset.add_parameter<double>("B");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<double>("a0");
+  pset.add_parameter<double>("G0");
+  pset.add_optional_parameter<double>("k", 1.3806485e-23); 
+
+  return pset;
+}
+
+double ArrheniusSlipRule::scalar_sslip(size_t g, size_t i, double tau, 
+                                      double strength, double T) const
+{
+  double F0kT = a0_ * G0_ * std::pow(b_,3.0) / (k_ * T);
+
+  return  g0_ * std::exp(-F0kT * std::pow(1.0 - std::pow(std::fabs(tau/strength),
+                                                     A_), B_)) * 
+      std::copysign(1.0, tau);
+}
+
+double ArrheniusSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau, 
+                                             double strength, double T) const
+{
+  double F0kT = a0_ * G0_ * std::pow(b_,3.0) / (k_ * T);
+
+  return std::fabs(-g0_ * A_*B_*F0kT*tau*std::pow(std::fabs(tau/strength),
+                                  A_-2.0)*std::pow(1.0-std::pow(std::fabs(tau/strength),
+                                                                A_), B_-1.0) *  
+                                      std::exp(-F0kT * std::pow(1.0 -
+                                                                std::pow(std::fabs(tau/strength),
+                                                                         A_),
+                                                                B_)) /
+                                      std::pow(strength, 2.0));
+}
+
+double ArrheniusSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i, 
+                                                  double tau, 
+                                                  double strength,
+                                                  double T) const
+{
+  double F0kT = a0_ * G0_ * std::pow(b_,3.0) / (k_ * T);
+  
+  return  -g0_ * A_ * B_ * F0kT * std::pow(tau, 2.0) *
+                       std::pow(std::fabs(tau/strength), A_-2.0) * std::pow(1.0
+                                                                            - std::pow(std::fabs(tau/strength),
+                                                                                       A_),
+                                                                            B_-1.0)
+                       * std::exp(-F0kT * std::pow(1.0 -
+                                                   std::pow(std::fabs(tau/strength),A_),B_))
+                       / std::pow(strength, 3.0) * std::copysign(1.0, tau);
+}
+
 }
