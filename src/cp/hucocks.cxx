@@ -103,54 +103,76 @@ void HuCocksPrecipitationModel::init_history(History & history) const
   history.get<double>(varnames_[2]) = N_init_;
 }
 
-double HuCocksPrecipitationModel::f_rate(const History & history, double T) const
+std::vector<double> HuCocksPrecipitationModel::rate(const History & history,
+                                                    double T) const
 {
-  // double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
+  double fi = f(history);
+  double ri = r(history);
+  double Ni = N(history);
 
-  return 4.0 * M_PI / 3.0 * (N_rate(history, T) * std::pow(r, 3.0) + N * 3.0 *
-                           std::pow(r, 2.0) * r_rate(history, T));
+  return {f_rate(fi, ri, Ni, T), r_rate(fi, ri, Ni, T), N_rate(fi, ri, Ni, T)};
 }
 
-double HuCocksPrecipitationModel::df_df(const History & history, double T) const
+std::vector<std::vector<double>> HuCocksPrecipitationModel::jac(
+    const History & history,double T) const
 {
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
+  double fi = f(history);
+  double ri = r(history);
+  double Ni = N(history);
 
-  return 4.0 * M_PI / 3.0 * (dN_df(history, T) * std::pow(r, 3.0) + N * 3.0 *
-                           std::pow(r, 2.0) * dr_df(history, T));
+  return
+  {
+    {df_df(fi, ri, Ni, T), df_dr(fi, ri, Ni, T), df_dN(fi, ri, Ni, T)},
+    {dr_df(fi, ri, Ni, T), dr_dr(fi, ri, Ni, T), dr_dN(fi, ri, Ni, T)},
+    {dN_df(fi, ri, Ni, T), dN_dr(fi, ri, Ni, T), dN_dN(fi, ri, Ni, T)}
+  };
 }
 
-double HuCocksPrecipitationModel::df_dr(const History & history, double T) const
+double HuCocksPrecipitationModel::f(const History & history) const
 {
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
+  return history.get<double>(varnames_[0]);
+}
 
-  return 4.0 * M_PI / 3.0 * (dN_dr(history, T) * std::pow(r, 3.0) +
-                             3.0*N_rate(history, T) * std::pow(r, 2.0) + 6.0* N
-                             * r * r_rate(history, T) + N * 3.0 * std::pow(r,
+double HuCocksPrecipitationModel::r(const History & history) const
+{
+  return history.get<double>(varnames_[1]);
+}
+
+double HuCocksPrecipitationModel::N(const History & history) const
+{
+  return history.get<double>(varnames_[2]);
+}
+
+double HuCocksPrecipitationModel::f_rate(double f, double r, double N, double T) const
+{
+  return 4.0 * M_PI / 3.0 * (N_rate(f, r, N, T) * std::pow(r, 3.0) + N * 3.0 *
+                           std::pow(r, 2.0) * r_rate(f, r, N, T));
+}
+
+double HuCocksPrecipitationModel::df_df(double f, double r, double N, double T) const
+{
+  return 4.0 * M_PI / 3.0 * (dN_df(f, r, N, T) * std::pow(r, 3.0) + N * 3.0 *
+                           std::pow(r, 2.0) * dr_df(f, r, N, T));
+}
+
+double HuCocksPrecipitationModel::df_dr(double f, double r, double N, double T) const
+{
+  return 4.0 * M_PI / 3.0 * (dN_dr(f, r, N, T) * std::pow(r, 3.0) +
+                             3.0*N_rate(f, r, N, T) * std::pow(r, 2.0) + 6.0* N
+                             * r * r_rate(f, r, N, T) + N * 3.0 * std::pow(r,
                                                                            2.0)
-                             * dr_dr(history, T));
+                             * dr_dr(f, r, N, T));
 }
 
-double HuCocksPrecipitationModel::df_dN(const History & history, double T) const
+double HuCocksPrecipitationModel::df_dN(double f, double r, double N, double T) const
 {
-  // double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-
-  return 4.0 * M_PI / 3.0 * (dN_dN(history, T) * std::pow(r, 3.0) + 3.0 *
-                             std::pow(r, 2.0) * r_rate(history, T) + N * 3.0 *
-                             std::pow(r, 2.0) * dr_dN(history, T));
+  return 4.0 * M_PI / 3.0 * (dN_dN(f, r, N, T) * std::pow(r, 3.0) + 3.0 *
+                             std::pow(r, 2.0) * r_rate(f, r, N, T) + N * 3.0 *
+                             std::pow(r, 2.0) * dr_dN(f, r, N, T));
 }
 
-double HuCocksPrecipitationModel::r_rate(const History & history, double T) const
+double HuCocksPrecipitationModel::r_rate(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-
   auto ci = c(f, T);
   double D = D_(T);
 
@@ -159,7 +181,7 @@ double HuCocksPrecipitationModel::r_rate(const History & history, double T) cons
     double rc = -2.0 * chi_ / Gvi;
     return D / r * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
                                                          ceq_[rate_]->value(T))
-        + N_rate(history, T) / N * (rc - r);
+        + N_rate(f, r, N, T) / N * (rc - r);
   }
   else {
     double K = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * ci[rate_] / (9.0 * R_ * T);
@@ -167,12 +189,8 @@ double HuCocksPrecipitationModel::r_rate(const History & history, double T) cons
   }
 }
 
-double HuCocksPrecipitationModel::dr_df(const History & history, double T) const
+double HuCocksPrecipitationModel::dr_df(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-
   auto ci = c(f, T);
   auto dci = dc_df(f, T);
   double D = D_(T);
@@ -183,7 +201,7 @@ double HuCocksPrecipitationModel::dr_df(const History & history, double T) const
     double rc = -2.0 * chi_ / Gvi;
     double drc = 2.0 * chi_ / (Gvi * Gvi) * dGvi;
     return D / r * dci[rate_] / (cp_[rate_]->value(T) - ceq_[rate_]->value(T))
-        + dN_df(history, T) / N * (rc - r) + N_rate(history, T) / N * drc;
+        + dN_df(f, r, N, T) / N * (rc - r) + N_rate(f, r, N, T) / N * drc;
   }
   else {
     double dK = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * dci[rate_] / (9.0 * R_ * T);
@@ -191,12 +209,8 @@ double HuCocksPrecipitationModel::dr_df(const History & history, double T) const
   }
 }
 
-double HuCocksPrecipitationModel::dr_dr(const History & history, double T) const
+double HuCocksPrecipitationModel::dr_dr(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-
   auto ci = c(f, T);
   double D = D_(T);
 
@@ -205,7 +219,7 @@ double HuCocksPrecipitationModel::dr_dr(const History & history, double T) const
     double rc = -2.0 * chi_ / Gvi;
     return -D / (r*r) * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
                                                          ceq_[rate_]->value(T))
-        + dN_dr(history, T) / N * (rc - r) - N_rate(history,T) / N;
+        + dN_dr(f, r, N, T) / N * (rc - r) - N_rate(f, r, N,T) / N;
   }
   else {
     double K = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * ci[rate_] / (9.0 * R_ * T);
@@ -213,30 +227,22 @@ double HuCocksPrecipitationModel::dr_dr(const History & history, double T) const
   }
 }
 
-double HuCocksPrecipitationModel::dr_dN(const History & history, double T) const
+double HuCocksPrecipitationModel::dr_dN(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-
   auto ci = c(f, T);
 
   if (nucleation_(ci, T)) {
     double Gvi = Gv(f, T);
     double rc = -2.0 * chi_ / Gvi;
-    return dN_dN(history, T) / N * (rc - r) - N_rate(history,T)/(N*N) * (rc - r);
+    return dN_dN(f, r, N, T) / N * (rc - r) - N_rate(f, r, N,T)/(N*N) * (rc - r);
   }
   else {
     return 0;
   }
 }
 
-double HuCocksPrecipitationModel::N_rate(const History & history, double T) const
+double HuCocksPrecipitationModel::N_rate(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-  
   auto ci = c(f, T);
   double D = D_(T);
 
@@ -249,16 +255,12 @@ double HuCocksPrecipitationModel::N_rate(const History & history, double T) cons
     return N0_ * ZB * std::exp(-Gstar / (kboltz_ * T));
   }
   else {
-    return -3.0 * N / r * r_rate(history, T);
+    return -3.0 * N / r * r_rate(f, r, N, T);
   }
 }
 
-double HuCocksPrecipitationModel::dN_df(const History & history, double T) const
+double HuCocksPrecipitationModel::dN_df(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-  
   auto ci = c(f, T);
   auto dci = dc_df(f, T);
   double D = D_(T);
@@ -282,39 +284,31 @@ double HuCocksPrecipitationModel::dN_df(const History & history, double T) const
         std::exp(-Gstar/ (kboltz_*T)) * dGstar / (kboltz_ * T);
   }
   else {
-    return -3.0 * N / r * dr_df(history, T);
+    return -3.0 * N / r * dr_df(f, r, N, T);
   }
 }
 
-double HuCocksPrecipitationModel::dN_dr(const History & history, double T) const
+double HuCocksPrecipitationModel::dN_dr(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-  
   auto ci = c(f, T);
 
   if (nucleation_(ci, T)) {
     return 0;
   }
   else {
-    return -3.0 * N / r * dr_dr(history, T) + 3.0 * N / (r * r) * r_rate(history, T);
+    return -3.0 * N / r * dr_dr(f, r, N, T) + 3.0 * N / (r * r) * r_rate(f, r, N, T);
   }
 }
 
-double HuCocksPrecipitationModel::dN_dN(const History & history, double T) const
+double HuCocksPrecipitationModel::dN_dN(double f, double r, double N, double T) const
 {
-  double f = history.get<double>(varnames_[0]);
-  double r = history.get<double>(varnames_[1]);
-  double N = history.get<double>(varnames_[2]);
-  
   auto ci = c(f, T);
 
   if (nucleation_(ci, T)) {
     return 0;
   }
   else {
-    return -3.0 * N / r * dr_dN(history, T) - 3.0 / r * r_rate(history, T);
+    return -3.0 * N / r * dr_dN(f, r, N, T) - 3.0 / r * r_rate(f, r, N, T);
   }
 }
 
@@ -779,7 +773,7 @@ History HuCocksHardening::d_hist_to_tau(size_t g, size_t i,
   // For each precipitation model
   for (size_t i = 0; i < pmodels_.size(); i++) {
     // Second block: f
-    auto dc = pmodels_[i]->dc_df(history.get<double>(pnames_[i][0]),T);
+    auto dc = pmodels_[i]->dc_df(pmodels_[i]->f(history),T);
     for (auto dci: dc)
       res.get<double>(pnames_[i][0]) += ac_ * G_->value(T) * b_ * b_ / (2.0 *
                                                                        std::sqrt(c
@@ -789,12 +783,12 @@ History HuCocksHardening::d_hist_to_tau(size_t g, size_t i,
     // Third block: r
     res.get<double>(pnames_[i][1]) = tau_p / std::sqrt(tau_p * tau_p + tau_d *
                                                        tau_d) * ap_ *
-        G_->value(T) * b_ * history.get<double>(pnames_[i][2]) / std::sqrt(NA);
+        G_->value(T) * b_ * pmodels_[i]->N(history) / std::sqrt(NA);
 
     // Fourth block: N
     res.get<double>(pnames_[i][2]) = tau_p / std::sqrt(tau_p * tau_p + tau_d *
                                                        tau_d) * ap_ *
-        G_->value(T) * b_ * history.get<double>(pnames_[i][1]) / std::sqrt(NA);
+        G_->value(T) * b_ * pmodels_[i]->r(history) / std::sqrt(NA);
   }
 
   return res;
@@ -816,9 +810,9 @@ History HuCocksHardening::hist(const Symmetric & stress,
   std::copy(h1.rawptr(), h1.rawptr() + h1.size(), 
             res.start_loc(dmodel_->varnames()[0]));
   for (size_t i = 0; i < pmodels_.size(); i++) {
-    res.get<double>(pnames_[i][0]) = pmodels_[i]->f_rate(history, T);
-    res.get<double>(pnames_[i][1]) = pmodels_[i]->r_rate(history, T);
-    res.get<double>(pnames_[i][2]) = pmodels_[i]->N_rate(history, T);
+    auto rate = pmodels_[i]->rate(history, T);
+    for (size_t j = 0; j < 3; j++)
+      res.get<double>(pnames_[i][j]) = rate[j];
   }
 
   return res;
@@ -875,35 +869,13 @@ History HuCocksHardening::d_hist_d_h(const Symmetric & stress,
         res.add_union(phists[i].history_derivative(phists[j]).zero());
     }
     // actual non-zeros
-    res.add<double>(pnames_[i][0]+"_"+pnames_[i][0]);
-    res.get<double>(pnames_[i][0]+"_"+pnames_[i][0]) = 
-        pmodels_[i]->df_df(history, T);
-    res.add<double>(pnames_[i][0]+"_"+pnames_[i][1]);
-    res.get<double>(pnames_[i][0]+"_"+pnames_[i][1]) = 
-        pmodels_[i]->df_dr(history, T);
-    res.add<double>(pnames_[i][0]+"_"+pnames_[i][2]);
-    res.get<double>(pnames_[i][0]+"_"+pnames_[i][2]) = 
-        pmodels_[i]->df_dN(history, T);
-
-    res.add<double>(pnames_[i][1]+"_"+pnames_[i][0]);
-    res.get<double>(pnames_[i][1]+"_"+pnames_[i][0]) = 
-        pmodels_[i]->dr_df(history, T);
-    res.add<double>(pnames_[i][1]+"_"+pnames_[i][1]);
-    res.get<double>(pnames_[i][1]+"_"+pnames_[i][1]) = 
-        pmodels_[i]->dr_dr(history, T);
-    res.add<double>(pnames_[i][1]+"_"+pnames_[i][2]);
-    res.get<double>(pnames_[i][1]+"_"+pnames_[i][2]) = 
-        pmodels_[i]->dr_dN(history, T);
-
-    res.add<double>(pnames_[i][2]+"_"+pnames_[i][0]);  
-    res.get<double>(pnames_[i][2]+"_"+pnames_[i][0]) = 
-        pmodels_[i]->dN_df(history, T);
-    res.add<double>(pnames_[i][2]+"_"+pnames_[i][1]);
-    res.get<double>(pnames_[i][2]+"_"+pnames_[i][1]) = 
-        pmodels_[i]->dN_dr(history, T);
-    res.add<double>(pnames_[i][2]+"_"+pnames_[i][2]);
-    res.get<double>(pnames_[i][2]+"_"+pnames_[i][2]) = 
-        pmodels_[i]->dN_dN(history, T);
+    auto jac = pmodels_[i]->jac(history, T);
+    for (size_t ii = 0; ii < 3; ii++) {
+      for (size_t jj = 0; jj < 3; jj++) {
+        res.add<double>(pnames_[i][ii]+"_"+pnames_[i][jj]);
+        res.get<double>(pnames_[i][ii]+"_"+pnames_[i][jj]) = jac[ii][jj];
+      }
+    }
   }
 
   // Reorder...
@@ -939,7 +911,7 @@ double HuCocksHardening::c_eff_(const History & history, double T) const
 {
   double res = 0.0;
   for (size_t i = 0; i < pmodels_.size(); i++) {
-    auto c = pmodels_[i]->c(history.get<double>(pnames_[i][0]), T);
+    auto c = pmodels_[i]->c(pmodels_[i]->f(history), T);
     for (auto ci : c)
       res += ci / pmodels_[i]->vm();
   }
@@ -950,8 +922,7 @@ double HuCocksHardening::NA_eff_(const History & history, double T) const
 {
   double res = 0.0;
   for (size_t i = 0; i < pmodels_.size(); i++) {
-    res += 2.0 * history.get<double>(pnames_[i][1]) *
-        history.get<double>(pnames_[i][2]);
+    res += 2.0 * pmodels_[i]->r(history) * pmodels_[i]->N(history);
   }
   return res;
 }

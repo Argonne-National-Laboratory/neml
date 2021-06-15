@@ -206,7 +206,8 @@ class TestPercipitationModel(unittest.TestCase):
         [1.0, 1.0, 0.3, 0.03])
 
     self.model_neml = hucocks.HuCocksPrecipitationModel(self.c0_neml, self.cp_neml, self.ceq_neml, 
-        self.am, self.N0, self.Vm, self.chi, self.D0, self.Q0, self.Cf_neml)
+        self.am, self.N0, self.Vm, self.chi, self.D0, self.Q0, self.Cf_neml,
+        fs = 1, rs = 1, Ns = 1)
    
   def make_state(self, f, r, N):
     hist = history.History()
@@ -220,353 +221,79 @@ class TestPercipitationModel(unittest.TestCase):
 
     return hist
 
-  def test_fdot_nucleation(self):
-    """
-      Test f_dot in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
+  def vector_state(self, vec):
+    hist = history.History()
 
-    py_v = self.model_py.f_dot(f, r, N, T)
-    ne_v = self.model_neml.f_rate(self.make_state(f, r, N), T)
-    self.assertAlmostEqual(py_v, ne_v)
+    hist.add_scalar("f")
+    hist.set_scalar("f", vec[0])
+    hist.add_scalar("r")
+    hist.set_scalar("r", vec[1])
+    hist.add_scalar("N")
+    hist.set_scalar("N", vec[2])
 
-  def test_df_df_nucleation(self):
+    return hist
+
+  def test_rate_nucleation(self):
     """
-      Test df_df in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.f_rate(self.make_state(x, r, N), T), f)
-    exact = self.model_neml.df_df(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_df_dr_nucleation(self):
-    """
-      Test df_dr in the nucleation regime
+      Test rate in the nucleation regime
     """
     T = 550.0 + 273.15
     f = 0.0035
     r = 34e-9
     N = f / (4.0/3.0*np.pi*r**3.0)
 
-    num = differentiate_new(lambda x: self.model_neml.f_rate(self.make_state(f, x, N), T), r)
-    exact = self.model_neml.df_dr(self.make_state(f, r, N), T)
+    state = np.array([f/self.model_neml.fs, r / self.model_neml.rs, N / self.model_neml.Ns])
 
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
+    py_v = np.array([self.model_py.f_dot(f, r, N, T), self.model_py.r_dot(f, r, N, T), self.model_py.N_dot(f, r, N, T)])
+    ne_v = self.model_neml.rate(self.vector_state(state), T)
+    self.assertTrue(np.allclose(py_v, ne_v))
 
-  def test_df_dN_nucleation(self):
+  def test_jac_nucleation(self):
     """
-      Test df_dN in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.f_rate(self.make_state(f, r, x), T), N)
-    exact = self.model_neml.df_dN(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_fdot_ostwald(self):
-    """
-      Test f_dot in the ripening regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    py_v = self.model_py.f_dot(f, r, N, T)
-    ne_v = self.model_neml.f_rate(self.make_state(f, r, N), T)
-    self.assertAlmostEqual(py_v, ne_v)
-
-  def test_df_df_ostwald(self):
-    """
-      Test df_df in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.f_rate(self.make_state(x, r, N), T), f)
-    exact = self.model_neml.df_df(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_df_dr_ostwald(self):
-    """
-      Test df_dr in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.f_rate(self.make_state(f, x, N), T), r)
-    exact = self.model_neml.df_dr(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_df_dN_ostwald(self):
-    """
-      Test df_dN in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.f_rate(self.make_state(f, r, x), T), N)
-    exact = self.model_neml.df_dN(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_rdot_nucleation(self):
-    """
-      Test r_dot in the nucleation regime
+      Test jacobian in the nucleation regime
     """
     T = 550.0 + 273.15
     f = 0.0035
     r = 34e-9
     N = f / (4.0/3.0*np.pi*r**3.0)
 
-    py_v = self.model_py.r_dot(f, r, N, T)
-    ne_v = self.model_neml.r_rate(self.make_state(f, r, N), T)
-    self.assertAlmostEqual(py_v, ne_v)
+    state = np.array([f/self.model_neml.fs, r / self.model_neml.rs, N / self.model_neml.Ns])
 
-  def test_dr_df_nucleation(self):
+    exact = self.model_neml.jac(self.vector_state(state), T)
+    num = differentiate_new(lambda x: np.array(self.model_neml.rate(self.vector_state(x), T)), state)
+
+    self.assertTrue(np.allclose(exact, num))
+
+  def test_rate_ostwald(self):
     """
-      Test dr_df in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.r_rate(self.make_state(x, r, N), T), f)
-    exact = self.model_neml.dr_df(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_dr_dr_nucleation(self):
-    """
-      Test dr_dr in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.r_rate(self.make_state(f, x, N), T), r)
-    exact = self.model_neml.dr_dr(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_dr_dN_nucleation(self):
-    """
-      Test dr_dN in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.r_rate(self.make_state(f, r, x), T), N)
-    exact = self.model_neml.dr_dN(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_rdot_ostwald(self):
-    """
-      Test r_dot in the ripening regime
+      Test rate in the ostwald regime
     """
     T = 550.0 + 273.15
     f = 0.073
     r = 95e-9
     N = f / (4.0/3.0*np.pi*r**3.0) 
 
-    py_v = self.model_py.r_dot(f, r, N, T)
-    ne_v = self.model_neml.r_rate(self.make_state(f, r, N), T)
-    self.assertAlmostEqual(py_v, ne_v)
+    state = np.array([f/self.model_neml.fs, r / self.model_neml.rs, N / self.model_neml.Ns])
 
-  def test_dr_df_ostwald(self):
+    py_v = np.array([self.model_py.f_dot(f, r, N, T), self.model_py.r_dot(f, r, N, T), self.model_py.N_dot(f, r, N, T)])
+    ne_v = self.model_neml.rate(self.vector_state(state), T)
+    self.assertTrue(np.allclose(py_v, ne_v))
+
+  def test_jac_ostwald(self):
     """
-      Test dr_df in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.r_rate(self.make_state(x, r, N), T), f)
-    exact = self.model_neml.dr_df(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_dr_dr_ostwald(self):
-    """
-      Test dr_dr in the ostwald regime
+      Test jacobian in the ostwald regime
     """
     T = 550.0 + 273.15
     f = 0.073
     r = 95e-9
     N = f / (4.0/3.0*np.pi*r**3.0) 
 
-    num = differentiate_new(lambda x: self.model_neml.r_rate(self.make_state(f, x, N), T), r)
-    exact = self.model_neml.dr_dr(self.make_state(f, r, N), T)
+    state = np.array([f/self.model_neml.fs, r / self.model_neml.rs, N / self.model_neml.Ns])
 
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
+    exact = self.model_neml.jac(self.vector_state(state), T)
+    num = differentiate_new(lambda x: np.array(self.model_neml.rate(self.vector_state(x), T)), state)
 
-  def test_dr_dN_ostwald(self):
-    """
-      Test dr_dN in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.r_rate(self.make_state(f, r, x), T), N)
-    exact = self.model_neml.dr_dN(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_Ndot_nucleation(self):
-    """
-      Test N_dot in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    py_v = self.model_py.N_dot(f, r, N, T)
-    ne_v = self.model_neml.N_rate(self.make_state(f, r, N), T)
-    self.assertAlmostEqual(py_v, ne_v)
-
-  def test_dN_df_nucleation(self):
-    """
-      Test dN_df in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.N_rate(self.make_state(x, r, N), T), f)
-    exact = self.model_neml.dN_df(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_dN_dr_nucleation(self):
-    """
-      Test dN_dr in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.N_rate(self.make_state(f, x, N), T), r)
-    exact = self.model_neml.dN_dr(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_dN_dN_nucleation(self):
-    """
-      Test dN_dN in the nucleation regime
-    """
-    T = 550.0 + 273.15
-    f = 0.0035
-    r = 34e-9
-    N = f / (4.0/3.0*np.pi*r**3.0)
-
-    num = differentiate_new(lambda x: self.model_neml.N_rate(self.make_state(f, r, x), T), N)
-    exact = self.model_neml.dN_dN(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_Ndot_ostwald(self):
-    """
-      Test N_dot in the ripening regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    py_v = self.model_py.N_dot(f, r, N, T)
-    ne_v = self.model_neml.N_rate(self.make_state(f, r, N), T)
-    self.assertAlmostEqual(py_v, ne_v)
-
-  def test_dN_df_ostwald(self):
-    """
-      Test dN_df in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.N_rate(self.make_state(x, r, N), T), f)
-    exact = self.model_neml.dN_df(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
-
-  def test_dN_dr_ostwald(self):
-    """
-      Test dN_dr in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.N_rate(self.make_state(f, x, N), T), r)
-    exact = self.model_neml.dN_dr(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-4))
-
-  def test_dN_dN_ostwald(self):
-    """
-      Test dN_dN in the ostwald regime
-    """
-    T = 550.0 + 273.15
-    f = 0.073
-    r = 95e-9
-    N = f / (4.0/3.0*np.pi*r**3.0) 
-
-    num = differentiate_new(lambda x: self.model_neml.N_rate(self.make_state(f, r, x), T), N)
-    exact = self.model_neml.dN_dN(self.make_state(f, r, N), T)
-
-    print(num, exact)
-    self.assertTrue(np.isclose(num, exact, rtol=1e-5))
+    self.assertTrue(np.allclose(exact, num))
 
   def test_c(self):
     """
@@ -734,7 +461,7 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
     self.carbide = hucocks.HuCocksPrecipitationModel(self.c0_car, self.cp_car, self.ceq_car, 
         self.am_car, self.N0_car, self.Vm_car, self.chi_car, self.D0_car,
-        self.Q0_car, self.Cf_car) 
+        self.Q0_car, self.Cf_car, fs = 1.0, rs = 1.0, Ns = 1.0) 
 
     self.am_laves = 3.6e-10
     self.N0_laves = 5e14
@@ -750,7 +477,7 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
     self.laves = hucocks.HuCocksPrecipitationModel(self.c0_laves, self.cp_laves, self.ceq_laves, 
         self.am_laves, self.N0_laves, self.Vm_laves, self.chi_laves, self.D0_laves,
-        self.Q0_laves, self.Cf_laves) 
+        self.Q0_laves, self.Cf_laves, fs = 1.0, rs = 1.0, Ns = 1.0) 
 
     self.ap = 0.84
     self.ac = 0.000457
@@ -831,13 +558,7 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
       All concatenated together
     """
     assem = np.array(list(np.array(self.dmodel.hist(self.S, self.Q, self.H, 
-      self.L, self.T, self.sliprule, self.fixed))) + [
-          self.carbide.f_rate(self.H, self.T),
-          self.carbide.r_rate(self.H, self.T),
-          self.carbide.N_rate(self.H, self.T),
-          self.laves.f_rate(self.H, self.T),
-          self.laves.r_rate(self.H, self.T),
-          self.laves.N_rate(self.H, self.T)])
+      self.L, self.T, self.sliprule, self.fixed))) + self.carbide.rate(self.H, self.T) + self.laves.rate(self.H, self.T))
     fmodel = self.model.hist(self.S, self.Q, self.H, self.L, self.T,
         self.sliprule, self.fixed)
 

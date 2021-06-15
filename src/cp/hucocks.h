@@ -43,41 +43,56 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
   /// Setup history
   virtual void init_history(History & history) const;
 
+  /// Actual (unscaled) f
+  double f(const History & history) const;
+
+  /// Actual (unscaled) r
+  double r(const History & history) const;
+
+  /// Actual (unscaled) N
+  double N(const History & history) const;
+
+  /// Rate vector
+  std::vector<double> rate(const History & history, double T) const;
+
+  /// Jacobian matrix
+  std::vector<std::vector<double>> jac(const History & history, double T) const;
+
   /// The volume fraction rate
-  virtual double f_rate(const History & history, double T) const;
+  virtual double f_rate(double f, double r, double N, double T) const;
 
   /// df_df
-  virtual double df_df(const History & history, double T) const;
+  virtual double df_df(double f, double r, double N, double T) const;
 
   /// df_dr
-  virtual double df_dr(const History & history, double T) const;
+  virtual double df_dr(double f, double r, double N, double T) const;
 
   /// df_dN
-  virtual double df_dN(const History & history, double T) const;
+  virtual double df_dN(double f, double r, double N, double T) const;
 
   /// The radius rate
-  virtual double r_rate(const History & history, double T) const;
+  virtual double r_rate(double f, double r, double N, double T) const;
 
   /// dr_df
-  virtual double dr_df(const History & history, double T) const;
+  virtual double dr_df(double f, double r, double N, double T) const;
 
   /// dr_dr
-  virtual double dr_dr(const History & history, double T) const;
+  virtual double dr_dr(double f, double r, double N, double T) const;
 
   /// dr_dN
-  virtual double dr_dN(const History & history, double T) const;
+  virtual double dr_dN(double f, double r, double N, double T) const;
 
   /// The number density rate
-  virtual double N_rate(const History & history, double T) const;
+  virtual double N_rate(double f, double r, double N, double T) const;
 
   /// dN_df
-  virtual double dN_df(const History & history, double T) const;
+  virtual double dN_df(double f, double r, double N, double T) const;
 
   /// dN_dr
-  virtual double dN_dr(const History & history, double T) const;
+  virtual double dN_dr(double f, double r, double N, double T) const;
 
   /// dN_dN
-  virtual double dN_dN(const History & history, double T) const;
+  virtual double dN_dN(double f, double r, double N, double T) const;
   
   /// Number of chemical species
   size_t nspecies() const;
