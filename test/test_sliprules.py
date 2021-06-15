@@ -38,9 +38,6 @@ class CommonSlipRule(object):
     d = np.array(self.model.d_hist_rate_d_hist(self.S, self.Q, self.H, self.L, self.T, self.fixed))
     nd = diff_history_history(lambda h: self.model.hist_rate(self.S, self.Q, h, self.L,
       self.T, self.fixed), self.H)
-    d = d.reshape(nd.shape)
-    print(d)
-    print(nd)
     self.assertTrue(np.allclose(nd.reshape(d.shape), d, rtol = 1.0e-4))
 
 class CommonSlipMultiStrengthSlipRule(object):

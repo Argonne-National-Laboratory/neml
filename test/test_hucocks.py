@@ -206,8 +206,7 @@ class TestPercipitationModel(unittest.TestCase):
         [1.0, 1.0, 0.3, 0.03])
 
     self.model_neml = hucocks.HuCocksPrecipitationModel(self.c0_neml, self.cp_neml, self.ceq_neml, 
-        self.am, self.N0, self.Vm, self.chi, self.D0, self.Q0, self.Cf_neml,
-        fs = 1, rs = 1, Ns = 1)
+        self.am, self.N0, self.Vm, self.chi, self.D0, self.Q0, self.Cf_neml)
    
   def make_state(self, f, r, N):
     hist = history.History()
@@ -244,7 +243,9 @@ class TestPercipitationModel(unittest.TestCase):
 
     state = np.array([f/self.model_neml.fs, r / self.model_neml.rs, N / self.model_neml.Ns])
 
-    py_v = np.array([self.model_py.f_dot(f, r, N, T), self.model_py.r_dot(f, r, N, T), self.model_py.N_dot(f, r, N, T)])
+    py_v = np.array([self.model_py.f_dot(f, r, N, T) / self.model_neml.fs, 
+      self.model_py.r_dot(f, r, N, T) / self.model_neml.rs, 
+      self.model_py.N_dot(f, r, N, T)/ self.model_neml.Ns])
     ne_v = self.model_neml.rate(self.vector_state(state), T)
     self.assertTrue(np.allclose(py_v, ne_v))
 
@@ -275,7 +276,9 @@ class TestPercipitationModel(unittest.TestCase):
 
     state = np.array([f/self.model_neml.fs, r / self.model_neml.rs, N / self.model_neml.Ns])
 
-    py_v = np.array([self.model_py.f_dot(f, r, N, T), self.model_py.r_dot(f, r, N, T), self.model_py.N_dot(f, r, N, T)])
+    py_v = np.array([self.model_py.f_dot(f, r, N, T) / self.model_neml.fs, 
+      self.model_py.r_dot(f, r, N, T) / self.model_neml.rs, 
+      self.model_py.N_dot(f, r, N, T)/ self.model_neml.Ns])
     ne_v = self.model_neml.rate(self.vector_state(state), T)
     self.assertTrue(np.allclose(py_v, ne_v))
 
@@ -426,18 +429,21 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
     self.T = 600 + 273.15
     
-    self.J1 = 2e14
-    self.J2 = 3.3e14
-    self.K = 2.56e-30
-    self.L0 = 3.1623e-7
+    self.uf = 1.0
+    
+    self.J1 = 2e14 * self.uf**2.0
+    self.J2 = 3.3e14 * self.uf**2.0
+    self.K = 2.56e-30 / self.uf**4.0
+    self.L0 = 3.1623e-7 / self.uf
     self.b = 2.5e-10
+    self.bd = self.b / self.uf
     self.ad = 0.35
     self.G = interpolate.PiecewiseLinearInterpolate(
         list(Ts),
         [61068, 59541.0, 57633.6, 55725.2])
     
     self.dmodel = hucocks.DislocationSpacingHardening(self.J1, self.J2, self.K, self.L0, self.ad, 
-        self.b, self.G, self.L)
+        self.bd, self.G, self.L)
 
     # Setup for [Cr,C] <-> M23C6
     self.am_car = 3.6e-10
@@ -461,7 +467,7 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
     self.carbide = hucocks.HuCocksPrecipitationModel(self.c0_car, self.cp_car, self.ceq_car, 
         self.am_car, self.N0_car, self.Vm_car, self.chi_car, self.D0_car,
-        self.Q0_car, self.Cf_car, fs = 1.0, rs = 1.0, Ns = 1.0) 
+        self.Q0_car, self.Cf_car, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8) 
 
     self.am_laves = 3.6e-10
     self.N0_laves = 5e14
@@ -477,7 +483,7 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
     self.laves = hucocks.HuCocksPrecipitationModel(self.c0_laves, self.cp_laves, self.ceq_laves, 
         self.am_laves, self.N0_laves, self.Vm_laves, self.chi_laves, self.D0_laves,
-        self.Q0_laves, self.Cf_laves, fs = 1.0, rs = 1.0, Ns = 1.0) 
+        self.Q0_laves, self.Cf_laves, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8) 
 
     self.ap = 0.84
     self.ac = 0.000457
@@ -492,12 +498,12 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
     self.nslip = self.L.ntotal
 
     self.current = 1.15e-7
-    self.f_carbide = 0.073
-    self.r_carbide = 95e-9
-    self.N_carbide = self.f_carbide / (4.0/3.0*np.pi*self.r_carbide**3.0)
-    self.f_laves = 0.00962
-    self.r_laves = 41.2e-9
-    self.N_laves = self.f_laves / (4.0/3.0*np.pi*self.r_laves**3.0) 
+    self.f_carbide = 0.073 / self.carbide.fs
+    self.r_carbide = 95e-9 / self.carbide.rs
+    self.N_carbide = self.f_carbide * self.carbide.fs / (4.0/3.0*np.pi*(self.r_carbide * self.carbide.rs) **3.0) / self.carbide.Ns
+    self.f_laves = 0.00962 / self.laves.fs
+    self.r_laves = 41.2e-9 / self.laves.rs
+    self.N_laves = self.f_laves * self.laves.fs / (4.0/3.0*np.pi*(self.r_laves*self.laves.rs)**3.0) / self.laves.Ns
 
     self.H = history.History()
     for i in range(self.nslip):
@@ -530,11 +536,8 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
     self.assertEqual(len(np.array(H1)), 12+3+3)
     
-    should = np.array([self.L0]*12+[0, 1.0e-20, 1.0e-6]*2) 
+    should = np.array([self.L0]*12+[4.18879e-16/self.carbide.fs, 1.0e-9/self.carbide.rs, 1.0e11/self.carbide.Ns]*2) 
     
-    print(np.array(H1))
-    print(should)
-
     self.assertTrue(np.allclose(np.array(H1), should))
 
   def test_hist_to_tau(self):
@@ -545,9 +548,12 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
         tau_d = self.dmodel.hist_to_tau(g, i, self.H, self.L, self.T,
             self.fixed)
-        Na = 2.0*self.H.get_scalar("r_0") * self.H.get_scalar("N_0") + 2.0*self.H.get_scalar("r_1") * self.H.get_scalar("N_1") 
-        c = np.sum(self.carbide.c(self.H.get_scalar("f_0"), self.T))/self.carbide.vm + np.sum(
-            self.laves.c(self.H.get_scalar("f_1"), self.T)) / self.laves.vm
+
+        Na = 2.0 * self.carbide.r(self.H) * self.carbide.N(self.H) + 2.0 * self.laves.r(self.H) * self.laves.N(self.H)
+        f0 = self.carbide.f(self.H)
+        f1 = self.laves.f(self.H)
+        c = np.sum(self.carbide.c(f0, self.T))/self.carbide.vm + np.sum(
+            self.laves.c(f1, self.T)) / self.laves.vm
         tau_p = self.ap * self.G.value(self.T) * self.b * np.sqrt(Na)
         tau_c = self.ac * self.G.value(self.T) * self.b * np.sqrt(c*self.b)
         should = np.sqrt(tau_d**2.0 + tau_p**2.0) + tau_c
@@ -618,3 +624,131 @@ class TestArrheniusSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSli
         actual = self.model.scalar_sslip(g, i, self.tau, self.strength, self.T)
         self.assertTrue(np.isclose(should, actual))
 
+class TestArrheniusSlipReal(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRule):
+  def setUp(self):
+    self.T = 600.0 + 273.15
+
+    Ts = np.array([500.0,550.0,600.0,650.0]) + 273.15
+
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+
+    self.T = 600 + 273.15
+    
+    self.uf = 1.0e-9
+    
+    self.J1 = 2e14 * self.uf**2.0
+    self.J2 = 3.3e14 * self.uf**2.0
+    self.K = 2.56e-30 / self.uf**4.0
+    self.L0 = 3.1623e-7 / self.uf
+    self.b = 2.5e-10
+    self.bd = self.b / self.uf
+    self.ad = 0.35
+    self.G = interpolate.PiecewiseLinearInterpolate(
+        list(Ts),
+        [61068, 59541.0, 57633.6, 55725.2])
+    
+    self.dmodel = hucocks.DislocationSpacingHardening(self.J1, self.J2, self.K, self.L0, self.ad, 
+        self.bd, self.G, self.L)
+
+    # Setup for [Cr,C] <-> M23C6
+    self.am_car = 3.6e-10
+    self.N0_car = 1.0e13
+    self.Vm_car = 6e-6
+    self.chi_car = 0.3
+    self.D0_car = 1.5e-4
+    self.Q0_car = 240e3
+    self.c0_car = [interpolate.ConstantInterpolate(16.25/100.0),
+        interpolate.ConstantInterpolate(0.0375/100.0)]
+    self.cp_car = [interpolate.PiecewiseLinearInterpolate(list(Ts),
+      [69.85/100, 69.05/100, 68.32/100, 67.52/100]),
+      interpolate.PiecewiseLinearInterpolate(list(Ts),
+        [5.13/100, 5.13/100, 5.13/100, 5.13/100])]
+    self.ceq_car = [interpolate.PiecewiseLinearInterpolate(list(Ts),
+      [15.64/100,15.69/100,15.75/100,15.83/100]),
+      interpolate.PiecewiseLinearInterpolate(list(Ts),
+        [7.25e-6/100, 2.92e-5/100, 9.48e-5/100, 2.97e-4/100])]
+    self.Cf_car = interpolate.PiecewiseLinearInterpolate(list(Ts), 
+        [1.0, 1.0, 0.3, 0.03])
+
+    self.carbide = hucocks.HuCocksPrecipitationModel(self.c0_car, self.cp_car, self.ceq_car, 
+        self.am_car, self.N0_car, self.Vm_car, self.chi_car, self.D0_car,
+        self.Q0_car, self.Cf_car, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8) 
+
+    self.am_laves = 3.6e-10
+    self.N0_laves = 5e14
+    self.Vm_laves = 2e-6
+    self.chi_laves = 0.25
+    self.D0_laves = 7.4e-4
+    self.Q0_laves = 283e3
+    self.c0_laves = [2.33/100.0]
+    self.cp_laves = [50.0/100.0]
+    self.ceq_laves = [interpolate.PiecewiseLinearInterpolate(list(Ts),
+      [0.25/100,0.46/100.0,0.76/100.0,1.16/100.0])]
+    self.Cf_laves = 1.0
+
+    self.laves = hucocks.HuCocksPrecipitationModel(self.c0_laves, self.cp_laves, self.ceq_laves, 
+        self.am_laves, self.N0_laves, self.Vm_laves, self.chi_laves, self.D0_laves,
+        self.Q0_laves, self.Cf_laves, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8) 
+
+    self.ap = 0.84
+    self.ac = 0.000457
+
+    self.strengthmodel = hucocks.HuCocksHardening(self.dmodel, [self.carbide, self.laves], self.ap, self.ac, self.b,
+        self.G)
+
+    self.nslip = self.L.ntotal
+
+    self.current = 1.15e-7
+    self.f_carbide = 0.073 / self.carbide.fs
+    self.r_carbide = 95e-9 / self.carbide.rs
+    self.N_carbide = self.f_carbide * self.carbide.fs / (4.0/3.0*np.pi*(self.r_carbide * self.carbide.rs) **3.0) / self.carbide.Ns
+    self.f_laves = 0.00962 / self.laves.fs
+    self.r_laves = 41.2e-9 / self.laves.rs
+    self.N_laves = self.f_laves * self.laves.fs / (4.0/3.0*np.pi*(self.r_laves*self.laves.rs)**3.0) / self.laves.Ns
+
+    self.H = history.History()
+    for i in range(self.nslip):
+      self.H.add_scalar("spacing_"+str(i))
+      self.H.set_scalar("spacing_"+str(i), self.current)
+    
+    self.H.add_scalar("f_0")
+    self.H.set_scalar("f_0", self.f_carbide)
+    self.H.add_scalar("r_0")
+    self.H.set_scalar("r_0", self.r_carbide)
+    self.H.add_scalar("N_0")
+    self.H.set_scalar("N_0", self.N_carbide)
+
+    self.H.add_scalar("f_1")
+    self.H.set_scalar("f_1", self.f_laves)
+    self.H.add_scalar("r_1")
+    self.H.set_scalar("r_1", self.r_laves)
+    self.H.add_scalar("N_1")
+    self.H.set_scalar("N_1", self.N_laves)
+
+    self.strengths = [self.strengthmodel]
+
+    self.fixed = history.History()
+
+    self.g0 = 2.0
+    self.a0 = 0.5
+    self.G0 = 77000.0e6
+    self.A = 3.0/4.0
+    self.B = 4.0 / 3.0
+
+    self.model = hucocks.ArrheniusSlipRule(self.strengthmodel, self.g0, self.A, self.B, self.b,
+        self.a0, self.G0)
+
+    self.static = 0
+    self.strength = self.strengthmodel.hist_to_tau(0, 0, self.H, self.L,
+        self.T, self.fixed)
+
+    self.strength_values = [self.strength + self.static]
+    
+    self.tau = -35.0

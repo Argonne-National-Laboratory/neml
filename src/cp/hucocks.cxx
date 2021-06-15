@@ -68,12 +68,12 @@ ParameterSet HuCocksPrecipitationModel::parameters()
   pset.add_optional_parameter<double>("R", 8.31462);
   pset.add_optional_parameter<double>("Na", 6.02e23);
   pset.add_optional_parameter<size_t>("rate", size_t(0));
-  pset.add_optional_parameter<double>("f_init", 0);
-  pset.add_optional_parameter<double>("r_init", 1e-20);
-  pset.add_optional_parameter<double>("N_init", 1.0e-6);
-  pset.add_optional_parameter<double>("fs", 1.0);
+  pset.add_optional_parameter<double>("f_init", 4.18879e-16);
+  pset.add_optional_parameter<double>("r_init", 1.0e-9);
+  pset.add_optional_parameter<double>("N_init", 1.0e11);
+  pset.add_optional_parameter<double>("fs", 0.1);
   pset.add_optional_parameter<double>("rs", 1.0e-9);
-  pset.add_optional_parameter<double>("Ns", 1.0e8);
+  pset.add_optional_parameter<double>("Ns", 1.0e12);
 
   return pset;
 }
@@ -98,9 +98,9 @@ void HuCocksPrecipitationModel::populate_history(History & history) const
 
 void HuCocksPrecipitationModel::init_history(History & history) const
 {
-  history.get<double>(varnames_[0]) = f_init_;
-  history.get<double>(varnames_[1]) = r_init_;
-  history.get<double>(varnames_[2]) = N_init_;
+  history.get<double>(varnames_[0]) = f_init_ / fs_;
+  history.get<double>(varnames_[1]) = r_init_ / rs_;
+  history.get<double>(varnames_[2]) = N_init_ / Ns_;
 }
 
 std::vector<double> HuCocksPrecipitationModel::rate(const History & history,
@@ -110,7 +110,8 @@ std::vector<double> HuCocksPrecipitationModel::rate(const History & history,
   double ri = r(history);
   double Ni = N(history);
 
-  return {f_rate(fi, ri, Ni, T), r_rate(fi, ri, Ni, T), N_rate(fi, ri, Ni, T)};
+  return {f_rate(fi, ri, Ni, T) / fs_, r_rate(fi, ri, Ni, T) / rs_, 
+    N_rate(fi, ri, Ni, T) / Ns_};
 }
 
 std::vector<std::vector<double>> HuCocksPrecipitationModel::jac(
@@ -122,25 +123,25 @@ std::vector<std::vector<double>> HuCocksPrecipitationModel::jac(
 
   return
   {
-    {df_df(fi, ri, Ni, T), df_dr(fi, ri, Ni, T), df_dN(fi, ri, Ni, T)},
-    {dr_df(fi, ri, Ni, T), dr_dr(fi, ri, Ni, T), dr_dN(fi, ri, Ni, T)},
-    {dN_df(fi, ri, Ni, T), dN_dr(fi, ri, Ni, T), dN_dN(fi, ri, Ni, T)}
+    {df_df(fi, ri, Ni, T) / fs_ * fs_, df_dr(fi, ri, Ni, T) / fs_ * rs_, df_dN(fi, ri, Ni, T) / fs_ * Ns_},
+    {dr_df(fi, ri, Ni, T) / rs_ * fs_, dr_dr(fi, ri, Ni, T) / rs_ * rs_, dr_dN(fi, ri, Ni, T) / rs_ * Ns_},
+    {dN_df(fi, ri, Ni, T) / Ns_ * fs_, dN_dr(fi, ri, Ni, T) / Ns_ * rs_, dN_dN(fi, ri, Ni, T )/ Ns_ * Ns_}
   };
 }
 
 double HuCocksPrecipitationModel::f(const History & history) const
 {
-  return history.get<double>(varnames_[0]);
+  return history.get<double>(varnames_[0]) * fs_;
 }
 
 double HuCocksPrecipitationModel::r(const History & history) const
 {
-  return history.get<double>(varnames_[1]);
+  return history.get<double>(varnames_[1]) * rs_;
 }
 
 double HuCocksPrecipitationModel::N(const History & history) const
 {
-  return history.get<double>(varnames_[2]);
+  return history.get<double>(varnames_[2]) * Ns_;
 }
 
 double HuCocksPrecipitationModel::f_rate(double f, double r, double N, double T) const
@@ -775,20 +776,22 @@ History HuCocksHardening::d_hist_to_tau(size_t g, size_t i,
     // Second block: f
     auto dc = pmodels_[i]->dc_df(pmodels_[i]->f(history),T);
     for (auto dci: dc)
-      res.get<double>(pnames_[i][0]) += ac_ * G_->value(T) * b_ * b_ / (2.0 *
+      res.get<double>(pnames_[i][0]) += (ac_ * G_->value(T) * b_ * b_ / (2.0 *
                                                                        std::sqrt(c
                                                                                  * b_))
-          * dci / pmodels_[i]->vm();
+          * dci / pmodels_[i]->vm())*pmodels_[i]->fs();
 
     // Third block: r
-    res.get<double>(pnames_[i][1]) = tau_p / std::sqrt(tau_p * tau_p + tau_d *
+    res.get<double>(pnames_[i][1]) = (tau_p / std::sqrt(tau_p * tau_p + tau_d *
                                                        tau_d) * ap_ *
-        G_->value(T) * b_ * pmodels_[i]->N(history) / std::sqrt(NA);
+        G_->value(T) * b_ * pmodels_[i]->N(history) / std::sqrt(NA))
+        * pmodels_[i]->rs();
 
     // Fourth block: N
-    res.get<double>(pnames_[i][2]) = tau_p / std::sqrt(tau_p * tau_p + tau_d *
+    res.get<double>(pnames_[i][2]) = (tau_p / std::sqrt(tau_p * tau_p + tau_d *
                                                        tau_d) * ap_ *
-        G_->value(T) * b_ * pmodels_[i]->r(history) / std::sqrt(NA);
+        G_->value(T) * b_ * pmodels_[i]->r(history) / std::sqrt(NA)) *
+        pmodels_[i]->Ns();
   }
 
   return res;

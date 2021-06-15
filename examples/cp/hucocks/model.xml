@@ -1,0 +1,129 @@
+<materials>
+  <hucocks type="SingleCrystalModel">
+    <initial_rotation type="Orientation">
+      <angles>0 0 0</angles>
+      <angle_type>degrees</angle_type>
+    </initial_rotation>
+    <kinematics type="StandardKinematicModel">
+      <emodel type="IsotropicLinearElasticModel">
+        <m1_type>youngs</m1_type>
+        <m1 type="PiecewiseLinearInterpolate">
+          <points>773.15 823.15 873.15 923.15</points>
+          <values>160000 156000 151000 140000</values>
+        </m1>
+        <m2_type>poissons</m2_type>
+        <m2>0.31</m2>
+      </emodel>
+      <imodel type="AsaroInelasticity">
+        <rule type="ArrheniusSlipRule">
+          <resistance type="HuCocksHardening">
+            <dmodel type = "DislocationSpacingHardening">
+              <J1>0.0002</J1>
+              <J2>0.00033</J2>
+              <K>2560000</K>
+              <L0>316.23</L0>
+              <a>0.35</a>
+              <b>0.25</b>
+              <G type="PiecewiseLinearInterpolate">
+                <points>773.15 823.15 873.15 923.15</points>
+                <values>61068 59541 57633.6 55725.2</values>
+              </G> 
+              <L type="CubicLattice">
+                <a>1.0</a>
+                <slip_systems>
+                  1 1 0 ; 1 1 1
+                </slip_systems>
+              </L>
+            </dmodel>
+            <pmodels>
+              <carbide type="HuCocksPrecipitationModel">
+                <c0>
+                  <Cr>
+                    0.1625
+                  </Cr>
+                  <C>
+                    0.000375
+                  </C>
+                </c0>
+                <cp>
+                  <Cr type="PiecewiseLinearInterpolate">
+                    <points>773.15 823.15 873.15 923.15</points>
+                    <values>0.69845 0.6905 0.6832 0.6752</values> 
+                  </Cr>
+                  <C type="PiecewiseLinearInterpolate">
+                    <points>773.15 823.15 873.15 923.15</points>
+                    <values>0.0513 0.0513 0.0513 0.0513</values> 
+                  </C>
+                </cp>
+                <ceq>
+                  <Cr type="PiecewiseLinearInterpolate">
+                    <points>773.15 823.15 873.15 923.15</points>
+                    <values>0.1564 0.1569 0.1575 0.1583</values> 
+                  </Cr>
+                  <C type="PiecewiseLinearInterpolate">
+                    <points>773.15 823.15 873.15 923.15</points>
+                    <values>7.25e-8 7.92e-7 9.48e-7 2.97e-6</values> 
+                  </C>
+                </ceq>
+                <am>3.6e-10</am>
+                <N0>1.0e13</N0>
+                <Vm>3e-6</Vm>
+                <chi>0.3</chi>
+                <D0>1.5e-4</D0>
+                <Q0>240e3</Q0>
+                <Cf type="PiecewiseLinearInterpolate">
+                  <points>773.15 823.15 873.15 923.15</points>
+                  <values>1.0 1.0 0.3 0.03</values> 
+                </Cf>
+              </carbide>
+              <laves type="HuCocksPrecipitationModel">
+                <c0>
+                  <Mo>
+                    0.0233
+                  </Mo>
+                </c0>
+                <cp>
+                  <Mo>
+                    0.5
+                  </Mo>
+                </cp>
+                <ceq>
+                  <Mo type="PiecewiseLinearInterpolate">
+                    <points>773.15 823.15 873.15 923.15</points>
+                    <values>0.0025 0.0046 0.0076 0.0116</values> 
+                  </Mo>
+                </ceq>
+                <am>3.6e-10</am>
+                <N0>5e14</N0>
+                <Vm>2e-6</Vm>
+                <chi>0.25</chi>
+                <D0>7.4e-4</D0>
+                <Q0>283e3</Q0>
+                <Cf>1.0</Cf>
+              </laves>
+            </pmodels>
+            <ap>0.84</ap>
+            <ac>0.000457</ac>
+            <b>2.5e-10</b>
+            <G type="PiecewiseLinearInterpolate">
+              <points>773.15 823.15 873.15 923.15</points>
+              <values>61068 59541 57633.6 55725.2</values>
+            </G>
+          </resistance>
+          <g0>1.0</g0>
+          <A>0.75</A>
+          <B>1.333333</B>
+          <b>2.5e-10</b>
+          <a0>0.5</a0>
+          <G0>77000e6</G0>
+        </rule>
+      </imodel>
+    </kinematics>
+    <lattice type="CubicLattice">
+      <a>1.0</a>
+      <slip_systems>
+        1 1 0 ; 1 1 1
+      </slip_systems>
+    </lattice>
+  </hucocks>
+</materials>
