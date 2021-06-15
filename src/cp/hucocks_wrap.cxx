@@ -46,6 +46,9 @@ PYBIND11_MODULE(hucocks, m) {
     .def("Gv", &HuCocksPrecipitationModel::Gv)
     .def("dG_df", &HuCocksPrecipitationModel::dG_df)
     .def_property_readonly("vm", &HuCocksPrecipitationModel::vm)
+    .def_property_readonly("fs", &HuCocksPrecipitationModel::fs)
+    .def_property_readonly("rs", &HuCocksPrecipitationModel::rs)
+    .def_property_readonly("Ns", &HuCocksPrecipitationModel::Ns)
     ;
 
   py::class_<DislocationSpacingHardening, SlipHardening, std::shared_ptr<DislocationSpacingHardening>>(m, "DislocationSpacingHardening")

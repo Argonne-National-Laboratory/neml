@@ -726,7 +726,7 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
       interpolate.PiecewiseLinearInterpolate(list(Ts),
         [5.13/100, 5.13/100, 5.13/100, 5.13/100])]
     self.ceq_car = [interpolate.PiecewiseLinearInterpolate(list(Ts),
-      [15.64/100,15.69/100,15.75,100,15.83/100]),
+      [15.64/100,15.69/100,15.75/100,15.83/100]),
       interpolate.PiecewiseLinearInterpolate(list(Ts),
         [7.25e-6/100, 2.92e-5/100, 9.48e-5/100, 2.97e-4/100])]
     self.Cf_car = interpolate.PiecewiseLinearInterpolate(list(Ts), 

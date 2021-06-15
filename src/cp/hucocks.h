@@ -23,7 +23,8 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
                             std::shared_ptr<Interpolate> Cf,
                             double kboltz, double R, double Na,
                             size_t rate,
-                            double f_init, double r_init, double N_init);
+                            double f_init, double r_init, double N_init,
+                            double fs, double rs, double Ns);
 
   /// String type for the object system
   static std::string type();
@@ -96,6 +97,15 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
   /// Access the molecular volume
   double vm() const;
 
+  /// Get the value of the volume fraction scaling term
+  double fs() const {return fs_;};
+
+  /// Get the value of the radius scaling term
+  double rs() const {return rs_;};
+
+  /// Get the value of the number density scaling term
+  double Ns() const {return Ns_;};
+
  protected:
   /// Diffusivity
   double D_(double T) const;
@@ -112,6 +122,7 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
   double kboltz_, R_, Na_;
   size_t rate_;
   double f_init_, r_init_, N_init_;
+  double fs_, rs_, Ns_;
   double vm_;
   std::vector<std::string> varnames_;
 };

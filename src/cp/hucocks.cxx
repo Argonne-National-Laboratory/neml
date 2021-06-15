@@ -8,10 +8,12 @@ HuCocksPrecipitationModel::HuCocksPrecipitationModel(
     std::vector<std::shared_ptr<Interpolate>> ceq,
     double am, double N0, double Vm, double chi, double D0, double Q0, 
     std::shared_ptr<Interpolate> Cf, double kboltz, double R,
-    double Na, size_t rate, double f_init, double r_init, double N_init) :
+    double Na, size_t rate, double f_init, double r_init, double N_init,
+    double fs, double rs, double Ns) :
       c0_(c0), cp_(cp), ceq_(ceq), am_(am), N0_(N0), Vm_(Vm), chi_(chi), 
       D0_(D0), Q0_(Q0), Cf_(Cf), kboltz_(kboltz), R_(R), Na_(Na),
       rate_(rate), f_init_(f_init), r_init_(r_init), N_init_(N_init),
+      fs_(fs), rs_(rs), Ns_(Ns),
       vm_(Vm / Na), varnames_({"f", "r", "N"})
 {
 }
@@ -41,7 +43,10 @@ std::unique_ptr<NEMLObject> HuCocksPrecipitationModel::initialize(
       params.get_parameter<size_t>("rate"),
       params.get_parameter<double>("f_init"),
       params.get_parameter<double>("r_init"),
-      params.get_parameter<double>("N_init"));
+      params.get_parameter<double>("N_init"),
+      params.get_parameter<double>("fs"),
+      params.get_parameter<double>("rs"),
+      params.get_parameter<double>("Ns"));
 }
 
 ParameterSet HuCocksPrecipitationModel::parameters()
@@ -66,6 +71,9 @@ ParameterSet HuCocksPrecipitationModel::parameters()
   pset.add_optional_parameter<double>("f_init", 0);
   pset.add_optional_parameter<double>("r_init", 1e-20);
   pset.add_optional_parameter<double>("N_init", 1.0e-6);
+  pset.add_optional_parameter<double>("fs", 1.0);
+  pset.add_optional_parameter<double>("rs", 1.0e-9);
+  pset.add_optional_parameter<double>("Ns", 1.0e8);
 
   return pset;
 }
@@ -995,6 +1003,9 @@ ParameterSet ArrheniusSlipRule::parameters()
 double ArrheniusSlipRule::scalar_sslip(size_t g, size_t i, double tau, 
                                       double strength, double T) const
 {
+  if (tau == 0.0)
+    return 0.0;
+
   double F0kT = a0_ * G0_ * std::pow(b_,3.0) / (k_ * T);
 
   return  g0_ * std::exp(-F0kT * std::pow(1.0 - std::pow(std::fabs(tau/strength),
@@ -1005,6 +1016,9 @@ double ArrheniusSlipRule::scalar_sslip(size_t g, size_t i, double tau,
 double ArrheniusSlipRule::scalar_d_sslip_dtau(size_t g, size_t i, double tau, 
                                              double strength, double T) const
 {
+  if (tau == 0.0)
+    return 0.0;
+
   double F0kT = a0_ * G0_ * std::pow(b_,3.0) / (k_ * T);
 
   return std::fabs(-g0_ * A_*B_*F0kT*tau*std::pow(std::fabs(tau/strength),
@@ -1022,6 +1036,9 @@ double ArrheniusSlipRule::scalar_d_sslip_dstrength(size_t g, size_t i,
                                                   double strength,
                                                   double T) const
 {
+  if (tau == 0.0)
+    return 0.0;
+
   double F0kT = a0_ * G0_ * std::pow(b_,3.0) / (k_ * T);
   
   return  -g0_ * A_ * B_ * F0kT * std::pow(tau, 2.0) *
