@@ -465,9 +465,12 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
     self.Cf_car = interpolate.PiecewiseLinearInterpolate(list(Ts), 
         [1.0, 1.0, 0.3, 0.03])
 
+    self.w = 0.1
+
     self.carbide = hucocks.HuCocksPrecipitationModel(self.c0_car, self.cp_car, self.ceq_car, 
         self.am_car, self.N0_car, self.Vm_car, self.chi_car, self.D0_car,
-        self.Q0_car, self.Cf_car, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8) 
+        self.Q0_car, self.Cf_car, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8, 
+        w = self.w) 
 
     self.am_laves = 3.6e-10
     self.N0_laves = 5e14
@@ -483,7 +486,8 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
 
     self.laves = hucocks.HuCocksPrecipitationModel(self.c0_laves, self.cp_laves, self.ceq_laves, 
         self.am_laves, self.N0_laves, self.Vm_laves, self.chi_laves, self.D0_laves,
-        self.Q0_laves, self.Cf_laves, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8) 
+        self.Q0_laves, self.Cf_laves, fs = 0.1, rs = 1.0e-9, Ns = 1.0e8,
+        w = self.w) 
 
     self.ap = 0.84
     self.ac = 0.000457

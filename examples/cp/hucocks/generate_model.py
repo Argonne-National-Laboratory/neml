@@ -9,7 +9,7 @@ from neml import models, interpolate, elasticity, history
 from neml.cp import hucocks, crystallography, sliprules, slipharden, inelasticity, kinematics, singlecrystal, polycrystal
 from neml.math import rotations
 
-def make_model(N, nthreads = 1):
+def make_singlecrystal():
   Ts = np.array([500.0,550.0,600.0,650.0]) + 273.15
 
   L = crystallography.CubicLattice(1.0)
@@ -30,6 +30,8 @@ def make_model(N, nthreads = 1):
   
   dmodel = hucocks.DislocationSpacingHardening(J1, J2, K, L0, ad, 
       b_d, G, L)
+  
+  w = 1.0
 
   # Setup for [Cr,C] <-> M23C6
   am_car = 3.6e-10
@@ -53,7 +55,7 @@ def make_model(N, nthreads = 1):
 
   carbide = hucocks.HuCocksPrecipitationModel(c0_car, cp_car, ceq_car, 
       am_car, N0_car, Vm_car, chi_car, D0_car,
-      Q0_car, Cf_car) 
+      Q0_car, Cf_car, w = w) 
 
   am_laves = 3.6e-10
   N0_laves = 5e14
@@ -69,7 +71,7 @@ def make_model(N, nthreads = 1):
 
   laves = hucocks.HuCocksPrecipitationModel(c0_laves, cp_laves, ceq_laves, 
       am_laves, N0_laves, Vm_laves, chi_laves, D0_laves,
-      Q0_laves, Cf_laves) 
+      Q0_laves, Cf_laves, w = w) 
 
   ap = 0.84
   ac = 0.000457
@@ -92,13 +94,22 @@ def make_model(N, nthreads = 1):
   emodel = elasticity.IsotropicLinearElasticModel(youngs, "youngs", 
       0.31, "poissons")
   kmodel = kinematics.StandardKinematicModel(emodel, imodel)
-  smodel = singlecrystal.SingleCrystalModel(kmodel, L, verbose = True)
+  smodel = singlecrystal.SingleCrystalModel(kmodel, L,
+       linesearch = True, initial_rotation = 
+       rotations.Orientation(0,0,0,angle_type="degrees"), verbose = True)
+
+  return smodel
+
+
+def make_model(N, nthreads = 1):
+  
+  smodel = make_singlecrystal()
 
   orientations = rotations.random_orientations(N)
 
   model = polycrystal.TaylorModel(smodel, orientations, nthreads = nthreads)
 
-  return smodel
+  return model
 
 if __name__ == "__main__":
   model = make_model(100)

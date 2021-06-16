@@ -24,7 +24,8 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
                             double kboltz, double R, double Na,
                             size_t rate,
                             double f_init, double r_init, double N_init,
-                            double fs, double rs, double Ns);
+                            double fs, double rs, double Ns,
+                            double w);
 
   /// String type for the object system
   static std::string type();
@@ -138,6 +139,7 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
   size_t rate_;
   double f_init_, r_init_, N_init_;
   double fs_, rs_, Ns_;
+  double w_;
   double vm_;
   std::vector<std::string> varnames_;
 };

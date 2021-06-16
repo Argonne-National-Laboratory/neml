@@ -9,13 +9,14 @@ HuCocksPrecipitationModel::HuCocksPrecipitationModel(
     double am, double N0, double Vm, double chi, double D0, double Q0, 
     std::shared_ptr<Interpolate> Cf, double kboltz, double R,
     double Na, size_t rate, double f_init, double r_init, double N_init,
-    double fs, double rs, double Ns) :
+    double fs, double rs, double Ns, double w) :
       c0_(c0), cp_(cp), ceq_(ceq), am_(am), N0_(N0), Vm_(Vm), chi_(chi), 
       D0_(D0), Q0_(Q0), Cf_(Cf), kboltz_(kboltz), R_(R), Na_(Na),
       rate_(rate), f_init_(f_init), r_init_(r_init), N_init_(N_init),
-      fs_(fs), rs_(rs), Ns_(Ns),
+      fs_(fs), rs_(rs), Ns_(Ns), w_(w),
       vm_(Vm / Na), varnames_({"f", "r", "N"})
 {
+
 }
 
 std::string HuCocksPrecipitationModel::type()
@@ -46,7 +47,8 @@ std::unique_ptr<NEMLObject> HuCocksPrecipitationModel::initialize(
       params.get_parameter<double>("N_init"),
       params.get_parameter<double>("fs"),
       params.get_parameter<double>("rs"),
-      params.get_parameter<double>("Ns"));
+      params.get_parameter<double>("Ns"),
+      params.get_parameter<double>("w"));
 }
 
 ParameterSet HuCocksPrecipitationModel::parameters()
@@ -74,6 +76,7 @@ ParameterSet HuCocksPrecipitationModel::parameters()
   pset.add_optional_parameter<double>("fs", 0.1);
   pset.add_optional_parameter<double>("rs", 1.0e-9);
   pset.add_optional_parameter<double>("Ns", 1.0e12);
+  pset.add_optional_parameter<double>("w", 1.0);
 
   return pset;
 }
@@ -146,7 +149,7 @@ double HuCocksPrecipitationModel::N(const History & history) const
 
 double HuCocksPrecipitationModel::f_rate(double f, double r, double N, double T) const
 {
-  return 4.0 * M_PI / 3.0 * (N_rate(f, r, N, T) * std::pow(r, 3.0) + N * 3.0 *
+  return  4.0 * M_PI / 3.0 * (N_rate(f, r, N, T) * std::pow(r, 3.0) + N * 3.0 *
                            std::pow(r, 2.0) * r_rate(f, r, N, T));
 }
 
@@ -249,7 +252,8 @@ double HuCocksPrecipitationModel::N_rate(double f, double r, double N, double T)
 
   if (nucleation_(ci, T)) {
     double Gvi = Gv(f, T);
-    double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0));
+    double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0))
+        * w_;
     double ZB = 2.0 * vm_ * D * ci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
                                                                           (kboltz_
                                                                            * T));
@@ -269,10 +273,11 @@ double HuCocksPrecipitationModel::dN_df(double f, double r, double N, double T) 
   if (nucleation_(ci, T)) {
     double Gvi = Gv(f, T);
     double dGvi = dG_df(f, T);
-    double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0));
+    double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0))
+        * w_;
     double dGstar = -32 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi,
                                                                        3.0)) *
-        dGvi;
+        dGvi * w_;
 
     double ZB = 2.0 * vm_ * D * ci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
                                                                           (kboltz_

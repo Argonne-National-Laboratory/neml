@@ -62,12 +62,12 @@
                   </Cr>
                   <C type="PiecewiseLinearInterpolate">
                     <points>773.15 823.15 873.15 923.15</points>
-                    <values>7.25e-8 7.92e-7 9.48e-7 2.97e-6</values> 
+                    <values>7.25e-8 2.92e-7 9.48e-7 2.97e-6</values> 
                   </C>
                 </ceq>
                 <am>3.6e-10</am>
                 <N0>1.0e13</N0>
-                <Vm>3e-6</Vm>
+                <Vm>6e-6</Vm>
                 <chi>0.3</chi>
                 <D0>1.5e-4</D0>
                 <Q0>240e3</Q0>
@@ -75,6 +75,7 @@
                   <points>773.15 823.15 873.15 923.15</points>
                   <values>1.0 1.0 0.3 0.03</values> 
                 </Cf>
+                <w>1.0</w>
               </carbide>
               <laves type="HuCocksPrecipitationModel">
                 <c0>
@@ -100,6 +101,7 @@
                 <D0>7.4e-4</D0>
                 <Q0>283e3</Q0>
                 <Cf>1.0</Cf>
+                <w>1.0</w>
               </laves>
             </pmodels>
             <ap>0.84</ap>
