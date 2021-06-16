@@ -180,7 +180,7 @@ double HuCocksPrecipitationModel::r_rate(double f, double r, double N, double T)
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * r_rate_nucleation(f, r, N, T) + s * r_rate_ripening(f, r, N,
+  return (1.0-s) * r_rate_nucleation_(f, r, N, T) + s * r_rate_ripening_(f, r, N,
                                                                        T);
 }
 
@@ -189,8 +189,8 @@ double HuCocksPrecipitationModel::dr_df(double f, double r, double N, double T) 
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * dr_df_nucleation(f, r, N, T) + s * dr_df_ripening(f, r, N, T) -
-      ds * r_rate_nucleation(f, r, N, T) + ds * r_rate_ripening(f, r, N, T);
+  return (1.0-s) * dr_df_nucleation_(f, r, N, T) + s * dr_df_ripening_(f, r, N, T) -
+      ds * r_rate_nucleation_(f, r, N, T) + ds * r_rate_ripening_(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dr_dr(double f, double r, double N, double T) const
@@ -198,7 +198,7 @@ double HuCocksPrecipitationModel::dr_dr(double f, double r, double N, double T) 
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * dr_dr_nucleation(f, r, N, T) + s * dr_dr_ripening(f, r, N, T);
+  return (1.0-s) * dr_dr_nucleation_(f, r, N, T) + s * dr_dr_ripening_(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dr_dN(double f, double r, double N, double T) const
@@ -206,11 +206,11 @@ double HuCocksPrecipitationModel::dr_dN(double f, double r, double N, double T) 
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * dr_dN_nucleation(f, r, N, T) + s * dr_dN_ripening(f, r, N,
+  return (1.0-s) * dr_dN_nucleation_(f, r, N, T) + s * dr_dN_ripening_(f, r, N,
                                                                      T);
 }
 
-double HuCocksPrecipitationModel::r_rate_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::r_rate_nucleation_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   double D = D_(T);
@@ -219,11 +219,11 @@ double HuCocksPrecipitationModel::r_rate_nucleation(double f, double r, double N
   double rc = -2.0 * chi_ / Gvi;
   return D / r * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
                                                        ceq_[rate_]->value(T))
-      + N_rate_nucleation(f, r, N, T) / N * (rc - r);
+      + N_rate_nucleation_(f, r, N, T) / N * (rc - r);
 
 }
 
-double HuCocksPrecipitationModel::dr_df_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dr_df_nucleation_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   auto dci = dc_df(f, T);
@@ -234,11 +234,11 @@ double HuCocksPrecipitationModel::dr_df_nucleation(double f, double r, double N,
   double rc = -2.0 * chi_ / Gvi;
   double drc = 2.0 * chi_ / (Gvi * Gvi) * dGvi;
   return D / r * dci[rate_] / (cp_[rate_]->value(T) - ceq_[rate_]->value(T))
-      + dN_df_nucleation(f, r, N, T) / N * (rc - r) + N_rate_nucleation(f, r, N, T) / N * drc;
+      + dN_df_nucleation_(f, r, N, T) / N * (rc - r) + N_rate_nucleation_(f, r, N, T) / N * drc;
 
 }
 
-double HuCocksPrecipitationModel::dr_dr_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dr_dr_nucleation_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   double D = D_(T);
@@ -247,19 +247,19 @@ double HuCocksPrecipitationModel::dr_dr_nucleation(double f, double r, double N,
   double rc = -2.0 * chi_ / Gvi;
   return -D / (r*r) * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
                                                        ceq_[rate_]->value(T))
-      + dN_dr_nucleation(f, r, N, T) / N * (rc - r) - N_rate_nucleation(f, r, N,T) / N;
+      + dN_dr_nucleation_(f, r, N, T) / N * (rc - r) - N_rate_nucleation_(f, r, N,T) / N;
 }
 
-double HuCocksPrecipitationModel::dr_dN_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dr_dN_nucleation_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
 
   double Gvi = Gv(f, T);
   double rc = -2.0 * chi_ / Gvi;
-  return dN_dN_nucleation(f, r, N, T) / N * (rc - r) - N_rate_nucleation(f, r, N,T)/(N*N) * (rc - r);
+  return dN_dN_nucleation_(f, r, N, T) / N * (rc - r) - N_rate_nucleation_(f, r, N,T)/(N*N) * (rc - r);
 }
 
-double HuCocksPrecipitationModel::r_rate_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::r_rate_ripening_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   double D = D_(T);
@@ -268,7 +268,7 @@ double HuCocksPrecipitationModel::r_rate_ripening(double f, double r, double N, 
   return K / (3.0 * std::pow(r, 2.0));
 }
 
-double HuCocksPrecipitationModel::dr_df_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dr_df_ripening_(double f, double r, double N, double T) const
 {
   auto dci = dc_df(f, T);
   double D = D_(T);
@@ -277,7 +277,7 @@ double HuCocksPrecipitationModel::dr_df_ripening(double f, double r, double N, d
   return dK / (3.0 * std::pow(r, 2.0));
 }
 
-double HuCocksPrecipitationModel::dr_dr_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dr_dr_ripening_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   double D = D_(T);
@@ -286,7 +286,7 @@ double HuCocksPrecipitationModel::dr_dr_ripening(double f, double r, double N, d
   return -2 * K / (3.0 * std::pow(r, 3.0));
 }
 
-double HuCocksPrecipitationModel::dr_dN_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dr_dN_ripening_(double f, double r, double N, double T) const
 {
   return 0;
 }
@@ -296,7 +296,7 @@ double HuCocksPrecipitationModel::N_rate(double f, double r, double N, double T)
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * N_rate_nucleation(f, r, N, T) + s * N_rate_ripening(f, r, N,
+  return (1.0-s) * N_rate_nucleation_(f, r, N, T) + s * N_rate_ripening_(f, r, N,
                                                                        T);
 }
 
@@ -305,8 +305,8 @@ double HuCocksPrecipitationModel::dN_df(double f, double r, double N, double T) 
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * dN_df_nucleation(f, r, N, T) + s * dN_df_ripening(f, r, N, T) -
-      ds * N_rate_nucleation(f, r, N, T) + ds * N_rate_ripening(f, r, N, T);
+  return (1.0-s) * dN_df_nucleation_(f, r, N, T) + s * dN_df_ripening_(f, r, N, T) -
+      ds * N_rate_nucleation_(f, r, N, T) + ds * N_rate_ripening_(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dN_dr(double f, double r, double N, double T) const
@@ -314,7 +314,7 @@ double HuCocksPrecipitationModel::dN_dr(double f, double r, double N, double T) 
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * dN_dr_nucleation(f, r, N, T) + s * dN_dr_ripening(f, r, N, T);
+  return (1.0-s) * dN_dr_nucleation_(f, r, N, T) + s * dN_dr_ripening_(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dN_dN(double f, double r, double N, double T) const
@@ -322,11 +322,11 @@ double HuCocksPrecipitationModel::dN_dN(double f, double r, double N, double T) 
   double s, ds;
   sfn_(f, T, s, ds);
 
-  return (1.0-s) * dN_dN_nucleation(f, r, N, T) + s * dN_dN_ripening(f, r, N,
+  return (1.0-s) * dN_dN_nucleation_(f, r, N, T) + s * dN_dN_ripening_(f, r, N,
                                                                      T);
 }
 
-double HuCocksPrecipitationModel::N_rate_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::N_rate_nucleation_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   double D = D_(T);
@@ -341,7 +341,7 @@ double HuCocksPrecipitationModel::N_rate_nucleation(double f, double r, double N
 
 }
 
-double HuCocksPrecipitationModel::dN_df_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dN_df_nucleation_(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   auto dci = dc_df(f, T);
@@ -366,34 +366,34 @@ double HuCocksPrecipitationModel::dN_df_nucleation(double f, double r, double N,
       std::exp(-Gstar/ (kboltz_*T)) * dGstar / (kboltz_ * T);
 }
 
-double HuCocksPrecipitationModel::dN_dr_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dN_dr_nucleation_(double f, double r, double N, double T) const
 {
   return 0;
 }
 
-double HuCocksPrecipitationModel::dN_dN_nucleation(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dN_dN_nucleation_(double f, double r, double N, double T) const
 {
   return 0;
 }
 
-double HuCocksPrecipitationModel::N_rate_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::N_rate_ripening_(double f, double r, double N, double T) const
 {
-  return -3.0 * N / r * r_rate_ripening(f, r, N, T);
+  return -3.0 * N / r * r_rate_ripening_(f, r, N, T);
 }
 
-double HuCocksPrecipitationModel::dN_df_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dN_df_ripening_(double f, double r, double N, double T) const
 {
-  return -3.0 * N / r * dr_df_ripening(f, r, N, T);
+  return -3.0 * N / r * dr_df_ripening_(f, r, N, T);
 }
 
-double HuCocksPrecipitationModel::dN_dr_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dN_dr_ripening_(double f, double r, double N, double T) const
 {
-  return -3.0 * N / r * dr_dr_ripening(f, r, N, T) + 3.0 * N / (r * r) * r_rate_ripening(f, r, N, T);
+  return -3.0 * N / r * dr_dr_ripening_(f, r, N, T) + 3.0 * N / (r * r) * r_rate_ripening_(f, r, N, T);
 }
 
-double HuCocksPrecipitationModel::dN_dN_ripening(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dN_dN_ripening_(double f, double r, double N, double T) const
 {
-  return -3.0 * N / r * dr_dN_ripening(f, r, N, T) - 3.0 / r * r_rate_ripening(f, r, N, T);
+  return -3.0 * N / r * dr_dN_ripening_(f, r, N, T) - 3.0 / r * r_rate_ripening_(f, r, N, T);
 }
 
 size_t HuCocksPrecipitationModel::nspecies() const

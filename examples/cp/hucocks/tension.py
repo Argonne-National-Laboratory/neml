@@ -17,7 +17,8 @@ if __name__ == "__main__":
     res = drivers.uniaxial_test(model, 8.33e-5, T = T, verbose = True)
   
     plt.plot(res['strain'], res['stress'], label = "%3.0f C" % (T-273.15))
-
+  
+  plt.legend(loc='best')
   plt.xlabel("Strain (mm/mm)")
   plt.ylabel("Stress (MPa)")
   plt.savefig("tension-unaged.png")

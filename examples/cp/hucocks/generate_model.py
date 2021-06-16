@@ -9,7 +9,7 @@ from neml import models, interpolate, elasticity, history
 from neml.cp import hucocks, crystallography, sliprules, slipharden, inelasticity, kinematics, singlecrystal, polycrystal
 from neml.math import rotations
 
-def make_singlecrystal():
+def make_singlecrystal(verbose = False, return_hardening = False):
   Ts = np.array([500.0,550.0,600.0,650.0]) + 273.15
 
   L = crystallography.CubicLattice(1.0)
@@ -96,9 +96,12 @@ def make_singlecrystal():
   kmodel = kinematics.StandardKinematicModel(emodel, imodel)
   smodel = singlecrystal.SingleCrystalModel(kmodel, L,
        linesearch = True, initial_rotation = 
-       rotations.Orientation(0,0,0,angle_type="degrees"), verbose = True)
-
-  return smodel
+       rotations.Orientation(0,0,0,angle_type="degrees"), verbose = verbose)
+  
+  if return_hardening:
+    return smodel, tau_model
+  else:
+    return smodel
 
 
 def make_model(N, nthreads = 1):
