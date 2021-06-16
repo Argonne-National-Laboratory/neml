@@ -106,7 +106,31 @@ class PrecipitationModel:
     return 4.0*np.pi/3 * (self.N_dot(f, r, N, T) * r**3.0 + N * 3.0 * r**2.0
         * self.r_dot(f, r, N, T))
 
+  def sfn(self, f, T):
+    v = np.max((self.c(f, T) - self.c0(T)) / (self.ceq(T) - self.c0(T)))
+    if v < 0:
+      return 0
+    elif v > 1:
+      return 1
+    else:
+      return v
+
   def r_dot(self, f, r, N, T):
+    """
+      Radius growth rate
+
+      Parameters:
+        r:      current radius
+        N:      current number density
+        T:      current temperature
+    """
+    c = self.c(f, T)
+
+    fi = self.sfn(f, T)
+
+    return (1.0-fi) * self.r_dot_nucleation(f, r, N, T) + fi * self.r_dot_ripening(f, r, N, T)
+
+  def r_dot_nucleation(self, f, r, N, T):
     """
       Radius growth rate
 
@@ -118,20 +142,29 @@ class PrecipitationModel:
     c = self.c(f, T)
     D = self.D(T)
 
-    # Branch 1: nucleation
-    if np.all(c >= self.ceq(T)):
-      Gv = self.Gv(c, T)
-      rc = -2.0*self.chi / Gv
+    Gv = self.Gv(c, T)
+    rc = -2.0*self.chi / Gv
 
-      rt = D/r * (c[self.use] - self.ceq(T)[self.use]) / (self.cp(T)[self.use] - self.ceq(T)[self.use]
-          ) + self.N_dot(f, r, N, T) / N * (rc - r)
-      return rt
-    # Branch 2: ripening
-    else:
-      K = self.Cf(T) * 8.0 * self.chi * self.Vm * D * c[self.use] / (
-          9.0 * self.R * T)
-      rt = K / (3.0*r**2.0)
-      return rt
+    rt1 = D/r * (c[self.use] - self.ceq(T)[self.use]) / (self.cp(T)[self.use] - self.ceq(T)[self.use]
+        ) + self.N_dot_nucleation(f, r, N, T) / N * (rc - r)
+    return rt1
+
+  def r_dot_ripening(self, f, r, N, T):
+    """
+      Radius growth rate
+
+      Parameters:
+        r:      current radius
+        N:      current number density
+        T:      current temperature
+    """
+    c = self.c(f, T)
+    D = self.D(T)
+
+    K = self.Cf(T) * 8.0 * self.chi * self.Vm * D * c[self.use] / (
+        9.0 * self.R * T)
+    rt2 = K / (3.0*r**2.0)
+    return rt2
 
   def N_dot(self, f, r, N, T):
     """
@@ -144,18 +177,42 @@ class PrecipitationModel:
     """
     c = self.c(f, T)
 
-    # Branch 1: nucleation
-    if np.all(c >= self.ceq(T)):
-      Gv = self.Gv(c, T)
-      Gstar = 16*np.pi*self.chi**3.0/(3.0*Gv**2.0)
-      D = self.D(T)
-      ZB = 2*self.vm * D  * c[self.use]/ self.am**4.0 * np.sqrt(
-          self.chi/(self.kboltz * T))
-      Nt = self.N0 * ZB * np.exp(-Gstar / (self.kboltz * T))
-      return Nt
-    # Branch 2: ripening
-    else:
-      return -3.0 * N / r * self.r_dot(f, r, N, T)
+    fi = self.sfn(f, T)
+
+    return (1.0-fi) * self.N_dot_nucleation(f, r, N, T) + fi * self.N_dot_ripening(f, r, N, T)
+
+  def N_dot_nucleation(self, f, r, N, T):
+    """
+      Number density growth rate
+
+      Parameters:
+        r:      current radius
+        N:      current number density
+        T:      current temperature
+    """
+    c = self.c(f, T)
+
+    Gv = self.Gv(c, T)
+    Gstar = 16*np.pi*self.chi**3.0/(3.0*Gv**2.0)
+    D = self.D(T)
+    ZB = 2*self.vm * D  * c[self.use]/ self.am**4.0 * np.sqrt(
+        self.chi/(self.kboltz * T))
+    Nt1 = self.N0 * ZB * np.exp(-Gstar / (self.kboltz * T))
+    return Nt1
+
+  def N_dot_ripening(self, f, r, N, T):
+    """
+      Number density growth rate
+
+      Parameters:
+        r:      current radius
+        N:      current number density
+        T:      current temperature
+    """
+    c = self.c(f, T)
+
+    Nt2 = -3.0 * N / r * self.r_dot_ripening(f, r, N, T)
+    return Nt2
 
   def ic(self, T):
     """
@@ -270,7 +327,7 @@ class TestPercipitationModel(unittest.TestCase):
       Test rate in the ostwald regime
     """
     T = 550.0 + 273.15
-    f = 0.073
+    f = 0.0045
     r = 95e-9
     N = f / (4.0/3.0*np.pi*r**3.0) 
 
@@ -280,6 +337,7 @@ class TestPercipitationModel(unittest.TestCase):
       self.model_py.r_dot(f, r, N, T) / self.model_neml.rs, 
       self.model_py.N_dot(f, r, N, T)/ self.model_neml.Ns])
     ne_v = self.model_neml.rate(self.vector_state(state), T)
+
     self.assertTrue(np.allclose(py_v, ne_v))
 
   def test_jac_ostwald(self):
@@ -287,7 +345,7 @@ class TestPercipitationModel(unittest.TestCase):
       Test jacobian in the ostwald regime
     """
     T = 550.0 + 273.15
-    f = 0.073
+    f = 0.0045
     r = 95e-9
     N = f / (4.0/3.0*np.pi*r**3.0) 
 
@@ -502,10 +560,10 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
     self.nslip = self.L.ntotal
 
     self.current = 1.15e-7
-    self.f_carbide = 0.073 / self.carbide.fs
+    self.f_carbide = 0.002 / self.carbide.fs
     self.r_carbide = 95e-9 / self.carbide.rs
     self.N_carbide = self.f_carbide * self.carbide.fs / (4.0/3.0*np.pi*(self.r_carbide * self.carbide.rs) **3.0) / self.carbide.Ns
-    self.f_laves = 0.00962 / self.laves.fs
+    self.f_laves = 0.009 / self.laves.fs
     self.r_laves = 41.2e-9 / self.laves.rs
     self.N_laves = self.f_laves * self.laves.fs / (4.0/3.0*np.pi*(self.r_laves*self.laves.rs)**3.0) / self.laves.Ns
 
@@ -710,7 +768,7 @@ class TestArrheniusSlipReal(unittest.TestCase, CommonSlipStrengthSlipRule, Commo
     self.nslip = self.L.ntotal
 
     self.current = 1.15e-7
-    self.f_carbide = 0.073 / self.carbide.fs
+    self.f_carbide = 0.002 / self.carbide.fs
     self.r_carbide = 95e-9 / self.carbide.rs
     self.N_carbide = self.f_carbide * self.carbide.fs / (4.0/3.0*np.pi*(self.r_carbide * self.carbide.rs) **3.0) / self.carbide.Ns
     self.f_laves = 0.00962 / self.laves.fs

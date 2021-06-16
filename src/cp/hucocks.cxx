@@ -177,145 +177,223 @@ double HuCocksPrecipitationModel::df_dN(double f, double r, double N, double T) 
 
 double HuCocksPrecipitationModel::r_rate(double f, double r, double N, double T) const
 {
-  auto ci = c(f, T);
-  double D = D_(T);
+  double s, ds;
+  sfn_(f, T, s, ds);
 
-  if (nucleation_(ci, T)) {
-    double Gvi = Gv(f, T);
-    double rc = -2.0 * chi_ / Gvi;
-    return D / r * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
-                                                         ceq_[rate_]->value(T))
-        + N_rate(f, r, N, T) / N * (rc - r);
-  }
-  else {
-    double K = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * ci[rate_] / (9.0 * R_ * T);
-    return K / (3.0 * std::pow(r, 2.0));
-  }
+  return (1.0-s) * r_rate_nucleation(f, r, N, T) + s * r_rate_ripening(f, r, N,
+                                                                       T);
 }
 
 double HuCocksPrecipitationModel::dr_df(double f, double r, double N, double T) const
 {
-  auto ci = c(f, T);
-  auto dci = dc_df(f, T);
-  double D = D_(T);
+  double s, ds;
+  sfn_(f, T, s, ds);
 
-  if (nucleation_(ci, T)) {
-    double Gvi = Gv(f, T);
-    double dGvi = dG_df(f, T);
-    double rc = -2.0 * chi_ / Gvi;
-    double drc = 2.0 * chi_ / (Gvi * Gvi) * dGvi;
-    return D / r * dci[rate_] / (cp_[rate_]->value(T) - ceq_[rate_]->value(T))
-        + dN_df(f, r, N, T) / N * (rc - r) + N_rate(f, r, N, T) / N * drc;
-  }
-  else {
-    double dK = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * dci[rate_] / (9.0 * R_ * T);
-    return dK / (3.0 * std::pow(r, 2.0));
-  }
+  return (1.0-s) * dr_df_nucleation(f, r, N, T) + s * dr_df_ripening(f, r, N, T) -
+      ds * r_rate_nucleation(f, r, N, T) + ds * r_rate_ripening(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dr_dr(double f, double r, double N, double T) const
 {
-  auto ci = c(f, T);
-  double D = D_(T);
+  double s, ds;
+  sfn_(f, T, s, ds);
 
-  if (nucleation_(ci, T)) {
-    double Gvi = Gv(f, T);
-    double rc = -2.0 * chi_ / Gvi;
-    return -D / (r*r) * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
-                                                         ceq_[rate_]->value(T))
-        + dN_dr(f, r, N, T) / N * (rc - r) - N_rate(f, r, N,T) / N;
-  }
-  else {
-    double K = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * ci[rate_] / (9.0 * R_ * T);
-    return -2 * K / (3.0 * std::pow(r, 3.0));
-  }
+  return (1.0-s) * dr_dr_nucleation(f, r, N, T) + s * dr_dr_ripening(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dr_dN(double f, double r, double N, double T) const
 {
-  auto ci = c(f, T);
+  double s, ds;
+  sfn_(f, T, s, ds);
 
-  if (nucleation_(ci, T)) {
-    double Gvi = Gv(f, T);
-    double rc = -2.0 * chi_ / Gvi;
-    return dN_dN(f, r, N, T) / N * (rc - r) - N_rate(f, r, N,T)/(N*N) * (rc - r);
-  }
-  else {
-    return 0;
-  }
+  return (1.0-s) * dr_dN_nucleation(f, r, N, T) + s * dr_dN_ripening(f, r, N,
+                                                                     T);
 }
 
-double HuCocksPrecipitationModel::N_rate(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::r_rate_nucleation(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   double D = D_(T);
 
-  if (nucleation_(ci, T)) {
-    double Gvi = Gv(f, T);
-    double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0))
-        * w_;
-    double ZB = 2.0 * vm_ * D * ci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
-                                                                          (kboltz_
-                                                                           * T));
-    return N0_ * ZB * std::exp(-Gstar / (kboltz_ * T));
-  }
-  else {
-    return -3.0 * N / r * r_rate(f, r, N, T);
-  }
+  double Gvi = Gv(f, T);
+  double rc = -2.0 * chi_ / Gvi;
+  return D / r * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
+                                                       ceq_[rate_]->value(T))
+      + N_rate_nucleation(f, r, N, T) / N * (rc - r);
+
 }
 
-double HuCocksPrecipitationModel::dN_df(double f, double r, double N, double T) const
+double HuCocksPrecipitationModel::dr_df_nucleation(double f, double r, double N, double T) const
 {
   auto ci = c(f, T);
   auto dci = dc_df(f, T);
   double D = D_(T);
 
-  if (nucleation_(ci, T)) {
-    double Gvi = Gv(f, T);
-    double dGvi = dG_df(f, T);
-    double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0))
-        * w_;
-    double dGstar = -32 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi,
-                                                                       3.0)) *
-        dGvi * w_;
+  double Gvi = Gv(f, T);
+  double dGvi = dG_df(f, T);
+  double rc = -2.0 * chi_ / Gvi;
+  double drc = 2.0 * chi_ / (Gvi * Gvi) * dGvi;
+  return D / r * dci[rate_] / (cp_[rate_]->value(T) - ceq_[rate_]->value(T))
+      + dN_df_nucleation(f, r, N, T) / N * (rc - r) + N_rate_nucleation(f, r, N, T) / N * drc;
 
-    double ZB = 2.0 * vm_ * D * ci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
-                                                                          (kboltz_
-                                                                           * T));
-    double dZB = 2.0 * vm_ * D * dci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
-                                                                          (kboltz_
-                                                                           * T));
+}
 
-    return N0_ * dZB * std::exp(-Gstar / (kboltz_ * T)) - N0_ * ZB *
-        std::exp(-Gstar/ (kboltz_*T)) * dGstar / (kboltz_ * T);
-  }
-  else {
-    return -3.0 * N / r * dr_df(f, r, N, T);
-  }
+double HuCocksPrecipitationModel::dr_dr_nucleation(double f, double r, double N, double T) const
+{
+  auto ci = c(f, T);
+  double D = D_(T);
+
+  double Gvi = Gv(f, T);
+  double rc = -2.0 * chi_ / Gvi;
+  return -D / (r*r) * (ci[rate_] - ceq_[rate_]->value(T)) / (cp_[rate_]->value(T) -
+                                                       ceq_[rate_]->value(T))
+      + dN_dr_nucleation(f, r, N, T) / N * (rc - r) - N_rate_nucleation(f, r, N,T) / N;
+}
+
+double HuCocksPrecipitationModel::dr_dN_nucleation(double f, double r, double N, double T) const
+{
+  auto ci = c(f, T);
+
+  double Gvi = Gv(f, T);
+  double rc = -2.0 * chi_ / Gvi;
+  return dN_dN_nucleation(f, r, N, T) / N * (rc - r) - N_rate_nucleation(f, r, N,T)/(N*N) * (rc - r);
+}
+
+double HuCocksPrecipitationModel::r_rate_ripening(double f, double r, double N, double T) const
+{
+  auto ci = c(f, T);
+  double D = D_(T);
+
+  double K = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * ci[rate_] / (9.0 * R_ * T);
+  return K / (3.0 * std::pow(r, 2.0));
+}
+
+double HuCocksPrecipitationModel::dr_df_ripening(double f, double r, double N, double T) const
+{
+  auto dci = dc_df(f, T);
+  double D = D_(T);
+
+  double dK = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * dci[rate_] / (9.0 * R_ * T);
+  return dK / (3.0 * std::pow(r, 2.0));
+}
+
+double HuCocksPrecipitationModel::dr_dr_ripening(double f, double r, double N, double T) const
+{
+  auto ci = c(f, T);
+  double D = D_(T);
+
+  double K = Cf_->value(T) * 8.0 * chi_ * Vm_ * D * ci[rate_] / (9.0 * R_ * T);
+  return -2 * K / (3.0 * std::pow(r, 3.0));
+}
+
+double HuCocksPrecipitationModel::dr_dN_ripening(double f, double r, double N, double T) const
+{
+  return 0;
+}
+
+double HuCocksPrecipitationModel::N_rate(double f, double r, double N, double T) const
+{
+  double s, ds;
+  sfn_(f, T, s, ds);
+
+  return (1.0-s) * N_rate_nucleation(f, r, N, T) + s * N_rate_ripening(f, r, N,
+                                                                       T);
+}
+
+double HuCocksPrecipitationModel::dN_df(double f, double r, double N, double T) const
+{
+  double s, ds;
+  sfn_(f, T, s, ds);
+
+  return (1.0-s) * dN_df_nucleation(f, r, N, T) + s * dN_df_ripening(f, r, N, T) -
+      ds * N_rate_nucleation(f, r, N, T) + ds * N_rate_ripening(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dN_dr(double f, double r, double N, double T) const
 {
-  auto ci = c(f, T);
+  double s, ds;
+  sfn_(f, T, s, ds);
 
-  if (nucleation_(ci, T)) {
-    return 0;
-  }
-  else {
-    return -3.0 * N / r * dr_dr(f, r, N, T) + 3.0 * N / (r * r) * r_rate(f, r, N, T);
-  }
+  return (1.0-s) * dN_dr_nucleation(f, r, N, T) + s * dN_dr_ripening(f, r, N, T);
 }
 
 double HuCocksPrecipitationModel::dN_dN(double f, double r, double N, double T) const
 {
-  auto ci = c(f, T);
+  double s, ds;
+  sfn_(f, T, s, ds);
 
-  if (nucleation_(ci, T)) {
-    return 0;
-  }
-  else {
-    return -3.0 * N / r * dr_dN(f, r, N, T) - 3.0 / r * r_rate(f, r, N, T);
-  }
+  return (1.0-s) * dN_dN_nucleation(f, r, N, T) + s * dN_dN_ripening(f, r, N,
+                                                                     T);
+}
+
+double HuCocksPrecipitationModel::N_rate_nucleation(double f, double r, double N, double T) const
+{
+  auto ci = c(f, T);
+  double D = D_(T);
+
+  double Gvi = Gv(f, T);
+  double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0))
+      * w_;
+  double ZB = 2.0 * vm_ * D * ci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
+                                                                        (kboltz_
+                                                                         * T));
+  return N0_ * ZB * std::exp(-Gstar / (kboltz_ * T));
+
+}
+
+double HuCocksPrecipitationModel::dN_df_nucleation(double f, double r, double N, double T) const
+{
+  auto ci = c(f, T);
+  auto dci = dc_df(f, T);
+  double D = D_(T);
+
+  double Gvi = Gv(f, T);
+  double dGvi = dG_df(f, T);
+  double Gstar = 16 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi, 2.0))
+      * w_;
+  double dGstar = -32 * M_PI * std::pow(chi_, 3.0) / (3.0 * std::pow(Gvi,
+                                                                     3.0)) *
+      dGvi * w_;
+
+  double ZB = 2.0 * vm_ * D * ci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
+                                                                        (kboltz_
+                                                                         * T));
+  double dZB = 2.0 * vm_ * D * dci[rate_] / std::pow(am_, 4.0) * std::sqrt(chi_ /
+                                                                        (kboltz_
+                                                                         * T));
+
+  return N0_ * dZB * std::exp(-Gstar / (kboltz_ * T)) - N0_ * ZB *
+      std::exp(-Gstar/ (kboltz_*T)) * dGstar / (kboltz_ * T);
+}
+
+double HuCocksPrecipitationModel::dN_dr_nucleation(double f, double r, double N, double T) const
+{
+  return 0;
+}
+
+double HuCocksPrecipitationModel::dN_dN_nucleation(double f, double r, double N, double T) const
+{
+  return 0;
+}
+
+double HuCocksPrecipitationModel::N_rate_ripening(double f, double r, double N, double T) const
+{
+  return -3.0 * N / r * r_rate_ripening(f, r, N, T);
+}
+
+double HuCocksPrecipitationModel::dN_df_ripening(double f, double r, double N, double T) const
+{
+  return -3.0 * N / r * dr_df_ripening(f, r, N, T);
+}
+
+double HuCocksPrecipitationModel::dN_dr_ripening(double f, double r, double N, double T) const
+{
+  return -3.0 * N / r * dr_dr_ripening(f, r, N, T) + 3.0 * N / (r * r) * r_rate_ripening(f, r, N, T);
+}
+
+double HuCocksPrecipitationModel::dN_dN_ripening(double f, double r, double N, double T) const
+{
+  return -3.0 * N / r * dr_dN_ripening(f, r, N, T) - 3.0 / r * r_rate_ripening(f, r, N, T);
 }
 
 size_t HuCocksPrecipitationModel::nspecies() const
@@ -399,6 +477,32 @@ double HuCocksPrecipitationModel::dG_df(double f, double T) const
 double HuCocksPrecipitationModel::vm() const
 {
   return vm_;
+}
+
+void HuCocksPrecipitationModel::sfn_(double f, double T, double & val, double
+                                       & dval) const
+{
+  auto cs = c(f, T);
+  auto dcs = dc_df(f, T);
+  val = 0.0;
+  for (size_t i = 0; i < nspecies(); i++) {
+    double xi = (cs[i] - c0_[i]->value(T)) / (ceq_[i]->value(T) -
+                                              c0_[i]->value(T));
+    if (xi > val) {
+      val = xi;
+      dval = dcs[i] / (ceq_[i]->value(T) - c0_[i]->value(T));
+    }
+  }
+  
+  if (val < 0.0) {
+    val = 0.0;
+    dval = 0.0;
+  }
+  
+  if (val > 1.0) {
+    val = 1.0;
+    dval = 0.0;
+  }
 }
 
 bool HuCocksPrecipitationModel::nucleation_(const std::vector<double> & c,

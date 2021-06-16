@@ -83,6 +83,30 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
   /// dr_dN
   virtual double dr_dN(double f, double r, double N, double T) const;
 
+  /// The radius rate in the nucleation regime
+  virtual double r_rate_nucleation(double f, double r, double N, double T) const;
+
+  /// dr_df in the nucleation regime
+  virtual double dr_df_nucleation(double f, double r, double N, double T) const;
+
+  /// dr_dr in the nucleation regime
+  virtual double dr_dr_nucleation(double f, double r, double N, double T) const;
+
+  /// dr_dN in the nucleation regime
+  virtual double dr_dN_nucleation(double f, double r, double N, double T) const;
+
+  /// The radius rate in the ripening regime
+  virtual double r_rate_ripening(double f, double r, double N, double T) const;
+
+  /// dr_df in the ripening regime
+  virtual double dr_df_ripening(double f, double r, double N, double T) const;
+
+  /// dr_dr in the ripening regime
+  virtual double dr_dr_ripening(double f, double r, double N, double T) const;
+
+  /// dr_dN in the ripening regime
+  virtual double dr_dN_ripening(double f, double r, double N, double T) const;
+
   /// The number density rate
   virtual double N_rate(double f, double r, double N, double T) const;
 
@@ -94,6 +118,30 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
 
   /// dN_dN
   virtual double dN_dN(double f, double r, double N, double T) const;
+
+  /// The number density rate in the nucleation regime
+  virtual double N_rate_nucleation(double f, double r, double N, double T) const;
+
+  /// dN_df in the nucleation regime
+  virtual double dN_df_nucleation(double f, double r, double N, double T) const;
+
+  /// dN_dr in the nucleation regime
+  virtual double dN_dr_nucleation(double f, double r, double N, double T) const;
+
+  /// dN_dN in the nucleation regime
+  virtual double dN_dN_nucleation(double f, double r, double N, double T) const;
+
+  /// The number density rate in the ripening regime
+  virtual double N_rate_ripening(double f, double r, double N, double T) const;
+
+  /// dN_df in the ripening regime
+  virtual double dN_df_ripening(double f, double r, double N, double T) const;
+
+  /// dN_dr in the ripening regime
+  virtual double dN_dr_ripening(double f, double r, double N, double T) const;
+
+  /// dN_dN in the ripening regime
+  virtual double dN_dN_ripening(double f, double r, double N, double T) const;
   
   /// Number of chemical species
   size_t nspecies() const;
@@ -128,6 +176,9 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
 
   /// Check to see if we're still in the nucleation regime
   bool nucleation_(const std::vector<double> & c, double T) const;
+
+  /// Indicator function for nucleation/ripening
+  void sfn_(double f, double T, double & val, double & dval) const;
 
  private:
   std::vector<std::shared_ptr<Interpolate>> c0_;
