@@ -51,6 +51,24 @@ jobs:
             - run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_Fortran_COMPILER=/usr/local/bin/gfortran -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
             - run: make -j 2
             - run: test/drivers/test_drivers.sh
+      test-bindings-windows:
+           runs-on: windows-latest
+           strategy:
+             matrix:
+               btype: [Release, Debug]
+           defaults:
+             run:
+               shell: msys2 {0}
+           steps:
+           - uses: actions/checkout@v2
+           - uses: msys2/setup-msys2@v2
+             with:
+               msystem: MINGW64
+               update: true
+               install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake mingw-w64-x86_64-python-pip mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-scipy mingw-w64-x86_64-python-networkx mingw-w64-x86_64-python-matplotlib mingw-w64-x86_64-python-nose
+           - run: cmake . -G"MSYS Makefiles" -D"WRAP_PYTHON=ON" -D"CMAKE_BUILD_TYPE=${{ matrix.btype }}"
+           - run: make -j 2
+           - run: nosetests
       test-base-windows:
            runs-on: windows-latest
            strategy:
@@ -67,4 +85,6 @@ jobs:
                update: true
                install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake
            - run: cmake . -G"MSYS Makefiles" -D"BUILD_UTILS=ON" -D"CMAKE_BUILD_TYPE=${{ matrix.btype }}"
-           - run: make -j 2
+           - run: make -j
+           - run: export PATH=$PATH:$PWD/lib 
+           - run: test/drivers/test_drivers.sh
