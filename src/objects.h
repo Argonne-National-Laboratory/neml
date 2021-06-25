@@ -66,6 +66,20 @@ private:
   std::vector<std::size_t> vec_size_t_;
 };
 
+template <> inline double & param_type::data<double>() { return double_; }
+template <> inline int & param_type::data<int>() { return int_; }
+template <> inline bool & param_type::data<bool>() { return bool_; }
+template <> inline std::vector<double> & param_type::data<std::vector<double>>() { return vec_double_; }
+template <> inline std::shared_ptr<NEMLObject> & param_type::data<std::shared_ptr<NEMLObject>>() { return neml_object_; }
+template <> inline std::vector<std::shared_ptr<NEMLObject>> & param_type::data<std::vector<std::shared_ptr<NEMLObject>>>() { return vec_neml_object_; }
+template <> inline std::string & param_type::data<std::string>() { return string_; }
+template <> inline list_systems & param_type::data<list_systems>() { return list_systems_; }
+template <> inline std::size_t & param_type::data<std::size_t>() { return size_t_; }
+template <> inline std::vector<std::size_t> & param_type::data<std::vector<std::size_t>>() { return vec_size_t_; }
+
+inline param_type::param_type(const char * val) { data<std::string>() = *val; }
+
+
 /// This is the enum name we assign to each type for the "external" interfaces
 /// to use in reconstructing a type from data
 enum ParamType {

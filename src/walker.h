@@ -157,7 +157,7 @@ class NEML_EXPORT WalkerSofteningModel: public SofteningModel {
 static Register<WalkerSofteningModel> regWalkerSoftening;
 
 /// Thermal rate scaling models
-class ThermalScaling: public NEMLObject {
+class NEML_EXPORT ThermalScaling: public NEMLObject {
  public:
   ThermalScaling();
 
@@ -175,7 +175,7 @@ class ThermalScaling: public NEMLObject {
 static Register<ThermalScaling> regThermalScaling;
 
 /// Walker's actual thermal scaling model
-class ArrheniusThermalScaling: public ThermalScaling {
+class NEML_EXPORT ArrheniusThermalScaling: public ThermalScaling {
  public:
   ArrheniusThermalScaling(std::shared_ptr<Interpolate> Q,
                           double R, double Tref);
@@ -202,7 +202,7 @@ class ArrheniusThermalScaling: public ThermalScaling {
 
 static Register<ArrheniusThermalScaling> regArrheniusThermalScaling;
 
-class IsotropicHardening: public ScalarInternalVariable {
+class NEML_EXPORT IsotropicHardening: public ScalarInternalVariable {
  public:
   IsotropicHardening(std::string name, 
                      std::shared_ptr<ThermalScaling> scale);
@@ -229,7 +229,7 @@ class IsotropicHardening: public ScalarInternalVariable {
   std::shared_ptr<ThermalScaling> scale_;
 };
 
-class ConstantIsotropicHardening: public IsotropicHardening {
+class NEML_EXPORT ConstantIsotropicHardening: public IsotropicHardening {
  public:
   ConstantIsotropicHardening(std::shared_ptr<ThermalScaling> scale = 
                              std::make_shared<ThermalScaling>());
@@ -255,7 +255,7 @@ class ConstantIsotropicHardening: public IsotropicHardening {
 static Register<ConstantIsotropicHardening> regConstantIsotropicHardening;
 
 /// The actual hardening model used in Walker's A617 viscoplastic model
-class WalkerIsotropicHardening: public IsotropicHardening {
+class NEML_EXPORT WalkerIsotropicHardening: public IsotropicHardening {
  public:
   WalkerIsotropicHardening(std::shared_ptr<Interpolate> r0,
                            std::shared_ptr<Interpolate> Rinf,
@@ -300,7 +300,7 @@ class WalkerIsotropicHardening: public IsotropicHardening {
 
 static Register<WalkerIsotropicHardening> regWalkerIsotropicHardening;
 
-class DragStress: public ScalarInternalVariable {
+class NEML_EXPORT DragStress: public ScalarInternalVariable {
  public:
   DragStress(std::string name, 
              std::shared_ptr<ThermalScaling> scale);
@@ -335,7 +335,7 @@ class DragStress: public ScalarInternalVariable {
   std::shared_ptr<ThermalScaling> scale_;
 };
 
-class ConstantDragStress: public DragStress {
+class NEML_EXPORT ConstantDragStress: public DragStress {
  public:
   ConstantDragStress(double value,
                      std::shared_ptr<ThermalScaling> scale = 
@@ -368,7 +368,7 @@ class ConstantDragStress: public DragStress {
 
 static Register<ConstantDragStress> regConstantDragStress;
 
-class WalkerDragStress: public DragStress {
+class NEML_EXPORT WalkerDragStress: public DragStress {
  public:
   WalkerDragStress(std::shared_ptr<Interpolate> d0,
                    std::shared_ptr<Interpolate> d1,
@@ -416,7 +416,7 @@ class WalkerDragStress: public DragStress {
 
 static Register<WalkerDragStress> regWalkerDragStress;
 
-class KinematicHardening: public SymmetricInternalVariable {
+class NEML_EXPORT KinematicHardening: public SymmetricInternalVariable {
  public:
   KinematicHardening(std::string name, 
                      std::shared_ptr<ThermalScaling> scale);
@@ -444,7 +444,7 @@ class KinematicHardening: public SymmetricInternalVariable {
 };
 
 /// Standard Frederick-Armstrong hardening
-class FAKinematicHardening: public KinematicHardening {
+class NEML_EXPORT FAKinematicHardening: public KinematicHardening {
  public:
   FAKinematicHardening(std::shared_ptr<Interpolate> c,
                        std::shared_ptr<Interpolate> g,
@@ -474,7 +474,7 @@ class FAKinematicHardening: public KinematicHardening {
 static Register<FAKinematicHardening> regFAKinematicHardening;
 
 /// Walker's kinematic hardening model
-class WalkerKinematicHardening: public KinematicHardening {
+class NEML_EXPORT WalkerKinematicHardening: public KinematicHardening {
  public:
   WalkerKinematicHardening(std::shared_ptr<Interpolate> c0,
                            std::shared_ptr<Interpolate> c1,
@@ -532,7 +532,7 @@ class WalkerKinematicHardening: public KinematicHardening {
 static Register<WalkerKinematicHardening> regWalkerKinematicHardening;
 
 /// Helper struct for the below
-struct State {
+struct NEML_EXPORT State {
   State(Symmetric S, History h, double T) :
       S(S), h(h), T(T) {};
   Symmetric S;
@@ -682,7 +682,7 @@ History WrappedViscoPlasticFlowRule::gather_derivative_<History>(double * const 
 }
 
 /// Test implementation of a simple flow rule
-class TestFlowRule: public WrappedViscoPlasticFlowRule
+class NEML_EXPORT TestFlowRule: public WrappedViscoPlasticFlowRule
 {
  public:
   TestFlowRule(double eps0, double D, double n, double s0, double K);
@@ -726,7 +726,7 @@ class TestFlowRule: public WrappedViscoPlasticFlowRule
 static Register<TestFlowRule> regTestFlowRule;
 
 /// Full Walker flow rule
-class WalkerFlowRule: public WrappedViscoPlasticFlowRule
+class NEML_EXPORT WalkerFlowRule: public WrappedViscoPlasticFlowRule
 {
  public:
   WalkerFlowRule(

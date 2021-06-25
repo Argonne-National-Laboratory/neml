@@ -37,8 +37,8 @@ mark_as_advanced(STRAIN_RATE_LIMIT)
 add_definitions(-DNEML_STRAIN_RATE_LIMIT=${STRAIN_RATE_LIMIT})
 
 ### Configure standard-ish libraries ###
-set(BLAS_VENDOR Generic)
-set(BLA_VENDOR Generic)
+#set(BLAS_VENDOR Generic)
+#set(BLA_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 
@@ -100,6 +100,11 @@ endif()
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
+      # There is some problem with LTO on mingw
+      if (WIN32)
+	      set(PYBIND11_LTO_CXX_FLAGS "")
+      endif()
+      #add_custom_command(TARGET neml POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy 
 endif()
 
 ### Check if we can validly build shared libraries ###
@@ -112,8 +117,10 @@ if (INSTALL)
       set(LIBRARY_BASE ${INSTALL})
       # This is a terrible hack, but hey it works
       set(CMAKE_BUILD_RPATH "$ORIGIN:$ORIGIN/..")
-else()
+elseif(WRAP_PYTHON)
       set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
+      set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/neml)
+else()
       set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/lib)
 endif()
 
