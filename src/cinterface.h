@@ -11,10 +11,10 @@
 #include <string>
 
 extern "C" {
-NEML_EXPORT typedef neml::NEMLModel NEMLMODEL;
+typedef neml::NEMLModel NEMLMODEL;
 #else
 // The opaque pointer
-NEML_EXPORT typedef struct NEMLMODEL NEMLMODEL;
+typedef struct NEMLMODEL NEMLMODEL;
 #endif
 
 // C interface
