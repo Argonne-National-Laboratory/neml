@@ -86,7 +86,4 @@ jobs:
                install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake
            - run: cmake . -G"MSYS Makefiles" -D"BUILD_UTILS=ON" -D"CMAKE_BUILD_TYPE=${{ matrix.btype }}"
            - run: make -j 2
-           - run: export PATH=$PATH:$PWD/lib
-           - run: ls neml
-           - run: echo $PATH
-           - run: test/drivers/test_drivers.sh
+           - run: PATH=$PATH:$PWD/lib ./test/drivers/test_drivers.sh
