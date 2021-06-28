@@ -14,7 +14,7 @@ jobs:
                     python-version: '3.x'
             - name: Install dependencies
               run: |
-                    sudo apt install cmake libblas-dev liblapack-dev
+                    yum install cmake blas-devel lapack-devel
             - name: Build sdist
               run: |
                     python setup.py sdist
