@@ -3,28 +3,28 @@ name: Make test packages
 on: pull_request
 
 jobs:
-      deploy-linux:
+      deploy_linux:
             runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v2
-      - name: Install python
-        uses: actions/setup-python@v2
-        with:
-              python-version: '3.x'
-      - name: Install dependencies
-        run: |
-              sudo apt install python3-dev python3-pip cmake libboost-dev libblas-dev liblapack-dev
-              python -m pip install --upgrade pip
-              pip install setuptools wheel twine auditwheel
-      - name: Build sdist
-        run: |
-              python setup.py sdist
-      - name: Build manylinux wheel
-        run: |
-              python setup.py bdist_wheel
-              auditwheel repair dist/*.whl
-      - name: Upload to Test PyPi
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-              password: ${{ secrets.PIPY_TEST_PASSWORD }}
-              repository_url: https://test.pypi.org/legacy/
+            steps:
+            - uses: actions/checkout@v2
+            - name: Install python
+              uses: actions/setup-python@v2
+              with:
+                    python-version: '3.x'
+            - name: Install dependencies
+              run: |
+                    sudo apt install python3-dev python3-pip cmake libboost-dev libblas-dev liblapack-dev
+                    python -m pip install --upgrade pip
+                    pip install setuptools wheel twine auditwheel
+            - name: Build sdist
+              run: |
+                    python setup.py sdist
+            - name: Build manylinux wheel
+              run: |
+                    python setup.py bdist_wheel
+                    auditwheel repair dist/*.whl
+            - name: Upload to Test PyPi
+              uses: pypa/gh-action-pypi-publish@master
+              with:
+                    password: ${{ secrets.PIPY_TEST_PASSWORD }}
+                    repository_url: https://test.pypi.org/legacy/
