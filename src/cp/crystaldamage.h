@@ -72,7 +72,7 @@ class NEML_EXPORT CrystalDamageModel: public NEMLObject {
 };
 
 /// Temp class to check interface (delete later)
-class NilDamageModel: public CrystalDamageModel {
+class NEML_EXPORT NilDamageModel: public CrystalDamageModel {
  public:
   NilDamageModel();
 
@@ -123,7 +123,7 @@ static Register<NilDamageModel> regNilDamageModel;
 
 /// Project damage on each plane proportional to some damage measure on the
 /// plane
-class PlanarDamageModel: public CrystalDamageModel {
+class NEML_EXPORT PlanarDamageModel: public CrystalDamageModel {
  public:
   PlanarDamageModel(std::shared_ptr<SlipPlaneDamage> damage,
                     std::shared_ptr<TransformationFunction> shear_transform,
@@ -187,7 +187,7 @@ class PlanarDamageModel: public CrystalDamageModel {
 static Register<PlanarDamageModel> regPlanarDamageModel;
 
 /// Slip plane damage functions
-class SlipPlaneDamage : public NEMLObject {
+class NEML_EXPORT SlipPlaneDamage : public NEMLObject {
  public:
   /// Initial value
   virtual double setup() const = 0;
@@ -219,7 +219,7 @@ class SlipPlaneDamage : public NEMLObject {
 };
 
 /// Accumulated work
-class WorkPlaneDamage : public SlipPlaneDamage
+class NEML_EXPORT WorkPlaneDamage : public SlipPlaneDamage
 {
  public:
   WorkPlaneDamage();
@@ -264,7 +264,7 @@ static Register<WorkPlaneDamage> regWorkPlaneDamage;
 
 /// Transformation functions: map the damage variable + ancillary info into 
 /// the range [0,1]
-class TransformationFunction: public NEMLObject {
+class NEML_EXPORT TransformationFunction: public NEMLObject {
  public:
   /// Map from damage and the normal stress to [0,1]
   virtual double map(double damage, double normal_stress) = 0;
@@ -275,7 +275,7 @@ class TransformationFunction: public NEMLObject {
 };
 
 /// Sigmoid function.  x=0 -> y=0, x=c -> y=1, beta controls smoothing
-class SigmoidTransformation: public TransformationFunction {
+class NEML_EXPORT SigmoidTransformation: public TransformationFunction {
  public:
   SigmoidTransformation(double c, double beta, double cut);
 
@@ -302,7 +302,7 @@ class SigmoidTransformation: public TransformationFunction {
 static Register<SigmoidTransformation> regSigmoidTransformation;
 
 /// Normal stress switch: don't damage compression
-class SwitchTransformation: public TransformationFunction {
+class NEML_EXPORT SwitchTransformation: public TransformationFunction {
  public:
   SwitchTransformation(std::shared_ptr<TransformationFunction> base);
 

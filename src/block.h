@@ -8,7 +8,7 @@ namespace neml {
 //  Update an entire block of models
 //  Input data must be in row major order (i.e. nblock is the first axes)
 //  Input and output must be as full tensors (not Mandel vectors)
-int block_evaluate(
+NEML_EXPORT int block_evaluate(
     std::shared_ptr<NEMLModel> model,
     size_t nblock,
     const double * const e_np1, const double * const e_n,
@@ -21,21 +21,21 @@ int block_evaluate(
     double * const p_np1, const double *  p_n);
 
 /// Fast block tensor to Mandel converter
-void t2m(const double * const tensor, double * const mandel, size_t nblock);
+NEML_EXPORT void t2m(const double * const tensor, double * const mandel, size_t nblock);
 
 /// Static data for t2m
-extern const double t2m_array[54];
+NEML_EXPORT extern const double t2m_array[54];
 
 /// Fast block Mandel to tensor converter
-void m2t(const double * const mandel, double * const tensor, size_t nblock);
+NEML_EXPORT void m2t(const double * const mandel, double * const tensor, size_t nblock);
 
 /// Static data for m2t
-extern const double m2t_array[54];
+NEML_EXPORT extern const double m2t_array[54];
 
 /// Fast block rank 4 Mandel to rank 4 tensor convert
-void m42t4(const double * const mandel, double * const tensor, size_t nblock);
+NEML_EXPORT void m42t4(const double * const mandel, double * const tensor, size_t nblock);
 
 /// Static data for m42t4
-extern const double m42t4_array[2916];
+NEML_EXPORT extern const double m42t4_array[2916];
 
 } // namespace neml

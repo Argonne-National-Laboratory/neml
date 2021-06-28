@@ -1,23 +1,27 @@
 #!/bin/sh
 
-ifile="../regression/models.txt"
-
-IWD=$(pwd)
 cd "$(dirname $0)"
 
-while IFS= read -r line
+for d in ../test_regression/test_*/
 do
-      echo "Beginning test: $line"
-      printf "\tTesting cxx driver..."
-      ../../util/cxx_interface/cxxsimple ../regression/reference.xml "$line" 0.02 100.0 20 300
-      printf " done\n"
-      printf "\tTesting c driver..."
-      ../../util/c_interface/csimple ../regression/reference.xml "$line" 0.02 100.0 20 300
-      printf " done\n"
-      printf "\tTesting fortran driver..."
-      ../../util/f_interface/fsimple ../regression/reference.xml "$line" 0.02 100.0 20 300
-      printf " done\n"
-      echo ""
-done < "$ifile"
-
-cd $IWD
+	echo "Beginning $(basename $d)"
+	printf "\tTesting cxx driver..."
+	if ! ../../util/cxx_interface/cxxsimple "$d/model.xml" "model" 0.1 100.0 100 300; then
+		printf " error!\n"
+		exit -1
+	fi
+	printf " done\n"
+	printf "\tTesting c driver..."
+	if ! ../../util/c_interface/csimple "$d/model.xml" "model" 0.1 100.0 100 300; then
+		printf " error!\n"
+		exit -1
+	fi
+	printf " done\n"
+	printf "\tTesting fortran driver..."
+	if ! ../../util/f_interface/fsimple "$d/model.xml" "model" 0.1 100.0 100 300; then
+		printf " error!\n"
+		exit -1
+	fi
+	printf " done\n"
+	echo ""
+done

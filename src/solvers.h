@@ -96,7 +96,7 @@ double NEML_EXPORT diff_jac_check(Solvable * system, const double * const x, Tri
                       const double * const J);
 
 // Test functions
-class TestPower: public Solvable {
+class NEML_EXPORT TestPower: public Solvable {
  public:
   TestPower(double A, double n, double b, double x0);
 
