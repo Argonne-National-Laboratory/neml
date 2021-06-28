@@ -15,7 +15,7 @@ First install the prerequisites
 
 .. code-block:: console
 
-   apt-get install build-essential git cmake libboost-dev libblas-dev liblapack-dev
+   apt-get install build-essential git cmake libblas-dev liblapack-dev
 
 Clone the neml source code
 
