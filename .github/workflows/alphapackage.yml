@@ -3,8 +3,9 @@ name: Make test packages
 on: pull_request
 
 jobs:
-      deploy_linux:
+      deploy_linux_test:
             runs-on: ubuntu-latest
+            container: quay.io/pypa/manylinux2014_x86_64
             steps:
             - uses: actions/checkout@v2
             - name: Install python
@@ -13,9 +14,7 @@ jobs:
                     python-version: '3.x'
             - name: Install dependencies
               run: |
-                    sudo apt install python3-dev python3-pip cmake libboost-dev libblas-dev liblapack-dev
-                    python -m pip install --upgrade pip
-                    pip install setuptools wheel twine auditwheel
+                    sudo apt install cmake libblas-dev liblapack-dev
             - name: Build sdist
               run: |
                     python setup.py sdist
