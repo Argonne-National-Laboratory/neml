@@ -39,6 +39,12 @@ target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRAR
 generate_export_header(neml)
 generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_SOURCE_DIR}/src/neml_export.h)
 
+# Copy library to standard location (lib) if we're building the bindings
+# This is to maintain backward compatibility with the old build approach
+if (WRAP_PYTHON)
+      add_custom_command(TARGET neml POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:neml> ${PROJECT_BINARY_DIR}/lib) 
+endif()
+
 ### python bindings in neml ###
 if (WRAP_PYTHON)
       set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MODULE_BASE})

@@ -37,8 +37,6 @@ mark_as_advanced(STRAIN_RATE_LIMIT)
 add_definitions(-DNEML_STRAIN_RATE_LIMIT=${STRAIN_RATE_LIMIT})
 
 ### Configure standard-ish libraries ###
-#set(BLAS_VENDOR Generic)
-#set(BLA_VENDOR Generic)
 FIND_PACKAGE(BLAS REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 
@@ -104,7 +102,6 @@ if (WRAP_PYTHON)
       if (WIN32)
 	      set(PYBIND11_LTO_CXX_FLAGS "")
       endif()
-      #add_custom_command(TARGET neml POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy 
 endif()
 
 ### Check if we can validly build shared libraries ###
