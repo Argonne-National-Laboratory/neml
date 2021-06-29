@@ -12,11 +12,11 @@ jobs:
                     path: neml
             - name: Install dependencies
               run: |
-                    yum -y install cmake blas-devel lapack-devel
+                    yum -y install cmake blas-devel lapack-devel zlib-devel
             - name: Build sdist
               run: |
                     cd $GITHUB_WORKSPACE/neml
-                    /opt/python/cp38-cp38/bin/python setup.py sdist --dist-dir=/source_packages
+                    /opt/python/cp38-cp38/bin/python setup.py sdist --dist-dir=$GITHUB_WORKSPACE/source_packages
             - name: Build manylinux wheel on each version
               run: |
                     for PYTHON in /opt/python/*/bin/; do
@@ -35,3 +35,14 @@ jobs:
                         $PYTHON/pip install neml --no-index -f $GITHUB_WORKSPACE/binary_packages
                         $PYTHON/nosetests $GITHUB_WORKSPACE/neml/test/
                     done
+            - name: Move packages to the standard location
+              run: |
+                    cd $GITHUB_WORKSPACE/neml
+                    mkdir -p dist
+                    cp $GITHUB_WORKSPACE/source_packages/* dist
+                    cp $GITHUB_WORKSPACE/binary_packages/* dist
+            - name: Upload the packages to PyPi test
+              uses: pypa/gh-action-pypi-publish@master
+              with:
+                    password: ${{ secrets.PIPY_TEST_PASSWORD }}
+                    repository_url: https://test.pypi.org/legacy/
