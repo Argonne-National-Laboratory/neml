@@ -8,6 +8,8 @@ jobs:
             container: quay.io/pypa/manylinux2014_x86_64
             steps:
             - uses: actions/checkout@v2
+              with:
+                    path: neml
             - name: Install dependencies
               run: |
                     yum -y install cmake blas-devel lapack-devel
@@ -17,18 +19,18 @@ jobs:
             - name: Build manylinux wheel on each version
               run: |
                     for PYTHON in /opt/python/*/bin/; do
-                        $PYTHON/pip install -r /neml/requirements.txt
-                        $PYTHON/pip wheel /neml/ --no-deps -w /original_binary_packages
+                        $PYTHON/pip install -r $GITHUB_WORKSPACE/neml/requirements.txt
+                        $PYTHON/pip wheel $GITHUB_WORKSPACE/neml/ --no-deps -w $GITHUB_WORKSPACE/original_binary_packages
                     done
             - name: Fix packages with auditwheel
               run: | 
-                    for whl in /original_binary_packages/*.whl; do
-                        auditwheel repair $whl --plat manylinux2014_x86_64 -w /binary_packages
+                    for whl in $GITHUB_WORKSPACE/original_binary_packages/*.whl; do
+                        auditwheel repair $whl --plat manylinux2014_x86_64 -w $GITHUB_WORKSPACE/binary_packages
                     done
             - name: Test each binary package
               run: |
                     cd $HOME
                     for PYTHON in /opt/python/*/bin/; do
-                        $PYTHON/pip install neml --no-index -f /binary_packages
-                        $PYTHON/nosetests /neml/test/
+                        $PYTHON/pip install neml --no-index -f $GITHUB_WORKSPACE/binary_packages
+                        $PYTHON/nosetests $GITHUB_WORKSPACE/neml/test/
                     done
