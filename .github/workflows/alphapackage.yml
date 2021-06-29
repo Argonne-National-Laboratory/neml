@@ -41,5 +41,5 @@ jobs:
                     TWINE_PASSWORD: ${{ secrets.PIPY_TEST_PASSWORD }}
               run: |
                     /opt/python/cp38-cp38/bin/pip install twine
-                    /opt/python/cp38-cp38/bin/twine upload --repository testpypi $GITHUB_WORKSPACE/source_packages
-                    /opt/python/cp38-cp38/bin/twine upload --repository testpypi $GITHUB_WORKSPACE/binary_packages
+                    /opt/python/cp38-cp38/bin/twine upload --repository testpypi $GITHUB_WORKSPACE/source_packages/*
+                    /opt/python/cp38-cp38/bin/twine upload --repository testpypi $GITHUB_WORKSPACE/binary_packages/*
