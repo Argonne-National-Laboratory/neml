@@ -19,7 +19,7 @@ jobs:
                     /opt/python/cp38-cp38/bin/python setup.py sdist --dist-dir=$GITHUB_WORKSPACE/source_packages
             - name: Build manylinux wheel on each version
               run: |
-                    for PYTHON in /opt/python/{cp36-cp36m,cp37-cp37m,cp38-cp38,cp39-cp39,pp37-pypy37_pp73}/bin/; do
+                    for PYTHON in /opt/python/{cp38-cp38}/bin/; do
                         $PYTHON/pip install -r $GITHUB_WORKSPACE/neml/requirements.txt
                         $PYTHON/pip wheel $GITHUB_WORKSPACE/neml/ --no-deps -w $GITHUB_WORKSPACE/original_binary_packages
                     done
@@ -31,23 +31,15 @@ jobs:
             - name: Test each binary package
               run: |
                     cd $HOME
-                    for PYTHON in /opt/python/{cp36-cp36m,cp37-cp37m,cp38-cp38,cp39-cp39,pp37-pypy37_pp73}/bin/; do
+                    for PYTHON in /opt/python/{cp38-cp38}/bin/; do
                         $PYTHON/pip install neml --no-index -f $GITHUB_WORKSPACE/binary_packages
                         $PYTHON/nosetests $GITHUB_WORKSPACE/neml/test/
                     done
-            - name: Move packages to the standard location
-              run: |
-                    cd $GITHUB_WORKSPACE/neml
-                    mkdir -p dist
-                    pwd
-                    ls 
-                    ls dist
-                    cp $GITHUB_WORKSPACE/source_packages/* dist
-                    cp $GITHUB_WORKSPACE/binary_packages/* dist
-                    ls
-                    ls dist
             - name: Upload the packages to PyPi test
-              uses: pypa/gh-action-pypi-publish@master
-              with:
-                    password: ${{ secrets.PIPY_TEST_PASSWORD }}
-                    repository_url: https://test.pypi.org/legacy/
+              env:
+                    TWINE_USERNAME: __token__
+                    TWINE_PASSWORD: ${{ secrets.PIPY_TEST_PASSWORD }}
+              run:
+                    /opt/python/cp38-cp38/bin/pip install twine
+                    /opt/python/cp38-cp38/bin/twine upload --repository testpypi $GITHUB_WORKSPACE/source_packages
+                    /opt/python/cp38-cp38/bin/twine upload --repository testpypi $GITHUB_WORKSPACE/binary_packages
