@@ -5,7 +5,7 @@ on: pull_request
 jobs:
       deploy_linux_test:
             runs-on: ubuntu-latest
-            container: quay.io/pypa/manylinux2010_x86_64
+            container: quay.io/pypa/manylinux2014_x86_64
             steps:
             - uses: actions/checkout@v2
             - name: Install dependencies
@@ -13,10 +13,22 @@ jobs:
                     yum -y install cmake blas-devel lapack-devel
             - name: Build sdist
               run: |
-                    /opt/python/cp38-cp38/bin/python setup.py sdist
+                    /opt/python/cp38-cp38/bin/python setup.py sdist --dist-dir=/source_packages
             - name: Build manylinux wheel on each version
               run: |
                     for PYTHON in /opt/python/*/bin/; do
                         $PYTHON/pip install -r /neml/requirements.txt
-                        $PYTHON/pip wheel /neml/ --no-deps -w wheelhouse/
+                        $PYTHON/pip wheel /neml/ --no-deps -w /original_binary_packages
+                    done
+            - name: Fix packages with auditwheel
+              run: | 
+                    for whl in /original_binary_packages/*.whl; do
+                        auditwheel repair $whl --plat manylinux2014_x86_64 -w /binary_packages
+                    done
+            - name: Test each binary package
+              run: |
+                    cd $HOME
+                    for PYTHON in /opt/python/*/bin/; do
+                        $PYTHON/pip install neml --no-index -f /binary_packages
+                        $PYTHON/nosetests /neml/test/
                     done
