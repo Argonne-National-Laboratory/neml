@@ -14,7 +14,7 @@ jobs:
             - name: Test avail
               run: |
                     for PYTHON in /opt/python/*/bin/; do
-                        echo $(PYTHON
+                        echo $(PYTHON)
                     done
             - name: Build manylinux wheel
               run: |
