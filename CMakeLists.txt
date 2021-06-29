@@ -62,7 +62,7 @@ endif()
 if(APPLE)
 #      set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
 #      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
-      set(CMAKE_SKIP_RPATH TRUE)
+      set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 endif(APPLE)
 ######
 
@@ -110,12 +110,12 @@ if ((NOT BUILD_SHARED_LIBS) AND WRAP_PYTHON)
       message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
 endif()
 
-#if (INSTALL)
-#      set(MODULE_BASE ${INSTALL})
-#      set(LIBRARY_BASE ${INSTALL})
-#      # This is a terrible hack, but hey it works
-#      set(CMAKE_BUILD_RPATH "$ORIGIN:$ORIGIN/..")
-if(WRAP_PYTHON)
+if (INSTALL)
+      set(MODULE_BASE ${INSTALL})
+      set(LIBRARY_BASE ${INSTALL})
+      # This is a terrible hack, but hey it works
+      set(CMAKE_BUILD_RPATH "$ORIGIN:$ORIGIN/..")
+elseif(WRAP_PYTHON)
       set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
       set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/neml)
 else()
