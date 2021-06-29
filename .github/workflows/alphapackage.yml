@@ -8,10 +8,6 @@ jobs:
             container: quay.io/pypa/manylinux2014_x86_64
             steps:
             - uses: actions/checkout@v2
-            - name: Install python
-              uses: actions/setup-python@v2
-              with:
-                    python-version: '3.x'
             - name: Install dependencies
               run: |
                     yum -y install cmake blas-devel lapack-devel
