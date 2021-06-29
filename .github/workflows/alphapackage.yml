@@ -5,21 +5,19 @@ on: pull_request
 jobs:
       deploy_linux_test:
             runs-on: ubuntu-latest
-            container: quay.io/pypa/manylinux2014_x86_64
+            container: quay.io/pypa/manylinux2010_x86_64
             steps:
             - uses: actions/checkout@v2
             - name: Install dependencies
               run: |
                     yum -y install cmake blas-devel lapack-devel
-            - name: Build sdist
+            - name: Test avail
               run: |
-                    python setup.py sdist
+                    for PYTHON in /opt/python/*/bin/; do
+                        echo $(PYTHON
+                    done
             - name: Build manylinux wheel
               run: |
-                    python setup.py bdist_wheel
-                    auditwheel repair dist/*.whl
-            - name: Upload to Test PyPi
-              uses: pypa/gh-action-pypi-publish@master
-              with:
-                    password: ${{ secrets.PIPY_TEST_PASSWORD }}
-                    repository_url: https://test.pypi.org/legacy/
+                    for PYTHON in /opt/python/*/bin/; do
+                        $(PYTHON) setup.py bdist_wheel
+                    done
