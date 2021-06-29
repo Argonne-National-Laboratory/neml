@@ -11,7 +11,8 @@ jobs:
                   CIBW_BEFORE_BUILD: pip install -r requirements.txt
                   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
                   CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-                  CIBW_TEST_COMMAND: nosetests {project}/test
+                  CIBW_TEST_REQUIRES: nose
+                  CIBW_TEST_COMMAND: pwd ; which nosetests ; nosetests {project}/test
             name: Build wheels on ${{ matrix.os }}
             runs-on: ${{ matrix.os }}
             strategy:
