@@ -107,7 +107,7 @@ setup (
     packages=find_packages(),
     # Locate tests
     test_suite='nose.collector',
-    tests_require=['nose'],
+    tests_require=['nose','tox'],
     # Python dependencies
     install_requires=[
       'numpy',

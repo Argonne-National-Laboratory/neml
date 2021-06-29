@@ -5,19 +5,18 @@ on: pull_request
 jobs:
       deploy_linux_test:
             runs-on: ubuntu-latest
-            container: quay.io/pypa/manylinux2014_x86_64
+            container: quay.io/pypa/manylinux2010_x86_64
             steps:
             - uses: actions/checkout@v2
             - name: Install dependencies
               run: |
                     yum -y install cmake blas-devel lapack-devel
-            - name: Test avail
+            - name: Build sdist
+              run: |
+                    /opt/python/cp38-cp38/bin/python setup.py sdist
+            - name: Build manylinux wheel on each version
               run: |
                     for PYTHON in /opt/python/*/bin/; do
-                        echo $(PYTHON)
-                    done
-            - name: Build manylinux wheel
-              run: |
-                    for PYTHON in /opt/python/*/bin/; do
-                        $(PYTHON) setup.py bdist_wheel
+                        $PYTHON/pip install -r /neml/requirements.txt
+                        $PYTHON/pip wheel /neml/ --no-deps -w wheelhouse/
                     done
