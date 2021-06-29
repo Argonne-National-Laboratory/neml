@@ -55,7 +55,7 @@ jobs:
                   - uses: actions/checkout@v2
                   - name: Setup for build
                     run: pip install -r requirements.txt
-                  - name: Build wheet
+                  - name: Build wheel
                     run: pip wheel . --no-deps
       build_sdist:
             name: Build source distribution
