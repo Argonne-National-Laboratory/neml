@@ -15,6 +15,7 @@ jobs:
                     yum -y install cmake blas-devel lapack-devel
             - name: Build sdist
               run: |
+                    cd $GITHUB_WORKSPACE/neml
                     /opt/python/cp38-cp38/bin/python setup.py sdist --dist-dir=/source_packages
             - name: Build manylinux wheel on each version
               run: |
