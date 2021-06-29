@@ -8,6 +8,7 @@ import re
 import sys
 import platform
 import subprocess
+import sysconfig
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -16,6 +17,20 @@ from distutils.version import LooseVersion
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding = 'utf-8') as f:
   long_description = f.read()
+
+def get_config_args():
+  args = []
+
+  # Include
+  args.append('-DPYTHON_INCLUDE_DIRS=%s' % sysconfig.get_path('include'))
+
+  # Bin
+  args.append('-DPYTHON_EXECUTABLE=%s' % sys.executable)
+
+  # Lib
+  args.append('-DPYTHON_LIBRARY=%s' % sysconfig.get_path('stdlib'))
+
+  return args
 
 class CMakeExtension(Extension):
   def __init__(self, name, sourcedir=''):
@@ -56,6 +71,9 @@ class CMakeBuild(build_ext):
 
     cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
     build_args += ['--', '-j2']
+
+    # Add the python info
+    cmake_args += get_config_args()
 
     if platform.system() == "Windows":
       cmake_args += ['-GMSYS Makefiles']
