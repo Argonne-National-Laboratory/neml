@@ -5,7 +5,7 @@ on: pull_request
 jobs:
       deploy_linux_test:
             runs-on: ubuntu-latest
-            container: quay.io/pypa/manylinux2010_x86_64
+            container: quay.io/pypa/manylinux2014_x86_64
             steps:
             - uses: actions/checkout@v2
             - name: Install dependencies
