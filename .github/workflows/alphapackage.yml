@@ -39,8 +39,13 @@ jobs:
               run: |
                     cd $GITHUB_WORKSPACE/neml
                     mkdir -p dist
+                    pwd
+                    ls 
+                    ls dist
                     cp $GITHUB_WORKSPACE/source_packages/* dist
                     cp $GITHUB_WORKSPACE/binary_packages/* dist
+                    ls
+                    ls dist
             - name: Upload the packages to PyPi test
               uses: pypa/gh-action-pypi-publish@master
               with:
