@@ -11,21 +11,13 @@ jobs:
                   CIBW_BEFORE_BUILD: pip install -r requirements.txt
                   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
                   CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-            defaults:
-                  run:
-                        shell: msys2
             name: Build wheels on ${{ matrix.os }}
             runs-on: ${{ matrix.os }}
             strategy:
                   matrix:
-                        os: [ubuntu-latest, macos-latest, windows-latest]
+                        os: [ubuntu-latest, macos-latest]
             steps:
                   - uses: actions/checkout@v2
-                  - uses: msys2/setup-msys2@v2
-                    with:
-                          msystem: MINGW
-                          update: true
-                          install: mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake  
                   - uses: actions/setup-python@v2
                     with:
                           python-version: '3.8'
