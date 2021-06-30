@@ -6,7 +6,7 @@ jobs:
       build_wheels_mac_linux:
             env:
                   CIBW_SKIP: cp27-* cp35-*
-                  CIBW_BEFORE_ALL_LINUX: yum -y install cmake blas-devel lapack-devel
+                  CIBW_BEFORE_ALL_LINUX: yum -y install cmake cmake3 blas-devel lapack-devel && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 --slave /usr/local/bin/ctest ctest /usr/bin/ctest --slave /usr/local/bin/cpack cpack /usr/bin/cpack --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake --family cmake && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 --family cmake
                   CIBW_BEFORE_ALL_MACOS: brew install cmake openblas superlu gfortran
                   CIBW_BEFORE_BUILD: pip install -r requirements.txt
                   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
