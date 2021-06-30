@@ -42,6 +42,7 @@ generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_SOURCE_DIR}/src/neml_expo
 # Copy library to standard location (lib) if we're building the bindings
 # This is to maintain backward compatibility with the old build approach
 if (WRAP_PYTHON)
+      file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
       add_custom_command(TARGET neml POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:neml> ${PROJECT_BINARY_DIR}/lib) 
 endif()
 

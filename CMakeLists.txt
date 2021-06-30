@@ -110,9 +110,16 @@ if ((NOT BUILD_SHARED_LIBS) AND WRAP_PYTHON)
       message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
 endif()
 
-if(WRAP_PYTHON)
+# We are building a python package
+if (INSTALL)
+      set(MODULE_BASE ${INSTALL})
+      set(LIBRARY_BASE ${INSTALL})
+      set(CMAKE_SKIP_RPATH TRUE)
+# We are building the wrappers locally
+elseif(WRAP_PYTHON)
       set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
       set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/neml)
+# We are just building the library itself
 else()
       set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/lib)
 endif()
