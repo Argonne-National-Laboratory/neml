@@ -1,0 +1,81 @@
+/batch,list
+/title, mvpl-um01, gal, usermat.F test case
+/com,
+/com, This is a single element test case for testing usermat.F
+/com, usermat.F is user materials subroutine for 18x elements.
+/com, The material subroutine provided as the example
+/com, is the same as the TB, BISO.
+/com, A side by side comparison is made for two 185 elements,
+/com, among which one is defined by TB,BISO, and another
+/com, is defined as TB,USER. They are expected to produce
+/com, the same results.
+/com, uniaxial tension stress, large deformation.
+/com,
+/UNITS, SI
+/NOPR
+/NOLIST
+/PREP7
+*get,twallbefore,active,,time,wall
+
+PRED, OFF
+NLGEOM, OFF
+
+gr91 = 1
+
+! define material by tb,user
+
+MAT, gr91
+BLOCK,0,1,0,1,0,1 ! Create a block that is 1 x 1 x 1
+ET,1,SOLID185 ! Use SOLID185 Elements
+
+tb,user,gr91,0,
+tb,state,gr91,,1000
+
+ESIZE,1 ! Set element size to 0.005
+VMESH,ALL ! Mesh all areas
+
+! boundary condition
+
+NSEL, S, LOC, X, 0
+D, ALL, UX, 0
+
+NSEL, R, LOC, Y, 0
+D, ALL, UY, 0
+
+NSEL, R, LOC, Z, 0
+D, ALL, UZ, 0
+
+NALL
+
+FINISH
+
+
+/SOLU
+
+ANTYPE,TRANS 
+AUTOTS,ON
+TUNIF, 298
+DSPOPTION,,,,,,PERFORMANCE
+
+NSEL, R, LOC, X, 1
+!NSUBST, 20, 100, 1
+D, ALL, VELX, 0.000083
+DELTIM, 10, 10, 10
+TIME, 1000
+
+DLIST,ALL
+
+NSEL, ALL
+
+OUTRES, , -1000
+!OUTPR, ALL, 1
+
+SOLVE
+FINISH
+
+ *get,twallafter,active,,time,wall
+
+/POST26
+
+ESOL, 2, 1, , S, X, Stress
+ESOL, 3, 1, , EPEL, X, Strain

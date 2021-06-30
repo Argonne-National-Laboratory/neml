@@ -1,0 +1,85 @@
+/batch,list
+/title, mvpl-um01, gal, usermat.F test case
+/com,
+/com, This is a single element test case for testing usermat.F
+/com, usermat.F is user materials subroutine for 18x elements.
+/com, The material subroutine provided as the example
+/com, is the same as the TB, BISO.
+/com, A side by side comparison is made for two 185 elements,
+/com, among which one is defined by TB,BISO, and another
+/com, is defined as TB,USER. They are expected to produce
+/com, the same results.
+/com, uniaxial tension stress, large deformation.
+/com,
+/nopr
+/nolist
+/prep7
+ele1=185
+ele2=185
+mat1=1
+mat2=2
+et,1,ele1
+keyopt,1,2,1
+mat,mat1
+block,0,1,0,1,0,1
+esize,,1
+vmesh,1
+mat,mat2
+block,0,1,0,1,0,1
+esize,,1
+vmesh,2
+elist
+! define material 1 by tb,biso
+mp,ex  ,mat1,20e5
+mp,nuxy,mat1,0.3
+tb,biso,mat1,2,4
+tbtemp,1.0
+tbdata,1,1e3,100,
+tbtemp,2.0
+tbdata,1,2e3,100,
+! define material 2 by tb,user
+tb,user,mat2,2,4
+tbtemp,1.0
+tbdata,1,19e5, 0.3, 1e3,100,
+tbtemp,2.0
+tbdata,1,21e5, 0.3, 2e3,100,
+tb,state,mat2,,1
+! boundary condition
+nsel,s,loc,x
+d,all,ux
+nall
+nsel,s,loc,y
+d,all,uy
+nall
+nsel,s,loc,z
+d,all,uz
+nall
+fini
+/solu
+tunif,1.5
+nlgeom,on
+nsel,s,loc,y,1
+nsubst,20,100,1
+d,all,uy,1.0
+time,1
+nall
+outres,,-10
+outpr,all,-10
+solv
+fini
+/post26
+esol,2,1,,s,x,SX_BISO
+esol,3,2,,s,x,SX_USER
+esol,4,1,,s,y,SY_BISO
+esol,5,2,,s,y,SY_USER
+! first temp.
+! E, posn, sigy, H
+- 14 -
+
+esol,6,1,,eppl,x,EPX_BISO
+esol,7,2,,eppl,x,EPX_USER
+esol,8,1,,eppl,y,EPY_BISO
+esol,9,2,,eppl,y,EPY_USER
+prvar,2,3,4,5
+prvar,6,7,8,9
+fini

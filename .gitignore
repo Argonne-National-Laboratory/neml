@@ -1,7 +1,5 @@
 *.pyc
-*.o
 *.swp
-*.so
 *~
 CMakeCache.txt
 CMakeFiles
@@ -17,7 +15,6 @@ util/f_interface/fsimple
 *.so.dylib*
 *.dylib
 *.dylib.*
-*.so.*
 examples/profiling/profile
 doc/html
 doc/pdf
