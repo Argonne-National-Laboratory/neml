@@ -8,6 +8,7 @@ import re
 import sys
 import platform
 import subprocess
+import sysconfig
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -16,6 +17,20 @@ from distutils.version import LooseVersion
 this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding = 'utf-8') as f:
   long_description = f.read()
+
+def get_config_args():
+  args = []
+
+  # Include
+  args.append('-DPYTHON_INCLUDE_DIRS=%s' % sysconfig.get_path('include'))
+
+  # Bin
+  args.append('-DPYTHON_EXECUTABLE=%s' % sys.executable)
+
+  # Lib
+  args.append('-DPYTHON_LIBRARY=%s' % sysconfig.get_path('stdlib'))
+
+  return args
 
 class CMakeExtension(Extension):
   def __init__(self, name, sourcedir=''):
@@ -54,14 +69,14 @@ class CMakeBuild(build_ext):
     cfg = 'Debug' if self.debug else 'Release'
     build_args = ['--config', cfg]
 
+    cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+    build_args += ['--', '-j2']
+
+    # Add the python info
+    cmake_args += get_config_args()
+
     if platform.system() == "Windows":
-      cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
-      if sys.maxsize > 2**32:
-          cmake_args += ['-A', 'x64']
-      build_args += ['--', '/m']
-    else:
-      cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-      build_args += ['--', '-j2']
+      cmake_args += ['-GMSYS Makefiles']
 
     env = os.environ.copy()
     env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
@@ -110,7 +125,7 @@ setup (
     packages=find_packages(),
     # Locate tests
     test_suite='nose.collector',
-    tests_required=['nose'],
+    tests_require=['nose','tox'],
     # Python dependencies
     install_requires=[
       'numpy',
