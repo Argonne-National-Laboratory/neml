@@ -97,6 +97,7 @@ endif()
 ### PYTHON BINDINGS ###
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
+      find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
       # There is some problem with LTO on mingw
       if (WIN32)
