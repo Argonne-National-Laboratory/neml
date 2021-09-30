@@ -28,7 +28,7 @@ jobs:
                     run: |
                           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GITHUB_WORKSPACE/lib
                           echo $LD_LIBRARY_PATH
-                          ls $LD_LIBRARY_PATH
+                          ls $GITHUB_WORKSPACE/lib
                           python -m cibuildwheel --output-dir wheelhouse
                   - uses: actions/upload-artifact@v2
                     with:
