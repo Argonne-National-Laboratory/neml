@@ -27,6 +27,7 @@ jobs:
                   - name: Build wheels
                     run: |
                           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GITHUB_WORKSPACE/lib
+                          ls $GITHUB_WORKSPACE
                           python -m cibuildwheel --output-dir wheelhouse
                   - uses: actions/upload-artifact@v2
                     with:
