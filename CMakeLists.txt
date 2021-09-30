@@ -115,7 +115,6 @@ endif()
 if (INSTALL)
       set(MODULE_BASE ${INSTALL})
       set(LIBRARY_BASE ${INSTALL})
-      set(CMAKE_INSTALL_RPATH ".")
 # We are building the wrappers locally
 elseif(WRAP_PYTHON)
       set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
