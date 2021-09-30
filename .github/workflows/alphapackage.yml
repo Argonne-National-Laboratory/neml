@@ -13,7 +13,8 @@ jobs:
                   CIBW_MANYLINUX_I686_IMAGE: manylinux2014
                   CIBW_TEST_REQUIRES: nose
                   CIBW_TEST_COMMAND: nosetests {project}/test
-                  CIBW_ENVIRONMENT: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
+                  CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
+                  CIBW_ENVIRONMENT_MACOS: DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$PWD/lib
             name: Build wheels on ${{ matrix.os }}
             runs-on: ${{ matrix.os }}
             strategy:
