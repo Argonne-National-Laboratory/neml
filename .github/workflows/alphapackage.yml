@@ -7,11 +7,12 @@ jobs:
             env:
                   CIBW_BEFORE_ALL_LINUX: yum -y install cmake cmake3 blas-devel lapack-devel && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 --slave /usr/local/bin/ctest ctest /usr/bin/ctest --slave /usr/local/bin/cpack cpack /usr/bin/cpack --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake --family cmake && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 --family cmake
                   CIBW_BEFORE_ALL_MACOS: brew install cmake openblas superlu gfortran
-                  CIBW_BEFORE_BUILD: pip install -r requirements.txt && cmake -D CMAKE_BUILD_TYPE=Release -DUSE_OPENMP=OFF . && make -j 2 && rm -rf CMakeCache.txt CMakeFiles 
+                  CIBW_BEFORE_BUILD: pip install -r requirements.txt && cmake -D CMAKE_BUILD_TYPE=Release -DUSE_OPENMP=OFF . && make -j 2 && rm -rf CMakeCache.txt CMakeFiles && ls $GITHUB_WORKSPACE/lib
                   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
                   CIBW_MANYLINUX_I686_IMAGE: manylinux2014
                   CIBW_TEST_REQUIRES: nose
                   CIBW_TEST_COMMAND: nosetests {project}/test
+                  CIBW_ENVIRONMENT: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
             name: Build wheels on ${{ matrix.os }}
             runs-on: ${{ matrix.os }}
             strategy:
@@ -25,10 +26,7 @@ jobs:
                   - name: Install cibuildwheel
                     run: python -m pip install cibuildwheel
                   - name: Build wheels
-                    run: |
-                          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GITHUB_WORKSPACE/lib
-                          ls $GITHUB_WORKSPACE
-                          python -m cibuildwheel --output-dir wheelhouse
+                    run: python -m cibuildwheel --output-dir wheelhouse
                   - uses: actions/upload-artifact@v2
                     with:
                           path: ./wheelhouse/*.whl
