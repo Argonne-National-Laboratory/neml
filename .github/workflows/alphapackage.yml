@@ -5,7 +5,6 @@ on: pull_request
 jobs:
       build_wheels_mac_linux:
             env:
-                  CIBW_SKIP: cp27-* cp35-*
                   CIBW_BEFORE_ALL_LINUX: yum -y install cmake cmake3 blas-devel lapack-devel && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 --slave /usr/local/bin/ctest ctest /usr/bin/ctest --slave /usr/local/bin/cpack cpack /usr/bin/cpack --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake --family cmake && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 --family cmake
                   CIBW_BEFORE_ALL_MACOS: brew install cmake openblas superlu gfortran
                   CIBW_BEFORE_BUILD: pip install -r requirements.txt
@@ -30,33 +29,6 @@ jobs:
                   - uses: actions/upload-artifact@v2
                     with:
                           path: ./wheelhouse/*.whl
-      build_wheels_windows:
-            strategy:
-                  matrix:
-                        python-version: [3.6,3.7,3.8,3.9]
-            name: Build wheels on windows-latest, python ${{ matrix.python-version }}
-            runs-on: windows-latest
-            defaults:
-                  run:
-                        shell: msys2 {0}
-            steps:
-                  - uses: msys2/setup-msys2@v2
-                    with:
-                          msystem: MINGW64
-                          update: true
-                          install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake
-                  - uses: actions/setup-python@v2
-                    with:
-                          python-version: ${{ matrix.python-version }}
-                  - name: Install pip
-                    run: |
-                          curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-                          python get-pip.py
-                  - uses: actions/checkout@v2
-                  - name: Setup for build
-                    run: pip install -r requirements.txt
-                  - name: Build wheel
-                    run: pip wheel . --no-deps
       build_sdist:
             name: Build source distribution
             runs-on: ubuntu-latest
