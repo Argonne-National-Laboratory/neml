@@ -1,7 +1,5 @@
-name: Make test packages
-
+name: Make and test python packages
 on: pull_request
-
 jobs:
       build_wheels_mac_linux:
             env:
