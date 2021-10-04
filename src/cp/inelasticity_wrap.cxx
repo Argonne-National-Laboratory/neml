@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "inelasticity.h"
+#include "cp/inelasticity.h"
 
 namespace py = pybind11;
 

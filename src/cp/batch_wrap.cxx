@@ -1,6 +1,6 @@
-#include "../pyhelp.h" // include first to avoid redef warning
+#include "pyhelp.h" // include first to avoid redef warning
 
-#include "batch.h"
+#include "cp/batch.h"
 
 namespace py = pybind11;
 

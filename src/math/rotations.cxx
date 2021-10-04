@@ -1,6 +1,6 @@
-#include "rotations.h"
+#include "math/rotations.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 
 #include <stdexcept>
 #include <algorithm>

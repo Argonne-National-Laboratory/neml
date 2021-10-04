@@ -1,4 +1,4 @@
-#include "slipharden.h"
+#include "cp/slipharden.h"
 
 #include <stdexcept>
 

@@ -1,6 +1,6 @@
-#include "crystallography.h"
+#include "cp/crystallography.h"
 
-#include "../math/nemlmath.h"
+#include "math/nemlmath.h"
 
 #include <cmath>
 #include <stdexcept>

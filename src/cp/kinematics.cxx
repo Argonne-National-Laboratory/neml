@@ -1,4 +1,4 @@
-#include "kinematics.h"
+#include "cp/kinematics.h"
 
 namespace neml {
 

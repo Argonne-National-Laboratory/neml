@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "tensors.h"
+#include "math/tensors.h"
 
 #include <iostream>
 #include <string>

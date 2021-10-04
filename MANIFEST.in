@@ -2,6 +2,7 @@ include LICENSE
 include *.py
 include *.txt *.md
 recursive-include src *.cxx *.h *.cmake *.txt
+recursive-include include *.h
 recursive-include test *.xml *.txt *.pickle
 graft pybind11
 graft rapidxml

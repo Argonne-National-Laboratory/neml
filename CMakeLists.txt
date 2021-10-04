@@ -97,29 +97,25 @@ endif()
 ### PYTHON BINDINGS ###
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
-      find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+      ### Check if we can validly build shared libraries ###
+      if ((NOT BUILD_SHARED_LIBS))
+            message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
+      endif()
+
+      # Setup RPATH so it works (hopefully) on install and in the build directory
+      set(CMAKE_SKIP_BUILD_RPATH FALSE)
+      set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+      # This is the damn thing to fix
+      set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib;$ORIGIN/../../lib")
+
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
+      add_subdirectory(pybind11 neml)
       # There is some problem with LTO on mingw
       if (WIN32)
 	      set(PYBIND11_LTO_CXX_FLAGS "")
       endif()
-endif()
 
-### Check if we can validly build shared libraries ###
-if ((NOT BUILD_SHARED_LIBS) AND WRAP_PYTHON)
-      message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
-endif()
 
-if (INSTALL)
-      set(MODULE_BASE ${INSTALL})
-      set(LIBRARY_BASE ${INSTALL})
-      # This is a terrible hack, but hey it works
-      set(CMAKE_BUILD_RPATH "$ORIGIN:$ORIGIN/..")
-elseif(WRAP_PYTHON)
-      set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
-      set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/neml)
-else()
-      set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/lib)
 endif()
 
 ### BASE LIBRARY ###

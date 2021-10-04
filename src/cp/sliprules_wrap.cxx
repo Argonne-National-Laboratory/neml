@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "sliprules.h"
+#include "cp/sliprules.h"
 
 namespace py = pybind11;
 

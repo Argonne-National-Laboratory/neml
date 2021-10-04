@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "kinematics.h"
+#include "cp/kinematics.h"
 
 namespace py = pybind11;
 

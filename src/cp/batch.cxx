@@ -1,4 +1,4 @@
-#include "batch.h"
+#include "cp/batch.h"
 
 #ifdef USE_OMP
 #include <omp.h>

@@ -8,14 +8,13 @@ target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/projections.cxx)
 
 if (WRAP_PYTHON)
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MODULE_BASE}/math)
-      if (WIN32)
-            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MODULE_BASE}/math)
-      endif()
+      # Make sure we install all the python files in neml/
+      file(GLOB python_files ${CMAKE_SOURCE_DIR}/neml/math/*.py)
+      install(FILES ${python_files} DESTINATION neml/math)
 
-      pybind(nemlmath)
-      pybind(rotations)
-      pybind(tensors)
-      pybind(matrix)
-      pybind(projections)
+      pybind(nemlmath math)
+      pybind(rotations math)
+      pybind(tensors math)
+      pybind(matrix math)
+      pybind(projections math)
 endif()

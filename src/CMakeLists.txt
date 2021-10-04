@@ -1,16 +1,12 @@
 include(macros.cmake)
 include (GenerateExportHeader)
 
-if (WRAP_PYTHON)
-      add_subdirectory(../pybind11 ${PROJECT_BINARY_DIR}/neml)
-endif()
-
-### BASE LIBRARY IN LIB ###
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_BASE})
+### Build library in lib to enable easy in-source build ###
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 if (WIN32)
-      set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_BASE})
+      set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 endif()
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_BASE})
 
 add_library(neml
       objects.cxx
@@ -35,22 +31,24 @@ add_library(neml
       )
 add_subdirectory(math)
 add_subdirectory(cp)
-target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
-generate_export_header(neml)
-generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_SOURCE_DIR}/src/neml_export.h)
 
-# Copy library to standard location (lib) if we're building the bindings
-# This is to maintain backward compatibility with the old build approach
-if (WRAP_PYTHON)
-      add_custom_command(TARGET neml POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:neml> ${PROJECT_BINARY_DIR}/lib) 
-endif()
+# Required headers
+target_include_directories(neml PRIVATE "../include")
+
+# Link the library and generate the export header
+target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/neml_export.h)
+set_target_properties(neml PROPERTIES PUBLIC_HEADER 
+      "${PROJECT_BINARY_DIR}/include/neml_export.h;../include/neml_interface.h;../include/nemlerror.h;../include/windows.h")
+install(TARGETS neml 
+      LIBRARY DESTINATION ${LIBRARY_INSTALL_DIR}
+      PUBLIC_HEADER DESTINATION include)
 
 ### python bindings in neml ###
 if (WRAP_PYTHON)
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${MODULE_BASE})
-      if (WIN32)
-            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${MODULE_BASE})
-      endif()
+      # Make sure we install all the python files in neml/
+      file(GLOB python_files ${CMAKE_SOURCE_DIR}/neml/*.py)
+      install(FILES ${python_files} DESTINATION neml)
 
       pybind(objects)
       pybind(solvers)
