@@ -113,6 +113,11 @@ if (WRAP_PYTHON)
       endif()
 endif()
 
+if (PYTHON_PACKAGE)
+  set(CMAKE_INSTALL_RPATH "$ORIGIN;$ORIGIN/..")
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
+
 ### BASE LIBRARY ###
 add_subdirectory(src)
 
