@@ -43,6 +43,7 @@ set_target_properties(neml PROPERTIES PUBLIC_HEADER
 
 # An annoyance for building the python package
 if (PYTHON_PACKAGE)
+      # Strictly we don't need this for wheels, but for source builds it's handy
       install(TARGETS neml 
             LIBRARY DESTINATION neml)
 else()

@@ -1,0 +1,46 @@
+name: Make and test python packages
+on: pull_request
+jobs:
+      build_wheels_mac_linux:
+            env:
+                  CIBW_SKIP: cp310-* *-manylinux_i686 pp* 
+                  CIBW_BEFORE_ALL_LINUX: yum -y install cmake cmake3 blas-devel lapack-devel && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 --slave /usr/local/bin/ctest ctest /usr/bin/ctest --slave /usr/local/bin/cpack cpack /usr/bin/cpack --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake --family cmake && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 --family cmake
+                  CIBW_BEFORE_ALL_MACOS: brew install cmake openblas superlu gfortran
+                  CIBW_BEFORE_BUILD: pip install -r requirements.txt 
+                  CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+                  CIBW_MANYLINUX_I686_IMAGE: manylinux2014
+                  CIBW_TEST_REQUIRES: nose
+                  CIBW_TEST_COMMAND: nosetests {project}/test
+                  CIBW_REPAIR_WHEEL_COMMAND_LINUX: "LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH auditwheel repair -w {dest_dir} {wheel}"
+                  CIBW_REPAIR_WHEEL_COMMAND_MAC: "DYLD_LIBRARY_PATH=$(pwd)/lib:$DYLD_LIBRARY_PATH delocate-wheel -w {dest_dir} -v {wheel}"
+            name: Build wheels on ${{ matrix.os }}
+            runs-on: ${{ matrix.os }}
+            strategy:
+                  matrix:
+                        os: [ubuntu-latest, macos-latest]
+            steps:
+                  - uses: actions/checkout@v2
+                  - uses: actions/setup-python@v2
+                    with:
+                          python-version: '3.8'
+                  - name: Install cibuildwheel
+                    run: python -m pip install cibuildwheel
+                  - name: Build wheels
+                    run: python -m cibuildwheel --output-dir wheelhouse
+                  - uses: actions/upload-artifact@v2
+                    with:
+                          path: ./wheelhouse/*.whl
+      build_sdist:
+            name: Build source distribution
+            runs-on: ubuntu-latest
+            steps:
+                  - uses: actions/checkout@v2
+                  - uses: actions/setup-python@v2
+                    name: Install Python
+                    with:
+                          python-version: '3.8'
+                  - name: Build source distribution
+                    run: python setup.py sdist
+                  - uses: actions/upload-artifact@v2
+                    with:
+                          path: dist/*.tar.gz
