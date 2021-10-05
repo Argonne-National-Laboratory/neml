@@ -9,8 +9,8 @@ jobs:
                   CIBW_BEFORE_BUILD: "cmake -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=OFF . && cmake --build . && rm CMakeCache.txt && rm -rf CMakeFiles && pip install -r requirements.txt"
                   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
                   CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-                  CIBW_TEST_REQUIRES: nose 
-                  CIBW_TEST_COMMAND: nosetests {project}/test
+                        #CIBW_TEST_REQUIRES: nose 
+                        #CIBW_TEST_COMMAND: nosetests {project}/test
                   CIBW_REPAIR_WHEEL_COMMAND_LINUX: "ls && pwd && LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH auditwheel repair -w {dest_dir} {wheel}"
                   CIBW_REPAIR_WHEEL_COMMAND_MAC: "ls && pwd && DYLD_LIBRARY_PATH=$(pwd)/lib:$DYLD_LIBRARY_PATH delocate-wheel -w {dest_dir} -v {wheel}"
                   CIBW_BUILD_VERBOSITY: 3
