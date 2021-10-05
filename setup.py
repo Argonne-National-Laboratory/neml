@@ -49,7 +49,8 @@ class CMakeBuild(build_ext):
                   '-DUSE_OPENMP=OFF',
                   '-DBUILD_UTILS=OFF',
                   '-DCMAKE_INSTALL_PREFIX=' + extdir,
-                  '-DPYTHON_PACKAGE=ON']
+                  '-DPYTHON_PACKAGE=ON',
+                  '-DPYTHON_EXECUTABLE={}'.format(sys.executable)]
 
     cfg = 'Debug' if self.debug else 'Release'
     build_args = ['--config', cfg]
