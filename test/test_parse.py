@@ -127,7 +127,7 @@ class TestStringParser(CompareMats, unittest.TestCase):
 
 class TestJ2Iso(CompareMats, unittest.TestCase):
   def setUp(self):
-    self.model1 = parse.parse_xml(localize("test/examples.xml"), "test_j2iso")
+    self.model1 = parse.parse_xml(localize("examples.xml"), "test_j2iso")
   
     mu = 40000.0
     K = 84000.0
