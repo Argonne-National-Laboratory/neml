@@ -40,15 +40,25 @@ target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRAR
 generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/neml_export.h)
 set_target_properties(neml PROPERTIES PUBLIC_HEADER 
       "${PROJECT_BINARY_DIR}/include/neml_export.h;../include/neml_interface.h;../include/nemlerror.h;../include/windows.h")
-install(TARGETS neml 
-      LIBRARY DESTINATION ${LIBRARY_INSTALL_DIR}
-      PUBLIC_HEADER DESTINATION include)
+
+# An annoyance for building the python package
+if (PYTHON_PACKAGE)
+      install(TARGETS neml 
+            LIBRARY DESTINATION neml)
+else()
+      install(TARGETS neml 
+            LIBRARY DESTINATION ${LIBRARY_INSTALL_DIR}
+            PUBLIC_HEADER DESTINATION include)
+endif()
 
 ### python bindings in neml ###
 if (WRAP_PYTHON)
       # Make sure we install all the python files in neml/
       file(GLOB python_files ${CMAKE_SOURCE_DIR}/neml/*.py)
       install(FILES ${python_files} DESTINATION neml)
+
+      # Copy the stupid library so windows can easily find it for tests
+      add_custom_command(TARGET neml POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:neml> ${PROJECT_BINARY_DIR}/neml) 
 
       pybind(objects)
       pybind(solvers)

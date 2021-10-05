@@ -95,6 +95,9 @@ endif()
 
 
 ### PYTHON BINDINGS ###
+# Do some tricky things for the python package
+option(PYTHON_PACKAGE "Generate a build for a python package, should be OFF except in setupy.py" OFF)
+
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
       ### Check if we can validly build shared libraries ###
@@ -102,20 +105,12 @@ if (WRAP_PYTHON)
             message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
       endif()
 
-      # Setup RPATH so it works (hopefully) on install and in the build directory
-      set(CMAKE_SKIP_BUILD_RPATH FALSE)
-      set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-      # This is the damn thing to fix
-      set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib;$ORIGIN/../../lib")
-
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
       add_subdirectory(pybind11 neml)
       # There is some problem with LTO on mingw
       if (WIN32)
 	      set(PYBIND11_LTO_CXX_FLAGS "")
       endif()
-
-
 endif()
 
 ### BASE LIBRARY ###

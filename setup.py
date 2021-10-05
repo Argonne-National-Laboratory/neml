@@ -22,7 +22,6 @@ class CMakeExtension(Extension):
       Extension.__init__(self, name, sources=[])
       self.sourcedir = os.path.abspath(sourcedir)
 
-
 class CMakeBuild(build_ext):
   def run(self):
     try:
@@ -49,7 +48,8 @@ class CMakeBuild(build_ext):
                   '-DWRAP_PYTHON=ON',
                   '-DUSE_OPENMP=OFF',
                   '-DBUILD_UTILS=OFF',
-                  '-DCMAKE_INSTALL_PREFIX=' + extdir]
+                  '-DCMAKE_INSTALL_PREFIX=' + extdir,
+                  '-DPYTHON_PACKAGE=ON']
 
     cfg = 'Debug' if self.debug else 'Release'
     build_args = ['--config', cfg]
