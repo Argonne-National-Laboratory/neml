@@ -78,7 +78,7 @@ setup (
     # Name of the project
     name = 'neml',
     # Version
-    version = '1.3.5',
+    version = '1.4.0',
     # One line-description
     description = "Nuclear Engineering Material model Library",
     # README
