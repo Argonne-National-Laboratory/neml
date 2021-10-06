@@ -4,25 +4,64 @@ on:
   release:
     types: [created]
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install python3-dev python3-pip cmake libboost-dev libblas-dev liblapack-dev
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PIPY_PASSWORD }}
-      run: |
-        python setup.py sdist
-        twine upload dist/*
+      build_wheels_linux_mac:
+            env:
+                  CIBW_SKIP: cp310-* *-manylinux_i686 pp* 
+                  CIBW_BEFORE_ALL_LINUX: yum -y install cmake cmake3 blas-devel lapack-devel && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 --slave /usr/local/bin/ctest ctest /usr/bin/ctest --slave /usr/local/bin/cpack cpack /usr/bin/cpack --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake --family cmake && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 --family cmake
+                  CIBW_BEFORE_ALL_MACOS: brew install cmake openblas superlu gfortran
+                  CIBW_BEFORE_BUILD: "cmake -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=OFF . && cmake --build . && rm CMakeCache.txt && rm -rf CMakeFiles && pip install -r requirements.txt"
+                  CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+                  CIBW_MANYLINUX_I686_IMAGE: manylinux2014
+                  CIBW_TEST_REQUIRES: nose 
+                  CIBW_TEST_COMMAND: nosetests {project}/test
+                  CIBW_REPAIR_WHEEL_COMMAND_LINUX: "LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH auditwheel repair -w {dest_dir} {wheel}"
+                  CIBW_REPAIR_WHEEL_COMMAND_MACOS: "DYLD_LIBRARY_PATH=$(pwd)/lib:$DYLD_LIBRARY_PATH delocate-listdeps {wheel} && DYLD_LIBRARY_PATH=$(pwd)/lib:$DYLD_LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
+                  CIBW_BUILD_VERBOSITY: 3
+            name: Build wheels on ${{ matrix.os }}
+            runs-on: ${{ matrix.os }}
+            strategy:
+                  matrix:
+                        os: [ubuntu-latest, macos-latest]
+            steps:
+                  - uses: actions/checkout@v2
+                  - uses: actions/setup-python@v2
+                    with:
+                          python-version: '3.8'
+                  - name: Install cibuildwheel
+                    run: python -m pip install cibuildwheel
+                  - name: Build wheels
+                    run: python -m cibuildwheel --output-dir wheelhouse
+                  - uses: actions/upload-artifact@v2
+                    with:
+                          path: ./wheelhouse/*.whl
+                          name: packages
+
+      build_sdist:
+            name: Build source distribution
+            runs-on: ubuntu-latest
+            steps:
+                  - uses: actions/checkout@v2
+                  - uses: actions/setup-python@v2
+                    name: Install Python
+                    with:
+                          python-version: '3.8'
+                  - name: Build source distribution
+                    run: python setup.py sdist
+                  - uses: actions/upload-artifact@v2
+                    with:
+                          path: dist/*.tar.gz
+                          name: packages
+
+      upload_pypi:
+            needs: [build_wheels_linux_mac, build_sdist]
+            runs-on: ubuntu-latest
+            name: Upload packages to pypi
+            steps:
+                  - uses: actions/download-artifact@v2
+                    with:
+                          name: packages
+                          path: dist
+                  - uses: pypa/gh-action-pypi-publish@master
+                    with:
+                          user: __token__
+                          password: ${{ secrets.PIPY_PASSWORD }}
