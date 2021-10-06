@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "matrix.h"
+#include "math/matrix.h"
 
 namespace py = pybind11;
 

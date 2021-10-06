@@ -47,3 +47,5 @@ dist
 neml.egg-info
 util/string_interface/cxxstring
 *.exe
+include/neml_export.h
+wheelhouse

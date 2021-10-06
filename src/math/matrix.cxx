@@ -1,6 +1,6 @@
-#include "matrix.h"
+#include "math/matrix.h"
 
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 
 #include <numeric>
 

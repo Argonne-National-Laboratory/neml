@@ -1,6 +1,6 @@
-#include "../pyhelp.h" // include first to avoid redef warning
+#include "pyhelp.h" // include first to avoid redef warning
 
-#include "singlecrystal.h"
+#include "cp/singlecrystal.h"
 
 namespace py = pybind11;
 

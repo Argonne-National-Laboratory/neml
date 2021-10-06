@@ -1,4 +1,4 @@
-#include "sliprules.h"
+#include "cp/sliprules.h"
 
 namespace neml {
 

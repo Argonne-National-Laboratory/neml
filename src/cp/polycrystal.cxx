@@ -1,6 +1,6 @@
-#include "polycrystal.h"
+#include "cp/polycrystal.h"
 
-#include "batch.h"
+#include "cp/batch.h"
 
 namespace neml {
 

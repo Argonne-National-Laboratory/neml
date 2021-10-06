@@ -37,7 +37,7 @@ mark_as_advanced(STRAIN_RATE_LIMIT)
 add_definitions(-DNEML_STRAIN_RATE_LIMIT=${STRAIN_RATE_LIMIT})
 
 ### Configure standard-ish libraries ###
-FIND_PACKAGE(BLAS REQUIRED)
+FIND_PACKAGE(BLAS REQUIRED) 
 FIND_PACKAGE(LAPACK REQUIRED)
 
 INCLUDE_DIRECTORIES(SYSTEM rapidxml)
@@ -95,31 +95,22 @@ endif()
 
 
 ### PYTHON BINDINGS ###
+# Do some tricky things for the python package
+option(PYTHON_PACKAGE "Generate a build for a python package, should be OFF except in setupy.py" OFF)
+
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
-      find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+      ### Check if we can validly build shared libraries ###
+      if ((NOT BUILD_SHARED_LIBS))
+            message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
+      endif()
+
       INCLUDE_DIRECTORIES(SYSTEM pybind11)
+      add_subdirectory(pybind11 neml)
       # There is some problem with LTO on mingw
       if (WIN32)
 	      set(PYBIND11_LTO_CXX_FLAGS "")
       endif()
-endif()
-
-### Check if we can validly build shared libraries ###
-if ((NOT BUILD_SHARED_LIBS) AND WRAP_PYTHON)
-      message(FATAL_ERROR "Cannot build python wrappers with statically-linked based library") 
-endif()
-
-if (INSTALL)
-      set(MODULE_BASE ${INSTALL})
-      set(LIBRARY_BASE ${INSTALL})
-      # This is a terrible hack, but hey it works
-      set(CMAKE_BUILD_RPATH "$ORIGIN:$ORIGIN/..")
-elseif(WRAP_PYTHON)
-      set(MODULE_BASE ${PROJECT_BINARY_DIR}/neml)
-      set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/neml)
-else()
-      set(LIBRARY_BASE ${PROJECT_BINARY_DIR}/lib)
 endif()
 
 ### BASE LIBRARY ###

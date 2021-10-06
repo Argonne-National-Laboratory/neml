@@ -22,7 +22,6 @@ class CMakeExtension(Extension):
       Extension.__init__(self, name, sources=[])
       self.sourcedir = os.path.abspath(sourcedir)
 
-
 class CMakeBuild(build_ext):
   def run(self):
     try:
@@ -49,10 +48,13 @@ class CMakeBuild(build_ext):
                   '-DWRAP_PYTHON=ON',
                   '-DUSE_OPENMP=OFF',
                   '-DBUILD_UTILS=OFF',
-                  '-DINSTALL=' + os.path.join(extdir,"neml")]
+                  '-DCMAKE_INSTALL_PREFIX=' + extdir,
+                  '-DPYTHON_PACKAGE=ON',
+                  '-DPYTHON_EXECUTABLE={}'.format(sys.executable)]
 
     cfg = 'Debug' if self.debug else 'Release'
     build_args = ['--config', cfg]
+    cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
 
     if platform.system() == "Windows":
       cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
@@ -60,7 +62,6 @@ class CMakeBuild(build_ext):
           cmake_args += ['-A', 'x64']
       build_args += ['--', '/m']
     else:
-      cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
       build_args += ['--', '-j2']
 
     env = os.environ.copy()
@@ -71,6 +72,7 @@ class CMakeBuild(build_ext):
   
     subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
     subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+    subprocess.check_call(['cmake', '--install', '.'], cwd = self.build_temp)
 
 setup (
     # Name of the project
@@ -110,7 +112,7 @@ setup (
     packages=find_packages(),
     # Locate tests
     test_suite='nose.collector',
-    tests_required=['nose'],
+    tests_require=['nose'],
     # Python dependencies
     install_requires=[
       'numpy',

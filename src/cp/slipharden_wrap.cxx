@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "slipharden.h"
+#include "cp/slipharden.h"
 
 namespace py = pybind11;
 

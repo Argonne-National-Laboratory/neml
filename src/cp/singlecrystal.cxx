@@ -1,4 +1,4 @@
-#include "singlecrystal.h"
+#include "cp/singlecrystal.h"
 
 namespace neml {
 

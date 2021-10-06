@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "crystaldamage.h"
+#include "cp/crystaldamage.h"
 
 namespace py = pybind11;
 

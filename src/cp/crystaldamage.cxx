@@ -1,6 +1,6 @@
-#include "crystaldamage.h"
+#include "cp/crystaldamage.h"
 
-#include "../math/projections.h"
+#include "math/projections.h"
 
 namespace neml {
 

@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "projections.h"
+#include "math/projections.h"
 
 namespace py = pybind11;
 

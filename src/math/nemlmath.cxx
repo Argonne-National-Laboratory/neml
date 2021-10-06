@@ -1,6 +1,6 @@
-#include "nemlmath.h"
+#include "math/nemlmath.h"
 
-#include "../nemlerror.h"
+#include "nemlerror.h"
 
 #include <cmath>
 #include <iostream>

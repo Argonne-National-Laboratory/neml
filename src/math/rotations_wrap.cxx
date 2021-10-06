@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "rotations.h"
+#include "math/rotations.h"
 
 #include <iostream>
 #include <string>

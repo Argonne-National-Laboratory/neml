@@ -1,7 +1,5 @@
-name: Upload Python Package
-on:
-      release:
-            types: [created]
+name: Make and test python packages
+on: pull_request
 jobs:
       build_wheels_linux_mac:
             env:
@@ -50,17 +48,3 @@ jobs:
                     with:
                           path: dist/*.tar.gz
                           name: packages
-
-      upload_pypi:
-            needs: [build_wheels_linux_mac, build_sdist]
-            runs-on: ubuntu-latest
-            name: Upload packages to pypi
-            steps:
-                  - uses: actions/download-artifact@v2
-                    with:
-                          name: packages
-                          path: dist
-                  - uses: pypa/gh-action-pypi-publish@master
-                    with:
-                          user: __token__
-                          password: ${{ secrets.PIPY_PASSWORD }}

@@ -1,4 +1,4 @@
-#include "inelasticity.h"
+#include "cp/inelasticity.h"
 
 namespace neml {
 

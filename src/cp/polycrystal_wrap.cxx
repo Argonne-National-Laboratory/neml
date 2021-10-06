@@ -1,6 +1,6 @@
-#include "../pyhelp.h" // include first to avoid redef warning
+#include "pyhelp.h" // include first to avoid redef warning
 
-#include "polycrystal.h"
+#include "cp/polycrystal.h"
 
 namespace py = pybind11;
 

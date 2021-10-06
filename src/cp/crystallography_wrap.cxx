@@ -1,6 +1,6 @@
-#include "../pyhelp.h"
+#include "pyhelp.h"
 
-#include "crystallography.h"
+#include "cp/crystallography.h"
 
 namespace py = pybind11;
 
