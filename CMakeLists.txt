@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 project(NEML LANGUAGES CXX)
 
 ### Version ###
-set(NEML_version 1.4.0)
+set(NEML_version 1.4.1)
 
 ### Setup modules ###
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
