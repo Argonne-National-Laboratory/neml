@@ -32,37 +32,7 @@ jobs:
                     with:
                           path: ./wheelhouse/*.whl
                           name: packages
-      build_wheels_windows:
-            env:
-                  CIBW_SKIP: cp310-* *-manylinux_i686 pp* 
-                  CIBW_BEFORE_BUILD_WINDOWS: "cmake -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=OFF . && cmake --build . && rm CMakeCache.txt && rm -rf CMakeFiles && pip install -r requirements.txt && pip install delvewheel" 
-                  CIBW_TEST_REQUIRES: nose 
-                  CIBW_TEST_COMMAND: nosetests {project}/test
-                  CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path=$(pwd)/lib -w {dest_dir} {wheel}"
-                  CIBW_BUILD_VERBOSITY: 3
-            name: Build wheels on ${{ matrix.os }}
-            runs-on: ${{ matrix.os }}
-            strategy:
-                  matrix:
-                        os: [windows-latest]
-            defaults:
-                  run:
-                        shell: msys2 {0}
-            steps:
-                  - uses: actions/checkout@v2
-                  - uses: msys2/setup-msys2@v2
-                    with:
-                          msystem: MINGW64
-                          update: true
-                          install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake mingw-w64-x86_64-python-pip mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-scipy mingw-w64-x86_64-python-networkx mingw-w64-x86_64-python-matplotlib mingw-w64-x86_64-python-nose
-                  - name: Install cibuildwheel
-                    run: python -m pip install cibuildwheel
-                  - name: Build wheels
-                    run: python -m cibuildwheel --output-dir wheelhouse
-                  - uses: actions/upload-artifact@v2
-                    with:
-                          path: ./wheelhouse/*.whl
-                          name: packages
+
       build_sdist:
             name: Build source distribution
             runs-on: ubuntu-latest
