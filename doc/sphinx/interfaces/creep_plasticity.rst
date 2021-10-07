@@ -49,10 +49,10 @@ Parameters
    ``plastic``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
    ``creep``, :cpp:class:`neml::CreepModel`, Rate dependent creep model, No
    ``alpha``, :cpp:class:`neml::Interpolate`, Temperature dependent instantaneous CTE, ``0.0``
-   ``tol``, :c:type:`double`, Integration tolerance, ``1.0e-8``
-   ``miter``, :c:type:`int`, Maximum number of integration iters, ``50``
-   ``verbose``, :c:type:`bool`, Print lots of convergence info, ``false``
-   ``sf``, :c:type:`double`, Scale factor on strain equation, ``1.0e6``
+   ``tol``, :code:`double`, Integration tolerance, ``1.0e-8``
+   ``miter``, :code:`int`, Maximum number of integration iters, ``50``
+   ``verbose``, :code:`bool`, Print lots of convergence info, ``false``
+   ``sf``, :code:`double`, Scale factor on strain equation, ``1.0e6``
 
 .. NOTE::
    The scale factor is multiplied by a strain residual equation that may involve

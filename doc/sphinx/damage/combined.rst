@@ -23,12 +23,12 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``elastic``, :cpp:class:`neml::LinearElasticModel`, Elasticity model, No
-   ``models``, :c:type:`std::vector<`:cpp:class:`neml::NEMLScalarDamagedModel_sd`:c:type:`>`, List of damage models to apply, No
+   ``models``, :code:`std::vector<`:cpp:class:`neml::NEMLScalarDamagedModel_sd`:code:`>`, List of damage models to apply, No
    ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
    ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
-   ``tol``, :c:type:`double`, Solver tolerance, ``1.0e-8``
-   ``miter``, :c:type:`int`, Maximum solver iterations, ``50``
-   ``verbose``, :c:type:`bool`, Verbosity flag, ``false``
+   ``tol``, :code:`double`, Solver tolerance, ``1.0e-8``
+   ``miter``, :code:`int`, Maximum solver iterations, ``50``
+   ``verbose``, :code:`bool`, Verbosity flag, ``false``
 
 Class description
 -----------------

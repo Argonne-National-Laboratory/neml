@@ -16,7 +16,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``tau_sat``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, Unrolled slip system hardening vector, N
+   ``tau_sat``, :code:`std::vector<`:cpp:class:`neml::Interpolate`:code:`>`, Unrolled slip system hardening vector, N
 
 Class description
 -----------------

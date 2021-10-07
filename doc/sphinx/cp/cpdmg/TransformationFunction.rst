@@ -46,7 +46,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``c``, :c:type:`double`, Critical damage value, No
+   ``c``, :code:`double`, Critical damage value, No
    ``beta``, :c:type`double`, Abruptness of damage onset, No
 
 Class description

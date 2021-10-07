@@ -18,7 +18,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``measures``, :c:type:`std::vector<`:cpp:class:`neml::EffectiveStress`:c:type:`>`, List of effective stress objects, No
+   ``measures``, :code:`std::vector<`:cpp:class:`neml::EffectiveStress`:code:`>`, List of effective stress objects, No
 
 Class description
 -----------------

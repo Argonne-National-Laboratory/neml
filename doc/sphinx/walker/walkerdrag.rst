@@ -25,7 +25,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
    
-   ``value``, :c:type:`double`, Value of the drag stress, No
+   ``value``, :code:`double`, Value of the drag stress, No
    ``scale``, :cpp:class:`neml::ThermalScaling`, Thermal scaling model, No scaling
 
 Class description
@@ -51,7 +51,7 @@ Parameters
    ``d1``, :cpp:class:`neml::Interpolate`, Recovery prefactor, No
    ``d2``, :cpp:class:`neml::Interpolate`, Recovery exponent, No
    ``D_xi``, :cpp:class:`neml::Interpolate`, Saturated drag stress, No
-   ``D_0``, :c:type:`double`, Initial drag stress, No
+   ``D_0``, :code:`double`, Initial drag stress, No
    ``softening``, :cpp:class:`neml::SofteningModel`, Softening model, No
    ``scale``, :cpp:class:`neml::ThermalScaling`, Thermal scaling model, No scaling
 

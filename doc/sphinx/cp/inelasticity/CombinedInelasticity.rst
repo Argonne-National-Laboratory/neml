@@ -26,7 +26,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``models``, :c:type:`std::vector<`:cpp:class:`neml::InelasticModel`:c:type:`>`, Individual models, No
+   ``models``, :code:`std::vector<`:cpp:class:`neml::InelasticModel`:code:`>`, Individual models, No
 
 Class description
 -----------------

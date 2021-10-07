@@ -23,7 +23,7 @@ the correct ``Vector`` type.
 
 Currently, the class is configured to store and return objects of the following types:
 
-* Scalars (i.e. :c:type:`double`)
+* Scalars (i.e. :code:`double`)
 
 * :doc:`math/tensors/Vector`
 

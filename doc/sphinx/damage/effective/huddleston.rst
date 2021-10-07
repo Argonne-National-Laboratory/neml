@@ -33,7 +33,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``b``, :c:type:`double`, Huddleston parameter, No
+   ``b``, :code:`double`, Huddleston parameter, No
 
 Class description
 -----------------

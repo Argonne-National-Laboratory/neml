@@ -21,8 +21,8 @@ Parameters
    ``A``, :cpp:class:`neml::Interpolate`, Prefactor, No
    ``n``, :cpp:class:`neml::Interpolate`, Exponent, No
    ``beta``, :cpp:class:`neml::Interpolate`, Exponential factor, No
-   ``R``, :c:type:`double`, Gas constant, No
-   ``Q``, :c:type:`double`, Activation energy, No
+   ``R``, :code:`double`, Gas constant, No
+   ``Q``, :code:`double`, Activation energy, No
 
 Class description
 -----------------

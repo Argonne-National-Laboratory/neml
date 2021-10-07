@@ -28,8 +28,8 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``model``, :cpp:class:`neml::SingleCrystalModel`, Single crystal update, N
-   ``qs``, :c:type:`std::vector<`:cpp:class:`neml::Orientation`:c:type:`>`, Vector of orientations, N
-   ``nthreads``, :c:type:`int`, Number of threads to use, 1
+   ``qs``, :code:`std::vector<`:cpp:class:`neml::Orientation`:code:`>`, Vector of orientations, N
+   ``nthreads``, :code:`int`, Number of threads to use, 1
 
 Class description
 -----------------

@@ -21,7 +21,7 @@ Parameters
    ``k``, :cpp:class:`std::vector<neml::Interpolate>`, Hardening prefactors, N
    ``saturation``, :cpp:class:`std::vector<neml::Interpolate>`, Saturated hardening values, N 
    ``m``, :cpp:class:`std::vector<neml::Interpolate>`, Voce exponents, N
-   ``initial``, :c:type:`std::vector<double>`, Initial strengths, N
+   ``initial``, :code:`std::vector<double>`, Initial strengths, N
 
 Class description
 -----------------

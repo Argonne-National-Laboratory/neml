@@ -44,7 +44,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``strength``, :c:type:`std::vector<`:cpp:class:`neml::SlipHardening`:c:type:`>`, List of slip hardening rules, No
+   ``strength``, :code:`std::vector<`:cpp:class:`neml::SlipHardening`:code:`>`, List of slip hardening rules, No
 
 Class description
 -----------------

@@ -76,11 +76,11 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``iso``, :cpp:class:`neml::IsotropicHardeningRule`, Isotropic hardening, No
-   ``c``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, Values of constant C for each backstress, No
-   ``gmodels``, :c:type:`std::vector<`:cpp:class:`neml::GammaModel`:c:type:`>`, The gamma functions for each backstress, No
-   ``A``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, The value of A for each backstress, No
-   ``a``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, The value of a for each backstress, No
-   ``noniso``, :c:type:`bool`, Include the nonisothermal term?, ``true``
+   ``c``, :code:`std::vector<`:cpp:class:`neml::Interpolate`:code:`>`, Values of constant C for each backstress, No
+   ``gmodels``, :code:`std::vector<`:cpp:class:`neml::GammaModel`:code:`>`, The gamma functions for each backstress, No
+   ``A``, :code:`std::vector<`:cpp:class:`neml::Interpolate`:code:`>`, The value of A for each backstress, No
+   ``a``, :code:`std::vector<`:cpp:class:`neml::Interpolate`:code:`>`, The value of a for each backstress, No
+   ``noniso``, :code:`bool`, Include the nonisothermal term?, ``true``
 
 The number of backstresses is set implicitly from the lengths of these vectors.
 The model will return an error if they have different lengths.

@@ -30,12 +30,12 @@ Parameters
    ``estress``,:cpp:class:`neml::EffectiveStress`, Effective stress, No
    ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
    ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
-   ``tol``, :c:type:`double`, Solver tolerance, ``1.0e-8``
-   ``miter``, :c:type:`int`, Maximum solver iterations, ``50``
-   ``verbose``, :c:type:`bool`, Verbosity flag, ``false``
-   ``ekill``, :c:type:`bool`, Trigger element death, ``false``
-   ``dkill``, :c:type:`double`, Critical damage threshold, ``0.5``
-   ``sfact``, :c:type:`double`, Stiffness factor for dead element, ``100000``
+   ``tol``, :code:`double`, Solver tolerance, ``1.0e-8``
+   ``miter``, :code:`int`, Maximum solver iterations, ``50``
+   ``verbose``, :code:`bool`, Verbosity flag, ``false``
+   ``ekill``, :code:`bool`, Trigger element death, ``false``
+   ``dkill``, :code:`double`, Critical damage threshold, ``0.5``
+   ``sfact``, :code:`double`, Stiffness factor for dead element, ``100000``
 
 Class description
 -----------------

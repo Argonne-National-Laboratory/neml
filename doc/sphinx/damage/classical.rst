@@ -26,9 +26,9 @@ Parameters
    ``phi``, :cpp:class:`neml::Interpolate`, Damage exponent, No
    ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
    ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
-   ``tol``, :c:type:`double`, Solver tolerance, ``1.0e-8``
-   ``miter``, :c:type:`int`, Maximum solver iterations, ``50``
-   ``verbose``, :c:type:`bool`, Verbosity flag, ``false``
+   ``tol``, :code:`double`, Solver tolerance, ``1.0e-8``
+   ``miter``, :code:`int`, Maximum solver iterations, ``50``
+   ``verbose``, :code:`bool`, Verbosity flag, ``false``
 
 Class description
 -----------------

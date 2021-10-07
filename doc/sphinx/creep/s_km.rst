@@ -34,12 +34,12 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``cuts``, :c:type:`std::vector<`:c:type:`double`:c:type:`>`, Normalized stress cutoffs, No
-   ``A``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, Corresponding A constants, No
-   ``B``, :c:type:`std::vector<`:cpp:class:`neml::Interpolate`:c:type:`>`, Corresponding B constants, No
-   ``kboltz``, :c:type:`double`, Boltzmann constant, No
-   ``b``, :c:type:`double`, Burgers vector, No
-   ``eps0``, :c:type:`double`, Reference strain rate, No
+   ``cuts``, :code:`std::vector<`:code:`double`:code:`>`, Normalized stress cutoffs, No
+   ``A``, :code:`std::vector<`:cpp:class:`neml::Interpolate`:code:`>`, Corresponding A constants, No
+   ``B``, :code:`std::vector<`:cpp:class:`neml::Interpolate`:code:`>`, Corresponding B constants, No
+   ``kboltz``, :code:`double`, Boltzmann constant, No
+   ``b``, :code:`double`, Burgers vector, No
+   ``eps0``, :code:`double`, Reference strain rate, No
    ``emodel``, :cpp:class:`neml::LinearElasticModel`, Elastic model (for shear modulus), No
 
 Class description

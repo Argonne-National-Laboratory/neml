@@ -18,10 +18,10 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``C``, :c:type:`double`, Prefactor, No
-   ``n``, :c:type:`double`, Exponent, No
-   ``V``, :c:type:`double`, Exponential factor, No
-   ``Q``, :c:type:`double`, Activation energy, No
+   ``C``, :code:`double`, Prefactor, No
+   ``n``, :code:`double`, Exponent, No
+   ``V``, :code:`double`, Exponential factor, No
+   ``Q``, :code:`double`, Activation energy, No
 
 Class description
 -----------------

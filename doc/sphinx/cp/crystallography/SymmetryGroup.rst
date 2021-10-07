@@ -16,7 +16,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``sclass``, :c:type:`string`, Point group in Hermann-Mauguin notation, No
+   ``sclass``, :code:`string`, Point group in Hermann-Mauguin notation, No
 
 Class description
 -----------------

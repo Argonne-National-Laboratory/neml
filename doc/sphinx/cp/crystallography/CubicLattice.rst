@@ -13,8 +13,8 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``a``, :c:type:`double`, Lattice parameter, No
-   ``isystems``, :c:type:`list_systems`, Initial list of slip systems, ``{}``
+   ``a``, :code:`double`, Lattice parameter, No
+   ``isystems``, :code:`list_systems`, Initial list of slip systems, ``{}``
 
 Class description
 -----------------

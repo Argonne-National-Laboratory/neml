@@ -59,7 +59,7 @@ Parameters
    ``elastic``, :cpp:class:`neml::LinearElasticModel`, Elasticity model, No
    ``flow``, :cpp:class:`neml::ViscoPlasticFlowRule`, Viscoplastic flow rule interface, No
    ``lambda``, :cpp:class:`neml::Interpolate`, Scaling parameter, No
-   ``eps0``, :c:type:`double`, Reference strain rate, No
+   ``eps0``, :code:`double`, Reference strain rate, No
 
 Class description
 -----------------

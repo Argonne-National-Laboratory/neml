@@ -64,11 +64,11 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``elastic``, :cpp:class:`neml::LinearElasticModel`, Temperature dependent elastic constants, No
-   ``models``, :c:type:`std::vector<`:cpp:class:`neml::NEMLModel_sd`:c:type:`>`, Vector of base models, No
-   ``gs``, :c:type:`std::vector<`:c:type:`double`:c:type:`>`, Corresponding vector of energies, No
-   ``kboltz``, :c:type:`double`, Boltzmann's constant, No
-   ``b``, :c:type:`double`, Burger's vector length, No
-   ``eps0``, :c:type:`double`, Reference strain rate, No
+   ``models``, :code:`std::vector<`:cpp:class:`neml::NEMLModel_sd`:code:`>`, Vector of base models, No
+   ``gs``, :code:`std::vector<`:code:`double`:code:`>`, Corresponding vector of energies, No
+   ``kboltz``, :code:`double`, Boltzmann's constant, No
+   ``b``, :code:`double`, Burger's vector length, No
+   ``eps0``, :code:`double`, Reference strain rate, No
    ``alpha``, :cpp:class:`neml::Interpolate`, Temperature dependent instantaneous CTE, ``0.0``
 
 Class description

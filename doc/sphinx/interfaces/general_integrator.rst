@@ -39,10 +39,10 @@ Parameters
    ``elastic``, :cpp:class:`neml::LinearElasticModel`, Temperature dependent elastic constants, No
    ``surface``, :cpp:class:`neml::GeneralFlowRule`, Flow rule interface, No
    ``alpha``, :cpp:class:`neml::Interpolate`, Temperature dependent instantaneous CTE, ``0.0``
-   ``tol``, :c:type:`double`, Integration tolerance, ``1.0e-8``
-   ``miter``, :c:type:`int`, Maximum number of integration iters, ``50``
-   ``verbose``, :c:type:`bool`, Print lots of convergence info, ``false``
-   ``max_divide``, :c:type:`int`, Max adaptive integration divides, ``8``
+   ``tol``, :code:`double`, Integration tolerance, ``1.0e-8``
+   ``miter``, :code:`int`, Maximum number of integration iters, ``50``
+   ``verbose``, :code:`bool`, Print lots of convergence info, ``false``
+   ``max_divide``, :code:`int`, Max adaptive integration divides, ``8``
 
 Class description
 -----------------

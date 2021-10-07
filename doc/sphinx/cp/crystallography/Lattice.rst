@@ -38,7 +38,7 @@ Parameters
    ``a2``, :cpp:class:`neml::Vector`, Second lattice vector, No
    ``a3``, :cpp:class:`neml::Vector`, Third lattice vector, No
    ``symmetry``, :cpp:class:`neml::SymmetryGroup`, Crystal symmetry group, No
-   ``isystems``, :c:type:`list_systems`, Initial list of slip systems, ``{}``
+   ``isystems``, :code:`list_systems`, Initial list of slip systems, ``{}``
 
 Class description
 -----------------

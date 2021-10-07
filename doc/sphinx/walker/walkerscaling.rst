@@ -26,8 +26,8 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``Q``, :cpp:class:`neml::Interpolate`, Activation energy, No
-   ``R``, :c:type:`double`, Universal gas constant, No
-   ``Tref``, :c:type:`double`, Reference temperature, No
+   ``R``, :code:`double`, Universal gas constant, No
+   ``Tref``, :code:`double`, Reference temperature, No
 
 Class description
 ^^^^^^^^^^^^^^^^^

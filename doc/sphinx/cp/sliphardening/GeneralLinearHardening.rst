@@ -31,8 +31,8 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``M``, :cpp:class:`neml::SquareMatrix`, Interaction matrix, N
-   ``tau_0``, :c:type:`std::vector<double>`, Initial strengths, N
-   ``absvar``, :c:type:`bool`, If true use absolute value slip rates, :c:type`true`
+   ``tau_0``, :code:`std::vector<double>`, Initial strengths, N
+   ``absvar``, :code:`bool`, If true use absolute value slip rates, :c:type`true`
 
 Class description
 -----------------

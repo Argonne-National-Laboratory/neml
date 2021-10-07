@@ -22,13 +22,13 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``emodel``, :cpp:class:`neml::LinearElasticModel`, Elasticity model (for shear modulus), No
-   ``A``, :c:type:`double`, Prefactor, No
-   ``n``, :c:type:`double`, Stress exponent, No
-   ``D0``, :c:type:`double`, Zero temperature lattice diffusivity, No
-   ``Q``, :c:type:`double`, Activation energy for diffusivity, No
-   ``b``, :c:type:`double`, Burgers vector, No
-   ``k``, :c:type:`double`, Boltzmann constant, No
-   ``R``, :c:type:`double`, Gas constant, No
+   ``A``, :code:`double`, Prefactor, No
+   ``n``, :code:`double`, Stress exponent, No
+   ``D0``, :code:`double`, Zero temperature lattice diffusivity, No
+   ``Q``, :code:`double`, Activation energy for diffusivity, No
+   ``b``, :code:`double`, Burgers vector, No
+   ``k``, :code:`double`, Boltzmann constant, No
+   ``R``, :code:`double`, Gas constant, No
 
 Class description
 -----------------

@@ -40,10 +40,10 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``function``, :cpp:class:`neml::Interpolate`, Generic Larson-Miller relation, No
-   ``lmr``, :c:type:`double`, Constant C from the Larson-Miller parameter, No
-   ``tol``, :c:type:`double`, Solver tolerance, ``1.0e-6``
-   ``miter``, :c:type:`int`, Maximum solver iterations, ``20``
-   ``verbose``, :c:type:`bool`, Verbosity flag, ``false``
+   ``lmr``, :code:`double`, Constant C from the Larson-Miller parameter, No
+   ``tol``, :code:`double`, Solver tolerance, ``1.0e-6``
+   ``miter``, :code:`int`, Maximum solver iterations, ``20``
+   ``verbose``, :code:`bool`, Verbosity flag, ``false``
 
 Class description
 -----------------

@@ -30,7 +30,7 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``rules``, :c:type:`std::vector<`:cpp:class:`neml::IsotropicHardeningRule`:c:type:`>`, List of hardening models, No
+   ``rules``, :code:`std::vector<`:cpp:class:`neml::IsotropicHardeningRule`:code:`>`, List of hardening models, No
 
 Class description
 -----------------

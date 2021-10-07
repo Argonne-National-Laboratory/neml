@@ -18,8 +18,8 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``measures``, :c:type:`std::vector<`:cpp:class:`neml::EffectiveStress`:c:type:`>`, List of effective stress objects, No
-   ``weights``, :c:type:`std::vector<`:c:type:`double`:c:type:`>`, List of weights, No
+   ``measures``, :code:`std::vector<`:cpp:class:`neml::EffectiveStress`:code:`>`, List of effective stress objects, No
+   ``weights``, :code:`std::vector<`:code:`double`:code:`>`, List of weights, No
 
 Class description
 -----------------

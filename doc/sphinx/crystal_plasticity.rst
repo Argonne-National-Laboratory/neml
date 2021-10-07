@@ -312,11 +312,11 @@ Parameters
    ``kinematics``, :cpp:class:`neml::KinematicModel`, Model kinematics, No
    ``lattice``, :cpp:class:`neml::Lattice`, Crystallography information, No
    ``initial_angle``, :cpp:class:`neml::Orientation`, Initial crystal orientation, Identity
-   ``update_rotation``, :c:type:`bool`, Evolve the crystal orientation, ``true``
-   ``tol``, :c:type:`double`, Nonlinear solver relative tolerance, ``1.0e-8``
-   ``miter``, :c:type:`int`, Maximum nonlinear solver iterations, ``30``
-   ``verbose``, :c:type:`bool`, Print lots of debug messages, ``false``
-   ``max_divide``, :c:type:`int`, Maximum number of adaptive integration subdivision, ``6``
+   ``update_rotation``, :code:`bool`, Evolve the crystal orientation, ``true``
+   ``tol``, :code:`double`, Nonlinear solver relative tolerance, ``1.0e-8``
+   ``miter``, :code:`int`, Maximum nonlinear solver iterations, ``30``
+   ``verbose``, :code:`bool`, Print lots of debug messages, ``false``
+   ``max_divide``, :code:`int`, Maximum number of adaptive integration subdivision, ``6``
 
 Class description
 -----------------

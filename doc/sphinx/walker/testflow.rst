@@ -23,11 +23,11 @@ Parameters
    :header: "Parameter", "Object type", "Description", "Default"
    :widths: 12, 30, 50, 8
 
-   ``eps0``, :c:type:`double`, Reference strain rate, No
-   ``D``, :c:type:`double`, Drag stress, No
-   ``n``, :c:type:`double`, Rate sensitivity exponent, No
-   ``s0``, :c:type:`double`, Initial hardening strength, No
-   ``K``, :c:type:`double`, Hardening modulus, No
+   ``eps0``, :code:`double`, Reference strain rate, No
+   ``D``, :code:`double`, Drag stress, No
+   ``n``, :code:`double`, Rate sensitivity exponent, No
+   ``s0``, :code:`double`, Initial hardening strength, No
+   ``K``, :code:`double`, Hardening modulus, No
 
 Class description
 ------------------
