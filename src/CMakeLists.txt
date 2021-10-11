@@ -49,7 +49,7 @@ if (PYTHON_PACKAGE)
             LIBRARY DESTINATION neml)
 else()
       install(TARGETS neml 
-            LIBRARY DESTINATION ${LIBRARY_INSTALL_DIR}
+            LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
 endif()
 
