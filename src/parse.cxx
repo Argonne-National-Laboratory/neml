@@ -185,6 +185,9 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
       case TYPE_SLIP:
         pset.assign_parameter(name, get_slip(child));
         break;
+      case TYPE_TWIN:
+        pset.assign_parameter(name, get_twin(child));
+        break;
       case TYPE_SIZE_TYPE:
         pset.assign_parameter(name, get_size_type(child));
         break;
@@ -312,6 +315,55 @@ list_systems get_slip( const rapidxml::xml_node<> * node)
     auto n = split_string_int(nor);
 
     groups.push_back(make_pair(d,n));
+  }
+
+  return groups;
+}
+
+twin_systems get_twin( const rapidxml::xml_node<> * node)
+{
+  twin_systems groups;
+
+  std::string text = get_string(node);
+
+  std::stringstream ss(text);
+  std::string to;
+
+  // Separate by newlines
+  while(std::getline(ss, to,'\n')) {
+    // Delete blank characters at front and back of string
+    strip(to);
+
+    // Skip blanks
+    if (to == "") continue;
+
+    // Split by semicolon
+    size_t curr = 0;
+    size_t next = to.find(";");
+    std::string eta1s = to.substr(curr, next);
+    strip(eta1s);
+    curr = next + 1;
+
+    next = to.find(";", curr);
+    std::string K1s = to.substr(curr, next);
+    strip(K1s);
+    curr = next + 1;
+    
+    next = to.find(";", curr);
+    std::string eta2s = to.substr(curr, next);
+    strip(eta2s);
+    curr = next + 1;
+    
+    std::string K2s = to.substr(curr);
+    strip(K2s);
+
+    // Make into vectors
+    auto eta1 = split_string_int(eta1s);
+    auto K1 = split_string_int(K1s);
+    auto eta2 = split_string_int(eta2s);
+    auto K2 = split_string_int(K2s);
+
+    groups.push_back(make_tuple(eta1,K1,eta2,K2));
   }
 
   return groups;

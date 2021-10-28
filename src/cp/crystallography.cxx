@@ -247,7 +247,8 @@ std::vector<Orientation> SymmetryGroup::misorientation_block(
 
 Lattice::Lattice(Vector a1, Vector a2, Vector a3,
                  std::shared_ptr<SymmetryGroup> symmetry,
-                 list_systems isystems) :
+                 list_systems isystems,
+                 twin_systems tsystems) :
     a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry), offsets_({0}),
     setup_(false)
 {
@@ -255,6 +256,10 @@ Lattice::Lattice(Vector a1, Vector a2, Vector a3,
 
   for (auto system : isystems) {
     add_slip_system(system.first, system.second);
+  }
+  for (auto system : tsystems) {
+    add_twin_system(std::get<0>(system), std::get<1>(system),
+                    std::get<2>(system), std::get<3>(system));
   }
 }
 
@@ -324,6 +329,7 @@ std::vector<Vector> Lattice::equivalent_vectors_bidirectional(Vector v)
 void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
 {
   std::vector<Vector> burgers, directions, normals;
+  std::vector<Orientation> reorientations;
 
   std::vector<Vector> pbs = equivalent_vectors_bidirectional(
       miller2cart_direction(d));
@@ -339,6 +345,7 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
         burgers.push_back(*bi);
         directions.push_back(nd);
         normals.push_back(nn);
+        reorientations.push_back(Orientation(std::vector<double>({1,0,0,0})));
       }
     }
   }
@@ -348,6 +355,98 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
     slip_directions_.push_back(directions);
     slip_planes_.push_back(normals);
     offsets_.push_back(offsets_.back() + burgers.size());
+    slip_types_.push_back(Lattice::SlipType::Slip);
+    shear_.push_back(0.0);
+    reorientations_.push_back(reorientations);
+    update_normals_(normals);
+  }
+}
+
+void Lattice::add_twin_system(std::vector<int> eta1, std::vector<int> K1,
+                              std::vector<int> eta2, std::vector<int> K2)
+{
+  std::vector<Vector> burgers, directions, normals;
+  std::vector<Orientation> reorientations;
+
+  std::vector<Vector> cart_K1 = equivalent_vectors(miller2cart_plane(K1));
+  std::vector<Vector> cart_eta2 = equivalent_vectors(miller2cart_direction(eta2));
+
+  std::vector<Vector> cart_eta1 =
+      equivalent_vectors(miller2cart_direction(eta1));
+  std::vector<Vector> cart_K2 = equivalent_vectors(miller2cart_plane(K2));
+  
+  // Keep this available for the group
+  double shear = 0;
+
+  for (auto K1i = cart_K1.begin(); K1i != cart_K1.end(); ++K1i) {
+    for (auto eta1i = cart_eta1.begin(); eta1i != cart_eta1.end(); ++eta1i) {
+      for (auto K2i = cart_K2.begin(); K2i != cart_K2.end(); ++K2i) {
+        for (auto eta2i = cart_eta2.begin(); eta2i != cart_eta2.end(); ++eta2i) {
+          // Make unit vectors
+          Vector l = *eta1i / eta1i->norm();
+          Vector m = *K1i / K1i->norm();
+          Vector n = *K2i / K2i->norm();
+          Vector g = *eta2i / eta2i->norm();
+          
+          // Check geometry of the shearing direction from K1 and eta2
+          double val = g.dot(m);
+          if (isclose(val,0)) continue;
+          Vector eta1_tr = 2*(m-g/val);
+          Vector l_tr = eta1_tr/eta1_tr.norm();
+          if (! isclose(fabs(l_tr.dot(l)), 1)) continue;
+
+          // Check the geometry of the undisturbed plane (use g and m and l...)
+          Vector P = l.cross(m);
+          P /= P.norm();
+          Vector n_tr = g.cross(P);
+          n_tr /= n_tr.norm();
+          if (! isclose(fabs(n_tr.dot(n)), 1)) continue;
+
+          // Requirements:
+          // 3) Angle between l and g is obtuse
+          // 4) Angle between l and n is acute
+          // 5) Angle between g and m is acute
+          // The 0.5 is some weird thing going on with Ti HCP Compression Twin
+          if ((l.dot(g) < 0) && (l.dot(n) > 0.5) &&
+              (g.dot(m) > 0.5)) {
+
+            // Check for the degenerate case
+            bool duplicate = false;
+            for (size_t i = 0; i < directions.size(); i++) {
+              if ((isclose(directions[i].dot(l), -1) &&
+                  isclose(normals[i].dot(m), -1)) ||
+                  (isclose(directions[i].dot(l),1) &&
+                   isclose(normals[i].dot(m),1))) {
+                duplicate = true;
+                break;
+              }
+            }
+            if (duplicate) continue;
+
+            // Right for compound twin
+            auto q = Orientation::createAxisAngle(m.data(), 180, "degrees");
+            reorientations.push_back(q);
+
+            // Shear
+            shear = sqrt(4.0*(1.0/std::pow(g.dot(m),2)-1.0));
+
+            burgers.push_back(*eta1i);
+            directions.push_back(l);
+            normals.push_back(m);
+          }
+        }
+      }
+    }
+  }
+  
+  if (burgers.size() != 0) {
+    burgers_vectors_.push_back(burgers);
+    slip_directions_.push_back(directions);
+    slip_planes_.push_back(normals);
+    offsets_.push_back(offsets_.back() + burgers.size());
+    slip_types_.push_back(Lattice::SlipType::Twin);
+    shear_.push_back(shear);
+    reorientations_.push_back(reorientations);
     update_normals_(normals);
   }
 }
@@ -376,6 +475,21 @@ size_t Lattice::nslip(size_t g) const
 size_t Lattice::flat(size_t g, size_t i) const
 {
   return offsets_[g] + i;
+}
+
+Lattice::SlipType Lattice::slip_type(size_t g, size_t i) const
+{
+  return slip_types_[g];
+}
+
+double Lattice::characteristic_shear(size_t g, size_t i) const
+{
+  return shear_[g];
+}
+
+Orientation Lattice::reorientation(size_t g, size_t i) const
+{
+  return reorientations_[g][i];
 }
 
 const Symmetric & Lattice::M(size_t g, size_t i, const Orientation & Q)
@@ -489,9 +603,10 @@ void Lattice::update_normals_(const std::vector<Vector> & new_planes)
 }
 
 CubicLattice::CubicLattice(double a,
-                           list_systems isystems) :
+                           list_systems isystems,
+                           twin_systems tsystems) :
     Lattice(Vector({a,0,0}),Vector({0,a,0}),Vector({0,0,a}),
-            std::make_shared<SymmetryGroup>("432"), isystems)
+            std::make_shared<SymmetryGroup>("432"), isystems, tsystems)
 {
 
 }
@@ -508,6 +623,8 @@ ParameterSet CubicLattice::parameters()
   pset.add_parameter<double>("a");
   pset.add_optional_parameter<list_systems>("slip_systems",
                                             list_systems());
+  pset.add_optional_parameter<list_systems>("twin_systems",
+                                            twin_systems());
 
   return pset;
 }
@@ -516,7 +633,69 @@ std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
 {
   return neml::make_unique<CubicLattice>(
       params.get_parameter<double>("a"),
-      params.get_parameter<list_systems>("slip_systems"));
+      params.get_parameter<list_systems>("slip_systems"),
+      params.get_parameter<twin_systems>("twin_systems"));
+}
+
+HCPLattice::HCPLattice(double a, double c,
+                       list_systems isystems,
+                       twin_systems tsystems) :
+    Lattice(Vector({a/2,-sqrt(3)*a/2,0}),Vector({a/2,sqrt(3)*a/2,0}),Vector({0,0,c}),
+            std::make_shared<SymmetryGroup>("622"), isystems, tsystems)
+{
+
+}
+
+std::string HCPLattice::type()
+{
+  return "HCPLattice";
+}
+
+ParameterSet HCPLattice::parameters()
+{
+  ParameterSet pset(HCPLattice::type());
+
+  pset.add_parameter<double>("a");
+  pset.add_parameter<double>("c");
+  pset.add_optional_parameter<list_systems>("slip_systems",
+                                            list_systems());
+  pset.add_optional_parameter<twin_systems>("twin_systems",
+                                            twin_systems());
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> HCPLattice::initialize(ParameterSet & params)
+{
+  return neml::make_unique<HCPLattice>(
+      params.get_parameter<double>("a"),
+      params.get_parameter<double>("c"),
+      params.get_parameter<list_systems>("slip_systems"),
+      params.get_parameter<twin_systems>("twin_systems"));
+}
+
+Vector HCPLattice::miller2cart_direction(std::vector<int> m)
+{
+  assert_miller_bravais_(m);
+
+  return Lattice::miller2cart_direction({2*m[0] + m[1], 2*m[1] + m[0], m[3]});
+}
+
+Vector HCPLattice::miller2cart_plane(std::vector<int> m)
+{
+  assert_miller_bravais_(m);
+  return Lattice::miller2cart_plane({m[0], m[1], m[3]});
+}
+
+void HCPLattice::assert_miller_bravais_(std::vector<int> m)
+{
+  if (m.size() != 4)   
+    throw std::invalid_argument("Miller-Bravais indices must have length 4");
+  
+
+  if (m[0] + m[1] + m[2] != 0)
+    throw std::invalid_argument("h + k + i must sum to 0 for Miller-Bravais"
+                                " notation");
 }
 
 } // namespace neml
