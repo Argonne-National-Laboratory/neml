@@ -267,8 +267,9 @@ Skew AsaroInelasticity::w_p(const Symmetric & stress, const Orientation & Q,
   Skew w;
   for (size_t g = 0; g < lattice.ngroup(); g++) {
     for (size_t i = 0; i < lattice.nslip(g); i++) {
-      w += rule_->slip(g, i, stress, Q, history, lattice, T, fixed) * lattice.N(
-          g, i, Q);
+      if (lattice.slip_type(g,i) == Lattice::SlipType::Slip) // No twin
+        w += rule_->slip(g, i, stress, Q, history, lattice, T, fixed) * lattice.N(
+            g, i, Q);
     }
   }
 
@@ -285,8 +286,9 @@ SkewSymR4 AsaroInelasticity::d_w_p_d_stress(const Symmetric & stress,
 
   for (size_t g = 0; g < lattice.ngroup(); g++) {
     for (size_t i = 0; i < lattice.nslip(g); i++) {
-      ds += douter(lattice.N(g, i, Q), 
-                   rule_->d_slip_d_s(g, i, stress, Q, history, lattice, T, fixed));
+      if (lattice.slip_type(g,i) == Lattice::SlipType::Slip) // No twin
+        ds += douter(lattice.N(g, i, Q), 
+                     rule_->d_slip_d_s(g, i, stress, Q, history, lattice, T, fixed));
     }
   }
 
@@ -303,10 +305,13 @@ History AsaroInelasticity::d_w_p_d_history(const Symmetric & stress,
 
   for (size_t g = 0; g < lattice.ngroup(); g++) {
     for (size_t i = 0; i < lattice.nslip(g); i++) {
-      History h_gi = rule_->d_slip_d_h(g, i, stress, Q, history, lattice, T, fixed);
-      for (auto item : h_gi.items()) {
-        // God is this annoying
-        h.get<Skew>(item) += h_gi.get<double>(item) * lattice.N(g, i, Q);
+      // No twins
+      if (lattice.slip_type(g,i) == Lattice::SlipType::Slip) {
+        History h_gi = rule_->d_slip_d_h(g, i, stress, Q, history, lattice, T, fixed);
+        for (auto item : h_gi.items()) {
+          // God is this annoying
+          h.get<Skew>(item) += h_gi.get<double>(item) * lattice.N(g, i, Q);
+        }
       }
     }
   }
