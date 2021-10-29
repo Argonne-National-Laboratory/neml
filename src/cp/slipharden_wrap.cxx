@@ -60,6 +60,15 @@ PYBIND11_MODULE(slipharden, m) {
                     }))
       ;
 
+  py::class_<SimpleLinearHardening, SlipHardening,
+      std::shared_ptr<SimpleLinearHardening>>(m, "SimpleLinearHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<SimpleLinearHardening>(
+                          args, kwargs, {"G", "tau_0"});
+                    }))
+      ;
+
   py::class_<SlipSingleHardening, SlipHardening,
         std::shared_ptr<SlipSingleHardening>>(m, "SlipSingleHardening")
       .def("hist_map", &SlipSingleHardening::hist_map)

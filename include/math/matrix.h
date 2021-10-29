@@ -48,6 +48,9 @@ class NEML_EXPORT Matrix {
   void matvec(const FlatVector & other, FlatVector & res);
 
   double * data() {return data_;};
+  
+  const double & operator()(size_t i, size_t j) const;
+  double & operator()(size_t i, size_t j);
 
  protected:
   size_t m_, n_;

@@ -122,6 +122,9 @@ double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & str
     strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
   }
 
+  if ((L.slip_type(g,i) == Lattice::SlipType::Twin) && (tau < 0)) 
+    return 0.0;
+
   return sslip(g, i, tau, strengths, T);
 }
 
@@ -136,6 +139,9 @@ Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmet
   for (size_t i = 0; i < nstrength(); i++) {
     strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
   }
+
+  if ((L.slip_type(g,i) == Lattice::SlipType::Twin) && (tau < 0)) 
+    return Symmetric::zero();
 
   return d_sslip_dtau(g, i, tau, strengths, T) * dtau;
 }
@@ -160,6 +166,9 @@ History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetri
     deriv.scalar_multiply(dtb[i]);
     dhist.add_union(deriv); 
   }
+
+  if ((L.slip_type(g,i) == Lattice::SlipType::Twin) && (tau < 0)) 
+    return dhist.zero();
 
   return dhist;
 }
