@@ -2,6 +2,7 @@
 #define SLIPRULES_H
 
 #include "slipharden.h"
+#include "sliprules.h"
 #include "crystallography.h"
 
 #include "../objects.h"
@@ -251,6 +252,8 @@ class NEML_EXPORT PowerLawSlipRule: public SlipStrengthSlipRule
 };
 
 static Register<PowerLawSlipRule> regPowerLawSlipRule;
+
+
 
 } // namespace neml
 

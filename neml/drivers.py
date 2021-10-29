@@ -1246,7 +1246,7 @@ def stress_relaxation(model, emax, erate, hold, T = 300.0, nsteps = 250,
 def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     nsteps_up = 150, sdir = np.array([1,0,0,0,0,0]), verbose = False,
     logspace = False, history = None, elimit = 1.0, check_dmg = False,
-    dtol = 0.75):
+    dtol = 0.75, miter = 25):
   """
     Simulate a creep test
 
@@ -1271,7 +1271,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       dict:          results dictionary
   """
   # Setup
-  driver = Driver_sd(model, verbose = verbose, T_init = T)
+  driver = Driver_sd(model, verbose = verbose, T_init = T, miter = miter)
   if history is not None:
     driver.stored_int[0] = history
   time = [0]
@@ -1292,7 +1292,7 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
   if logspace:
     ts = np.logspace(0, np.log10(hold), num = nsteps) + t0
   else:
-    ts = np.linspace(0,hold, num = nsteps) + t0
+    ts = np.linspace(0,hold, num = nsteps+1)[1:] + t0
 
   failed = False
   for t in ts:
@@ -1301,28 +1301,36 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
     try:
       driver.stress_step(driver.stress_int[-1], t, T)
     except:
+      print("Exception in driver detected...")
       failed = True
       break
     if np.any(np.isnan(driver.strain_int[-1])):
+      print("NaN strain detected...")
       failed = True
       break
     if np.any(np.abs(driver.strain_int[-1]) > elimit):
+      print("Excessive strain detected...")
       failed = True
       break
 
     ed = np.dot(driver.strain_int[-1],sdir)
     if ed < strain[-1]:
+      print("Strain reversing direction...")
       failed = True
       break
 
     if check_dmg:
       if driver.stored_int[-1][0] > dtol:
+        print("Damage exceeded limit...")
         failed = True
         break
 
     time.append(t)
     strain.append(ed)
     stress.append(np.dot(driver.stress_int[-1],sdir))
+
+  if failed:
+    print("Simulation died prematurely")
 
   time = np.array(time)
   strain = np.array(strain)

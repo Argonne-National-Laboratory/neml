@@ -407,4 +407,10 @@ void History::unravel_hh(const History & base, double * const array)
   }
 }
 
+double * History::start_loc(std::string name)
+{
+  error_if_not_exists_(name);
+  return &(storage_[loc_.at(name)]);
+}
+
 } // namespace neml

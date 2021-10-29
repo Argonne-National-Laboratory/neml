@@ -65,11 +65,10 @@ PYBIND11_MODULE(crystallography, m) {
       .def_property_readonly("ntotal", &Lattice::ntotal)
       .def_property_readonly("ngroup", &Lattice::ngroup)
       .def("nslip", &Lattice::nslip)
-
       .def("characteristic_shear", &Lattice::characteristic_shear)
       .def("slip_type", &Lattice::slip_type)
       .def("reorientation", &Lattice::reorientation)
-
+      .def("flat", &Lattice::flat)
       .def("M", &Lattice::M)
       .def("N", &Lattice::N)
       .def("shear", &Lattice::shear)

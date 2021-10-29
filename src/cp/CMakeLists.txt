@@ -10,6 +10,7 @@ target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/batch.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/polycrystal.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/crystaldamage.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/hucocks.cxx
       )
 
 if (WRAP_PYTHON)
@@ -26,4 +27,5 @@ if (WRAP_PYTHON)
       pybind(batch cp)
       pybind(polycrystal cp)
       pybind(crystaldamage cp)
+      pybind(hucocks cp)
 endif()
