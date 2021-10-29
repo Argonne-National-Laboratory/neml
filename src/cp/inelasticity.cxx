@@ -1,5 +1,7 @@
 #include "cp/inelasticity.h"
 
+#include <limits>
+
 namespace neml {
 
 bool InelasticModel::use_nye() const
