@@ -119,3 +119,35 @@ class TestCubicModel(CommonElasticity, unittest.TestCase):
 
     self.assertEqual(self.model.C_tensor(self.T),
         self.model.C_tensor(self.T, self.Q_cube))
+
+class TestCubicModel(CommonElasticity, unittest.TestCase):
+  def setUp(self):
+    self.C11 = 160000.0
+    self.C33 = 181000.0
+    self.C44 = 46500.0
+    self.C12 = 90000.0
+    self.C13 = 66000.0
+    self.T = 325.0
+
+    self.Q = rotations.Orientation(31.0, 59.0, 80.0, angle_type = "degrees",
+        convention = "bunge")
+    self.Q_cube = rotations.Orientation(90.0, 0.0, 0.0, angle_type = "degrees",
+        convention = "bunge") 
+
+    self.model = elasticity.TransverseIsotropicLinearElasticModel(
+        self.C11, self.C33, self.C12, self.C13, self.C44, "components")
+
+    self.v1 = tensors.Vector(np.array([1.0,0.0,0]))
+    self.v2 = tensors.Vector(np.array([0.0,1.0,0]))
+
+  def test_definition(self):
+    C1 = self.model.C(self.T)
+    C2 = np.array([
+      [self.C11,self.C12,self.C13,0,0,0],
+      [self.C12,self.C11,self.C13,0,0,0],
+      [self.C13,self.C13,self.C33,0,0,0],
+      [0,0,0,self.C44,0,0],
+      [0,0,0,0,self.C44,0],
+      [0,0,0,0,0,(self.C11-self.C12)/2]])
+
+    self.assertTrue(np.allclose(C1, C2))

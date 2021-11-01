@@ -78,6 +78,21 @@ PYBIND11_MODULE(elasticity, m) {
           return create_object_python<CubicLinearElasticModel>(args, kwargs, {"m1", "m2", "m3", "method"});
         }))
   ;
+
+  py::class_<TransverseIsotropicLinearElasticModel, LinearElasticModel,
+      std::shared_ptr<TransverseIsotropicLinearElasticModel>>(m,
+                                                              "TransverseIsotropicLinearElasticModel")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return
+          create_object_python<TransverseIsotropicLinearElasticModel>(args,
+                                                                      kwargs,
+                                                                      {"m1",
+                                                                      "m2",
+                                                                      "m3",
+                                                                      "m4", "m5",  "method"});
+        }))
+  ;
 }
 
 }

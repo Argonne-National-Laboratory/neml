@@ -24,7 +24,6 @@ SingleCrystalModel::SingleCrystalModel(
   History h;
   populate_static_(h);
   static_names_ = h.get_order();
-  static_size_ = h.size();
 }
 
 SingleCrystalModel::~SingleCrystalModel()
@@ -209,6 +208,9 @@ int SingleCrystalModel::attempt_update_ld_inc_(
   History H_n = HF_n.split(not_updated_());
   History F_n = HF_n.split(not_updated_(), false);
 
+  for (auto s : not_updated_())
+    std::cout << s << std::endl;
+
   /* Begin adaptive stepping */
   double dT = T_np1 - T_n;
   int progress = 0;
@@ -308,8 +310,8 @@ int SingleCrystalModel::attempt_update_ld_inc_(
                                H_np1, H_n);
 
   // Update model based on any post-processors
-  for (auto pp : postprocessors_)
-    pp->act(*this, local_lattice, T_np1, D, W, HF_np1, HF_n);
+  //for (auto pp : postprocessors_)
+  //  pp->act(*this, local_lattice, T_np1, D, W, HF_np1);
 
   return 0;
 }
@@ -351,7 +353,13 @@ int SingleCrystalModel::elastic_strains(
 
 size_t SingleCrystalModel::nparams() const
 {
-  return 6 + nhist() - static_size_;
+  // 6 stress + the history minus the rotations minus the nye tensor
+  if (use_nye()) {
+    return 6 + nhist() - 8 - 9;
+  }
+  else {
+    return 6 + nhist() - 8;
+  }
 }
 
 int SingleCrystalModel::init_x(double * const x, TrialState * ts)

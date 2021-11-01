@@ -3,6 +3,7 @@
 
 #include "kinematics.h"
 #include "crystallography.h"
+#include "postprocessors.h"
 
 #include "../models.h"
 #include "../elasticity.h"
@@ -14,6 +15,8 @@
 #include "../windows.h"
 
 namespace neml {
+
+class CrystalPostprocessor; // forward declaration
 
 /// Store the trial state for the single crystal model
 class SCTrialState: public TrialState {
@@ -48,7 +51,9 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
                      std::shared_ptr<Interpolate> alpha,
                      bool update_rotation,
                      double rtol, double atol, int miter, bool verbose,
-                     bool linesearch, int max_divide);
+                     bool linesearch, int max_divide,
+                     std::vector<std::shared_ptr<CrystalPostprocessor>>
+                     postprocessors);
   /// Destructor
   virtual ~SingleCrystalModel();
 
@@ -161,6 +166,8 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
   std::vector<std::string> not_updated_() const;
 
+  void populate_static_(History & history) const;
+
  private:
   std::shared_ptr<KinematicModel> kinematics_;
   std::shared_ptr<Lattice> lattice_;
@@ -173,6 +180,10 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   int max_divide_;
 
   History stored_hist_;
+
+  std::vector<std::shared_ptr<CrystalPostprocessor>> postprocessors_;
+  std::vector<std::string> static_names_;
+  size_t static_size_;
 };
 
 static Register<SingleCrystalModel> regSingleCrystalModel;
