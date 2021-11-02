@@ -71,7 +71,7 @@ void PTRTwinReorientation::act(SingleCrystalModel & model,
                                const Skew & W, History & state,
                                const History & prev_state)
 {
-  // Temporary decision: don't twin twice
+  // If "not twinned"
   if (prev_state.get<double>("twinned") < 0.5) {
     state.get<double>("twinned") = prev_state.get<double>("twinned");
     size_t j = 0;
@@ -103,6 +103,8 @@ void PTRTwinReorientation::act(SingleCrystalModel & model,
           j++;
         }
       }
+      // Allow to "retwin"
+      state.get<double>("twinned") = 0.0;
     }
   }
   else {

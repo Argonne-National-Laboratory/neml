@@ -12,13 +12,13 @@ from neml import elasticity
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  N = 200
-  nthreads = 1
+  N = 1000
+  nthreads = 3
 
-  L = np.array([[0,0,0],[0,1.0,0],[0,0,-1.0]])
+  L = np.array([[1.0,0,0],[0,1.0,0],[0,0,-1.0]])
   erate = 1.0e-4
   steps = 100
-  emax = 1.0
+  emax = 2.0
 
   T = 0
   
@@ -32,16 +32,16 @@ if __name__ == "__main__":
   C12 = 90000.0
   C13 = 66000.0
 
-  tau0 = np.array([170.0]*3+[90.5]*3+[210]*6+[180.0]*6+[250.0]*6)
+  tau0 = np.array([170.0]*3+[90.5]*3+[210]*6+[180.0]*6+[250.0]*6)/10.0
   
   # Not realistic but I just want it to roll quickly
-  H1 = 100.0 
-  H2 = 100.0
+  H1 = 10.0 
+  H2 = 10.0
 
   g0 = 1.0
   n = 12.0
 
-  twin_threshold = 0.5
+  twin_threshold = 0.75
 
   M = matrix.SquareMatrix(24, type = "diagonal_blocks", 
       data = [H1,H2], blocks = [12,12])
@@ -52,7 +52,7 @@ if __name__ == "__main__":
   # Prismatic <a>
   lattice.add_slip_system([1,1,-2,0],[1,0,-1,0])
   # Pyramidal <c+a>
-  lattice.add_slip_system([1,1,-2,3],[1,1,-2,2])
+  lattice.add_slip_system([1,1,-2,-3],[1,1,-2,2])
   # Tension twinning
   lattice.add_twin_system([-1,0,1,1],[1,0,-1,2],[1,0,-1,1],[1,0,-1,-2])
   # Compression twinning
@@ -78,7 +78,8 @@ if __name__ == "__main__":
   twinner = postprocessors.PTRTwinReorientation(twin_threshold)
 
   model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
-      postprocessors = [twinner], verbose = True, linesearch = True)
+      postprocessors = [twinner], verbose = False, linesearch = True,
+      miter = 100, max_divide = 10)
 
   pmodel = polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
 
