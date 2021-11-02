@@ -12,40 +12,50 @@ from neml import elasticity
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
+  # Number of crystals and number of threads
   N = 1000
   nthreads = 3
-
-  L = np.array([[1.0,0,0],[0,1.0,0],[0,0,-1.0]])
+  
+  # Strain direction, rate, and number of steps
+  L = np.array([[0.0,0,0],[0,1.0,0],[0,0,-1.0]])
   erate = 1.0e-4
   steps = 100
   emax = 2.0
-
+  
+  # Temperature in K
   T = 0
   
   # Model
   a = 2.9511*0.1 # nm
   c = 4.68433*0.1 # nm
-
+  
+  # Elastic constants in MPa
   C11 = 160000.0
   C33 = 181000.0
   C44 = 46500.0
   C12 = 90000.0
   C13 = 66000.0
-
+  
+  # Constant part of the strength for slip and twin
   tau0 = np.array([170.0]*3+[90.5]*3+[210]*6+[180.0]*6+[250.0]*6)/10.0
   
   # Not realistic but I just want it to roll quickly
-  H1 = 10.0 
+  # Hardening coefficients for slip (H1) and twinning (H2)
+  H1 = 10.0
   H2 = 10.0
-
+  
+  # Reference slip rate and rate sensitivity exponent
   g0 = 1.0
   n = 12.0
-
+  
+  # Twin threshold 
   twin_threshold = 0.75
-
+  
+  # Sets up the interaction matrix
   M = matrix.SquareMatrix(24, type = "diagonal_blocks", 
       data = [H1,H2], blocks = [12,12])
-
+  
+  # Sets up the lattice crystallography
   lattice = crystallography.HCPLattice(a, c)
   # Basal <a>
   lattice.add_slip_system([1,1,-2,0],[0,0,0,1])
@@ -58,31 +68,42 @@ if __name__ == "__main__":
   # Compression twinning
   lattice.add_twin_system([1,1,-2,-3],[1,1,-2,2],[2,2,-4,3],[1,1,-2,-4])
 
-  # Setup
+  # Sets up the actual deformation tensor
   L *= erate
   dt = emax / steps / erate
+  # Randomly selects initial orientations
   orientations = rotations.random_orientations(N)
-
+  
+  # Plots an initial basal pole figure
   polefigures.pole_figure_discrete(orientations,[0,0,0,1],lattice)
   plt.title("Initial, <0001>")
   plt.show()
-
+  
+  # Sets up the linear elastic tensor
   emodel = elasticity.TransverseIsotropicLinearElasticModel(
       C11,C33,C12,C13,C44,"components")
-
+  
+  # Sets up the slip system strength model (this is what you'll change)
   strength = slipharden.SimpleLinearHardening(M, tau0)
+  # Sets up the slip rule
   slipmodel = sliprules.PowerLawSlipRule(strength, g0, n)
+  # Sets up the model inelastic rate kinematics 
   imodel = inelasticity.AsaroInelasticity(slipmodel)
+  # Sets up the overall model kinematics
   kmodel = kinematics.StandardKinematicModel(emodel, imodel)
-
+  
+  # This is the object that causes twins to recrystallize
   twinner = postprocessors.PTRTwinReorientation(twin_threshold)
-
+  
+  # Sets up the single crystal model
   model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
       postprocessors = [twinner], verbose = False, linesearch = True,
       miter = 100, max_divide = 10)
-
+  
+  # Sets up the poly crystal model
   pmodel = polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
-
+  
+  # Runs the exmaple
   h_n = pmodel.init_store()
  
   d_inc = nemlmath.sym(0.5*(L+L.T))
@@ -111,7 +132,8 @@ if __name__ == "__main__":
 
     u_n = u_np1
     p_n = p_np1
-
+  
+  # Plots a second, as-rolled basal pole figure
   polefigures.pole_figure_discrete(pmodel.orientations(h_np1),
       [0,0,0,1],lattice)
   plt.title("Final, <0001>")
