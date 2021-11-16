@@ -945,6 +945,313 @@ void SimpleLinearHardening::consistency(Lattice & L) const
   }
 }
 
+
+ForestHardening::ForestHardening(
+	std::vector<std::shared_ptr<Interpolate>> tau_0, 
+	std::shared_ptr<SquareMatrix> C_st,
+	std::vector<std::shared_ptr<Interpolate>> mu_s, 
+	std::vector<std::shared_ptr<Interpolate>> mu_t, 
+	std::vector<std::shared_ptr<Interpolate>> k1, 
+	std::vector<std::shared_ptr<Interpolate>> k2, 
+	std::vector<std::shared_ptr<Interpolate>> b_s, 
+	std::vector<std::shared_ptr<Interpolate>> b_t, 
+	std::string varprefix,
+	std::string twinprefix):
+      tau_0_(tau_0), C_st_(C_st), mu_s_(mu_s), mu_t_(mu_t),
+	  k1_(k1), k2_(k2), b_s_(b_s), b_t_(b_t),
+      varprefix_(varprefix), twinprefix_(twinprefix)
+{
+  if (C_st_->n() != tau_0_.size()) {
+    throw std::invalid_argument("Twinning interaction matrix and dislocation density sizes do not agree!");
+  }
+  
+  varnames_.resize(size());
+  for (size_t i = 0; i < size(); i++) {
+	if (i < size()/2){
+      varnames_[i] = varprefix_+std::to_string(i);
+	} else{
+	  varnames_[i] = twinprefix_+std::to_string(i);	
+	}
+    
+  }
+  init_cache_();
+}
+
+std::string ForestHardening::type()
+{
+  return "ForestHardening";
+}
+
+std::unique_ptr<NEMLObject> ForestHardening::initialize(ParameterSet & params)
+{
+  return neml::make_unique<ForestHardening>(
+	  params.get_object_parameter_vector<Interpolate>("tau_0"),	  
+      params.get_object_parameter<SquareMatrix>("C_st"),
+	  params.get_object_parameter_vector<Interpolate>("mu_s"),
+	  params.get_object_parameter_vector<Interpolate>("mu_t"),
+	  params.get_object_parameter_vector<Interpolate>("k1"),
+	  params.get_object_parameter_vector<Interpolate>("k2"),
+	  params.get_object_parameter_vector<Interpolate>("b_s"),
+	  params.get_object_parameter_vector<Interpolate>("b_t"),
+      params.get_parameter<std::string>("varprefix"),
+	  params.get_parameter<std::string>("twinprefix"));
+}
+
+ParameterSet ForestHardening::parameters()
+{
+  ParameterSet pset(ForestHardening::type());
+
+  pset.add_parameter<NEMLObject>("tau_0");
+  pset.add_parameter<NEMLObject>("C_st");
+  pset.add_parameter<NEMLObject>("mu_s");
+  pset.add_parameter<NEMLObject>("mu_t");
+  pset.add_parameter<NEMLObject>("k1");
+  pset.add_parameter<NEMLObject>("k2");
+  pset.add_parameter<NEMLObject>("b_s");
+  pset.add_parameter<NEMLObject>("b_t");
+  pset.add_optional_parameter<std::string>("varprefix", 
+                                           std::string("rho"));
+  pset.add_optional_parameter<std::string>("twinprefix", 
+                                           std::string("slip"));
+
+  return pset;
+}
+
+std::vector<std::string> ForestHardening::varnames() const
+{
+  return varnames_;
+}
+
+void ForestHardening::set_varnames(std::vector<std::string> vars)
+{
+  varnames_ = vars;
+  init_cache_();
+}
+
+void ForestHardening::populate_history(History & history) const
+{
+  for (auto vn : varnames_) {
+    history.add<double>(vn);
+  }
+}
+
+void ForestHardening::init_history(History & history) const
+{
+  size_t i = 0;
+  for (auto vn : varnames_) {
+    history.get<double>(vn) = 0; //tau_0_[i];
+    i++;
+  }
+}
+
+double ForestHardening::hist_to_tau(size_t g, size_t i, 
+                                           const History & history,
+                                           Lattice & L,
+                                           double T, const History & fixed) const
+{
+  consistency(L);
+
+  double X_s = X_s_->value(T);
+  double b_s = b_s_->value(T);
+  double b_t = b_t_->value(T);
+  double mu_s = mu_s_->value(T);
+  double mu_t = mu_t_->value(T);
+  double tau_0 = tau_0_->value(T);
+
+  
+  if (L.SlipType == 0){
+	  double v = 0;
+	  v =  X_s[L.flat(g,i)]* b_s[L.flat(g,i)]* mu_s[L.flat(g,i)] * std::sqrt(history.get<double>(varnames_[L.flat(g,i)]));
+	  
+  } else{
+	  double v = 0;
+	  for (size_t k = 0; k < size()/2; k++)
+	    v += (C_st_)(i,k) * b_s[k] * b_t[L.flat(g,i)] * history.get<double>(varnames_[k]);
+	  v = v * mu_t[L.flat(g,i)]
+  }
+  
+  return v + tau_0[L.flat(g,i)];  
+  
+}
+
+History ForestHardening::d_hist_to_tau(size_t g, size_t i, 
+                                              const History & history,
+                                              Lattice & L,
+                                              double T, 
+                                              const History & fixed) const
+{
+  History res = cache(CacheType::DOUBLE);
+  
+  double X_s = X_s_->value(T);
+  double b_s = b_s_->value(T);
+  double b_t = b_t_->value(T);
+  double mu_s = mu_s_->value(T);
+  double mu_t = mu_t_->value(T);
+  double tau_0 = tau_0_->value(T);
+  
+
+  if (L.SlipType == 0){
+    res.get<double>(varnames_[L.flat(g,i)]) = X_s[L.flat(g,i)] * b_s[L.flat(g,i)] * mu_s[L.flat(g,i)
+					] * 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
+  } else {
+    // double v = 0;
+    // for (size_t k = 0; k < size()/2; k++) 
+      // res = (C_st_)(i,k) * b_s_[k] * b_t_[L.flat(g,i)] * mu_t_[L.flat(g,i)];
+	res.get<double>(varnames_[L.flat(g,i)]) = 0.0;
+  }
+
+  return res;
+}
+
+History ForestHardening::hist(const Symmetric & stress, 
+                                     const Orientation & Q,
+                                     const History & history, 
+                                     Lattice & L, double T, const SlipRule & R, 
+                                     const History & fixed) const
+{
+  consistency(L); 
+
+  History res = blank_hist();
+  
+
+  double k1 = k1_->value(T);
+  double k2 = k2_->value(T);
+
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+	  if (L.SlipType == 0){
+        res.get<double>(varnames_[ind]) = (k1[L.flat(g,i)] * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])
+						) - k2[L.flat(g,i)] * history.get<double>(varnames_[L.flat(g,i)])
+						) * R.slip(g, i, stress, Q, history, L, T, fixed);
+	    ind++;
+	  } else{
+		res.get<double>(varnames_[ind]) = fabs(R.slip(g, i, stress, Q, history, L,
+                                      T, fixed));  
+		ind++;
+	  }
+    }
+
+  return res;
+}
+
+History ForestHardening::d_hist_d_s(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history,
+                                           Lattice & L, double T, 
+                                           const SlipRule & R,
+                                           const History & fixed) const
+{
+  consistency(L);
+  History res = blank_hist().derivative<Symmetric>();
+  
+  double k1 = k1_->value(T);
+  double k2 = k2_->value(T);
+ 
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+	  size_t k = L.flat(g,i);
+      if (L.SlipType == 0){
+	    res.get<Symmetric>(varnames_[k]) = (k1[L.flat(g,i)] * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])
+						) - k2[L.flat(g,i)] * history.get<double>(varnames_[L.flat(g,i)])
+						) * R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
+		ind++;
+	  } else{
+		double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
+        res.get<Symmetric>(varnames_[ind]) = R.d_slip_d_s(g, i, stress,
+                                            Q, history, L,
+                                            T, fixed); 
+        ind++;											
+	  }
+    }
+
+  return res;
+}
+
+History ForestHardening::d_hist_d_h(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history, 
+                                           Lattice & L,
+                                           double T, const SlipRule & R, 
+                                           const History & fixed) const
+{
+  consistency(L); 
+  auto res = blank_hist().derivative<History>();
+  
+  double k1 = k1_->value(T);
+  double k2 = k2_->value(T);
+
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+	  size_t k = L.flat(g,i);
+	  if (L.SlipType == 0){
+	  res.get<double>(varnames_[ind] + "_" + varnames_[k]) =
+	    (k1[k] * 1.0 / (2.0 * std::sqrt(history.get<double>(varnames_[k]))) - k2[k]
+								) * R.slip(g, i, stress, Q, history, L, T, fixed);
+		ind++;
+      } else{
+	  double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
+      History dhist = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
+      res.get<double>(varnames_[ind] + "_" + varnames_[k]) =
+                                            dhist.get<double>(varnames_[k]);
+	  ind++;
+	  }
+
+  return res;
+}
+
+History ForestHardening::d_hist_d_h_ext(const Symmetric & stress, 
+                                               const Orientation & Q,
+                                               const History & history,
+                                               Lattice & L, double T, const SlipRule & R,
+                                               const History & fixed, 
+                                               std::vector<std::string> ext) const
+{
+  consistency(L);
+  History res = blank_hist().history_derivative(history.subset(ext)).zero();
+  
+  double k1 = k1_->value(T);
+  double k2 = k2_->value(T);
+
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+	  size_t k = L.flat(g,i);
+	  if (L.SlipType == 0){
+		for (auto vn : ext) {
+          if (dhist.contains(vn)) 
+			res.get<double>(varnames_[ind] + "_" + vn) =
+				(k1[k] * 1.0 / (2.0 * std::sqrt(history.get<double>(varnames_[k]))) - k2[k]
+								) * R.slip(g, i, stress, Q, history, L, T, fixed);
+		ind++;
+      } else{
+	  double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
+      History dhist = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
+      for (auto vn : ext) {
+        if (dhist.contains(vn)) 
+          res.get<double>(varnames_[ind] + "_" + vn) = dhist.get<double>(vn);
+      }
+	  ind++;
+	  }
+  return res;
+}
+
+void ForestHardening::consistency_(Lattice & L) const
+{
+  if (L.ntotal() != size()) {
+    throw std::logic_error("Lattice and hardening matrix sizes do not match");
+  }
+}
+
+
+
+
+
+
+
+
 double SlipSingleHardening::hist_to_tau(
     size_t g, size_t i, const History & history, Lattice & L, double T, 
     const History & fixed) const
