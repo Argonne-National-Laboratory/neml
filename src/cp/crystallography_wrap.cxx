@@ -73,6 +73,7 @@ PYBIND11_MODULE(crystallography, m) {
       .def("N", &Lattice::N)
       .def("shear", &Lattice::shear)
       .def("d_shear", &Lattice::d_shear)
+      .def("burgers", &Lattice::burgers)
 
       .def_property_readonly("unique_planes", &Lattice::unique_planes)
       .def_property_readonly("nplanes", &Lattice::nplanes)

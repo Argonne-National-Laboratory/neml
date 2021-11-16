@@ -55,6 +55,8 @@ if __name__ == "__main__":
   M = matrix.SquareMatrix(24, type = "diagonal_blocks", 
       data = [H1,H2], blocks = [12,12])
   
+  print(M)
+  
   # Sets up the lattice crystallography
   lattice = crystallography.HCPLattice(a, c)
   # Basal <a>
@@ -97,7 +99,7 @@ if __name__ == "__main__":
   
   # Sets up the single crystal model
   model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
-      postprocessors = [twinner], verbose = False, linesearch = True,
+      postprocessors = [], verbose = False, linesearch = True,
       miter = 100, max_divide = 10)
   
   # Sets up the poly crystal model
