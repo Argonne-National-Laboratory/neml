@@ -69,6 +69,17 @@ PYBIND11_MODULE(slipharden, m) {
                     }))
       ;
 
+  py::class_<ForestHardening, SlipHardening,
+      std::shared_ptr<ForestHardening>>(m, "ForestHardening")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<SimpleLinearHardening>(
+                          args, kwargs, {"tau_0", "C_st", "mu_s", "mu_t",
+						  "k1", "k2", "b_s", "b_t"});
+                    }))
+      ;
+
+
   py::class_<SlipSingleHardening, SlipHardening,
         std::shared_ptr<SlipSingleHardening>>(m, "SlipSingleHardening")
       .def("hist_map", &SlipSingleHardening::hist_map)
