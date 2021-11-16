@@ -74,7 +74,7 @@ PYBIND11_MODULE(slipharden, m) {
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return create_object_python<SimpleLinearHardening>(
-                          args, kwargs, {"tau_0", "C_st", "mu_s", "mu_t",
+                          args, kwargs, {"tau_0", "C_st", "mu_s", "mu_t", "X_s",
 						  "k1", "k2", "b_s", "b_t"});
                     }))
       ;
