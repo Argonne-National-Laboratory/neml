@@ -1054,9 +1054,11 @@ double ForestHardening::hist_to_tau(size_t g, size_t i,
 {
   consistency(L);
 
+  SlipType stype = L.slip_type(g,i);
+
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
-		if (enum L.slip_type(g,i) == 0){
+		if (stype == 0){
 		  double v = 0;
 	      v =  X_s_[L.flat(g,i)]* b_s_[L.flat(g,i)]->value(T) * mu_s_[L.flat(g,i)]->value(T) 
 				* std::sqrt(history.get<double>(varnames_[L.flat(g,i)]));
@@ -1081,9 +1083,11 @@ History ForestHardening::d_hist_to_tau(size_t g, size_t i,
 {
   History res = cache(CacheType::DOUBLE);
   
+  SlipType stype = L.slip_type(g,i);
+  
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
-      if (enum L.slip_type(g,i) == 0){
+      if (stype == 0){
         res.get<double>(varnames_[L.flat(g,i)]) = X_s_[L.flat(g,i)] * b_s_[L.flat(g,i)]->value(T) 
 					* mu_s_[L.flat(g,i)]->value(T) 
 					* 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
@@ -1110,11 +1114,13 @@ History ForestHardening::hist(const Symmetric & stress,
   consistency(L); 
 
   History res = blank_hist();
+
+  SlipType stype = L.slip_type(g,i);
   
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
-	  if (enum L.slip_type(g,i) == 0){
+	  if (stype == 0){
         res.get<double>(varnames_[ind]) = (k1_[L.flat(g,i)]->value(T) 
 						* std::sqrt(history.get<double>(varnames_[L.flat(g,i)])
 						) - k2_[L.flat(g,i)]->value(T) * history.get<double>(varnames_[L.flat(g,i)])
@@ -1139,13 +1145,14 @@ History ForestHardening::d_hist_d_s(const Symmetric & stress,
 {
   consistency(L);
   History res = blank_hist().derivative<Symmetric>();
-  
+ 
+ SlipType stype = L.slip_type(g,i); 
 
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
 	  size_t k = L.flat(g,i);
-      if (enum L.slip_type(g,i) == 0){
+      if (stype == 0){
 	    res.get<Symmetric>(varnames_[k]) = (k1_[L.flat(g,i)]->value(T) * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])
 					) - k2_[L.flat(g,i)]->value(T) * history.get<double>(varnames_[L.flat(g,i)])
 					) * R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
@@ -1172,12 +1179,13 @@ History ForestHardening::d_hist_d_h(const Symmetric & stress,
   consistency(L); 
   auto res = blank_hist().derivative<History>();
   
+ SlipType stype = L.slip_type(g,i); 
 
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
 	  size_t k = L.flat(g,i);
-	  if (enum L.slip_type(g,i) == 0){
+	  if (stype == 0){
 	  res.get<double>(varnames_[ind] + "_" + varnames_[k]) =
 	    (k1_[k]->value(T) * 1.0 / (2.0 * std::sqrt(history.get<double>(varnames_[k]))) - k2_[k]->value(T)
 								) * R.slip(g, i, stress, Q, history, L, T, fixed);
@@ -1203,11 +1211,13 @@ History ForestHardening::d_hist_d_h_ext(const Symmetric & stress,
   consistency(L);
   History res = blank_hist().history_derivative(history.subset(ext)).zero();
   
+ SlipType stype = L.slip_type(g,i); 
+ 
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
 	  size_t k = L.flat(g,i);
-	  if (enum L.slip_type(g,i) == 0){
+	  if (stype == 0){
 		for (auto vn : ext) {
           if (dhist.contains(vn)) 
 			res.get<double>(varnames_[ind] + "_" + vn) =
