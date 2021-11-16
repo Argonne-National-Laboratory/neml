@@ -1094,10 +1094,11 @@ History ForestHardening::d_hist_to_tau(size_t g, size_t i,
     res.get<double>(varnames_[L.flat(g,i)]) = X_s[L.flat(g,i)] * b_s[L.flat(g,i)] * mu_s[L.flat(g,i)
 					] * 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
   } else {
-    // double v = 0;
-    // for (size_t k = 0; k < size()/2; k++) 
-      // res = (C_st_)(i,k) * b_s_[k] * b_t_[L.flat(g,i)] * mu_t_[L.flat(g,i)];
-	res.get<double>(varnames_[L.flat(g,i)]) = 0.0;
+    double v = 0;
+    for (size_t k = 0; k < size()/2; k++) 
+      v += (C_st_)(i,k) * b_s[k] * b_t[L.flat(g,i)] * (k1[k] * std::sqrt(history.get<double>(varnames_[k])
+				) - k2[k] * history.get<double>(varnames_[k]);
+	res.get<double>(varnames_[L.flat(g,i)]) = mu_t * v;
   }
 
   return res;
