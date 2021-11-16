@@ -457,6 +457,7 @@ class NEML_EXPORT ForestHardening: public SlipHardening
 				  std::vector<std::shared_ptr<Interpolate>> k2, 
 				  std::vector<std::shared_ptr<Interpolate>> b_s, 
 				  std::vector<std::shared_ptr<Interpolate>> b_t, 
+				  double X_s,
 				  std::string varprefix,
 				  std::string twinprefix);
 
@@ -516,13 +517,15 @@ class NEML_EXPORT ForestHardening: public SlipHardening
                      std::vector<std::string> ext) const;
 
  protected:
-  size_t size() const {return rou_.size() + gamma_t_.size();};
+  size_t size() const {return tau_0_.size();};
   void consistency(Lattice & L) const;
 
  private:
+  std::vector<std::shared_ptr<Interpolate>> tau_0_;
   std::shared_ptr<SquareMatrix> C_st_;
-  std::vector<std::shared_ptr<Interpolate>> rou_, gamma_t_;
-  std::string varprefix_;
+  std::vector<std::shared_ptr<Interpolate>> mu_s_, mu_t_, k1_, k2_, b_s_, b_t_;
+  double X_s_;
+  std::string varprefix_, twinprefix_;
   std::vector<std::string> varnames_;
 };
 
