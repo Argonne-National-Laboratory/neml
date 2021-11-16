@@ -1099,4 +1099,4 @@ CrystalOrientation make_crystal_orientation(const Orientation & o)
   return CrystalOrientation(params);
 }
 
-} // namespace cpfmwk
+} // namespace neml

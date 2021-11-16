@@ -42,6 +42,8 @@ def make_singlecrystal(verbose = False, return_hardening = False):
   Q0_car = 240e3
   c0_car = [interpolate.ConstantInterpolate(16.25/100.0),
       interpolate.ConstantInterpolate(0.0375/100.0)]
+  print("c0_car: ", c0_car)
+  sys.exit('exit')
   cp_car = [interpolate.PiecewiseLinearInterpolate(list(Ts),
     [69.85/100, 69.05/100, 68.32/100, 67.52/100]),
     interpolate.PiecewiseLinearInterpolate(list(Ts),

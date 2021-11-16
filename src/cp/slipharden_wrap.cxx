@@ -69,6 +69,17 @@ PYBIND11_MODULE(slipharden, m) {
                     }))
       ;
 
+  py::class_<LANLTiModel, SlipHardening,
+      std::shared_ptr<LANLTiModel>>(m, "LANLTiModel")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<LANLTiModel>(
+                          args, kwargs, {"tau_0", "C_st", "mu", 
+						  "k1", "k2"});
+                    }))
+      ;
+
+
   py::class_<SlipSingleHardening, SlipHardening,
         std::shared_ptr<SlipSingleHardening>>(m, "SlipSingleHardening")
       .def("hist_map", &SlipSingleHardening::hist_map)
