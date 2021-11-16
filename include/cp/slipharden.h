@@ -435,6 +435,92 @@ class NEML_EXPORT SimpleLinearHardening: public SlipHardening
 
 static Register<SimpleLinearHardening> regSimpleLinearHardening;
 
+
+class NEML_EXPORT ForestHardening: public SlipHardening
+{
+ public:
+  ForestHardening(std::vector<std::shared_ptr<Interpolate>> tau_0, 
+				  std::shared_ptr<SquareMatrix> C_st,
+			      std::vector<std::shared_ptr<Interpolate>> mu_s, 
+				  std::vector<std::shared_ptr<Interpolate>> mu_t, 
+				  std::vector<std::shared_ptr<Interpolate>> k1, 
+				  std::vector<std::shared_ptr<Interpolate>> k2, 
+				  std::vector<std::shared_ptr<Interpolate>> b_s, 
+				  std::vector<std::shared_ptr<Interpolate>> b_t, 
+				  std::string varprefix,
+				  std::string twinprefix);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Report your variable names
+  virtual std::vector<std::string> varnames() const;
+  /// Set new varnames
+  virtual void set_varnames(std::vector<std::string> vars);
+
+  /// Request whatever history you will need
+  virtual void populate_history(History & history) const;
+  /// Setup history
+  virtual void init_history(History & history) const;
+
+  /// Map the set of history variables to the slip system hardening
+  virtual double hist_to_tau(size_t g, size_t i, const History & history,
+                             Lattice & L,
+                             double T, const History & fixed) const;
+  /// Derivative of the map wrt to history
+  virtual History
+      d_hist_to_tau(size_t g, size_t i, const History & history, Lattice & L,
+                    double T, const History & fixed) const;
+
+  /// The rate of the history
+  virtual History hist(const Symmetric & stress,
+                     const Orientation & Q, const History & history,
+                     Lattice & L, double T, const SlipRule & R,
+                     const History & fixed) const;
+  /// Derivative of the history wrt stress
+  virtual History d_hist_d_s(const Symmetric & stress,
+                             const Orientation & Q, const History & history,
+                             Lattice & L, double T,
+                             const SlipRule & R,
+                             const History & fixed) const;
+  /// Derivative of the history wrt the history
+  virtual History
+      d_hist_d_h(const Symmetric & stress,
+                 const Orientation & Q,
+                 const History & history,
+                 Lattice & L,
+                 double T, const SlipRule & R,
+                 const History & fixed) const;
+  /// Derivative of this history wrt the history, external variables
+  virtual History
+      d_hist_d_h_ext(const Symmetric & stress,
+                     const Orientation & Q,
+                     const History & history,
+                     Lattice & L,
+                     double T, const SlipRule & R,
+                     const History & fixed,
+                     std::vector<std::string> ext) const;
+
+ protected:
+  size_t size() const {return rou_.size() + gamma_t_.size();};
+  void consistency(Lattice & L) const;
+
+ private:
+  std::shared_ptr<SquareMatrix> C_st_;
+  std::vector<std::shared_ptr<Interpolate>> rou_, gamma_t_;
+  std::string varprefix_;
+  std::vector<std::string> varnames_;
+};
+
+static Register<ForestHardening> regForestHardening;
+
+/// Forest Hardneing model above
+
+
 /// Slip strength rules where all systems share the same strength
 class NEML_EXPORT SlipSingleHardening: public SlipHardening
 {
