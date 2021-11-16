@@ -955,14 +955,15 @@ ForestHardening::ForestHardening(
 	std::vector<std::shared_ptr<Interpolate>> k2, 
 	std::vector<std::shared_ptr<Interpolate>> b_s, 
 	std::vector<std::shared_ptr<Interpolate>> b_t, 
+	double X_s,
 	std::string varprefix,
 	std::string twinprefix):
       tau_0_(tau_0), C_st_(C_st), mu_s_(mu_s), mu_t_(mu_t),
-	  k1_(k1), k2_(k2), b_s_(b_s), b_t_(b_t),
+	  k1_(k1), k2_(k2), b_s_(b_s), b_t_(b_t), X_s_(X_s),
       varprefix_(varprefix), twinprefix_(twinprefix)
 {
   if (C_st_->n() != tau_0_.size()) {
-    throw std::invalid_argument("Twinning interaction matrix and dislocation density sizes do not agree!");
+    throw std::invalid_argument("Twinning interaction matrix and initial strength sizes do not agree!");
   }
   
   varnames_.resize(size());
@@ -993,6 +994,7 @@ std::unique_ptr<NEMLObject> ForestHardening::initialize(ParameterSet & params)
 	  params.get_object_parameter_vector<Interpolate>("k2"),
 	  params.get_object_parameter_vector<Interpolate>("b_s"),
 	  params.get_object_parameter_vector<Interpolate>("b_t"),
+	  params.get_parameter<double>("X_s"),
       params.get_parameter<std::string>("varprefix"),
 	  params.get_parameter<std::string>("twinprefix"));
 }
@@ -1009,6 +1011,7 @@ ParameterSet ForestHardening::parameters()
   pset.add_parameter<NEMLObject>("k2");
   pset.add_parameter<NEMLObject>("b_s");
   pset.add_parameter<NEMLObject>("b_t");
+  pset.add_optional_parameter<double>("X_s", 0.9);
   pset.add_optional_parameter<std::string>("varprefix", 
                                            std::string("rho"));
   pset.add_optional_parameter<std::string>("twinprefix", 
@@ -1051,7 +1054,6 @@ double ForestHardening::hist_to_tau(size_t g, size_t i,
 {
   consistency(L);
 
-  double X_s = X_s_->value(T);
   double b_s = b_s_->value(T);
   double b_t = b_t_->value(T);
   double mu_s = mu_s_->value(T);
@@ -1061,7 +1063,7 @@ double ForestHardening::hist_to_tau(size_t g, size_t i,
   
   if (L.SlipType == 0){
 	  double v = 0;
-	  v =  X_s[L.flat(g,i)]* b_s[L.flat(g,i)]* mu_s[L.flat(g,i)] * std::sqrt(history.get<double>(varnames_[L.flat(g,i)]));
+	  v =  X_s_[L.flat(g,i)]* b_s[L.flat(g,i)]* mu_s[L.flat(g,i)] * std::sqrt(history.get<double>(varnames_[L.flat(g,i)]));
 	  
   } else{
 	  double v = 0;
@@ -1082,7 +1084,6 @@ History ForestHardening::d_hist_to_tau(size_t g, size_t i,
 {
   History res = cache(CacheType::DOUBLE);
   
-  double X_s = X_s_->value(T);
   double b_s = b_s_->value(T);
   double b_t = b_t_->value(T);
   double mu_s = mu_s_->value(T);
@@ -1091,7 +1092,7 @@ History ForestHardening::d_hist_to_tau(size_t g, size_t i,
   
 
   if (L.SlipType == 0){
-    res.get<double>(varnames_[L.flat(g,i)]) = X_s[L.flat(g,i)] * b_s[L.flat(g,i)] * mu_s[L.flat(g,i)
+    res.get<double>(varnames_[L.flat(g,i)]) = X_s_[L.flat(g,i)] * b_s[L.flat(g,i)] * mu_s[L.flat(g,i)
 					] * 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
   } else {
     double v = 0;
