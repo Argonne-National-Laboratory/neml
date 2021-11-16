@@ -352,6 +352,85 @@ class TestSimpleLinearHardening(unittest.TestCase, CommonSlipHardening):
 
     self.assertTrue(np.allclose(hrate, np.abs(srates)))
 
+# Eventually this should be TestLANLTiModel(unittest.TestCase, CommonSlipHardening) to get the Jacobian tests 
+class TestLANLTiModel(unittest.TestCase):
+  def setUp(self):
+    # Sets up the self.L crystallography
+    a = 2.9511*0.1 # nm
+    c = 4.68433*0.1 # nm
+    self.L = crystallography.HCPLattice(a, c)
+    # Basal <a>
+    self.L.add_slip_system([1,1,-2,0],[0,0,0,1])
+    # Prismatic <a>
+    self.L.add_slip_system([1,1,-2,0],[1,0,-1,0])
+    # Pyramidal <c+a>
+    self.L.add_slip_system([1,1,-2,-3],[1,1,-2,2])
+    # Tension twinning
+    self.L.add_twin_system([-1,0,1,1],[1,0,-1,2],[1,0,-1,1],[1,0,-1,-2])
+    # Compression twinning
+    self.L.add_twin_system([1,1,-2,-3],[1,1,-2,2],[2,2,-4,3],[1,1,-2,-4])
+    
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    
+    self.nslip = self.L.ntotal
+    
+    self.current_rho = 1e6
+    self.current_slip = 0.1
+
+    self.H = history.History()
+
+    for i in range(12):
+      self.H.add_scalar("rho"+str(i))
+      self.H.set_scalar("rho"+str(i), self.current_rho)
+
+    for i in range(12,24):
+      self.H.add_scalar("slip"+str(i))
+      self.H.set_scalar("slip"+str(i), self.current_slip)
+
+    self.T = 300.0
+    
+    self.G_np = ra.random((12,12)) * 10
+
+    self.G = matrix.SquareMatrix(12, type = "dense", data = self.G_np.flatten())
+    
+    self.k1_v = 0.5
+    self.k2_v = 0.75
+
+    self.k1 = list(np.ones((12,)) * self.k1_v)
+    self.k2 = list(np.ones((12,)) * self.k2_v)
+
+    self.tau0 = np.ones((24,))
+    self.tau0_slip = 30.0
+    self.tau0_twin = 50.0
+    self.tau0[:12] = self.tau0_slip
+    self.tau0[12:] = self.tau0_twin
+    self.tau0 = list(self.tau0)
+
+    self.b_s = list(np.ones((12,)) * 0.3)
+    self.b_t = list(np.ones((12,)) * 0.5)
+
+    self.mu_s = list(np.ones((12,)) * 30000.0)
+    self.mu_t = list(np.ones((12,)) * 25000.0)
+
+    self.model = slipharden.LANLTiModel(self.tau0, self.G, self.mu_s, self.mu_t, self.k1, self.k2, self.b_s, self.b_t)
+
+    self.g0 = 1.0
+    self.n = 3.0
+    self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
+
+    self.fixed = history.History()
+
+  def test_hist_to_tau(self):
+    direct = [self.model.hist_to_tau(g, i, self.H, self.L, self.T, self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))]
+    # Then implement what it should be in python and compare
+
+  def test_definition(self):
+    direct = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule, self.fixed)
+
 
 class CommonSlipSingleHardening():
   def test_d_hist_map(self):

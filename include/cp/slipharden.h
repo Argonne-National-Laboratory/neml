@@ -446,10 +446,10 @@ class NEML_EXPORT SimpleLinearHardening: public SlipHardening
 static Register<SimpleLinearHardening> regSimpleLinearHardening;
 
 
-class NEML_EXPORT ForestHardening: public SlipHardening
+class NEML_EXPORT LANLTiModel: public SlipHardening
 {
  public:
-  ForestHardening(std::vector<std::shared_ptr<Interpolate>> tau_0, 
+  LANLTiModel(std::vector<std::shared_ptr<Interpolate>> tau_0, 
 				  std::shared_ptr<SquareMatrix> C_st,
 			      std::vector<std::shared_ptr<Interpolate>> mu_s, 
 				  std::vector<std::shared_ptr<Interpolate>> mu_t, 
@@ -529,9 +529,7 @@ class NEML_EXPORT ForestHardening: public SlipHardening
   std::vector<std::string> varnames_;
 };
 
-static Register<ForestHardening> regForestHardening;
-
-/// Forest Hardneing model above
+static Register<LANLTiModel> regLANLTiModel;
 
 
 /// Slip strength rules where all systems share the same strength

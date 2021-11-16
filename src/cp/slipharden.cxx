@@ -946,7 +946,7 @@ void SimpleLinearHardening::consistency(Lattice & L) const
 }
 
 
-ForestHardening::ForestHardening(
+LANLTiModel::LANLTiModel(
 	std::vector<std::shared_ptr<Interpolate>> tau_0, 
 	std::shared_ptr<SquareMatrix> C_st,
 	std::vector<std::shared_ptr<Interpolate>> mu_s, 
@@ -961,14 +961,16 @@ ForestHardening::ForestHardening(
       tau_0_(tau_0), C_st_(C_st), mu_s_(mu_s), mu_t_(mu_t),
 	  k1_(k1), k2_(k2), b_s_(b_s), b_t_(b_t), X_s_(X_s),
       varprefix_(varprefix), twinprefix_(twinprefix)
-{
-  if (C_st_->n() != tau_0_.size()) {
+{ 
+  // Shouldn't tau_0 be 24 and C_st be 12?
+  // Long term you should fix the /2
+  if (C_st_->n() != tau_0_.size()/2) {
     throw std::invalid_argument("Twinning interaction matrix and initial strength sizes do not agree!");
   }
   
   varnames_.resize(size());
   for (size_t i = 0; i < size(); i++) {
-	if (i < size()/2){
+	if (i < size()/2){ // You'll need to fix this at some point
       varnames_[i] = varprefix_+std::to_string(i);
 	} else{
 	  varnames_[i] = twinprefix_+std::to_string(i);	
@@ -978,14 +980,14 @@ ForestHardening::ForestHardening(
   init_cache_();
 }
 
-std::string ForestHardening::type()
+std::string LANLTiModel::type()
 {
-  return "ForestHardening";
+  return "LANLTiModel";
 }
 
-std::unique_ptr<NEMLObject> ForestHardening::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> LANLTiModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<ForestHardening>(
+  return neml::make_unique<LANLTiModel>(
 	  params.get_object_parameter_vector<Interpolate>("tau_0"),	  
       params.get_object_parameter<SquareMatrix>("C_st"),
 	  params.get_object_parameter_vector<Interpolate>("mu_s"),
@@ -999,18 +1001,18 @@ std::unique_ptr<NEMLObject> ForestHardening::initialize(ParameterSet & params)
 	  params.get_parameter<std::string>("twinprefix"));
 }
 
-ParameterSet ForestHardening::parameters()
+ParameterSet LANLTiModel::parameters()
 {
-  ParameterSet pset(ForestHardening::type());
+  ParameterSet pset(LANLTiModel::type());
 
-  pset.add_parameter<NEMLObject>("tau_0");
+  pset.add_parameter<std::vector<NEMLObject>>("tau_0");
   pset.add_parameter<NEMLObject>("C_st");
-  pset.add_parameter<NEMLObject>("mu_s");
-  pset.add_parameter<NEMLObject>("mu_t");
-  pset.add_parameter<NEMLObject>("k1");
-  pset.add_parameter<NEMLObject>("k2");
-  pset.add_parameter<NEMLObject>("b_s");
-  pset.add_parameter<NEMLObject>("b_t");
+  pset.add_parameter<std::vector<NEMLObject>>("mu_s");
+  pset.add_parameter<std::vector<NEMLObject>>("mu_t");
+  pset.add_parameter<std::vector<NEMLObject>>("k1");
+  pset.add_parameter<std::vector<NEMLObject>>("k2");
+  pset.add_parameter<std::vector<NEMLObject>>("b_s");
+  pset.add_parameter<std::vector<NEMLObject>>("b_t");
   pset.add_optional_parameter<double>("X_s", 0.9);
   pset.add_optional_parameter<std::string>("varprefix", 
                                            std::string("rho"));
@@ -1020,25 +1022,25 @@ ParameterSet ForestHardening::parameters()
   return pset;
 }
 
-std::vector<std::string> ForestHardening::varnames() const
+std::vector<std::string> LANLTiModel::varnames() const
 {
   return varnames_;
 }
 
-void ForestHardening::set_varnames(std::vector<std::string> vars)
+void LANLTiModel::set_varnames(std::vector<std::string> vars)
 {
   varnames_ = vars;
   init_cache_();
 }
 
-void ForestHardening::populate_history(History & history) const
+void LANLTiModel::populate_history(History & history) const
 {
   for (auto vn : varnames_) {
     history.add<double>(vn);
   }
 }
 
-void ForestHardening::init_history(History & history) const
+void LANLTiModel::init_history(History & history) const
 {
   size_t i = 0;
   for (auto vn : varnames_) {
@@ -1047,35 +1049,34 @@ void ForestHardening::init_history(History & history) const
   }
 }
 
-double ForestHardening::hist_to_tau(size_t g, size_t i, 
+double LANLTiModel::hist_to_tau(size_t g, size_t i, 
                                            const History & history,
                                            Lattice & L,
                                            double T, const History & fixed) const
 {
   consistency(L);
 
-  SlipType stype = L.slip_type(g,i);
-
+  Lattice::SlipType stype = L.slip_type(g,i);
+  
+  double v = 0; // ??
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
-		if (stype == 0){
-		  double v = 0;
-	      v =  X_s_[L.flat(g,i)]* b_s_[L.flat(g,i)]->value(T) * mu_s_[L.flat(g,i)]->value(T) 
+		if (stype == Lattice::SlipType::Slip){
+	      v =  X_s_ * b_s_[L.flat(g,i)]->value(T) * mu_s_[L.flat(g,i)]->value(T) 
 				* std::sqrt(history.get<double>(varnames_[L.flat(g,i)]));
 	  
 		 } else{
-	      double v = 0;
 	      for (size_t k = 0; k < size()/2; k++)
-	        v += (C_st_)(i,k) * b_s_[k]->value(T) * b_t_[L.flat(g,i)]->value(T) 
+	        v += (*C_st_)(i,k) * b_s_[k]->value(T) * b_t_[L.flat(g,i)]->value(T) 
 			    * history.get<double>(varnames_[k]);
-	      v = v * mu_t_[L.flat(g,i)]->value(T)
+	      v = v * mu_t_[L.flat(g,i)]->value(T);
   }
   
 }
   return v + tau_0_[L.flat(g,i)]->value(T);  
 }
 
-History ForestHardening::d_hist_to_tau(size_t g, size_t i, 
+History LANLTiModel::d_hist_to_tau(size_t g, size_t i, 
                                               const History & history,
                                               Lattice & L,
                                               double T, 
@@ -1083,20 +1084,21 @@ History ForestHardening::d_hist_to_tau(size_t g, size_t i,
 {
   History res = cache(CacheType::DOUBLE);
   
-  SlipType stype = L.slip_type(g,i);
+  Lattice::SlipType stype = L.slip_type(g,i);
   
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
-      if (stype == 0){
-        res.get<double>(varnames_[L.flat(g,i)]) = X_s_[L.flat(g,i)] * b_s_[L.flat(g,i)]->value(T) 
+      if (stype == Lattice::SlipType::Slip){
+        res.get<double>(varnames_[L.flat(g,i)]) = X_s_ * b_s_[L.flat(g,i)]->value(T) 
 					* mu_s_[L.flat(g,i)]->value(T) 
 					* 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
       } else {
         double v = 0;
-        for (size_t k = 0; k < size()/2; k++) 
-          v += (C_st_)(i,k) * b_s_[k]->value(T) * b_t_[L.flat(g,i)]->value(T) 
+        for (size_t k = 0; k < size()/2; k++) {
+          v += (*C_st_)(i,k) * b_s_[k]->value(T) * b_t_[L.flat(g,i)]->value(T) 
 				* (k1_[k]->value(T) * std::sqrt(history.get<double>(varnames_[k])
-				) - k2_[k]->value(T) * history.get<double>(varnames_[k]);
+				) - k2_[k]->value(T) * history.get<double>(varnames_[k]));
+        }
 	  
 	  res.get<double>(varnames_[L.flat(g,i)]) = mu_t_[L.flat(g,i)]->value(T) * v;
   }
@@ -1105,7 +1107,7 @@ History ForestHardening::d_hist_to_tau(size_t g, size_t i,
   return res;
 }
 
-History ForestHardening::hist(const Symmetric & stress, 
+History LANLTiModel::hist(const Symmetric & stress, 
                                      const Orientation & Q,
                                      const History & history, 
                                      Lattice & L, double T, const SlipRule & R, 
@@ -1115,12 +1117,11 @@ History ForestHardening::hist(const Symmetric & stress,
 
   History res = blank_hist();
 
-  SlipType stype = L.slip_type(g,i);
-  
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
-	  if (stype == 0){
+    Lattice::SlipType stype = L.slip_type(g,i);
+	  if (stype == Lattice::SlipType::Slip){
         res.get<double>(varnames_[ind]) = (k1_[L.flat(g,i)]->value(T) 
 						* std::sqrt(history.get<double>(varnames_[L.flat(g,i)])
 						) - k2_[L.flat(g,i)]->value(T) * history.get<double>(varnames_[L.flat(g,i)])
@@ -1136,7 +1137,7 @@ History ForestHardening::hist(const Symmetric & stress,
   return res;
 }
 
-History ForestHardening::d_hist_d_s(const Symmetric & stress, 
+History LANLTiModel::d_hist_d_s(const Symmetric & stress, 
                                            const Orientation & Q, 
                                            const History & history,
                                            Lattice & L, double T, 
@@ -1146,18 +1147,19 @@ History ForestHardening::d_hist_d_s(const Symmetric & stress,
   consistency(L);
   History res = blank_hist().derivative<Symmetric>();
  
- SlipType stype = L.slip_type(g,i); 
-
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
+    Lattice::SlipType stype = L.slip_type(g,i); 
+      
 	  size_t k = L.flat(g,i);
-      if (stype == 0){
+      if (stype == Lattice::SlipType::Slip){
 	    res.get<Symmetric>(varnames_[k]) = (k1_[L.flat(g,i)]->value(T) * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])
 					) - k2_[L.flat(g,i)]->value(T) * history.get<double>(varnames_[L.flat(g,i)])
 					) * R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
 		ind++;
 	  } else{
+      // You don't do anything with this?
 		double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
         res.get<Symmetric>(varnames_[ind]) = R.d_slip_d_s(g, i, stress,
                                             Q, history, L,
@@ -1169,7 +1171,7 @@ History ForestHardening::d_hist_d_s(const Symmetric & stress,
   return res;
 }
 
-History ForestHardening::d_hist_d_h(const Symmetric & stress, 
+History LANLTiModel::d_hist_d_h(const Symmetric & stress, 
                                            const Orientation & Q, 
                                            const History & history, 
                                            Lattice & L,
@@ -1179,13 +1181,13 @@ History ForestHardening::d_hist_d_h(const Symmetric & stress,
   consistency(L); 
   auto res = blank_hist().derivative<History>();
   
- SlipType stype = L.slip_type(g,i); 
-
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
+      Lattice::SlipType stype = L.slip_type(g,i); 
+      
 	  size_t k = L.flat(g,i);
-	  if (stype == 0){
+	  if (stype == Lattice::SlipType::Slip){
 	  res.get<double>(varnames_[ind] + "_" + varnames_[k]) =
 	    (k1_[k]->value(T) * 1.0 / (2.0 * std::sqrt(history.get<double>(varnames_[k]))) - k2_[k]->value(T)
 								) * R.slip(g, i, stress, Q, history, L, T, fixed);
@@ -1197,11 +1199,12 @@ History ForestHardening::d_hist_d_h(const Symmetric & stress,
                                             dhist.get<double>(varnames_[k]);
 	  ind++;
 	  }
+    }
 
   return res;
 }
 
-History ForestHardening::d_hist_d_h_ext(const Symmetric & stress, 
+History LANLTiModel::d_hist_d_h_ext(const Symmetric & stress, 
                                                const Orientation & Q,
                                                const History & history,
                                                Lattice & L, double T, const SlipRule & R,
@@ -1211,20 +1214,20 @@ History ForestHardening::d_hist_d_h_ext(const Symmetric & stress,
   consistency(L);
   History res = blank_hist().history_derivative(history.subset(ext)).zero();
   
- SlipType stype = L.slip_type(g,i); 
- 
   size_t ind = 0;
   for (size_t g = 0; g < L.ngroup(); g++)
     for (size_t i = 0; i < L.nslip(g); i++) {
+    Lattice::SlipType stype = L.slip_type(g,i); 
+
 	  size_t k = L.flat(g,i);
-	  if (stype == 0){
+	  if (stype == Lattice::SlipType::Slip){
 		for (auto vn : ext) {
-          if (dhist.contains(vn)) 
 			res.get<double>(varnames_[ind] + "_" + vn) =
 				(k1_[k]->value(T) * 1.0 / (2.0 * std::sqrt(history.get<double>(varnames_[k]))) 
 				- k2_[k]->value(T)) * R.slip(g, i, stress, Q, history, L, T, fixed);
 		ind++;
-      } else{
+      }
+    }else{
 	  double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
       History dhist = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
       for (auto vn : ext) {
@@ -1233,22 +1236,16 @@ History ForestHardening::d_hist_d_h_ext(const Symmetric & stress,
       }
 	  ind++;
 	  }
+    }
   return res;
 }
 
-void ForestHardening::consistency_(Lattice & L) const
+void LANLTiModel::consistency(Lattice & L) const
 {
   if (L.ntotal() != size()) {
     throw std::logic_error("Lattice and hardening matrix sizes do not match");
   }
 }
-
-
-
-
-
-
-
 
 double SlipSingleHardening::hist_to_tau(
     size_t g, size_t i, const History & history, Lattice & L, double T, 
