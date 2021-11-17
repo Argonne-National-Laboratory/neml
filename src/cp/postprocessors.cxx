@@ -94,12 +94,13 @@ void PTRTwinReorientation::act(SingleCrystalModel & model,
         j++;
       }
     }
-    // Anneal
+    // Remove accumulated twin slip
     if (state.get<double>("twinned") > 0.5) {
       j = 0;
       for (size_t g = 0; g < L.ngroup(); g++) {
         for (size_t i = 0; i < L.nslip(g); i++) {
-          state.get<double>(prefix_+std::to_string(j)) = 0;
+          if (L.slip_type(g,i) == Lattice::SlipType::Twin)
+            state.get<double>(prefix_+std::to_string(j)) = 0;
           j++;
         }
       }

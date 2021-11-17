@@ -236,6 +236,32 @@ are described in their own section in the manual.
 
    cp/crystaldamage
 
+Specialized models
+------------------
+
+The crystal plasticity module includes several material-specific combinations
+of slip system hardening and slip rate models.  These are documented with
+special chapters in the documentation:
+
+.. toctree::
+   :maxdepth: 1
+
+   cp/HuCocks
+
+Postprocessors
+---------------
+
+A system of postprocessors provides a generic interface for altering the
+state of a crystal model in response to some internal (i.e. within the material
+system) or external (e.g. from a polycrystal or full-field solver) stimulus.
+As an example, this system can be used to reorient a crystal by some
+twinning operation when certain criteria are met.
+
+.. toctree::
+   :maxdepth: 1
+
+   cp/CrystalPostprocessor
+
 Mathematical operations
 -----------------------
 
