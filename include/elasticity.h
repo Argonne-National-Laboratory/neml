@@ -115,6 +115,39 @@ class NEML_EXPORT CubicLinearElasticModel: public LinearElasticModel {
 
 static Register<CubicLinearElasticModel> regCubicLinearElasticModel;
 
+class NEML_EXPORT TransverseIsotropicLinearElasticModel: public LinearElasticModel {
+ public:
+  TransverseIsotropicLinearElasticModel(std::shared_ptr<Interpolate> m1,
+                                        std::shared_ptr<Interpolate> m2,
+                                        std::shared_ptr<Interpolate> m3,
+                                        std::shared_ptr<Interpolate> m4,
+                                        std::shared_ptr<Interpolate> m5,
+                                        std::string method);
+
+  /// The string type for the object system
+  static std::string type();
+  /// Setup default parameters for the object system
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Initialize from a parameter set
+  static ParameterSet parameters();
+
+  /// Implement the stiffness tensor
+  virtual int C(double T, double * const Cv) const;
+  /// Implement the compliance tensor
+  virtual int S(double T, double * const Sv) const;
+
+ private:
+  void get_components_(double T, double & C11, double & C33, double & C12,
+                       double & C13, double & C44) const;
+
+
+ private:
+  std::shared_ptr<Interpolate> m1_, m2_, m3_, m4_, m5_;
+  std::string method_;
+};
+
+static Register<TransverseIsotropicLinearElasticModel> regTransverseIsotropicLinearElasticModel;
+
 } // namespace neml
 
 

@@ -2,6 +2,7 @@
 #define SLIPRULES_H
 
 #include "slipharden.h"
+#include "sliprules.h"
 #include "crystallography.h"
 
 #include "../objects.h"
@@ -80,6 +81,8 @@ class NEML_EXPORT SlipRule: public NEMLObject
 
 /// Class relying on multiple strength models (each of which is a function of 
 /// some history variables with corresponding evolution laws)
+//    This class implements slip/twin behavior by zeroing the rates of twin
+//    systems with negative shears
 class NEML_EXPORT SlipMultiStrengthSlipRule: public SlipRule
 {
  public:
@@ -251,6 +254,8 @@ class NEML_EXPORT PowerLawSlipRule: public SlipStrengthSlipRule
 };
 
 static Register<PowerLawSlipRule> regPowerLawSlipRule;
+
+
 
 } // namespace neml
 

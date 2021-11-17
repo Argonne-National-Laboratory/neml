@@ -54,9 +54,12 @@ class NEML_EXPORT Lattice: public NEMLObject {
   /// Initialize with the three lattice vectors, the symmetry group and
   /// (optionally) a initial list of slip systems
   Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry,
-          list_systems isystems = {});
+          list_systems isystems = {}, twin_systems tsystems = {});
   /// Destructor
   virtual ~Lattice();
+
+  /// Type: slip or twin
+  enum SlipType {Slip=0, Twin=1};
 
   /// First lattice vector
   const Vector & a1() {return a1_;};
@@ -75,13 +78,17 @@ class NEML_EXPORT Lattice: public NEMLObject {
   const std::vector<std::vector<Vector>> & burgers_vectors() {return burgers_vectors_;};
   /// Return the list of normalized slip directions
   const std::vector<std::vector<Vector>> & slip_directions() {return slip_directions_;};
-  /// Return the list of normalize slip normals
+  /// Return the list of normalized slip normals
   const std::vector<std::vector<Vector>> & slip_planes() {return slip_planes_;};
+  /// Return the list of characteristic shears
+  const std::vector<double> characteristic_shears() {return shear_;}; 
+  /// Return the list of slip system types
+  const std::vector<SlipType> & slip_types() {return slip_types_;};
 
   /// Convert Miller directions to cartesian vectors
-  Vector miller2cart_direction(std::vector<int> m);
+  virtual Vector miller2cart_direction(std::vector<int> m);
   /// Convert Miller planes to cartesian normal vectors
-  Vector miller2cart_plane(std::vector<int> m);
+  virtual Vector miller2cart_plane(std::vector<int> m);
 
   /// Find all sets of equivalent vectors (+/- different)
   std::vector<Vector> equivalent_vectors(Vector v);
@@ -89,8 +96,12 @@ class NEML_EXPORT Lattice: public NEMLObject {
   std::vector<Vector> equivalent_vectors_bidirectional(Vector v);
 
   /// Add a slip system given the Miller direction and plane
-  void add_slip_system(std::vector<int> d, std::vector<int> p);
-  
+  virtual void add_slip_system(std::vector<int> d, std::vector<int> p);
+
+  /// Add a twin system given the twin direction and plane
+  virtual void add_twin_system(std::vector<int> eta1, std::vector<int> K1,
+                               std::vector<int> eta2, std::vector<int> K2);
+
   /// Number of total slip systems
   size_t ntotal() const;
   /// Number of groups of slip systems
@@ -99,6 +110,13 @@ class NEML_EXPORT Lattice: public NEMLObject {
   size_t nslip(size_t g) const;
   /// Flat index of slip group g, system i
   size_t flat(size_t g, size_t i) const;
+  
+  /// Type of system: slip or twin
+  SlipType slip_type(size_t g, size_t i) const;
+  /// Characteristic shear (0 for slip systems)
+  double characteristic_shear(size_t g, size_t i) const;
+  /// Twin reorientation operator (identity for slip systems)
+  Orientation reorientation(size_t g, size_t i) const;
 
   /// Return the sym(d x n) tensor for group g, system i, rotated with Q
   const Symmetric & M(size_t g, size_t i, const Orientation & Q);
@@ -141,6 +159,9 @@ class NEML_EXPORT Lattice: public NEMLObject {
   std::vector<std::vector<Vector>> burgers_vectors_;
   std::vector<std::vector<Vector>> slip_directions_;
   std::vector<std::vector<Vector>> slip_planes_;
+  std::vector<SlipType> slip_types_;
+  std::vector<double> shear_;
+  std::vector<std::vector<Orientation>> reorientations_;
 
   std::vector<size_t> offsets_;
 
@@ -159,7 +180,7 @@ class NEML_EXPORT CubicLattice: public Lattice {
  public:
   /// Specialized Lattice for cubic systems, initialize with the lattice
   /// parameter
-  CubicLattice(double a, list_systems isystems = {});
+  CubicLattice(double a, list_systems isystems = {}, twin_systems tsystems = {});
 
   /// String type for the object system
   static std::string type();
@@ -170,6 +191,30 @@ class NEML_EXPORT CubicLattice: public Lattice {
 };
 
 static Register<CubicLattice> regCubicLattice;
+
+class NEML_EXPORT HCPLattice: public Lattice {
+ public:
+  /// Specialized to HCP, initialize with a and c
+  HCPLattice(double a, double c, list_systems isystems = {}, twin_systems
+             tsystems = {});
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Convert Miller-Bravais directions to cartesian vectors
+  virtual Vector miller2cart_direction(std::vector<int> m);
+  /// Convert Miller-Bravais planes to cartesian normal vectors
+  virtual Vector miller2cart_plane(std::vector<int> m);
+
+ private:
+  void assert_miller_bravais_(std::vector<int> m);
+};
+
+static Register<HCPLattice> regHCPLattice;
 
 } // namespace neml
 

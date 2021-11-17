@@ -8,13 +8,23 @@ SingleCrystalModel::SingleCrystalModel(
     std::shared_ptr<Orientation> initial_angle,
     std::shared_ptr<Interpolate> alpha,
     bool update_rotation, double rtol, double atol, int miter, bool verbose, 
-    bool linesearch, int max_divide) :
+    bool linesearch, int max_divide,
+    std::vector<std::shared_ptr<CrystalPostprocessor>> postprocessors) :
       kinematics_(kinematics), lattice_(lattice), q0_(initial_angle), alpha_(alpha),
       update_rotation_(update_rotation), rtol_(rtol), atol_(atol), miter_(miter),
       verbose_(verbose), linesearch_(linesearch),
-      max_divide_(max_divide), stored_hist_(false)
+      max_divide_(max_divide), stored_hist_(false),
+      postprocessors_(postprocessors)
 {
   populate_history(stored_hist_);
+  
+  // Really dumb way to get the names of the parameters that stay fixed during
+  // the update
+  // Look to fix this
+  History h;
+  populate_static_(h);
+  static_names_ = h.get_order();
+  static_size_ = h.size();
 }
 
 SingleCrystalModel::~SingleCrystalModel()
@@ -44,6 +54,7 @@ ParameterSet SingleCrystalModel::parameters()
   pset.add_optional_parameter<bool>("verbose", false);
   pset.add_optional_parameter<bool>("linesearch", false);
   pset.add_optional_parameter<int>("max_divide", 6);
+  pset.add_optional_parameter<std::vector<NEMLObject>>("postprocessors", {});
 
   return pset;
 }
@@ -61,17 +72,26 @@ std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params
       params.get_parameter<int>("miter"),
       params.get_parameter<bool>("verbose"),
       params.get_parameter<bool>("linesearch"),
-      params.get_parameter<int>("max_divide"));
+      params.get_parameter<int>("max_divide"),
+      params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors"));
 }
 
 void SingleCrystalModel::populate_history(History & history) const
+{
+  populate_static_(history);
+
+  kinematics_->populate_history(history);
+}
+
+void SingleCrystalModel::populate_static_(History & history) const
 {
   history.add<Orientation>("rotation");
   history.add<Orientation>("rotation0");
   if (use_nye()) {
     history.add<RankTwo>("nye");
   }
-  kinematics_->populate_history(history);
+  for (auto pp : postprocessors_)
+    pp->populate_history(*lattice_, history);
 }
 
 void SingleCrystalModel::init_history(History & history) const
@@ -81,6 +101,9 @@ void SingleCrystalModel::init_history(History & history) const
   if (use_nye()) {
     history.get<RankTwo>("nye") = RankTwo({0,0,0,0,0,0,0,0,0});
   }
+  for (auto pp : postprocessors_)
+    pp->init_history(*lattice_, history);
+
   kinematics_->init_history(history);
 }
 
@@ -284,6 +307,10 @@ int SingleCrystalModel::attempt_update_ld_inc_(
                                HF_np1.get<Orientation>("rotation"), Q_n,
                                H_np1, H_n);
 
+  // Update model based on any post-processors
+  for (auto pp : postprocessors_)
+    pp->act(*this, local_lattice, T_np1, D, W, HF_np1, HF_n);
+
   return 0;
 }
 
@@ -324,13 +351,7 @@ int SingleCrystalModel::elastic_strains(
 
 size_t SingleCrystalModel::nparams() const
 {
-  // 6 stress + the history minus the rotations minus the nye tensor
-  if (use_nye()) {
-    return 6 + nhist() - 8 - 9;
-  }
-  else {
-    return 6 + nhist() - 8;
-  }
+  return 6 + nhist() - static_size_;
 }
 
 int SingleCrystalModel::init_x(double * const x, TrialState * ts)
@@ -742,12 +763,7 @@ int SingleCrystalModel::solve_substep_(SCTrialState * ts,
 
 std::vector<std::string> SingleCrystalModel::not_updated_() const
 {
-  if (use_nye()) {
-    return {"rotation", "rotation0", "nye"};
-  }
-  else {
-    return {"rotation", "rotation0"};
-  }
+  return static_names_;
 }
 
 } // namespace neml

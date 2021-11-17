@@ -31,6 +31,11 @@ class TestBasicMatrix(unittest.TestCase):
     self.assertEqual(self.M.m, self.np_mat.shape[0])
     self.assertEqual(self.M.n, self.np_mat.shape[1])
 
+  def test_index(self):
+    for i in range(3):
+      for j in range(3):
+        self.assertAlmostEqual(self.M(i,j), self.np_mat[i,j])
+
 class TestMatVec(unittest.TestCase):
   def setUp(self):
     self.a_data = [1.0,1.1,2.3]

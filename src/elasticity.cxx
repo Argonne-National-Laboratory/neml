@@ -336,4 +336,97 @@ void CubicLinearElasticModel::get_components_(double T,
   }
 }
 
+TransverseIsotropicLinearElasticModel::TransverseIsotropicLinearElasticModel(
+    std::shared_ptr<Interpolate> m1,
+    std::shared_ptr<Interpolate> m2,
+    std::shared_ptr<Interpolate> m3,
+    std::shared_ptr<Interpolate> m4,
+    std::shared_ptr<Interpolate> m5,
+    std::string method) :
+      m1_(m1), m2_(m2), m3_(m3), m4_(m4), m5_(m5), method_(method)
+{
+  if ((method != "components")) {
+    throw std::invalid_argument("Unknown initialization method " + method);
+  }
+}
+
+std::string TransverseIsotropicLinearElasticModel::type()
+{
+  return "TransverseIsotropicLinearElasticModel";
+}
+
+ParameterSet TransverseIsotropicLinearElasticModel::parameters()
+{
+  ParameterSet pset(TransverseIsotropicLinearElasticModel::type());
+
+  pset.add_parameter<NEMLObject>("m1");
+  pset.add_parameter<NEMLObject>("m2");
+  pset.add_parameter<NEMLObject>("m3");
+  pset.add_parameter<NEMLObject>("m4");
+  pset.add_parameter<NEMLObject>("m5");
+  pset.add_parameter<std::string>("method");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> TransverseIsotropicLinearElasticModel::initialize(ParameterSet & params)
+{
+  return neml::make_unique<TransverseIsotropicLinearElasticModel>(
+      params.get_object_parameter<Interpolate>("m1"),
+      params.get_object_parameter<Interpolate>("m2"),
+      params.get_object_parameter<Interpolate>("m3"),
+      params.get_object_parameter<Interpolate>("m4"),
+      params.get_object_parameter<Interpolate>("m5"),
+      params.get_parameter<std::string>("method")
+      ); 
+}
+
+int TransverseIsotropicLinearElasticModel::C(double T, double * const Cv) const
+{
+  double C11, C33, C12, C13, C44;
+  get_components_(T, C11, C33, C12, C13, C44);
+
+  std::fill(Cv, Cv+36, 0.0);
+  Cv[0] = C11;
+  Cv[1] = C12;
+  Cv[2] = C13;
+
+  Cv[6] = C12;
+  Cv[7] = C11;
+  Cv[8] = C13;
+
+  Cv[12] = C13;
+  Cv[13] = C13;
+  Cv[14] = C33;
+
+  Cv[21] = C44;
+  Cv[28] = C44;
+  Cv[35] = (C11-C12)/2;
+
+  return 0;
+}
+
+int TransverseIsotropicLinearElasticModel::S(double T, double * const Sv) const
+{
+  C(T, Sv);
+  return invert_mat(Sv, 6);
+}
+
+void TransverseIsotropicLinearElasticModel::get_components_(double T, 
+                                              double & C11, double & C33,
+                                              double & C12, double & C13,
+                                              double & C44) const
+{
+  if (method_ == "components") {
+    C11 = m1_->value(T);
+    C33 = m2_->value(T);
+    C12 = m3_->value(T);
+    C13 = m4_->value(T);
+    C44 = m5_->value(T);
+  }
+  else {
+    throw std::invalid_argument("Invalid method in class internal!");
+  }
+}
+
 } // namespace neml

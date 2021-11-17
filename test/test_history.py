@@ -264,3 +264,33 @@ class TestUnion(unittest.TestCase):
     self.assertTrue(np.isclose(hist.get_scalar("a"), self.scalar1))
     self.assertTrue(np.isclose(hist.get_scalar("c"), self.scalar2))
     self.assertEqual(hist.get_vector("b"), self.vector1)
+
+class TestReorder(unittest.TestCase):
+  def setUp(self):
+    self.scalar1 = 2.0
+    self.scalar2 = 3.0
+    self.scalar3 = 4.0
+    self.scalar4 = 5.0
+
+    self.hist1 = history.History()
+    self.hist1.add_scalar("a")
+    self.hist1.set_scalar("a", self.scalar1)
+    self.hist1.add_scalar("b")
+    self.hist1.set_scalar("b", self.scalar2)
+
+    self.hist2 = history.History()
+    self.hist2.add_scalar("c")
+    self.hist2.set_scalar("c", self.scalar3)
+    self.hist2.add_scalar("d")
+    self.hist2.set_scalar("d", self.scalar4)
+
+  def test_reorder(self):
+    self.hist1.add_union(self.hist2)
+
+    self.assertTrue(np.allclose(np.array(self.hist1),
+      np.array([self.scalar1, self.scalar2, self.scalar3, self.scalar4])))
+
+    self.hist1.reorder(["c", "a", "b", "d"])
+
+    self.assertTrue(np.allclose(np.array(self.hist1),
+      np.array([self.scalar3, self.scalar1, self.scalar2, self.scalar4])))

@@ -16,6 +16,10 @@ namespace neml {
 
 /// Typedef for slip systems
 typedef std::vector<std::pair<std::vector<int>,std::vector<int>>> list_systems;
+/// Typedef for twin systems
+typedef
+    std::vector<std::tuple<std::vector<int>,std::vector<int>,std::vector<int>,std::vector<int>>>
+    twin_systems;
 
 /// We can avoid this with proper C++14, will need ifdefs
 template<typename T, typename... Args>
@@ -62,6 +66,7 @@ private:
   std::vector<std::shared_ptr<NEMLObject>> vec_neml_object_;
   std::string string_;
   list_systems list_systems_;
+  twin_systems twin_systems_;
   std::size_t size_t_;
   std::vector<std::size_t> vec_size_t_;
 };
@@ -74,6 +79,7 @@ template <> inline std::shared_ptr<NEMLObject> & param_type::data<std::shared_pt
 template <> inline std::vector<std::shared_ptr<NEMLObject>> & param_type::data<std::vector<std::shared_ptr<NEMLObject>>>() { return vec_neml_object_; }
 template <> inline std::string & param_type::data<std::string>() { return string_; }
 template <> inline list_systems & param_type::data<list_systems>() { return list_systems_; }
+template <> inline twin_systems & param_type::data<twin_systems>() { return twin_systems_; }
 template <> inline std::size_t & param_type::data<std::size_t>() { return size_t_; }
 template <> inline std::vector<std::size_t> & param_type::data<std::vector<std::size_t>>() { return vec_size_t_; }
 
@@ -92,7 +98,8 @@ enum ParamType {
   TYPE_STRING           = 6,
   TYPE_SLIP             = 7,
   TYPE_SIZE_TYPE        = 8,
-  TYPE_VEC_SIZE_TYPE    = 9
+  TYPE_VEC_SIZE_TYPE    = 9,
+  TYPE_TWIN             = 10
 };
 // This black magic lets us map the actual type of each parameter to the enum
 template <class T> constexpr ParamType GetParamType();
@@ -112,6 +119,8 @@ template <> constexpr ParamType GetParamType<std::vector<NEMLObject>>()
 template <> constexpr ParamType GetParamType<std::string>() {return TYPE_STRING;}
 template <> constexpr ParamType GetParamType<list_systems>()
 {return TYPE_SLIP;}
+template <> constexpr ParamType GetParamType<twin_systems>()
+{return TYPE_TWIN;}
 template <> constexpr ParamType GetParamType<size_t>() {return TYPE_SIZE_TYPE;}
 template <> constexpr ParamType GetParamType<std::vector<size_t>>() {return
 TYPE_VEC_SIZE_TYPE;}

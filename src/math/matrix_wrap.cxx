@@ -38,6 +38,10 @@ PYBIND11_MODULE(matrix, m) {
       .def_property_readonly("n", &Matrix::n)
       .def_property_readonly("size", &Matrix::size)
       .def("dot", &Matrix::dot)
+      .def("__call__", 
+           [](Matrix & m, size_t i, size_t j) -> double& {
+            return m(i,j);
+           })
       .def_buffer(
           [](Matrix & m) -> py::buffer_info
           {

@@ -61,6 +61,9 @@ std::string get_string(const rapidxml::xml_node<> * node);
 /// Extract a slip system from an xml node
 list_systems get_slip(const rapidxml::xml_node<> * node);
 
+/// Extra a twin system list from an xml node
+twin_systems get_twin(const rapidxml::xml_node<> * node);
+
 /// Extract a size_type from an xml node
 size_t get_size_type(const rapidxml::xml_node<> * node);
 

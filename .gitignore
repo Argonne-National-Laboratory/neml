@@ -49,3 +49,4 @@ util/string_interface/cxxstring
 *.exe
 include/neml_export.h
 wheelhouse
+examples/**/*.png

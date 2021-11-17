@@ -72,6 +72,16 @@ void Matrix::matvec(const FlatVector & other, FlatVector & res)
   mat_vec(data_, m(), other.data_, n(), res.data_);
 }
 
+const double & Matrix::operator()(size_t i, size_t j) const
+{
+  return data_[CINDEX(i,j,m_)];
+}
+
+double & Matrix::operator()(size_t i, size_t j)
+{
+  return data_[CINDEX(i,j,m_)];
+}
+
 SquareMatrix::SquareMatrix(size_t m, std::string type,
                            std::vector<double> data, 
                            std::vector<size_t> blocks) :

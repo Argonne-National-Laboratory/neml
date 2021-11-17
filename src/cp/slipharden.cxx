@@ -745,6 +745,206 @@ void GeneralLinearHardening::consistency(Lattice & L) const
   }
 }
 
+SimpleLinearHardening::SimpleLinearHardening(std::shared_ptr<SquareMatrix> G, 
+                                               std::vector<double> tau_0,
+                                               std::string varprefix) :
+    G_(G), tau_0_(tau_0), varprefix_(varprefix)
+{
+  if (G_->n() != tau_0_.size()) {
+    throw std::invalid_argument("Hardening matrix and initial strength sizes do not agree!");
+  }
+  
+  varnames_.resize(size());
+  for (size_t i = 0; i < size(); i++) {
+    varnames_[i] = varprefix_+std::to_string(i);
+  }
+  init_cache_();
+}
+
+std::string SimpleLinearHardening::type()
+{
+  return "SimpleLinearHardening";
+}
+
+std::unique_ptr<NEMLObject> SimpleLinearHardening::initialize(ParameterSet & params)
+{
+  return neml::make_unique<SimpleLinearHardening>(
+      params.get_object_parameter<SquareMatrix>("G"),
+      params.get_parameter<std::vector<double>>("tau_0"),
+      params.get_parameter<std::string>("varprefix"));
+}
+
+ParameterSet SimpleLinearHardening::parameters()
+{
+  ParameterSet pset(SimpleLinearHardening::type());
+
+  pset.add_parameter<NEMLObject>("G");
+  pset.add_parameter<std::vector<double>>("tau_0");
+
+  pset.add_optional_parameter<std::string>("varprefix", 
+                                           std::string("slip"));
+
+  return pset;
+}
+
+std::vector<std::string> SimpleLinearHardening::varnames() const
+{
+  return varnames_;
+}
+
+void SimpleLinearHardening::set_varnames(std::vector<std::string> vars)
+{
+  varnames_ = vars;
+  init_cache_();
+}
+
+void SimpleLinearHardening::populate_history(History & history) const
+{
+  for (auto vn : varnames_) {
+    history.add<double>(vn);
+  }
+}
+
+void SimpleLinearHardening::init_history(History & history) const
+{
+  size_t i = 0;
+  for (auto vn : varnames_) {
+    history.get<double>(vn) = 0;
+    i++;
+  }
+}
+
+double SimpleLinearHardening::hist_to_tau(size_t g, size_t i, 
+                                           const History & history,
+                                           Lattice & L,
+                                           double T, const History & fixed) const
+{
+  consistency(L);
+
+  double v = 0;
+  for (size_t j = 0; j < size(); j++) 
+    v += (*G_)(i,j) * history.get<double>(varnames_[j]);
+
+  return v + tau_0_[L.flat(g,i)];
+}
+
+History SimpleLinearHardening::d_hist_to_tau(size_t g, size_t i, 
+                                              const History & history,
+                                              Lattice & L,
+                                              double T, 
+                                              const History & fixed) const
+{
+  consistency(L);  
+  History res = cache(CacheType::DOUBLE);
+
+  for (size_t j = 0; j < size(); j++)
+    res.get<double>(varnames_[j]) = (*G_)(i,j);
+
+  return res;
+}
+
+History SimpleLinearHardening::hist(const Symmetric & stress, 
+                                     const Orientation & Q,
+                                     const History & history, 
+                                     Lattice & L, double T, const SlipRule & R, 
+                                     const History & fixed) const
+{
+  consistency(L); 
+
+  History res = blank_hist();
+
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      res.get<double>(varnames_[ind]) = fabs(R.slip(g, i, stress, Q, history, L,
+                                                    T, fixed));
+      ind++;
+    }
+
+  return res;
+}
+
+History SimpleLinearHardening::d_hist_d_s(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history,
+                                           Lattice & L, double T, 
+                                           const SlipRule & R,
+                                           const History & fixed) const
+{
+  consistency(L);
+  History res = blank_hist().derivative<Symmetric>();
+ 
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
+      res.get<Symmetric>(varnames_[ind]) = copysign(1.0, slip
+                                                    ) * R.d_slip_d_s(g, i, stress,
+                                                                     Q, history, L,
+                                                                     T, fixed);
+      ind++;
+    }
+
+  return res;
+}
+
+History SimpleLinearHardening::d_hist_d_h(const Symmetric & stress, 
+                                           const Orientation & Q, 
+                                           const History & history, 
+                                           Lattice & L,
+                                           double T, const SlipRule & R, 
+                                           const History & fixed) const
+{
+  consistency(L); 
+  auto res = blank_hist().derivative<History>();
+
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
+      History dhist = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
+      for (size_t j = 0; j < size(); j++)
+        res.get<double>(varnames_[ind] + "_" + varnames_[j]) =
+            dhist.get<double>(varnames_[j]) * copysign(1.0, slip);
+      ind++;
+    } 
+
+  return res;
+}
+
+History SimpleLinearHardening::d_hist_d_h_ext(const Symmetric & stress, 
+                                               const Orientation & Q,
+                                               const History & history,
+                                               Lattice & L, double T, const SlipRule & R,
+                                               const History & fixed, 
+                                               std::vector<std::string> ext) const
+{
+  consistency(L);
+  History res = blank_hist().history_derivative(history.subset(ext)).zero();
+
+  size_t ind = 0;
+  for (size_t g = 0; g < L.ngroup(); g++)
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
+      History dhist = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
+      for (auto vn : ext) {
+        if (dhist.contains(vn)) 
+          res.get<double>(varnames_[ind] + "_" + vn) = copysign(1.0, slip) *
+              dhist.get<double>(vn);
+      }
+      ind++;
+    } 
+
+  return res;
+}
+
+void SimpleLinearHardening::consistency(Lattice & L) const
+{
+  if (L.ntotal() != size()) {
+    throw std::logic_error("Lattice and hardening matrix sizes do not match");
+  }
+}
+
 double SlipSingleHardening::hist_to_tau(
     size_t g, size_t i, const History & history, Lattice & L, double T, 
     const History & fixed) const

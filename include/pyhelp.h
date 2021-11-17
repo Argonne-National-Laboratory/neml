@@ -154,6 +154,9 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
     case TYPE_SLIP:
       pset.assign_parameter(name, py::cast<list_systems>(value));
       break;
+    case TYPE_TWIN:
+      pset.assign_parameter(name, py::cast<twin_systems>(value));
+      break;
     case TYPE_SIZE_TYPE:
       pset.assign_parameter(name, py::cast<size_t>(value));
       break;
