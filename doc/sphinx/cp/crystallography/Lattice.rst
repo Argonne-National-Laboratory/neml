@@ -26,6 +26,7 @@ the lattice vectors and symmetry group.
    :maxdepth: 1
 
    CubicLattice
+   HCPLattice
 
 Parameters
 ----------

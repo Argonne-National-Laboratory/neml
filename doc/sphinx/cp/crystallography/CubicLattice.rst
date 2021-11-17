@@ -14,7 +14,8 @@ Parameters
    :widths: 12, 30, 50, 8
 
    ``a``, :code:`double`, Lattice parameter, No
-   ``isystems``, :code:`list_systems`, Initial list of slip systems, ``{}``
+   ``slip_systems``, :code:`list_systems`, Initial list of slip systems, ``{}``
+   ``twin_systems``, :code:`list_systems`, Initial list of twin systems, ``{}``
 
 Class description
 -----------------
