@@ -400,23 +400,23 @@ class TestLANLTiModel(unittest.TestCase):
     self.k1_v = 0.5
     self.k2_v = 0.75
 
-    self.k1 = list(np.ones((12,)) * self.k1_v)
-    self.k2 = list(np.ones((12,)) * self.k2_v)
+    self.k1 = np.ones((12,)) * self.k1_v
+    self.k2 = np.ones((12,)) * self.k2_v
 
     self.tau0 = np.ones((24,))
     self.tau0_slip = 30.0
     self.tau0_twin = 50.0
     self.tau0[:12] = self.tau0_slip
     self.tau0[12:] = self.tau0_twin
-    self.tau0 = list(self.tau0)
 
-    self.b_s = list(np.ones((12,)) * 0.3)
-    self.b_t = list(np.ones((12,)) * 0.5)
+    self.b_s = np.ones((12,)) * 0.3
+    self.b_t = np.ones((12,)) * 0.5
 
-    self.mu_s = list(np.ones((12,)) * 30000.0)
-    self.mu_t = list(np.ones((12,)) * 25000.0)
+    self.mu_s = np.ones((12,)) * 30000.0
+    self.mu_t = np.ones((12,)) * 25000.0
+    self.X_s = 0.9
 
-    self.model = slipharden.LANLTiModel(self.tau0, self.G, self.mu_s, self.mu_t, self.k1, self.k2, self.b_s, self.b_t)
+    self.model = slipharden.LANLTiModel(self.tau0, self.G, self.mu_s, self.mu_t, self.k1, self.k2, self.b_s, self.b_t, X_s = self.X_s)
 
     self.g0 = 1.0
     self.n = 3.0
@@ -427,6 +427,12 @@ class TestLANLTiModel(unittest.TestCase):
   def test_hist_to_tau(self):
     direct = [self.model.hist_to_tau(g, i, self.H, self.L, self.T, self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))]
     # Then implement what it should be in python and compare
+    check = np.zeros((24,))
+
+    check[:12] = self.X_s * self.b_s * self.mu_s * np.sqrt(np.array(self.H)[:12]) + self.tau0[:12]
+    check[12:] = self.G_np.dot(np.array(self.H)[:12] * self.b_s) * self.mu_t * self.b_t + self.tau0[12:]
+    
+    self.assertTrue(np.allclose(direct, check))
 
   def test_definition(self):
     direct = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule, self.fixed)

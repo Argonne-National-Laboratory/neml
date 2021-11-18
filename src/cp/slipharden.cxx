@@ -1058,26 +1058,28 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 
   FlatVector crss(size());
   size_t ind = 0;
-  
+  size_t tind = 0;
+
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
       Lattice::SlipType stype = L.slip_type(g,i);
-	  if (stype == Lattice::SlipType::Slip){
-       crss.data()[ind] = X_s_ * b_s_[L.flat(g,i)]->value(T) * mu_s_[L.flat(g,i)]->value(T) 
-		* std::sqrt(history.get<double>(varnames_[L.flat(g,i)]))
-		+ tau_0_[L.flat(g,i)]->value(T);
-		
-	  ind++;
-	} else{
-	double v = 0;
-	for (size_t k = 0; k < size()/2; k++)
-	  v += ((*C_st_)(i,k) * b_s_[k]->value(T) * b_t_[L.flat(g,i)]->value(T) 
-		* history.get<double>(varnames_[k])
-		) * mu_t_[L.flat(g,i)]->value(T);
-	crss.data()[ind] = v + tau_0_[L.flat(g,i)]->value(T);;
-	ind++;
-  }
-	}
+	    if (stype == Lattice::SlipType::Slip) {
+        crss.data()[ind] = X_s_ * b_s_[ind]->value(T) * mu_s_[ind]->value(T) 
+            * std::sqrt(history.get<double>(varnames_[ind])) + tau_0_[ind]->value(T);
+      } 
+      else {
+	      double v = 0;
+        // b_t and mu_t were being indexed wrong
+	      for (size_t k = 0; k < size()/2; k++) {
+	        v += (*C_st_)(tind,k) * b_s_[k]->value(T) *
+              history.get<double>(varnames_[k]);
+        }
+	      crss.data()[ind] = v * b_t_[ind-size()/2]->value(T) *
+            mu_t_[ind-size()/2]->value(T) + tau_0_[ind]->value(T);
+        tind++;
+      }
+      ind++;
+    }
   }
   return crss.data()[L.flat(g,i)];
 }  
@@ -1118,6 +1120,9 @@ History LANLTiModel::hist(const Symmetric & stress,
   consistency(L); 
 
   History res = blank_hist();
+
+  return res;
+
   size_t ind = 0;
   
   for (size_t g = 0; g < L.ngroup(); g++) {
