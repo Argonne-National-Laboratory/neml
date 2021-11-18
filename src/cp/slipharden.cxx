@@ -1056,22 +1056,30 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 {
   consistency(L);
 
-  Lattice::SlipType stype = L.slip_type(g,i);
-
-	if (stype == Lattice::SlipType::Slip){
-	return  X_s_ * b_s_[L.flat(g,i)]->value(T) * mu_s_[L.flat(g,i)]->value(T) 
+  FlatVector crss(size());
+  size_t ind = 0;
+  
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      Lattice::SlipType stype = L.slip_type(g,i);
+	  if (stype == Lattice::SlipType::Slip){
+       crss.data()[ind] = X_s_ * b_s_[L.flat(g,i)]->value(T) * mu_s_[L.flat(g,i)]->value(T) 
 		* std::sqrt(history.get<double>(varnames_[L.flat(g,i)]))
 		+ tau_0_[L.flat(g,i)]->value(T);
-	  
+		
+	  ind++;
 	} else{
 	double v = 0;
 	for (size_t k = 0; k < size()/2; k++)
 	  v += ((*C_st_)(i,k) * b_s_[k]->value(T) * b_t_[L.flat(g,i)]->value(T) 
 		* history.get<double>(varnames_[k])
 		) * mu_t_[L.flat(g,i)]->value(T);
-	return v + tau_0_[L.flat(g,i)]->value(T);
+	crss.data()[ind] = v + tau_0_[L.flat(g,i)]->value(T);;
+	ind++;
   }
-
+	}
+  }
+  return crss.data()[L.flat(g,i)];
 }  
   
 
@@ -1082,17 +1090,22 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
                                               const History & fixed) const
 {
   History res = cache(CacheType::DOUBLE);
+  size_t ind = 0;
   
-  Lattice::SlipType stype = L.slip_type(g,i);
-  
-
-  if (stype == Lattice::SlipType::Slip){
-	res.get<double>(varnames_[L.flat(g,i)]) = X_s_ * b_s_[L.flat(g,i)]->value(T) 
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+      Lattice::SlipType stype = L.slip_type(g,i);
+      if (stype == Lattice::SlipType::Slip){
+	    res.get<double>(varnames_[ind]) = X_s_ * b_s_[L.flat(g,i)]->value(T) 
 				* mu_s_[L.flat(g,i)]->value(T) 
 				* 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
-  } else {
-    res.get<double>(varnames_[L.flat(g,i)]) = 0.0;
-}
+	    ind++;
+      } else {
+        res.get<double>(varnames_[ind]) = 0.0;
+		ind++;
+      }
+	}
+  }
   return res;
 }
 
@@ -1167,7 +1180,6 @@ History LANLTiModel::d_hist_d_h(const Symmetric & stress,
   auto res = blank_hist().derivative<History>();
 
 
-
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
       Lattice::SlipType stype = L.slip_type(g,i);      
@@ -1178,7 +1190,7 @@ History LANLTiModel::d_hist_d_h(const Symmetric & stress,
 	  res.get<double>(varnames_[k] + "_" + varnames_[k]) =
 	    (k1_[k]->value(T) * 1.0 / (2.0 * std::sqrt(history.get<double>(varnames_[k]))) 				
 				- k2_[k]->value(T)) * R.slip(g, i, stress, Q, history, L, T, fixed);
-	  // other part			
+	  // other parts		
 	  History dslip = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
 	  for (size_t j = 0; j < L.ntotal()/2; j++){
         std::string other = varnames_[j];
