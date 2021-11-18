@@ -1118,19 +1118,22 @@ History LANLTiModel::hist(const Symmetric & stress,
   consistency(L); 
 
   History res = blank_hist();
-
+  size_t ind = 0;
+  
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
 	size_t k = L.flat(g,i);
     Lattice::SlipType stype = L.slip_type(g,i);
 	  if (stype == Lattice::SlipType::Slip){
-        res.get<double>(varnames_[k]) = (k1_[k]->value(T) 
+        res.get<double>(varnames_[ind]) = (k1_[k]->value(T) 
 						* std::sqrt(history.get<double>(varnames_[k])
 						) - k2_[k]->value(T) * history.get<double>(varnames_[k])
 						) * R.slip(g, i, stress, Q, history, L, T, fixed);
+		ind++;
 	  } else{
-		res.get<double>(varnames_[k]) = fabs(R.slip(g, i, stress, Q, history, L,
+		res.get<double>(varnames_[ind]) = fabs(R.slip(g, i, stress, Q, history, L,
                                       T, fixed));  
+		ind++;
 	  }
     }
   }
@@ -1146,23 +1149,26 @@ History LANLTiModel::d_hist_d_s(const Symmetric & stress,
 {
   consistency(L);
   History res = blank_hist().derivative<Symmetric>();
- 
+  size_t ind = 0;
+  
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
     Lattice::SlipType stype = L.slip_type(g,i);   
 	size_t k = L.flat(g,i);
       if (stype == Lattice::SlipType::Slip){
-	    res.get<Symmetric>(varnames_[k]) = (k1_[k]->value(T) 
+	    res.get<Symmetric>(varnames_[ind]) = (k1_[k]->value(T) 
 					* std::sqrt(history.get<double>(varnames_[k])
 					) - k2_[k]->value(T) * history.get<double>(varnames_[k])
 					) * R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed);
+		ind++;
 	  } else{
       // You don't do anything with this?
 		double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
-        res.get<Symmetric>(varnames_[k]) = copysign(1.0, slip
+        res.get<Symmetric>(varnames_[ind]) = copysign(1.0, slip
                                             )* R.d_slip_d_s(g, i, stress,
                                             Q, history, L,
-                                            T, fixed); 									
+                                            T, fixed); 	
+        ind++;											
 	  }
     }
   }
