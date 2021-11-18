@@ -492,6 +492,11 @@ Orientation Lattice::reorientation(size_t g, size_t i) const
   return reorientations_[g][i];
 }
 
+double Lattice::burgers(size_t g, size_t i) const
+{
+  return burgers_vectors_[g][i].norm();
+}
+
 const Symmetric & Lattice::M(size_t g, size_t i, const Orientation & Q)
 {
   cache_rot_(Q);

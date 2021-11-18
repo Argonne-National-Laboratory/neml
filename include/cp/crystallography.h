@@ -118,6 +118,9 @@ class NEML_EXPORT Lattice: public NEMLObject {
   /// Twin reorientation operator (identity for slip systems)
   Orientation reorientation(size_t g, size_t i) const;
 
+  /// Norm of the Burgers vector for a particular system
+  double burgers(size_t g, size_t i) const;
+
   /// Return the sym(d x n) tensor for group g, system i, rotated with Q
   const Symmetric & M(size_t g, size_t i, const Orientation & Q);
   /// Return the skew(d x n) tensor for group g, system i, rotated with Q
