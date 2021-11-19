@@ -353,7 +353,7 @@ class TestSimpleLinearHardening(unittest.TestCase, CommonSlipHardening):
     self.assertTrue(np.allclose(hrate, np.abs(srates)))
 
 # Eventually this should be TestLANLTiModel(unittest.TestCase, CommonSlipHardening) to get the Jacobian tests 
-class TestLANLTiModel(unittest.TestCase):
+class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
   def setUp(self):
     # Sets up the self.L crystallography
     a = 2.9511*0.1 # nm
@@ -375,6 +375,7 @@ class TestLANLTiModel(unittest.TestCase):
       [100.0,-25.0,10.0],
       [-25.0,-17.0,15.0],
       [10.0,  15.0,35.0]]))
+    
     
     self.nslip = self.L.ntotal
     
