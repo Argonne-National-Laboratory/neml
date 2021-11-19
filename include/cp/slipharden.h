@@ -451,12 +451,9 @@ class NEML_EXPORT LANLTiModel: public SlipHardening
  public:
   LANLTiModel(std::vector<std::shared_ptr<Interpolate>> tau_0, 
 				  std::shared_ptr<SquareMatrix> C_st,
-			      std::vector<std::shared_ptr<Interpolate>> mu_s, 
-				  std::vector<std::shared_ptr<Interpolate>> mu_t, 
+			      std::vector<std::shared_ptr<Interpolate>> mu, 
 				  std::vector<std::shared_ptr<Interpolate>> k1, 
-				  std::vector<std::shared_ptr<Interpolate>> k2, 
-				  std::vector<std::shared_ptr<Interpolate>> b_s, 
-				  std::vector<std::shared_ptr<Interpolate>> b_t, 
+				  std::vector<std::shared_ptr<Interpolate>> k2,
 				  double X_s,
 				  std::string varprefix,
 				  std::string twinprefix);
@@ -523,7 +520,7 @@ class NEML_EXPORT LANLTiModel: public SlipHardening
  private:
   std::vector<std::shared_ptr<Interpolate>> tau_0_;
   std::shared_ptr<SquareMatrix> C_st_;
-  std::vector<std::shared_ptr<Interpolate>> mu_s_, mu_t_, k1_, k2_, b_s_, b_t_;
+  std::vector<std::shared_ptr<Interpolate>> mu_, k1_, k2_;
   double X_s_;
   std::string varprefix_, twinprefix_;
   std::vector<std::string> varnames_;
