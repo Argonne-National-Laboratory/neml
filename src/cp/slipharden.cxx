@@ -949,17 +949,14 @@ void SimpleLinearHardening::consistency(Lattice & L) const
 LANLTiModel::LANLTiModel(
 	std::vector<std::shared_ptr<Interpolate>> tau_0, 
 	std::shared_ptr<SquareMatrix> C_st,
-	std::vector<std::shared_ptr<Interpolate>> mu_s, 
-	std::vector<std::shared_ptr<Interpolate>> mu_t, 
+	std::vector<std::shared_ptr<Interpolate>> mu, 
 	std::vector<std::shared_ptr<Interpolate>> k1, 
 	std::vector<std::shared_ptr<Interpolate>> k2, 
-	std::vector<std::shared_ptr<Interpolate>> b_s, 
-	std::vector<std::shared_ptr<Interpolate>> b_t, 
 	double X_s,
 	std::string varprefix,
 	std::string twinprefix):
-      tau_0_(tau_0), C_st_(C_st), mu_s_(mu_s), mu_t_(mu_t),
-	  k1_(k1), k2_(k2), b_s_(b_s), b_t_(b_t), X_s_(X_s),
+      tau_0_(tau_0), C_st_(C_st), mu_(mu),
+	  k1_(k1), k2_(k2), X_s_(X_s),
       varprefix_(varprefix), twinprefix_(twinprefix)
 { 
   // Shouldn't tau_0 be 24 and C_st be 12?
@@ -990,12 +987,9 @@ std::unique_ptr<NEMLObject> LANLTiModel::initialize(ParameterSet & params)
   return neml::make_unique<LANLTiModel>(
 	  params.get_object_parameter_vector<Interpolate>("tau_0"),	  
       params.get_object_parameter<SquareMatrix>("C_st"),
-	  params.get_object_parameter_vector<Interpolate>("mu_s"),
-	  params.get_object_parameter_vector<Interpolate>("mu_t"),
+	  params.get_object_parameter_vector<Interpolate>("mu"),
 	  params.get_object_parameter_vector<Interpolate>("k1"),
 	  params.get_object_parameter_vector<Interpolate>("k2"),
-	  params.get_object_parameter_vector<Interpolate>("b_s"),
-	  params.get_object_parameter_vector<Interpolate>("b_t"),
 	  params.get_parameter<double>("X_s"),
       params.get_parameter<std::string>("varprefix"),
 	  params.get_parameter<std::string>("twinprefix"));
@@ -1007,12 +1001,9 @@ ParameterSet LANLTiModel::parameters()
 
   pset.add_parameter<std::vector<NEMLObject>>("tau_0");
   pset.add_parameter<NEMLObject>("C_st");
-  pset.add_parameter<std::vector<NEMLObject>>("mu_s");
-  pset.add_parameter<std::vector<NEMLObject>>("mu_t");
+  pset.add_parameter<std::vector<NEMLObject>>("mu");
   pset.add_parameter<std::vector<NEMLObject>>("k1");
   pset.add_parameter<std::vector<NEMLObject>>("k2");
-  pset.add_parameter<std::vector<NEMLObject>>("b_s");
-  pset.add_parameter<std::vector<NEMLObject>>("b_t");
   pset.add_optional_parameter<double>("X_s", 0.9);
   pset.add_optional_parameter<std::string>("varprefix", 
                                            std::string("rho"));
@@ -1057,30 +1048,49 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
   consistency(L);
 
   FlatVector crss(size());
+  FlatVector slip_burgers(size()/2);
+  size_t slip_burger_index = 0;
+  
+  
   size_t ind = 0;
   size_t tind = 0;
-
+  
+  
+  Lattice::SlipType stype = L.slip_type(g,i);
+  
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
-      Lattice::SlipType stype = L.slip_type(g,i);
-	    if (stype == Lattice::SlipType::Slip) {
-        crss.data()[ind] = X_s_ * b_s_[ind]->value(T) * mu_s_[ind]->value(T) 
-            * std::sqrt(history.get<double>(varnames_[ind])) + tau_0_[ind]->value(T);
-      } 
-      else {
-	      double v = 0;
-        // b_t and mu_t were being indexed wrong
-	      for (size_t k = 0; k < size()/2; k++) {
-	        v += (*C_st_)(tind,k) * b_s_[k]->value(T) *
-              history.get<double>(varnames_[k]);
-        }
-	      crss.data()[ind] = v * b_t_[ind-size()/2]->value(T) *
-            mu_t_[ind-size()/2]->value(T) + tau_0_[ind]->value(T);
-        tind++;
-      }
-      ind++;
+	  Lattice::SlipType stype = L.slip_type(g,i);	
+	  if (stype == Lattice::SlipType::Slip){
+      slip_burgers.data()[slip_burger_index] = L.burgers(g,i);
+	  slip_burger_index++;
+	  }
     }
   }
+  
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+	  Lattice::SlipType stype = L.slip_type(g,i);	
+	  if (stype == Lattice::SlipType::Slip) {
+		  crss.data()[ind] = X_s_ * L.burgers(g,i) * mu_[ind]->value(T) 
+				* std::sqrt(history.get<double>(varnames_[ind])) 
+				+ tau_0_[ind]->value(T);
+		  } 
+		else {
+		  double v = 0;
+		  // b_t and mu_t were being indexed wrong
+		  for (size_t k = 0; k < size()/2; k++) {
+			v += (*C_st_)(tind,k) * slip_burgers.data()[k] *
+					history.get<double>(varnames_[k]);
+			}
+		  crss.data()[ind] = v * L.burgers(g,i) *
+			   mu_[ind]->value(T) + tau_0_[ind]->value(T);
+			tind++;
+		  }
+	  ind++;
+	}
+  }
+
   return crss.data()[L.flat(g,i)];
 }  
   
@@ -1091,23 +1101,20 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
                                               double T, 
                                               const History & fixed) const
 {
+
+	
   History res = cache(CacheType::DOUBLE);
-  size_t ind = 0;
   
-  for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t i = 0; i < L.nslip(g); i++) {
-      Lattice::SlipType stype = L.slip_type(g,i);
-      if (stype == Lattice::SlipType::Slip){
-	    res.get<double>(varnames_[ind]) = X_s_ * b_s_[L.flat(g,i)]->value(T) 
-				* mu_s_[L.flat(g,i)]->value(T) 
-				* 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
-	    ind++;
-      } else {
-        res.get<double>(varnames_[ind]) = 0.0;
-		ind++;
-      }
-	}
+  Lattice::SlipType stype = L.slip_type(g,i);
+  if (stype == Lattice::SlipType::Slip){
+	res.get<double>(varnames_[L.flat(g,i)]) = X_s_ * L.burgers(g,i)
+			* mu_[L.flat(g,i)]->value(T) 
+			* 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
+  } else {
+	res.get<double>(varnames_[L.flat(g,i)]) = 0.0;
+
   }
+
   return res;
 }
 
