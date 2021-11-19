@@ -1056,8 +1056,6 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
   size_t tind = 0;
   
   
-  Lattice::SlipType stype = L.slip_type(g,i);
-  
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
 	  Lattice::SlipType stype = L.slip_type(g,i);	
@@ -1067,7 +1065,9 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 	  }
     }
   }
-  
+
+
+
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
 	  Lattice::SlipType stype = L.slip_type(g,i);	
@@ -1078,7 +1078,6 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 		  } 
 		else {
 		  double v = 0;
-		  // b_t and mu_t were being indexed wrong
 		  for (size_t k = 0; k < size()/2; k++) {
 			v += (*C_st_)(tind,k) * slip_burgers.data()[k] *
 					history.get<double>(varnames_[k]);
