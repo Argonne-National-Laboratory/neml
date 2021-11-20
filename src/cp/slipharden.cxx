@@ -1048,26 +1048,11 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
   consistency(L);
 
   FlatVector crss(size());
-  FlatVector slip_burgers(size()/2);
-  size_t slip_burger_index = 0;
   
   
   size_t ind = 0;
   size_t tind = 0;
   
-  
-  for (size_t g = 0; g < L.ngroup(); g++) {
-    for (size_t i = 0; i < L.nslip(g); i++) {
-	  Lattice::SlipType stype = L.slip_type(g,i);	
-	  if (stype == Lattice::SlipType::Slip){
-      slip_burgers.data()[slip_burger_index] = L.burgers(g,i);
-	  slip_burger_index++;
-	  }
-    }
-  }
-
-
-
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
 	  Lattice::SlipType stype = L.slip_type(g,i);	
@@ -1078,10 +1063,17 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 		  } 
 		else {
 		  double v = 0;
-		  for (size_t k = 0; k < size()/2; k++) {
-			v += (*C_st_)(tind,k) * slip_burgers.data()[k] *
-					history.get<double>(varnames_[k]);
+		  for (size_t g2 = 0; g2 < L.ngroup(); g2++) {
+	        for (size_t i2 = 0; i2 < L.nslip(g2); i2++) {
+			  size_t k2 = L.flat(g2,i2);
+			  if (L.slip_type(g2,i2) == Lattice::SlipType::Slip){
+			     v += (*C_st_)(tind,k2) * L.burgers(g2,i2) *
+					history.get<double>(varnames_[k2]);
+			  }else{
+				 v += 0.0;				 
+			  }
 			}
+		  }
 		  crss.data()[ind] = v * L.burgers(g,i) *
 			   mu_[ind]->value(T) + tau_0_[ind]->value(T);
 			tind++;
@@ -1104,17 +1096,36 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
 
   consistency(L);
   History res = cache(CacheType::DOUBLE);
-  
-  
-  Lattice::SlipType stype = L.slip_type(g,i);
-  if (stype == Lattice::SlipType::Slip){
-  res.get<double>(varnames_[L.flat(g,i)]) = X_s_ * L.burgers(g,i) * mu_[L.flat(g,i)]->value(T) 
-		* 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));
-   } else {	   
-	 res.get<double>(varnames_[L.flat(g,i)]) = 0.0;
-   }
+     
+  size_t tind = 0;
+  size_t ind = 0;
 
 
+  for (size_t g = 0; g < L.ngroup(); g++) {
+    for (size_t i = 0; i < L.nslip(g); i++) {
+	  Lattice::SlipType stype = L.slip_type(g,i);
+	  if (stype == Lattice::SlipType::Slip){
+		res.get<double>(varnames_[ind]) = X_s_ * L.burgers(g,i) * mu_[ind]->value(T) 
+			   * 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[ind])));	
+	  }
+	  else{
+		double v = 0;  
+		for (size_t g2 = 0; g2 < L.ngroup(); g2++) {
+	      for (size_t i2 = 0; i2 < L.nslip(g2); i2++) {
+			size_t k2 = L.flat(g2,i2);
+			if (L.slip_type(g2,i2) == Lattice::SlipType::Slip){
+			  v +=  (*C_st_)(tind, k2) * L.burgers(g2,i2);
+			}else{
+			  v += 0.0;
+			}
+			}
+		}
+		res.get<double>(varnames_[ind]) = v * mu_[ind]->value(T) * L.burgers(g,i);
+		tind++;
+	  }
+	  ind++;
+	}
+  }
   return res;
 }
 
