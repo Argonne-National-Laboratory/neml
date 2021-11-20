@@ -34,6 +34,8 @@ class CommonSlipHardening():
         nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.L, self.T, self.fixed), self.H)
         d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
 
+        print("nd:", np.array(nd))
+        print("d:", np.array(d))
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
 
 class TestConstantHardening(unittest.TestCase, CommonSlipHardening):
