@@ -34,8 +34,8 @@ class CommonSlipHardening():
         nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.L, self.T, self.fixed), self.H)
         d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
 
-        print("nd:", np.array(nd))
-        print("d:", np.array(d))
+        # print("nd:", np.array(nd))
+        # print("d:", np.array(d))
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
 
 class TestConstantHardening(unittest.TestCase, CommonSlipHardening):
@@ -378,7 +378,6 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
       [-25.0,-17.0,15.0],
       [10.0,  15.0,35.0]]))
     
-    
     self.nslip = self.L.ntotal
     
     self.current_rho = 1e6
@@ -403,8 +402,8 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.k1_v = 0.5
     self.k2_v = 0.75
 
-    self.k1 = np.ones((12,)) * self.k1_v
-    self.k2 = np.ones((12,)) * self.k2_v
+    self.k1 = np.ones((24,)) * self.k1_v
+    self.k2 = np.ones((24,)) * self.k2_v
 
     self.tau0 = np.ones((24,))
     self.tau0_slip = 30.0
@@ -453,7 +452,8 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     check[:12] = self.X_s * burger[:12] * self.mu[:12] * np.sqrt(np.array(self.H)[:12]) + self.tau0[:12]
     check[12:] = self.G_np.dot(np.array(self.H)[:12] * burger[:12]) * self.mu[12:] * burger[12:] + self.tau0[12:]
     
-    
+    print("check:", check)
+    print("direct:", direct)
     
     self.assertTrue(np.allclose(direct, check))
 
