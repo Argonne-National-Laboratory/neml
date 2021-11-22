@@ -354,7 +354,6 @@ class TestSimpleLinearHardening(unittest.TestCase, CommonSlipHardening):
 
     self.assertTrue(np.allclose(hrate, np.abs(srates)))
 
-# Eventually this should be TestLANLTiModel(unittest.TestCase, CommonSlipHardening) to get the Jacobian tests 
 class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
   def setUp(self):
     # Sets up the self.L crystallography
@@ -376,11 +375,11 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.S = tensors.Symmetric(np.array([
       [100.0,-25.0,10.0],
       [-25.0,-17.0,15.0],
-      [10.0,  15.0,35.0]]))
+      [10.0,  15.0,35.0]]))*2
     
     self.nslip = self.L.ntotal
     
-    self.current_rho = 1e6
+    self.current_rho = 1e-6
     self.current_slip = 0.1
 
     self.H = history.History()
@@ -411,12 +410,6 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.tau0[:12] = self.tau0_slip
     self.tau0[12:] = self.tau0_twin
 
-    # self.b_s = np.ones((12,)) * 0.3
-    # self.b_t = np.ones((12,)) * 0.5
-
-    # self.mu_s = np.ones((12,)) * 30000.0
-    # self.mu_t = np.ones((12,)) * 25000.0
-    
     self.mu = np.ones((24,))
     self.mu_slip = 30000.0
     self.mu_twin = 25000.0
@@ -448,20 +441,16 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
         burger[iq] = self.L.burgers(g,i)
         iq += 1
     
-    print("burger:", burger)
     check[:12] = self.X_s * burger[:12] * self.mu[:12] * np.sqrt(np.array(self.H)[:12]) + self.tau0[:12]
     check[12:] = self.G_np.dot(np.array(self.H)[:12] * burger[:12]) * self.mu[12:] * burger[12:] + self.tau0[12:]
-    
-    print("check:", check)
-    print("direct:", direct)
-    
+
     self.assertTrue(np.allclose(direct, check))
 
   def test_definition(self):
     direct = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule, self.fixed)
     srates = np.array([self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, self.T, 
       self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))])
-
+    
     self.assertTrue(np.allclose(direct, np.abs(srates)))
 
 
