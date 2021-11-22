@@ -459,6 +459,10 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
 
   def test_definition(self):
     direct = self.model.hist(self.S, self.Q, self.H, self.L, self.T, self.sliprule, self.fixed)
+    srates = np.array([self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, self.T, 
+      self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))])
+
+    self.assertTrue(np.allclose(direct, np.abs(srates)))
 
 
 class CommonSlipSingleHardening():
