@@ -382,6 +382,8 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.current_rho = 1e-6
     self.current_slip = 0.1
 
+    self.rhos = np.ones((12,)) * self.current_rho
+
     self.H = history.History()
 
     for i in range(12):
@@ -401,8 +403,8 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.k1_v = 0.5
     self.k2_v = 0.75
 
-    self.k1 = np.ones((24,)) * self.k1_v
-    self.k2 = np.ones((24,)) * self.k2_v
+    self.k1 = np.ones((12,)) * self.k1_v
+    self.k2 = np.ones((12,)) * self.k2_v
 
     self.tau0 = np.ones((24,))
     self.tau0_slip = 30.0
@@ -451,7 +453,10 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     srates = np.array([self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, self.T, 
       self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))])
     
-    self.assertTrue(np.allclose(direct, np.abs(srates)))
+    act = np.abs(srates)
+    act[:12] *= self.k1 * np.sqrt(self.rhos) - self.k2*self.rhos
+    
+    self.assertTrue(np.allclose(direct, act))
 
 
 class CommonSlipSingleHardening():
