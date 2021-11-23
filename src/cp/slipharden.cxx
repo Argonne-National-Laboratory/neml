@@ -1035,7 +1035,7 @@ void LANLTiModel::init_history(History & history) const
 {
   size_t i = 0;
   for (auto vn : varnames_) {
-    history.get<double>(vn) = 0; //tau_0_[i];
+    history.get<double>(vn) = 0;
     i++;
   }
 }
@@ -1049,11 +1049,10 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 
   FlatVector crss(size());
   
-  
+  // Do you use these?
   size_t ind = 0;
   size_t tind = 0;
   
-
   Lattice::SlipType stype = L.slip_type(g,i);	
   if (stype == Lattice::SlipType::Slip) {
 	  return X_s_ * L.burgers(g,i) * mu_[L.flat(g,i)]->value(T) 
@@ -1063,6 +1062,7 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 	else {
 	  double v = 0;
 	  for (size_t g2 = 0; g2 < L.ngroup(); g2++) {
+    // Fix indentation
 		for (size_t i2 = 0; i2 < L.nslip(g2); i2++) {
 		  size_t k2 = L.flat(g2,i2);
 		  Lattice::SlipType otype = L.slip_type(g2,i2);
@@ -1085,8 +1085,6 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
                                               double T, 
                                               const History & fixed) const
 {
-
-
   consistency(L);
   History res = cache(CacheType::DOUBLE);
 
@@ -1105,10 +1103,7 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
 		res.get<double>(varnames_[k2]) = (*C_st_)(L.flat(g,i)-size()/2,k2) * L.burgers(g2,i2)
 				* mu_[L.flat(g,i)]->value(T) * L.burgers(g,i);
 	  }
-	  // else{
-		// res.get<double>(varnames_[k2]) = 0.0;
-	  // }
-	}
+	} // Fix the tabs
 	}
   }
   return res;
@@ -1124,8 +1119,6 @@ History LANLTiModel::hist(const Symmetric & stress,
 
   History res = blank_hist();
 
-
-  
   for (size_t g = 0; g < L.ngroup(); g++) {
     for (size_t i = 0; i < L.nslip(g); i++) {
 	size_t k = L.flat(g,i);
@@ -1154,7 +1147,7 @@ History LANLTiModel::d_hist_d_s(const Symmetric & stress,
   consistency(L);
   History res = blank_hist().derivative<Symmetric>();
   
-
+  // Could replace this with L.flat(g,i) I think
   size_t ind = 0;
   
   for (size_t g = 0; g < L.ngroup(); g++) {
