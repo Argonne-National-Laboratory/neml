@@ -92,8 +92,18 @@ if __name__ == "__main__":
   mu[12:] = mu_twin
   X_s = 0.9
   
-  k1_v = 0.5
-  k2_v = 0.75
+  k1_v = 1.02e17
+  X = 0.3
+  b = 0.25
+  gamma_dot = 1.0e7
+  g = 0.01
+  tau_D = 500.0
+  eps_dot = 1.0e-4
+  k = 1.38064852e-23
+  T = 298.0
+  
+  k2_v = k1_v*X*b*(1-k*T/(tau_D*b**3)*np.log(eps_dot/gamma_dot))/g
+  
 
   k1 = np.ones((12,)) * k1_v
   k2 = np.ones((12,)) * k2_v
@@ -116,7 +126,7 @@ if __name__ == "__main__":
   
   # Sets up the single crystal model
   model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
-      postprocessors = [twinner], verbose = False, linesearch = True,
+      postprocessors = [], verbose = False, linesearch = True,
       miter = 100, max_divide = 10)
   
   # Sets up the poly crystal model
