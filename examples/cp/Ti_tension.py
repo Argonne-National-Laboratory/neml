@@ -7,8 +7,8 @@ from neml import drivers
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  N = 50
-  nthreads = 3
+  N = 1
+  nthreads = 1
   strain_rate = 1.0e-4
   model = make_model(strain_rate, N, nthreads = nthreads)
  
@@ -28,5 +28,7 @@ if __name__ == "__main__":
   plt.legend(loc='best')
   plt.xlabel("Strain (mm/mm)")
   plt.ylabel("Stress (MPa)")
-  plt.savefig("tension-Ti.png")
+  # plt.savefig("tension-Ti.png")
+  plt.show()
+  plt.close()
 
