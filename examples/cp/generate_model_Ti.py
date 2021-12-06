@@ -13,6 +13,9 @@ import numpy.random as ra
 
 def make_singlecrystal(strain_rate, verbose = False, return_hardening = False):
 
+  # unit transformer
+  ut = 1.0e9
+
   # Temperature in K
   T = 298.0
   
@@ -55,17 +58,20 @@ def make_singlecrystal(strain_rate, verbose = False, return_hardening = False):
   num_ttwin, num_ctwin = 6, 6
   ## basal plane
   C1_single = np.array([50.0]*num_ttwin+[50.0]*num_ttwin)
-  C1 = np.stack([C1_single for _ in range(num_basal)])   
+  C1 = np.stack([C1_single for _ in range(num_basal)])
   ## prismatic plane
   C2_single = np.array([100.0]*num_ttwin+[1000.0]*num_ttwin)
-  C2 = np.stack([C2_single for _ in range(num_prism)])  
+  C2 = np.stack([C2_single for _ in range(num_prism)])
   ## pyramidal plane
   C3_single = np.array([250.0]*num_ttwin+[170.0]*num_ttwin)
-  C3 = np.stack([C3_single for _ in range(num_pyram)]) 
+  C3 = np.stack([C3_single for _ in range(num_pyram)])
   ## stack up each slip system
   C_np = np.vstack((C1, C2, C3)).T
 
   C_st = matrix.SquareMatrix(12, type = "dense", data = C_np.flatten())
+
+  M = matrix.SquareMatrix(24, type = "diagonal_blocks",
+      data = [10.0, 10.0], blocks = [12,12])
 
   mu = np.ones((24,))
   mu_slip = 30000.0
@@ -73,16 +79,16 @@ def make_singlecrystal(strain_rate, verbose = False, return_hardening = False):
   mu[:12] = mu_slip
   mu[12:] = mu_twin
   X_s = 0.9
-  k1 = np.array([1.50]*3+[0.25]*3+[5.00]*6+[1.50]*3+[0.25]*3+[5.00]*6)
+  k1 = np.array([1.50e9]*3+[2.5e8]*3+[5.00e9]*6)/ut #+[1.50]*3+[0.25]*3+[5.00]*6)
   X = 0.3
-  b = np.array([0.29511]*3+[0.29511]*3+[0.55364]*6+[0.29511]*3+[0.29511]*3+[0.55364]*6)
+  b = np.array([2.9511e-10]*3+[2.9511e-10]*3+[5.5364e-10]*6)*ut  #+[0.29511]*3+[0.29511]*3+[0.55364]*6)
   # b = np.array([0.29511]*3+[0.29511]*3+[0.55364]*6+[0.060040]*6+[0.082015]*6)
   gamma_dot = 1.0e7
-  g = np.array([0.002]*3+[0.002]*3+[0.0055]*6+[0.002]*3+[0.002]*3+[0.0055]*6)
-  tau_D = np.array([100.0]*3+[100.0]*3+[100.0]*6+[100.0]*3+[100.0]*3+[100.0]*6)
+  g = np.array([0.002]*3+[0.002]*3+[0.0055]*6) #+[0.002]*3+[0.002]*3+[0.0055]*6)
+  tau_D = np.array([100.0]*3+[100.0]*3+[100.0]*6) #+[100.0]*3+[100.0]*3+[100.0]*6)
   eps_dot = strain_rate
-  k = 1.38064852e-23
-  
+  k = 1.38064852e-23*ut**2.0
+
   k2 = k1*X*b*(1-k*T/(tau_D*b**3)*np.log(eps_dot/gamma_dot))/g
   
   # Sets up the linear elastic tensor
