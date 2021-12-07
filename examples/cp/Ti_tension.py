@@ -7,7 +7,7 @@ from neml import drivers
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  N = 1
+  N = 1000
   nthreads = 1
   strain_rate = 1.0e-4
   model = make_model(strain_rate, N, nthreads = nthreads)
