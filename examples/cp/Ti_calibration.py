@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 def simulation(strain_rate, N, nthreads, T):
   
   model = make_model(strain_rate, N, nthreads = nthreads)
-  res = drivers.uniaxial_test(model, strain_rate, T = T, verbose = True)
+  res = drivers.uniaxial_test(model, strain_rate, T = T, verbose = False)
 
   return res
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
   nthreads = 1
   strain_rate = 1.0e-4
   T = 298.0
-  samples = 200
+  # samples = 200
 
   res = simulation(strain_rate, N, nthreads, T)
   df = load_file(path_1)
