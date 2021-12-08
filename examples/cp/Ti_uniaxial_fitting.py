@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 def make_model(X_s, k1_1, k1_2, k1_3, X, 
             g_1, g_2, g_3,
             tau_D1, tau_D2, tau_D3,
-            T = 298.0, N = 1, 
+            T = 298.0, emax = 0.05, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
             verbose = True):
 
@@ -127,7 +127,7 @@ def make_model(X_s, k1_1, k1_2, k1_3, X,
 
   model = polycrystal.TaylorModel(single_model, orientations, nthreads = nthreads)
 
-  res = drivers.uniaxial_test(model, strain_rate, T = T, verbose = verbose)
+  res = drivers.uniaxial_test(model, strain_rate, T = T, emax = emax, verbose = verbose)
   
   return res
 
