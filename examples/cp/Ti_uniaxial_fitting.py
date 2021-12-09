@@ -28,7 +28,7 @@ def make_model(X_s, k1_1, k1_2, k1_3, X,
             tau_D1, tau_D2, tau_D3,
             T = 298.0, emax = 0.05, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = True):
+            verbose = True, Taylor = True):
 
   # unit transformer
   ut = 1.0e9
@@ -127,9 +127,14 @@ def make_model(X_s, k1_1, k1_2, k1_3, X,
 
   model = polycrystal.TaylorModel(single_model, orientations, nthreads = nthreads)
 
+  
   res = drivers.uniaxial_test(model, strain_rate, T = T, emax = emax, verbose = verbose)
   
-  return res
+  if Taylor:
+    return res
+  else:
+    return single_res = drivers.uniaxial_test(single_model, strain_rate, 
+            T = T, emax = emax, verbose = verbose)
 
 
 def interpolate(strain, stress, targets):
