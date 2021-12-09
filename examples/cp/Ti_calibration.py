@@ -42,7 +42,7 @@ path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Ito-2019-MSEB/"
 
 
 if __name__ == "__main__":
-  N = 1
+  N = 100
   nthreads = 1
   strain_rate = 1.0e-4
   T = 298.0
