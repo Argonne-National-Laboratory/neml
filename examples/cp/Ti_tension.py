@@ -10,7 +10,8 @@ if __name__ == "__main__":
   N = 1000
   nthreads = 1
   strain_rate = 1.0e-4
-  model = make_model(strain_rate, N, nthreads = nthreads)
+  # model = make_model(strain_rate, N, nthreads = nthreads)
+  model = make_singlecrystal(strain_rate)
  
   T = 298.0
   res = drivers.uniaxial_test(model, strain_rate, T = T, verbose = True)
