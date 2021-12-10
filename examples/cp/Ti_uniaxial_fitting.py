@@ -28,7 +28,7 @@ def make_model(X_s, k1_1, k1_2, k1_3, X,
             tau_D1, tau_D2, tau_D3,
             T = 298.0, emax = 0.05, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = True, Taylor = True):
+            verbose = True, Taylor = True, PTR = True):
 
   # unit transformer
   ut = 1.0e9
@@ -119,21 +119,24 @@ def make_model(X_s, k1_1, k1_2, k1_3, X,
   twinner = postprocessors.PTRTwinReorientation(twin_threshold)
   
   # Sets up the single crystal model
-  single_model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
-      postprocessors = [], verbose = False, linesearch = True,
-      miter = 100, max_divide = 10)
-      
-  orientations = rotations.random_orientations(N)
-
-  model = polycrystal.TaylorModel(single_model, orientations, nthreads = nthreads)
-
-  
-  res = drivers.uniaxial_test(model, strain_rate, T = T, emax = emax, verbose = verbose)
-  
-  if Taylor:
-    return res
+  if PTR:
+    single_model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
+        postprocessors = [], verbose = False, linesearch = True,
+        initial_rotation = rotations.Orientation(0,0,0,angle_type="degrees"),
+        miter = 100, max_divide = 10)
   else:
-    return single_res = drivers.uniaxial_test(single_model, strain_rate, 
+    single_model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
+        verbose = False, linesearch = True,
+        initial_rotation = rotations.Orientation(0,0,0,angle_type="degrees"),
+        miter = 100, max_divide = 10)
+        
+  if Taylor:
+    orientations = rotations.random_orientations(N)
+    model = polycrystal.TaylorModel(single_model, orientations, nthreads = nthreads)
+    return drivers.uniaxial_test(model, strain_rate, T = T, 
+            emax = emax, verbose = verbose)
+  else:
+    return drivers.uniaxial_test(single_model, strain_rate, 
             T = T, emax = emax, verbose = verbose)
 
 
@@ -171,7 +174,7 @@ if __name__ == "__main__":
             tau_D1, tau_D2, tau_D3,
             T = 298.0, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = True)
+            verbose = True, Taylor = True, PTR = True)
             
             
   df = load_file(path_1)
