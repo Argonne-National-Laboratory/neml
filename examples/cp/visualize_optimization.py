@@ -17,30 +17,30 @@ import concurrent.futures
 from multiprocessing import Pool
 from optimparallel import minimize_parallel
 
-"""
+
 # sets up x_scale for both experiment and simulation
-emax = 0.05
+emax = 0.2
 Nsample = 200
 x_sample = np.linspace(0.0, emax*0.99, Nsample)
 
 # sets up the parameters range 
 min_theta = (X_s_min, k1_1_min, k1_2_min, k1_3_min, 
         X_min, g_1_min, g_2_min, g_3_min,
-        tau_D1_min, tau_D2_min, tau_D3_min) = (0.527777705, 74.625,
-                                               5.30971905, 61.379739,
-                                               0.255167712, 0.01367479605,
-                                               0.01396919455, 0.01855309345,
-                                               49.6123269, 90.436568,
-                                               42.58838775)
+        tau_D1_min, tau_D2_min, tau_D3_min) = (3.150832905, 41.90999565,
+                                               9.04691245, 122.1456805,
+                                               0.4906251715, 0.0145345937,
+                                               0.0114694439, 0.03620099355,
+                                               53.5702925, 50.0646285,
+                                               45.9480411)
                                                
 max_theta = (X_s_max, k1_1_max, k1_2_max, k1_3_max, 
         X_max, g_1_max, g_2_max, g_3_max,
-        tau_D1_max, tau_D2_max, tau_D3_max) = (1.5833331149999998, 223.875,
-                                               15.92915715, 184.139217,
-                                               0.765503136, 0.04102438815,
-                                               0.041907583649999997, 0.05565928034999999,
-                                               148.8369807, 271.309704,
-                                               127.76516325)
+        tau_D1_max, tau_D2_max, tau_D3_max) = (4.7262493575, 125.72998695,
+                                               27.140737350000002, 366.43704149999996,
+                                               1.4718755145, 0.0436037811,
+                                               0.034408331699999996, 0.10860298064999999,
+                                               160.7108775, 150.1938855,
+                                               137.84412329999998)
 """
 
 # sets up initial model parameters
@@ -75,7 +75,7 @@ max_theta = (X_s_max, k1_1_max, k1_2_max, k1_3_max,
                                                g_2_i*(1+sf), g_3_i*(1+sf), 
                                                tau_D1_i*(1+sf), tau_D2_i*(1+sf),
                                                tau_D3_i*(1+sf))
-
+"""
 #================================================#
 def convert_to_real(p):
 #================================================#
@@ -113,9 +113,10 @@ def make_Ti_model(params):
   res = make_model(X_s, k1_1, k1_2, k1_3, X, 
             g_1, g_2, g_3,
             tau_D1, tau_D2, tau_D3,
-            T = 298.0, emax = emax, N = 1, 
+            T = 298.0, emax = emax, N = 10, 
             strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = False)
+            verbose = False, Taylor = True, 
+            PTR = False)
 
   return res
 
@@ -136,10 +137,9 @@ if __name__ == "__main__":
   
   T = 298.0
 
-  params = [0.5872926, 1.0, 0.4240177, 
-            0.24294844, 0.85410004, 0.68559576,
-            0.70046437, 0.33568583, 0.49608411,
-            0.90845018, 0.42513523]
+  params = [0.28776328, 0.48671358, 0.74433297, 0.2457169,
+            0.07744721, 0.92449378, 0.17374999, 0.28382545,
+            0.02952822, 0.10566986, 0.65129651]
   theta_in = (params[0], 
          params[1], params[2], params[3], 
          params[4], params[5], params[6],
@@ -154,9 +154,9 @@ if __name__ == "__main__":
   df = load_file(path_1)
   
   plt.plot(res['strain'], res['stress'], label = "Sim - %3.0f C" % (T-273.15))
-  plt.plot(x_sample, res_stress, label = "Sim - %3.0f C interpolate" % (T-273.15))
+  # plt.plot(x_sample, res_stress, label = "Sim - %3.0f C interpolate" % (T-273.15))
   plt.plot(df['Nominal_strain'], df['True_stress'], label = "Exp - %3.0f C" % (T-273.15))
-  plt.plot(x_sample, stress, label = "Exp - %3.0f C interpolate" % (T-273.15))
+  # plt.plot(x_sample, stress, label = "Exp - %3.0f C interpolate" % (T-273.15))
 
   plt.legend(loc='best')
   plt.xlabel("Strain (mm/mm)")
