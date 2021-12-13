@@ -19,13 +19,26 @@ from optimparallel import minimize_parallel
 from scipy.optimize import curve_fit
 
 
-sf = 0.8
-
 # sets up x_scale for both experiment and simulation
 emax = 0.2
 Nsample = 200
 x_sample = np.linspace(0.0, emax*0.99, Nsample)
 
+
+#================================================#
+def make_Ti_simple_model(x_sample, X_s, k1_1, k1_2, k1_3, 
+                         X, k2_1, k2_2, k2_3):
+#================================================#
+  
+  res = simplify_model(X_s, k1_1, k1_2, k1_3, X, 
+            k2_1, k2_2, k2_3,
+            T = 298.0, emax = 0.05, N = 1, 
+            strain_rate = 1.0e-4, nthreads = 1, 
+            verbose = True, Taylor = True, 
+            PTR = True)
+            
+  yobs = interpolate(res['strain'], res['stress'], x_sample)
+  return yobs
 
 #================================================#
 def make_Ti_model(x_sample, X_s, k1_1, k1_2, k1_3, 
@@ -54,18 +67,58 @@ def interpolate_obs():
   
 if __name__ == "__main__":
   
-
-  df = interpolate_obs()
-  xdata = x_sample
-  ydata = interpolate(df['Nominal_strain'], df['True_stress'], x_sample)
-  popt, pcov = curve_fit(make_Ti_model, xdata, ydata)
+  simplify = True
   
-  print(popt)
-  plt.plot(xdata, make_Ti_model(xdata, *popt), 'g--', label = 'fit')
+  if simplify:
+    # sets up parameters range
+    min_params = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    max_params = [1.0, 100.0, 100.0, 100.0, 1.0, 100.0, 100.0, 100.0]
+
+    df = interpolate_obs()
+    xdata = x_sample
+    ydata = interpolate(df['Nominal_strain'], df['True_stress'], x_sample)
+    popt, pcov = curve_fit(make_Ti_simple_model, xdata, ydata, 
+      bounds=(min_params, max_params))
+
+    print("popt: ", popt)
+    print("")
+    print("pcov: ", pcov)
+
+    plt.plot(xdata, make_Ti_simple_model(xdata, *popt), 'g--', label = 'fit')
          # label='fit: a=%5.3f, b=%5.3f, c=%5.3f' % tuple(popt))
-  plt.plot(xdata, ydata, 'b-', label='data')
-  plt.xlabel('x')
-  plt.ylabel('y')
-  plt.legend()
-  plt.show()
+    plt.plot(xdata, ydata, 'b-', label='data')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("tension-Ti-simplify.png")
+    plt.show()
+    plt.close()
+
+  else:
+  
+    # sets up parameters range
+    min_params = [0.1, 0.1, 0.1, 0.1, 0.1, 0.0, 0.0, 0.0, 100.0, 100.0, 100.0]
+    max_params = [1.0, 100.0, 100.0, 100.0, 1.0, 1.0, 1.0, 1.0, 10000.0, 10000.0, 10000.0]
+
+    df = interpolate_obs()
+    xdata = x_sample
+    ydata = interpolate(df['Nominal_strain'], df['True_stress'], x_sample)
+    popt, pcov = curve_fit(make_Ti_model, xdata, ydata, 
+      bounds=(min_params, max_params))
+
+    print("popt: ", popt)
+    print("")
+    print("pcov: ", pcov)
+
+    plt.plot(xdata, make_Ti_model(xdata, *popt), 'g--', label = 'fit')
+         # label='fit: a=%5.3f, b=%5.3f, c=%5.3f' % tuple(popt))
+    plt.plot(xdata, ydata, 'b-', label='data')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("tension-Ti-allparam.png")
+    plt.show()
+    plt.close()
   
