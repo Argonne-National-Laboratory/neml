@@ -20,24 +20,22 @@ from optimparallel import minimize_parallel
 # sets up initial model parameters
 (X_s_i, k1_1_i, k1_2_i, k1_3_i, 
         X_i, g_1_i, g_2_i, g_3_i, 
-        tau_D1_i, tau_D2_i, tau_D3_i) = (1.90030445e+00, 4.77297206e+01, 
-                                         5.37344797e+00, 9.84225347e+02,
-                                         5.35037312e-01, 4.26367070e-02,
-                                         3.31374213e-02, 4.71697076e-01,
-                                         1.99910788e+01, 1.08052795e+02,
-                                         1.12859103e+03)
+        tau_D1_i, tau_D2_i, tau_D3_i) = (1.00000176, 0.99999989, 0.99999972,
+                                         1.00000035, 0.99999971, 1.00000174,
+                                         0.99999919, 0.99999946, 0.9999988,
+                                         1.00000011, 0.99999834)
 
-sf = 0.8
+sf = 0.9
 
 # sets up x_scale for both experiment and simulation
-emax = 0.2
-Nsample = 200
+emax = 0.15
+Nsample = 1000
 x_sample = np.linspace(0.0, emax*0.99, Nsample)
 
 # sets up the parameters range 
 min_theta = (X_s_min, k1_1_min, k1_2_min, k1_3_min, 
         X_min, g_1_min, g_2_min, g_3_min,
-        tau_D1_min, tau_D2_min, tau_D3_min) = (0.1, k1_1_i*(1-sf), 
+        tau_D1_min, tau_D2_min, tau_D3_min) = (X_s_i*(1-sf), k1_1_i*(1-sf), 
                                                k1_2_i*(1-sf), k1_3_i*(1-sf), 
                                                X_i*(1-sf), g_1_i*(1-sf),
                                                g_2_i*(1-sf), g_3_i*(1-sf), 
@@ -46,30 +44,12 @@ min_theta = (X_s_min, k1_1_min, k1_2_min, k1_3_min,
                                                
 max_theta = (X_s_max, k1_1_max, k1_2_max, k1_3_max, 
         X_max, g_1_max, g_2_max, g_3_max,
-        tau_D1_max, tau_D2_max, tau_D3_max) = (1.0, k1_1_i*(1+sf), 
+        tau_D1_max, tau_D2_max, tau_D3_max) = (X_s_i*(1+sf), k1_1_i*(1+sf), 
                                                k1_2_i*(1+sf), k1_3_i*(1+sf), 
                                                X_i*(1+sf), g_1_i*(1+sf),
                                                g_2_i*(1+sf), g_3_i*(1+sf), 
                                                tau_D1_i*(1+sf), tau_D2_i*(1+sf),
                                                tau_D3_i*(1+sf))
-"""
-# sets up the parameters range 
-min_theta = (X_s_min, k1_1_min, k1_2_min, k1_3_min, 
-        X_min, g_1_min, g_2_min, g_3_min,
-        tau_D1_min, tau_D2_min, tau_D3_min) = (3.150832905 41.90999565 9.04691245 122.1456805 0.4906251715 0.0145345937 0.0114694439 0.03620099355 53.5702925 50.0646285 45.9480411)
-                                               
-max_theta = (X_s_max, k1_1_max, k1_2_max, k1_3_max, 
-        X_max, g_1_max, g_2_max, g_3_max,
-        tau_D1_max, tau_D2_max, tau_D3_max) = (4.7262493575, 125.72998695,
-                                               27.140737350000002, 366.43704149999996,
-                                               1.4718755145, 0.0436037811,
-                                               0.034408331699999996, 0.10860298064999999,
-                                               160.7108775, 150.1938855,
-                                               137.84412329999998)
-"""
-
-
-
 
 #================================================#
 def convert_to_real(p):

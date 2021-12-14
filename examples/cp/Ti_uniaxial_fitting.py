@@ -23,7 +23,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def simplify_model(X_s, k1_1, k1_2, k1_3, X, 
+def simplify_model(taus_1, taus_2, taus_3,
+            taut_1, taut_2, X_s,
+            k1_1, k1_2, k1_3, X, 
             k2_1, k2_2, k2_3,
             T = 298.0, emax = 0.05, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
@@ -40,7 +42,7 @@ def simplify_model(X_s, k1_1, k1_2, k1_3, X,
   C13 = 66000.0
   
   # Constant part of the strength for slip and twin
-  tau0 = np.array([170.0]*3+[90.5]*3+[210]*6+[180.0]*6+[250.0]*6)
+  tau0 = np.array([taus_1]*3+[taus_2]*3+[taus_3]*6+[taut_1]*6+[taut_2]*6)
   
   # Reference slip rate and rate sensitivity exponent
   g0 = 1.0
@@ -129,12 +131,18 @@ def simplify_model(X_s, k1_1, k1_2, k1_3, X,
             T = T, emax = emax, verbose = verbose)
 
 
-def make_model(X_s, k1_1, k1_2, k1_3, X, 
+
+
+
+def make_model(taus_1, taus_2, taus_3,
+            taut_1, taut_2, X_s, 
+            k1_1, k1_2, k1_3, X, 
             g_1, g_2, g_3,
             tau_D1, tau_D2, tau_D3,
             T = 298.0, emax = 0.05, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = True, Taylor = True, PTR = True):
+            verbose = True, Taylor = True,
+            PTR = True):
 
   # unit transformer
   ut = 1.0e9
@@ -151,7 +159,8 @@ def make_model(X_s, k1_1, k1_2, k1_3, X,
   C13 = 66000.0
   
   # Constant part of the strength for slip and twin
-  tau0 = np.array([170.0]*3+[90.5]*3+[210]*6+[180.0]*6+[250.0]*6)
+  # tau0 = np.array([170.0]*3+[90.5]*3+[210]*6+[180.0]*6+[250.0]*6)
+  tau0 = np.array([taus_1]*3+[taus_2]*3+[taus_3]*6+[taut_1]*6+[taut_2]*6)
   
   # Reference slip rate and rate sensitivity exponent
   g0 = 1.0
@@ -235,7 +244,7 @@ def make_model(X_s, k1_1, k1_2, k1_3, X,
         verbose = False, linesearch = True,
         initial_rotation = rotations.Orientation(0,0,0,angle_type="degrees"),
         miter = 100, max_divide = 10)
-        
+      
   if Taylor:
     orientations = rotations.random_orientations(N)
     model = polycrystal.TaylorModel(single_model, orientations, nthreads = nthreads)
@@ -280,7 +289,7 @@ if __name__ == "__main__":
             tau_D1, tau_D2, tau_D3,
             T = 298.0, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = True, Taylor = True, PTR = True)
+            verbose = True)
             
             
   df = load_file(path_1)

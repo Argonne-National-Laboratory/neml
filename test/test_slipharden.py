@@ -28,7 +28,7 @@ class CommonSlipHardening():
     
     nd = nd.reshape(d.shape)
 
-    self.assertTrue(np.allclose(nd.reshape(d.shape), d, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(nd.reshape(d.shape), d, rtol = 1.0e-4))
 
   def test_d_hist_to_tau_d_hist(self):
     for g in range(self.L.ngroup):

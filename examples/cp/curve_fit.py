@@ -20,38 +20,45 @@ from scipy.optimize import curve_fit
 
 
 # sets up x_scale for both experiment and simulation
-emax = 0.2
-Nsample = 200
+emax = 0.15
+Nsample = 1000
 x_sample = np.linspace(0.0, emax*0.99, Nsample)
 
 
 #================================================#
-def make_Ti_simple_model(x_sample, X_s, k1_1, k1_2, k1_3, 
+def make_Ti_simple_model(x_sample, taus_1, taus_2, taus_3,
+                         taut_1, taut_2, X_s, 
+                         k1_1, k1_2, k1_3, 
                          X, k2_1, k2_2, k2_3):
 #================================================#
   
-  res = simplify_model(X_s, k1_1, k1_2, k1_3, X, 
+  res = simplify_model(taus_1, taus_2, taus_3,
+            taut_1, taut_2, X_s,
+            k1_1, k1_2, k1_3, X, 
             k2_1, k2_2, k2_3,
-            T = 298.0, emax = 0.05, N = 1, 
-            strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = True, Taylor = True, 
-            PTR = True)
+            T = 298.0, emax = emax, N = 20, 
+            strain_rate = 1.0e-4, nthreads = 30, 
+            verbose = True, Taylor = True, PTR = True)
             
   yobs = interpolate(res['strain'], res['stress'], x_sample)
   return yobs
 
 #================================================#
-def make_Ti_model(x_sample, X_s, k1_1, k1_2, k1_3, 
-                  X, g_1, g_2, g_3, tau_D1, tau_D2, 
-                  tau_D3):
+def make_Ti_model(x_sample, taus_1, taus_2, taus_3,
+                  taut_1, taut_2, X_s, 
+                  k1_1, k1_2, k1_3, X, 
+                  g_1, g_2, g_3,
+                  tau_D1, tau_D2, tau_D3):
 #================================================#
   
-  res = make_model(X_s, k1_1, k1_2, k1_3, X, 
+  res = make_model(taus_1, taus_2, taus_3,
+            taut_1, taut_2, X_s, 
+            k1_1, k1_2, k1_3, X, 
             g_1, g_2, g_3,
             tau_D1, tau_D2, tau_D3,
-            T = 298.0, emax = emax, N = 1, 
-            strain_rate = 1.0e-4, nthreads = 1, 
-            verbose = False, Taylor = True,
+            T = 298.0, emax = emax, N = 20, 
+            strain_rate = 1.0e-4, nthreads = 30, 
+            verbose = True, Taylor = True,
             PTR = True)
   yobs = interpolate(res['strain'], res['stress'], x_sample)
   return yobs
@@ -67,7 +74,7 @@ def interpolate_obs():
   
 if __name__ == "__main__":
   
-  simplify = True
+  simplify = False
   
   if simplify:
     # sets up parameters range
@@ -77,8 +84,8 @@ if __name__ == "__main__":
     df = interpolate_obs()
     xdata = x_sample
     ydata = interpolate(df['Nominal_strain'], df['True_stress'], x_sample)
-    popt, pcov = curve_fit(make_Ti_simple_model, xdata, ydata, 
-      bounds=(min_params, max_params))
+    popt, pcov = curve_fit(make_Ti_simple_model, xdata, ydata)
+      # bounds=(min_params, max_params))
 
     print("popt: ", popt)
     print("")
@@ -104,8 +111,8 @@ if __name__ == "__main__":
     df = interpolate_obs()
     xdata = x_sample
     ydata = interpolate(df['Nominal_strain'], df['True_stress'], x_sample)
-    popt, pcov = curve_fit(make_Ti_model, xdata, ydata, 
-      bounds=(min_params, max_params))
+    popt, pcov = curve_fit(make_Ti_model, xdata, ydata)
+      # bounds=(min_params, max_params))
 
     print("popt: ", popt)
     print("")
