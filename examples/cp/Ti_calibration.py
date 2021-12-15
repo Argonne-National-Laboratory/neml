@@ -223,7 +223,8 @@ if __name__ == "__main__":
   
 
   if easy_mode:
-    res = opt.minimize(R, p0, method = 'L-BFGS-B', bounds = [taus_1_range, taus_2_range, taus_3_range,
+    res = minimize_parallel(R, p0, bounds = [taus_1_range, taus_2_range, taus_3_range,
+    # res = opt.minimize(R, p0, method = 'L-BFGS-B', bounds = [taus_1_range, taus_2_range, taus_3_range,
         taut_1_range, taut_2_range, X_s_range,
         k1_1_range, k1_2_range, k1_3_range,
         X_range, g_1_range, g_2_range,

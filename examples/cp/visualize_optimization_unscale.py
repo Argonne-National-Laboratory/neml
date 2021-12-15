@@ -24,43 +24,43 @@ emax = 0.2
 Nsample = 200
 x_sample = np.linspace(0.0, emax*0.99, Nsample)
 
-
-
 #================================================#
-def simplify_Ti_model(x_sample, X_s, k1_1, k1_2, k1_3, X, 
-                      k2_1, k2_2, k2_3, 
-                      check = True):
+def simplify_Ti_model(x_sample, taus_1, taus_2, taus_3,
+                      taut_1, taut_2, X_s, 
+                      k1_1, k1_2, k1_3, X, 
+                      k2_1, k2_2, k2_3 
+                      ):
 #================================================#
   
-  res = simplify_model(X_s, k1_1, k1_2, k1_3, X, 
+  res = simplify_model(taus_1, taus_2, taus_3,
+            taut_1, taut_2, X_s,
+            k1_1, k1_2, k1_3, X, 
             k2_1, k2_2, k2_3,
-            T = 298.0, emax = emax, N = 5, 
+            T = 298.0, emax = emax, N = 10, 
             strain_rate = 1.0e-4, nthreads = 1, 
             verbose = True, Taylor = True, PTR = True)
-  yobs = interpolate(res['strain'], res['stress'], x_sample)
-  if check:
-    return yobs
-  else:
-    return res
+            
+  return res
 
 #================================================#
-def make_Ti_model(x_sample, X_s, k1_1, k1_2, k1_3, 
+def make_Ti_model(x_sample, taus_1, taus_2, taus_3,
+                  taut_1, taut_2, X_s, 
+                  k1_1, k1_2, k1_3, 
                   X, g_1, g_2, g_3, tau_D1, tau_D2, 
-                  tau_D3, check = True):
+                  tau_D3):
 #================================================#
   
-  res = make_model(X_s, k1_1, k1_2, k1_3, X, 
+  res = make_model(taus_1, taus_2, taus_3,
+            taut_1, taut_2, X_s, 
+            k1_1, k1_2, k1_3, X, 
             g_1, g_2, g_3,
             tau_D1, tau_D2, tau_D3,
             T = 298.0, emax = emax, N = 5, 
             strain_rate = 1.0e-4, nthreads = 1, 
             verbose = True, Taylor = True,
             PTR = True)
-  yobs = interpolate(res['strain'], res['stress'], x_sample)
-  if check:
-    return yobs
-  else:
-    return res
+
+  return res
 
 
 
@@ -75,37 +75,38 @@ def interpolate_obs():
   
 if __name__ == "__main__":
   
-  check = False
-  fa, fac = 1.0, 1.0
+  simple = False
 
-  params = [0.9, 1.00000009*fa, 0.99999987*fa, 
-            0.99999987*fa, 0.5, 1.00000002*fac,
-            1.00000013*fac, 1.00000001*fac]
-  """
-  params = [0.99999998, 3.0, 3.0,
-            3.0, 0.99999988, 0.016, 0.016, 0.016, 
-            100.0, 100.0, 100.0]
-  """
-  if check:
+  if simple:
+    params = [270.0, 190.0, 310.0,
+            280.0, 350.0, 0.9,
+            2.00, 2.00, 5.00,
+            0.35, 70.0, 70.0, 70.0]
     df = interpolate_obs()
-    y_sim = make_Ti_model(x_sample, *params, check = check)
-    plt.plot(x_sample, y_sim, 'g--', label = 'fit')
-    plt.plot(df['Nominal_strain'], df['True_stress'], 'b-', label = 'data')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.legend()
-    plt.savefig("Ti-fitting-manual.png")
-    plt.show()
-    plt.close()
-    
-  else:
-    df = interpolate_obs()
-    res = simplify_Ti_model(x_sample, *params, check = check)
+    res = simplify_Ti_model(x_sample, *params)
     plt.plot(res['strain'], res['stress'], 'g--', label = 'fit')
     plt.plot(df['Nominal_strain'], df['True_stress'], 'b-', label = 'data')
     plt.xlabel('x')
     plt.ylabel('y')
     plt.legend()
+    plt.savefig("Ti-fitting-simple.png")
+    plt.show()
+    plt.close()
+    
+  else:
+    params = [270.0, 190.0, 310.0,
+            280.0, 350.0, 0.9,
+            2.00, 2.00, 5.00,
+            0.35, 0.0045, 0.0045, 0.005,
+            100.0, 100.0, 100.0]
+    df = interpolate_obs()
+    res = make_Ti_model(x_sample, *params)
+    plt.plot(res['strain'], res['stress'], 'g--', label = 'fit')
+    plt.plot(df['Nominal_strain'], df['True_stress'], 'b-', label = 'data')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.savefig("Ti-fitting-complex.png")
     plt.show()
     plt.close()
   

@@ -36,8 +36,8 @@ def make_Ti_simple_model(x_sample, taus_1, taus_2, taus_3,
             taut_1, taut_2, X_s,
             k1_1, k1_2, k1_3, X, 
             k2_1, k2_2, k2_3,
-            T = 298.0, emax = emax, N = 20, 
-            strain_rate = 1.0e-4, nthreads = 30, 
+            T = 298.0, emax = emax, N = 5, 
+            strain_rate = 1.0e-4, nthreads = 1, 
             verbose = True, Taylor = True, PTR = True)
             
   yobs = interpolate(res['strain'], res['stress'], x_sample)
@@ -56,8 +56,8 @@ def make_Ti_model(x_sample, taus_1, taus_2, taus_3,
             k1_1, k1_2, k1_3, X, 
             g_1, g_2, g_3,
             tau_D1, tau_D2, tau_D3,
-            T = 298.0, emax = emax, N = 20, 
-            strain_rate = 1.0e-4, nthreads = 30, 
+            T = 298.0, emax = emax, N = 5, 
+            strain_rate = 1.0e-4, nthreads = 1, 
             verbose = True, Taylor = True,
             PTR = True)
   yobs = interpolate(res['strain'], res['stress'], x_sample)
