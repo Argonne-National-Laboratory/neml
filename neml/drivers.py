@@ -373,7 +373,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
       T:                temperature, default 300.0
       emax:             maximum strain, default 5%
       nsteps:           number of steps to use, default 250
-      sdir:             stress direction, default tension in x
+      sdir:             stress direction, default tension in x    # [xx,yy,zz,yz,xz,xy] stress tensor
       verbose:          whether to be verbose
       offset:           used to calculate yield stress
       history:          initial model history

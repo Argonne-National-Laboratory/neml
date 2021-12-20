@@ -75,11 +75,13 @@ if __name__ == "__main__":
   L *= erate
   dt = emax / steps / erate
   # Randomly selects initial orientations
-  orientations = rotations.random_orientations(N)
+  # orientations = rotations.random_orientations(N)
+  initial_ori = rotations.Orientation([1.0, 0.0, 0.0])
   
+  orientations = np.array([initial_ori]*N)
   # Plots an initial basal pole figure
-  polefigures.pole_figure_discrete(orientations,[0,0,0,1],lattice)
-  plt.title("Initial, <0001>")
+  polefigures.pole_figure_discrete(orientations,[1,0,-1,0],lattice)
+  plt.title("Initial, <10-10>")
   plt.show()
   
   G_np = ra.random((12,12)) * 10

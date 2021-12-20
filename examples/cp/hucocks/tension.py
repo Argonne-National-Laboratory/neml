@@ -7,8 +7,8 @@ from neml import drivers
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  N = 50
-  nthreads = 3
+  N = 1
+  nthreads = 1
   model = make_model(N, nthreads = nthreads)
  
   Ts = np.array([500,550,600,650.0]) + 273.15
