@@ -27,13 +27,13 @@ def Ti_maker_sim(taus_1, taus_2, taus_3,
             taut_1, taut_2, X_s, 
             k1_1, k1_2, k1_3,
             k2_1, k2_2, k2_3,
-            T = 296.0, emax = 0.05, N = 1, 
+            T = 298.0, emax = 0.05, N = 1, 
             strain_rate = 1.0e-4, nthreads = 1, 
             verbose = True, Taylor = True,
             PTR = True):
 
   # temperature levels
-  Ts = np.array([296.0, 373.0, 473.0, 573.0, 673.0, 773.0])
+  Ts = np.array([298.0, 423.0, 523.0, 623.0, 773.0, 873.0, 973.0])
   # unit transformer
   ut = 1.0e9
   
@@ -44,37 +44,37 @@ def Ti_maker_sim(taus_1, taus_2, taus_3,
   # Elastic constants in MPa
   C11 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [160000.0, 157900.0, 152200.0, 146800.0, 141600.0, 136800.0])
+      [162400.0, 155100.0, 149500.0, 144200.0, 136800.0, 132200.0, 127600.0])
   C33 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [181000.0, 177400.0, 173400.0, 169600.0, 166100.0, 162700.0])
+      [180700.0, 175300.0, 171500.0, 167800.0, 162700.0, 159300.0, 156000.0])
   C44 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [46500.0, 45300.0, 43400.0, 41400.0, 39200.0, 37000.0])      
+      [46700.0, 44400.0, 42400.0, 40300.0, 37000.0, 34800.0, 32600.0])      
   C12 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [90000.0, 93400.0, 95200.0, 96700.0, 97800.0, 98500.0])
+      [92000.0, 94300.0, 96100.0, 97300.0, 98500.0, 99100.0, 99300.0])
   C13 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [66000.0, 69400.0, 69500.0, 69200.0, 69000.0, 68800.0])
+      [69000.0, 69500.0, 69200.0, 69100.0, 68800.0, 68800.0, 68800.0])
   
   
   # Constant part of the strength for slip and twin
   taus_1 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [taus_1, taus_1, taus_1, taus_1, taus_1, taus_1]) 
+      [taus_1, taus_1, taus_1, taus_1, taus_1, taus_1, taus_1]) 
   taus_2 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [taus_2, taus_2, taus_2, taus_2, taus_2, taus_2]) 
+      [taus_2, taus_2, taus_2, taus_2, taus_2, taus_2, taus_2]) 
   taus_3 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [taus_3, taus_3, taus_3, taus_3, taus_3, taus_3]) 
+      [taus_3, taus_3, taus_3, taus_3, taus_3, taus_3, taus_3]) 
   taut_1 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [taut_1, taut_1, taut_1, taut_1, taut_1, taut_1]) 
+      [taut_1, taut_1, taut_1, taut_1, taut_1, taut_1, taut_1]) 
   taut_2 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [taut_2, taut_2, taut_2, taut_2, taut_2, taut_2]) 
+      [taut_2, taut_2, taut_2, taut_2, taut_2, taut_2, taut_2]) 
   # tau0 = np.array([170.0]*3+[90.5]*3+[210]*6+[180.0]*6+[250.0]*6)
   tau0 = np.array([taus_1]*3+[taus_2]*3+[taus_3]*6+[taut_1]*6+[taut_2]*6)
   
@@ -120,11 +120,11 @@ def Ti_maker_sim(taus_1, taus_2, taus_3,
   # calculate temperature depdendent shear modulus of slip systems  u = 39.61-0.03223*T
   mu_slip = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [30005.46, 27588.21, 24365.21, 21142.21, 17919.21, 14696.21])
+      [35200.0, 30400.0, 26700.0, 23400.0, 19100.0, 16600.0, 14200.0])
   # calculate temperature depdendent shear modulus of twin systems  u = 34.605-0.03223*T
   mu_twin = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [25000.46, 22583.21, 19360.21, 16137.21, 12914.21, 9691.21])
+      [25000.46, 21591.31, 18963.42, 16619.62, 13565.60, 11789.99, 10085.41])
   
   mu = np.array([mu_slip]*12+[mu_twin]*12)
   
@@ -132,13 +132,13 @@ def Ti_maker_sim(taus_1, taus_2, taus_3,
 
   k2_1 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [k2_1, k2_1, k2_1, k2_1, k2_1, k2_1]) 
+      [k2_1, k2_1, k2_1, k2_1, k2_1, k2_1, k2_1]) 
   k2_2 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [k2_2, k2_2, k2_2, k2_2, k2_2, k2_2]) 
+      [k2_2, k2_2, k2_2, k2_2, k2_2, k2_2, k2_2]) 
   k2_3 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [k2_3, k2_3, k2_3, k2_3, k2_3, k2_3]) 
+      [k2_3, k2_3, k2_3, k2_3, k2_3, k2_3, k2_3]) 
 
   k2 = np.array([k2_1]*3+[k2_2]*3+[k2_3]*6)
   
@@ -161,24 +161,26 @@ def Ti_maker_sim(taus_1, taus_2, taus_3,
   
   # Sets up the single crystal model
   if PTR:
-    single_model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
+    single_model = singlecrystal.SingleCrystalModel(kmodel, lattice,
         postprocessors = [], verbose = False, linesearch = True,
         initial_rotation = rotations.Orientation(0,0,0,angle_type="degrees"),
         miter = 100, max_divide = 10)
   else:
-    single_model = singlecrystal.SingleCrystalModel(kmodel, lattice, 
+    single_model = singlecrystal.SingleCrystalModel(kmodel, lattice,
         verbose = False, linesearch = True,
         initial_rotation = rotations.Orientation(0,0,0,angle_type="degrees"),
         miter = 100, max_divide = 10)
-      
+
   if Taylor:
+    #initial_ori = rotations.Orientation([1.0, 0.0, 0.0])
+    #orientations = np.array([initial_ori]*N)
     orientations = rotations.random_orientations(N)
     model = polycrystal.TaylorModel(single_model, orientations, nthreads = nthreads)
-    return drivers.uniaxial_test(model, strain_rate, T = T, 
-            emax = emax, sdir = np.array([-1,0,0,0,0,0]), verbose = verbose)
+    return drivers.uniaxial_test(model, strain_rate, T = T,
+            emax = emax, sdir = np.array([0,0,-1,0,0,0]), verbose = verbose)
   else:
-    return drivers.uniaxial_test(single_model, strain_rate, 
-            T = T, emax = emax, sdir = np.array([-1,0,0,0,0,0]), verbose = verbose)
+    return drivers.uniaxial_test(single_model, strain_rate,
+            T = T, emax = emax, sdir = np.array([0,0,-1,0,0,0]), verbose = verbose)
 
 def Ti_maker(taus_1, taus_2, taus_3,
             taut_1, taut_2, X_s, 
