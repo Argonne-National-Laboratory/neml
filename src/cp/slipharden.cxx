@@ -1359,7 +1359,7 @@ ParameterSet VoceSlipHardening::parameters()
   pset.add_parameter<NEMLObject>("tau_0");
 
   pset.add_optional_parameter<NEMLObject>("k", make_constant(0));
-  pset.add_optional_parameter<std::string>("varprefix", "strength");
+  pset.add_optional_parameter<std::string>("var_name", std::string("strength"));
 
   return pset;
 }
@@ -1440,7 +1440,7 @@ ParameterSet LinearSlipHardening::parameters()
   pset.add_parameter<NEMLObject>("k1");
   pset.add_parameter<NEMLObject>("k2");
 
-  pset.add_optional_parameter<std::string>("varprefix", "strength");
+  pset.add_optional_parameter<std::string>("var_name", std::string("strength"));
 
   return pset;
 }

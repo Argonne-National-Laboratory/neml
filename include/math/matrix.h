@@ -65,7 +65,7 @@ class NEML_EXPORT Matrix {
 //      diagonal blocks
 //      generic blocks
 //      fully-dense
-class NEML_EXPORT SquareMatrix: public Matrix, public NEMLObject {
+class NEML_EXPORT SquareMatrix: public NEMLObject, public Matrix {
  public:
   SquareMatrix(ParameterSet & params);
 

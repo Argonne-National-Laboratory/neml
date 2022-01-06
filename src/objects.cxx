@@ -95,12 +95,8 @@ Factory::Factory()
 
 ParameterSet Factory::provide_parameters(std::string type)
 {
-  try {
     return setups_[type]();
-  }
-  catch (std::exception & e) {
-    throw UnregisteredError(type);
-  }
+
 }
 
 std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
@@ -109,12 +105,7 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
     throw UndefinedParameters(params.type(), params.unassigned_parameters());
   }
 
-  try {
     return creators_[params.type()](params);
-  }
-  catch (std::out_of_range & e) {
-    throw UnregisteredError(params.type());
-  }
 }
 
 std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
@@ -123,12 +114,7 @@ std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
     throw UndefinedParameters(params.type(), params.unassigned_parameters());
   }
 
-  try {
     return creators_[params.type()](params);
-  }
-  catch (std::out_of_range & e) {
-      throw UnregisteredError(params.type());
-  }
 }
 
 void Factory::register_type(std::string type,

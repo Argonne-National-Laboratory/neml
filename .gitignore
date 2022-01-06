@@ -50,3 +50,4 @@ util/string_interface/cxxstring
 include/neml_export.h
 wheelhouse
 examples/**/*.png
+neml/*.cmake

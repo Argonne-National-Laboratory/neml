@@ -83,8 +83,8 @@ double & Matrix::operator()(size_t i, size_t j)
 }
 
 SquareMatrix::SquareMatrix(ParameterSet & params) :
-    Matrix(params.get_parameter<size_t>("m"),params.get_parameter<size_t>("m")),
-    NEMLObject(params)
+    NEMLObject(params),
+    Matrix(params.get_parameter<size_t>("m"),params.get_parameter<size_t>("m"))
 {
   std::string type = params.get_parameter<std::string>("type");
   std::vector<double> data = params.get_parameter<std::vector<double>>("data");

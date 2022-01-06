@@ -174,7 +174,7 @@ class NEML_EXPORT Lattice {
   std::vector<std::vector<size_t>> normal_map_;
 };
 
-class NEML_EXPORT CubicLattice: public Lattice, public NEMLObject {
+class NEML_EXPORT CubicLattice: public NEMLObject, public Lattice {
  public:
   /// Specialized Lattice for cubic systems, initialize with the lattice
   /// parameter
@@ -190,7 +190,7 @@ class NEML_EXPORT CubicLattice: public Lattice, public NEMLObject {
 
 static Register<CubicLattice> regCubicLattice;
 
-class NEML_EXPORT HCPLattice: public Lattice, public NEMLObject {
+class NEML_EXPORT HCPLattice: public NEMLObject, public Lattice {
  public:
   /// Specialized to HCP, initialize with a and c
   HCPLattice(ParameterSet & params);

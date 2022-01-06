@@ -1069,8 +1069,9 @@ ParameterSet CrystalOrientation::parameters()
   ParameterSet pset(CrystalOrientation::type());
 
   pset.add_parameter<std::vector<double>>("angles");
-  pset.add_optional_parameter<std::string>("angle_type", "radians");
-  pset.add_optional_parameter<std::string>("angle_convention", "kocks");
+  pset.add_optional_parameter<std::string>("angle_type", std::string("radians"));
+  pset.add_optional_parameter<std::string>("angle_convention",
+                                           std::string("kocks"));
 
   return pset;
 }

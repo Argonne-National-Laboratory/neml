@@ -601,14 +601,14 @@ void Lattice::update_normals_(const std::vector<Vector> & new_planes)
 }
 
 CubicLattice::CubicLattice(ParameterSet & params) :
+    NEMLObject(params),
     Lattice(
         Vector({params.get_parameter<double>("a"),0,0}),
         Vector({0,params.get_parameter<double>("a"),0}),
         Vector({0,0,params.get_parameter<double>("a")}),
         get_group("432"), 
         params.get_parameter<list_systems>("slip_systems"), 
-        params.get_parameter<twin_systems>("twin_systems")),
-    NEMLObject(params)
+        params.get_parameter<twin_systems>("twin_systems"))
 {
 
 }
@@ -637,14 +637,14 @@ std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
 }
 
 HCPLattice::HCPLattice(ParameterSet & params) :
+    NEMLObject(params),
     Lattice(
         Vector({params.get_parameter<double>("a")/2,-sqrt(3)*params.get_parameter<double>("a")/2,0}),
         Vector({params.get_parameter<double>("a")/2,sqrt(3)*params.get_parameter<double>("a")/2,0}),
         Vector({0,0,params.get_parameter<double>("c")}),
         get_group("622"), 
         params.get_parameter<list_systems>("slip_systems"), 
-        params.get_parameter<twin_systems>("twin_systems")),
-    NEMLObject(params)
+        params.get_parameter<twin_systems>("twin_systems"))
 {
 
 }

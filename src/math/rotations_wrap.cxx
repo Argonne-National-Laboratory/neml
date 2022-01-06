@@ -238,10 +238,17 @@ PYBIND11_MODULE(rotations, m) {
 
   py::class_<CrystalOrientation, Orientation, NEMLObject,
       std::shared_ptr<CrystalOrientation>>(m, "CrystalOrientation")
-      .def(py::init([](py::args args, py::kwargs kwargs)
-        {
-          return create_object_python<CrystalOrientation>(args, kwargs, {"angles"});
-        }))
+      .def(py::init(
+           [](double a, double b, double c, std::string angles, std::string convention)
+           {
+            auto params = CrystalOrientation::parameters();
+            params.assign_parameter("angles", std::vector<double>({a,b,c}));
+            params.assign_parameter("angle_type", angles);
+            params.assign_parameter("angle_convention", convention);
+
+            return new CrystalOrientation(params);
+           }), "Initialize from Euler angles",
+           py::arg("a"), py::arg("b"), py::arg("c"), py::arg("angle_type") = "radians", py::arg("convention") = "kocks")
   ;
   
   m.def("random_orientations", &random_orientations);
