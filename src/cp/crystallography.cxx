@@ -131,8 +131,9 @@ std::vector<Orientation> symmetry_rotations(std::string sclass)
   return res;
 }
 
-SymmetryGroup::SymmetryGroup(std::string sclass) :
-    ops_(symmetry_rotations(sclass))
+SymmetryGroup::SymmetryGroup(ParameterSet & params) :
+    NEMLObject(params),
+    ops_(symmetry_rotations(params.get_parameter<std::string>("sclass")))
 {
   misops_.reserve(ops_.size() * ops_.size());
   for (auto a : ops_) {
@@ -140,11 +141,6 @@ SymmetryGroup::SymmetryGroup(std::string sclass) :
       misops_.push_back(a * b);
     }
   }
-}
-
-SymmetryGroup::~SymmetryGroup()
-{
-
 }
 
 std::string SymmetryGroup::type()
@@ -163,8 +159,7 @@ ParameterSet SymmetryGroup::parameters()
 
 std::unique_ptr<NEMLObject> SymmetryGroup::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SymmetryGroup>(
-      params.get_parameter<std::string>("sclass"));
+  return neml::make_unique<SymmetryGroup>(params);
 }
 
 const std::vector<Orientation> & SymmetryGroup::ops() const
@@ -245,6 +240,14 @@ std::vector<Orientation> SymmetryGroup::misorientation_block(
   return res;
 }
 
+std::shared_ptr<SymmetryGroup> get_group(std::string grp)
+{
+  ParameterSet params = SymmetryGroup::parameters();
+  params.assign_parameter("sclass", grp);
+
+  return std::make_shared<SymmetryGroup>(params);
+}
+
 Lattice::Lattice(Vector a1, Vector a2, Vector a3,
                  std::shared_ptr<SymmetryGroup> symmetry,
                  list_systems isystems,
@@ -261,11 +264,6 @@ Lattice::Lattice(Vector a1, Vector a2, Vector a3,
     add_twin_system(std::get<0>(system), std::get<1>(system),
                     std::get<2>(system), std::get<3>(system));
   }
-}
-
-Lattice::~Lattice()
-{
-
 }
 
 Vector Lattice::miller2cart_direction(std::vector<int> m)
@@ -602,11 +600,15 @@ void Lattice::update_normals_(const std::vector<Vector> & new_planes)
   normal_map_.push_back(new_indices);
 }
 
-CubicLattice::CubicLattice(double a,
-                           list_systems isystems,
-                           twin_systems tsystems) :
-    Lattice(Vector({a,0,0}),Vector({0,a,0}),Vector({0,0,a}),
-            std::make_shared<SymmetryGroup>("432"), isystems, tsystems)
+CubicLattice::CubicLattice(ParameterSet & params) :
+    Lattice(
+        Vector({params.get_parameter<double>("a"),0,0}),
+        Vector({0,params.get_parameter<double>("a"),0}),
+        Vector({0,0,params.get_parameter<double>("a")}),
+        get_group("432"), 
+        params.get_parameter<list_systems>("slip_systems"), 
+        params.get_parameter<twin_systems>("twin_systems")),
+    NEMLObject(params)
 {
 
 }
@@ -631,17 +633,18 @@ ParameterSet CubicLattice::parameters()
 
 std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
 {
-  return neml::make_unique<CubicLattice>(
-      params.get_parameter<double>("a"),
-      params.get_parameter<list_systems>("slip_systems"),
-      params.get_parameter<twin_systems>("twin_systems"));
+  return neml::make_unique<CubicLattice>(params);
 }
 
-HCPLattice::HCPLattice(double a, double c,
-                       list_systems isystems,
-                       twin_systems tsystems) :
-    Lattice(Vector({a/2,-sqrt(3)*a/2,0}),Vector({a/2,sqrt(3)*a/2,0}),Vector({0,0,c}),
-            std::make_shared<SymmetryGroup>("622"), isystems, tsystems)
+HCPLattice::HCPLattice(ParameterSet & params) :
+    Lattice(
+        Vector({params.get_parameter<double>("a")/2,-sqrt(3)*params.get_parameter<double>("a")/2,0}),
+        Vector({params.get_parameter<double>("a")/2,sqrt(3)*params.get_parameter<double>("a")/2,0}),
+        Vector({0,0,params.get_parameter<double>("c")}),
+        get_group("622"), 
+        params.get_parameter<list_systems>("slip_systems"), 
+        params.get_parameter<twin_systems>("twin_systems")),
+    NEMLObject(params)
 {
 
 }
@@ -667,11 +670,7 @@ ParameterSet HCPLattice::parameters()
 
 std::unique_ptr<NEMLObject> HCPLattice::initialize(ParameterSet & params)
 {
-  return neml::make_unique<HCPLattice>(
-      params.get_parameter<double>("a"),
-      params.get_parameter<double>("c"),
-      params.get_parameter<list_systems>("slip_systems"),
-      params.get_parameter<twin_systems>("twin_systems"));
+  return neml::make_unique<HCPLattice>(params);
 }
 
 Vector HCPLattice::miller2cart_direction(std::vector<int> m)

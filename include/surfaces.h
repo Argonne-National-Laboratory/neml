@@ -26,6 +26,7 @@ namespace neml {
 //  variables.
 class NEML_EXPORT YieldSurface: public NEMLObject {
  public:
+  YieldSurface(ParameterSet & params);
   /// Indicates how many history variables the model expects to get
   virtual size_t nhist() const = 0;
 
@@ -55,12 +56,12 @@ class NEML_EXPORT YieldSurface: public NEMLObject {
 };
 
 /// Helper to reduce a isotropic + kinematic function to isotropic only
-template<class BT, typename... Args>
+template<class BT>
 class NEML_EXPORT IsoFunction: public YieldSurface {
  public:
-  /// Take whatever args the template class takes
-  IsoFunction(Args... args) :
-      base_(new BT(args...))
+  IsoFunction(ParameterSet & params) :
+      YieldSurface(params),
+      base_(new BT(params))
   {
 
   }
@@ -178,9 +179,8 @@ class NEML_EXPORT IsoFunction: public YieldSurface {
 //
 class NEML_EXPORT IsoKinJ2: public YieldSurface {
  public:
-  /// No parameters
-  IsoKinJ2();
-  virtual ~IsoKinJ2();
+  /// No actual parameters
+  IsoKinJ2(ParameterSet & params);
 
   /// String type for object system
   static std::string type();
@@ -231,9 +231,9 @@ static Register<IsoKinJ2> regIsoKinJ2;
 //
 class NEML_EXPORT IsoJ2: public IsoFunction<IsoKinJ2> {
  public:
-  /// No parameters
-  IsoJ2() :
-      IsoFunction<IsoKinJ2>()
+  /// No actual parameters
+  IsoJ2(ParameterSet & params) :
+      IsoFunction<IsoKinJ2>(params)
   {
   }
 
@@ -256,8 +256,7 @@ static Register<IsoJ2> regIsoJ2;
 class NEML_EXPORT IsoKinJ2I1: public YieldSurface {
  public:
   /// Parameters: h prefactor, l exponent
-  IsoKinJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l);
-  virtual ~IsoKinJ2I1();
+  IsoKinJ2I1(ParameterSet & params);
 
   /// String type for object system
   static std::string type();
@@ -303,13 +302,11 @@ class NEML_EXPORT IsoKinJ2I1: public YieldSurface {
 static Register<IsoKinJ2I1> regIsoKinJ2I1;
 
 /// Isotropic only version of J2I1 surface
-class NEML_EXPORT IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
-    std::shared_ptr<Interpolate>> {
+class NEML_EXPORT IsoJ2I1: public IsoFunction<IsoKinJ2I1> {
  public:
   // h prefactor and l exponent
-  IsoJ2I1(std::shared_ptr<Interpolate> h, std::shared_ptr<Interpolate> l) :
-      IsoFunction<IsoKinJ2I1, std::shared_ptr<Interpolate>,
-      std::shared_ptr<Interpolate>>(h, l)
+  IsoJ2I1(ParameterSet & params) :
+      IsoFunction<IsoKinJ2I1>(params)
   {
   }
 
@@ -319,7 +316,6 @@ class NEML_EXPORT IsoJ2I1: public IsoFunction<IsoKinJ2I1, std::shared_ptr<Interp
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
-
 };
 
 static Register<IsoJ2I1> regIsoJ2I1;

@@ -19,6 +19,7 @@ namespace neml {
 /// Describes the stress, history, and rotation rates
 class NEML_EXPORT KinematicModel: public NEMLObject {
  public:
+  KinematicModel(ParameterSet & params);
   /// Populate history with the correct variable names and types
   virtual void populate_history(History & history) const = 0;
   /// Initialize history with actual starting values
@@ -158,10 +159,7 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
 class NEML_EXPORT StandardKinematicModel: public KinematicModel {
  public:
   /// Initialize with elastic and inelastic models
-  StandardKinematicModel(std::shared_ptr<LinearElasticModel> emodel,
-                         std::shared_ptr<InelasticModel> imodel);
-  /// Destructor
-  virtual ~StandardKinematicModel();
+  StandardKinematicModel(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -293,11 +291,7 @@ static Register<StandardKinematicModel> regStandardKinematicModel;
 class NEML_EXPORT DamagedStandardKinematicModel: public StandardKinematicModel {
  public:
   /// Initialize with elastic and inelastic models
-  DamagedStandardKinematicModel(std::shared_ptr<LinearElasticModel> emodel,
-                                std::shared_ptr<AsaroInelasticity> imodel,
-                                std::shared_ptr<CrystalDamageModel> dmodel);
-  /// Destructor
-  virtual ~DamagedStandardKinematicModel();
+  DamagedStandardKinematicModel(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

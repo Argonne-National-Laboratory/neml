@@ -17,9 +17,7 @@ class LMTrialState: public TrialState {
 //    Input function gives log(s) = fn(LMP) with LMP = T * (C + log(tr)) 
 class NEML_EXPORT LarsonMillerRelation: public NEMLObject, public Solvable {
  public:
-  LarsonMillerRelation(std::shared_ptr<Interpolate> fn, double C,
-                       double rtol, double atol, int miter, bool verbose,
-                       bool linesearch);
+  LarsonMillerRelation(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();

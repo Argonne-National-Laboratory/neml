@@ -108,7 +108,7 @@ std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node)
   // Special case: could be a ConstantInterpolate
   std::string type = get_type_of_node(node);
   if (type == "none") {
-    return neml::make_unique<ConstantInterpolate>(get_double(node));
+    return make_constant_unique(get_double(node));
   }
   else {
     ParameterSet params = get_parameters(node);
@@ -126,7 +126,7 @@ std::shared_ptr<NEMLObject> get_object(const rapidxml::xml_node<> * node)
   // Special case: could be a ConstantInterpolate
   std::string type = get_type_of_node(node);
   if (type == "none") {
-    return std::make_shared<ConstantInterpolate>(get_double(node));
+    return make_constant(get_double(node));
   }
   else {
     ParameterSet params = get_parameters(node);
@@ -214,7 +214,7 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
       (node->first_node()->type() == rapidxml::node_data)) {
     std::vector<double> data = get_vector_double(node);
     for (auto v : data) {
-      joined.push_back(neml::make_unique<ConstantInterpolate>(v));
+      joined.push_back(make_constant(v));
     }
     return joined;
   }

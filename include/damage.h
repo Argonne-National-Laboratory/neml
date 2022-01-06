@@ -15,11 +15,7 @@ namespace neml {
 class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
  public:
   /// Input is an elastic model, an undamaged base material, and the CTE
-  NEMLDamagedModel_sd(
-                      std::shared_ptr<LinearElasticModel> elastic,
-                      std::shared_ptr<NEMLModel_sd> base,
-                      std::shared_ptr<Interpolate> alpha,
-                      bool truesdell);
+  NEMLDamagedModel_sd(ParameterSet & params);
 
   /// How many history variables?  Equal to base_history + ndamage
   virtual size_t nhist() const;
@@ -68,12 +64,7 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   /// Parameters are an elastic model, a base model, the CTE, a solver
   /// tolerance, the maximum number of solver iterations, and a verbosity
   /// flag
-  NEMLScalarDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
-                            std::shared_ptr<NEMLModel_sd> base,
-                            std::shared_ptr<Interpolate> alpha,
-                            double rtol, double atol, int miter,
-                            bool verbose, bool lineseach, bool truesdell,
-                            bool ekill, double dkill, double sfact);
+  NEMLScalarDamagedModel_sd(ParameterSet & params);
 
   /// Stress update using the scalar damage model
   virtual int update_sd(
@@ -166,13 +157,7 @@ class NEML_EXPORT CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   /// Parameters: elastic model, vector of damage models, the base model
   /// CTE, solver tolerance, solver max iterations, and a verbosity flag
-  CombinedDamageModel_sd(
-      std::shared_ptr<LinearElasticModel> elastic,
-      std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
-      std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<Interpolate> alpha,
-      double rtol, double atol, int miter,
-      bool verbose, bool linesearch, bool truesdell);
+  CombinedDamageModel_sd(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -225,15 +210,7 @@ class NEML_EXPORT ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd
   /// Parameters are the elastic model, the parameters A, xi, phi, the
   /// base model, the CTE, the solver tolerance, maximum iterations,
   /// and the verbosity flag.
-  ClassicalCreepDamageModel_sd(
-                            std::shared_ptr<LinearElasticModel> elastic,
-                            std::shared_ptr<Interpolate> A,
-                            std::shared_ptr<Interpolate> xi,
-                            std::shared_ptr<Interpolate> phi,
-                            std::shared_ptr<NEMLModel_sd> base,
-                            std::shared_ptr<Interpolate> alpha,
-                            double rtol, double atol, int miter,
-                            bool verbose, bool linesearch, bool truesdell);
+  ClassicalCreepDamageModel_sd(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -285,6 +262,7 @@ static Register<ClassicalCreepDamageModel_sd> regClassicalCreepDamageModel_sd;
 /// Base class of modular effective stresses used by ModularCreepDamageModel_sd
 class NEML_EXPORT EffectiveStress: public NEMLObject {
  public:
+  EffectiveStress(ParameterSet & params);
   virtual int effective(const double * const s, double & eff) const = 0;
   virtual int deffective(const double * const s, double * const deff) const = 0;
 };
@@ -293,7 +271,7 @@ class NEML_EXPORT EffectiveStress: public NEMLObject {
 class NEML_EXPORT VonMisesEffectiveStress: public EffectiveStress
 {
  public:
-  VonMisesEffectiveStress();
+  VonMisesEffectiveStress(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -312,7 +290,7 @@ static Register<VonMisesEffectiveStress> regVonMisesEffectiveStress;
 class NEML_EXPORT MeanEffectiveStress: public EffectiveStress
 {
  public:
-  MeanEffectiveStress();
+  MeanEffectiveStress(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -331,7 +309,7 @@ static Register<MeanEffectiveStress> regMeanEffectiveStress;
 class NEML_EXPORT HuddlestonEffectiveStress: public EffectiveStress
 {
  public:
-  HuddlestonEffectiveStress(double b);
+  HuddlestonEffectiveStress(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -353,7 +331,7 @@ static Register<HuddlestonEffectiveStress> regHuddlestonEffectiveStress;
 class NEML_EXPORT MaxPrincipalEffectiveStress: public EffectiveStress
 {
  public:
-  MaxPrincipalEffectiveStress();
+  MaxPrincipalEffectiveStress(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -372,7 +350,7 @@ static Register<MaxPrincipalEffectiveStress> regMaxPrincipalEffectiveStress;
 class NEML_EXPORT MaxSeveralEffectiveStress: public EffectiveStress
 {
  public:
-  MaxSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures);
+  MaxSeveralEffectiveStress(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -397,8 +375,7 @@ static Register<MaxSeveralEffectiveStress> regMaxSeveralEffectiveStress;
 class NEML_EXPORT SumSeveralEffectiveStress: public EffectiveStress
 {
  public:
-  SumSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures,
-                            std::vector<double> weights);
+  SumSeveralEffectiveStress(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -424,18 +401,7 @@ static Register<SumSeveralEffectiveStress> regSumSeveralEffectiveStress;
 //         results match the old analytic solutions
 class NEML_EXPORT ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
-  ModularCreepDamageModel_sd(
-                            std::shared_ptr<LinearElasticModel> elastic,
-                            std::shared_ptr<Interpolate> A,
-                            std::shared_ptr<Interpolate> xi,
-                            std::shared_ptr<Interpolate> phi,
-                            std::shared_ptr<EffectiveStress> estress,
-                            std::shared_ptr<NEMLModel_sd> base,
-                            std::shared_ptr<Interpolate> alpha,
-                            double rtol, double atol, int miter,
-                            bool verbose, bool linesearch, bool truesdell,
-                            bool ekill, double dkill,
-                            double sfact);
+  ModularCreepDamageModel_sd(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -485,16 +451,7 @@ static Register<ModularCreepDamageModel_sd> regModularCreepDamageModel_sd;
 /// Time-fraction ASME damage using a generic Larson-Miller relation and effective stress
 class NEML_EXPORT LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
  public:
-  LarsonMillerCreepDamageModel_sd(
-                            std::shared_ptr<LinearElasticModel> elastic,
-                            std::shared_ptr<LarsonMillerRelation> lmr,
-                            std::shared_ptr<EffectiveStress> estress,
-                            std::shared_ptr<NEMLModel_sd> base,
-                            std::shared_ptr<Interpolate> alpha,
-                            double rtol, double atol, int miter,
-                            bool verbose, bool linesearch, bool truesdell, 
-                            bool ekill, double dkill,
-                            double sfact);
+  LarsonMillerCreepDamageModel_sd(ParameterSet & params);
   
   /// String type for the object system
   static std::string type();
@@ -544,12 +501,7 @@ class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedMod
  public:
   /// Parameters: elastic model, base model, CTE, solver tolerance,
   /// solver maximum number of iterations, verbosity flag
-  NEMLStandardScalarDamagedModel_sd(
-      std::shared_ptr<LinearElasticModel> elastic,
-      std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<Interpolate> alpha,
-      double rtol, double atol, int miter,
-      bool verbose, bool linesearch, bool truesdell);
+  NEMLStandardScalarDamagedModel_sd(ParameterSet & params);
 
   /// Damage, now only proportional to the inelastic effective strain
   virtual int damage(double d_np1, double d_n,
@@ -602,15 +554,7 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
  public:
   /// Parameters: elastic model, base model, CTE, solver tolerance,
   /// solver maximum number of iterations, verbosity flag
-  NEMLWorkDamagedModel_sd(
-      std::shared_ptr<LinearElasticModel> elastic,
-      std::shared_ptr<Interpolate> Wcrit,
-      double n,
-      std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<Interpolate> alpha,
-      double rtol, double atol, int miter,
-      bool verbose, bool linesearch, bool truesdell,
-      double eps);
+  NEMLWorkDamagedModel_sd(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -672,13 +616,7 @@ class NEML_EXPORT NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedM
   /// Parameters are an elastic model, the constants A and a, the base
   /// material model, the CTE, a solver tolerance, solver maximum number
   /// of iterations, and a verbosity flag
-  NEMLPowerLawDamagedModel_sd(
-      std::shared_ptr<LinearElasticModel> elastic,
-      std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> a,
-      std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<Interpolate> alpha,
-      double rtol, double atol, int miter,
-      bool verbose, bool linesearch, bool truesdell);
+  NEMLPowerLawDamagedModel_sd(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -713,14 +651,7 @@ class NEML_EXPORT NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarD
   /// Parameters are the elastic model, parameters W0, k0, and af, the
   /// base material model, the CTE, a solver tolerance, maximum number
   /// of iterations, and a verbosity flag.
-  NEMLExponentialWorkDamagedModel_sd(
-      std::shared_ptr<LinearElasticModel> elastic,
-      std::shared_ptr<Interpolate> W0, std::shared_ptr<Interpolate> k0,
-      std::shared_ptr<Interpolate> af,
-      std::shared_ptr<NEMLModel_sd> base,
-      std::shared_ptr<Interpolate> alpha,
-      double rtol, double atol, int miter,
-      bool verbose, bool linesearch, bool truesdell);
+  NEMLExponentialWorkDamagedModel_sd(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

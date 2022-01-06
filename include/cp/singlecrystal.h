@@ -45,17 +45,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
 {
  public:
   /// Raw constructor
-  SingleCrystalModel(std::shared_ptr<KinematicModel> kinematics,
-                     std::shared_ptr<Lattice> lattice,
-                     std::shared_ptr<Orientation> initial_angle,
-                     std::shared_ptr<Interpolate> alpha,
-                     bool update_rotation,
-                     double rtol, double atol, int miter, bool verbose,
-                     bool linesearch, int max_divide,
-                     std::vector<std::shared_ptr<CrystalPostprocessor>>
-                     postprocessors);
-  /// Destructor
-  virtual ~SingleCrystalModel();
+  SingleCrystalModel(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();

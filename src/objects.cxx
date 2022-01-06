@@ -4,6 +4,17 @@
 
 namespace neml {
 
+NEMLObject::NEMLObject(ParameterSet & params) :
+    current_params_(params)
+{
+
+}
+
+ParameterSet & NEMLObject::current_parameters()
+{
+  return current_params_;
+}
+
 ParameterSet::ParameterSet() :
     type_("invalid")
 {

@@ -14,6 +14,9 @@
 
 namespace neml {
 
+// Forward declaration
+class ParameterSet;
+
 /// Typedef for slip systems
 typedef std::vector<std::pair<std::vector<int>,std::vector<int>>> list_systems;
 /// Typedef for twin systems
@@ -31,7 +34,19 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 /// for future work on serialization.
 class NEML_EXPORT NEMLObject {
  public:
-  virtual ~NEMLObject() {};
+  NEMLObject(ParameterSet & params);
+  
+  /// Return the current parameter set, including any updates from construction
+  // Most of the time the default will be sufficient, but we may need to
+  // override for a few objects
+  virtual ParameterSet & current_parameters();
+
+  /// Serialize an object to ASCII XML
+
+  /// Serialize an object to "binary XML"
+
+ protected:
+  ParameterSet & current_params_;
 };
 
 /// This black magic lets us store parameters in a unified map (note that this is a replacement for boost::variant

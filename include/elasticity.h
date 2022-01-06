@@ -19,6 +19,8 @@ namespace neml {
 //    Return properties as a function of temperature
 class NEML_EXPORT LinearElasticModel: public NEMLObject {
  public:
+  LinearElasticModel(ParameterSet & params);
+
   /// The stiffness tensor, in Mandel notation
   virtual int C(double T, double * const Cv) const = 0;
   /// The compliance tensor, in Mandel notation
@@ -45,11 +47,7 @@ class NEML_EXPORT LinearElasticModel: public NEMLObject {
 class NEML_EXPORT IsotropicLinearElasticModel: public LinearElasticModel {
  public:
   /// See detailed documentation for how to initialize with elastic constants
-  IsotropicLinearElasticModel(
-      std::shared_ptr<Interpolate> m1,
-      std::string m1_type,
-      std::shared_ptr<Interpolate> m2,
-      std::string m2_type);
+  IsotropicLinearElasticModel(ParameterSet & params);
 
   /// The string type for the object system
   static std::string type();
@@ -87,10 +85,7 @@ static Register<IsotropicLinearElasticModel> regIsotropicLinearElasticModel;
 
 class NEML_EXPORT CubicLinearElasticModel: public LinearElasticModel {
  public:
-  CubicLinearElasticModel(std::shared_ptr<Interpolate> m1,
-                          std::shared_ptr<Interpolate> m2,
-                          std::shared_ptr<Interpolate> m3,
-                          std::string method);
+  CubicLinearElasticModel(ParameterSet & params);
 
   /// The string type for the object system
   static std::string type();
@@ -117,12 +112,7 @@ static Register<CubicLinearElasticModel> regCubicLinearElasticModel;
 
 class NEML_EXPORT TransverseIsotropicLinearElasticModel: public LinearElasticModel {
  public:
-  TransverseIsotropicLinearElasticModel(std::shared_ptr<Interpolate> m1,
-                                        std::shared_ptr<Interpolate> m2,
-                                        std::shared_ptr<Interpolate> m3,
-                                        std::shared_ptr<Interpolate> m4,
-                                        std::shared_ptr<Interpolate> m5,
-                                        std::string method);
+  TransverseIsotropicLinearElasticModel(ParameterSet & params);
 
   /// The string type for the object system
   static std::string type();

@@ -123,7 +123,7 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
       //  "is this actually a c++ double"
       try {
         double v = py::cast<double>(value);
-        pset.assign_parameter(name, std::make_shared<ConstantInterpolate>(v));
+        pset.assign_parameter(name, make_constant(v));
         break;
       }
       catch (py::cast_error & e) {
@@ -138,7 +138,7 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
         std::vector<double> v = py::cast<std::vector<double>>(value);
         std::vector<std::shared_ptr<NEMLObject>> vect;
         for (auto it = v.begin(); it != v.end(); ++it) {
-          vect.push_back(std::make_shared<ConstantInterpolate>(*it));
+          vect.push_back(make_constant(*it));
         }
         pset.assign_parameter(name, vect);
         break;

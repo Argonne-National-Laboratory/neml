@@ -67,8 +67,7 @@ class NEML_EXPORT Matrix {
 //      fully-dense
 class NEML_EXPORT SquareMatrix: public Matrix, public NEMLObject {
  public:
-  SquareMatrix(size_t m, std::string type, std::vector<double> data,
-               std::vector<size_t> blocks);
+  SquareMatrix(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

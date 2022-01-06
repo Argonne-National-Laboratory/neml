@@ -15,17 +15,7 @@ namespace neml {
 class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
 {
  public:
-  HuCocksPrecipitationModel(std::vector<std::shared_ptr<Interpolate>> c0,
-                            std::vector<std::shared_ptr<Interpolate>> cp,
-                            std::vector<std::shared_ptr<Interpolate>> ceq,
-                            double am, double N0, double Vm, double chi,
-                            double D0, double Q0, 
-                            std::shared_ptr<Interpolate> Cf,
-                            double kboltz, double R, double Na,
-                            size_t rate,
-                            double f_init, double r_init, double N_init,
-                            double fs, double rs, double Ns,
-                            double w);
+  HuCocksPrecipitationModel(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -202,14 +192,7 @@ static Register<HuCocksPrecipitationModel> regHuCocksPrecipitationModel;
 class NEML_EXPORT DislocationSpacingHardening: public SlipHardening
 {
  public:
-  DislocationSpacingHardening(std::shared_ptr<Interpolate> J1,
-                              std::shared_ptr<Interpolate> J2,
-                              std::shared_ptr<Interpolate> K, 
-                              double L0,
-                              double a, double b,
-                              std::shared_ptr<Interpolate> G,
-                              std::shared_ptr<Lattice> L,
-                              std::string varprefix);
+  DislocationSpacingHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -285,11 +268,7 @@ static Register<DislocationSpacingHardening> regDislocationSpacingHardening;
 class NEML_EXPORT HuCocksHardening: public SlipHardening
 {
  public:
-  HuCocksHardening(std::shared_ptr<SlipHardening> dmodel,
-                   std::vector<std::shared_ptr<HuCocksPrecipitationModel>> pmodels,
-                   double ap, double ac,
-                   double b,
-                   std::shared_ptr<Interpolate> G);
+  HuCocksHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -366,9 +345,7 @@ class NEML_EXPORT ArrheniusSlipRule: public SlipStrengthSlipRule
  public:
   /// Initialize with the strength object, the reference strain rate, and the
   /// rate sensitivity
-  ArrheniusSlipRule(std::shared_ptr<SlipHardening> strength,
-                    double g0, double A, double B, double b,
-                    double a0, double G0, double k);
+  ArrheniusSlipRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

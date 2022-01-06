@@ -19,9 +19,7 @@ NEML_EXPORT std::vector<Orientation> symmetry_rotations(std::string sclass);
 class NEML_EXPORT SymmetryGroup: public NEMLObject {
  public:
   /// Initialize with the Hermann-Mauguin notation as a string
-  SymmetryGroup(std::string sclass);
-  /// Destructor
-  virtual ~SymmetryGroup();
+  SymmetryGroup(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -49,14 +47,14 @@ class NEML_EXPORT SymmetryGroup: public NEMLObject {
 
 static Register<SymmetryGroup> regSymmetryGroup;
 
-class NEML_EXPORT Lattice: public NEMLObject {
+std::shared_ptr<SymmetryGroup> get_group(std::string);
+
+class NEML_EXPORT Lattice {
  public:
   /// Initialize with the three lattice vectors, the symmetry group and
   /// (optionally) a initial list of slip systems
   Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry,
           list_systems isystems = {}, twin_systems tsystems = {});
-  /// Destructor
-  virtual ~Lattice();
 
   /// Type: slip or twin
   enum SlipType {Slip=0, Twin=1};
@@ -176,11 +174,11 @@ class NEML_EXPORT Lattice: public NEMLObject {
   std::vector<std::vector<size_t>> normal_map_;
 };
 
-class NEML_EXPORT CubicLattice: public Lattice {
+class NEML_EXPORT CubicLattice: public Lattice, public NEMLObject {
  public:
   /// Specialized Lattice for cubic systems, initialize with the lattice
   /// parameter
-  CubicLattice(double a, list_systems isystems = {}, twin_systems tsystems = {});
+  CubicLattice(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -192,11 +190,10 @@ class NEML_EXPORT CubicLattice: public Lattice {
 
 static Register<CubicLattice> regCubicLattice;
 
-class NEML_EXPORT HCPLattice: public Lattice {
+class NEML_EXPORT HCPLattice: public Lattice, public NEMLObject {
  public:
   /// Specialized to HCP, initialize with a and c
-  HCPLattice(double a, double c, list_systems isystems = {}, twin_systems
-             tsystems = {});
+  HCPLattice(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

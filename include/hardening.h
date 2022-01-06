@@ -17,6 +17,7 @@ namespace neml {
 //    2) Give the gradient of that function
 class NEML_EXPORT HardeningRule: public NEMLObject {
  public:
+  HardeningRule(ParameterSet & params);
   /// The number of history variables
   virtual size_t nhist() const = 0;
   /// Initialize the history
@@ -30,6 +31,7 @@ class NEML_EXPORT HardeningRule: public NEMLObject {
 /// Isotropic hardening rules
 class NEML_EXPORT IsotropicHardeningRule: public HardeningRule {
  public:
+  IsotropicHardeningRule(ParameterSet & params);
   /// Number of strain-like history variable, defaults to 1
   virtual size_t nhist() const;
   /// Initialize the history, defaults to initializing one variable to 0.0
@@ -45,7 +47,7 @@ class NEML_EXPORT IsotropicHardeningRule: public HardeningRule {
 class NEML_EXPORT LinearIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial surface size and linear coefficient
-  LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K);
+  LinearIsotropicHardeningRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -77,7 +79,7 @@ static Register<LinearIsotropicHardeningRule> regLinearIsotropicHardeningRule;
 class NEML_EXPORT InterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameter is the interpolate to use
-  InterpolatedIsotropicHardeningRule(std::shared_ptr<Interpolate> flow);
+  InterpolatedIsotropicHardeningRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -103,9 +105,7 @@ class NEML_EXPORT VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial yield stress, total increase amount,
   /// saturation speed constant
-  VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0,
-                             std::shared_ptr<Interpolate> R,
-                             std::shared_ptr<Interpolate> d);
+  VoceIsotropicHardeningRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -136,9 +136,7 @@ static Register<VoceIsotropicHardeningRule> regVoceIsotropicHardeningRule;
 class NEML_EXPORT PowerLawIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameters: initial yield stress, prefactor, exponent
-  PowerLawIsotropicHardeningRule(std::shared_ptr<Interpolate> s0,
-                                      std::shared_ptr<Interpolate> A,
-                                      std::shared_ptr<Interpolate> n);
+  PowerLawIsotropicHardeningRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -162,8 +160,7 @@ static Register<PowerLawIsotropicHardeningRule> regPowerLawIsotropicHardeningRul
 class NEML_EXPORT CombinedIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
   /// Parameter is a vector of isotropic hardening rules
-  CombinedIsotropicHardeningRule(
-      std::vector<std::shared_ptr<IsotropicHardeningRule>> rules);
+  CombinedIsotropicHardeningRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -190,6 +187,7 @@ static Register<CombinedIsotropicHardeningRule> regCombinedIsotropicHardeningRul
 /// Base class for pure kinematic hardening
 class NEML_EXPORT KinematicHardeningRule: public HardeningRule {
  public:
+  KinematicHardeningRule(ParameterSet & params);
   /// Number of history variables (6)
   virtual size_t nhist() const;
   /// Initialize the 6 backstress components to zero
@@ -205,7 +203,7 @@ class NEML_EXPORT KinematicHardeningRule: public HardeningRule {
 class NEML_EXPORT LinearKinematicHardeningRule: public KinematicHardeningRule {
  public:
   /// Parameter is the linear hardening coefficient
-  LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H);
+  LinearKinematicHardeningRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -232,8 +230,7 @@ static Register<LinearKinematicHardeningRule> regLinearKinematicHardeningRule;
 class NEML_EXPORT CombinedHardeningRule: public HardeningRule {
  public:
   /// Parameters: a isotropic hardening rule and a kinematic hardening rule
-  CombinedHardeningRule(std::shared_ptr<IsotropicHardeningRule> iso,
-                        std::shared_ptr<KinematicHardeningRule> kin);
+  CombinedHardeningRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -261,6 +258,7 @@ static Register<CombinedHardeningRule> regCombinedHardeningRule;
 /// ABC of a non-associative hardening rule
 class NEML_EXPORT NonAssociativeHardening: public NEMLObject {
  public:
+  NonAssociativeHardening(ParameterSet & params);
   /// How many stress-like variables
   virtual size_t ninter() const = 0; // How many "q" variables it spits out
   /// How many strain-like variables
@@ -308,6 +306,7 @@ class NEML_EXPORT NonAssociativeHardening: public NEMLObject {
 /// Model for the gamma constant used in Chaboche hardening
 class NEML_EXPORT GammaModel: public NEMLObject {
  public:
+  GammaModel(ParameterSet & params);
   /// Gamma as a function of equivalent inelastic strain
   virtual double gamma(double ep, double T) const = 0;
   /// Derivative of the gamma function wrt inelastic strain
@@ -319,7 +318,7 @@ class NEML_EXPORT GammaModel: public NEMLObject {
 class NEML_EXPORT ConstantGamma: public GammaModel {
  public:
   /// Parameter is just the constant value
-  ConstantGamma(std::shared_ptr<Interpolate> g);
+  ConstantGamma(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -347,7 +346,7 @@ class NEML_EXPORT SatGamma: public GammaModel {
  public:
   /// Parameters are the initial value of gamma, the saturated value of gamma
   /// and the saturation speed constant
-  SatGamma(std::shared_ptr<Interpolate> gs, std::shared_ptr<Interpolate> g0, std::shared_ptr<Interpolate> beta);
+  SatGamma(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -382,12 +381,7 @@ class NEML_EXPORT Chaboche: public NonAssociativeHardening {
   /// Parameters: isotropic hardening model, vector of backstress constants C,
   /// vector of gamma functions, vector of static recovery constants A,
   /// vector static recovery constants a, flag trigger the nonisothermal terms
-  Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<Interpolate>> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels,
-           std::vector<std::shared_ptr<Interpolate>> A,
-           std::vector<std::shared_ptr<Interpolate>> a,
-           bool noniso = true);
+  Chaboche(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -457,8 +451,8 @@ class NEML_EXPORT Chaboche: public NonAssociativeHardening {
 
  private:
   std::shared_ptr<IsotropicHardeningRule> iso_;
+  const std::vector<std::shared_ptr<Interpolate>> c_;  
   const int n_;
-  const std::vector<std::shared_ptr<Interpolate>> c_;
   std::vector<std::shared_ptr<GammaModel>> gmodels_;
 
   const std::vector<std::shared_ptr<Interpolate>> A_;

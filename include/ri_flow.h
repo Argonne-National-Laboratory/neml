@@ -15,6 +15,8 @@ namespace neml {
 /// ABC describing rate independent flow
 class NEML_EXPORT RateIndependentFlowRule: public NEMLObject {
  public:
+  RateIndependentFlowRule(ParameterSet & params);
+
   /// Number of history variables
   virtual size_t nhist() const = 0;
   /// Setup the history at time zero
@@ -55,8 +57,7 @@ class NEML_EXPORT RateIndependentFlowRule: public NEMLObject {
 class NEML_EXPORT RateIndependentAssociativeFlow: public RateIndependentFlowRule {
  public:
   /// Parameters: yield surface and hardening rule
-  RateIndependentAssociativeFlow(std::shared_ptr<YieldSurface> surface,
-                                 std::shared_ptr<HardeningRule> hardening);
+  RateIndependentAssociativeFlow(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -117,8 +118,7 @@ static Register<RateIndependentAssociativeFlow> regRateIndependentAssociativeFlo
 //
 class NEML_EXPORT RateIndependentNonAssociativeHardening: public RateIndependentFlowRule {
  public:
-  RateIndependentNonAssociativeHardening(std::shared_ptr<YieldSurface> surface,
-                                         std::shared_ptr<NonAssociativeHardening> hardening);
+  RateIndependentNonAssociativeHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

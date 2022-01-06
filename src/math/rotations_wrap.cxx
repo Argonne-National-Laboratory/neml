@@ -81,7 +81,7 @@ PYBIND11_MODULE(rotations, m) {
       .def(py::self / double())
       ;
 
-  py::class_<Orientation, Quaternion, NEMLObject, std::shared_ptr<Orientation>>(m, "Orientation")
+  py::class_<Orientation, Quaternion, std::shared_ptr<Orientation>>(m, "Orientation")
       .def(py::init<Quaternion&>(), "Copy from a quaternion object", py::arg("General quaternion"))
       .def(py::init(
            [](py::array_t<double> n, double a, std::string angles)
@@ -235,6 +235,14 @@ PYBIND11_MODULE(rotations, m) {
 
       .def("distance", &Orientation::distance)
       ;
+
+  py::class_<CrystalOrientation, Orientation, NEMLObject,
+      std::shared_ptr<CrystalOrientation>>(m, "CrystalOrientation")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<CrystalOrientation>(args, kwargs, {"angles"});
+        }))
+  ;
   
   m.def("random_orientations", &random_orientations);
   m.def("wexp", &wexp);

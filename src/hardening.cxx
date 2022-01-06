@@ -9,7 +9,17 @@
 
 namespace neml {
 
+HardeningRule::HardeningRule(ParameterSet & params) :
+    NEMLObject(params)
+{
 
+}
+
+IsotropicHardeningRule::IsotropicHardeningRule(ParameterSet & params) :
+    HardeningRule(params)
+{
+
+}
 
 size_t IsotropicHardeningRule::nhist() const
 {
@@ -24,8 +34,10 @@ int IsotropicHardeningRule::init_hist(double * const alpha) const
 }
 
 // Implementation of linear hardening
-LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> K) :
-    s0_(s0), K_(K)
+LinearIsotropicHardeningRule::LinearIsotropicHardeningRule(ParameterSet & params) :
+    IsotropicHardeningRule(params),
+    s0_(params.get_object_parameter<Interpolate>("s0")),
+    K_(params.get_object_parameter<Interpolate>("K"))
 {
 
 }
@@ -47,10 +59,7 @@ ParameterSet LinearIsotropicHardeningRule::parameters()
 
 std::unique_ptr<NEMLObject> LinearIsotropicHardeningRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<LinearIsotropicHardeningRule>(
-      params.get_object_parameter<Interpolate>("s0"),
-      params.get_object_parameter<Interpolate>("K")
-      ); 
+  return neml::make_unique<LinearIsotropicHardeningRule>(params); 
 }
 
 int LinearIsotropicHardeningRule::q(const double * const alpha, 
@@ -80,9 +89,9 @@ double LinearIsotropicHardeningRule::K(double T) const
 }
 
 
-InterpolatedIsotropicHardeningRule::InterpolatedIsotropicHardeningRule(
-    std::shared_ptr<Interpolate> flow) :
-    flow_(flow)
+InterpolatedIsotropicHardeningRule::InterpolatedIsotropicHardeningRule(ParameterSet & params) :
+    IsotropicHardeningRule(params),
+    flow_(params.get_object_parameter<Interpolate>("flow"))
 {
 
 }
@@ -104,7 +113,7 @@ ParameterSet InterpolatedIsotropicHardeningRule::parameters()
 std::unique_ptr<NEMLObject> InterpolatedIsotropicHardeningRule::initialize(ParameterSet & params)
 {
   return neml::make_unique<InterpolatedIsotropicHardeningRule>(
-      params.get_object_parameter<Interpolate>("flow")
+      params
       ); 
 }
 
@@ -124,8 +133,12 @@ int InterpolatedIsotropicHardeningRule::dq_da(const double * const alpha,
 }
 
 // Implementation of voce hardening
-VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> R, std::shared_ptr<Interpolate> d) :
-    s0_(s0), R_(R), d_(d)
+VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(
+    ParameterSet & params) :
+      IsotropicHardeningRule(params),
+      s0_(params.get_object_parameter<Interpolate>("s0")), 
+      R_(params.get_object_parameter<Interpolate>("R")),
+      d_(params.get_object_parameter<Interpolate>("d"))
 {
 
 }
@@ -148,11 +161,7 @@ ParameterSet VoceIsotropicHardeningRule::parameters()
 
 std::unique_ptr<NEMLObject> VoceIsotropicHardeningRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<VoceIsotropicHardeningRule>(
-      params.get_object_parameter<Interpolate>("s0"),
-      params.get_object_parameter<Interpolate>("R"),
-      params.get_object_parameter<Interpolate>("d")
-      ); 
+  return neml::make_unique<VoceIsotropicHardeningRule>(params); 
 }
 
 int VoceIsotropicHardeningRule::q(const double * const alpha, 
@@ -187,10 +196,12 @@ double VoceIsotropicHardeningRule::d(double T) const
 }
 
 // Implementation of voce hardening
-PowerLawIsotropicHardeningRule::PowerLawIsotropicHardeningRule(
-    std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> A, 
-    std::shared_ptr<Interpolate> n) :
-    s0_(s0), A_(A), n_(n)
+PowerLawIsotropicHardeningRule::PowerLawIsotropicHardeningRule(ParameterSet &
+                                                               params) :
+    IsotropicHardeningRule(params),
+    s0_(params.get_object_parameter<Interpolate>("s0")),
+    A_(params.get_object_parameter<Interpolate>("A")),
+    n_(params.get_object_parameter<Interpolate>("n"))
 {
 
 }
@@ -213,11 +224,7 @@ ParameterSet PowerLawIsotropicHardeningRule::parameters()
 
 std::unique_ptr<NEMLObject> PowerLawIsotropicHardeningRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PowerLawIsotropicHardeningRule>(
-      params.get_object_parameter<Interpolate>("s0"),
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("n")
-      ); 
+  return neml::make_unique<PowerLawIsotropicHardeningRule>(params); 
 }
 
 int PowerLawIsotropicHardeningRule::q(const double * const alpha, 
@@ -242,9 +249,10 @@ int PowerLawIsotropicHardeningRule::dq_da(const double * const alpha,
 }
 
 // Implementation of combined isotropic class
-CombinedIsotropicHardeningRule::CombinedIsotropicHardeningRule(
-      std::vector<std::shared_ptr<IsotropicHardeningRule>> rules)
-  : rules_(rules)
+CombinedIsotropicHardeningRule::CombinedIsotropicHardeningRule(ParameterSet &
+                                                               params): 
+    IsotropicHardeningRule(params),    
+    rules_(params.get_object_parameter_vector<IsotropicHardeningRule>("rules"))
 {
 
 }
@@ -266,7 +274,7 @@ ParameterSet CombinedIsotropicHardeningRule::parameters()
 std::unique_ptr<NEMLObject> CombinedIsotropicHardeningRule::initialize(ParameterSet & params)
 {
   return neml::make_unique<CombinedIsotropicHardeningRule>(
-      params.get_object_parameter_vector<IsotropicHardeningRule>("rules")
+      params
       ); 
 }
 
@@ -305,6 +313,12 @@ size_t CombinedIsotropicHardeningRule::nrules() const
   return rules_.size();
 }
 
+KinematicHardeningRule::KinematicHardeningRule(ParameterSet & params) :
+    HardeningRule(params)
+{
+
+}
+
 // Implementation of kinematic base class
 size_t KinematicHardeningRule::nhist() const
 {
@@ -319,8 +333,9 @@ int KinematicHardeningRule::init_hist(double * const alpha) const
 }
 
 // Implementation of linear kinematic hardening
-LinearKinematicHardeningRule::LinearKinematicHardeningRule(std::shared_ptr<Interpolate> H) :
-    H_(H)
+LinearKinematicHardeningRule::LinearKinematicHardeningRule(ParameterSet & params) :
+    KinematicHardeningRule(params),
+    H_(params.get_object_parameter<Interpolate>("H"))
 {
 
 }
@@ -341,9 +356,7 @@ ParameterSet LinearKinematicHardeningRule::parameters()
 
 std::unique_ptr<NEMLObject> LinearKinematicHardeningRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<LinearKinematicHardeningRule>(
-      params.get_object_parameter<Interpolate>("H")
-      ); 
+  return neml::make_unique<LinearKinematicHardeningRule>(params); 
 }
 
 int LinearKinematicHardeningRule::q(const double * const alpha, 
@@ -372,10 +385,10 @@ double LinearKinematicHardeningRule::H(double T) const
   return H_->value(T);
 }
 
-CombinedHardeningRule::CombinedHardeningRule(
-    std::shared_ptr<IsotropicHardeningRule> iso,
-    std::shared_ptr<KinematicHardeningRule> kin) :
-      iso_(iso), kin_(kin)
+CombinedHardeningRule::CombinedHardeningRule(ParameterSet & params) :
+    HardeningRule(params),
+    iso_(params.get_object_parameter<IsotropicHardeningRule>("iso")), 
+    kin_(params.get_object_parameter<KinematicHardeningRule>("kin"))
 {
 
 }
@@ -397,10 +410,7 @@ ParameterSet CombinedHardeningRule::parameters()
 
 std::unique_ptr<NEMLObject> CombinedHardeningRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<CombinedHardeningRule>(
-      params.get_object_parameter<IsotropicHardeningRule>("iso"),
-      params.get_object_parameter<KinematicHardeningRule>("kin")
-      ); 
+  return neml::make_unique<CombinedHardeningRule>(params); 
 }
 
 size_t CombinedHardeningRule::nhist() const
@@ -454,6 +464,11 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
   return 0;
 }
 
+NonAssociativeHardening::NonAssociativeHardening(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
 
 // Provide zeros for these
 int NonAssociativeHardening::h_time(const double * const s, 
@@ -508,11 +523,17 @@ int NonAssociativeHardening::dh_da_temp(const double * const s,
 // Begin non-associative hardening rules
 //
 // Gamma functions for Chaboche
+GammaModel::GammaModel(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
 //
 // Constant
 //
-ConstantGamma::ConstantGamma(std::shared_ptr<Interpolate> g) :
-    g_(g)
+ConstantGamma::ConstantGamma(ParameterSet & params) :
+    GammaModel(params),
+    g_(params.get_object_parameter<Interpolate>("g"))
 {
 
 }
@@ -534,7 +555,7 @@ ParameterSet ConstantGamma::parameters()
 std::unique_ptr<NEMLObject> ConstantGamma::initialize(ParameterSet & params)
 {
   return neml::make_unique<ConstantGamma>(
-      params.get_object_parameter<Interpolate>("g")
+      params
       ); 
 }
 
@@ -553,8 +574,11 @@ double ConstantGamma::g(double T) const {
 //
 // Saturating
 //
-SatGamma::SatGamma(std::shared_ptr<Interpolate> gs, std::shared_ptr<Interpolate> g0, std::shared_ptr<Interpolate> beta) :
-    gs_(gs), g0_(g0), beta_(beta)
+SatGamma::SatGamma(ParameterSet & params) :
+    GammaModel(params),
+    gs_(params.get_object_parameter<Interpolate>("gs")), 
+    g0_(params.get_object_parameter<Interpolate>("g0")), 
+    beta_(params.get_object_parameter<Interpolate>("beta"))
 {
 
 }
@@ -577,11 +601,7 @@ ParameterSet SatGamma::parameters()
 
 std::unique_ptr<NEMLObject> SatGamma::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SatGamma>(
-      params.get_object_parameter<Interpolate>("gs"),
-      params.get_object_parameter<Interpolate>("g0"),
-      params.get_object_parameter<Interpolate>("beta")
-      ); 
+  return neml::make_unique<SatGamma>(params); 
 }
 
 double SatGamma::gamma(double ep, double T) const {
@@ -607,14 +627,16 @@ double SatGamma::beta(double T) const {
 //
 // Chaboche
 //
-Chaboche::Chaboche(std::shared_ptr<IsotropicHardeningRule> iso,
-           std::vector<std::shared_ptr<Interpolate>> c,
-           std::vector<std::shared_ptr<GammaModel>> gmodels,
-           std::vector<std::shared_ptr<Interpolate>> A,
-           std::vector<std::shared_ptr<Interpolate>> a,
-           bool noniso) :
-    iso_(iso), n_(c.size()), c_(c), gmodels_(gmodels), A_(A), a_(a), 
-    relax_(true), noniso_(noniso)
+Chaboche::Chaboche(ParameterSet & params) :
+    NonAssociativeHardening(params),
+    iso_(params.get_object_parameter<IsotropicHardeningRule>("iso")),
+    c_(params.get_object_parameter_vector<Interpolate>("C")),
+    n_(c_.size()), 
+    gmodels_(params.get_object_parameter_vector<GammaModel>("gmodels")), 
+    A_(params.get_object_parameter_vector<Interpolate>("A")), 
+    a_( params.get_object_parameter_vector<Interpolate>("a")), 
+    relax_(true), 
+    noniso_(params.get_parameter<bool>("noniso"))
 {
 
 }
@@ -641,14 +663,7 @@ ParameterSet Chaboche::parameters()
 
 std::unique_ptr<NEMLObject> Chaboche::initialize(ParameterSet & params)
 {
-  return neml::make_unique<Chaboche>(
-      params.get_object_parameter<IsotropicHardeningRule>("iso"),
-      params.get_object_parameter_vector<Interpolate>("C"),
-      params.get_object_parameter_vector<GammaModel>("gmodels"),
-      params.get_object_parameter_vector<Interpolate>("A"),
-      params.get_object_parameter_vector<Interpolate>("a"),
-      params.get_parameter<bool>("noniso")
-      ); 
+  return neml::make_unique<Chaboche>(params); 
 }
 
 size_t Chaboche::ninter() const

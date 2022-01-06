@@ -8,18 +8,18 @@
 
 namespace neml {
 
-// NEMLModel_sd implementation
-NEMLModel_sd::NEMLModel_sd(
-    std::shared_ptr<LinearElasticModel> emodel,
-    std::shared_ptr<Interpolate> alpha, 
-    bool truesdell) :
-      NEMLModel(), elastic_(emodel), alpha_(alpha),
-      truesdell_(truesdell)
+NEMLModel::NEMLModel(ParameterSet & params) :
+    NEMLObject(params)
 {
 
 }
 
-NEMLModel_sd::~NEMLModel_sd()
+// NEMLModel_sd implementation
+NEMLModel_sd::NEMLModel_sd(ParameterSet & params) :
+      NEMLModel(params), 
+      elastic_(params.get_object_parameter<LinearElasticModel>("elastic")), 
+      alpha_(params.get_object_parameter<Interpolate>("alpha")),
+      truesdell_(params.get_parameter<bool>("truesdell"))
 {
 
 }
@@ -146,13 +146,8 @@ int NEMLModel_sd::calc_tangent_(const double * const D, const double * const W,
 }
 
 // NEMLModel_ldi implementation
-NEMLModel_ldi::NEMLModel_ldi() :
-      NEMLModel()
-{
-
-}
-
-NEMLModel_ldi::~NEMLModel_ldi()
+NEMLModel_ldi::NEMLModel_ldi(ParameterSet & params) :
+      NEMLModel(params)
 {
 
 }
@@ -185,16 +180,15 @@ int NEMLModel_ldi::init_store(double * const store) const
   return 0;
 }
 
-SubstepModel_sd::SubstepModel_sd(std::shared_ptr<LinearElasticModel> emodel,
-                                 std::shared_ptr<Interpolate> alpha,
-                                 bool truesdell, 
-                                 double rtol, double atol, int miter,
-                                 bool verbose, bool linesearch,
-                                 int max_divide, bool force_divide) :
-    NEMLModel_sd(emodel, alpha, truesdell), 
-    rtol_(rtol), atol_(atol), miter_(miter), verbose_(verbose), 
-    linesearch_(linesearch), max_divide_(max_divide),
-    force_divide_(force_divide)
+SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
+    NEMLModel_sd(params), 
+    rtol_(params.get_parameter<double>("rtol")),
+    atol_(params.get_parameter<double>("atol")),
+    miter_(params.get_parameter<int>("miter")),
+    verbose_(params.get_parameter<bool>("verbose")), 
+    linesearch_(params.get_parameter<bool>("linesearch")),
+    max_divide_(params.get_parameter<int>("max_divide")),
+    force_divide_(params.get_parameter<bool>("force_divide"))
 {
 
 }
@@ -401,11 +395,8 @@ int SubstepModel_sd::update_step(
 }
 
 // Implementation of small strain elasticity
-SmallStrainElasticity::SmallStrainElasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<Interpolate> alpha,
-    bool truesdell) :
-    NEMLModel_sd(elastic, alpha, truesdell)
+SmallStrainElasticity::SmallStrainElasticity(ParameterSet & params) :
+    NEMLModel_sd(params)
 {
 
 }
@@ -422,7 +413,7 @@ ParameterSet SmallStrainElasticity::parameters()
   pset.add_parameter<NEMLObject>("elastic");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<bool>("truesdell", true);
 
   return pset;
@@ -430,11 +421,7 @@ ParameterSet SmallStrainElasticity::parameters()
 
 std::unique_ptr<NEMLObject> SmallStrainElasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SmallStrainElasticity>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<SmallStrainElasticity>(params);
 }
 
 size_t SmallStrainElasticity::nhist() const
@@ -474,17 +461,10 @@ int SmallStrainElasticity::update_sd(
 }
 
 // Implementation of perfect plasticity
-SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<YieldSurface> surface,
-    std::shared_ptr<Interpolate> ys,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter,
-    bool verbose, bool linesearch, int max_divide,
-    bool force_divide, bool truesdell) :
-      SubstepModel_sd(elastic, alpha, truesdell, rtol, atol, miter, verbose, 
-                      linesearch, max_divide, force_divide),
-      surface_(surface), ys_(ys)
+SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(ParameterSet & params) :
+      SubstepModel_sd(params), 
+      surface_(params.get_object_parameter<YieldSurface>("surface")),
+      ys_(params.get_object_parameter<Interpolate>("ys"))
 {
 
 }
@@ -503,7 +483,7 @@ ParameterSet SmallStrainPerfectPlasticity::parameters()
   pset.add_parameter<NEMLObject>("ys");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<double>("rtol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -519,20 +499,7 @@ ParameterSet SmallStrainPerfectPlasticity::parameters()
 
 std::unique_ptr<NEMLObject> SmallStrainPerfectPlasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SmallStrainPerfectPlasticity>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<YieldSurface>("surface"),
-      params.get_object_parameter<Interpolate>("ys"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<int>("max_divide"),
-      params.get_parameter<bool>("force_divide"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<SmallStrainPerfectPlasticity>(params); 
 }
 
 size_t SmallStrainPerfectPlasticity::nhist() const
@@ -745,14 +712,9 @@ int SmallStrainPerfectPlasticity::make_trial_state(
 // Implementation of small strain rate independent plasticity
 //
 SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<RateIndependentFlowRule> flow, 
-    std::shared_ptr<Interpolate> alpha, bool truesdell,
-    double rtol, double atol, int miter, bool verbose, bool linesearch,
-    int max_divide, bool force_divide) : 
-      SubstepModel_sd(elastic, alpha, truesdell, rtol, atol, miter,
-                      verbose, linesearch, max_divide, force_divide),
-      flow_(flow)
+    ParameterSet & params) : 
+      SubstepModel_sd(params),
+      flow_(params.get_object_parameter<RateIndependentFlowRule>("flow"))
 {
 
 }
@@ -770,7 +732,7 @@ ParameterSet SmallStrainRateIndependentPlasticity::parameters()
   pset.add_parameter<NEMLObject>("flow");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<bool>("truesdell", true);
 
   pset.add_optional_parameter<double>("rtol", 1.0e-8);
@@ -788,19 +750,7 @@ ParameterSet SmallStrainRateIndependentPlasticity::parameters()
 
 std::unique_ptr<NEMLObject> SmallStrainRateIndependentPlasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SmallStrainRateIndependentPlasticity>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<RateIndependentFlowRule>("flow"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<bool>("truesdell"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<int>("max_divide"),
-      params.get_parameter<bool>("force_divide")
-      ); 
+  return neml::make_unique<SmallStrainRateIndependentPlasticity>(params); 
 }
 
 size_t SmallStrainRateIndependentPlasticity::nhist() const
@@ -1094,14 +1044,16 @@ int SmallStrainRateIndependentPlasticity::make_trial_state(
 // Implementation of small strain rate independent plasticity
 //
 SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> plastic,
-    std::shared_ptr<CreepModel> creep,
-    std::shared_ptr<Interpolate> alpha, double rtol, double atol,
-    int miter, bool verbose, bool linesearch, double sf, bool truesdell) :
-      NEMLModel_sd(elastic, alpha, truesdell),
-      plastic_(plastic), creep_(creep), rtol_(rtol), atol_(atol), sf_(sf),
-      miter_(miter), verbose_(verbose), linesearch_(linesearch)
+    ParameterSet & params) :
+      NEMLModel_sd(params),
+      plastic_(params.get_object_parameter<NEMLModel_sd>("plastic")),
+      creep_(params.get_object_parameter<CreepModel>("creep")),
+      rtol_(params.get_parameter<double>("rtol")),
+      atol_(params.get_parameter<double>("atol")),
+      sf_(params.get_parameter<double>("sf")),
+      miter_(params.get_parameter<int>("miter")),
+      verbose_(params.get_parameter<bool>("verbose")),
+      linesearch_(params.get_parameter<bool>("linesearch"))
 {
 
 }
@@ -1120,7 +1072,7 @@ ParameterSet SmallStrainCreepPlasticity::parameters()
   pset.add_parameter<NEMLObject>("creep");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                           make_constant(0.0));
   pset.add_optional_parameter<double>("atol", 1.0e-10);
   pset.add_optional_parameter<int>("miter", 50);
   pset.add_optional_parameter<bool>("verbose", false);
@@ -1135,19 +1087,7 @@ ParameterSet SmallStrainCreepPlasticity::parameters()
 
 std::unique_ptr<NEMLObject> SmallStrainCreepPlasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SmallStrainCreepPlasticity>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<NEMLModel_sd>("plastic"),
-      params.get_object_parameter<CreepModel>("creep"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<double>("sf"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<SmallStrainCreepPlasticity>(params); 
 }
 
 size_t SmallStrainCreepPlasticity::nhist() const
@@ -1357,16 +1297,10 @@ int SmallStrainCreepPlasticity::set_elastic_model(std::shared_ptr<LinearElasticM
 }
 
 // Start general integrator implementation
-GeneralIntegrator::GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
-                                     std::shared_ptr<GeneralFlowRule> rule,
-                                     std::shared_ptr<Interpolate> alpha,
-                                     bool truesdell, double rtol, double atol,
-                                     int miter, bool verbose, bool linesearch,
-                                     int max_divide, bool force_divide,
-                                     bool skip_first) :
-    SubstepModel_sd(elastic, alpha, truesdell, rtol, atol, miter, verbose, 
-                    linesearch, max_divide, force_divide),
-    rule_(rule), skip_first_(skip_first)
+GeneralIntegrator::GeneralIntegrator(ParameterSet & params) :
+    SubstepModel_sd(params),
+    rule_(params.get_object_parameter<GeneralFlowRule>("rule")),
+    skip_first_(params.get_parameter<bool>("skip_first_step"))
 {
 
 }
@@ -1384,7 +1318,7 @@ ParameterSet GeneralIntegrator::parameters()
   pset.add_parameter<NEMLObject>("rule");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<bool>("truesdell", true);
   
   pset.add_optional_parameter<double>("rtol", 1.0e-8);
@@ -1401,20 +1335,7 @@ ParameterSet GeneralIntegrator::parameters()
 
 std::unique_ptr<NEMLObject> GeneralIntegrator::initialize(ParameterSet & params)
 {
-  return neml::make_unique<GeneralIntegrator>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<GeneralFlowRule>("rule"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<bool>("truesdell"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<int>("max_divide"),
-      params.get_parameter<bool>("force_divide"),
-      params.get_parameter<bool>("skip_first_step")
-      ); 
+  return neml::make_unique<GeneralIntegrator>(params); 
 }
 
 TrialState * GeneralIntegrator::setup(
@@ -1689,14 +1610,13 @@ int GeneralIntegrator::set_elastic_model(std::shared_ptr<LinearElasticModel> emo
 }
 
 // Start KMRegimeModel
-KMRegimeModel::KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
-                             std::vector<std::shared_ptr<NEMLModel_sd>> models,
-                             std::vector<double> gs,
-                             double kboltz, double b, double eps0,
-                             std::shared_ptr<Interpolate> alpha, 
-                             bool truesdell) :
-    NEMLModel_sd(emodel, alpha, truesdell), models_(models), gs_(gs),
-    kboltz_(kboltz), b_(b), eps0_(eps0)
+KMRegimeModel::KMRegimeModel(ParameterSet & params) :
+    NEMLModel_sd(params), 
+    models_(params.get_object_parameter_vector<NEMLModel_sd>("models")), 
+    gs_(params.get_parameter<std::vector<double>>("gs")),
+    kboltz_(params.get_parameter<double>("kboltz")), 
+    b_(params.get_parameter<double>("b")), 
+    eps0_(params.get_parameter<double>("eps0"))
 {
 
 }
@@ -1718,7 +1638,7 @@ ParameterSet KMRegimeModel::parameters()
   pset.add_parameter<double>("eps0");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
 
   pset.add_optional_parameter<bool>("truesdell", true);
 
@@ -1727,16 +1647,7 @@ ParameterSet KMRegimeModel::parameters()
 
 std::unique_ptr<NEMLObject> KMRegimeModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<KMRegimeModel>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter_vector<NEMLModel_sd>("models"),
-      params.get_parameter<std::vector<double>>("gs"),
-      params.get_parameter<double>("kboltz"),
-      params.get_parameter<double>("b"),
-      params.get_parameter<double>("eps0"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<KMRegimeModel>(params); 
 }
 
 int KMRegimeModel::update_sd(
