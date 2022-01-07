@@ -24,6 +24,18 @@ std::shared_ptr<NEMLModel> parse_string(std::string input)
   }
 }
 
+std::shared_ptr<NEMLObject> get_object_string(std::string repr)
+{
+  // Parse the string to the rapidxml representation
+  rapidxml::xml_document<> doc;
+  doc.parse<0>(&repr[0]);
+
+  // The object, regardless of name
+  const rapidxml::xml_node<> * found = doc.first_node();
+
+  return get_object(found);
+}
+
 std::unique_ptr<NEMLModel> parse_string_unique(std::string input, std::string mname)
 {
   // Parse the string to the rapidxml representation

@@ -1,6 +1,7 @@
 #include "objects.h"
 
 #include "deparse.h"
+#include "parse.h"
 
 // #include <fenv.h>
 #include <iostream>

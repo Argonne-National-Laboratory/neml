@@ -72,7 +72,6 @@ def rtt_restart(tdir, xml_file = "xmodel.xml", model_name = "model"):
   
   temp_dir = tempfile.mkdtemp()
   mfile = os.path.join(temp_dir,  xml_file)
-  print(mfile)
   omodel.save(mfile, model_name)
   model = parse.parse_xml(mfile, model_name)
 

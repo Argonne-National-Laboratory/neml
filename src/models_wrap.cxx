@@ -3,6 +3,7 @@
 #include "models.h"
 
 #include "nemlerror.h"
+#include "parse.h"
 
 namespace py = pybind11;
 

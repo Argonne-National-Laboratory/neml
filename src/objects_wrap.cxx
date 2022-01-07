@@ -1,6 +1,9 @@
 #include "pyhelp.h" // include first to avoid annoying redef warning
 
 #include "objects.h"
+#include "parse.h"
+
+#include "interpolate.h"
 
 namespace py = pybind11;
 
@@ -14,6 +17,15 @@ PYBIND11_MODULE(objects, m) {
   py::class_<NEMLObject, std::shared_ptr<NEMLObject>>(m, "NEMLObject")
       .def("serialize", &NEMLObject::serialize, py::arg("top_name") = "object",
            py::arg("top_node") = "")
+      // This should work but doesn't
+      .def(py::pickle(
+              [](std::shared_ptr<NEMLObject> p) {
+                return p->serialize("object", "");
+              },
+              [](std::string state) {
+                return get_object_string(state);
+              }
+              ))
       ;
 }
 
