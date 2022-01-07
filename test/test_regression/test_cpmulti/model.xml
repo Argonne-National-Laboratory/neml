@@ -25,11 +25,7 @@
     </kinematics>
     <lattice type="CubicLattice">
       <a>1.0</a>
-      <slip_systems>
-        1 1 1 ; 1 1 0
-        1 1 1 ; 1 2 3
-        1 1 1 ; 1 1 2
-      </slip_systems>
+      <slip_systems>1 1 1 ; 1 1 0, 1 1 1 ; 1 2 3, 1 1 1 ; 1 1 2</slip_systems>
     </lattice>
   </model>
 </materials>

@@ -150,6 +150,10 @@ class NEML_EXPORT Lattice {
 
   void update_normals_(const std::vector<Vector> & new_planes);
 
+ protected:
+  list_systems current_slip_;
+  twin_systems current_twin_;
+
  private:
   Vector a1_, a2_, a3_, b1_, b2_, b3_;
   const std::shared_ptr<SymmetryGroup> symmetry_;
@@ -186,6 +190,9 @@ class NEML_EXPORT CubicLattice: public NEMLObject, public Lattice {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
+
+  /// Override serialization to account for dynamic changes
+  virtual ParameterSet & current_parameters();
 };
 
 static Register<CubicLattice> regCubicLattice;
@@ -206,6 +213,9 @@ class NEML_EXPORT HCPLattice: public NEMLObject, public Lattice {
   virtual Vector miller2cart_direction(std::vector<int> m);
   /// Convert Miller-Bravais planes to cartesian normal vectors
   virtual Vector miller2cart_plane(std::vector<int> m);
+
+  /// Override serialization to account for dynamic changes
+  virtual ParameterSet & current_parameters();
 
  private:
   void assert_miller_bravais_(std::vector<int> m);

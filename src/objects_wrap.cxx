@@ -12,6 +12,8 @@ PYBIND11_MODULE(objects, m) {
   m.doc() = "Factory system for creating objects.";
 
   py::class_<NEMLObject, std::shared_ptr<NEMLObject>>(m, "NEMLObject")
+      .def("serialize", &NEMLObject::serialize, py::arg("top_name") = "object",
+           py::arg("top_node") = "")
       ;
 }
 

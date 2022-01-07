@@ -1,18 +1,25 @@
 #include "objects.h"
 
+#include "deparse.h"
+
 // #include <fenv.h>
+#include <iostream>
 
 namespace neml {
 
 NEMLObject::NEMLObject(ParameterSet & params) :
     current_params_(params)
 {
-
 }
 
 ParameterSet & NEMLObject::current_parameters()
 {
   return current_params_;
+}
+
+std::string NEMLObject::serialize(std::string object_name, std::string top_node)
+{
+  return deparse_to_string(current_parameters(), object_name, top_node);
 }
 
 ParameterSet::ParameterSet() :
@@ -84,7 +91,7 @@ void ParameterSet::resolve_objects_()
   for (auto it = defered_params_.begin(); it != defered_params_.end(); ++it) {
     params_[it->first] = Factory::Creator()->create(it->second);
   }
-  defered_params_.clear();
+  defered_params_.clear(); 
 }
 
 Factory::Factory()

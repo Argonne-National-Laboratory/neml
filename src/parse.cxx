@@ -291,13 +291,16 @@ list_systems get_slip( const rapidxml::xml_node<> * node)
 {
   list_systems groups;
 
+  if (node->value_size() == 0)
+    return groups;
+
   std::string text = get_string(node);
 
   std::stringstream ss(text);
   std::string to;
 
   // Separate by newlines
-  while(std::getline(ss, to,'\n')) {
+  while(std::getline(ss, to,',')) {
     // Delete blank characters at front and back of string
     strip(to);
 
@@ -324,13 +327,16 @@ twin_systems get_twin( const rapidxml::xml_node<> * node)
 {
   twin_systems groups;
 
+  if (node->value_size() == 0)
+    return groups;
+
   std::string text = get_string(node);
 
   std::stringstream ss(text);
   std::string to;
 
   // Separate by newlines
-  while(std::getline(ss, to,'\n')) {
+  while(std::getline(ss, to,',')) {
     // Delete blank characters at front and back of string
     strip(to);
 

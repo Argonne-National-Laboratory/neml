@@ -15,7 +15,7 @@
 namespace neml {
 
 // Forward declaration
-class ParameterSet;
+class NEMLObject;
 
 /// Typedef for slip systems
 typedef std::vector<std::pair<std::vector<int>,std::vector<int>>> list_systems;
@@ -29,25 +29,6 @@ template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
-
-/// NEMLObjects are current pretty useless.  However, they are a hook
-/// for future work on serialization.
-class NEML_EXPORT NEMLObject {
- public:
-  NEMLObject(ParameterSet & params);
-  
-  /// Return the current parameter set, including any updates from construction
-  // Most of the time the default will be sufficient, but we may need to
-  // override for a few objects
-  virtual ParameterSet & current_parameters();
-
-  /// Serialize an object to ASCII XML
-
-  /// Serialize an object to "binary XML"
-
- protected:
-  ParameterSet & current_params_;
-};
 
 /// This black magic lets us store parameters in a unified map (note that this is a replacement for boost::variant
 /// to get rid of a boost dependency which is causing us grief due to spurious memory leaks in boost)
@@ -277,6 +258,9 @@ class NEML_EXPORT ParameterSet {
 
   /// Check to make sure this parameter set is ready to go
   bool fully_assigned();
+  
+  /// Name getter
+  const std::vector<std::string> & param_names() const {return param_names_;};
 
  private:
   /// Run down the chain of deferred objects and actually construct them
@@ -400,6 +384,25 @@ class NEML_EXPORT UnregisteredError: public std::exception {
  private:
   std::string name_;
   std::string message_;
+};
+
+/// NEMLObjects are current pretty useless.  However, they are a hook
+/// for future work on serialization.
+class NEML_EXPORT NEMLObject {
+ public:
+  NEMLObject(ParameterSet & params);
+  
+  /// Return the current parameter set, including any updates from construction
+  // Most of the time the default will be sufficient, but we may need to
+  // override for a few objects
+  virtual ParameterSet & current_parameters();
+
+  /// Serialize an object to ASCII XML
+  std::string serialize(std::string object_name = "object", std::string top_node
+                        = "");
+
+ protected:
+  ParameterSet current_params_;
 };
 
 } //namespace neml

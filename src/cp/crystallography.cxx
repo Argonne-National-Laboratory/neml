@@ -252,8 +252,8 @@ Lattice::Lattice(Vector a1, Vector a2, Vector a3,
                  std::shared_ptr<SymmetryGroup> symmetry,
                  list_systems isystems,
                  twin_systems tsystems) :
-    a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry), offsets_({0}),
-    setup_(false)
+    a1_(a1), a2_(a2), a3_(a3), symmetry_(symmetry), 
+    offsets_({0}), setup_(false)
 {
   make_reciprocal_lattice_();
 
@@ -326,6 +326,8 @@ std::vector<Vector> Lattice::equivalent_vectors_bidirectional(Vector v)
 
 void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
 {
+  current_slip_.push_back(std::make_pair(d,p));
+
   std::vector<Vector> burgers, directions, normals;
   std::vector<Orientation> reorientations;
 
@@ -363,6 +365,8 @@ void Lattice::add_slip_system(std::vector<int> d, std::vector<int> p)
 void Lattice::add_twin_system(std::vector<int> eta1, std::vector<int> K1,
                               std::vector<int> eta2, std::vector<int> K2)
 {
+  current_twin_.push_back(std::make_tuple(eta1,K1,eta2,K2));
+
   std::vector<Vector> burgers, directions, normals;
   std::vector<Orientation> reorientations;
 
@@ -631,6 +635,13 @@ ParameterSet CubicLattice::parameters()
   return pset;
 }
 
+ParameterSet & CubicLattice::current_parameters()
+{
+  current_params_.assign_parameter("slip_systems", current_slip_);
+  current_params_.assign_parameter("twin_systems", current_twin_);
+  return current_params_;
+}
+
 std::unique_ptr<NEMLObject> CubicLattice::initialize(ParameterSet & params)
 {
   return neml::make_unique<CubicLattice>(params);
@@ -684,6 +695,13 @@ Vector HCPLattice::miller2cart_plane(std::vector<int> m)
 {
   assert_miller_bravais_(m);
   return Lattice::miller2cart_plane({m[0], m[1], m[3]});
+}
+
+ParameterSet & HCPLattice::current_parameters()
+{
+  current_params_.assign_parameter("slip_systems", current_slip_);
+  current_params_.assign_parameter("twin_systems", current_twin_);
+  return current_params_;
 }
 
 void HCPLattice::assert_miller_bravais_(std::vector<int> m)

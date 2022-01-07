@@ -5,6 +5,8 @@
 
 #include <cassert>
 #include <limits>
+#include <iostream>
+#include <fstream>
 
 namespace neml {
 
@@ -12,6 +14,15 @@ NEMLModel::NEMLModel(ParameterSet & params) :
     NEMLObject(params)
 {
 
+}
+
+void NEMLModel::save(std::string file_name, std::string model_name)
+{
+  std::string representation = serialize(model_name, "materials");
+  
+  std::ofstream outfile(file_name);
+  outfile << representation;
+  outfile.close();
 }
 
 // NEMLModel_sd implementation

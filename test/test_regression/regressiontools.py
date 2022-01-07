@@ -4,6 +4,8 @@ import os.path
 import sys
 import argparse
 
+import tempfile
+
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -51,6 +53,29 @@ def rtt(tdir):
   """
   model = parse.parse_xml(os.path.join(tdir, default_xml_file),
       default_model_name)
+  input_data = np.loadtxt(os.path.join(tdir, default_result_name), delimiter = ',',
+      skiprows = 1)
+
+  output_data = run_compare_test(model, input_data[:,0], input_data[:,1], 
+      input_data[:,2:8])
+
+  return input_data[:,8:14], output_data[:,8:14]
+
+def rtt_restart(tdir, xml_file = "xmodel.xml", model_name = "model"):
+  """
+    Load a model from tdir, save it to XML, reload it from XML,
+    load the time, temperature, and strain data
+    from the csv file, run the test, and compare the stresses
+  """
+  omodel = parse.parse_xml(os.path.join(tdir, default_xml_file),
+      default_model_name)
+  
+  temp_dir = tempfile.mkdtemp()
+  mfile = os.path.join(temp_dir,  xml_file)
+  print(mfile)
+  omodel.save(mfile, model_name)
+  model = parse.parse_xml(mfile, model_name)
+
   input_data = np.loadtxt(os.path.join(tdir, default_result_name), delimiter = ',',
       skiprows = 1)
 

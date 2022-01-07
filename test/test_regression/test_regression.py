@@ -10,7 +10,7 @@ import glob
 import unittest
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from regressiontools import rtt
+from regressiontools import rtt, rtt_restart
 
 def test_all_regression():
   tests = glob.glob(os.path.join(os.path.dirname(__file__),"test_*"))
@@ -23,6 +23,17 @@ def test_all_regression():
   for test in tests:
     yield check_regression, test
 
+def test_all_regression_restart():
+  tests = glob.glob(os.path.join(os.path.dirname(__file__),"test_*"))
+  npe = glob.glob(os.path.join(os.path.dirname(__file__),"test*.py"))
+  # This removes the files test_*.py, which are unfortunately how I have
+  # to name the python files for nose to find them
+  for n in npe:
+    tests.remove(n)
+
+  for test in tests:
+    yield check_restart_regression, test
+
 def check_regression(tdir):
   print(tdir)
   reference, run = rtt(tdir)
@@ -31,3 +42,12 @@ def check_regression(tdir):
   print(run[1])
   
   assert(np.allclose(reference,run))
+
+def check_restart_regression(tdir):
+  print(tdir)
+  reference, run = rtt_restart(tdir)
+
+  print(reference[1])
+  print(run[1])
+
+  assert(np.allclose(reference, run, atol = 1e-2))

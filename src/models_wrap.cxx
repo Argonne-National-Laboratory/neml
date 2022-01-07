@@ -17,6 +17,7 @@ PYBIND11_MODULE(models, m) {
   m.doc() = "Base class for all material models.";
   
   py::class_<NEMLModel, NEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
+      .def("save", &NEMLModel::save)
       .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
       .def("init_store",
            [](NEMLModel & m) -> py::array_t<double>

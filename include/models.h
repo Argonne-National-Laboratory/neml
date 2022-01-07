@@ -26,6 +26,10 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
   public:
    NEMLModel(ParameterSet & params);
    virtual ~NEMLModel() {};
+
+   /// Store model to an XML file
+   virtual void save(std::string file_name, std::string model_name);
+
    /// Total number of stored internal variables
    virtual size_t nstore() const = 0;
    /// Initialize the internal variables
