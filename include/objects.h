@@ -390,6 +390,7 @@ class NEML_EXPORT UnregisteredError: public std::exception {
 class NEML_EXPORT NEMLObject {
  public:
   NEMLObject(ParameterSet & params);
+  virtual ~NEMLObject() {}; // IDK, clang whines
   
   /// Return the current parameter set, including any updates from construction
   // Most of the time the default will be sufficient, but we may need to

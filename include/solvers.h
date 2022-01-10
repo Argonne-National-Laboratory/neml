@@ -39,6 +39,8 @@ struct SolverParameters {
 /// Generic nonlinear solver interface
 class NEML_EXPORT Solvable {
  public:
+  virtual ~Solvable() {}; // clang issue...
+
   /// Number of parameters in the nonlinear equation
   virtual size_t nparams() const = 0;
   /// Initialize a guess to start the solution iterations
@@ -97,6 +99,7 @@ double NEML_EXPORT diff_jac_check(Solvable * system, const double * const x, Tri
 class NEML_EXPORT TestPower: public Solvable {
  public:
   TestPower(double A, double n, double b, double x0);
+  virtual ~TestPower() {}; // clang...
 
   size_t nparams() const;
   int init_x(double * const x, TrialState * ts);
