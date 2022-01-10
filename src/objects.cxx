@@ -1,10 +1,9 @@
 #include "objects.h"
 
-#include "deparse.h"
 #include "parse.h"
+#include "deparse.h"
 
 // #include <fenv.h>
-#include <iostream>
 
 namespace neml {
 

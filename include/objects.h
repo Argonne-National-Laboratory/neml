@@ -14,7 +14,6 @@
 
 namespace neml {
 
-// Forward declaration
 class NEMLObject;
 
 /// Typedef for slip systems

@@ -1,9 +1,9 @@
 #include "pyhelp.h" // include first to avoid annoying redef warning
 
 #include "objects.h"
-#include "parse.h"
 
-#include "interpolate.h"
+#include "parse.h"
+#include "deparse.h"
 
 namespace py = pybind11;
 
