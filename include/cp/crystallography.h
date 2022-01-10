@@ -55,6 +55,7 @@ class NEML_EXPORT Lattice {
   /// (optionally) a initial list of slip systems
   Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry,
           list_systems isystems = {}, twin_systems tsystems = {});
+  virtual ~Lattice() {}; // clang??
 
   /// Type: slip or twin
   enum SlipType {Slip=0, Twin=1};
