@@ -97,7 +97,6 @@ double NEML_EXPORT diff_jac_check(Solvable * system, const double * const x, Tri
 class NEML_EXPORT TestPower: public Solvable {
  public:
   TestPower(double A, double n, double b, double x0);
-  virtual ~TestPower() {};
 
   size_t nparams() const;
   int init_x(double * const x, TrialState * ts);
