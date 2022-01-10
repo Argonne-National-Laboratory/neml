@@ -1051,7 +1051,7 @@ Orientation rotate_to_family(const Vector & a, const Vector & b, double ang)
 
 // Create from Euler angles stored in params
 CrystalOrientation::CrystalOrientation(ParameterSet & params) :
-    Orientation(), NEMLObject(params)
+    NEMLObject(params), Orientation()
 {
   std::vector<double> angles = params.get_parameter<std::vector<double>>("angles");
   setEulerAngles(angles[0], angles[1], angles[2],

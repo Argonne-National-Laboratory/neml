@@ -263,7 +263,7 @@ NEML_EXPORT Orientation rotate_to(const Vector & a, const Vector & b);
 /// Family of rotations from a to b parameterized by an angle
 NEML_EXPORT Orientation rotate_to_family(const Vector & a, const Vector & b, double ang);
 
-class NEML_EXPORT CrystalOrientation : public Orientation, public NEMLObject { 
+class NEML_EXPORT CrystalOrientation : public NEMLObject, public Orientation { 
  public:
   CrystalOrientation(ParameterSet & params);
 
