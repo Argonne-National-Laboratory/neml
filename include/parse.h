@@ -4,6 +4,7 @@
 #include "objects.h"
 #include "models.h"
 #include "damage.h"
+#include "interpolate.h"
 
 #include "windows.h"
 
