@@ -236,25 +236,25 @@ class NEML_EXPORT MTSShearInterpolate : public Interpolate {
 static Register<MTSShearInterpolate> regMTSShearInterpolate;
 
 /// A helper to make a vector of constant interpolates from a vector
-std::vector<std::shared_ptr<Interpolate>>
+NEML_EXPORT std::vector<std::shared_ptr<Interpolate>>
   make_vector(const std::vector<double> & iv);
 
 /// A helper to evaluate a vector of interpolates
-std::vector<double> eval_vector(
+NEML_EXPORT std::vector<double> eval_vector(
     const std::vector<std::shared_ptr<Interpolate>> & iv, double x);
 
 /// A helper to evaluate the derivative of a vector of interpolates
-std::vector<double> eval_deriv_vector(
+NEML_EXPORT std::vector<double> eval_deriv_vector(
     const std::vector<std::shared_ptr<Interpolate>> & iv, double x);
 
 /// A helper to make a constant interpolate from a double
-std::shared_ptr<ConstantInterpolate> make_constant(double v);
+NEML_EXPORT std::shared_ptr<ConstantInterpolate> make_constant(double v);
 
 /// A helper to make a constant interpolate from a double
-std::unique_ptr<ConstantInterpolate> make_constant_unique(double v);
+NEML_EXPORT std::unique_ptr<ConstantInterpolate> make_constant_unique(double v);
 
 /// A helper to make a piecewiselinear interpolate
-std::shared_ptr<PiecewiseLinearInterpolate> make_piecewise(
+NEML_EXPORT std::shared_ptr<PiecewiseLinearInterpolate> make_piecewise(
     std::vector<double> points, std::vector<double> values);
 
 } // namespace neml
