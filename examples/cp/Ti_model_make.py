@@ -191,15 +191,16 @@ def CP_Ti_Maker(T = 298.0, emax = 0.05, N = 1,
             T = T, emax = emax, sdir = np.array([0,0,-1,0,0,0]), verbose = verbose)
 
 
-def Ti_maker_sim(taus_1, taus_2, taus_3,
+def Ti_maker_Polycrystal(taus_1, taus_2, taus_3,
             taut_1, taut_2, X_s,
             k1_1, k1_2, k1_3,
             k2_1, k2_2, k2_3,
-            T = 296.0, emax = 0.05, N = 1,
+            T = 296.0, emax = 0.05, N = 1, steps = 100,
             strain_rate = 1.0e-4, nthreads = 1,
             verbose = True, Taylor = True,
             PTR = True, return_hardening = False,
-            full_results = False):
+            full_results = False,
+            large_deform = False):
 
   # temperature levels
   Ts = np.array([298.0, 423.0, 523.0, 623.0, 773.0, 873.0, 973.0])
@@ -345,11 +346,51 @@ def Ti_maker_sim(taus_1, taus_2, taus_3,
     #orientations = np.array([initial_ori]*N)
     orientations = rotations.random_orientations(N)
     model = polycrystal.TaylorModel(single_model, orientations, nthreads = nthreads)
-    if return_hardening:
-      return drivers.uniaxial_test(model, strain_rate, T = T,
-            emax = emax, sdir = np.array([0,0,-1,0,0,0]), verbose = verbose, full_results = full_results), strength
+    if large_deform:
+      L = np.array([[0.0,0,0],[0,1.0,0],[0,0,-1.0]])
+      dt = emax / steps / strain_rate
+      L *= strain_rate
+      # Runs the exmaple
+      h_n = model.init_store()
+     
+      d_inc = nemlmath.sym(0.5*(L+L.T))
+      w_inc = nemlmath.skew(0.5*(L-L.T))
+      
+      s_n = np.zeros((6,))
+      d_n = np.zeros((6,))
+      w_n = np.zeros((3,))
+
+      u_n = 0.0
+      p_n = 0.0
+      
+      e = [0.0]
+      s = [0.0]
+      for i in range(steps):
+        print(i)
+        d_np1 = d_n + d_inc * dt
+        w_np1 = w_n + w_inc * dt
+        s_np1, h_np1, A_np1, B_np1, u_np1, p_np1 = model.update_ld_inc(
+            d_np1, d_n, w_np1, w_n, T, T, dt, 0,
+            s_n, h_n, u_n, p_n)
+
+        e.append(d_np1[1])
+        s.append(s_np1[1])
+        
+        d_n = np.copy(d_np1)
+        w_n = np.copy(w_np1)
+
+        s_n = np.copy(s_np1)
+        h_n = np.copy(h_np1)
+
+        u_n = u_np1
+        p_n = p_np1
+      return [e, s]
     else:
-      return drivers.uniaxial_test(model, strain_rate, T = T,
+      if return_hardening:
+        return drivers.uniaxial_test(model, strain_rate, T = T,
+            emax = emax, sdir = np.array([0,0,-1,0,0,0]), verbose = verbose, full_results = full_results), strength
+      else:
+        return drivers.uniaxial_test(model, strain_rate, T = T,
             emax = emax, sdir = np.array([0,0,-1,0,0,0]), verbose = verbose, full_results = full_results)
 
   else:
