@@ -523,6 +523,8 @@ def make_simple_singlecrystal(taus_1, taus_2, taus_3,
             return_hardening = False,
             update_rotation = True):
 
+  # temperature levels
+  Ts = np.array([298.0, 423.0, 523.0, 623.0, 773.0, 873.0, 973.0])
   # Model
   a = 2.9511*0.1 # nm
   c = 4.68433*0.1 # nm
