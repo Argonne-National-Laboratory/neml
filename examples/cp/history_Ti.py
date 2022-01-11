@@ -23,6 +23,20 @@ from neml.math import rotations
 
 Ngrains = 2
 nthreads = 1
+
+#================================================#
+def make_simple_cubic(N = Ngrains, nthreads = nthreads):
+#================================================#  
+  smodel = tensile_single_cubic(simplelinear = True,         
+            verbose = False,
+            update_rotation = True)
+
+  orientations = rotations.random_orientations(N)
+
+  model = polycrystal.TaylorModel(smodel, orientations, nthreads = nthreads)
+
+  return model
+
 #================================================#
 def make_simple_Ti(taus_1, taus_2, taus_3,
             taut_1, taut_2, H1, H2, 
@@ -72,7 +86,8 @@ def load_file(path):
 
 if __name__ == "__main__":
  
- 
+  # define the model trying to use
+  use_model = "cubic"
   # sets up x_scale for both experiment and simulation
   emax = 0.2
   Nsample = 200
@@ -86,26 +101,28 @@ if __name__ == "__main__":
   print(df)
   
   
-  """
-  # 973k temperature
-  params = [25.0, 25.0, 25.0,
+  if use_model == "Ti_polycrystal":
+    # 973k temperature
+    params = [25.0, 25.0, 25.0,
         100.0, 180.0, 0.9,
         1.0, 0.25, 5.0,
         1000.0, 1000.0, 1000.0]
-        
-  tmodel = make_Ti_polycrystal(*params)
-  """
-  # 973k temperature
-  params = [25.0, 25.0, 25.0,
+    tmodel = make_Ti_polycrystal(*params)
+  elif use_model == "Ti_simple":
+    # 973k temperature
+    params = [25.0, 25.0, 25.0,
         100.0, 180.0, 1.0, 1.0]
-  tmodel = make_simple_Ti(*params)
+    tmodel = make_simple_Ti(*params)
+  elif use_model == "cubic":
+    tmodel = make_simple_cubic()
   
+  
+  # output histroy internal variables
   full_results = False
   
   if full_results:
     res = drivers.uniaxial_test(tmodel, erate = erate, emax = emax,
                               T = T, verbose = True, full_results = True)
-
 
     density = np.array(res['history'])
     length = 47 * Ngrains # every single grain will have size of 47 for the internal history vector
@@ -131,7 +148,7 @@ if __name__ == "__main__":
     plt.ylabel('y')
     plt.legend()
     plt.grid(True)
-    plt.savefig("Dislocation-history-{}.png".format(int(T)))
+    # plt.savefig("Dislocation-history-{}.png".format(int(T)))
     plt.show()
     plt.close()
   else:
@@ -145,7 +162,7 @@ if __name__ == "__main__":
     plt.ylabel('y')
     plt.legend()
     plt.grid(True)
-    plt.savefig("Dislocation-history-{}.png".format(int(T)))
+    # plt.savefig("Dislocation-history-{}.png".format(int(T)))
     plt.show()
     plt.close()    
   

@@ -515,8 +515,6 @@ def make_Ti_singlecrystal(taus_1, taus_2, taus_3,
   else:
     return single_model
 
-
-
 def make_simple_singlecrystal(taus_1, taus_2, taus_3,
             taut_1, taut_2, H1, H2,
             verbose = True, PTR = True, 
@@ -603,6 +601,54 @@ def make_simple_singlecrystal(taus_1, taus_2, taus_3,
     return single_model, strength
   else:
     return single_model
+
+
+def tensile_single_cubic(simplelinear = True,         
+            verbose = True,
+            update_rotation = True):
+
+  L = np.array([[-0.5,0,0],[0,1.0,0],[0,0,-0.5]])
+  erate = 1.0e-4
+  steps = 25
+  emax = 0.5
+
+  E = 120000.0
+  nu = 0.3
+
+  t0 = 50.0
+  ts = 50.0
+  b = 100.0
+
+  g0 = 1.0
+  n = 12.0
+
+  tau0 = np.array([180.0]*6+[250.0]*6)
+  # Sets up the interaction matrix
+  H1 = 1.0
+  H2 = 1.0
+  M = matrix.SquareMatrix(12, type = "diagonal_blocks", 
+      data = [H1,H2], blocks = [6,6])
+  
+  if simplelinear:
+    strengthmodel = slipharden.SimpleLinearHardening(M, tau0)
+  else:
+    strengthmodel = slipharden.VoceSlipHardening(ts, b, t0)
+    
+  slipmodel = sliprules.PowerLawSlipRule(strengthmodel, g0, n)
+  imodel = inelasticity.AsaroInelasticity(slipmodel)
+  emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
+  kmodel = kinematics.StandardKinematicModel(emodel, imodel)
+
+  lattice = crystallography.CubicLattice(1.0)
+  lattice.add_slip_system([1,1,0],[1,1,1])
+
+  single_model = singlecrystal.SingleCrystalModel(kmodel, lattice,
+        update_rotation = update_rotation,
+        verbose = verbose, linesearch = True,
+        initial_rotation = rotations.Orientation(0,0,0,angle_type="degrees"),
+        miter = 100, max_divide = 10)
+
+  return single_model
 
 
 def Ti_orientation(taus_1, taus_2, taus_3,
