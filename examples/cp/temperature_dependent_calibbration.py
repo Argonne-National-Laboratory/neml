@@ -25,9 +25,9 @@ Nsample = 200
 x_sample = np.linspace(0.0, emax*0.99, Nsample)
 #  model grains and threads
 erate = 1.0e-2
-Ngrains = 200
-nthreads = 30
-T = 298.0
+Ngrains = 500
+nthreads = 1
+T = 1073.0
 
 #================================================#
 def make_Ti_model(x_sample, taus_1, taus_2, taus_3,
@@ -55,8 +55,8 @@ def load_file(path):
     strain_rate = os.path.basename(f).split('_')[0]
     if strain_rate == "1e-2":
       temp = os.path.basename(f).split('_')[1].split('.')[0]
-    if strain_rate == "1e-2" and temp == "298k":
-      df = pd.read_csv(f, usecols=[0,1], names=['Nominal_strain', 'True_stress'], header=None)
+    if strain_rate == "1e-2" and temp == "1073k":
+      df = pd.read_csv(f, usecols=[0,1], names=['True_strain', 'True_stress'], header=None)
       return df
 
 """
@@ -80,9 +80,11 @@ def load_file(path, temper):
 if __name__ == "__main__":
  
  
-  path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Huang-2007-MSEA/"
+  path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Yapici-2014-MD/"
   df = load_file(path_1)
+  print(df)
 
+  """
   # room temperature
   params = [190.0, 110.5, 230.0,
         180.0, 250.0, 0.9,
@@ -96,16 +98,16 @@ if __name__ == "__main__":
         280.0, 280.0, 280.0]
         
   # 523k temperature
-  params = [100.0, 50.0, 145.0,
+  params = [100.0, 60.0, 145.0,
         160.0, 230.0, 0.9,
         1.0, 0.25, 5.0,
         330.0, 330.0, 330.0]
 
   # 623k temperature
-  params = [60.0, 40.0, 110.0,
+  params = [70.0, 60.0, 110.0,
         150.0, 210.0, 0.9,
         1.0, 0.25, 5.0,
-        350.0, 350.0, 350.0]
+        450.0, 450.0, 450.0]
 
   # 773k temperature
   params = [46.0, 37.0, 82.0,
@@ -124,6 +126,12 @@ if __name__ == "__main__":
         100.0, 180.0, 0.9,
         1.0, 0.25, 5.0,
         1000.0, 1000.0, 1000.0]
+  """
+  # 1073k temperature
+  params = [25.0, 25.0, 25.0,
+        100.0, 180.0, 0.9,
+        1.0, 0.25, 5.0,
+        6000.0, 6000.0, 6000.0]
 
   res = make_Ti_model(x_sample, *params)
   true_strain = np.log(1+res['strain'])
@@ -132,6 +140,7 @@ if __name__ == "__main__":
   plt.plot(df['True_strain'], df['True_stress'], 'b-', label = 'data')
   plt.xlabel('x')
   plt.ylabel('y')
+  plt.title("CP-Ti_{}".format(int(T)))
   plt.legend()
   plt.grid(True)
   # plt.savefig("Ti-fitting-simple.png")

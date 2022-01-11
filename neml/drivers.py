@@ -432,7 +432,8 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
     return {'time': driver.t_int,
         'strain': driver.mechanical_strain_int,
         'temperature': driver.T_int,
-        'stress': driver.stress_int }
+        'stress': driver.stress_int,
+        'history': driver.stored_int}
   else:
     return {'strain': strain, 'stress': stress,
         'energy_density': np.copy(driver.u),
