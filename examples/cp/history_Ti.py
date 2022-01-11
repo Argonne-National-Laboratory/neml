@@ -21,7 +21,7 @@ from scipy.optimize import curve_fit
 from neml.cp import hucocks, crystallography, sliprules, slipharden, inelasticity, kinematics, singlecrystal, polycrystal
 from neml.math import rotations
 
-Ngrains = 2
+Ngrains = 50
 nthreads = 1
 
 
@@ -88,8 +88,9 @@ def make_Ti_polycrystal(taus_1, taus_2, taus_3,
             taut_1, taut_2, X_s,
             k1_1, k1_2, k1_3,
             k2_1, k2_2, k2_3,
-            verbose = True, PTR = True, 
-            return_hardening = False)
+            verbose = True, PTR = False, 
+            return_hardening = False,
+            update_rotation = False)
 
   orientations = rotations.random_orientations(N)
 
@@ -104,21 +105,21 @@ def load_file(path):
     strain_rate = os.path.basename(f).split('_')[0]
     if strain_rate == "1e-2":
       temp = os.path.basename(f).split('_')[1].split('.')[0]
-    if strain_rate == "1e-2" and temp == "973k":
+    if strain_rate == "1e-2" and temp == "298k":
       df = pd.read_csv(f, usecols=[0,1], names=['True_strain', 'True_stress'], header=None)
       return df
 
 if __name__ == "__main__":
  
   # define the model trying to use
-  use_model = "cubic"
+  use_model = "Ti_polycrystal"
   # sets up x_scale for both experiment and simulation
   emax = 0.2
   Nsample = 200
   x_sample = np.linspace(0.0, emax*0.99, Nsample)
   #  model grains and threads
   erate = 1.0e-2
-  T = 973.0
+  T = 298.0
  
   path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Huang-2007-MSEA/"
   df = load_file(path_1)
@@ -126,11 +127,11 @@ if __name__ == "__main__":
   
   
   if use_model == "Ti_polycrystal":
-    # 973k temperature
-    params = [25.0, 25.0, 25.0,
-        100.0, 180.0, 0.9,
+    # room temperature
+    params = [190.0, 110.5, 230.0,
+        180.0, 250.0, 0.9,
         1.0, 0.25, 5.0,
-        1000.0, 1000.0, 1000.0]
+        25.0, 25.0, 25.0]
     tmodel = make_Ti_polycrystal(*params)
   elif use_model == "Ti_simple":
     # 973k temperature

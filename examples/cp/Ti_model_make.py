@@ -525,7 +525,8 @@ def make_Ti_singlecrystal(taus_1, taus_2, taus_3,
       C11,C33,C12,C13,C44,"components")
 
   # Sets up the slip system strength model (this is what you'll change)
-  strength = slipharden.LANLTiModel(tau0, C_st, mu, k1, k2, X_s=X_s)
+  strength = slipharden.FixedStrengthHardening(tau0)
+  # strength = slipharden.LANLTiModel(tau0, C_st, mu, k1, k2, X_s=X_s)
   # strength = slipharden.SimpleLinearHardening(M, tau0)
   # Sets up the slip rule
   slipmodel = sliprules.PowerLawSlipRule(strength, g0, n)
