@@ -9,6 +9,11 @@
 
 namespace neml {
 
+GeneralFlowRule::GeneralFlowRule(ParameterSet & params) :
+    NEMLObject(params)
+{
+}
+
 int GeneralFlowRule::work_rate(const double * const s,
                                             const double * const alpha,
                                             const double * const edot, double T,
@@ -30,9 +35,10 @@ void GeneralFlowRule::override_guess(double * const x)
   return;
 }
 
-TVPFlowRule::TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
-            std::shared_ptr<ViscoPlasticFlowRule> flow) :
-    elastic_(elastic), flow_(flow)
+TVPFlowRule::TVPFlowRule(ParameterSet & params) :
+    GeneralFlowRule(params),
+    elastic_(params.get_object_parameter<LinearElasticModel>("elastic")),
+    flow_(params.get_object_parameter<ViscoPlasticFlowRule>("flow"))
 {
 
 }
@@ -54,10 +60,7 @@ ParameterSet TVPFlowRule::parameters()
 
 std::unique_ptr<NEMLObject> TVPFlowRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<TVPFlowRule>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<ViscoPlasticFlowRule>("flow")
-      ); 
+  return neml::make_unique<TVPFlowRule>(params); 
 }
 
 

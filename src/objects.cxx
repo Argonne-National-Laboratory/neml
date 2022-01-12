@@ -1,8 +1,26 @@
 #include "objects.h"
 
+#include "parse.h"
+#include "deparse.h"
+
 // #include <fenv.h>
 
 namespace neml {
+
+NEMLObject::NEMLObject(ParameterSet & params) :
+    current_params_(params)
+{
+}
+
+ParameterSet & NEMLObject::current_parameters()
+{
+  return current_params_;
+}
+
+std::string NEMLObject::serialize(std::string object_name, std::string top_node)
+{
+  return deparse_to_string(current_parameters(), object_name, top_node);
+}
 
 ParameterSet::ParameterSet() :
     type_("invalid")
@@ -73,7 +91,7 @@ void ParameterSet::resolve_objects_()
   for (auto it = defered_params_.begin(); it != defered_params_.end(); ++it) {
     params_[it->first] = Factory::Creator()->create(it->second);
   }
-  defered_params_.clear();
+  defered_params_.clear(); 
 }
 
 Factory::Factory()
@@ -84,12 +102,8 @@ Factory::Factory()
 
 ParameterSet Factory::provide_parameters(std::string type)
 {
-  try {
     return setups_[type]();
-  }
-  catch (std::exception & e) {
-    throw UnregisteredError(type);
-  }
+
 }
 
 std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
@@ -98,12 +112,7 @@ std::shared_ptr<NEMLObject> Factory::create(ParameterSet & params)
     throw UndefinedParameters(params.type(), params.unassigned_parameters());
   }
 
-  try {
     return creators_[params.type()](params);
-  }
-  catch (std::out_of_range & e) {
-    throw UnregisteredError(params.type());
-  }
 }
 
 std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
@@ -112,12 +121,7 @@ std::unique_ptr<NEMLObject> Factory::create_unique(ParameterSet & params)
     throw UndefinedParameters(params.type(), params.unassigned_parameters());
   }
 
-  try {
     return creators_[params.type()](params);
-  }
-  catch (std::out_of_range & e) {
-      throw UnregisteredError(params.type());
-  }
 }
 
 void Factory::register_type(std::string type,

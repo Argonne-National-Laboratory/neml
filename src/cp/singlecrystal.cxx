@@ -2,19 +2,21 @@
 
 namespace neml {
 
-SingleCrystalModel::SingleCrystalModel(
-    std::shared_ptr<KinematicModel> kinematics,
-    std::shared_ptr<Lattice> lattice,
-    std::shared_ptr<Orientation> initial_angle,
-    std::shared_ptr<Interpolate> alpha,
-    bool update_rotation, double rtol, double atol, int miter, bool verbose, 
-    bool linesearch, int max_divide,
-    std::vector<std::shared_ptr<CrystalPostprocessor>> postprocessors) :
-      kinematics_(kinematics), lattice_(lattice), q0_(initial_angle), alpha_(alpha),
-      update_rotation_(update_rotation), rtol_(rtol), atol_(atol), miter_(miter),
-      verbose_(verbose), linesearch_(linesearch),
-      max_divide_(max_divide), stored_hist_(false),
-      postprocessors_(postprocessors)
+SingleCrystalModel::SingleCrystalModel(ParameterSet & params) :
+    NEMLModel_ldi(params),
+    kinematics_(params.get_object_parameter<KinematicModel>("kinematics")), 
+    lattice_(params.get_object_parameter<Lattice>("lattice")), 
+    q0_(params.get_object_parameter<Orientation>("initial_rotation")), 
+    alpha_(params.get_object_parameter<Interpolate>("alpha")),
+    update_rotation_(params.get_parameter<bool>("update_rotation")), 
+    rtol_(params.get_parameter<double>("rtol")), 
+    atol_(params.get_parameter<double>("atol")), 
+    miter_(params.get_parameter<int>("miter")),
+    verbose_(params.get_parameter<bool>("verbose")),
+    linesearch_(params.get_parameter<bool>("linesearch")),
+    max_divide_(params.get_parameter<int>("max_divide")), 
+    stored_hist_(false),
+    postprocessors_(params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors"))
 {
   populate_history(stored_hist_);
   
@@ -25,11 +27,6 @@ SingleCrystalModel::SingleCrystalModel(
   populate_static_(h);
   static_names_ = h.get_order();
   static_size_ = h.size();
-}
-
-SingleCrystalModel::~SingleCrystalModel()
-{
-
 }
 
 std::string SingleCrystalModel::type()
@@ -44,9 +41,9 @@ ParameterSet SingleCrystalModel::parameters()
   pset.add_parameter<NEMLObject>("kinematics");
   pset.add_parameter<NEMLObject>("lattice");
   pset.add_optional_parameter<NEMLObject>("initial_rotation", 
-                                          std::make_shared<Orientation>());
+                                          zero_orientation());
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<bool>("update_rotation", true);
   pset.add_optional_parameter<double>("rtol", 1.0e-8);
   pset.add_optional_parameter<double>("atol", 1.0e-6);
@@ -61,19 +58,7 @@ ParameterSet SingleCrystalModel::parameters()
 
 std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SingleCrystalModel>(
-      params.get_object_parameter<KinematicModel>("kinematics"),
-      params.get_object_parameter<Lattice>("lattice"),
-      params.get_object_parameter<Orientation>("initial_rotation"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<bool>("update_rotation"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<int>("max_divide"),
-      params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors"));
+  return neml::make_unique<SingleCrystalModel>(params);
 }
 
 void SingleCrystalModel::populate_history(History & history) const

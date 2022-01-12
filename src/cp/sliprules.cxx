@@ -2,6 +2,12 @@
 
 namespace neml {
 
+SlipRule::SlipRule(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
 double SlipRule::sum_slip(const Symmetric & stress, const Orientation & Q, 
                           const History & history, Lattice & L, 
                           double T, const History & fixed) const
@@ -58,9 +64,11 @@ bool SlipRule::use_nye() const
   return false;
 }
 
-SlipMultiStrengthSlipRule::SlipMultiStrengthSlipRule(
-    std::vector<std::shared_ptr<SlipHardening>> strengths) :
-      strengths_(strengths)
+SlipMultiStrengthSlipRule::SlipMultiStrengthSlipRule(ParameterSet & params,
+                                                     std::vector<std::shared_ptr<SlipHardening>>
+                                                     strengths) :
+    SlipRule(params),
+    strengths_(strengths)
 {
   // Rename variables to avoid conflicts
   if (strengths.size() > 1) {
@@ -244,14 +252,13 @@ bool SlipMultiStrengthSlipRule::use_nye() const
   return false;
 }
 
-KinematicPowerLawSlipRule::KinematicPowerLawSlipRule(
-    std::shared_ptr<SlipHardening> backstrength,
-    std::shared_ptr<SlipHardening> isostrength,
-    std::shared_ptr<SlipHardening> flowresistance,
-    std::shared_ptr<Interpolate> gamma0,
-    std::shared_ptr<Interpolate> n) :
-      SlipMultiStrengthSlipRule({backstrength, isostrength, flowresistance}),
-      gamma0_(gamma0), n_(n)
+KinematicPowerLawSlipRule::KinematicPowerLawSlipRule(ParameterSet & params) :
+      SlipMultiStrengthSlipRule(params,
+                                {params.get_object_parameter<SlipHardening>("backstrength"), 
+                                params.get_object_parameter<SlipHardening>("isostrength"), 
+                                params.get_object_parameter<SlipHardening>("flowresistance")}),
+      gamma0_(params.get_object_parameter<Interpolate>("gamma0")), 
+      n_(params.get_object_parameter<Interpolate>("n"))
 {
 
 }
@@ -264,12 +271,7 @@ std::string KinematicPowerLawSlipRule::type()
 std::unique_ptr<NEMLObject> KinematicPowerLawSlipRule::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<KinematicPowerLawSlipRule>(
-      params.get_object_parameter<SlipHardening>("backstrength"),
-      params.get_object_parameter<SlipHardening>("isostrength"),
-      params.get_object_parameter<SlipHardening>("flowresistance"),
-      params.get_object_parameter<Interpolate>("gamma0"),
-      params.get_object_parameter<Interpolate>("n"));
+  return neml::make_unique<KinematicPowerLawSlipRule>(params);
 }
 
 ParameterSet KinematicPowerLawSlipRule::parameters()
@@ -346,8 +348,8 @@ std::vector<double> KinematicPowerLawSlipRule::d_sslip_dstrength(
 }
 
 SlipStrengthSlipRule::SlipStrengthSlipRule(
-    std::shared_ptr<SlipHardening> strength) :
-      SlipMultiStrengthSlipRule({strength})
+    ParameterSet & params) :
+      SlipMultiStrengthSlipRule(params, {params.get_object_parameter<SlipHardening>("resistance")})
 {
   
 }
@@ -374,10 +376,10 @@ std::vector<double> SlipStrengthSlipRule::d_sslip_dstrength(size_t g,
   return {scalar_d_sslip_dstrength(g, i, tau, strengths[0], T)};
 }
 
-PowerLawSlipRule::PowerLawSlipRule(std::shared_ptr<SlipHardening> strength,
-                                   std::shared_ptr<Interpolate> gamma0, 
-                                   std::shared_ptr<Interpolate> n) :
-    SlipStrengthSlipRule(strength), gamma0_(gamma0), n_(n)
+PowerLawSlipRule::PowerLawSlipRule(ParameterSet & params) :
+    SlipStrengthSlipRule(params), 
+    gamma0_(params.get_object_parameter<Interpolate>("gamma0")), 
+    n_(params.get_object_parameter<Interpolate>("n"))
 {
 
 }
@@ -390,10 +392,7 @@ std::string PowerLawSlipRule::type()
 std::unique_ptr<NEMLObject> PowerLawSlipRule::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<PowerLawSlipRule>(
-      params.get_object_parameter<SlipHardening>("resistance"),
-      params.get_object_parameter<Interpolate>("gamma0"),
-      params.get_object_parameter<Interpolate>("n"));
+  return neml::make_unique<PowerLawSlipRule>(params);
 }
 
 ParameterSet PowerLawSlipRule::parameters()

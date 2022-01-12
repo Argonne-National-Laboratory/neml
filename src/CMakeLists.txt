@@ -28,6 +28,7 @@ add_library(neml
       larsonmiller.cxx
       walker.cxx
       block.cxx
+      deparse.cxx
       )
 add_subdirectory(math)
 add_subdirectory(cp)

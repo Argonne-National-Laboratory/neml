@@ -4,12 +4,19 @@
 
 namespace neml {
 
+InelasticModel::InelasticModel(ParameterSet & params) : 
+    NEMLObject(params)
+{
+
+}
+
 bool InelasticModel::use_nye() const
 {
   return false;
 }
 
-NoInelasticity::NoInelasticity()
+NoInelasticity::NoInelasticity(ParameterSet & params) :
+    InelasticModel(params)
 {
 
 }
@@ -33,7 +40,7 @@ ParameterSet NoInelasticity::parameters()
 
 std::unique_ptr<NEMLObject> NoInelasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<NoInelasticity>(); 
+  return neml::make_unique<NoInelasticity>(params); 
 }
 
 void NoInelasticity::populate_history(History & history) const
@@ -131,8 +138,9 @@ History NoInelasticity::d_w_p_d_history(const Symmetric & stress,
   return History();
 }
 
-AsaroInelasticity::AsaroInelasticity(std::shared_ptr<SlipRule> rule) :
-    rule_(rule)
+AsaroInelasticity::AsaroInelasticity(ParameterSet & params) :
+    InelasticModel(params),
+    rule_(params.get_object_parameter<SlipRule>("rule"))
 {
 
 }
@@ -158,9 +166,7 @@ ParameterSet AsaroInelasticity::parameters()
 
 std::unique_ptr<NEMLObject> AsaroInelasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<AsaroInelasticity>(
-      params.get_object_parameter<SlipRule>("rule")
-      ); 
+  return neml::make_unique<AsaroInelasticity>(params); 
 }
 
 void AsaroInelasticity::populate_history(History & history) const
@@ -326,14 +332,10 @@ bool AsaroInelasticity::use_nye() const
   return rule_->use_nye();
 }
 
-PowerLawInelasticity::PowerLawInelasticity(std::shared_ptr<Interpolate> A, 
-                   std::shared_ptr<Interpolate> n) :
-    A_(A), n_(n)
-{
-
-}
-
-PowerLawInelasticity::~PowerLawInelasticity()
+PowerLawInelasticity::PowerLawInelasticity(ParameterSet & params) :
+    InelasticModel(params),
+    A_(params.get_object_parameter<Interpolate>("A")), 
+    n_(params.get_object_parameter<Interpolate>("n"))
 {
 
 }
@@ -354,9 +356,7 @@ ParameterSet PowerLawInelasticity::parameters()
 
 std::unique_ptr<NEMLObject> PowerLawInelasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PowerLawInelasticity>(
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("n")); 
+  return neml::make_unique<PowerLawInelasticity>(params);
 }
 
 void PowerLawInelasticity::populate_history(History & history) const
@@ -482,14 +482,9 @@ double PowerLawInelasticity::seq_(const Symmetric & stress) const
   return sqrt(3.0/2.0) * stress.dev().norm();
 }
 
-CombinedInelasticity::CombinedInelasticity(
-    std::vector<std::shared_ptr<InelasticModel>> models) :
-      models_(models)
-{
-
-}
-
-CombinedInelasticity::~CombinedInelasticity()
+CombinedInelasticity::CombinedInelasticity(ParameterSet & params) :
+    InelasticModel(params),
+    models_(params.get_object_parameter_vector<InelasticModel>("models"))
 {
 
 }
@@ -510,9 +505,7 @@ ParameterSet CombinedInelasticity::parameters()
 
 std::unique_ptr<NEMLObject> CombinedInelasticity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<CombinedInelasticity>(
-      params.get_object_parameter_vector<InelasticModel>("models")
-      ); 
+  return neml::make_unique<CombinedInelasticity>(params); 
 }
 
 void CombinedInelasticity::populate_history(History & history) const

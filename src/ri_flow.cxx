@@ -4,10 +4,17 @@
 
 namespace neml {
 
-RateIndependentAssociativeFlow::RateIndependentAssociativeFlow(
-    std::shared_ptr<YieldSurface> surface, 
-    std::shared_ptr<HardeningRule> hardening) :
-      surface_(surface), hardening_(hardening)
+RateIndependentFlowRule::RateIndependentFlowRule(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
+RateIndependentAssociativeFlow::RateIndependentAssociativeFlow(ParameterSet &
+                                                               params) :
+    RateIndependentFlowRule(params),
+    surface_(params.get_object_parameter<YieldSurface>("surface")), 
+    hardening_(params.get_object_parameter<HardeningRule>("hardening"))
 {
 
 }
@@ -29,10 +36,7 @@ ParameterSet RateIndependentAssociativeFlow::parameters()
 
 std::unique_ptr<NEMLObject> RateIndependentAssociativeFlow::initialize(ParameterSet & params)
 {
-  return neml::make_unique<RateIndependentAssociativeFlow>(
-      params.get_object_parameter<YieldSurface>("surface"),
-      params.get_object_parameter<HardeningRule>("hardening")
-      ); 
+  return neml::make_unique<RateIndependentAssociativeFlow>(params); 
 }
 
 size_t RateIndependentAssociativeFlow::nhist() const
@@ -192,9 +196,10 @@ int RateIndependentAssociativeFlow::dh_da(const double * const s,
 
 
 RateIndependentNonAssociativeHardening::RateIndependentNonAssociativeHardening(
-    std::shared_ptr<YieldSurface> surface, 
-    std::shared_ptr<NonAssociativeHardening> hardening) :
-      surface_(surface), hardening_(hardening)
+    ParameterSet & params) :
+      RateIndependentFlowRule(params),
+      surface_(params.get_object_parameter<YieldSurface>("surface")),
+      hardening_(params.get_object_parameter<NonAssociativeHardening>("hardening"))
 {
 
 }
@@ -216,10 +221,7 @@ ParameterSet RateIndependentNonAssociativeHardening::parameters()
 
 std::unique_ptr<NEMLObject> RateIndependentNonAssociativeHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<RateIndependentNonAssociativeHardening>(
-      params.get_object_parameter<YieldSurface>("surface"),
-      params.get_object_parameter<NonAssociativeHardening>("hardening")
-      ); 
+  return neml::make_unique<RateIndependentNonAssociativeHardening>(params); 
 }
 
 size_t RateIndependentNonAssociativeHardening::nhist() const

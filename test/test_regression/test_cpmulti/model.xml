@@ -1,6 +1,6 @@
 <materials>
   <model type="SingleCrystalModel">
-    <initial_rotation type="Orientation">
+    <initial_rotation type="CrystalOrientation">
       <angles>-81.3 128.8 146.7</angles>
       <angle_type>degrees</angle_type>
     </initial_rotation>
@@ -25,11 +25,7 @@
     </kinematics>
     <lattice type="CubicLattice">
       <a>1.0</a>
-      <slip_systems>
-        1 1 1 ; 1 1 0
-        1 1 1 ; 1 2 3
-        1 1 1 ; 1 1 2
-      </slip_systems>
+      <slip_systems>1 1 1 ; 1 1 0, 1 1 1 ; 1 2 3, 1 1 1 ; 1 1 2</slip_systems>
     </lattice>
   </model>
 </materials>

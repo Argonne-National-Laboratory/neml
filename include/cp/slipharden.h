@@ -26,6 +26,7 @@ class SlipRule; // Why would we need a forward declaration?
 class NEML_EXPORT SlipHardening: public NEMLObject
 {
  public:
+  SlipHardening(ParameterSet & params);
   /// Report your variable names
   virtual std::vector<std::string> varnames() const = 0;
   /// Set new varnames
@@ -100,7 +101,7 @@ class NEML_EXPORT SlipHardening: public NEMLObject
 class NEML_EXPORT FixedStrengthHardening: public SlipHardening
 {
   public:
-   FixedStrengthHardening(std::vector<std::shared_ptr<Interpolate>> strengths);
+   FixedStrengthHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -158,11 +159,7 @@ static Register<FixedStrengthHardening> regFixedStrengthHardening;
 class NEML_EXPORT VocePerSystemHardening: public SlipHardening
 {
   public:
-   VocePerSystemHardening(std::vector<double> initial,
-                          std::vector<std::shared_ptr<Interpolate>> k,
-                          std::vector<std::shared_ptr<Interpolate>> sat,
-                          std::vector<std::shared_ptr<Interpolate>> m,
-                          std::string varprefix);
+   VocePerSystemHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -227,9 +224,7 @@ static Register<VocePerSystemHardening> regVocePerSystemHardening;
 class NEML_EXPORT FASlipHardening: public SlipHardening
 {
   public:
-   FASlipHardening(std::vector<std::shared_ptr<Interpolate>> k,
-                   std::vector<std::shared_ptr<Interpolate>> sat,
-                   std::string varprefix);
+   FASlipHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -293,10 +288,7 @@ static Register<FASlipHardening> regFASlipHardening;
 class NEML_EXPORT GeneralLinearHardening: public SlipHardening
 {
  public:
-  GeneralLinearHardening(std::shared_ptr<SquareMatrix> M, 
-                         std::vector<double> tau_0,
-                         bool absval,
-                         std::string varprefix);
+  GeneralLinearHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -373,9 +365,7 @@ static Register<GeneralLinearHardening> regGeneralLinearHardening;
 class NEML_EXPORT SimpleLinearHardening: public SlipHardening
 {
  public:
-  SimpleLinearHardening(std::shared_ptr<SquareMatrix> G, 
-                        std::vector<double> tau_0,
-                        std::string varprefix);
+  SimpleLinearHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -449,6 +439,8 @@ static Register<SimpleLinearHardening> regSimpleLinearHardening;
 class NEML_EXPORT SlipSingleHardening: public SlipHardening
 {
  public:
+  SlipSingleHardening(ParameterSet & params);
+
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
                              Lattice & L,
@@ -470,7 +462,7 @@ class NEML_EXPORT SlipSingleHardening: public SlipHardening
 class NEML_EXPORT SlipSingleStrengthHardening: public SlipSingleHardening
 {
  public:
-  SlipSingleStrengthHardening(std::string var_name = "strength");
+  SlipSingleStrengthHardening(ParameterSet & params);
 
   /// Report varnames
   virtual std::vector<std::string> varnames() const;
@@ -569,8 +561,7 @@ class NEML_EXPORT SumSlipSingleStrengthHardening: public SlipSingleHardening
 {
  public:
   /// Initialize with a list of models
-  SumSlipSingleStrengthHardening(std::vector<std::shared_ptr<SlipSingleStrengthHardening>>
-                                 models);
+  SumSlipSingleStrengthHardening(ParameterSet & params);
 
   /// Report varnames
   virtual std::vector<std::string> varnames() const;
@@ -640,7 +631,7 @@ static Register<SumSlipSingleStrengthHardening> regSumSlipSingleStrengthHardenin
 class NEML_EXPORT PlasticSlipHardening: public SlipSingleStrengthHardening
 {
  public:
-  PlasticSlipHardening(std::string var_name = "strength");
+  PlasticSlipHardening(ParameterSet & params);
 
   /// Scalar evolution law
   virtual double hist_rate(const Symmetric & stress, const Orientation & Q,
@@ -681,11 +672,7 @@ class NEML_EXPORT VoceSlipHardening: public PlasticSlipHardening
  public:
   /// Initialize with the saturated strength, the rate constant, and a constant
   /// strength
-  VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
-                    std::shared_ptr<Interpolate> b,
-                    std::shared_ptr<Interpolate> tau_0,
-                    std::shared_ptr<Interpolate> k,
-                    std::string var_name = "strength");
+  VoceSlipHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -728,10 +715,7 @@ class NEML_EXPORT LinearSlipHardening: public PlasticSlipHardening
  public:
   /// Initialize with the saturated strength, the rate constant, and a constant
   /// strength
-  LinearSlipHardening(std::shared_ptr<Interpolate> tau0,
-                      std::shared_ptr<Interpolate> k1,
-                      std::shared_ptr<Interpolate> k2,
-                      std::string var_name = "strength");
+  LinearSlipHardening(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

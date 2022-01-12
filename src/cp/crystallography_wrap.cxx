@@ -26,7 +26,7 @@ PYBIND11_MODULE(crystallography, m) {
       .def("misorientation_block", &SymmetryGroup::misorientation_block)
       ;
 
-  py::class_<Lattice, NEMLObject, std::shared_ptr<Lattice>> lattice(m,
+  py::class_<Lattice, std::shared_ptr<Lattice>> lattice(m,
                                                                     "Lattice");
 
   py::enum_<Lattice::SlipType>(lattice, "SlipType")
@@ -79,7 +79,7 @@ PYBIND11_MODULE(crystallography, m) {
       .def("plane_index", &Lattice::plane_index)
       ;
 
-  py::class_<CubicLattice, Lattice, std::shared_ptr<CubicLattice>>(m, "CubicLattice")
+  py::class_<CubicLattice, Lattice, NEMLObject, std::shared_ptr<CubicLattice>>(m, "CubicLattice")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return create_object_python<CubicLattice>(
@@ -87,7 +87,7 @@ PYBIND11_MODULE(crystallography, m) {
                     }))
       ;
 
-  py::class_<HCPLattice, Lattice, std::shared_ptr<HCPLattice>>(m, "HCPLattice")
+  py::class_<HCPLattice, Lattice, NEMLObject, std::shared_ptr<HCPLattice>>(m, "HCPLattice")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return create_object_python<HCPLattice>(

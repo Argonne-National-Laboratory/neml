@@ -14,6 +14,8 @@ PYBIND11_MODULE(parse, m) {
   m.def("parse_xml", &parse_xml);
   m.def("parse_string", &parse_string);
 
+  m.def("get_object_string", &get_object_string);
+
   py::register_exception<NodeNotFound>(m, "NodeNotFound");
   py::register_exception<DuplicateNode>(m, "DuplicateNode");
   py::register_exception<InvalidType>(m, "InvalidType");

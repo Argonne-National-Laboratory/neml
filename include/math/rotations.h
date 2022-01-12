@@ -15,7 +15,7 @@
 namespace neml {
 
 /// A generic quaternion, stored as [s v1 v2 v3]
-class NEML_EXPORT Quaternion: public NEMLObject {
+class NEML_EXPORT Quaternion {
  public:
   /// Default constructor (manage own memory)
   Quaternion();
@@ -27,13 +27,6 @@ class NEML_EXPORT Quaternion: public NEMLObject {
   Quaternion(const Quaternion & other);
   /// Move constructor
   Quaternion(const Quaternion && other);
-
-  /// Type for the object system
-  static std::string type();
-  /// Parameters for the object system
-  static ParameterSet parameters();
-  /// Setup from a ParameterSet
-  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual ~Quaternion();
 
@@ -103,8 +96,6 @@ class NEML_EXPORT Quaternion: public NEMLObject {
   bool store_;
 };
 
-static Register<Quaternion> regQuat;
-
 // Binary operators
 /// Scalar multiplication
 NEML_EXPORT Quaternion operator*(double s, const Quaternion & q);
@@ -122,13 +113,6 @@ NEML_EXPORT std::ostream & operator<<(std::ostream & os, const Quaternion & q);
 
 class NEML_EXPORT Orientation: public Quaternion {
  public:
-  /// Type for the object system
-  static std::string type();
-  /// Parameters for the object system
-  static ParameterSet parameters();
-  /// Setup from a ParameterSet
-  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
   // Creation functions
   /// Create from a Rodrigues vector
   static Orientation createRodrigues(const double * const r);
@@ -253,8 +237,6 @@ class NEML_EXPORT Orientation: public Quaternion {
   static void kocks_to_matrix_(double a, double b, double c, double * const M);
 };
 
-static Register<Orientation> regOrientation;
-
 // Binary operators
 /// Compose two rotations
 NEML_EXPORT Orientation operator*(const Orientation & lhs, const Orientation & rhs);
@@ -280,6 +262,22 @@ NEML_EXPORT Orientation rotate_to(const Vector & a, const Vector & b);
 
 /// Family of rotations from a to b parameterized by an angle
 NEML_EXPORT Orientation rotate_to_family(const Vector & a, const Vector & b, double ang);
+
+class NEML_EXPORT CrystalOrientation : public NEMLObject, public Orientation { 
+ public:
+  CrystalOrientation(ParameterSet & params);
+
+  /// Type for the object system
+  static std::string type();
+  /// Parameters for the object system
+  static ParameterSet parameters();
+  /// Setup from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+};
+
+static Register<CrystalOrientation> regCrystalOrientation;
+
+std::shared_ptr<CrystalOrientation> zero_orientation();
 
 } // namespace neml
 

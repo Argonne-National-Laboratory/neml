@@ -12,9 +12,7 @@ namespace neml {
 class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
 {
  public:
-  PolycrystalModel(std::shared_ptr<SingleCrystalModel> model,
-                   std::vector<std::shared_ptr<Orientation>> qs,
-                   int nthreads);
+  PolycrystalModel(ParameterSet & params);
 
   size_t n() const;
 
@@ -42,9 +40,7 @@ class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
 class NEML_EXPORT TaylorModel: public PolycrystalModel
 {
  public:
-  TaylorModel(std::shared_ptr<SingleCrystalModel> model,
-              std::vector<std::shared_ptr<Orientation>> qs,
-              int nthreads);
+  TaylorModel(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();
