@@ -3,6 +3,7 @@
 #include "damage.h"
 
 #include "nemlerror.h"
+#include "parse.h"
 
 namespace py = pybind11;
 
@@ -95,6 +96,7 @@ PYBIND11_MODULE(damage, m) {
       ;
 
   py::class_<CombinedDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<CombinedDamageModel_sd>>(m, "CombinedDamageModel_sd")
+      PICKLEABLE(CombinedDamageModel_sd)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<CombinedDamageModel_sd>(args, kwargs,
@@ -105,6 +107,7 @@ PYBIND11_MODULE(damage, m) {
       ;
 
   py::class_<ClassicalCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ClassicalCreepDamageModel_sd>>(m, "ClassicalCreepDamageModel_sd")
+      PICKLEABLE(ClassicalCreepDamageModel_sd)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<ClassicalCreepDamageModel_sd>(args, kwargs,
@@ -117,6 +120,7 @@ PYBIND11_MODULE(damage, m) {
 
   py::class_<NEMLWorkDamagedModel_sd, NEMLScalarDamagedModel_sd,
       std::shared_ptr<NEMLWorkDamagedModel_sd>>(m, "NEMLWorkDamagedModel_sd")
+      PICKLEABLE(NEMLWorkDamagedModel_sd)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<NEMLWorkDamagedModel_sd>(args, kwargs,
@@ -188,6 +192,7 @@ PYBIND11_MODULE(damage, m) {
       ;
 
   py::class_<ModularCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ModularCreepDamageModel_sd>>(m, "ModularCreepDamageModel_sd")
+      PICKLEABLE(ModularCreepDamageModel_sd)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<ModularCreepDamageModel_sd>(args, kwargs,
@@ -199,6 +204,7 @@ PYBIND11_MODULE(damage, m) {
       ;
 
   py::class_<LarsonMillerCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<LarsonMillerCreepDamageModel_sd>>(m, "LarsonMillerCreepDamageModel_sd")
+      PICKLEABLE(LarsonMillerCreepDamageModel_sd)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<LarsonMillerCreepDamageModel_sd>(args, kwargs,
@@ -241,6 +247,7 @@ PYBIND11_MODULE(damage, m) {
       ;
 
   py::class_<NEMLPowerLawDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd")
+      PICKLEABLE(NEMLPowerLawDamagedModel_sd)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<NEMLPowerLawDamagedModel_sd>(args, kwargs, 
@@ -251,6 +258,7 @@ PYBIND11_MODULE(damage, m) {
       ;
 
   py::class_<NEMLExponentialWorkDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd")
+      PICKLEABLE(NEMLExponentialWorkDamagedModel_sd)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<NEMLExponentialWorkDamagedModel_sd>(

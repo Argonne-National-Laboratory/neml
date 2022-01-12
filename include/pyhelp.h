@@ -17,6 +17,16 @@
 #include "interpolate.h"
 #include "nemlerror.h"
 
+#define PICKLEABLE(T) \
+      .def(py::pickle(\
+              [](std::shared_ptr<T> p) {\
+                return p->serialize("object", "");\
+              },\
+              [](std::string state) {\
+                return std::dynamic_pointer_cast<T>(get_object_string(state));\
+              }\
+              ))\
+
 namespace py = pybind11;
 
 namespace neml {

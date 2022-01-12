@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DEPARSE_H
+#define DEPARSE_H
 
 #include "objects.h"
 #include "windows.h"
@@ -79,3 +80,5 @@ xml_node<>* make_vec_object_node(const std::vector<std::shared_ptr<NEMLObject>> 
                                  std::string name, xml_document <> & doc);
 
 } // namespace neml
+
+#endif

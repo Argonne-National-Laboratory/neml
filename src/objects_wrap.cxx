@@ -2,8 +2,8 @@
 
 #include "objects.h"
 
-#include "parse.h"
-#include "deparse.h"
+// #include "parse.h"
+// #include "deparse.h"
 
 namespace py = pybind11;
 
@@ -17,7 +17,9 @@ PYBIND11_MODULE(objects, m) {
   py::class_<NEMLObject, std::shared_ptr<NEMLObject>>(m, "NEMLObject")
       .def("serialize", &NEMLObject::serialize, py::arg("top_name") = "object",
            py::arg("top_node") = "")
-      // This should work but doesn't
+      // This should work but doesn't.  Instead we have the stupid
+      // PICKLEABLE(T) macro in pyhelp.h at the fully-defined class level
+      /*
       .def(py::pickle(
               [](std::shared_ptr<NEMLObject> p) {
                 return p->serialize("object", "");
@@ -26,6 +28,7 @@ PYBIND11_MODULE(objects, m) {
                 return get_object_string(state);
               }
               ))
+      */
       ;
 }
 
