@@ -163,7 +163,7 @@ class TestPowerLawInterpolate(unittest.TestCase, BaseInterpolate):
     self.assertTrue(np.isclose(self.A * self.x**self.B, 
       self.interpolate(self.x)))
 
-class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):
+class TestMTSShearInterpolate(unittest.TestCase, BaseInterpolate):
   def setUp(self):
     self.y0 = 100.0
     self.D = 50.0
@@ -175,5 +175,28 @@ class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):
 
   def test_interpolate(self):
     should = self.y0 - self.D / (np.exp(self.x0 / self.x) - 1.0)
+    act = self.interpolate(self.x)
+    self.assertTrue(np.isclose(should, act))
+
+class TestMTSInterpolate(unittest.TestCase, BaseInterpolate):
+  def setUp(self):
+    self.tau0 = 300.0
+    self.g0 = 0.75
+
+    E_poly = np.array([-3.94833389e-02, -5.20197047e+01, 1.95594836e+05])
+    nu = 0.31
+    self.mu = interpolate.PolynomialInterpolate(E_poly/(2*(1+nu)))
+    self.k = 1.38064e-20
+    self.b = 2.02e-7
+
+    self.p = 0.8
+    self.q = 0.9
+
+    self.interpolate = interpolate.MTSInterpolate(self.tau0, self.g0, self.q, self.p, self.k, self.b, self.mu)
+
+    self.x = 300.0
+
+  def test_interpolate(self):
+    should = self.tau0 * (1.0- (self.k*self.x/(self.mu(self.x)*self.b**3.0*self.g0))**(1.0/self.q))**(1.0/self.p) 
     act = self.interpolate(self.x)
     self.assertTrue(np.isclose(should, act))

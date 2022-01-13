@@ -235,6 +235,30 @@ class NEML_EXPORT MTSShearInterpolate : public Interpolate {
 
 static Register<MTSShearInterpolate> regMTSShearInterpolate;
 
+
+/// The Mechanical Threshold Stress scaling
+class NEML_EXPORT MTSInterpolate : public Interpolate {
+ public:
+  /// Interpolation using the MTS model
+  MTSInterpolate(ParameterSet & params);
+
+  /// Type for the object system
+  static std::string type();
+  /// Create parameters for the object system
+  static ParameterSet parameters();
+  /// Create object from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
+  virtual double value(double x) const;
+  virtual double derivative(double x) const;
+
+ private:
+  const double tau0_, g0_, q_, p_, k_, b_;
+  const std::shared_ptr<Interpolate> mu_;
+};
+
+static Register<MTSInterpolate> regMTSInterpolate;
+
 /// A helper to make a vector of constant interpolates from a vector
 NEML_EXPORT std::vector<std::shared_ptr<Interpolate>>
   make_vector(const std::vector<double> & iv);

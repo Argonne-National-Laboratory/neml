@@ -464,6 +464,92 @@ class NEML_EXPORT Chaboche: public NonAssociativeHardening {
 
 static Register<Chaboche> regChaboche;
 
+/// Chaboche model with hard-coded, recoverable Voce isotropic hardening
+class NEML_EXPORT ChabocheVoceRecovery: public NonAssociativeHardening {
+ public:
+  /// Parameters: isotropic hardening model, vector of backstress constants C,
+  /// vector of gamma functions, vector of static recovery constants A,
+  /// vector static recovery constants a, flag trigger the nonisothermal terms
+  ChabocheVoceRecovery(ParameterSet & params);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// 1 (isotropic) + 6 (backstress) = 7
+  virtual size_t ninter() const; // How many "q" variables it spits out
+  /// 1 (isotropic) + n_backstresses * 6
+  virtual size_t nhist() const; // How many internal variables it stores
+
+  /// Initialize internal variables
+  virtual int init_hist(double * const alpha) const;
+
+  /// Map the isotropic variable, map the backstresses
+  virtual int q(const double * const alpha, double T, double * const qv) const;
+  /// Derivative of map
+  virtual int dq_da(const double * const alpha, double T, double * const qv) const;
+
+  /// Hardening proportional to inelastic strain rate
+  /// Assume associated isotropic hardening, each backstress is
+  /// -2/3 * C * X/norm(X) - sqrt(2/3) gamma(ep) * X
+  virtual int h(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  /// Derivative of h wrt stress
+  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  /// Derivative of h wrt history
+  virtual int dh_da(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  /// Hardening proportional to time
+  virtual int h_time(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  /// Derivative of h_time wrt stress
+  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  /// Derivative of h_time wrt history
+  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  /// Hardening proportional to the temperature rate
+  virtual int h_temp(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  /// Derivative of h_temp wrt stress
+  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  /// Derivative of h_temp wrt history
+  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  /// Getter for the number of backstresses
+  int n() const;
+
+ private:
+  void backstress_(const double * const alpha, double * const X) const;
+
+ private:
+  const std::shared_ptr<Interpolate> s0_;
+  const std::shared_ptr<Interpolate> theta0_;
+  const std::shared_ptr<Interpolate> Rmax_;
+  const std::shared_ptr<Interpolate> Rmin_;
+  const std::shared_ptr<Interpolate> r1_;
+  const std::shared_ptr<Interpolate> r2_;
+
+  const std::vector<std::shared_ptr<Interpolate>> c_;  
+  const int n_;
+  std::vector<std::shared_ptr<GammaModel>> gmodels_;
+
+  const std::vector<std::shared_ptr<Interpolate>> A_;
+  const std::vector<std::shared_ptr<Interpolate>> a_;
+
+  const bool noniso_;
+};
+
+static Register<ChabocheVoceRecovery> regChabocheVoceRecovery;
+
 } // namespace neml
 
 #endif // HARDENING_H

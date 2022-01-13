@@ -29,6 +29,7 @@ Implementations
 
 .. toctree::
    non/chaboche
+   non/special_chaboche
 
 Class description
 -----------------

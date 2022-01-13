@@ -274,6 +274,18 @@ PYBIND11_MODULE(hardening, m) {
           return cv;
          }, "c material constant.")
       ;
+
+  py::class_<ChabocheVoceRecovery, NonAssociativeHardening,
+      std::shared_ptr<ChabocheVoceRecovery>>(m, "ChabocheVoceRecovery")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<ChabocheVoceRecovery>(args, kwargs, {"s0",
+                                                            "theta0", "Rmax",
+                                                            "Rmin", "r1", "r2", "C",
+                                                "gmodels", "A", "a"});
+        }))
+      .def_property_readonly("n", &ChabocheVoceRecovery::n, "Number of backstresses")
+      ;
 }
 
 } // namespace neml

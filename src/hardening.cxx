@@ -999,4 +999,398 @@ void Chaboche::backstress_(const double * const alpha, double * const X) const
   }
 }
 
+//
+// ChabocheVoceRecovery with fancy, hard-coded Voce isotropic hardening
+//
+ChabocheVoceRecovery::ChabocheVoceRecovery(ParameterSet & params) :
+    NonAssociativeHardening(params),
+    s0_(params.get_object_parameter<Interpolate>("s0")),
+    theta0_(params.get_object_parameter<Interpolate>("theta0")),
+    Rmax_(params.get_object_parameter<Interpolate>("Rmax")),
+    Rmin_(params.get_object_parameter<Interpolate>("Rmin")),
+    r1_(params.get_object_parameter<Interpolate>("r1")),
+    r2_(params.get_object_parameter<Interpolate>("r2")),
+    c_(params.get_object_parameter_vector<Interpolate>("C")),
+    n_(c_.size()), 
+    gmodels_(params.get_object_parameter_vector<GammaModel>("gmodels")), 
+    A_(params.get_object_parameter_vector<Interpolate>("A")), 
+    a_( params.get_object_parameter_vector<Interpolate>("a")), 
+    noniso_(params.get_parameter<bool>("noniso"))
+{
+
+}
+
+std::string ChabocheVoceRecovery::type()
+{
+  return "ChabocheVoceRecovery";
+}
+
+ParameterSet ChabocheVoceRecovery::parameters()
+{
+  ParameterSet pset(ChabocheVoceRecovery::type());
+
+  pset.add_parameter<NEMLObject>("s0");
+  pset.add_parameter<NEMLObject>("theta0");
+  pset.add_parameter<NEMLObject>("Rmax");
+  pset.add_parameter<NEMLObject>("Rmin");
+  pset.add_parameter<NEMLObject>("r1");
+  pset.add_parameter<NEMLObject>("r2");
+
+  pset.add_parameter<std::vector<NEMLObject>>("C");
+  pset.add_parameter<std::vector<NEMLObject>>("gmodels");
+  pset.add_parameter<std::vector<NEMLObject>>("A");
+  pset.add_parameter<std::vector<NEMLObject>>("a");
+
+  pset.add_optional_parameter<bool>("noniso", true);
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> ChabocheVoceRecovery::initialize(ParameterSet & params)
+{
+  return neml::make_unique<ChabocheVoceRecovery>(params); 
+}
+
+size_t ChabocheVoceRecovery::ninter() const
+{
+  return 1 + 6;
+}
+
+size_t ChabocheVoceRecovery::nhist() const
+{
+  return 1 + 6 * n_;
+}
+
+int ChabocheVoceRecovery::init_hist(double * const alpha) const
+{
+  std::fill(alpha, alpha+nhist(), 0.0);
+  return 0;
+}
+
+int ChabocheVoceRecovery::q(const double * const alpha, double T, double * const qv) const
+{
+  // Isotropic part
+  qv[0] = -(s0_->value(T) + alpha[0]);
+
+  std::fill(qv+1, qv+7, 0.0);
+  
+  // Helps with unrolling
+  int n = n_;
+
+  for (int i=0; i<n; i++) {
+    for (int j=0; j<6; j++) {
+      qv[j+1] += alpha[1+i*6+j];
+    }
+  }
+  return 0;
+}
+
+int ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * const qv) const
+{
+  std::fill(qv, qv+(ninter()*nhist()), 0.0);
+
+  // Isotropic part
+  qv[0] = -1.0;
+  
+  // Help unroll
+  int n = n_;
+
+  for (int i=0; i<n; i++) {
+    for (int j=0; j<6; j++) {
+      qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
+    }
+  }
+  return 0;
+}
+
+int ChabocheVoceRecovery::h(const double * const s, const double * const alpha, double T,
+              double * const hv) const
+{
+  // Isotropic
+  hv[0] = theta0_->value(T) * (1 - alpha[0]/Rmax_->value(T)) *
+      std::sqrt(2.0/3.0);
+
+  double X[6], nv[6];
+  backstress_(alpha, X);
+  std::copy(s, s+6, nv);
+  dev_vec(nv);
+  add_vec(nv, X, 6, nv);
+  normalize_vec(nv, 6);
+  
+  // Note the extra factor of sqrt(2.0/3.0) -- this is to make it equivalent
+  // to Chaboche's original definition
+  
+  std::vector<double> c = eval_vector(c_, T);
+
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      hv[1+i*6+j] = - 2.0 / 3.0 * c[i] * nv[j] - sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T) * alpha[1+i*6+j];
+    }
+  }
+
+  return 0;
+}
+
+int ChabocheVoceRecovery::dh_ds(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  std::fill(dhv, dhv + nhist()*6, 0.0);
+
+  std::vector<double> c = eval_vector(c_, T);
+
+  double X[6];
+  backstress_(alpha, X);
+
+  double n[6];
+  std::copy(s, s+6, n);
+  dev_vec(n);
+  add_vec(n, X, 6, n);
+  double nv = norm2_vec(n, 6);
+  normalize_vec(n, 6);
+  
+  double nn[36];
+
+  std::fill(nn, nn+36, 0.0);
+  for (int i=0; i<6; i++) {
+    nn[CINDEX(i,i,6)] += 1.0;
+  }
+  
+  double iv[6];
+  double jv[6];
+  for (int i=0; i<3; i++) {
+    iv[i] = 1.0 / 3.0;
+    jv[i] = 1.0;
+  }
+  for (int i=3; i<6; i++) {
+    iv[i] = 0.0;
+    jv[i] = 0.0;
+  }
+
+  outer_update_minus(iv, 6, jv, 6, nn);
+
+  outer_update_minus(n, 6, n, 6, nn);
+  if (nv != 0.0) {
+    for (int i=0; i<36; i++) {
+      nn[i] /= nv;
+    }
+  }
+  
+  // Fill in...
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      for (int k=0; k<6; k++) {
+        dhv[CINDEX((1+i*6+j),(k),6)] = -2.0 / 3.0 * c[i] * nn[CINDEX(j,k,6)];
+      }
+    }
+  }
+  
+  return 0;
+}
+
+int ChabocheVoceRecovery::dh_da(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  // Again, there should be no earthly reason the compiler can't do this
+  int nh = nhist();
+
+  std::fill(dhv, dhv + nh*nh, 0.0);
+
+  // Isotropic contribution
+  dhv[0] = -theta0_->value(T) / Rmax_->value(T) * std::sqrt(2.0/3.0);
+  std::vector<double> c = eval_vector(c_, T);
+
+  double X[6];
+  backstress_(alpha, X);
+
+  double ss[36];
+  double n[6];
+  std::copy(s, s+6, n);
+  dev_vec(n);
+  add_vec(n, X, 6, n);
+  double nv = norm2_vec(n, 6);
+  normalize_vec(n, 6);
+  
+  std::fill(ss, ss+36, 0.0);
+  for (int i=0; i<6; i++) {
+    ss[CINDEX(i,i,6)] += 1.0;
+  }
+  
+  outer_update_minus(n, 6, n, 6, ss);
+  if (nv != 0.0) {
+    for (int i=0; i<36; i++) {
+      ss[i] /= nv;
+    }
+  }
+  
+  // Fill in the gamma part
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nh)] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
+    }
+  }
+
+  // Fill in the ss part
+  for (int bi=0; bi<n_; bi++) {
+    for (int i=0; i<6; i++) {
+      for (int bj=0; bj<n_; bj++) {
+        for (int j=0; j<6; j++) {
+          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nh)] -= 2.0 / 3.0 * c[bi]  * 
+              ss[CINDEX(i,j,6)];
+        }
+      }
+    }
+  }
+
+  // Fill in the alpha part
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * 
+          gmodels_[i]->dgamma(alpha[0], T) * alpha[1+i*6+j];
+    }
+  }
+
+  return 0;
+}
+
+int ChabocheVoceRecovery::h_time(const double * const s, const double * const alpha, 
+                     double T, double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+
+  // Isotropic recovery term 
+  hv[0] = r1_->value(T) * (Rmin_->value(T) - alpha[0]
+                           ) * std::pow(std::fabs(Rmin_->value(T) - alpha[0]),
+                                        r2_->value(T) - 1.0);
+ 
+  std::vector<double> A = eval_vector(A_, T);
+  std::vector<double> a = eval_vector(a_, T);
+
+  double Xi[6];
+  double nXi;
+  for (int i=0; i<n_; i++) {
+    std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
+    nXi = norm2_vec(Xi, 6);
+    for (int j=0; j<6; j++) {
+      hv[1+i*6+j] = -A[i] * pow(sqrt(3.0/2.0) * nXi, a[i] - 1.0) *
+          alpha[1+i*6+j];
+    }
+  }
+
+  return 0;
+}
+
+int ChabocheVoceRecovery::dh_ds_time(const double * const s, const double * const alpha, 
+                         double T, double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*6, 0.0);
+
+  // Also return if relax
+
+  return 0;
+}
+
+int ChabocheVoceRecovery::dh_da_time(const double * const s, const double * const alpha,
+                         double T, double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+
+  dhv[0] = std::copysign(r1_->value(T) * r2_->value(T) *
+                         std::pow(std::fabs(Rmin_->value(T) - alpha[0]), r2_->value(T) -
+                                  1.0), Rmin_->value(T) - alpha[0]);
+
+  std::vector<double> A = eval_vector(A_, T);
+  std::vector<double> a = eval_vector(a_, T);
+
+  int nh = nhist();
+  int n = n_;
+  
+  double XX[36];
+  double Xi[6];
+  double nXi;
+  int ia,ib;
+  double d;
+  for (int i=0; i<n; i++) {
+    std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
+    nXi = norm2_vec(Xi, 6);
+    normalize_vec(Xi, 6);
+    outer_vec(Xi, 6, Xi, 6, XX);
+    for (int j=0; j<6; j++) {
+      ia = 1 + i*6 + j;
+      for (int k=0; k<6; k++) {
+        ib = 1 + i*6 + k;
+        if (j == k) {
+          d = 1.0;
+        }
+        else {
+          d = 0.0;
+        }
+        dhv[CINDEX(ia,ib,nh)] = -A[i] * pow( sqrt(3.0/2.0) * nXi, a[i]-1.0) * (
+            d + (a[i] - 1.0) * XX[CINDEX(j,k,6)]);
+      }
+    }
+  }
+
+  return 0;
+}
+
+int ChabocheVoceRecovery::h_temp(const double * const s, const double * const alpha, double T,
+              double * const hv) const
+{
+  std::fill(hv, hv+nhist(), 0.0);
+  if (not noniso_) return 0;
+
+  std::vector<double> c = eval_vector(c_, T);
+  std::vector<double> dc = eval_deriv_vector(c_, T);
+
+  for (int i=0; i<n_; i++) {
+    if (c[i] == 0.0) continue;
+    for (int j=0; j<6; j++) {
+      hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
+    }
+  }
+  return 0;
+}
+
+int ChabocheVoceRecovery::dh_ds_temp(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*6, 0.0);
+  return 0;
+}
+
+int ChabocheVoceRecovery::dh_da_temp(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  if (not noniso_) return 0;
+
+  std::vector<double> c = eval_vector(c_, T);
+  std::vector<double> dc = eval_deriv_vector(c_, T);
+
+  for (int i=0; i<n_; i++) {
+    if (c[i] == 0.0) continue;
+    for (int j=0; j<6; j++) {
+      int ci = 1 + i*6 + j;
+      dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
+    }
+  }
+
+  return 0;
+}
+
+int ChabocheVoceRecovery::n() const
+{
+  return n_;
+}
+
+void ChabocheVoceRecovery::backstress_(const double * const alpha, double * const X) const
+{
+  std::fill(X, X+6, 0.0);
+  for (int i=0; i<n_; i++) {
+    for (int j=0; j<6; j++) {
+      X[j] += alpha[1+i*6+j];
+    }
+  }
+}
+
 } // namespace neml
