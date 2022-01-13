@@ -1106,8 +1106,9 @@ int ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * c
 int ChabocheVoceRecovery::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  // Isotropic -- does this need a sqrt(2.0/3.0)?
-  hv[0] = theta0_->value(T) * (1 - alpha[0]/Rmax_->value(T));
+  // Isotropic
+  hv[0] = theta0_->value(T) * (1 - alpha[0]/Rmax_->value(T)) *
+      std::sqrt(2.0/3.0);
 
   double X[6], nv[6];
   backstress_(alpha, X);
@@ -1194,8 +1195,8 @@ int ChabocheVoceRecovery::dh_da(const double * const s, const double * const alp
 
   std::fill(dhv, dhv + nh*nh, 0.0);
 
-  // Isotropic contributiondvh[0] = -theta0_->value(T) / Rmax_->value(T);
-  dhv[0] = -theta0_->value(T) / Rmax_->value(T);
+  // Isotropic contribution
+  dhv[0] = -theta0_->value(T) / Rmax_->value(T) * std::sqrt(2.0/3.0);
   std::vector<double> c = eval_vector(c_, T);
 
   double X[6];
@@ -1256,7 +1257,7 @@ int ChabocheVoceRecovery::h_time(const double * const s, const double * const al
 {
   std::fill(hv, hv+nhist(), 0.0);
 
-  // Isotropic recovery term (need sqrt(3/2)?)
+  // Isotropic recovery term 
   hv[0] = r1_->value(T) * (Rmin_->value(T) - alpha[0]
                            ) * std::pow(std::fabs(Rmin_->value(T) - alpha[0]),
                                         r2_->value(T) - 1.0);
@@ -1270,7 +1271,7 @@ int ChabocheVoceRecovery::h_time(const double * const s, const double * const al
     std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
     nXi = norm2_vec(Xi, 6);
     for (int j=0; j<6; j++) {
-      hv[1+i*6+j] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i] - 1.0) *
+      hv[1+i*6+j] = -A[i] * pow(sqrt(3.0/2.0) * nXi, a[i] - 1.0) *
           alpha[1+i*6+j];
     }
   }
@@ -1323,7 +1324,7 @@ int ChabocheVoceRecovery::dh_da_time(const double * const s, const double * cons
         else {
           d = 0.0;
         }
-        dhv[CINDEX(ia,ib,nh)] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i]-1.0) * (
+        dhv[CINDEX(ia,ib,nh)] = -A[i] * pow( sqrt(3.0/2.0) * nXi, a[i]-1.0) * (
             d + (a[i] - 1.0) * XX[CINDEX(j,k,6)]);
       }
     }
