@@ -543,6 +543,68 @@ double MTSShearInterpolate::derivative(double x) const
   return -D_ * T0_ / (4.0 * pow(x * sinh(T0_ / (2 * x)),2));
 }
 
+
+MTSInterpolate::MTSInterpolate(ParameterSet & params) :
+    Interpolate(params),
+    tau0_(params.get_parameter<double>("tau0")), 
+    g0_(params.get_parameter<double>("g0")), 
+    q_(params.get_parameter<double>("q")),
+    p_(params.get_parameter<double>("p")),
+    k_(params.get_parameter<double>("k")),
+    b_(params.get_parameter<double>("b")),
+    mu_(params.get_object_parameter<Interpolate>("mu"))
+{
+  
+}
+
+std::string MTSInterpolate::type()
+{
+  return "MTSInterpolate";
+}
+
+ParameterSet MTSInterpolate::parameters()
+{
+  ParameterSet pset(MTSInterpolate::type());
+
+  pset.add_parameter<double>("tau0");
+  pset.add_parameter<double>("g0");
+  pset.add_parameter<double>("q");
+  pset.add_parameter<double>("p");
+  pset.add_parameter<double>("k");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<NEMLObject>("mu");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> MTSInterpolate::initialize(ParameterSet & params)
+{
+  return neml::make_unique<MTSInterpolate>(params); 
+}
+
+double MTSInterpolate::value(double x) const
+{
+  return tau0_ * std::pow(1.0 - 
+                          std::pow(k_*x/(mu_->value(x) * std::pow(b_,3) * g0_),
+                                   1.0/q_)
+                          , 1.0/p_);
+}
+
+double MTSInterpolate::derivative(double x) const
+{
+  double b3 = std::pow(b_,3);
+  double mu = mu_->value(x);
+  double dmu = mu_->derivative(x);
+  double inner = k_*x/(b3*g0_*mu);
+
+  double A = -tau0_ * std::pow(inner, 1/q_) * std::pow(1-std::pow(inner, 1/q_),
+                                                       1/p_ - 1) / (p_ * q_ * x);
+  double B =  tau0_ * std::pow(inner, 1/q_) * std::pow(1-std::pow(inner, 1/q_), 
+                                                       1/p_ - 1) / (p_ * q_ *
+                                                                   mu);
+  return A + B*dmu;
+}
+
 std::vector<std::shared_ptr<Interpolate>> 
     make_vector(const std::vector<double> & iv)
 {

@@ -96,6 +96,14 @@ PYBIND11_MODULE(interpolate, m) {
                                                            {"V0", "D", "T0"});
         }))
       ;
+
+  py::class_<MTSInterpolate, Interpolate, std::shared_ptr<MTSInterpolate>>(m, "MTSInterpolate")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<MTSInterpolate>(args, kwargs, 
+                  {"tau0", "g0", "q", "p", "k", "b", "mu"});
+        }))
+      ;
 }
 
 } // namespace neml
