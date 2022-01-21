@@ -56,8 +56,8 @@ if __name__ == "__main__":
   erate = float(rate)
   Ts = np.array([298.0, 423.0, 523.0, 623.0, 773.0, 873.0, 973.0, 1073.0, 1173.0])
   
-  path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Huang-2007-MSEA/"
-  path_2 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Yapici-2014-MD/"
+  path_1 = xxxxx
+  path_2 = xxxxx
 
   for T in Ts:
     if T < 1000.0:
