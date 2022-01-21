@@ -56,13 +56,13 @@ def Ti_singlecrystal(verbose = True, PTR = True,
   # Constant part of the strength for slip and twin
   taus_1 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [200.0, 145.0, 100.0, 70.0, 53.0, 38.0, 24.0, 15.0, 7.0])
+      [200.0, 145.0, 100.0, 70.0, 53.0, 38.0, 18.0, 15.0, 9.0])
   taus_2 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [120.0, 70.5, 60.0, 60.0, 43.0, 38.0, 24.0, 15.0, 7.0])
+      [120.0, 70.5, 60.0, 60.0, 43.0, 38.0, 18.0, 15.0, 9.0])
   taus_3 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [230.0, 185.0, 145.0, 110.0, 87.0, 61.0, 24.0, 15.0, 7.0])
+      [230.0, 185.0, 145.0, 110.0, 87.0, 61.0, 35.0, 20.0, 11.0])
   taut_1 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
       [200.0, 170.0, 160.0, 150.0, 120.0, 110.0, 100.0, 100.0, 100.0])
@@ -126,13 +126,13 @@ def Ti_singlecrystal(verbose = True, PTR = True,
 
   k2_1 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [250.0, 280.0, 330.0, 450.0, 500.0, 600.0, 1000.0, 1200.0, 1400.0])
+      [250.0, 280.0, 330.0, 450.0, 500.0, 600.0, 1020.0, 1200.0, 1400.0])
   k2_2 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [250.0, 280.0, 330.0, 450.0, 500.0, 600.0, 1000.0, 1200.0, 1400.0])
+      [250.0, 280.0, 330.0, 450.0, 500.0, 600.0, 1020.0, 1200.0, 1400.0])
   k2_3 = interpolate.PiecewiseLinearInterpolate(
       list(Ts),
-      [250.0, 280.0, 330.0, 450.0, 500.0, 600.0, 1000.0, 1200.0, 1400.0])
+      [250.0, 280.0, 330.0, 450.0, 500.0, 600.0, 1020.0, 1200.0, 1400.0])
 
   k2 = np.array([k2_1]*3+[k2_2]*3+[k2_3]*6)
 
