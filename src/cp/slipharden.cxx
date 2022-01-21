@@ -4,6 +4,12 @@
 
 namespace neml {
 
+SlipHardening::SlipHardening(ParameterSet & params): 
+    NEMLObject(params)
+{
+
+}
+
 History SlipHardening::cache(CacheType type) const
 {
   switch (type) {
@@ -49,9 +55,9 @@ bool SlipHardening::use_nye() const
   return false;
 }
 
-FixedStrengthHardening::FixedStrengthHardening(
-    std::vector<std::shared_ptr<Interpolate>> strengths) :
-      strengths_(strengths)
+FixedStrengthHardening::FixedStrengthHardening(ParameterSet & params) :
+    SlipHardening(params),
+    strengths_(params.get_object_parameter_vector<Interpolate>("strengths"))
 {
   init_cache_();
 }
@@ -63,8 +69,7 @@ std::string FixedStrengthHardening::type()
 
 std::unique_ptr<NEMLObject> FixedStrengthHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<FixedStrengthHardening>(
-      params.get_object_parameter_vector<Interpolate>("strengths"));
+  return neml::make_unique<FixedStrengthHardening>(params);
 }
 
 ParameterSet FixedStrengthHardening::parameters()
@@ -140,13 +145,13 @@ History FixedStrengthHardening::d_hist_d_h(const Symmetric & stress,
   return blank_hist().derivative<History>();
 }
 
-VocePerSystemHardening::VocePerSystemHardening(
-    std::vector<double> initial,
-    std::vector<std::shared_ptr<Interpolate>> k,
-    std::vector<std::shared_ptr<Interpolate>> sat,
-    std::vector<std::shared_ptr<Interpolate>> m,
-    std::string varprefix) :
-      initial_(initial), k_(k), sat_(sat), m_(m), varprefix_(varprefix)
+VocePerSystemHardening::VocePerSystemHardening(ParameterSet & params) :
+    SlipHardening(params),
+    initial_(params.get_parameter<std::vector<double>>("initial")), 
+    k_(params.get_object_parameter_vector<Interpolate>("k")), 
+    sat_(params.get_object_parameter_vector<Interpolate>("saturation")), 
+    m_(params.get_object_parameter_vector<Interpolate>("m")), 
+    varprefix_(params.get_parameter<std::string>("varprefix"))
 {
   varnames_.resize(size_());
   for (size_t i = 0; i < size_(); i++) {
@@ -163,12 +168,7 @@ std::string VocePerSystemHardening::type()
 
 std::unique_ptr<NEMLObject> VocePerSystemHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<VocePerSystemHardening>(
-      params.get_parameter<std::vector<double>>("initial"),
-      params.get_object_parameter_vector<Interpolate>("k"),
-      params.get_object_parameter_vector<Interpolate>("saturation"),
-      params.get_object_parameter_vector<Interpolate>("m"),
-      params.get_parameter<std::string>("varprefix"));
+  return neml::make_unique<VocePerSystemHardening>(params);
 }
 
 ParameterSet VocePerSystemHardening::parameters()
@@ -333,11 +333,11 @@ void VocePerSystemHardening::consistency_(Lattice & L) const
     throw std::logic_error("Hardening model size not consistent with lattice!");
 }
 
-FASlipHardening::FASlipHardening(
-    std::vector<std::shared_ptr<Interpolate>> k,
-    std::vector<std::shared_ptr<Interpolate>> sat,
-    std::string varprefix) :
-      k_(k), sat_(sat), varprefix_(varprefix)
+FASlipHardening::FASlipHardening(ParameterSet & params) :
+    SlipHardening(params),
+    k_(params.get_object_parameter_vector<Interpolate>("k")),
+    sat_(params.get_object_parameter_vector<Interpolate>("saturation")),
+    varprefix_(params.get_parameter<std::string>("varprefix"))
 {
   varnames_.resize(size_());
   for (size_t i = 0; i < size_(); i++) {
@@ -354,10 +354,7 @@ std::string FASlipHardening::type()
 
 std::unique_ptr<NEMLObject> FASlipHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<FASlipHardening>(
-      params.get_object_parameter_vector<Interpolate>("k"),
-      params.get_object_parameter_vector<Interpolate>("saturation"),
-      params.get_parameter<std::string>("varprefix"));
+  return neml::make_unique<FASlipHardening>(params);
 }
 
 ParameterSet FASlipHardening::parameters()
@@ -513,11 +510,12 @@ void FASlipHardening::consistency_(Lattice & L) const
     throw std::logic_error("Hardening model size not consistent with lattice!");
 }
 
-GeneralLinearHardening::GeneralLinearHardening(std::shared_ptr<SquareMatrix> M, 
-                                               std::vector<double> tau_0,
-                                               bool absval,
-                                               std::string varprefix) :
-    M_(M), tau_0_(tau_0), absval_(absval), varprefix_(varprefix)
+GeneralLinearHardening::GeneralLinearHardening(ParameterSet & params) :
+    SlipHardening(params),
+    M_(params.get_object_parameter<SquareMatrix>("M")), 
+    tau_0_(params.get_parameter<std::vector<double>>("tau_0")), 
+    absval_(params.get_parameter<bool>("absval")), 
+    varprefix_(params.get_parameter<std::string>("varprefix"))
 {
   if (M_->n() != tau_0_.size()) {
     throw std::invalid_argument("Hardening matrix and initial strength sizes do not agree!");
@@ -537,11 +535,7 @@ std::string GeneralLinearHardening::type()
 
 std::unique_ptr<NEMLObject> GeneralLinearHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<GeneralLinearHardening>(
-      params.get_object_parameter<SquareMatrix>("M"),
-      params.get_parameter<std::vector<double>>("tau_0"),
-      params.get_parameter<bool>("absval"),
-      params.get_parameter<std::string>("varprefix"));
+  return neml::make_unique<GeneralLinearHardening>(params);
 }
 
 ParameterSet GeneralLinearHardening::parameters()
@@ -745,10 +739,11 @@ void GeneralLinearHardening::consistency(Lattice & L) const
   }
 }
 
-SimpleLinearHardening::SimpleLinearHardening(std::shared_ptr<SquareMatrix> G, 
-                                               std::vector<double> tau_0,
-                                               std::string varprefix) :
-    G_(G), tau_0_(tau_0), varprefix_(varprefix)
+SimpleLinearHardening::SimpleLinearHardening(ParameterSet & params) :
+    SlipHardening(params),
+    G_(params.get_object_parameter<SquareMatrix>("G")), 
+    tau_0_(params.get_parameter<std::vector<double>>("tau_0")), 
+    varprefix_(params.get_parameter<std::string>("varprefix"))
 {
   if (G_->n() != tau_0_.size()) {
     throw std::invalid_argument("Hardening matrix and initial strength sizes do not agree!");
@@ -768,10 +763,7 @@ std::string SimpleLinearHardening::type()
 
 std::unique_ptr<NEMLObject> SimpleLinearHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SimpleLinearHardening>(
-      params.get_object_parameter<SquareMatrix>("G"),
-      params.get_parameter<std::vector<double>>("tau_0"),
-      params.get_parameter<std::string>("varprefix"));
+  return neml::make_unique<SimpleLinearHardening>(params);
 }
 
 ParameterSet SimpleLinearHardening::parameters()
@@ -945,19 +937,16 @@ void SimpleLinearHardening::consistency(Lattice & L) const
   }
 }
 
-
-LANLTiModel::LANLTiModel(
-	std::vector<std::shared_ptr<Interpolate>> tau_0, 
-	std::shared_ptr<SquareMatrix> C_st,
-	std::vector<std::shared_ptr<Interpolate>> mu, 
-	std::vector<std::shared_ptr<Interpolate>> k1, 
-	std::vector<std::shared_ptr<Interpolate>> k2, 
-	double X_s,
-	std::string varprefix,
-	std::string twinprefix):
-      tau_0_(tau_0), C_st_(C_st), mu_(mu),
-	  k1_(k1), k2_(k2), X_s_(X_s),
-      varprefix_(varprefix), twinprefix_(twinprefix)
+LANLTiModel::LANLTiModel(ParameterSet & params) :
+    SlipHardening(params),
+    tau_0_(params.get_object_parameter_vector<Interpolate>("tau_0")), 
+    C_st_(params.get_object_parameter<SquareMatrix>("C_st")), 
+    mu_(params.get_object_parameter_vector<Interpolate>("mu")),
+	  k1_(params.get_object_parameter_vector<Interpolate>("k1")), 
+    k2_(params.get_object_parameter_vector<Interpolate>("k2")), 
+    X_s_(params.get_parameter<double>("X_s")),
+    varprefix_(params.get_parameter<std::string>("varprefix")), 
+    twinprefix_(params.get_parameter<std::string>("twinprefix"))
 { 
   // Shouldn't tau_0 be 24 and C_st be 12?
   // Long term you should fix the /2
@@ -984,15 +973,7 @@ std::string LANLTiModel::type()
 
 std::unique_ptr<NEMLObject> LANLTiModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<LANLTiModel>(
-	  params.get_object_parameter_vector<Interpolate>("tau_0"),	  
-      params.get_object_parameter<SquareMatrix>("C_st"),
-	  params.get_object_parameter_vector<Interpolate>("mu"),
-	  params.get_object_parameter_vector<Interpolate>("k1"),
-	  params.get_object_parameter_vector<Interpolate>("k2"),
-	  params.get_parameter<double>("X_s"),
-      params.get_parameter<std::string>("varprefix"),
-	  params.get_parameter<std::string>("twinprefix"));
+  return neml::make_unique<LANLTiModel>(params);
 }
 
 ParameterSet LANLTiModel::parameters()
@@ -1254,6 +1235,12 @@ void LANLTiModel::consistency(Lattice & L) const
   }
 }
 
+SlipSingleHardening::SlipSingleHardening(ParameterSet & params) :
+    SlipHardening(params)
+{
+
+}
+
 double SlipSingleHardening::hist_to_tau(
     size_t g, size_t i, const History & history, Lattice & L, double T, 
     const History & fixed) const
@@ -1268,8 +1255,10 @@ History SlipSingleHardening::d_hist_to_tau(
   return d_hist_map(history, T, fixed);
 }
 
-SlipSingleStrengthHardening::SlipSingleStrengthHardening(std::string var_name)
-  : var_name_(var_name)
+SlipSingleStrengthHardening::SlipSingleStrengthHardening(ParameterSet & params)
+  : 
+      SlipSingleHardening(params),
+      var_name_(params.get_parameter<std::string>("var_name"))
 {
 
 }
@@ -1393,9 +1382,10 @@ double SlipSingleStrengthHardening::nye_part(const RankTwo & nye, double T) cons
   return 0.0;
 }
 
-SumSlipSingleStrengthHardening::SumSlipSingleStrengthHardening(
-    std::vector<std::shared_ptr<SlipSingleStrengthHardening>> models)
-  :   models_(models)
+SumSlipSingleStrengthHardening::SumSlipSingleStrengthHardening(ParameterSet &
+                                                               params) :
+    SlipSingleHardening(params),
+    models_(params.get_object_parameter_vector<SlipSingleStrengthHardening>("models"))
 {
   for (size_t i = 0; i < nmodels(); i++) {
     models_[i]->set_variable("strength"+std::to_string(i));
@@ -1430,8 +1420,7 @@ std::string SumSlipSingleStrengthHardening::type()
 std::unique_ptr<NEMLObject> SumSlipSingleStrengthHardening::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<SumSlipSingleStrengthHardening>(
-      params.get_object_parameter_vector<SlipSingleStrengthHardening>("models"));
+  return neml::make_unique<SumSlipSingleStrengthHardening>(params);
 }
 
 ParameterSet SumSlipSingleStrengthHardening::parameters()
@@ -1566,8 +1555,8 @@ bool SumSlipSingleStrengthHardening::use_nye() const
   return false;
 }
 
-PlasticSlipHardening::PlasticSlipHardening(std::string var_name) 
-  : SlipSingleStrengthHardening(var_name)
+PlasticSlipHardening::PlasticSlipHardening(ParameterSet & params) 
+  : SlipSingleStrengthHardening(params)
 {
 
 }
@@ -1638,13 +1627,12 @@ History PlasticSlipHardening::d_hist_rate_d_hist_ext(const Symmetric & stress,
   return res;
 }
 
-VoceSlipHardening::VoceSlipHardening(std::shared_ptr<Interpolate> tau_sat,
-                                     std::shared_ptr<Interpolate> b,
-                                     std::shared_ptr<Interpolate> tau_0,
-                                     std::shared_ptr<Interpolate> k,
-                                     std::string var_name) :
-    PlasticSlipHardening(var_name), tau_sat_(tau_sat), b_(b), tau_0_(tau_0), 
-    k_(k)
+VoceSlipHardening::VoceSlipHardening(ParameterSet & params) :
+    PlasticSlipHardening(params),
+    tau_sat_( params.get_object_parameter<Interpolate>("tau_sat")),
+    b_(params.get_object_parameter<Interpolate>("b")),
+    tau_0_(params.get_object_parameter<Interpolate>("tau_0")), 
+    k_(params.get_object_parameter<Interpolate>("k"))
 {
   init_cache_();
 }
@@ -1657,11 +1645,7 @@ std::string VoceSlipHardening::type()
 std::unique_ptr<NEMLObject> VoceSlipHardening::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<VoceSlipHardening>(
-      params.get_object_parameter<Interpolate>("tau_sat"),
-      params.get_object_parameter<Interpolate>("b"),
-      params.get_object_parameter<Interpolate>("tau_0"),
-      params.get_object_parameter<Interpolate>("k"));
+  return neml::make_unique<VoceSlipHardening>(params);
 }
 
 ParameterSet VoceSlipHardening::parameters()
@@ -1672,8 +1656,8 @@ ParameterSet VoceSlipHardening::parameters()
   pset.add_parameter<NEMLObject>("b");
   pset.add_parameter<NEMLObject>("tau_0");
 
-  pset.add_optional_parameter<NEMLObject>("k", 
-                                    std::make_shared<ConstantInterpolate>(0));
+  pset.add_optional_parameter<NEMLObject>("k", make_constant(0));
+  pset.add_optional_parameter<std::string>("var_name", std::string("strength"));
 
   return pset;
 }
@@ -1726,11 +1710,11 @@ double VoceSlipHardening::nye_part(const RankTwo & nye, double T) const
   return k_->value(T) * sqrt(nye.norm());
 }
 
-LinearSlipHardening::LinearSlipHardening(std::shared_ptr<Interpolate> tau0,
-                                         std::shared_ptr<Interpolate> k1,
-                                         std::shared_ptr<Interpolate> k2,
-                                         std::string var_name) :
-    PlasticSlipHardening(var_name), tau0_(tau0), k1_(k1), k2_(k2)
+LinearSlipHardening::LinearSlipHardening(ParameterSet & params) :
+    PlasticSlipHardening(params),
+    tau0_(params.get_object_parameter<Interpolate>("tau0")),
+    k1_(params.get_object_parameter<Interpolate>("k1")),
+    k2_(params.get_object_parameter<Interpolate>("k2"))
 {
   init_cache_();
 }
@@ -1743,10 +1727,7 @@ std::string LinearSlipHardening::type()
 std::unique_ptr<NEMLObject> LinearSlipHardening::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<LinearSlipHardening>(
-      params.get_object_parameter<Interpolate>("tau0"),
-      params.get_object_parameter<Interpolate>("k1"),
-      params.get_object_parameter<Interpolate>("k2"));
+  return neml::make_unique<LinearSlipHardening>(params);
 }
 
 ParameterSet LinearSlipHardening::parameters()
@@ -1756,6 +1737,8 @@ ParameterSet LinearSlipHardening::parameters()
   pset.add_parameter<NEMLObject>("tau0");
   pset.add_parameter<NEMLObject>("k1");
   pset.add_parameter<NEMLObject>("k2");
+
+  pset.add_optional_parameter<std::string>("var_name", std::string("strength"));
 
   return pset;
 }

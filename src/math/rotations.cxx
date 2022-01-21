@@ -65,30 +65,6 @@ Quaternion::~Quaternion()
   quat_ = nullptr;
 }
 
-std::string Quaternion::type()
-{
-  return "Quaternion";
-}
-
-ParameterSet Quaternion::parameters()
-{
-  ParameterSet pset(Quaternion::type());
-
-  pset.add_parameter<std::vector<double>>("quat");
-
-  return pset;
-}
-
-std::unique_ptr<NEMLObject> Quaternion::initialize(ParameterSet & params)
-{
-  std::vector<double> p = params.get_parameter<std::vector<double>>("quat");
-  if (p.size() != 4) {
-    throw std::runtime_error("Input quaternion must be length 4!");
-  }
-
-  return neml::make_unique<Quaternion>(p);
-}
-
 Quaternion & Quaternion::operator=(const Quaternion & rhs)
 {
   // Copy
@@ -394,36 +370,6 @@ std::ostream & operator<<(std::ostream & os, const Quaternion & q)
 }
 
 // Unit quaternion stuff
-
-std::string Orientation::type()
-{
-  return "Orientation";
-}
-
-ParameterSet Orientation::parameters()
-{
-  ParameterSet pset(Orientation::type());
-
-  pset.add_parameter<std::vector<double>>("angles");
-  pset.add_optional_parameter<std::string>("angle_type", "radians");
-  pset.add_optional_parameter<std::string>("angle_convention", "kocks");
-
-  return pset;
-}
-
-std::unique_ptr<NEMLObject> Orientation::initialize(ParameterSet & params)
-{
-  std::vector<double> angles = params.get_parameter<std::vector<double>>("angles");
-  if (angles.size() != 3) {
-    throw std::runtime_error("Orientation parameter angles must be length three!");
-  }
-
-  return std::unique_ptr<Orientation>(new Orientation(
-          Orientation::createEulerAngles(angles[0], angles[1], angles[2],
-                                         params.get_parameter<std::string>("angle_type"))
-          ));
-}
-
 Orientation Orientation::createRodrigues(const double * const r)
 {
   Orientation q;
@@ -1101,6 +1047,46 @@ Orientation rotate_to_family(const Vector & a, const Vector & b, double ang)
   Orientation null = Orientation::createAxisAngle(b.data(), ang);
 
   return null * base;
+}
+
+// Create from Euler angles stored in params
+CrystalOrientation::CrystalOrientation(ParameterSet & params) :
+    NEMLObject(params), Orientation()
+{
+  std::vector<double> angles = params.get_parameter<std::vector<double>>("angles");
+  setEulerAngles(angles[0], angles[1], angles[2],
+                 params.get_parameter<std::string>("angle_type"),
+                 params.get_parameter<std::string>("angle_convention"));
+}
+
+std::string CrystalOrientation::type()
+{
+  return "CrystalOrientation";
+}
+
+ParameterSet CrystalOrientation::parameters()
+{
+  ParameterSet pset(CrystalOrientation::type());
+
+  pset.add_parameter<std::vector<double>>("angles");
+  pset.add_optional_parameter<std::string>("angle_type", std::string("radians"));
+  pset.add_optional_parameter<std::string>("angle_convention",
+                                           std::string("kocks"));
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> CrystalOrientation::initialize(ParameterSet & params)
+{
+  return neml::make_unique<CrystalOrientation>(params);
+}
+
+std::shared_ptr<CrystalOrientation> zero_orientation()
+{
+  ParameterSet params = CrystalOrientation::parameters();
+  params.assign_parameter("angles", std::vector<double>({0,0,0}));
+
+  return std::make_shared<CrystalOrientation>(params);
 }
 
 } // namespace cpfmwk

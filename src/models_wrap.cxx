@@ -3,6 +3,7 @@
 #include "models.h"
 
 #include "nemlerror.h"
+#include "parse.h"
 
 namespace py = pybind11;
 
@@ -17,6 +18,7 @@ PYBIND11_MODULE(models, m) {
   m.doc() = "Base class for all material models.";
   
   py::class_<NEMLModel, NEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
+      .def("save", &NEMLModel::save)
       .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
       .def("init_store",
            [](NEMLModel & m) -> py::array_t<double>
@@ -95,6 +97,7 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainElasticity, NEMLModel_sd, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity")
+      PICKLEABLE(SmallStrainElasticity)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<SmallStrainElasticity>(args, kwargs,
@@ -115,6 +118,7 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainPerfectPlasticity, SubstepModel_sd, Solvable, std::shared_ptr<SmallStrainPerfectPlasticity>>(m, "SmallStrainPerfectPlasticity")
+      PICKLEABLE(SmallStrainPerfectPlasticity)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<SmallStrainPerfectPlasticity>(args, kwargs,
@@ -142,6 +146,7 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, SubstepModel_sd, Solvable, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
+      PICKLEABLE(SmallStrainRateIndependentPlasticity)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<SmallStrainRateIndependentPlasticity>(args, kwargs,
@@ -166,6 +171,7 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<SmallStrainCreepPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity")
+      PICKLEABLE(SmallStrainCreepPlasticity)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<SmallStrainCreepPlasticity>(args, kwargs,
@@ -193,6 +199,7 @@ PYBIND11_MODULE(models, m) {
 
 
   py::class_<GeneralIntegrator, SubstepModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
+      PICKLEABLE(GeneralIntegrator)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<GeneralIntegrator>(args, kwargs, 
@@ -216,6 +223,7 @@ PYBIND11_MODULE(models, m) {
       ;
 
   py::class_<KMRegimeModel, NEMLModel_sd, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel")
+      PICKLEABLE(KMRegimeModel)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
           return create_object_python<KMRegimeModel>(args, kwargs, 

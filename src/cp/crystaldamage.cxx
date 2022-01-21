@@ -4,7 +4,9 @@
 
 namespace neml {
 
-CrystalDamageModel::CrystalDamageModel(std::vector<std::string> vars) :
+CrystalDamageModel::CrystalDamageModel(ParameterSet & params, 
+                                       std::vector<std::string> vars) :
+    NEMLObject(params),
     varnames_(vars)
 {
 
@@ -31,8 +33,8 @@ void CrystalDamageModel::populate_history(History & history) const
     history.add<double>(name);
 }
 
-NilDamageModel::NilDamageModel() :
-    CrystalDamageModel({"whatever"})
+NilDamageModel::NilDamageModel(ParameterSet & params) :
+    CrystalDamageModel(params, {"whatever"})
 {
 
 }
@@ -44,7 +46,7 @@ std::string NilDamageModel::type()
 
 std::unique_ptr<NEMLObject> NilDamageModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<NilDamageModel>();
+  return neml::make_unique<NilDamageModel>(params);
 }
 
 ParameterSet NilDamageModel::parameters()
@@ -133,13 +135,12 @@ History NilDamageModel::d_damage_d_history(const Symmetric & stress,
   return res;
 }
 
-PlanarDamageModel::PlanarDamageModel(
-    std::shared_ptr<SlipPlaneDamage> damage,
-    std::shared_ptr<TransformationFunction> shear_transform,
-    std::shared_ptr<TransformationFunction> normal_transform,
-    std::shared_ptr<Lattice> lattice) :
-      CrystalDamageModel({}), damage_(damage), shear_transform_(shear_transform),
-      normal_transform_(normal_transform), lattice_(lattice)
+PlanarDamageModel::PlanarDamageModel(ParameterSet & params) :
+      CrystalDamageModel(params, {}), 
+      damage_(params.get_object_parameter<SlipPlaneDamage>("damage")), 
+      shear_transform_(params.get_object_parameter<TransformationFunction>("shear_transform")),
+      normal_transform_(params.get_object_parameter<TransformationFunction>("normal_transform")), 
+      lattice_(params.get_object_parameter<Lattice>("lattice"))
 {
   std::vector<std::string> varnames;
   for (size_t i = 0; i < lattice_->nplanes(); i++)
@@ -154,12 +155,7 @@ std::string PlanarDamageModel::type()
 
 std::unique_ptr<NEMLObject> PlanarDamageModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PlanarDamageModel>(
-      params.get_object_parameter<SlipPlaneDamage>("damage"),
-      params.get_object_parameter<TransformationFunction>("shear_transform"),
-      params.get_object_parameter<TransformationFunction>("normal_transform"),
-      params.get_object_parameter<Lattice>("lattice")
-      );
+  return neml::make_unique<PlanarDamageModel>(params);
 }
 
 ParameterSet PlanarDamageModel::parameters()
@@ -439,8 +435,14 @@ History PlanarDamageModel::inelastic_history_(const History & total) const
   return total.subset(names);
 }
 
-WorkPlaneDamage::WorkPlaneDamage() :
-    SlipPlaneDamage()
+SlipPlaneDamage::SlipPlaneDamage(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
+WorkPlaneDamage::WorkPlaneDamage(ParameterSet & params) :
+    SlipPlaneDamage(params)
 {
 
 }
@@ -452,7 +454,7 @@ std::string WorkPlaneDamage::type()
 
 std::unique_ptr<NEMLObject> WorkPlaneDamage::initialize(ParameterSet & params)
 {
-  return neml::make_unique<WorkPlaneDamage>();
+  return neml::make_unique<WorkPlaneDamage>(params);
 }
 
 ParameterSet WorkPlaneDamage::parameters()
@@ -514,8 +516,17 @@ double WorkPlaneDamage::d_damage_rate_d_damage(
   return 0;
 }
 
-SigmoidTransformation::SigmoidTransformation(double c, double beta, double cut) :
-    c_(c), beta_(beta), cut_(cut)
+TransformationFunction::TransformationFunction(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
+SigmoidTransformation::SigmoidTransformation(ParameterSet & params) :
+    TransformationFunction(params),
+    c_(params.get_parameter<double>("c")), 
+    beta_(params.get_parameter<double>("beta")), 
+    cut_(params.get_parameter<double>("cut"))
 {
 
 }
@@ -528,10 +539,7 @@ std::string SigmoidTransformation::type()
 std::unique_ptr<NEMLObject> SigmoidTransformation::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<SigmoidTransformation>(
-      params.get_parameter<double>("c"),
-      params.get_parameter<double>("beta"),
-      params.get_parameter<double>("cut"));
+  return neml::make_unique<SigmoidTransformation>(params);
 }
 
 ParameterSet SigmoidTransformation::parameters()
@@ -580,9 +588,9 @@ double SigmoidTransformation::d_map_d_normal(double damage, double normal_stress
   return 0;
 }
 
-SwitchTransformation::SwitchTransformation(
-    std::shared_ptr<TransformationFunction> base) :
-      base_(base)
+SwitchTransformation::SwitchTransformation(ParameterSet & params) :
+    TransformationFunction(params),
+    base_(params.get_object_parameter<TransformationFunction>("base"))
 {
 
 }
@@ -595,8 +603,7 @@ std::string SwitchTransformation::type()
 std::unique_ptr<NEMLObject> SwitchTransformation::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<SwitchTransformation>(
-      params.get_object_parameter<TransformationFunction>("base"));
+  return neml::make_unique<SwitchTransformation>(params);
 }
 
 ParameterSet SwitchTransformation::parameters()

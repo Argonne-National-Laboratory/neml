@@ -7,6 +7,12 @@
 
 namespace neml {
 
+ViscoPlasticFlowRule::ViscoPlasticFlowRule(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
 // Default implementation of flow rule wrt time
 int ViscoPlasticFlowRule::g_time(const double * const s, 
                                  const double * const alpha, double T, 
@@ -112,10 +118,17 @@ void ViscoPlasticFlowRule::override_guess(double * const guess)
   return;
 }
 
+GFlow::GFlow(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
 // Various g(s) implementations
-GPowerLaw::GPowerLaw(std::shared_ptr<Interpolate> n, 
-                     std::shared_ptr<Interpolate> eta) :
-    n_(n), eta_(eta)
+GPowerLaw::GPowerLaw(ParameterSet & params) :
+    GFlow(params),
+    n_(params.get_object_parameter<Interpolate>("n")), 
+    eta_(params.get_object_parameter<Interpolate>("eta"))
 {
 
 }
@@ -137,10 +150,7 @@ ParameterSet GPowerLaw::parameters()
 
 std::unique_ptr<NEMLObject> GPowerLaw::initialize(ParameterSet & params)
 {
-  return neml::make_unique<GPowerLaw>(
-      params.get_object_parameter<Interpolate>("n"),
-      params.get_object_parameter<Interpolate>("eta")
-      ); 
+  return neml::make_unique<GPowerLaw>(params); 
 }
 
 double GPowerLaw::g(double f, double T) const
@@ -164,10 +174,11 @@ double GPowerLaw::eta(double T) const
   return eta_->value(T);
 }
 
-PerzynaFlowRule::PerzynaFlowRule(std::shared_ptr<YieldSurface> surface,
-                std::shared_ptr<HardeningRule> hardening,
-                std::shared_ptr<GFlow> g) :
-    surface_(surface), hardening_(hardening), g_(g)
+PerzynaFlowRule::PerzynaFlowRule(ParameterSet & params) :
+    ViscoPlasticFlowRule(params),
+    surface_(params.get_object_parameter<YieldSurface>("surface")), 
+    hardening_(params.get_object_parameter<HardeningRule>("hardening")), 
+    g_(params.get_object_parameter<GFlow>("g"))
 {
   
 }
@@ -190,11 +201,7 @@ ParameterSet PerzynaFlowRule::parameters()
 
 std::unique_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PerzynaFlowRule>(
-      params.get_object_parameter<YieldSurface>("surface"),
-      params.get_object_parameter<HardeningRule>("hardening"),
-      params.get_object_parameter<GFlow>("g")
-      ); 
+  return neml::make_unique<PerzynaFlowRule>(params); 
 }
 
 size_t PerzynaFlowRule::nhist() const
@@ -386,9 +393,16 @@ int PerzynaFlowRule::dh_da(const double * const s, const double * const alpha, d
   return mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
 }
 
+FluidityModel::FluidityModel(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
 // Begin Chaboche
-ConstantFluidity::ConstantFluidity(std::shared_ptr<Interpolate> eta) :
-    eta_(eta)
+ConstantFluidity::ConstantFluidity(ParameterSet & params) :
+    FluidityModel(params),
+    eta_(params.get_object_parameter<Interpolate>("eta"))
 {
 
 }
@@ -409,9 +423,7 @@ ParameterSet ConstantFluidity::parameters()
 
 std::unique_ptr<NEMLObject> ConstantFluidity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<ConstantFluidity>(
-      params.get_object_parameter<Interpolate>("eta")
-      ); 
+  return neml::make_unique<ConstantFluidity>(params); 
 }
 
 
@@ -425,10 +437,11 @@ double ConstantFluidity::deta(double a, double T) const
   return 0.0;
 }
 
-SaturatingFluidity::SaturatingFluidity(std::shared_ptr<Interpolate> K0,
-                   std::shared_ptr<Interpolate> A,
-                   std::shared_ptr<Interpolate> b)
-  : K0_(K0), A_(A), b_(b)
+SaturatingFluidity::SaturatingFluidity(ParameterSet & params):
+    FluidityModel(params),
+    K0_(params.get_object_parameter<Interpolate>("K0")),
+    A_(params.get_object_parameter<Interpolate>("A")),
+    b_(params.get_object_parameter<Interpolate>("b"))
 {
 
 }
@@ -451,11 +464,7 @@ ParameterSet SaturatingFluidity::parameters()
 
 std::unique_ptr<NEMLObject> SaturatingFluidity::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SaturatingFluidity>(
-      params.get_object_parameter<Interpolate>("K0"),
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("b")
-      ); 
+  return neml::make_unique<SaturatingFluidity>(params); 
 }
 
 
@@ -476,13 +485,17 @@ double SaturatingFluidity::deta(double a, double T) const
   return A * b * exp(-b * a);
 }
 
-ChabocheFlowRule::ChabocheFlowRule(
-    std::shared_ptr<YieldSurface> surface,
-    std::shared_ptr<NonAssociativeHardening> hardening,
-    std::shared_ptr<FluidityModel> fluidity, std::shared_ptr<Interpolate> n,
-    std::shared_ptr<Interpolate> prefactor)
-    : surface_(surface), hardening_(hardening), fluidity_(fluidity), n_(n),
-      prefactor_(prefactor), recovery_(false) {}
+ChabocheFlowRule::ChabocheFlowRule(ParameterSet & params) :
+    ViscoPlasticFlowRule(params),
+    surface_(params.get_object_parameter<YieldSurface>("surface")), 
+    hardening_(params.get_object_parameter<NonAssociativeHardening>("hardening")), 
+    fluidity_(params.get_object_parameter<FluidityModel>("fluidity")), 
+    n_(params.get_object_parameter<Interpolate>("n")),
+    prefactor_(params.get_object_parameter<Interpolate>("prefactor")), 
+    recovery_(false)
+{
+
+}
 
 std::string ChabocheFlowRule::type()
 {
@@ -497,18 +510,13 @@ ParameterSet ChabocheFlowRule::parameters() {
   pset.add_parameter<NEMLObject>("fluidity");
   pset.add_parameter<NEMLObject>("n");
   pset.add_optional_parameter<NEMLObject>(
-      "prefactor", std::make_shared<ConstantInterpolate>(1.0));
+      "prefactor", make_constant(1.0));
 
   return pset;
 }
 
-std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet &params) {
-  return neml::make_unique<ChabocheFlowRule>(
-      params.get_object_parameter<YieldSurface>("surface"),
-      params.get_object_parameter<NonAssociativeHardening>("hardening"),
-      params.get_object_parameter<FluidityModel>("fluidity"),
-      params.get_object_parameter<Interpolate>("n"),
-      params.get_object_parameter<Interpolate>("prefactor"));
+std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params) {
+  return neml::make_unique<ChabocheFlowRule>(params);
 }
 
 size_t ChabocheFlowRule::nhist() const
@@ -721,7 +729,8 @@ int ChabocheFlowRule::dh_da_temp(const double * const s, const double * const al
   return hardening_->dh_da_temp(s, alpha, T, dhv);
 }
 
-YaguchiGr91FlowRule::YaguchiGr91FlowRule()
+YaguchiGr91FlowRule::YaguchiGr91FlowRule(ParameterSet & params) : 
+    ViscoPlasticFlowRule(params)
 {
 
 }
@@ -740,7 +749,7 @@ ParameterSet YaguchiGr91FlowRule::parameters()
 
 std::unique_ptr<NEMLObject> YaguchiGr91FlowRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<YaguchiGr91FlowRule>(); 
+  return neml::make_unique<YaguchiGr91FlowRule>(params); 
 }
 
 

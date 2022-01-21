@@ -2,6 +2,8 @@
 
 #include "cp/singlecrystal.h"
 
+#include "parse.h"
+
 namespace py = pybind11;
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
@@ -18,6 +20,7 @@ PYBIND11_MODULE(singlecrystal, m) {
       ;
 
   py::class_<SingleCrystalModel, NEMLModel_ldi, Solvable, std::shared_ptr<SingleCrystalModel>>(m, "SingleCrystalModel")
+      PICKLEABLE(SingleCrystalModel)
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {
                       return create_object_python<SingleCrystalModel>(args, 

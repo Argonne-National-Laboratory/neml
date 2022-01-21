@@ -10,6 +10,12 @@
 
 namespace neml {
 
+YieldSurface::YieldSurface(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
 std::string IsoJ2::type()
 {
   return "IsoJ2";
@@ -17,7 +23,7 @@ std::string IsoJ2::type()
 
 std::unique_ptr<NEMLObject> IsoJ2::initialize(ParameterSet & params)
 {
-  return neml::make_unique<IsoJ2>(); 
+  return neml::make_unique<IsoJ2>(params); 
 }
 
 ParameterSet IsoJ2::parameters()
@@ -28,12 +34,8 @@ ParameterSet IsoJ2::parameters()
 }
 
 // Combined isotropic/kinematic J2 surface
-IsoKinJ2::IsoKinJ2()
-{
-
-}
-
-IsoKinJ2::~IsoKinJ2()
+IsoKinJ2::IsoKinJ2(ParameterSet & params) :
+    YieldSurface(params)
 {
 
 }
@@ -45,7 +47,7 @@ std::string IsoKinJ2::type()
 
 std::unique_ptr<NEMLObject> IsoKinJ2::initialize(ParameterSet & params)
 {
-  return neml::make_unique<IsoKinJ2>(); 
+  return neml::make_unique<IsoKinJ2>(params); 
 }
 
 ParameterSet IsoKinJ2::parameters()
@@ -219,14 +221,10 @@ int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
 
 // J2I1 implementation
 // Combined isotropic/kinematic with some I1 contribution
-IsoKinJ2I1::IsoKinJ2I1(std::shared_ptr<Interpolate> h, 
-                       std::shared_ptr<Interpolate> l) :
-    h_(h), l_(l)
-{
-
-}
-
-IsoKinJ2I1::~IsoKinJ2I1()
+IsoKinJ2I1::IsoKinJ2I1(ParameterSet & params) :
+    YieldSurface(params),
+    h_(params.get_object_parameter<Interpolate>("h")),
+    l_(params.get_object_parameter<Interpolate>("l"))
 {
 
 }
@@ -238,10 +236,7 @@ std::string IsoKinJ2I1::type()
 
 std::unique_ptr<NEMLObject> IsoKinJ2I1::initialize(ParameterSet & params)
 {
-  return neml::make_unique<IsoKinJ2I1>(
-      params.get_object_parameter<Interpolate>("h"),
-      params.get_object_parameter<Interpolate>("l")
-      ); 
+  return neml::make_unique<IsoKinJ2I1>(params); 
 }
 
 ParameterSet IsoKinJ2I1::parameters()
@@ -470,10 +465,7 @@ std::string IsoJ2I1::type()
 
 std::unique_ptr<NEMLObject> IsoJ2I1::initialize(ParameterSet & params)
 {
-  return neml::make_unique<IsoJ2I1>(
-      params.get_object_parameter<Interpolate>("h"),
-      params.get_object_parameter<Interpolate>("l")
-      ); 
+  return neml::make_unique<IsoJ2I1>(params); 
 }
 
 ParameterSet IsoJ2I1::parameters()

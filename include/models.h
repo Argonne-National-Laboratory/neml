@@ -24,6 +24,12 @@ namespace neml {
 //  and provides the methods for reading in material parameters.
 class NEML_EXPORT NEMLModel: public NEMLObject {
   public:
+   NEMLModel(ParameterSet & params);
+   virtual ~NEMLModel() {};
+
+   /// Store model to an XML file
+   virtual void save(std::string file_name, std::string model_name);
+
    /// Total number of stored internal variables
    virtual size_t nstore() const = 0;
    /// Initialize the internal variables
@@ -68,8 +74,7 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
 /// Large deformation incremental update model
 class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
   public:
-    NEMLModel_ldi();
-    virtual ~NEMLModel_ldi();
+    NEMLModel_ldi(ParameterSet & params);
 
    /// The small strain stress update interface
    virtual int update_sd(
@@ -109,10 +114,7 @@ class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
 class NEML_EXPORT NEMLModel_sd: public NEMLModel {
   public:
     /// All small strain models use small strain elasticity and CTE
-    NEMLModel_sd(std::shared_ptr<LinearElasticModel> emodel,
-                 std::shared_ptr<Interpolate> alpha,
-                 bool truesdell);
-    virtual ~NEMLModel_sd();
+    NEMLModel_sd(ParameterSet & params);
 
    /// The small strain stress update interface
    virtual int update_sd(
@@ -177,11 +179,7 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
 /// Adaptive integration, tangent using the usual trick
 class SubstepModel_sd: public NEMLModel_sd, public Solvable {
  public:
-  SubstepModel_sd(std::shared_ptr<LinearElasticModel> emodel,
-                  std::shared_ptr<Interpolate> alpha,
-                  bool truesdell, double rtol, double atol,
-                  int miter, bool verbose, bool linesearch,
-                  int max_divide, bool force_divide);
+  SubstepModel_sd(ParameterSet & params);
 
   /// Complete substep update
   virtual int update_sd(
@@ -265,9 +263,7 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
 class NEML_EXPORT SmallStrainElasticity: public NEMLModel_sd {
  public:
   /// Parameters are the minimum: an elastic model and a thermal expansion
-  SmallStrainElasticity(std::shared_ptr<LinearElasticModel> elastic,
-                        std::shared_ptr<Interpolate> alpha,
-                        bool truesdell);
+  SmallStrainElasticity(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();
@@ -351,15 +347,7 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
   /// Parameters: elastic model, yield surface, yield stress, CTE,
   /// integration tolerance, maximum number of iterations,
   /// verbosity flag, and the maximum number of adaptive subdivisions
-  SmallStrainPerfectPlasticity(std::shared_ptr<LinearElasticModel> elastic,
-                               std::shared_ptr<YieldSurface> surface,
-                               std::shared_ptr<Interpolate> ys,
-                               std::shared_ptr<Interpolate> alpha,
-                               double rtol, double atol, int miter,
-                               bool verbose, bool linesearch,
-                               int max_divide,
-                               bool force_divide,
-                               bool truesdell);
+  SmallStrainPerfectPlasticity(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();
@@ -454,12 +442,7 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   /// Parameters: elasticity model, flow rule, CTE, solver tolerance, maximum
   /// solver iterations, verbosity flag, tolerance on the Kuhn-Tucker conditions
   /// check, and a flag on whether the KT conditions should be evaluated
-  SmallStrainRateIndependentPlasticity(std::shared_ptr<LinearElasticModel> elastic,
-                                       std::shared_ptr<RateIndependentFlowRule> flow,
-                                       std::shared_ptr<Interpolate> alpha, bool truesdell,
-                                       double rtol, double atol, int miter,
-                                       bool verbose, bool linesearch,
-                                       int max_divide, bool force_divide);
+  SmallStrainRateIndependentPlasticity(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();
@@ -553,14 +536,7 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
   /// the CTE, a solution tolerance, the maximum number of nonlinear
   /// iterations, a verbosity flag, and a scale factor to regularize
   /// the nonlinear equations.
-  SmallStrainCreepPlasticity(
-                             std::shared_ptr<LinearElasticModel> elastic,
-                             std::shared_ptr<NEMLModel_sd> plastic,
-                             std::shared_ptr<CreepModel> creep,
-                             std::shared_ptr<Interpolate> alpha,
-                             double rtol, double atol, int miter,
-                             bool verbose, bool linesearch, double sf,
-                             bool truesdell);
+  SmallStrainCreepPlasticity(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();
@@ -626,13 +602,7 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   /// the CTE, the integration tolerance, the maximum
   /// nonlinear iterations, a verbosity flag, and the
   /// maximum number of subdivisions for adaptive integration
-  GeneralIntegrator(std::shared_ptr<LinearElasticModel> elastic,
-                    std::shared_ptr<GeneralFlowRule> rule,
-                    std::shared_ptr<Interpolate> alpha,
-                    bool truesdell, double rtol, double atol,
-                    int miter, bool verbose, bool linesearch,
-                    int max_divide, bool force_divide,
-                    bool skip_first);
+  GeneralIntegrator(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();
@@ -738,12 +708,7 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
   /// the transition activation energies, the Boltzmann constant in appropriate
   /// units, a Burgers vector for normalization, a reference strain rate,
   /// and the CTE.
-  KMRegimeModel(std::shared_ptr<LinearElasticModel> emodel,
-                std::vector<std::shared_ptr<NEMLModel_sd>> models,
-                std::vector<double> gs,
-                double kboltz, double b, double eps0,
-                std::shared_ptr<Interpolate> alpha,
-                bool truesdell);
+  KMRegimeModel(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();

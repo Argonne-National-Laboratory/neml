@@ -28,6 +28,7 @@ Implementations
    sliphardening/SlipSingleHardening
    sliphardening/FixedStrengthHardening
    sliphardening/GeneralLinearHardening
+   sliphardening/SimpleLinearHardening
    sliphardening/VocePerSystemHardening
    sliphardening/FASlipHardening
 

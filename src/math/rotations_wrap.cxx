@@ -81,7 +81,7 @@ PYBIND11_MODULE(rotations, m) {
       .def(py::self / double())
       ;
 
-  py::class_<Orientation, Quaternion, NEMLObject, std::shared_ptr<Orientation>>(m, "Orientation")
+  py::class_<Orientation, Quaternion, std::shared_ptr<Orientation>>(m, "Orientation")
       .def(py::init<Quaternion&>(), "Copy from a quaternion object", py::arg("General quaternion"))
       .def(py::init(
            [](py::array_t<double> n, double a, std::string angles)
@@ -235,6 +235,21 @@ PYBIND11_MODULE(rotations, m) {
 
       .def("distance", &Orientation::distance)
       ;
+
+  py::class_<CrystalOrientation, Orientation, NEMLObject,
+      std::shared_ptr<CrystalOrientation>>(m, "CrystalOrientation")
+      .def(py::init(
+           [](double a, double b, double c, std::string angles, std::string convention)
+           {
+            auto params = CrystalOrientation::parameters();
+            params.assign_parameter("angles", std::vector<double>({a,b,c}));
+            params.assign_parameter("angle_type", angles);
+            params.assign_parameter("angle_convention", convention);
+
+            return new CrystalOrientation(params);
+           }), "Initialize from Euler angles",
+           py::arg("a"), py::arg("b"), py::arg("c"), py::arg("angle_type") = "radians", py::arg("convention") = "kocks")
+  ;
   
   m.def("random_orientations", &random_orientations);
   m.def("wexp", &wexp);

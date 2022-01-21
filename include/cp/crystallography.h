@@ -19,9 +19,7 @@ NEML_EXPORT std::vector<Orientation> symmetry_rotations(std::string sclass);
 class NEML_EXPORT SymmetryGroup: public NEMLObject {
  public:
   /// Initialize with the Hermann-Mauguin notation as a string
-  SymmetryGroup(std::string sclass);
-  /// Destructor
-  virtual ~SymmetryGroup();
+  SymmetryGroup(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -49,14 +47,15 @@ class NEML_EXPORT SymmetryGroup: public NEMLObject {
 
 static Register<SymmetryGroup> regSymmetryGroup;
 
-class NEML_EXPORT Lattice: public NEMLObject {
+std::shared_ptr<SymmetryGroup> get_group(std::string);
+
+class NEML_EXPORT Lattice {
  public:
   /// Initialize with the three lattice vectors, the symmetry group and
   /// (optionally) a initial list of slip systems
   Lattice(Vector a1, Vector a2, Vector a3, std::shared_ptr<SymmetryGroup> symmetry,
           list_systems isystems = {}, twin_systems tsystems = {});
-  /// Destructor
-  virtual ~Lattice();
+  virtual ~Lattice() {}; // clang??
 
   /// Type: slip or twin
   enum SlipType {Slip=0, Twin=1};
@@ -155,6 +154,10 @@ class NEML_EXPORT Lattice: public NEMLObject {
 
   void update_normals_(const std::vector<Vector> & new_planes);
 
+ protected:
+  list_systems current_slip_;
+  twin_systems current_twin_;
+
  private:
   Vector a1_, a2_, a3_, b1_, b2_, b3_;
   const std::shared_ptr<SymmetryGroup> symmetry_;
@@ -179,11 +182,11 @@ class NEML_EXPORT Lattice: public NEMLObject {
   std::vector<std::vector<size_t>> normal_map_;
 };
 
-class NEML_EXPORT CubicLattice: public Lattice {
+class NEML_EXPORT CubicLattice: public NEMLObject, public Lattice {
  public:
   /// Specialized Lattice for cubic systems, initialize with the lattice
   /// parameter
-  CubicLattice(double a, list_systems isystems = {}, twin_systems tsystems = {});
+  CubicLattice(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -191,15 +194,17 @@ class NEML_EXPORT CubicLattice: public Lattice {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Default parameters
   static ParameterSet parameters();
+
+  /// Override serialization to account for dynamic changes
+  virtual ParameterSet & current_parameters();
 };
 
 static Register<CubicLattice> regCubicLattice;
 
-class NEML_EXPORT HCPLattice: public Lattice {
+class NEML_EXPORT HCPLattice: public NEMLObject, public Lattice {
  public:
   /// Specialized to HCP, initialize with a and c
-  HCPLattice(double a, double c, list_systems isystems = {}, twin_systems
-             tsystems = {});
+  HCPLattice(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -212,6 +217,9 @@ class NEML_EXPORT HCPLattice: public Lattice {
   virtual Vector miller2cart_direction(std::vector<int> m);
   /// Convert Miller-Bravais planes to cartesian normal vectors
   virtual Vector miller2cart_plane(std::vector<int> m);
+
+  /// Override serialization to account for dynamic changes
+  virtual ParameterSet & current_parameters();
 
  private:
   void assert_miller_bravais_(std::vector<int> m);

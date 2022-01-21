@@ -4,12 +4,15 @@
 
 namespace neml {
 
-LarsonMillerRelation::LarsonMillerRelation(std::shared_ptr<Interpolate> fn, 
-                                           double C, double rtol, double atol,
-                                           int miter, bool verbose, 
-                                           bool linesearch) :
-    fn_(fn), C_(C), rtol_(rtol), atol_(atol), miter_(miter), verbose_(verbose),
-    linesearch_(linesearch)
+LarsonMillerRelation::LarsonMillerRelation(ParameterSet & params) :
+    NEMLObject(params),
+    fn_(params.get_object_parameter<Interpolate>("function")), 
+    C_(params.get_parameter<double>("C")), 
+    rtol_(params.get_parameter<double>("rtol")), 
+    atol_(params.get_parameter<double>("atol")), 
+    miter_(params.get_parameter<int>("miter")), 
+    verbose_(params.get_parameter<bool>("verbose")),
+    linesearch_(params.get_parameter<bool>("linesearch"))
 {
 
 }
@@ -37,15 +40,7 @@ ParameterSet LarsonMillerRelation::parameters()
 std::unique_ptr<NEMLObject> LarsonMillerRelation::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<LarsonMillerRelation>(
-      params.get_object_parameter<Interpolate>("function"),
-      params.get_parameter<double>("C"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch")
-      ); 
+  return neml::make_unique<LarsonMillerRelation>(params); 
 }
 
 int LarsonMillerRelation::sR(double t, double T, double & s) const

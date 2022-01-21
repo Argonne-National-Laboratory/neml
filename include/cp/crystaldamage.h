@@ -19,7 +19,8 @@ class TransformationFunction;
 /// Abstract base class for slip plane damage models
 class NEML_EXPORT CrystalDamageModel: public NEMLObject {
  public:
-  CrystalDamageModel(std::vector<std::string> vars);
+  CrystalDamageModel(ParameterSet & params,
+                     std::vector<std::string> vars);
 
   /// Report the number of internal variables
   virtual size_t nvars() const;
@@ -74,7 +75,7 @@ class NEML_EXPORT CrystalDamageModel: public NEMLObject {
 /// Temp class to check interface (delete later)
 class NEML_EXPORT NilDamageModel: public CrystalDamageModel {
  public:
-  NilDamageModel();
+  NilDamageModel(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -125,10 +126,7 @@ static Register<NilDamageModel> regNilDamageModel;
 /// plane
 class NEML_EXPORT PlanarDamageModel: public CrystalDamageModel {
  public:
-  PlanarDamageModel(std::shared_ptr<SlipPlaneDamage> damage,
-                    std::shared_ptr<TransformationFunction> shear_transform,
-                    std::shared_ptr<TransformationFunction> normal_transform,
-                    std::shared_ptr<Lattice> lattice);
+  PlanarDamageModel(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -189,6 +187,8 @@ static Register<PlanarDamageModel> regPlanarDamageModel;
 /// Slip plane damage functions
 class NEML_EXPORT SlipPlaneDamage : public NEMLObject {
  public:
+  SlipPlaneDamage(ParameterSet & params);
+
   /// Initial value
   virtual double setup() const = 0;
 
@@ -222,7 +222,7 @@ class NEML_EXPORT SlipPlaneDamage : public NEMLObject {
 class NEML_EXPORT WorkPlaneDamage : public SlipPlaneDamage
 {
  public:
-  WorkPlaneDamage();
+  WorkPlaneDamage(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -266,6 +266,8 @@ static Register<WorkPlaneDamage> regWorkPlaneDamage;
 /// the range [0,1]
 class NEML_EXPORT TransformationFunction: public NEMLObject {
  public:
+  TransformationFunction(ParameterSet & params);
+
   /// Map from damage and the normal stress to [0,1]
   virtual double map(double damage, double normal_stress) = 0;
   /// Derivative of the map with respect to the damage
@@ -277,7 +279,7 @@ class NEML_EXPORT TransformationFunction: public NEMLObject {
 /// Sigmoid function.  x=0 -> y=0, x=c -> y=1, beta controls smoothing
 class NEML_EXPORT SigmoidTransformation: public TransformationFunction {
  public:
-  SigmoidTransformation(double c, double beta, double cut);
+  SigmoidTransformation(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -304,7 +306,7 @@ static Register<SigmoidTransformation> regSigmoidTransformation;
 /// Normal stress switch: don't damage compression
 class NEML_EXPORT SwitchTransformation: public TransformationFunction {
  public:
-  SwitchTransformation(std::shared_ptr<TransformationFunction> base);
+  SwitchTransformation(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

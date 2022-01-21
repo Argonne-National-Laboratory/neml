@@ -4,10 +4,11 @@
 
 namespace neml {
 
-PolycrystalModel::PolycrystalModel(std::shared_ptr<SingleCrystalModel> model,
-                                   std::vector<std::shared_ptr<Orientation>> qs,
-                                   int nthreads) :
-    model_(model), q0s_(qs), nthreads_(nthreads)
+PolycrystalModel::PolycrystalModel(ParameterSet & params) :
+    NEMLModel_ldi(params),
+    model_(params.get_object_parameter<SingleCrystalModel>("model")),
+    q0s_(params.get_object_parameter_vector<Orientation>("qs")),
+    nthreads_(params.get_parameter<int>("nthreads"))
 {
 
 }
@@ -85,10 +86,8 @@ std::vector<Orientation> PolycrystalModel::orientations(double * const store) co
   return res;
 }
 
-TaylorModel::TaylorModel(std::shared_ptr<SingleCrystalModel> model,
-                         std::vector<std::shared_ptr<Orientation>> qs,
-                         int nthreads) :
-    PolycrystalModel(model, qs, nthreads)
+TaylorModel::TaylorModel(ParameterSet & params) :
+    PolycrystalModel(params)
 {
 
 }
@@ -111,10 +110,7 @@ ParameterSet TaylorModel::parameters()
 
 std::unique_ptr<NEMLObject> TaylorModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<TaylorModel>(
-      params.get_object_parameter<SingleCrystalModel>("model"),
-      params.get_object_parameter_vector<Orientation>("qs"),
-      params.get_parameter<int>("nthreads"));
+  return neml::make_unique<TaylorModel>(params);
 }
 
 size_t TaylorModel::nstore() const

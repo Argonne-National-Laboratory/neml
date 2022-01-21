@@ -19,6 +19,7 @@ namespace neml {
 //  the orientation.  Similarly it would include all the w_p derivatives.
 class NEML_EXPORT InelasticModel: public NEMLObject {
  public:
+  InelasticModel(ParameterSet & params);
   /// Populate a history object with the correct variables
   virtual void populate_history(History & history) const = 0;
   /// Actually initialize the history object with the starting values
@@ -90,7 +91,7 @@ class NEML_EXPORT InelasticModel: public NEMLObject {
 class NEML_EXPORT NoInelasticity: public InelasticModel {
  public:
   /// Don't need any parameters to return zero!
-  NoInelasticity();
+  NoInelasticity(ParameterSet & params);
   /// Destructor
   virtual ~NoInelasticity();
 
@@ -172,7 +173,7 @@ static Register<NoInelasticity> regNoInelasticity;
 class NEML_EXPORT AsaroInelasticity: public InelasticModel {
  public:
   /// Provide a SlipRule defining the slip rate/strength relations
-  AsaroInelasticity(std::shared_ptr<SlipRule> rule);
+  AsaroInelasticity(ParameterSet & params);
   /// Destructor
   virtual ~AsaroInelasticity();
 
@@ -266,8 +267,7 @@ static Register<AsaroInelasticity> regAsaroInelasticity;
 /// typically combined with slip system models to represent diffusion
 class NEML_EXPORT PowerLawInelasticity: public InelasticModel {
  public:
-  PowerLawInelasticity(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
-  virtual ~PowerLawInelasticity();
+  PowerLawInelasticity(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -363,9 +363,7 @@ static Register<PowerLawInelasticity> regPowerLawInelasticity;
 class NEML_EXPORT CombinedInelasticity: public InelasticModel {
  public:
   /// Initialize with the list of models
-  CombinedInelasticity(std::vector<std::shared_ptr<InelasticModel>> models);
-  /// Destructor
-  virtual ~CombinedInelasticity();
+  CombinedInelasticity(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

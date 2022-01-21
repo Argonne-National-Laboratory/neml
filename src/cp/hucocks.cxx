@@ -3,18 +3,31 @@
 namespace neml {
 
 HuCocksPrecipitationModel::HuCocksPrecipitationModel(
-    std::vector<std::shared_ptr<Interpolate>> c0, 
-    std::vector<std::shared_ptr<Interpolate>> cp,
-    std::vector<std::shared_ptr<Interpolate>> ceq,
-    double am, double N0, double Vm, double chi, double D0, double Q0, 
-    std::shared_ptr<Interpolate> Cf, double kboltz, double R,
-    double Na, size_t rate, double f_init, double r_init, double N_init,
-    double fs, double rs, double Ns, double w) :
-      c0_(c0), cp_(cp), ceq_(ceq), am_(am), N0_(N0), Vm_(Vm), chi_(chi), 
-      D0_(D0), Q0_(Q0), Cf_(Cf), kboltz_(kboltz), R_(R), Na_(Na),
-      rate_(rate), f_init_(f_init), r_init_(r_init), N_init_(N_init),
-      fs_(fs), rs_(rs), Ns_(Ns), w_(w),
-      vm_(Vm / Na), varnames_({"f", "r", "N"})
+    ParameterSet & params) :
+      NEMLObject(params),
+      c0_(params.get_object_parameter_vector<Interpolate>("c0")), 
+      cp_(params.get_object_parameter_vector<Interpolate>("cp")), 
+      ceq_(params.get_object_parameter_vector<Interpolate>("ceq")),
+      am_(params.get_parameter<double>("am")), 
+      N0_(params.get_parameter<double>("N0")), 
+      Vm_(params.get_parameter<double>("Vm")), 
+      chi_(params.get_parameter<double>("chi")), 
+      D0_(params.get_parameter<double>("D0")), 
+      Q0_(params.get_parameter<double>("Q0")), 
+      Cf_(params.get_object_parameter<Interpolate>("Cf")), 
+      kboltz_(params.get_parameter<double>("kboltz")), 
+      R_(params.get_parameter<double>("R")), 
+      Na_(params.get_parameter<double>("Na")),
+      rate_(params.get_parameter<size_t>("rate")), 
+      f_init_(params.get_parameter<double>("f_init")), 
+      r_init_(params.get_parameter<double>("r_init")), 
+      N_init_(params.get_parameter<double>("N_init")),
+      fs_(params.get_parameter<double>("fs")), 
+      rs_(params.get_parameter<double>("rs")), 
+      Ns_(params.get_parameter<double>("Ns")), 
+      w_(params.get_parameter<double>("w")),
+      vm_(Vm_ / Na_), 
+      varnames_({"f", "r", "N"})
 {
 
 }
@@ -27,28 +40,7 @@ std::string HuCocksPrecipitationModel::type()
 std::unique_ptr<NEMLObject> HuCocksPrecipitationModel::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<HuCocksPrecipitationModel>(
-      params.get_object_parameter_vector<Interpolate>("c0"),
-      params.get_object_parameter_vector<Interpolate>("cp"),
-      params.get_object_parameter_vector<Interpolate>("ceq"),
-      params.get_parameter<double>("am"),
-      params.get_parameter<double>("N0"),
-      params.get_parameter<double>("Vm"),
-      params.get_parameter<double>("chi"),
-      params.get_parameter<double>("D0"),
-      params.get_parameter<double>("Q0"),
-      params.get_object_parameter<Interpolate>("Cf"),
-      params.get_parameter<double>("kboltz"),
-      params.get_parameter<double>("R"),
-      params.get_parameter<double>("Na"),
-      params.get_parameter<size_t>("rate"),
-      params.get_parameter<double>("f_init"),
-      params.get_parameter<double>("r_init"),
-      params.get_parameter<double>("N_init"),
-      params.get_parameter<double>("fs"),
-      params.get_parameter<double>("rs"),
-      params.get_parameter<double>("Ns"),
-      params.get_parameter<double>("w"));
+  return neml::make_unique<HuCocksPrecipitationModel>(params);
 }
 
 ParameterSet HuCocksPrecipitationModel::parameters()
@@ -514,16 +506,17 @@ bool HuCocksPrecipitationModel::nucleation_(const std::vector<double> & c,
   return true;
 }
 
-DislocationSpacingHardening::DislocationSpacingHardening(std::shared_ptr<Interpolate> J1, 
-                                                         std::shared_ptr<Interpolate> J2,
-                                                         std::shared_ptr<Interpolate> K, 
-                                                         double L0,
-                                                         double a, double b,
-                                                         std::shared_ptr<Interpolate> G,
-                                                         std::shared_ptr<Lattice> L,
-                                                         std::string varprefix) :
-    J1_(J1), J2_(J2), K_(K), L0_(L0), a_(a), b_(b), G_(G), L_(L),
-    varprefix_(varprefix)
+DislocationSpacingHardening::DislocationSpacingHardening(ParameterSet & params) :
+    SlipHardening(params),
+    J1_(params.get_object_parameter<Interpolate>("J1")),
+    J2_(params.get_object_parameter<Interpolate>("J2")),
+    K_(params.get_object_parameter<Interpolate>("K")),
+    L0_(params.get_parameter<double>("L0")),
+    a_(params.get_parameter<double>("a")),
+    b_(params.get_parameter<double>("b")),
+    G_(params.get_object_parameter<Interpolate>("G")),
+    L_(params.get_object_parameter<Lattice>("L")),
+    varprefix_(params.get_parameter<std::string>("varprefix"))
 {
   varnames_.resize(L_->ntotal());
   for (size_t i = 0; i < size(); i++)
@@ -539,16 +532,7 @@ std::string DislocationSpacingHardening::type()
 
 std::unique_ptr<NEMLObject> DislocationSpacingHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<DislocationSpacingHardening>(
-      params.get_object_parameter<Interpolate>("J1"),
-      params.get_object_parameter<Interpolate>("J2"),
-      params.get_object_parameter<Interpolate>("K"),
-      params.get_parameter<double>("L0"),
-      params.get_parameter<double>("a"),
-      params.get_parameter<double>("b"),
-      params.get_object_parameter<Interpolate>("G"),
-      params.get_object_parameter<Lattice>("L"),
-      params.get_parameter<std::string>("varprefix"));
+  return neml::make_unique<DislocationSpacingHardening>(params);
 }
 
 ParameterSet DislocationSpacingHardening::parameters()
@@ -765,10 +749,14 @@ size_t DislocationSpacingHardening::size() const
   return varnames_.size();
 }
 
-HuCocksHardening::HuCocksHardening(std::shared_ptr<SlipHardening> dmodel,
-                                   std::vector<std::shared_ptr<HuCocksPrecipitationModel>> pmodels,
-                                   double ap, double ac, double b, std::shared_ptr<Interpolate> G) :
-    dmodel_(dmodel), pmodels_(pmodels), ap_(ap), ac_(ac), b_(b), G_(G)
+HuCocksHardening::HuCocksHardening(ParameterSet & params) :
+    SlipHardening(params),
+    dmodel_(params.get_object_parameter<SlipHardening>("dmodel")),
+    pmodels_(params.get_object_parameter_vector<HuCocksPrecipitationModel>("pmodels")),
+    ap_(params.get_parameter<double>("ap")),
+    ac_(params.get_parameter<double>("ac")),
+    b_(params.get_parameter<double>("b")),
+    G_(params.get_object_parameter<Interpolate>("G"))
 {
   // Alter the varnames of the pmodels...
   size_t i = 0;
@@ -791,13 +779,7 @@ std::string HuCocksHardening::type()
 
 std::unique_ptr<NEMLObject> HuCocksHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<HuCocksHardening>(
-      params.get_object_parameter<SlipHardening>("dmodel"),
-      params.get_object_parameter_vector<HuCocksPrecipitationModel>("pmodels"),
-      params.get_parameter<double>("ap"),
-      params.get_parameter<double>("ac"),
-      params.get_parameter<double>("b"),
-      params.get_object_parameter<Interpolate>("G"));
+  return neml::make_unique<HuCocksHardening>(params);
 }
 
 ParameterSet HuCocksHardening::parameters()
@@ -1039,11 +1021,15 @@ double HuCocksHardening::NA_eff_(const History & history, double T) const
   return res;
 }
 
-ArrheniusSlipRule::ArrheniusSlipRule(std::shared_ptr<SlipHardening> strength,
-                                     double g0, double A, double B, double b,
-                                     double a0, double G0, double k) :
-    SlipStrengthSlipRule(strength), g0_(g0), A_(A), B_(B), b_(b), a0_(a0),
-    G0_(G0), k_(k)
+ArrheniusSlipRule::ArrheniusSlipRule(ParameterSet & params) :
+    SlipStrengthSlipRule(params),
+    g0_(params.get_parameter<double>("g0")),
+    A_(params.get_parameter<double>("A")),
+    B_(params.get_parameter<double>("B")),
+    b_(params.get_parameter<double>("b")),
+    a0_(params.get_parameter<double>("a0")),
+    G0_(params.get_parameter<double>("G0")),
+    k_(params.get_parameter<double>("k"))
 {
 
 }
@@ -1056,15 +1042,7 @@ std::string ArrheniusSlipRule::type()
 std::unique_ptr<NEMLObject> ArrheniusSlipRule::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<ArrheniusSlipRule>(
-      params.get_object_parameter<SlipHardening>("resistance"),
-      params.get_parameter<double>("g0"),
-      params.get_parameter<double>("A"),
-      params.get_parameter<double>("B"),
-      params.get_parameter<double>("b"),
-      params.get_parameter<double>("a0"),
-      params.get_parameter<double>("G0"),
-      params.get_parameter<double>("k"));
+  return neml::make_unique<ArrheniusSlipRule>(params);
 }
 
 ParameterSet ArrheniusSlipRule::parameters()

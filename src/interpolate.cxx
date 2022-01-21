@@ -8,7 +8,8 @@
 
 namespace neml {
 
-Interpolate::Interpolate() :
+Interpolate::Interpolate(ParameterSet & params) :
+    NEMLObject(params),
     valid_(true)
 {
 
@@ -24,8 +25,9 @@ bool Interpolate::valid() const
   return valid_;
 }
 
-PolynomialInterpolate::PolynomialInterpolate(const std::vector<double> coefs) :
-    Interpolate(), coefs_(coefs)
+PolynomialInterpolate::PolynomialInterpolate(ParameterSet & params) :
+    Interpolate(params), 
+    coefs_(params.get_parameter<std::vector<double>>("coefs"))
 {
   deriv_ = differentiate_poly(coefs_);
 }
@@ -46,9 +48,7 @@ ParameterSet PolynomialInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PolynomialInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PolynomialInterpolate>(
-      params.get_parameter<std::vector<double>>("coefs")
-      ); 
+  return neml::make_unique<PolynomialInterpolate>(params); 
 }
 
 double PolynomialInterpolate::value(double x) const
@@ -62,17 +62,17 @@ double PolynomialInterpolate::derivative(double x) const
 }
 
 
-PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(
-    const std::vector<double> points,
-    const std::vector<double> values) :
-      Interpolate(), points_(points), values_(values)
+PiecewiseLinearInterpolate::PiecewiseLinearInterpolate(ParameterSet & params) :
+      Interpolate(params),
+      points_(params.get_parameter<std::vector<double>>("points")), 
+      values_(params.get_parameter<std::vector<double>>("values"))
 {
   // Check if sorted
-  if (not std::is_sorted(points.begin(), points.end())) {
+  if (not std::is_sorted(points_.begin(), points_.end())) {
     valid_ = false; 
   }
 
-  if (points.size() != values.size()) {
+  if (points_.size() != values_.size()) {
     valid_ = false;
   }
 }
@@ -94,10 +94,7 @@ ParameterSet PiecewiseLinearInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PiecewiseLinearInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PiecewiseLinearInterpolate>(
-      params.get_parameter<std::vector<double>>("points"),
-      params.get_parameter<std::vector<double>>("values")
-      ); 
+  return neml::make_unique<PiecewiseLinearInterpolate>(params); 
 }
 
 double PiecewiseLinearInterpolate::value(double x) const
@@ -146,17 +143,17 @@ double PiecewiseLinearInterpolate::derivative(double x) const
   }
 }
 
-GenericPiecewiseInterpolate::GenericPiecewiseInterpolate(
-    std::vector<double> points,
-    std::vector<std::shared_ptr<Interpolate>> functions) :
-      Interpolate(), points_(points), functions_(functions)
+GenericPiecewiseInterpolate::GenericPiecewiseInterpolate(ParameterSet & params) :
+      Interpolate(params),
+      points_(params.get_parameter<std::vector<double>>("points")), 
+      functions_(params.get_object_parameter_vector<Interpolate>("functions"))
 {
   // Check if sorted
-  if (not std::is_sorted(points.begin(), points.end())) {
+  if (not std::is_sorted(points_.begin(), points_.end())) {
     valid_ = false; 
   }
 
-  if (points.size() != (functions.size()+1)) {
+  if (points_.size() != (functions_.size()+1)) {
     valid_ = false;
   }
 }
@@ -178,10 +175,7 @@ ParameterSet GenericPiecewiseInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> GenericPiecewiseInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<GenericPiecewiseInterpolate>(
-      params.get_parameter<std::vector<double>>("points"),
-      params.get_object_parameter_vector<Interpolate>("functions")
-      ); 
+  return neml::make_unique<GenericPiecewiseInterpolate>(params); 
 }
 
 double GenericPiecewiseInterpolate::value(double x) const
@@ -223,16 +217,17 @@ double GenericPiecewiseInterpolate::derivative(double x) const
 }
 
 PiecewiseLogLinearInterpolate::PiecewiseLogLinearInterpolate(
-    const std::vector<double> points,
-    const std::vector<double> values) :
-      Interpolate(), points_(points), values_(values)
+    ParameterSet & params) :
+      Interpolate(params),
+      points_(params.get_parameter<std::vector<double>>("points")),
+      values_(params.get_parameter<std::vector<double>>("values"))
 {
   // Check if sorted
-  if (not std::is_sorted(points.begin(), points.end())) {
+  if (not std::is_sorted(points_.begin(), points_.end())) {
     valid_ = false; 
   }
 
-  if (points.size() != values.size()) {
+  if (points_.size() != values_.size()) {
     valid_ = false;
   }
 
@@ -259,10 +254,7 @@ ParameterSet PiecewiseLogLinearInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PiecewiseLogLinearInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PiecewiseLogLinearInterpolate>(
-      params.get_parameter<std::vector<double>>("points"),
-      params.get_parameter<std::vector<double>>("values")
-      ); 
+  return neml::make_unique<PiecewiseLogLinearInterpolate>(params); 
 }
 
 double PiecewiseLogLinearInterpolate::value(double x) const
@@ -312,20 +304,21 @@ double PiecewiseLogLinearInterpolate::derivative(double x) const
 }
 
 PiecewiseSemiLogXLinearInterpolate::PiecewiseSemiLogXLinearInterpolate(
-    const std::vector<double> points,
-    const std::vector<double> values) :
-      Interpolate(), points_(points), values_(values)
+    ParameterSet & params) :
+      Interpolate(params), 
+      points_(params.get_parameter<std::vector<double>>("points")), 
+      values_(params.get_parameter<std::vector<double>>("values"))
 {
   // Check if sorted
-  if (not std::is_sorted(points.begin(), points.end())) {
+  if (not std::is_sorted(points_.begin(), points_.end())) {
     valid_ = false; 
   }
 
-  if (points.size() != values.size()) {
+  if (points_.size() != values_.size()) {
     valid_ = false;
   }
 
-  for (auto pt : points) {
+  for (auto pt : points_) {
     if (pt < 0.0) {
       valid_ = false;
     }
@@ -349,10 +342,7 @@ ParameterSet PiecewiseSemiLogXLinearInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PiecewiseSemiLogXLinearInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PiecewiseSemiLogXLinearInterpolate>(
-      params.get_parameter<std::vector<double>>("points"),
-      params.get_parameter<std::vector<double>>("values")
-      ); 
+  return neml::make_unique<PiecewiseSemiLogXLinearInterpolate>(params); 
 }
 
 double PiecewiseSemiLogXLinearInterpolate::value(double x) const
@@ -401,8 +391,9 @@ double PiecewiseSemiLogXLinearInterpolate::derivative(double x) const
   }
 }
 
-ConstantInterpolate::ConstantInterpolate(double v) :
-    Interpolate(), v_(v)
+ConstantInterpolate::ConstantInterpolate(ParameterSet & params) :
+    Interpolate(params),
+    v_(params.get_parameter<double>("v"))
 {
 
 }
@@ -423,9 +414,7 @@ ParameterSet ConstantInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> ConstantInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<ConstantInterpolate>(
-      params.get_parameter<double>("v")
-      ); 
+  return neml::make_unique<ConstantInterpolate>(params); 
 }
 
 double ConstantInterpolate::value(double x) const
@@ -438,8 +427,10 @@ double ConstantInterpolate::derivative(double x) const
   return 0.0;
 }
 
-ExpInterpolate::ExpInterpolate(double A, double B) :
-    Interpolate(), A_(A), B_(B)
+ExpInterpolate::ExpInterpolate(ParameterSet & params) :
+    Interpolate(params),
+    A_(params.get_parameter<double>("A")),
+    B_(params.get_parameter<double>("B"))
 {
 
 }
@@ -461,10 +452,7 @@ ParameterSet ExpInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> ExpInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<ExpInterpolate>(
-      params.get_parameter<double>("A"),
-      params.get_parameter<double>("B")
-      ); 
+  return neml::make_unique<ExpInterpolate>(params); 
 }
 
 double ExpInterpolate::value(double x) const
@@ -477,8 +465,10 @@ double ExpInterpolate::derivative(double x) const
   return -A_ * B_ * exp(B_ / x) / (x*x);
 }
 
-PowerLawInterpolate::PowerLawInterpolate(double A, double B) :
-    Interpolate(), A_(A), B_(B)
+PowerLawInterpolate::PowerLawInterpolate(ParameterSet & params) :
+    Interpolate(params),
+    A_(params.get_parameter<double>("A")),
+    B_(params.get_parameter<double>("B"))
 {
 
 }
@@ -500,10 +490,7 @@ ParameterSet PowerLawInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> PowerLawInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PowerLawInterpolate>(
-      params.get_parameter<double>("A"),
-      params.get_parameter<double>("B")
-      ); 
+  return neml::make_unique<PowerLawInterpolate>(params); 
 }
 
 double PowerLawInterpolate::value(double x) const
@@ -516,8 +503,11 @@ double PowerLawInterpolate::derivative(double x) const
   return A_ * B_ * std::pow(x, B_-1.0);
 }
 
-MTSShearInterpolate::MTSShearInterpolate(double V0, double D, double T0) :
-    Interpolate(), V0_(V0), D_(D), T0_(T0)
+MTSShearInterpolate::MTSShearInterpolate(ParameterSet & params) :
+    Interpolate(params),
+    V0_(params.get_parameter<double>("V0")), 
+    D_(params.get_parameter<double>("D")), 
+    T0_(params.get_parameter<double>("T0"))
 {
   
 }
@@ -540,11 +530,7 @@ ParameterSet MTSShearInterpolate::parameters()
 
 std::unique_ptr<NEMLObject> MTSShearInterpolate::initialize(ParameterSet & params)
 {
-  return neml::make_unique<MTSShearInterpolate>(
-      params.get_parameter<double>("V0"),
-      params.get_parameter<double>("D"),
-      params.get_parameter<double>("T0")
-      ); 
+  return neml::make_unique<MTSShearInterpolate>(params); 
 }
 
 double MTSShearInterpolate::value(double x) const
@@ -557,12 +543,74 @@ double MTSShearInterpolate::derivative(double x) const
   return -D_ * T0_ / (4.0 * pow(x * sinh(T0_ / (2 * x)),2));
 }
 
+
+MTSInterpolate::MTSInterpolate(ParameterSet & params) :
+    Interpolate(params),
+    tau0_(params.get_parameter<double>("tau0")), 
+    g0_(params.get_parameter<double>("g0")), 
+    q_(params.get_parameter<double>("q")),
+    p_(params.get_parameter<double>("p")),
+    k_(params.get_parameter<double>("k")),
+    b_(params.get_parameter<double>("b")),
+    mu_(params.get_object_parameter<Interpolate>("mu"))
+{
+  
+}
+
+std::string MTSInterpolate::type()
+{
+  return "MTSInterpolate";
+}
+
+ParameterSet MTSInterpolate::parameters()
+{
+  ParameterSet pset(MTSInterpolate::type());
+
+  pset.add_parameter<double>("tau0");
+  pset.add_parameter<double>("g0");
+  pset.add_parameter<double>("q");
+  pset.add_parameter<double>("p");
+  pset.add_parameter<double>("k");
+  pset.add_parameter<double>("b");
+  pset.add_parameter<NEMLObject>("mu");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> MTSInterpolate::initialize(ParameterSet & params)
+{
+  return neml::make_unique<MTSInterpolate>(params); 
+}
+
+double MTSInterpolate::value(double x) const
+{
+  return tau0_ * std::pow(1.0 - 
+                          std::pow(k_*x/(mu_->value(x) * std::pow(b_,3) * g0_),
+                                   1.0/q_)
+                          , 1.0/p_);
+}
+
+double MTSInterpolate::derivative(double x) const
+{
+  double b3 = std::pow(b_,3);
+  double mu = mu_->value(x);
+  double dmu = mu_->derivative(x);
+  double inner = k_*x/(b3*g0_*mu);
+
+  double A = -tau0_ * std::pow(inner, 1/q_) * std::pow(1-std::pow(inner, 1/q_),
+                                                       1/p_ - 1) / (p_ * q_ * x);
+  double B =  tau0_ * std::pow(inner, 1/q_) * std::pow(1-std::pow(inner, 1/q_), 
+                                                       1/p_ - 1) / (p_ * q_ *
+                                                                   mu);
+  return A + B*dmu;
+}
+
 std::vector<std::shared_ptr<Interpolate>> 
     make_vector(const std::vector<double> & iv)
 {
   std::vector<std::shared_ptr<Interpolate>> vt;
   for (auto it = iv.begin(); it != iv.end(); ++it) {
-    vt.emplace_back(std::make_shared<ConstantInterpolate>(*it));
+    vt.emplace_back(make_constant(*it));
   }
   return vt;
 }
@@ -586,5 +634,33 @@ std::vector<double> eval_deriv_vector(
   }
   return vt;
 }
+
+std::shared_ptr<ConstantInterpolate> make_constant(double v)
+{
+  ParameterSet params = ConstantInterpolate::parameters();
+  params.assign_parameter("v", v);
+  
+  return std::make_shared<ConstantInterpolate>(params);
+}
+
+std::unique_ptr<ConstantInterpolate> make_constant_unique(double v)
+{
+  ParameterSet params = ConstantInterpolate::parameters();
+  params.assign_parameter("v", v);
+
+  return neml::make_unique<ConstantInterpolate>(params);
+}
+
+std::shared_ptr<PiecewiseLinearInterpolate> make_piecewise(
+    std::vector<double> points, std::vector<double> values)
+{
+  ParameterSet params = PiecewiseLinearInterpolate::parameters();
+  params.assign_parameter("points", points);
+  params.assign_parameter("values", values);
+  
+  return std::make_shared<PiecewiseLinearInterpolate>(params);
+}
+
+
 
 } // namespace neml

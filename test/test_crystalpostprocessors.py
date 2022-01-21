@@ -53,7 +53,7 @@ class TestPTRTwinReorientation(unittest.TestCase):
     imodel = inelasticity.AsaroInelasticity(slipmodel)
     kmodel = kinematics.StandardKinematicModel(emodel, imodel)
 
-    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.Q = rotations.CrystalOrientation(35.0,17.0,14.0, angle_type = "degrees")
     
     L = np.array([[0.5,0.5,0],[0,0.5,0],[0,0,-1.0]])
     self.D = tensors.Symmetric(0.5*(L+L.T))

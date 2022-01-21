@@ -14,6 +14,8 @@ namespace neml {
 /// ABC for a completely general flow rule...
 class NEML_EXPORT GeneralFlowRule: public NEMLObject {
  public:
+  GeneralFlowRule(ParameterSet & params);
+
   /// Number of history variables
   virtual size_t nhist() const = 0;
   /// Initialize the history at time zero
@@ -83,8 +85,7 @@ class NEML_EXPORT GeneralFlowRule: public NEMLObject {
 class NEML_EXPORT TVPFlowRule : public GeneralFlowRule {
  public:
   /// Parameters: elastic model and a viscoplastic flow rule
-  TVPFlowRule(std::shared_ptr<LinearElasticModel> elastic,
-              std::shared_ptr<ViscoPlasticFlowRule> flow);
+  TVPFlowRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

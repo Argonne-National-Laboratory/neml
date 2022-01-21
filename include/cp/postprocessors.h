@@ -12,9 +12,9 @@ namespace neml {
 class SingleCrystalModel; // forward declaration
 
 /// Superclass of postprocessors: do something to history after update
-class CrystalPostprocessor: public NEMLObject {
+class NEML_EXPORT CrystalPostprocessor: public NEMLObject {
  public:
-  CrystalPostprocessor();
+  CrystalPostprocessor(ParameterSet & params);
 
   virtual void populate_history(const Lattice & L, History & history) const = 0;
   virtual void init_history(const Lattice & L, History & history) const = 0;
@@ -26,10 +26,9 @@ class CrystalPostprocessor: public NEMLObject {
 };
 
 /// Reorients twins based on a PTR criteria
-class PTRTwinReorientation: public CrystalPostprocessor {
+class NEML_EXPORT PTRTwinReorientation: public CrystalPostprocessor {
  public:
-  PTRTwinReorientation(std::shared_ptr<Interpolate> threshold,
-                       std::string prefix = "slip");
+  PTRTwinReorientation(ParameterSet & params);
 
   /// Type for the object system
   static std::string type();

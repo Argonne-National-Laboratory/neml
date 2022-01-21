@@ -53,7 +53,7 @@ class InternalVariable : public NEMLObject {
   };
 
  public:
-  InternalVariable(std::string name);
+  InternalVariable(ParameterSet & params);
   
   std::string name() const {return name_;};
   void set_name(std::string name) {name_ = name;};
@@ -89,8 +89,9 @@ class InternalVariable : public NEMLObject {
 };
 
 template <class V>
-InternalVariable<V>::InternalVariable(std::string name) :
-    name_(name)
+InternalVariable<V>::InternalVariable(ParameterSet & params) :
+    NEMLObject(params),
+    name_(params.get_parameter<std::string>("name"))
 {
 
 }

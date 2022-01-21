@@ -2,14 +2,16 @@
 
 namespace neml {
 
-CrystalPostprocessor::CrystalPostprocessor()
+CrystalPostprocessor::CrystalPostprocessor(ParameterSet & params) :
+    NEMLObject(params)
 {
 
 }
 
-PTRTwinReorientation::PTRTwinReorientation(std::shared_ptr<Interpolate>
-                                           threshold, std::string prefix) :
-    CrystalPostprocessor(), threshold_(threshold), prefix_(prefix)
+PTRTwinReorientation::PTRTwinReorientation(ParameterSet & params) :
+    CrystalPostprocessor(params),
+    threshold_(params.get_object_parameter<Interpolate>("threshold")),
+    prefix_(params.get_parameter<std::string>("prefix"))
 {
 
 }
@@ -32,9 +34,7 @@ ParameterSet PTRTwinReorientation::parameters()
 std::unique_ptr<NEMLObject> PTRTwinReorientation::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<PTRTwinReorientation>(
-      params.get_object_parameter<Interpolate>("threshold"),
-      params.get_parameter<std::string>("prefix"));
+  return neml::make_unique<PTRTwinReorientation>(params);
 }
 
 void PTRTwinReorientation::populate_history(const Lattice & L, 
@@ -94,12 +94,13 @@ void PTRTwinReorientation::act(SingleCrystalModel & model,
         j++;
       }
     }
-    // Anneal
+    // Remove accumulated twin slip
     if (state.get<double>("twinned") > 0.5) {
       j = 0;
       for (size_t g = 0; g < L.ngroup(); g++) {
         for (size_t i = 0; i < L.nslip(g); i++) {
-          state.get<double>(prefix_+std::to_string(j)) = 0;
+          if (L.slip_type(g,i) == Lattice::SlipType::Twin)
+            state.get<double>(prefix_+std::to_string(j)) = 0;
           j++;
         }
       }

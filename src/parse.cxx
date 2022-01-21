@@ -24,6 +24,18 @@ std::shared_ptr<NEMLModel> parse_string(std::string input)
   }
 }
 
+std::shared_ptr<NEMLObject> get_object_string(std::string repr)
+{
+  // Parse the string to the rapidxml representation
+  rapidxml::xml_document<> doc;
+  doc.parse<0>(&repr[0]);
+
+  // The object, regardless of name
+  const rapidxml::xml_node<> * found = doc.first_node();
+
+  return get_object(found);
+}
+
 std::unique_ptr<NEMLModel> parse_string_unique(std::string input, std::string mname)
 {
   // Parse the string to the rapidxml representation
@@ -108,7 +120,7 @@ std::unique_ptr<NEMLObject> get_object_unique(const rapidxml::xml_node<> * node)
   // Special case: could be a ConstantInterpolate
   std::string type = get_type_of_node(node);
   if (type == "none") {
-    return neml::make_unique<ConstantInterpolate>(get_double(node));
+    return make_constant_unique(get_double(node));
   }
   else {
     ParameterSet params = get_parameters(node);
@@ -126,7 +138,7 @@ std::shared_ptr<NEMLObject> get_object(const rapidxml::xml_node<> * node)
   // Special case: could be a ConstantInterpolate
   std::string type = get_type_of_node(node);
   if (type == "none") {
-    return std::make_shared<ConstantInterpolate>(get_double(node));
+    return make_constant(get_double(node));
   }
   else {
     ParameterSet params = get_parameters(node);
@@ -214,7 +226,7 @@ std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
       (node->first_node()->type() == rapidxml::node_data)) {
     std::vector<double> data = get_vector_double(node);
     for (auto v : data) {
-      joined.push_back(neml::make_unique<ConstantInterpolate>(v));
+      joined.push_back(make_constant(v));
     }
     return joined;
   }
@@ -291,13 +303,16 @@ list_systems get_slip( const rapidxml::xml_node<> * node)
 {
   list_systems groups;
 
+  if (node->value_size() == 0)
+    return groups;
+
   std::string text = get_string(node);
 
   std::stringstream ss(text);
   std::string to;
 
   // Separate by newlines
-  while(std::getline(ss, to,'\n')) {
+  while(std::getline(ss, to,',')) {
     // Delete blank characters at front and back of string
     strip(to);
 
@@ -324,13 +339,16 @@ twin_systems get_twin( const rapidxml::xml_node<> * node)
 {
   twin_systems groups;
 
+  if (node->value_size() == 0)
+    return groups;
+
   std::string text = get_string(node);
 
   std::stringstream ss(text);
   std::string to;
 
   // Separate by newlines
-  while(std::getline(ss, to,'\n')) {
+  while(std::getline(ss, to,',')) {
     // Delete blank characters at front and back of string
     strip(to);
 

@@ -9,6 +9,12 @@
 
 namespace neml {
 
+ScalarCreepRule::ScalarCreepRule(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
 // Scalar creep default derivatives for time and temperature
 int ScalarCreepRule::dg_dt(double seq, double eeq, double t, double T,
                            double & dg) const
@@ -27,9 +33,10 @@ int ScalarCreepRule::dg_dT(double seq, double eeq, double t, double T,
 }
 
 // Implementation of power law creep
-PowerLawCreep::PowerLawCreep(std::shared_ptr<Interpolate> A,
-                             std::shared_ptr<Interpolate> n) :
-    A_(A), n_(n)
+PowerLawCreep::PowerLawCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    A_(params.get_object_parameter<Interpolate>("A")), 
+    n_(params.get_object_parameter<Interpolate>("n"))
 {
 
 }
@@ -51,10 +58,7 @@ ParameterSet PowerLawCreep::parameters()
 
 std::unique_ptr<NEMLObject> PowerLawCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<PowerLawCreep>(
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("n")
-      ); 
+  return neml::make_unique<PowerLawCreep>(params);
 }
 
 
@@ -89,9 +93,10 @@ double PowerLawCreep::n(double T) const
 }
 
 // Implementation of power law creep
-NormalizedPowerLawCreep::NormalizedPowerLawCreep(std::shared_ptr<Interpolate> s0,
-                             std::shared_ptr<Interpolate> n) :
-    s0_(s0), n_(n)
+NormalizedPowerLawCreep::NormalizedPowerLawCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    s0_(params.get_object_parameter<Interpolate>("s0")), 
+    n_(params.get_object_parameter<Interpolate>("n"))
 {
 
 }
@@ -113,10 +118,7 @@ ParameterSet NormalizedPowerLawCreep::parameters()
 
 std::unique_ptr<NEMLObject> NormalizedPowerLawCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<NormalizedPowerLawCreep>(
-      params.get_object_parameter<Interpolate>("s0"),
-      params.get_object_parameter<Interpolate>("n")
-      ); 
+  return neml::make_unique<NormalizedPowerLawCreep>(params); 
 }
 
 
@@ -142,12 +144,13 @@ int NormalizedPowerLawCreep::dg_de(double seq, double eeq, double t, double T, d
 }
 
 // Implementation of the Blackburn minimum creep rate equation
-BlackburnMinimumCreep::BlackburnMinimumCreep(
-    std::shared_ptr<Interpolate> A,
-    std::shared_ptr<Interpolate> n,
-    std::shared_ptr<Interpolate> beta,
-    double R, double Q) :
-      A_(A), n_(n), beta_(beta), R_(R), Q_(Q)
+BlackburnMinimumCreep::BlackburnMinimumCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    A_(params.get_object_parameter<Interpolate>("A")),
+    n_(params.get_object_parameter<Interpolate>("n")),
+    beta_(params.get_object_parameter<Interpolate>("beta")),
+    R_(params.get_parameter<double>("R")),
+    Q_(params.get_parameter<double>("Q"))
 {
 
 }
@@ -172,13 +175,7 @@ ParameterSet BlackburnMinimumCreep::parameters()
 
 std::unique_ptr<NEMLObject> BlackburnMinimumCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<BlackburnMinimumCreep>(
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("n"),
-      params.get_object_parameter<Interpolate>("beta"),
-      params.get_parameter<double>("R"),
-      params.get_parameter<double>("Q")
-      ); 
+  return neml::make_unique<BlackburnMinimumCreep>(params); 
 }
 
 
@@ -222,9 +219,13 @@ int BlackburnMinimumCreep::dg_dT(double seq, double eeq, double t, double T, dou
 }
 
 // Implementation of the Swindeman minimum creep rate equation
-SwindemanMinimumCreep::SwindemanMinimumCreep(double C, double n, double V,
-                                             double Q, bool celsius) :
-      C_(C), n_(n), V_(V), Q_(Q), shift_(celsius ? 273.15 : 0.0)
+SwindemanMinimumCreep::SwindemanMinimumCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    C_(params.get_parameter<double>("C")), 
+    n_(params.get_parameter<double>("n")),
+    V_(params.get_parameter<double>("V")),
+    Q_(params.get_parameter<double>("Q")),
+    shift_(params.get_parameter<bool>("celsius") ? 273.15 : 0.0)
 {
 
 }
@@ -250,13 +251,7 @@ ParameterSet SwindemanMinimumCreep::parameters()
 
 std::unique_ptr<NEMLObject> SwindemanMinimumCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SwindemanMinimumCreep>(
-      params.get_parameter<double>("C"),
-      params.get_parameter<double>("n"),
-      params.get_parameter<double>("V"),
-      params.get_parameter<double>("Q"),
-      params.get_parameter<bool>("celsius")
-      ); 
+  return neml::make_unique<SwindemanMinimumCreep>(params); 
 }
 
 
@@ -289,14 +284,17 @@ int SwindemanMinimumCreep::dg_dT(double seq, double eeq, double t, double T, dou
 }
 
 // Implementation of the mechanism switching model
-RegionKMCreep::RegionKMCreep(std::vector<double> cuts, 
-                             std::vector<std::shared_ptr<Interpolate>> A, 
-                             std::vector<std::shared_ptr<Interpolate>> B,
-                             double kboltz, double b, double eps0, 
-                             std::shared_ptr<LinearElasticModel> emodel,
-                             bool celsius) :
-    cuts_(cuts), A_(A), B_(B), kboltz_(kboltz), b_(b), eps0_(eps0), 
-    b3_(pow(b,3)), emodel_(emodel), shift_(celsius ? 273.15 : 0.0)
+RegionKMCreep::RegionKMCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    cuts_(params.get_parameter<std::vector<double>>("cuts")),
+    A_(params.get_object_parameter_vector<Interpolate>("A")), 
+    B_(params.get_object_parameter_vector<Interpolate>("B")),
+    kboltz_(params.get_parameter<double>("kboltz")),
+    b_(params.get_parameter<double>("b")),
+    eps0_( params.get_parameter<double>("eps0")), 
+    b3_(pow(b_,3)),
+    emodel_(params.get_object_parameter<LinearElasticModel>("emodel")),
+    shift_(params.get_parameter<bool>("celsius") ? 273.15 : 0.0)
 {
 
 }
@@ -325,16 +323,7 @@ ParameterSet RegionKMCreep::parameters()
 
 std::unique_ptr<NEMLObject> RegionKMCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<RegionKMCreep>(
-      params.get_parameter<std::vector<double>>("cuts"),
-      params.get_object_parameter_vector<Interpolate>("A"),
-      params.get_object_parameter_vector<Interpolate>("B"),
-      params.get_parameter<double>("kboltz"),
-      params.get_parameter<double>("b"),
-      params.get_parameter<double>("eps0"),
-      params.get_object_parameter<LinearElasticModel>("emodel"),
-      params.get_parameter<bool>("celsius")
-      ); 
+  return neml::make_unique<RegionKMCreep>(params); 
 }
 
 int RegionKMCreep::g(double seq, double eeq, double t, double T, double & g) const
@@ -398,10 +387,11 @@ void RegionKMCreep::select_region_(double seq, double T, double & Ai, double & B
 }
 
 // Implementation of Norton-Bailey creep
-NortonBaileyCreep::NortonBaileyCreep(std::shared_ptr<Interpolate> A,
-                                     std::shared_ptr<Interpolate> m,
-                                     std::shared_ptr<Interpolate> n) :
-    A_(A), m_(m), n_(n)
+NortonBaileyCreep::NortonBaileyCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    A_(params.get_object_parameter<Interpolate>("A")),
+    m_(params.get_object_parameter<Interpolate>("m")),
+    n_(params.get_object_parameter<Interpolate>("n"))
 {
 
 }
@@ -424,11 +414,7 @@ ParameterSet NortonBaileyCreep::parameters()
 
 std::unique_ptr<NEMLObject> NortonBaileyCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<NortonBaileyCreep>(
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("m"),
-      params.get_object_parameter<Interpolate>("n")
-      ); 
+  return neml::make_unique<NortonBaileyCreep>(params); 
 }
 
 int NortonBaileyCreep::g(double seq, double eeq, double t, double T, double & g) const
@@ -504,10 +490,16 @@ double NortonBaileyCreep::n(double T) const
 }
 
 
-MukherjeeCreep::MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel,
-                               double A, double n, double D0, double Q,
-                               double b, double k, double R) :
-    emodel_(emodel), A_(A), n_(n), D0_(D0), Q_(Q), b_(b), k_(k), R_(R)
+MukherjeeCreep::MukherjeeCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    emodel_(params.get_object_parameter<LinearElasticModel>("emodel")), 
+    A_(params.get_parameter<double>("A")),
+    n_(params.get_parameter<double>("n")),
+    D0_(params.get_parameter<double>("D0")), 
+    Q_(params.get_parameter<double>("Q")),
+    b_(params.get_parameter<double>("b")),
+    k_(params.get_parameter<double>("k")), 
+    R_(params.get_parameter<double>("R"))
 {
   
 }
@@ -535,16 +527,7 @@ ParameterSet MukherjeeCreep::parameters()
 
 std::unique_ptr<NEMLObject> MukherjeeCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<MukherjeeCreep>(
-      params.get_object_parameter<LinearElasticModel>("emodel"),
-      params.get_parameter<double>("A"),
-      params.get_parameter<double>("n"),
-      params.get_parameter<double>("D0"),
-      params.get_parameter<double>("Q"),
-      params.get_parameter<double>("b"),
-      params.get_parameter<double>("k"),
-      params.get_parameter<double>("R")
-      ); 
+  return neml::make_unique<MukherjeeCreep>(params); 
 }
 
 int MukherjeeCreep::g(double seq, double eeq, double t, double T, 
@@ -607,8 +590,9 @@ double MukherjeeCreep::R() const
   return R_;
 }
 
-GenericCreep::GenericCreep(std::shared_ptr<Interpolate> cfn) :
-    cfn_(cfn)
+GenericCreep::GenericCreep(ParameterSet & params) :
+    ScalarCreepRule(params),
+    cfn_(params.get_object_parameter<Interpolate>("cfn"))
 {
 
 }
@@ -620,9 +604,7 @@ std::string GenericCreep::type()
 
 std::unique_ptr<NEMLObject> GenericCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<GenericCreep>(
-      params.get_object_parameter<Interpolate>("cfn")
-      );
+  return neml::make_unique<GenericCreep>(params);
 }
 
 ParameterSet GenericCreep::parameters()
@@ -661,10 +643,13 @@ int GenericCreep::dg_de(double seq, double eeq, double t, double T, double & dg)
 }
 
 // Setup for solve
-CreepModel::CreepModel(double rtol, double atol, int miter, bool verbose,
-                       bool linesearch) :
-    rtol_(rtol), atol_(atol), miter_(miter), verbose_(verbose), 
-    linesearch_(linesearch)
+CreepModel::CreepModel(ParameterSet & params) :
+    NEMLObject(params),
+    rtol_(params.get_parameter<double>("rtol")),
+    atol_(params.get_parameter<double>("atol")),
+    miter_(params.get_parameter<int>("miter")),
+    verbose_(params.get_parameter<bool>("verbose")), 
+    linesearch_(params.get_parameter<bool>("linesearch"))
 {
 
 }
@@ -786,7 +771,8 @@ int CreepModel::calc_tangent_(const double * const e_np1,
 }
 
 // Implementation of 2.25Cr-1Mo rule
-MinCreep225Cr1MoCreep::MinCreep225Cr1MoCreep()
+MinCreep225Cr1MoCreep::MinCreep225Cr1MoCreep(ParameterSet & params) :
+    ScalarCreepRule(params)
 {
 
 }
@@ -805,7 +791,7 @@ ParameterSet MinCreep225Cr1MoCreep::parameters()
 
 std::unique_ptr<NEMLObject> MinCreep225Cr1MoCreep::initialize(ParameterSet & params)
 {
-  return neml::make_unique<MinCreep225Cr1MoCreep>(); 
+  return neml::make_unique<MinCreep225Cr1MoCreep>(params); 
 }
 
 
@@ -851,39 +837,37 @@ int MinCreep225Cr1MoCreep::dg_de(double seq, double eeq, double t, double T, dou
 
 double MinCreep225Cr1MoCreep::e1_(double seq, double T) const
 {
-  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double U = MinCreep225Cr1MoCreep::U->value(T);
   double exp = 6.7475 + 0.011426 * seq + 987.72 / U * log10(seq) - 13494.0/T;
   return pow(10.0, exp) / 100.0;
 }
 
 double MinCreep225Cr1MoCreep::e2_(double seq, double T) const
 {
-  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double U = MinCreep225Cr1MoCreep::U->value(T);
   double exp = 11.498 - 8.2226*U / T - 20448 / T + 5862.4 / T * log10(seq);
   return pow(10.0, exp) / 100.0;
 }
 
 double MinCreep225Cr1MoCreep::de1_(double seq, double T) const
 {
-  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double U = MinCreep225Cr1MoCreep::U->value(T);
   double exp = 4.7475 + 0.011426 * seq + 428.961 / U * log(seq) - 13494.0/T;
   return pow(10.0, exp) * (0.011426 + 428.961 / (seq * U)) * log(10.0);
 }
 
 double MinCreep225Cr1MoCreep::de2_(double seq, double T) const
 {
-  double U = MinCreep225Cr1MoCreep::U.value(T);
+  double U = MinCreep225Cr1MoCreep::U->value(T);
   double exp = 9.498 - 8.2226*U / T - 20448 / T + 2546.01 / T * log(seq);
   return 2546.01 * pow(10.0, exp) * log(10.0) / (seq * T);
 }
 
-const PiecewiseLinearInterpolate MinCreep225Cr1MoCreep::U  = PiecewiseLinearInterpolate({644.15,673.15,723.15,773.15,823.15,873.15,894.15,922.15},{471,468,452,418,634,284,300,270});
+const std::shared_ptr<PiecewiseLinearInterpolate> MinCreep225Cr1MoCreep::U = make_piecewise({644.15,673.15,723.15,773.15,823.15,873.15,894.15,922.15},{471,468,452,418,634,284,300,270});
 
 // Implementation of J2 creep
-J2CreepModel::J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
-                           double rtol, double atol, int miter, bool verbose,
-                           bool linesearch) :
-    CreepModel(rtol, atol, miter, verbose, linesearch), rule_(rule)
+J2CreepModel::J2CreepModel(ParameterSet & params) :
+    CreepModel(params), rule_(params.get_object_parameter<ScalarCreepRule>("rule"))
 {
 
 }
@@ -910,14 +894,7 @@ ParameterSet J2CreepModel::parameters()
 
 std::unique_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<J2CreepModel>(
-      params.get_object_parameter<ScalarCreepRule>("rule"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch")
-      ); 
+  return neml::make_unique<J2CreepModel>(params); 
 }
 
 int J2CreepModel::f(const double * const s, const double * const e, double t,

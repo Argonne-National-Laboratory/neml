@@ -4,10 +4,10 @@
 // To fix redef warnings
 #include "Python.h"
 
-#include "pybind11.h"
-#include "numpy.h"
-#include "stl.h"
-#include "operators.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+#include <pybind11/operators.h>
 
 #include <vector>
 #include <algorithm>
@@ -16,6 +16,16 @@
 #include "objects.h"
 #include "interpolate.h"
 #include "nemlerror.h"
+
+#define PICKLEABLE(T) \
+      .def(py::pickle(\
+              [](std::shared_ptr<T> p) {\
+                return p->serialize("object", "");\
+              },\
+              [](std::string state) {\
+                return std::dynamic_pointer_cast<T>(get_object_string(state));\
+              }\
+              ))\
 
 namespace py = pybind11;
 
@@ -123,7 +133,7 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
       //  "is this actually a c++ double"
       try {
         double v = py::cast<double>(value);
-        pset.assign_parameter(name, std::make_shared<ConstantInterpolate>(v));
+        pset.assign_parameter(name, make_constant(v));
         break;
       }
       catch (py::cast_error & e) {
@@ -138,7 +148,7 @@ void assign_python_parameter(ParameterSet & pset, std::string name,
         std::vector<double> v = py::cast<std::vector<double>>(value);
         std::vector<std::shared_ptr<NEMLObject>> vect;
         for (auto it = v.begin(); it != v.end(); ++it) {
-          vect.push_back(std::make_shared<ConstantInterpolate>(*it));
+          vect.push_back(make_constant(*it));
         }
         pset.assign_parameter(name, vect);
         break;

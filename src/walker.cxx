@@ -2,12 +2,12 @@
 
 namespace neml {
 
-WalkerKremplSwitchRule::WalkerKremplSwitchRule(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<ViscoPlasticFlowRule> flow,
-    std::shared_ptr<Interpolate> lambda,
-    double eps0) :
-      elastic_(elastic), flow_(flow), lambda_(lambda), eps0_(eps0)
+WalkerKremplSwitchRule::WalkerKremplSwitchRule(ParameterSet & params) :
+    GeneralFlowRule(params),
+    elastic_(params.get_object_parameter<LinearElasticModel>("elastic")),
+    flow_(params.get_object_parameter<ViscoPlasticFlowRule>("flow")),
+    lambda_(params.get_object_parameter<Interpolate>("lambda")),
+    eps0_(params.get_parameter<double>("eps_ref"))
 {
 
 }
@@ -31,12 +31,7 @@ ParameterSet WalkerKremplSwitchRule::parameters()
 
 std::unique_ptr<NEMLObject> WalkerKremplSwitchRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<WalkerKremplSwitchRule>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<ViscoPlasticFlowRule>("flow"),
-      params.get_object_parameter<Interpolate>("lambda"),
-      params.get_parameter<double>("eps_ref")
-      ); 
+  return neml::make_unique<WalkerKremplSwitchRule>(params); 
 }
 
 
@@ -443,7 +438,8 @@ void WalkerKremplSwitchRule::override_guess(double * const x)
   flow_->override_guess(x);
 }
 
-SofteningModel::SofteningModel()
+SofteningModel::SofteningModel(ParameterSet & params) :
+  NEMLObject(params)
 {
 
 }
@@ -455,7 +451,7 @@ std::string SofteningModel::type()
 
 std::unique_ptr<NEMLObject> SofteningModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SofteningModel>(); 
+  return neml::make_unique<SofteningModel>(params); 
 }
 
 ParameterSet SofteningModel::parameters()
@@ -475,9 +471,10 @@ double SofteningModel::dphi(double alpha, double T) const
   return 0.0;
 }
 
-WalkerSofteningModel::WalkerSofteningModel(std::shared_ptr<Interpolate> phi0,
-                                           std::shared_ptr<Interpolate> phi1) :
-    phi_0_(phi0), phi_1_(phi1)
+WalkerSofteningModel::WalkerSofteningModel(ParameterSet & params) :
+    SofteningModel(params),
+    phi_0_(params.get_object_parameter<Interpolate>("phi_0")),
+    phi_1_(params.get_object_parameter<Interpolate>("phi_1"))
 {
 
 }
@@ -489,10 +486,7 @@ std::string WalkerSofteningModel::type()
 
 std::unique_ptr<NEMLObject> WalkerSofteningModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<WalkerSofteningModel>(
-      params.get_object_parameter<Interpolate>("phi_0"),
-      params.get_object_parameter<Interpolate>("phi_1")
-      ); 
+  return neml::make_unique<WalkerSofteningModel>(params); 
 }
 
 ParameterSet WalkerSofteningModel::parameters()
@@ -527,7 +521,8 @@ double WalkerSofteningModel::dphi(double alpha, double T) const
     return phi_1_->value(T) * phi_0_->value(T) * std::pow(alpha, phi_1_->value(T) - 1.0);
 }
 
-ThermalScaling::ThermalScaling()
+ThermalScaling::ThermalScaling(ParameterSet & params) :
+    NEMLObject(params)
 {
 
 }
@@ -539,7 +534,7 @@ std::string ThermalScaling::type()
 
 std::unique_ptr<NEMLObject> ThermalScaling::initialize(ParameterSet & params)
 {
-  return neml::make_unique<ThermalScaling>(); 
+  return neml::make_unique<ThermalScaling>(params); 
 }
 
 ParameterSet ThermalScaling::parameters()
@@ -554,9 +549,11 @@ double ThermalScaling::value(double T) const
   return 1.0;
 }
 
-ArrheniusThermalScaling::ArrheniusThermalScaling(std::shared_ptr<Interpolate> Q,
-                                                 double R, double T_ref) :
-    Q_(Q), R_(R), T_ref_(T_ref)
+ArrheniusThermalScaling::ArrheniusThermalScaling(ParameterSet & params) :
+    ThermalScaling(params),
+    Q_(params.get_object_parameter<Interpolate>("Q")),
+    R_(params.get_parameter<double>("R")),
+    T_ref_(params.get_parameter<double>("T_ref"))
 {
 
 }
@@ -566,13 +563,10 @@ std::string ArrheniusThermalScaling::type()
   return "ArrheniusThermalScaling";
 }
 
-std::unique_ptr<NEMLObject> ArrheniusThermalScaling::initialize(ParameterSet & params)
+std::unique_ptr<NEMLObject> ArrheniusThermalScaling::initialize(
+    ParameterSet & params)
 {
-  return neml::make_unique<ArrheniusThermalScaling>(
-      params.get_object_parameter<Interpolate>("Q"),
-      params.get_parameter<double>("R"),
-      params.get_parameter<double>("T_ref")
-      ); 
+  return neml::make_unique<ArrheniusThermalScaling>(params); 
 }
 
 ParameterSet ArrheniusThermalScaling::parameters()
@@ -596,10 +590,12 @@ double ArrheniusThermalScaling::arr_(double T) const
   return std::exp(-Q_->value(T) / (R_ * T));
 }
 
-IsotropicHardening::IsotropicHardening(std::string name, 
-                                       std::shared_ptr<ThermalScaling> scale) :
-    ScalarInternalVariable(name), scale_(scale)
-{}
+IsotropicHardening::IsotropicHardening(ParameterSet & params) :
+    ScalarInternalVariable(params), 
+    scale_(params.get_object_parameter<ThermalScaling>("scaling"))
+{
+
+}
 
 /// Return zero for time rate by default 
 double IsotropicHardening::ratet(VariableState & state)
@@ -686,9 +682,8 @@ Symmetric IsotropicHardening::d_rateT_d_g(VariableState & state)
 }
 
 
-ConstantIsotropicHardening::ConstantIsotropicHardening(
-    std::shared_ptr<ThermalScaling> scale) :
-      IsotropicHardening("R", scale)
+ConstantIsotropicHardening::ConstantIsotropicHardening(ParameterSet & params) :
+      IsotropicHardening(params)
 {
 
 }
@@ -701,9 +696,10 @@ std::string ConstantIsotropicHardening::type()
 ParameterSet ConstantIsotropicHardening::parameters()
 {
   ParameterSet pset(ConstantIsotropicHardening::type());
-
+  
+  pset.add_optional_parameter<std::string>("name", "R");
   pset.add_optional_parameter<NEMLObject>("scaling", 
-                                          std::make_shared<ThermalScaling>());
+                                          default_scaling());
 
   return pset;
 }
@@ -711,9 +707,7 @@ ParameterSet ConstantIsotropicHardening::parameters()
 std::unique_ptr<NEMLObject> ConstantIsotropicHardening::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<ConstantIsotropicHardening>(
-      params.get_object_parameter<ThermalScaling>("scaling")
-      ); 
+  return neml::make_unique<ConstantIsotropicHardening>(params); 
 }
 
 double ConstantIsotropicHardening::initial_value()
@@ -757,12 +751,13 @@ Symmetric ConstantIsotropicHardening::d_ratep_d_g(VariableState & state)
 }
 
 
-WalkerIsotropicHardening::WalkerIsotropicHardening(
-    std::shared_ptr<Interpolate> r0, std::shared_ptr<Interpolate> Rinf,
-    std::shared_ptr<Interpolate> R0, std::shared_ptr<Interpolate> r1,
-    std::shared_ptr<Interpolate> r2, std::shared_ptr<ThermalScaling> scale) :
-      IsotropicHardening("R", scale), r0_(r0), Rinf_(Rinf), R0_(R0), r1_(r1), 
-      r2_(r2)
+WalkerIsotropicHardening::WalkerIsotropicHardening(ParameterSet & params) :
+      IsotropicHardening(params),
+      r0_(params.get_object_parameter<Interpolate>("r0")),
+      Rinf_(params.get_object_parameter<Interpolate>("Rinf")),
+      R0_(params.get_object_parameter<Interpolate>("R0")),
+      r1_(params.get_object_parameter<Interpolate>("r1")), 
+      r2_(params.get_object_parameter<Interpolate>("r2"))
 {
 
 }
@@ -781,22 +776,16 @@ ParameterSet WalkerIsotropicHardening::parameters()
   pset.add_parameter<NEMLObject>("R0");
   pset.add_parameter<NEMLObject>("r1");
   pset.add_parameter<NEMLObject>("r2");
+  pset.add_optional_parameter<std::string>("name", "R");
   pset.add_optional_parameter<NEMLObject>("scaling", 
-                                          std::make_shared<ThermalScaling>());
+                                          default_scaling());
 
   return pset;
 }
 
 std::unique_ptr<NEMLObject> WalkerIsotropicHardening::initialize(ParameterSet & params)
 {
-  return neml::make_unique<WalkerIsotropicHardening>(
-      params.get_object_parameter<Interpolate>("r0"),
-      params.get_object_parameter<Interpolate>("Rinf"),
-      params.get_object_parameter<Interpolate>("R0"),
-      params.get_object_parameter<Interpolate>("r1"),
-      params.get_object_parameter<Interpolate>("r2"),
-      params.get_object_parameter<ThermalScaling>("scaling")
-      ); 
+  return neml::make_unique<WalkerIsotropicHardening>(params); 
 }
 
 double WalkerIsotropicHardening::initial_value()
@@ -876,10 +865,12 @@ Symmetric WalkerIsotropicHardening::d_ratet_d_g(VariableState & state)
   return Symmetric();
 }
 
-DragStress::DragStress(std::string name, 
-                                       std::shared_ptr<ThermalScaling> scale) :
-    ScalarInternalVariable(name), scale_(scale)
-{}
+DragStress::DragStress(ParameterSet & params) :
+    ScalarInternalVariable(params),
+    scale_(params.get_object_parameter<ThermalScaling>("scaling"))
+{
+
+}
 
 /// Makes no sense in this context
 double DragStress::d_ratep_d_D(VariableState & state)
@@ -971,9 +962,9 @@ Symmetric DragStress::d_rateT_d_g(VariableState & state)
   return Symmetric::zero();
 }
 
-ConstantDragStress::ConstantDragStress(double value,
-    std::shared_ptr<ThermalScaling> scale) :
-      DragStress("D", scale), value_(value)
+ConstantDragStress::ConstantDragStress(ParameterSet & params) :
+      DragStress(params), 
+      value_(params.get_parameter<double>("value"))
 {
 
 }
@@ -988,8 +979,9 @@ ParameterSet ConstantDragStress::parameters()
   ParameterSet pset(ConstantDragStress::type());
   
   pset.add_parameter<double>("value");
+  pset.add_optional_parameter<std::string>("name", "D");
   pset.add_optional_parameter<NEMLObject>("scaling", 
-                                          std::make_shared<ThermalScaling>());
+                                          default_scaling());
 
   return pset;
 }
@@ -997,10 +989,7 @@ ParameterSet ConstantDragStress::parameters()
 std::unique_ptr<NEMLObject> ConstantDragStress::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<ConstantDragStress>(
-      params.get_parameter<double>("value"),
-      params.get_object_parameter<ThermalScaling>("scaling")
-      ); 
+  return neml::make_unique<ConstantDragStress>(params); 
 }
 
 double ConstantDragStress::initial_value()
@@ -1048,13 +1037,14 @@ Symmetric ConstantDragStress::d_ratep_d_g(VariableState & state)
   return Symmetric();
 }
 
-WalkerDragStress::WalkerDragStress(
-    std::shared_ptr<Interpolate> d0, std::shared_ptr<Interpolate> d1,
-    std::shared_ptr<Interpolate> d2, std::shared_ptr<Interpolate> D_xi,
-    double D_0, std::shared_ptr<SofteningModel> softening,
-    std::shared_ptr<ThermalScaling> scale) :
-      DragStress("D", scale), d0_(d0), d1_(d1), d2_(d2),
-      D_xi_(D_xi), D_0_(D_0), softening_(softening)
+WalkerDragStress::WalkerDragStress(ParameterSet & params) :
+      DragStress(params),
+      d0_(params.get_object_parameter<Interpolate>("d0")), 
+      d1_(params.get_object_parameter<Interpolate>("d1")), 
+      d2_(params.get_object_parameter<Interpolate>("d2")),
+      D_xi_(params.get_object_parameter<Interpolate>("D_xi")), 
+      D_0_(params.get_parameter<double>("D_0")), 
+      softening_(params.get_object_parameter<SofteningModel>("softening"))
 {
 
 }
@@ -1074,8 +1064,9 @@ ParameterSet WalkerDragStress::parameters()
   pset.add_parameter<NEMLObject>("D_xi");
   pset.add_parameter<double>("D_0");
   pset.add_parameter<NEMLObject>("softening");
+  pset.add_optional_parameter<std::string>("name", "D");
   pset.add_optional_parameter<NEMLObject>("scaling", 
-                                          std::make_shared<ThermalScaling>());
+                                          default_scaling());
 
   return pset;
 }
@@ -1083,15 +1074,7 @@ ParameterSet WalkerDragStress::parameters()
 std::unique_ptr<NEMLObject> WalkerDragStress::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<WalkerDragStress>(
-      params.get_object_parameter<Interpolate>("d0"),
-      params.get_object_parameter<Interpolate>("d1"),
-      params.get_object_parameter<Interpolate>("d2"),
-      params.get_object_parameter<Interpolate>("D_xi"),
-      params.get_parameter<double>("D_0"),
-      params.get_object_parameter<SofteningModel>("softening"),
-      params.get_object_parameter<ThermalScaling>("scaling")
-      ); 
+  return neml::make_unique<WalkerDragStress>(params); 
 }
 
 double WalkerDragStress::initial_value()
@@ -1181,10 +1164,12 @@ Symmetric WalkerDragStress::d_ratet_d_g(VariableState & state)
   return Symmetric();
 }
 
-KinematicHardening::KinematicHardening(std::string name, 
-                                       std::shared_ptr<ThermalScaling> scale) :
-    SymmetricInternalVariable(name), scale_(scale)
-{}
+KinematicHardening::KinematicHardening(ParameterSet & params) :
+    SymmetricInternalVariable(params), 
+    scale_(params.get_object_parameter<ThermalScaling>("scaling"))
+{
+
+}
 
 /// Return zero for time rate by default 
 Symmetric KinematicHardening::ratet(VariableState & state)
@@ -1270,11 +1255,10 @@ SymSymR4 KinematicHardening::d_rateT_d_g(VariableState & state)
   return SymSymR4::zero();
 }
 
-FAKinematicHardening::FAKinematicHardening(std::shared_ptr<Interpolate> c,
-                                           std::shared_ptr<Interpolate> g,
-                                           std::shared_ptr<ThermalScaling>
-                                           scale) : 
-    KinematicHardening("X", scale), c_(c), g_(g)
+FAKinematicHardening::FAKinematicHardening(ParameterSet & params) : 
+    KinematicHardening(params),
+    c_(params.get_object_parameter<Interpolate>("c")),
+    g_(params.get_object_parameter<Interpolate>("g"))
 {
 
 }
@@ -1290,8 +1274,9 @@ ParameterSet FAKinematicHardening::parameters()
   
   pset.add_parameter<NEMLObject>("c");
   pset.add_parameter<NEMLObject>("g");
+  pset.add_optional_parameter<std::string>("name", "X");
   pset.add_optional_parameter<NEMLObject>("scaling", 
-                                          std::make_shared<ThermalScaling>());
+                                          default_scaling());
 
   return pset;
 }
@@ -1299,11 +1284,7 @@ ParameterSet FAKinematicHardening::parameters()
 std::unique_ptr<NEMLObject> FAKinematicHardening::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<FAKinematicHardening>(
-      params.get_object_parameter<Interpolate>("c"),
-      params.get_object_parameter<Interpolate>("g"),
-      params.get_object_parameter<ThermalScaling>("scaling")
-      ); 
+  return neml::make_unique<FAKinematicHardening>(params); 
 }
 
 Symmetric FAKinematicHardening::initial_value()
@@ -1347,15 +1328,18 @@ SymSymR4 FAKinematicHardening::d_ratep_d_g(VariableState & state)
 }
 
 
-WalkerKinematicHardening::WalkerKinematicHardening(
-    std::shared_ptr<Interpolate> c0, std::shared_ptr<Interpolate> c1, 
-    std::shared_ptr<Interpolate> c2, std::shared_ptr<Interpolate> l0,
-    std::shared_ptr<Interpolate> l1, std::shared_ptr<Interpolate> l,
-    std::shared_ptr<Interpolate> b0, std::shared_ptr<Interpolate> x0,
-    std::shared_ptr<Interpolate> x1, std::shared_ptr<SofteningModel> softening,
-    std::shared_ptr<ThermalScaling> scale) : 
-      KinematicHardening("X", scale), c0_(c0), c1_(c1), c2_(c2), l0_(l0), l1_(l1),
-      l_(l), b0_(b0), x0_(x0), x1_(x1), softening_(softening)
+WalkerKinematicHardening::WalkerKinematicHardening(ParameterSet & params) : 
+      KinematicHardening(params), 
+      c0_(params.get_object_parameter<Interpolate>("c0")),
+      c1_(params.get_object_parameter<Interpolate>("c1")), 
+      c2_(params.get_object_parameter<Interpolate>("c2")), 
+      l0_(params.get_object_parameter<Interpolate>("l0")), 
+      l1_(params.get_object_parameter<Interpolate>("l1")),
+      l_(params.get_object_parameter<Interpolate>("l")), 
+      b0_(params.get_object_parameter<Interpolate>("b0")), 
+      x0_(params.get_object_parameter<Interpolate>("x0")), 
+      x1_(params.get_object_parameter<Interpolate>("x1")), 
+      softening_(params.get_object_parameter<SofteningModel>("softening"))
 {
 
 }
@@ -1381,7 +1365,8 @@ ParameterSet WalkerKinematicHardening::parameters()
   pset.add_parameter<NEMLObject>("softening");
 
   pset.add_optional_parameter<NEMLObject>("scaling", 
-                                          std::make_shared<ThermalScaling>());
+                                          default_scaling());
+  pset.add_optional_parameter<std::string>("name", "X");
 
   return pset;
 }
@@ -1389,19 +1374,7 @@ ParameterSet WalkerKinematicHardening::parameters()
 std::unique_ptr<NEMLObject> WalkerKinematicHardening::initialize(
     ParameterSet & params)
 {
-  return neml::make_unique<WalkerKinematicHardening>(
-      params.get_object_parameter<Interpolate>("c0"),
-      params.get_object_parameter<Interpolate>("c1"),
-      params.get_object_parameter<Interpolate>("c2"),
-      params.get_object_parameter<Interpolate>("l0"),
-      params.get_object_parameter<Interpolate>("l1"),
-      params.get_object_parameter<Interpolate>("l"),
-      params.get_object_parameter<Interpolate>("b0"),
-      params.get_object_parameter<Interpolate>("x0"),
-      params.get_object_parameter<Interpolate>("x1"),
-      params.get_object_parameter<SofteningModel>("softening"),
-      params.get_object_parameter<ThermalScaling>("scaling")
-      ); 
+  return neml::make_unique<WalkerKinematicHardening>(params); 
 }
 
 Symmetric WalkerKinematicHardening::initial_value()
@@ -1591,7 +1564,8 @@ SymSymR4 WalkerKinematicHardening::dN_(VariableState & state)
     return std::sqrt(3.0/2.0) / dn * (SymSymR4::id() - douter(d/dn,d/dn));
 }
 
-WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule() :
+WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule(ParameterSet & params) :
+    ViscoPlasticFlowRule(params),
     stored_hist_(false)
 {
 
@@ -1821,8 +1795,13 @@ void WrappedViscoPlasticFlowRule::dh_da_temp(const State & state, History & res)
   res.zero();
 }
 
-TestFlowRule::TestFlowRule(double eps0, double D, double n, double s0, double K)
-  : WrappedViscoPlasticFlowRule(), eps0_(eps0), D_(D), n_(n), s0_(s0), K_(K)
+TestFlowRule::TestFlowRule(ParameterSet & params)
+  : WrappedViscoPlasticFlowRule(params), 
+    eps0_(params.get_parameter<double>("eps0")), 
+    D_(params.get_parameter<double>("D")), 
+    n_(params.get_parameter<double>("n")), 
+    s0_(params.get_parameter<double>("s0")), 
+    K_(params.get_parameter<double>("K"))
 {
   populate_hist(stored_hist_);
 }
@@ -1834,13 +1813,7 @@ std::string TestFlowRule::type()
 
 std::unique_ptr<NEMLObject> TestFlowRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<TestFlowRule>(
-      params.get_parameter<double>("eps0"),
-      params.get_parameter<double>("D"),
-      params.get_parameter<double>("n"),
-      params.get_parameter<double>("s0"),
-      params.get_parameter<double>("K")
-      );
+  return neml::make_unique<TestFlowRule>(params);
 }
 
 ParameterSet TestFlowRule::parameters()
@@ -1941,18 +1914,21 @@ void TestFlowRule::dh_da(const State & state, History & res) const
   res.zero();
 }
 
-WalkerFlowRule::WalkerFlowRule(
-    std::shared_ptr<Interpolate> eps0, std::shared_ptr<SofteningModel> softening,
-    std::shared_ptr<ThermalScaling> scaling, std::shared_ptr<Interpolate> n,
-    std::shared_ptr<Interpolate> k, std::shared_ptr<Interpolate> m,
-    std::shared_ptr<IsotropicHardening> R, std::shared_ptr<DragStress> D,
-    std::vector<std::shared_ptr<KinematicHardening>> X)
-    : WrappedViscoPlasticFlowRule(), eps0_(eps0), softening_(softening),
-      scaling_(scaling), n_(n), k_(k), m_(m), R_(R), D_(D), X_(X)
+WalkerFlowRule::WalkerFlowRule(ParameterSet & params) :
+    WrappedViscoPlasticFlowRule(params),
+    eps0_(params.get_object_parameter<Interpolate>("eps0")),
+    softening_(params.get_object_parameter<SofteningModel>("softening")),
+    scaling_(params.get_object_parameter<ThermalScaling>("scaling")),
+    n_(params.get_object_parameter<Interpolate>("n")),
+    k_(params.get_object_parameter<Interpolate>("k")),
+    m_(params.get_object_parameter<Interpolate>("m")),
+    R_(params.get_object_parameter<IsotropicHardening>("R")),
+    D_(params.get_object_parameter<DragStress>("D")),
+    X_(params.get_object_parameter_vector<KinematicHardening>("X"))
 {
   // The variable names to something canonical
-  R->set_name("R");
-  D->set_name("D");
+  R_->set_name("R");
+  D_->set_name("D");
   int i = 0;
   for (auto X : X_) {
     X->set_name("X" + std::to_string(i));
@@ -1976,17 +1952,7 @@ std::string WalkerFlowRule::type()
 
 std::unique_ptr<NEMLObject> WalkerFlowRule::initialize(ParameterSet & params)
 {
-  return neml::make_unique<WalkerFlowRule>(
-      params.get_object_parameter<Interpolate>("eps0"),
-      params.get_object_parameter<SofteningModel>("softening"),
-      params.get_object_parameter<ThermalScaling>("scaling"),
-      params.get_object_parameter<Interpolate>("n"),
-      params.get_object_parameter<Interpolate>("k"),
-      params.get_object_parameter<Interpolate>("m"),
-      params.get_object_parameter<IsotropicHardening>("R"),
-      params.get_object_parameter<DragStress>("D"),
-      params.get_object_parameter_vector<KinematicHardening>("X")
-      );
+  return neml::make_unique<WalkerFlowRule>(params);
 }
 
 ParameterSet WalkerFlowRule::parameters()
@@ -2519,6 +2485,13 @@ void WalkerFlowRule::override_guess(double * const x)
     x[6] += 1.0e-3;
   }
   return;
+}
+
+std::shared_ptr<ThermalScaling> default_scaling()
+{
+  ParameterSet params = ThermalScaling::parameters();
+
+  return std::make_shared<ThermalScaling>(params);
 }
 
 }

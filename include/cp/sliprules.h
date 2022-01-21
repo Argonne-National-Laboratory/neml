@@ -26,6 +26,7 @@ class SlipHardening;
 class NEML_EXPORT SlipRule: public NEMLObject
 {
  public:
+  SlipRule(ParameterSet & params);
   /// Populate the history object with the appropriate variable names and types
   virtual void populate_history(History & history) const = 0;
   /// Actually set the history to their initial values
@@ -87,8 +88,8 @@ class NEML_EXPORT SlipMultiStrengthSlipRule: public SlipRule
 {
  public:
   /// Initialize with the strength models
-  SlipMultiStrengthSlipRule(std::vector<std::shared_ptr<SlipHardening>>
-                            strengths);
+  SlipMultiStrengthSlipRule(ParameterSet & params, 
+                            std::vector<std::shared_ptr<SlipHardening>> strengths);
 
   /// Number of strengths
   size_t nstrength() const;
@@ -156,11 +157,7 @@ class NEML_EXPORT KinematicPowerLawSlipRule: public SlipMultiStrengthSlipRule
  public:
   /// A completely generic slip rule with a backstrength, a isostrength, and
   /// a flow resistance.
-  KinematicPowerLawSlipRule(std::shared_ptr<SlipHardening> backstrength,
-                            std::shared_ptr<SlipHardening> isostrength,
-                            std::shared_ptr<SlipHardening> flowresistance,
-                            std::shared_ptr<Interpolate> gamma0,
-                            std::shared_ptr<Interpolate> n);
+  KinematicPowerLawSlipRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -195,7 +192,7 @@ class NEML_EXPORT SlipStrengthSlipRule: public SlipMultiStrengthSlipRule
 {
  public:
   /// Initialize with the strength model
-  SlipStrengthSlipRule(std::shared_ptr<SlipHardening> strength);
+  SlipStrengthSlipRule(ParameterSet & params);
 
   /// The slip rate on group g, system i given the resolved shear, the strength,
   /// and temperature
@@ -227,9 +224,7 @@ class NEML_EXPORT PowerLawSlipRule: public SlipStrengthSlipRule
  public:
   /// Initialize with the strength object, the reference strain rate, and the
   /// rate sensitivity
-  PowerLawSlipRule(std::shared_ptr<SlipHardening> strength,
-                   std::shared_ptr<Interpolate> gamma0,
-                   std::shared_ptr<Interpolate> n);
+  PowerLawSlipRule(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

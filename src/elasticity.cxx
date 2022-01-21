@@ -8,6 +8,12 @@
 
 namespace neml {
 
+LinearElasticModel::LinearElasticModel(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
 SymSymR4 LinearElasticModel::C(double T) const
 {
   SymSymR4 res;
@@ -46,20 +52,21 @@ double LinearElasticModel::G(double T, const Orientation & Q, const Vector & b,
 }
 
 IsotropicLinearElasticModel::IsotropicLinearElasticModel(
-      std::shared_ptr<Interpolate> m1,
-      std::string m1_type,
-      std::shared_ptr<Interpolate> m2,
-      std::string m2_type) :
-    m1_(m1), m2_(m2), m1_type_(m1_type), m2_type_(m2_type)
+      ParameterSet & params) :
+    LinearElasticModel(params),
+    m1_(params.get_object_parameter<Interpolate>("m1")), 
+    m2_(params.get_object_parameter<Interpolate>("m2")),
+    m1_type_(params.get_parameter<std::string>("m1_type")),
+    m2_type_(params.get_parameter<std::string>("m2_type"))
 {
-  if (m1_type_ == m2_type) {
+  if (m1_type_ == m2_type_) {
     throw std::invalid_argument("Two distinct elastic constants are required!");
   }
-  if (valid_types_.find(m1_type) == valid_types_.end()) {
-    throw std::invalid_argument("Unknown elastic constant " + m1_type);
+  if (valid_types_.find(m1_type_) == valid_types_.end()) {
+    throw std::invalid_argument("Unknown elastic constant " + m1_type_);
   }
-  if (valid_types_.find(m2_type) == valid_types_.end()) {
-    throw std::invalid_argument("Unknown elastic constant " + m2_type);
+  if (valid_types_.find(m2_type_) == valid_types_.end()) {
+    throw std::invalid_argument("Unknown elastic constant " + m2_type_);
   }
 }
 
@@ -82,12 +89,7 @@ ParameterSet IsotropicLinearElasticModel::parameters()
 
 std::unique_ptr<NEMLObject> IsotropicLinearElasticModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<IsotropicLinearElasticModel>(
-      params.get_object_parameter<Interpolate>("m1"),
-      params.get_parameter<std::string>("m1_type"),
-      params.get_object_parameter<Interpolate>("m2"),
-      params.get_parameter<std::string>("m2_type")
-      ); 
+  return neml::make_unique<IsotropicLinearElasticModel>(params); 
 }
 
 int IsotropicLinearElasticModel::C(double T, double * const Cv) const
@@ -242,15 +244,15 @@ void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) cons
   }
 }
 
-CubicLinearElasticModel::CubicLinearElasticModel(
-    std::shared_ptr<Interpolate> m1,
-    std::shared_ptr<Interpolate> m2,
-    std::shared_ptr<Interpolate> m3,
-    std::string method) :
-      M1_(m1), M2_(m2), M3_(m3), method_(method)
+CubicLinearElasticModel::CubicLinearElasticModel(ParameterSet & params) :
+    LinearElasticModel(params),
+    M1_(params.get_object_parameter<Interpolate>("m1")), 
+    M2_(params.get_object_parameter<Interpolate>("m2")), 
+    M3_(params.get_object_parameter<Interpolate>("m3")), 
+    method_(params.get_parameter<std::string>("method"))
 {
-  if ((method != "moduli") and (method != "components")) {
-    throw std::invalid_argument("Unknown initialization method " + method);
+  if ((method_ != "moduli") and (method_ != "components")) {
+    throw std::invalid_argument("Unknown initialization method " + method_);
   }
 }
 
@@ -273,12 +275,7 @@ ParameterSet CubicLinearElasticModel::parameters()
 
 std::unique_ptr<NEMLObject> CubicLinearElasticModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<CubicLinearElasticModel>(
-      params.get_object_parameter<Interpolate>("m1"),
-      params.get_object_parameter<Interpolate>("m2"),
-      params.get_object_parameter<Interpolate>("m3"),
-      params.get_parameter<std::string>("method")
-      ); 
+  return neml::make_unique<CubicLinearElasticModel>(params); 
 }
 
 int CubicLinearElasticModel::C(double T, double * const Cv) const
@@ -337,16 +334,17 @@ void CubicLinearElasticModel::get_components_(double T,
 }
 
 TransverseIsotropicLinearElasticModel::TransverseIsotropicLinearElasticModel(
-    std::shared_ptr<Interpolate> m1,
-    std::shared_ptr<Interpolate> m2,
-    std::shared_ptr<Interpolate> m3,
-    std::shared_ptr<Interpolate> m4,
-    std::shared_ptr<Interpolate> m5,
-    std::string method) :
-      m1_(m1), m2_(m2), m3_(m3), m4_(m4), m5_(m5), method_(method)
+      ParameterSet & params) :
+    LinearElasticModel(params),    
+    m1_(params.get_object_parameter<Interpolate>("m1")), 
+    m2_(params.get_object_parameter<Interpolate>("m2")),
+    m3_(params.get_object_parameter<Interpolate>("m3")),
+    m4_(params.get_object_parameter<Interpolate>("m4")),
+    m5_(params.get_object_parameter<Interpolate>("m5")),
+    method_(params.get_parameter<std::string>("method"))
 {
-  if ((method != "components")) {
-    throw std::invalid_argument("Unknown initialization method " + method);
+  if ((method_ != "components")) {
+    throw std::invalid_argument("Unknown initialization method " + method_);
   }
 }
 
@@ -371,14 +369,7 @@ ParameterSet TransverseIsotropicLinearElasticModel::parameters()
 
 std::unique_ptr<NEMLObject> TransverseIsotropicLinearElasticModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<TransverseIsotropicLinearElasticModel>(
-      params.get_object_parameter<Interpolate>("m1"),
-      params.get_object_parameter<Interpolate>("m2"),
-      params.get_object_parameter<Interpolate>("m3"),
-      params.get_object_parameter<Interpolate>("m4"),
-      params.get_object_parameter<Interpolate>("m5"),
-      params.get_parameter<std::string>("method")
-      ); 
+  return neml::make_unique<TransverseIsotropicLinearElasticModel>(params); 
 }
 
 int TransverseIsotropicLinearElasticModel::C(double T, double * const Cv) const

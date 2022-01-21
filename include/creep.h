@@ -13,6 +13,7 @@ namespace neml {
 /// Scalar creep functions in terms of effective stress and strain
 class NEML_EXPORT ScalarCreepRule: public NEMLObject {
   public:
+   ScalarCreepRule(ParameterSet & params);
    /// Scalar creep strain rate as a function of effective stress,
    /// effective strain, time, and temperature
    virtual int g(double seq, double eeq, double t, double T, double & g)
@@ -34,10 +35,7 @@ class NEML_EXPORT ScalarCreepRule: public NEMLObject {
 /// Creep rate law from Blackburn 1972
 class NEML_EXPORT BlackburnMinimumCreep: public ScalarCreepRule {
  public:
-  BlackburnMinimumCreep(std::shared_ptr<Interpolate> A,
-                        std::shared_ptr<Interpolate> n,
-                        std::shared_ptr<Interpolate> beta,
-                        double R, double Q);
+  BlackburnMinimumCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -68,8 +66,7 @@ static Register<BlackburnMinimumCreep> regBlackburnMinimumCreep;
 /// Creep rate law from Swindeman 1999
 class NEML_EXPORT SwindemanMinimumCreep: public ScalarCreepRule {
  public:
-  SwindemanMinimumCreep(double C, double n, double V, double Q,
-                        bool celsius);
+  SwindemanMinimumCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -100,7 +97,7 @@ static Register<SwindemanMinimumCreep> regSwindemanMinimumCreep;
 class NEML_EXPORT PowerLawCreep: public ScalarCreepRule {
  public:
   /// Parameters: prefector A and exponent n
-  PowerLawCreep(std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> n);
+  PowerLawCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -133,7 +130,7 @@ static Register<PowerLawCreep> regPowerLawCreep;
 class NEML_EXPORT NormalizedPowerLawCreep: public ScalarCreepRule {
  public:
   /// Parameters: stress divisor s0 and exponent n
-  NormalizedPowerLawCreep(std::shared_ptr<Interpolate> s0, std::shared_ptr<Interpolate> n);
+  NormalizedPowerLawCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -163,9 +160,7 @@ class NEML_EXPORT RegionKMCreep: public ScalarCreepRule {
   /// Inputs: cuts in normalized activation energy, prefactors for each region
   /// exponents for each region, boltzmann constant, burgers vector,
   /// reference strain rate, elastic model, to compute mu
-  RegionKMCreep(std::vector<double> cuts, std::vector<std::shared_ptr<Interpolate>> A,
-                std::vector<std::shared_ptr<Interpolate>> B, double kboltz, double b, double eps0,
-                std::shared_ptr<LinearElasticModel> emodel, bool celsius);
+  RegionKMCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -199,9 +194,7 @@ static Register<RegionKMCreep> regRegionKMCreep;
 class NEML_EXPORT NortonBaileyCreep: public ScalarCreepRule {
  public:
   /// Parameters: prefactor A, stress exponent n, time exponent m
-  NortonBaileyCreep(std::shared_ptr<Interpolate> A,
-                    std::shared_ptr<Interpolate> m,
-                    std::shared_ptr<Interpolate> n);
+  NortonBaileyCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -236,8 +229,7 @@ class NEML_EXPORT MukherjeeCreep: public ScalarCreepRule {
   /// Parameters: elastic model (for shear modulus), prefactor,
   /// stress exponent, reference lattice diffusivity, activation energy for
   /// lattice diffusion, burgers vector, boltzmann constant, gas constant
-  MukherjeeCreep(std::shared_ptr<LinearElasticModel> emodel, double A, double n,
-                 double D0, double Q, double b, double k, double R);
+  MukherjeeCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -280,7 +272,7 @@ static Register<MukherjeeCreep> regMukherjeeCreep;
 class NEML_EXPORT GenericCreep: public ScalarCreepRule {
  public:
   /// Parameters: interpolate giving the log creep rate
-  GenericCreep(std::shared_ptr<Interpolate> cfn);
+  GenericCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -307,7 +299,7 @@ static Register<GenericCreep> regGenericCreep;
 class NEML_EXPORT MinCreep225Cr1MoCreep: public ScalarCreepRule {
  public:
   /// Parameters: prefector A and exponent n
-  MinCreep225Cr1MoCreep();
+  MinCreep225Cr1MoCreep(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -333,7 +325,7 @@ class NEML_EXPORT MinCreep225Cr1MoCreep: public ScalarCreepRule {
   double de2_(double seq, double T) const;
 
  private:
-  const static PiecewiseLinearInterpolate U;
+  const static std::shared_ptr<PiecewiseLinearInterpolate> U;
 };
 
 static Register<MinCreep225Cr1MoCreep> regMinCreep225Cr1MoCreep;
@@ -352,7 +344,7 @@ class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
  public:
   /// Parameters are a solver tolerance, the maximum allowable iterations,
   /// and a verbosity flag
-  CreepModel(double rtol, double atol, int miter, bool verbose, bool linesearch);
+  CreepModel(ParameterSet & params);
 
   /// Use the creep rate function to update the creep strain
   int update(const double * const s_np1,
@@ -407,9 +399,7 @@ class NEML_EXPORT J2CreepModel: public CreepModel {
  public:
   /// Parameters: scalar creep rule, nonlinear tolerance, maximum solver
   /// iterations, and a verbosity flag
-  J2CreepModel(std::shared_ptr<ScalarCreepRule> rule,
-               double rtol, double atol, int miter, bool verbose, 
-               bool linesearch);
+  J2CreepModel(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

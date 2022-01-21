@@ -82,11 +82,15 @@ double & Matrix::operator()(size_t i, size_t j)
   return data_[CINDEX(i,j,m_)];
 }
 
-SquareMatrix::SquareMatrix(size_t m, std::string type,
-                           std::vector<double> data, 
-                           std::vector<size_t> blocks) :
-    Matrix(m,m)
+SquareMatrix::SquareMatrix(ParameterSet & params) :
+    NEMLObject(params),
+    Matrix(params.get_parameter<size_t>("m"),params.get_parameter<size_t>("m"))
 {
+  std::string type = params.get_parameter<std::string>("type");
+  std::vector<double> data = params.get_parameter<std::vector<double>>("data");
+  std::vector<size_t> blocks =
+      params.get_parameter<std::vector<size_t>>("blocks"); 
+
   if (type == "zero") {
     std::fill(data_, data_+size(), 0);
   }
@@ -134,11 +138,7 @@ ParameterSet SquareMatrix::parameters()
 
 std::unique_ptr<NEMLObject> SquareMatrix::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SquareMatrix>(
-      params.get_parameter<size_t>("m"),
-      params.get_parameter<std::string>("type"),
-      params.get_parameter<std::vector<double>>("data"),
-      params.get_parameter<std::vector<size_t>>("blocks"));
+  return neml::make_unique<SquareMatrix>(params);
 }
 
 void SquareMatrix::setup_id_()

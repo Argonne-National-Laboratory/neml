@@ -2,6 +2,11 @@
 
 namespace neml {
 
+KinematicModel::KinematicModel(ParameterSet & params) :
+    NEMLObject(params)
+{
+}
+
 SymSymR4 KinematicModel::d_stress_rate_d_d_decouple(
     const Symmetric & stress, const Symmetric & d,
     const Skew & w, const Orientation & Q,
@@ -43,15 +48,10 @@ bool KinematicModel::use_nye() const
   return false;
 }
 
-StandardKinematicModel::StandardKinematicModel(
-    std::shared_ptr<LinearElasticModel> emodel,
-    std::shared_ptr<InelasticModel> imodel) :
-      emodel_(emodel), imodel_(imodel)
-{
-
-}
-
-StandardKinematicModel::~StandardKinematicModel()
+StandardKinematicModel::StandardKinematicModel(ParameterSet & params) :
+    KinematicModel(params),
+    emodel_(params.get_object_parameter<LinearElasticModel>("emodel")),
+    imodel_(params.get_object_parameter<InelasticModel>("imodel"))
 {
 
 }
@@ -63,9 +63,7 @@ std::string StandardKinematicModel::type()
 
 std::unique_ptr<NEMLObject> StandardKinematicModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<StandardKinematicModel>(
-      params.get_object_parameter<LinearElasticModel>("emodel"),
-      params.get_object_parameter<InelasticModel>("imodel"));
+  return neml::make_unique<StandardKinematicModel>(params);
 }
 
 ParameterSet StandardKinematicModel::parameters()
@@ -285,16 +283,11 @@ bool StandardKinematicModel::use_nye() const
 }
 
 DamagedStandardKinematicModel::DamagedStandardKinematicModel(
-    std::shared_ptr<LinearElasticModel> emodel,
-    std::shared_ptr<AsaroInelasticity> imodel,
-    std::shared_ptr<CrystalDamageModel> dmodel) :
-      StandardKinematicModel(emodel, imodel), dmodel_(dmodel), amodel_(imodel)
+    ParameterSet & params) :
+      StandardKinematicModel(params),
+      dmodel_(params.get_object_parameter<CrystalDamageModel>("dmodel")),
+      amodel_(params.get_object_parameter<AsaroInelasticity>("imodel"))
 {
-}
-
-DamagedStandardKinematicModel::~DamagedStandardKinematicModel()
-{
-
 }
 
 std::string DamagedStandardKinematicModel::type()
@@ -304,10 +297,7 @@ std::string DamagedStandardKinematicModel::type()
 
 std::unique_ptr<NEMLObject> DamagedStandardKinematicModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<DamagedStandardKinematicModel>(
-      params.get_object_parameter<LinearElasticModel>("emodel"),
-      params.get_object_parameter<AsaroInelasticity>("imodel"),
-      params.get_object_parameter<CrystalDamageModel>("dmodel"));
+  return neml::make_unique<DamagedStandardKinematicModel>(params);
 }
 
 ParameterSet DamagedStandardKinematicModel::parameters()

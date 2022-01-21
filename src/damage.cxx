@@ -6,11 +6,9 @@
 
 namespace neml {
 
-NEMLDamagedModel_sd::NEMLDamagedModel_sd(std::shared_ptr<LinearElasticModel> elastic,
-                                         std::shared_ptr<NEMLModel_sd> base, 
-                                         std::shared_ptr<Interpolate> alpha,
-                                         bool truesdell) :
-    NEMLModel_sd(elastic, alpha, truesdell), base_(base)
+NEMLDamagedModel_sd::NEMLDamagedModel_sd(ParameterSet & params) :
+    NEMLModel_sd(params), 
+    base_(params.get_object_parameter<NEMLModel_sd>("base"))
 {
 
 }
@@ -34,19 +32,17 @@ int NEMLDamagedModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
   return base_->set_elastic_model(emodel);
 }
 
-NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> base, 
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter, bool verbose, bool linesearch,
-    bool truesdell, bool ekill, double dkill,
-    double sfact) :
-      NEMLDamagedModel_sd(elastic, base, alpha, truesdell), 
-      rtol_(rtol), atol_(atol), miter_(miter),
-      verbose_(verbose), linesearch_(linesearch),
-      ekill_(ekill), dkill_(dkill), sfact_(sfact)
+NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(ParameterSet & params) :
+      NEMLDamagedModel_sd(params), 
+      rtol_(params.get_parameter<double>("rtol")), 
+      atol_(params.get_parameter<double>("atol")), 
+      miter_(params.get_parameter<int>("miter")),
+      verbose_(params.get_parameter<bool>("verbose")), 
+      linesearch_(params.get_parameter<bool>("linesearch")),
+      ekill_(params.get_parameter<bool>("ekill")), 
+      dkill_(params.get_parameter<double>("dkill")), 
+      sfact_(params.get_parameter<double>("sfact"))
 {
-
 }
 
 int NEMLScalarDamagedModel_sd::update_sd(
@@ -292,19 +288,10 @@ int NEMLScalarDamagedModel_sd::ekill_update_(double T_np1,
   return 0;
 }
 
-CombinedDamageModel_sd::CombinedDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter, bool verbose,
-    bool linesearch, bool truesdell) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter,
-                                verbose, linesearch, truesdell, false, 0, 1),
-      models_(models)
+CombinedDamageModel_sd::CombinedDamageModel_sd(ParameterSet & params) :
+      NEMLScalarDamagedModel_sd(params),
+      models_(params.get_object_parameter_vector<NEMLScalarDamagedModel_sd>("models"))
 {
-
-
 }
 
 std::string CombinedDamageModel_sd::type()
@@ -321,7 +308,7 @@ ParameterSet CombinedDamageModel_sd::parameters()
   pset.add_parameter<NEMLObject>("base");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("rtol", 1.0e-6);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -329,23 +316,16 @@ ParameterSet CombinedDamageModel_sd::parameters()
   pset.add_optional_parameter<bool>("linesearch", false);
   pset.add_optional_parameter<bool>("truesdell", true);
 
+  pset.add_optional_parameter<bool>("ekill", false);
+  pset.add_optional_parameter<double>("dkill", 0.5);
+  pset.add_optional_parameter<double>("sfact", 100000.0);
+
   return pset;
 }
 
 std::unique_ptr<NEMLObject> CombinedDamageModel_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<CombinedDamageModel_sd>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter_vector<NEMLScalarDamagedModel_sd>("models"),
-      params.get_object_parameter<NEMLModel_sd>("base"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<CombinedDamageModel_sd>(params); 
 }
 
 int CombinedDamageModel_sd::damage(
@@ -439,18 +419,11 @@ int CombinedDamageModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel
   return 0;
 }
 
-ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<Interpolate> A,
-    std::shared_ptr<Interpolate> xi,
-    std::shared_ptr<Interpolate> phi,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter,
-    bool verbose, bool linesearch, bool truesdell) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter,
-                                verbose, linesearch, truesdell, false, 0, 1),
-      A_(A), xi_(xi), phi_(phi)
+ClassicalCreepDamageModel_sd::ClassicalCreepDamageModel_sd(ParameterSet & params) :
+      NEMLScalarDamagedModel_sd(params),
+      A_(params.get_object_parameter<Interpolate>("A")),
+      xi_(params.get_object_parameter<Interpolate>("xi")),
+      phi_(params.get_object_parameter<Interpolate>("phi"))
 {
 
 
@@ -472,7 +445,7 @@ ParameterSet ClassicalCreepDamageModel_sd::parameters()
   pset.add_parameter<NEMLObject>("base");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("rtol", 1.0e-8);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -480,25 +453,16 @@ ParameterSet ClassicalCreepDamageModel_sd::parameters()
   pset.add_optional_parameter<bool>("linesearch", false);
   pset.add_optional_parameter<bool>("truesdell", true);
 
+  pset.add_optional_parameter<bool>("ekill", false);
+  pset.add_optional_parameter<double>("dkill", 0.5);
+  pset.add_optional_parameter<double>("sfact", 100000.0);
+
   return pset;
 }
 
 std::unique_ptr<NEMLObject> ClassicalCreepDamageModel_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<ClassicalCreepDamageModel_sd>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("xi"),
-      params.get_object_parameter<Interpolate>("phi"),
-      params.get_object_parameter<NEMLModel_sd>("base"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<ClassicalCreepDamageModel_sd>(params); 
 }
 
 int ClassicalCreepDamageModel_sd::damage(
@@ -592,7 +556,14 @@ double ClassicalCreepDamageModel_sd::se(const double * const s) const
                                               pow(s[5], 2.0))) / 2.0);
 }
 
-VonMisesEffectiveStress::VonMisesEffectiveStress()
+EffectiveStress::EffectiveStress(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
+VonMisesEffectiveStress::VonMisesEffectiveStress(ParameterSet & params) : 
+    EffectiveStress(params)
 {
 
 }
@@ -611,7 +582,7 @@ ParameterSet VonMisesEffectiveStress::parameters()
 
 std::unique_ptr<NEMLObject> VonMisesEffectiveStress::initialize(ParameterSet & params)
 {
-  return neml::make_unique<VonMisesEffectiveStress>();
+  return neml::make_unique<VonMisesEffectiveStress>(params);
 }
 
 int VonMisesEffectiveStress::effective(const double * const s, double & eff) const
@@ -638,7 +609,10 @@ int VonMisesEffectiveStress::deffective(const double * const s, double * const d
   return 0;
 }
 
-MeanEffectiveStress::MeanEffectiveStress() {}
+MeanEffectiveStress::MeanEffectiveStress(ParameterSet & params) :
+  EffectiveStress(params)
+{
+}
 
 std::string MeanEffectiveStress::type() { return "MeanEffectiveStress"; }
 
@@ -650,7 +624,7 @@ ParameterSet MeanEffectiveStress::parameters() {
 
 std::unique_ptr<NEMLObject>
 MeanEffectiveStress::initialize(ParameterSet &params) {
-  return neml::make_unique<MeanEffectiveStress>();
+  return neml::make_unique<MeanEffectiveStress>(params);
 }
 
 int MeanEffectiveStress::effective(const double *const s, double &eff) const {
@@ -672,8 +646,9 @@ int MeanEffectiveStress::deffective(const double *const s,
 }
 
 
-HuddlestonEffectiveStress::HuddlestonEffectiveStress(double b) :
-    b_(b)
+HuddlestonEffectiveStress::HuddlestonEffectiveStress(ParameterSet & params) :
+    EffectiveStress(params),
+    b_(params.get_parameter<double>("b"))
 {
 
 }
@@ -694,9 +669,7 @@ ParameterSet HuddlestonEffectiveStress::parameters()
 
 std::unique_ptr<NEMLObject> HuddlestonEffectiveStress::initialize(ParameterSet & params)
 {
-  return neml::make_unique<HuddlestonEffectiveStress>(
-      params.get_parameter<double>("b")
-      );
+  return neml::make_unique<HuddlestonEffectiveStress>(params);
 }
 
 int HuddlestonEffectiveStress::effective(const double * const s, double & eff) const
@@ -771,7 +744,9 @@ int HuddlestonEffectiveStress::deffective(const double * const s, double * const
   return 0;
 }
 
-MaxPrincipalEffectiveStress::MaxPrincipalEffectiveStress()
+MaxPrincipalEffectiveStress::MaxPrincipalEffectiveStress(ParameterSet & params)
+  :
+      EffectiveStress(params)
 {
 
 }
@@ -790,7 +765,7 @@ ParameterSet MaxPrincipalEffectiveStress::parameters()
 
 std::unique_ptr<NEMLObject> MaxPrincipalEffectiveStress::initialize(ParameterSet & params)
 {
-  return neml::make_unique<MaxPrincipalEffectiveStress>();
+  return neml::make_unique<MaxPrincipalEffectiveStress>(params);
 }
 
 int MaxPrincipalEffectiveStress::effective(const double * const s, double & eff) const
@@ -840,8 +815,9 @@ int MaxPrincipalEffectiveStress::deffective(const double * const s, double * con
 }
 
 
-MaxSeveralEffectiveStress::MaxSeveralEffectiveStress(std::vector<std::shared_ptr<EffectiveStress>> measures) :
-    measures_(measures)
+MaxSeveralEffectiveStress::MaxSeveralEffectiveStress(ParameterSet & params) :
+    EffectiveStress(params),
+    measures_(params.get_object_parameter_vector<EffectiveStress>("measures"))
 {
 
 }
@@ -862,8 +838,7 @@ ParameterSet MaxSeveralEffectiveStress::parameters()
 
 std::unique_ptr<NEMLObject> MaxSeveralEffectiveStress::initialize(ParameterSet & params)
 {
-  return neml::make_unique<MaxSeveralEffectiveStress>(
-      params.get_object_parameter_vector<EffectiveStress>("measures"));
+  return neml::make_unique<MaxSeveralEffectiveStress>(params);
 }
 
 int MaxSeveralEffectiveStress::effective(const double * const s, double & eff) const
@@ -900,10 +875,10 @@ void MaxSeveralEffectiveStress::select_(const double * const s, size_t & ind, do
   }
 }
 
-SumSeveralEffectiveStress::SumSeveralEffectiveStress(
-    std::vector<std::shared_ptr<EffectiveStress>> measures,
-    std::vector<double> weights) :
-      measures_(measures), weights_(weights)
+SumSeveralEffectiveStress::SumSeveralEffectiveStress(ParameterSet & params) :
+    EffectiveStress(params),
+    measures_(params.get_object_parameter_vector<EffectiveStress>("measures")),
+    weights_(params.get_parameter<std::vector<double>>("weights"))
 {
   if (measures_.size() != weights_.size()) {
     throw std::invalid_argument("Length of measures and weights must be the same");
@@ -927,9 +902,7 @@ ParameterSet SumSeveralEffectiveStress::parameters()
 
 std::unique_ptr<NEMLObject> SumSeveralEffectiveStress::initialize(ParameterSet & params)
 {
-  return neml::make_unique<SumSeveralEffectiveStress>(
-      params.get_object_parameter_vector<EffectiveStress>("measures"),
-      params.get_parameter<std::vector<double>>("weights"));
+  return neml::make_unique<SumSeveralEffectiveStress>(params);
 }
 
 int SumSeveralEffectiveStress::effective(const double * const s, double & eff) const
@@ -956,23 +929,13 @@ int SumSeveralEffectiveStress::deffective(const double * const s, double * const
   return 0;
 }
 
-ModularCreepDamageModel_sd::ModularCreepDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<Interpolate> A,
-    std::shared_ptr<Interpolate> xi,
-    std::shared_ptr<Interpolate> phi,
-    std::shared_ptr<EffectiveStress> estress,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter,
-    bool verbose, bool linesearch, bool truesdell,
-    bool ekill, double dkill, double sfact) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter,
-                                verbose, linesearch, truesdell, ekill,
-                                dkill, sfact),
-      A_(A), xi_(xi), phi_(phi), estress_(estress)
+ModularCreepDamageModel_sd::ModularCreepDamageModel_sd(ParameterSet & params) :
+      NEMLScalarDamagedModel_sd(params),
+      A_(params.get_object_parameter<Interpolate>("A")), 
+      xi_(params.get_object_parameter<Interpolate>("xi")),
+      phi_(params.get_object_parameter<Interpolate>("phi")), 
+      estress_(params.get_object_parameter<EffectiveStress>("estress"))
 {
-
 
 }
 
@@ -993,7 +956,7 @@ ParameterSet ModularCreepDamageModel_sd::parameters()
   pset.add_parameter<NEMLObject>("base");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("rtol", 1.0e-6);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -1009,24 +972,7 @@ ParameterSet ModularCreepDamageModel_sd::parameters()
 
 std::unique_ptr<NEMLObject> ModularCreepDamageModel_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<ModularCreepDamageModel_sd>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("xi"),
-      params.get_object_parameter<Interpolate>("phi"),
-      params.get_object_parameter<EffectiveStress>("estress"),
-      params.get_object_parameter<NEMLModel_sd>("base"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<bool>("truesdell"),
-      params.get_parameter<bool>("ekill"),
-      params.get_parameter<double>("dkill"),
-      params.get_parameter<double>("sfact")
-      ); 
+  return neml::make_unique<ModularCreepDamageModel_sd>(params); 
 }
 
 int ModularCreepDamageModel_sd::damage(
@@ -1113,21 +1059,12 @@ int ModularCreepDamageModel_sd::ddamage_ds(
   return 0;
 }
 
-LarsonMillerCreepDamageModel_sd::LarsonMillerCreepDamageModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<LarsonMillerRelation> lmr,
-    std::shared_ptr<EffectiveStress> estress,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter,
-    bool verbose, bool linesearch, bool truesdell,
-    bool ekill, double dkill, double sfact) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter,
-                                verbose, linesearch, truesdell, ekill, dkill, sfact),
-      lmr_(lmr), estress_(estress)
+LarsonMillerCreepDamageModel_sd::LarsonMillerCreepDamageModel_sd(ParameterSet &
+                                                                 params) :
+      NEMLScalarDamagedModel_sd(params),
+      lmr_(params.get_object_parameter<LarsonMillerRelation>("lmr")), 
+      estress_(params.get_object_parameter<EffectiveStress>("estress"))
 {
-
-
 }
 
 std::string LarsonMillerCreepDamageModel_sd::type()
@@ -1145,7 +1082,7 @@ ParameterSet LarsonMillerCreepDamageModel_sd::parameters()
   pset.add_parameter<NEMLObject>("base");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("rtol", 1.0e-6);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -1161,22 +1098,7 @@ ParameterSet LarsonMillerCreepDamageModel_sd::parameters()
 
 std::unique_ptr<NEMLObject> LarsonMillerCreepDamageModel_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<LarsonMillerCreepDamageModel_sd>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<LarsonMillerRelation>("lmr"),
-      params.get_object_parameter<EffectiveStress>("estress"),
-      params.get_object_parameter<NEMLModel_sd>("base"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<bool>("truesdell"),
-      params.get_parameter<bool>("ekill"),
-      params.get_parameter<double>("dkill"),
-      params.get_parameter<double>("sfact")
-      ); 
+  return neml::make_unique<LarsonMillerCreepDamageModel_sd>(params); 
 }
 
 int LarsonMillerCreepDamageModel_sd::damage(
@@ -1285,14 +1207,9 @@ int LarsonMillerCreepDamageModel_sd::ddamage_ds(
   return 0;
 }
 
-NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter, bool verbose, bool linesearch,
-    bool truesdell) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter,
-                                verbose, linesearch, truesdell, false, 0, 1) 
+NEMLStandardScalarDamagedModel_sd::NEMLStandardScalarDamagedModel_sd(ParameterSet
+                                                                     & params) :
+      NEMLScalarDamagedModel_sd(params) 
 {
 
 }
@@ -1451,21 +1368,11 @@ double NEMLStandardScalarDamagedModel_sd::dep(
   }
 }
 
-
-
-NEMLWorkDamagedModel_sd::NEMLWorkDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<Interpolate> Wcrit,
-    double n,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter,
-    bool verbose, bool linesearch, bool truesdell,
-    double eps) :
-      NEMLScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter, 
-                                        verbose, linesearch, truesdell, false,
-                                        0, 1), 
-      Wcrit_(Wcrit), n_(n), eps_(eps)
+NEMLWorkDamagedModel_sd::NEMLWorkDamagedModel_sd(ParameterSet & params) :
+      NEMLScalarDamagedModel_sd(params), 
+      Wcrit_(params.get_object_parameter<Interpolate>("Wcrit")),
+      n_(params.get_parameter<double>("n")),
+      eps_(params.get_parameter<double>("eps"))
 {
 }
 
@@ -1484,7 +1391,7 @@ ParameterSet NEMLWorkDamagedModel_sd::parameters()
   pset.add_parameter<NEMLObject>("base");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("rtol", 1.0e-14);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -1492,6 +1399,9 @@ ParameterSet NEMLWorkDamagedModel_sd::parameters()
   pset.add_optional_parameter<bool>("linesearch", false);
 
   pset.add_optional_parameter<bool>("truesdell", true);
+  pset.add_optional_parameter<bool>("ekill", false);
+  pset.add_optional_parameter<double>("dkill", 0.5);
+  pset.add_optional_parameter<double>("sfact", 100000.0);
 
   pset.add_optional_parameter<double>("eps", 1e-30);
 
@@ -1500,20 +1410,7 @@ ParameterSet NEMLWorkDamagedModel_sd::parameters()
 
 std::unique_ptr<NEMLObject> NEMLWorkDamagedModel_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<NEMLWorkDamagedModel_sd>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<Interpolate>("Wcrit"),
-      params.get_parameter<double>("n"),
-      params.get_object_parameter<NEMLModel_sd>("base"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<bool>("truesdell"),
-      params.get_parameter<double>("eps")
-      ); 
+  return neml::make_unique<NEMLWorkDamagedModel_sd>(params); 
 }
 
 int NEMLWorkDamagedModel_sd::damage(double d_np1, double d_n,
@@ -1690,16 +1587,10 @@ double NEMLWorkDamagedModel_sd::workrate(
   return fabs(dot_vec(stress_np1, dp, 6) / dt * (1.0 - d_np1));
 }
 
-NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<Interpolate> A, std::shared_ptr<Interpolate> a, 
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter,
-    bool verbose, bool linesearch, bool truesdell) :
-      NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter, 
-                                        verbose, linesearch, truesdell), 
-      A_(A), a_(a)
+NEMLPowerLawDamagedModel_sd::NEMLPowerLawDamagedModel_sd(ParameterSet & params) :
+      NEMLStandardScalarDamagedModel_sd(params), 
+      A_(params.get_object_parameter<Interpolate>("A")),
+      a_(params.get_object_parameter<Interpolate>("a"))
 {
 
 }
@@ -1719,7 +1610,7 @@ ParameterSet NEMLPowerLawDamagedModel_sd::parameters()
   pset.add_parameter<NEMLObject>("base");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("rtol", 1.0e-10);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -1728,24 +1619,16 @@ ParameterSet NEMLPowerLawDamagedModel_sd::parameters()
 
   pset.add_optional_parameter<bool>("truesdell", true);
 
+  pset.add_optional_parameter<bool>("ekill", false);
+  pset.add_optional_parameter<double>("dkill", 0.5);
+  pset.add_optional_parameter<double>("sfact", 100000.0);
+
   return pset;
 }
 
 std::unique_ptr<NEMLObject> NEMLPowerLawDamagedModel_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<NEMLPowerLawDamagedModel_sd>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<Interpolate>("A"),
-      params.get_object_parameter<Interpolate>("a"),
-      params.get_object_parameter<NEMLModel_sd>("base"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<NEMLPowerLawDamagedModel_sd>(params); 
 }
 
 int NEMLPowerLawDamagedModel_sd::f(const double * const s_np1, double d_np1,
@@ -1795,17 +1678,12 @@ double NEMLPowerLawDamagedModel_sd::se(const double * const s) const
                                               pow(s[5], 2.0))) / 2.0);
 }
 
-NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(
-    std::shared_ptr<LinearElasticModel> elastic,
-    std::shared_ptr<Interpolate> W0, std::shared_ptr<Interpolate> k0,
-    std::shared_ptr<Interpolate> af,
-    std::shared_ptr<NEMLModel_sd> base,
-    std::shared_ptr<Interpolate> alpha,
-    double rtol, double atol, int miter,
-    bool verbose, bool linesearch, bool truesdell) :
-      NEMLStandardScalarDamagedModel_sd(elastic, base, alpha, rtol, atol, miter, 
-                                        verbose, linesearch, truesdell), 
-      W0_(W0), k0_(k0), af_(af)
+NEMLExponentialWorkDamagedModel_sd::NEMLExponentialWorkDamagedModel_sd(ParameterSet
+                                                                       & params) :
+      NEMLStandardScalarDamagedModel_sd(params), 
+      W0_(params.get_object_parameter<Interpolate>("W0")),
+      k0_(params.get_object_parameter<Interpolate>("k0")),
+      af_(params.get_object_parameter<Interpolate>("af"))
 {
 
 }
@@ -1826,7 +1704,7 @@ ParameterSet NEMLExponentialWorkDamagedModel_sd::parameters()
   pset.add_parameter<NEMLObject>("base");
 
   pset.add_optional_parameter<NEMLObject>("alpha",
-                                          std::make_shared<ConstantInterpolate>(0.0));
+                                          make_constant(0.0));
   pset.add_optional_parameter<double>("rtol", 1.0e-10);
   pset.add_optional_parameter<double>("atol", 1.0e-8);
   pset.add_optional_parameter<int>("miter", 50);
@@ -1835,25 +1713,16 @@ ParameterSet NEMLExponentialWorkDamagedModel_sd::parameters()
 
   pset.add_optional_parameter<bool>("truesdell", true);
 
+  pset.add_optional_parameter<bool>("ekill", false);
+  pset.add_optional_parameter<double>("dkill", 0.5);
+  pset.add_optional_parameter<double>("sfact", 100000.0);
+
   return pset;
 }
 
 std::unique_ptr<NEMLObject> NEMLExponentialWorkDamagedModel_sd::initialize(ParameterSet & params)
 {
-  return neml::make_unique<NEMLExponentialWorkDamagedModel_sd>(
-      params.get_object_parameter<LinearElasticModel>("elastic"),
-      params.get_object_parameter<Interpolate>("W0"),
-      params.get_object_parameter<Interpolate>("k0"),
-      params.get_object_parameter<Interpolate>("af"),
-      params.get_object_parameter<NEMLModel_sd>("base"),
-      params.get_object_parameter<Interpolate>("alpha"),
-      params.get_parameter<double>("rtol"),
-      params.get_parameter<double>("atol"),
-      params.get_parameter<int>("miter"),
-      params.get_parameter<bool>("verbose"),
-      params.get_parameter<bool>("linesearch"),
-      params.get_parameter<bool>("truesdell")
-      ); 
+  return neml::make_unique<NEMLExponentialWorkDamagedModel_sd>(params); 
 }
 
 int NEMLExponentialWorkDamagedModel_sd::f(const double * const s_np1, double d_np1,

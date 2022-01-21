@@ -1,6 +1,12 @@
 References
 ==========
 
+.. [TLK1991] Tome, C. N. and Lebensohn, R. A. and U. F. Kocks. "A model for texture development dominated by deformation twinning: Application to zirconium alloys." `Acta Metallurgica et Materialia,` 39(11): pp. 2667-2680 (1991).
+
+.. [VM2021] Venkataraman, A. and M. C. Messner. `An initial framework for the rapid qualification of long-term creep rupture strength via microstrucetural modeling.` Argonne National Laboratory technical report ANL-21/34 (2021).
+
+.. [HC2020] Hu, Jianan and Green, Graham and Hogg, Simon and Higginson, Rebecca and Alan Cocks. "Effect of microstructure evoltuion on the creep properties of polycrystalline 316H austenitic stainless steel." `Materials Science and Engineering A,` 772: pp. 138787 (2020).
+
 .. [MS2020] Messner, M. C. and T.-L. Sham. `Initial High Temperature Inelastic Constitutive Model for Alloy 617`.  Argonne National Laboratory technical report ANL-ART-195 (2020).
 
 .. [SW2008] Sham, T.-L. and Kevin P. Walker. "Preliminary Development of a Unified Viscoplastic Constitutive Model for Alloy 617 with Special Reference to Long Term Creep Behavior." In the proceedings of the `Fourth International Topical Meeting on High Temperature Reactor Technology` pp. 81-89 (2008).

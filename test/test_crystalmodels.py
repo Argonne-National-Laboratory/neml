@@ -85,7 +85,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
     
-    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.Q = rotations.CrystalOrientation(35.0,17.0,14.0, angle_type = "degrees")
 
     self.mu = 29000.0
     self.E = 120000.0
@@ -154,7 +154,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
       self.T), self.strength_np1 + self.tau0))
 
   def test_Fe(self):
-    Qc = rotations.Orientation(12.0,35.0,61.0, angle_type = "degrees")
+    Qc = rotations.CrystalOrientation(12.0,35.0,61.0, angle_type = "degrees")
 
     h = self.model.init_store()
     h[:4] = Qc.quat
@@ -194,7 +194,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.assertTrue(np.allclose(Rtrue, R))
 
   def test_set_active(self):
-    q = rotations.Orientation(15.0,50.0,60.0, angle_type = "degrees")
+    q = rotations.CrystalOrientation(15.0,50.0,60.0, angle_type = "degrees")
     h = self.model.init_store()
 
     self.model.set_active_orientation(h, q)
@@ -202,7 +202,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
       self.model.get_active_orientation(h).quat))
 
   def test_set_passive(self):
-    q = rotations.Orientation(15.0,50.0,60.0, angle_type = "degrees")
+    q = rotations.CrystalOrientation(15.0,50.0,60.0, angle_type = "degrees")
     h = self.model.init_store()
 
     self.model.set_passive_orientation(h, q)
@@ -237,7 +237,7 @@ class TestComplicatedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
     
-    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.Q = rotations.CrystalOrientation(35.0,17.0,14.0, angle_type = "degrees")
 
     self.mu = 29000.0
     self.E = 120000.0
@@ -326,7 +326,7 @@ class TestNyeStuffCrystal(unittest.TestCase):
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
     
-    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.Q = rotations.CrystalOrientation(35.0,17.0,14.0, angle_type = "degrees")
 
     self.mu = 29000.0
     self.E = 120000.0
@@ -427,7 +427,7 @@ class TestFakeDamagedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.L = crystallography.CubicLattice(1.0)
     self.L.add_slip_system([1,1,0],[1,1,1])
     
-    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.Q = rotations.CrystalOrientation(35.0,17.0,14.0, angle_type = "degrees")
 
     self.mu = 29000.0
     self.E = 120000.0

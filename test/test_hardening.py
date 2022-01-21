@@ -529,3 +529,42 @@ class TestChabocheTempTerm(unittest.TestCase, CommonNonAssociative):
     for i in range(self.n):
       hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
     return hist
+
+class TestChabocheSpecializedRecovery(unittest.TestCase, CommonNonAssociative):
+  """
+    Test ChabocheVoceRecovery, a Chaboche model with a specialized, recoverable
+    isotropic hardening term
+  """
+  def setUp(self):
+    s0 = 200.0
+    theta0 = 2000.0
+    Rmax = 100.0
+    Rmin = 10.0
+    r1 = 1.0e-8
+    r2 = 4.1
+
+    self.n = 2
+    cvals1 = [1000.0,10.0]
+    cvals2 = [100.0,100.0]
+    Ts = [0.0,1000.0]
+
+    cs = [interpolate.PiecewiseLinearInterpolate(Ts, [ci,cj]) for ci,cj in zip(cvals1, cvals2)]
+    rs = [1.0e-2,1.0]
+    gammas = [hardening.ConstantGamma(r) for r in rs]
+    self.As = [1.0e-6] * self.n
+    self.ns = [2.1] * self.n
+
+    self.model = hardening.ChabocheVoceRecovery(s0, theta0, Rmax, Rmin, r1, r2, cs, gammas, self.As, self.ns)
+
+    self.hist0 = np.zeros((1 + self.n*6,))
+    self.conform = 7
+
+    self.T = 300.0
+  
+  def gen_hist(self):
+    hist = np.array(range(1,2+self.n*6)) / (3*self.n)
+    hist[0] = 50.0
+    hist[1:] = (1.0 - 2.0 * hist[1:]) * 100.0
+    for i in range(self.n):
+      hist[1+i*6:1+(i+1)*6] = make_dev(hist[1+i*6:1+(i+1)*6])
+    return hist

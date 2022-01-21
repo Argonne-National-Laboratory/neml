@@ -1,9 +1,9 @@
 name: Make and test python packages
 on: pull_request
 jobs:
-      build_wheels_linux_mac:
+      test_wheels_linux_mac:
             env:
-                  CIBW_SKIP: cp310-* *-manylinux_i686 pp* 
+                  CIBW_SKIP: cp310-* *-manylinux_i686 pp* *_ppc641e *_s390x *_aarch64 *musllinux* 
                   CIBW_BEFORE_ALL_LINUX: yum -y install cmake cmake3 blas-devel lapack-devel && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 --slave /usr/local/bin/ctest ctest /usr/bin/ctest --slave /usr/local/bin/cpack cpack /usr/bin/cpack --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake --family cmake && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 --family cmake
                   CIBW_BEFORE_ALL_MACOS: brew install cmake openblas superlu gfortran
                   CIBW_BEFORE_BUILD: "cmake -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=OFF . && cmake --build . && rm CMakeCache.txt && rm -rf CMakeFiles && pip install -r requirements.txt"
@@ -14,13 +14,15 @@ jobs:
                   CIBW_REPAIR_WHEEL_COMMAND_LINUX: "LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH auditwheel repair -w {dest_dir} {wheel}"
                   CIBW_REPAIR_WHEEL_COMMAND_MACOS: "DYLD_LIBRARY_PATH=$(pwd)/lib:$DYLD_LIBRARY_PATH delocate-listdeps {wheel} && DYLD_LIBRARY_PATH=$(pwd)/lib:$DYLD_LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
                   CIBW_BUILD_VERBOSITY: 3
-            name: Build wheels on ${{ matrix.os }}
+            name: Test wheels on ${{ matrix.os }}
             runs-on: ${{ matrix.os }}
             strategy:
                   matrix:
                         os: [ubuntu-latest, macos-latest]
             steps:
                   - uses: actions/checkout@v2
+                    with:
+                          submodules: recursive
                   - uses: actions/setup-python@v2
                     with:
                           python-version: '3.8'
@@ -33,11 +35,13 @@ jobs:
                           path: ./wheelhouse/*.whl
                           name: packages
 
-      build_sdist:
-            name: Build source distribution
+      test_sdist:
+            name: Test source distribution on linux
             runs-on: ubuntu-latest
             steps:
                   - uses: actions/checkout@v2
+                    with:
+                          submodules: recursive
                   - uses: actions/setup-python@v2
                     name: Install Python
                     with:
