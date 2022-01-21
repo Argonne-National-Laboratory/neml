@@ -1068,7 +1068,6 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
 	   * 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));	
   }
   else{
-  double v = 0;  
   for (size_t g2 = 0; g2 < L.ngroup(); g2++) {
 	for (size_t i2 = 0; i2 < L.nslip(g2); i2++) {
 	  size_t k2 = L.flat(g2,i2);
@@ -1206,7 +1205,6 @@ History LANLTiModel::d_hist_d_h_ext(const Symmetric & stress,
       Lattice::SlipType stype = L.slip_type(g,i); 
 	  size_t k = L.flat(g,i);
 	  if (stype == Lattice::SlipType::Slip){
-	    double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
         History dslip = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
 		for (auto vn : ext) {
 		  res.get<double>(varnames_[k] + "_" + vn) = (k1_[k]->value(T)
