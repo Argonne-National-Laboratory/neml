@@ -74,7 +74,10 @@ def Ti_singlecrystal(verbose = True, PTR = True,
 
   # Reference slip rate and rate sensitivity exponent
   g0 = 1.0
+  # if strain rate is 1e-2
   n = 12.0
+  # if strain rate is 1e-3
+  # n = 7.5
 
   # Twin threshold
   twin_threshold = 0.75
@@ -181,19 +184,6 @@ def interp(strain, stress, targets):
   """
   return inter.interp1d(strain, stress)(targets) 
 
-
-def load_file(path, temper):
-  for file in glob.glob(path + temper + "k.csv"):
-    df = pd.read_csv(file, usecols=[0,1], names=['True_strain', 'True_stress'], header=None)
-  return df
-
-# def load_file(path, temper):
-  # for file in glob.glob(path + "CG_Ti.csv"):
-    # df = pd.read_csv(file, usecols=[0,1], names=['Nominal_strain', 'True_stress'], header=None)
-  # return df
-
-
 if __name__ == "__main__":
   
-  path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Ito-2019-MSEB/"
 

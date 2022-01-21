@@ -47,9 +47,10 @@ def load_file(path, T, rate):
 
 if __name__ == "__main__":
 
+  # set up model grains and threads
   Ngrains = 50
-  nthreads = 1
-  # sets up x_scale for both experiment and simulation
+  nthreads = 10
+  # tensile conditions
   rate = "1e-2"
   emax = 0.2
   erate = float(rate)
@@ -63,20 +64,21 @@ if __name__ == "__main__":
       path = path_1
     else:
       path = path_2
-    df = load_file(path, T)
+    df = load_file(path, T, rate)
     tmodel = make_Ti_polycrystal(Ngrains, nthreads)
     res = drivers.uniaxial_test(tmodel, erate = erate, emax = emax,
                           sdir = np.array([0,0,-1,0,0,0]),
                           T = T, verbose = True, full_results = False)
+    # save the stress-strain data for future use
     data = pd.DataFrame({
       "strain": res['strain'],
       "stress": res['stress']}) 
     data.to_csv('res_{}.csv'.format(int(T)))
+    # convert to engineering stress-strain
     eng_strain = np.exp(df['True_strain']) - 1.0
     eng_stress = df['True_stress'] / (1 + eng_strain)
     plt.plot(eng_strain, eng_stress, label = 'Exp-{}'.format(int(T)))
     plt.plot(res['strain'], res['stress'], label = 'Model-{}'.format(int(T)))
-    
     plt.xlabel('Strain (mm/mm)')
     plt.ylabel('Stress (MPa)')
     plt.legend()
