@@ -30,8 +30,7 @@ if __name__ == "__main__":
   hrule = hardening.Chaboche(iso, c, gmodels, As, ns)
 
   flow = ri_flow.RateIndependentNonAssociativeHardening(surface, hrule)
-  model = models.SmallStrainRateIndependentPlasticity(elastic, flow, verbose = False,
-      check_kt = False)
+  model = models.SmallStrainRateIndependentPlasticity(elastic, flow)
   
   
   # Uniaxial stress/strain curves at decades of strain rates

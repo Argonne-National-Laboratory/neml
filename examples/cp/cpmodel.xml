@@ -1,6 +1,6 @@
 <materials>
   <example type="SingleCrystalModel">
-    <initial_rotation type="Orientation">
+    <initial_rotation type="CrystalOrientation">
       <angles>-81.3 128.8 146.7</angles>
       <angle_type>degrees</angle_type>
     </initial_rotation>
@@ -31,7 +31,7 @@
     </lattice>
   </example>
   <tvm type="SingleCrystalModel">
-    <initial_rotation type="Orientation">
+    <initial_rotation type="CrystalOrientation">
       <angles>-81.3 128.8 146.7</angles>
       <angle_type>degrees</angle_type>
     </initial_rotation>
