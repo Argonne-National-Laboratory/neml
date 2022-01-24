@@ -1016,7 +1016,7 @@ void LANLTiModel::init_history(History & history) const
 {
   size_t i = 0;
   for (auto vn : varnames_) {
-    history.get<double>(vn) = 1.0e-7;
+    history.get<double>(vn) = 1.0e-6;
     i++;
   }
 }
