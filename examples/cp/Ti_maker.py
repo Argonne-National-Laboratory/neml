@@ -186,4 +186,6 @@ def interp(strain, stress, targets):
 
 if __name__ == "__main__":
   
+  path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Huang-2007-MSEA/"
+  path_2 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Yapici-2014-MD/"
 

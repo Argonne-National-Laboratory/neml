@@ -49,15 +49,15 @@ if __name__ == "__main__":
 
   # set up model grains and threads
   Ngrains = 50
-  nthreads = 10
+  nthreads = 1
   # tensile conditions
   rate = "1e-2"
   emax = 0.2
   erate = float(rate)
   Ts = np.array([298.0, 423.0, 523.0, 623.0, 773.0, 873.0, 973.0, 1073.0, 1173.0])
   
-  path_1 = xxxxx
-  path_2 = xxxxx
+  path_1 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Huang-2007-MSEA/"
+  path_2 = "/mnt/c/Users/ladmin/Desktop/argonne/RTRC_data_extract/Yapici-2014-MD/"
 
   for T in Ts:
     if T < 1000.0:
