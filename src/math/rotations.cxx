@@ -970,11 +970,11 @@ double Orientation::distance(const Orientation & other) const
   return acos(d);
 }
 
-std::vector<Orientation> random_orientations(int n)
+std::vector<CrystalOrientation> random_orientations(int n)
 {
   double u[3];
   double w, x, y, z;
-  std::vector<Orientation> result;
+  std::vector<CrystalOrientation> result;
 
   std::random_device rdev{};
   std::default_random_engine generator{rdev()};
@@ -990,7 +990,7 @@ std::vector<Orientation> random_orientations(int n)
     y = sqrt(u[0]) * sin(2.0 * M_PI * u[2]);
     z = sqrt(u[0]) * cos(2.0 * M_PI * u[2]);
 
-    result.emplace_back(Orientation({w,x,y,z}));
+    result.emplace_back(make_crystal_orientation(Orientation({w,x,y,z})));
   }
 
   return result;
@@ -1087,6 +1087,16 @@ std::shared_ptr<CrystalOrientation> zero_orientation()
   params.assign_parameter("angles", std::vector<double>({0,0,0}));
 
   return std::make_shared<CrystalOrientation>(params);
+}
+
+CrystalOrientation make_crystal_orientation(const Orientation & o)
+{
+  ParameterSet params = CrystalOrientation::parameters();
+  double a, b, c;
+  o.to_euler(a, b, c);
+  params.assign_parameter("angles", std::vector<double>({a,b,c}));
+
+  return CrystalOrientation(params);
 }
 
 } // namespace cpfmwk
