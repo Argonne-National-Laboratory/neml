@@ -243,10 +243,26 @@ NEML_EXPORT Orientation operator*(const Orientation & lhs, const Orientation & r
 /// Compose a rotation with the inverse of a rotation
 NEML_EXPORT Orientation operator/(const Orientation & lhs, const Orientation & rhs);
 
+class NEML_EXPORT CrystalOrientation : public NEMLObject, public Orientation { 
+ public:
+  CrystalOrientation(ParameterSet & params);
+
+  /// Type for the object system
+  static std::string type();
+  /// Parameters for the object system
+  static ParameterSet parameters();
+  /// Setup from a ParameterSet
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+};
+
+static Register<CrystalOrientation> regCrystalOrientation;
+
+std::shared_ptr<CrystalOrientation> zero_orientation();
+
 /// Generate n random orientations
 //    This algorithm comes from LaValle, 2006 who I believe grabbed it
 //    from Shoemake, 1992
-NEML_EXPORT std::vector<Orientation> random_orientations(int n);
+NEML_EXPORT std::vector<CrystalOrientation> random_orientations(int n);
 
 /// Exponential map of a skew tensor in my convention
 NEML_EXPORT Orientation wexp(const Skew & w);
@@ -263,21 +279,8 @@ NEML_EXPORT Orientation rotate_to(const Vector & a, const Vector & b);
 /// Family of rotations from a to b parameterized by an angle
 NEML_EXPORT Orientation rotate_to_family(const Vector & a, const Vector & b, double ang);
 
-class NEML_EXPORT CrystalOrientation : public NEMLObject, public Orientation { 
- public:
-  CrystalOrientation(ParameterSet & params);
-
-  /// Type for the object system
-  static std::string type();
-  /// Parameters for the object system
-  static ParameterSet parameters();
-  /// Setup from a ParameterSet
-  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-};
-
-static Register<CrystalOrientation> regCrystalOrientation;
-
-std::shared_ptr<CrystalOrientation> zero_orientation();
+/// Convert an orientation to a crystal orientation
+NEML_EXPORT CrystalOrientation make_crystal_orientation(const Orientation & o);
 
 } // namespace neml
 

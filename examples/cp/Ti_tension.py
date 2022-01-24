@@ -32,7 +32,7 @@ def make_Ti_polycrystal(N, nthreads):
 
   model = polycrystal.TaylorModel(smodel, orientations, nthreads = nthreads)
 
-  return model
+  return smodel
 #================================================#
 def load_file(path, T, rate):
 #================================================#
