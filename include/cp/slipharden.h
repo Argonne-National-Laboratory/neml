@@ -439,14 +439,7 @@ static Register<SimpleLinearHardening> regSimpleLinearHardening;
 class NEML_EXPORT LANLTiModel: public SlipHardening
 {
  public:
-  LANLTiModel(std::vector<std::shared_ptr<Interpolate>> tau_0, 
-				  std::shared_ptr<SquareMatrix> C_st,
-			      std::vector<std::shared_ptr<Interpolate>> mu, 
-				  std::vector<std::shared_ptr<Interpolate>> k1, 
-				  std::vector<std::shared_ptr<Interpolate>> k2,
-				  double X_s,
-				  std::string varprefix,
-				  std::string twinprefix);
+  LANLTiModel(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();

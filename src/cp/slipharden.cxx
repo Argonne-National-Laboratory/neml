@@ -937,18 +937,16 @@ void SimpleLinearHardening::consistency(Lattice & L) const
   }
 }
 
-LANLTiModel::LANLTiModel(
-	std::vector<std::shared_ptr<Interpolate>> tau_0, 
-	std::shared_ptr<SquareMatrix> C_st,
-	std::vector<std::shared_ptr<Interpolate>> mu, 
-	std::vector<std::shared_ptr<Interpolate>> k1, 
-	std::vector<std::shared_ptr<Interpolate>> k2, 
-	double X_s,
-	std::string varprefix,
-	std::string twinprefix):
-      tau_0_(tau_0), C_st_(C_st), mu_(mu),
-	  k1_(k1), k2_(k2), X_s_(X_s),
-      varprefix_(varprefix), twinprefix_(twinprefix)
+LANLTiModel::LANLTiModel(ParameterSet & params):
+    SlipHardening(params),
+    tau_0_(params.get_object_parameter_vector<Interpolate>("tau_0")),
+    C_st_(params.get_object_parameter<SquareMatrix>("C_st")),
+    mu_(params.get_object_parameter_vector<Interpolate>("mu")),
+	  k1_(params.get_object_parameter_vector<Interpolate>("k1")), 
+    k2_(params.get_object_parameter_vector<Interpolate>("k2")),
+    X_s_(params.get_parameter<double>("X_s")),
+    varprefix_(params.get_parameter<std::string>("varprefix")), 
+    twinprefix_(params.get_parameter<std::string>("twinprefix"))
 { 
   // Shouldn't tau_0 be 24 and C_st be 12?
   // Long term you should fix the /2
@@ -975,15 +973,7 @@ std::string LANLTiModel::type()
 
 std::unique_ptr<NEMLObject> LANLTiModel::initialize(ParameterSet & params)
 {
-  return neml::make_unique<LANLTiModel>(
-	  params.get_object_parameter_vector<Interpolate>("tau_0"),	  
-      params.get_object_parameter<SquareMatrix>("C_st"),
-	  params.get_object_parameter_vector<Interpolate>("mu"),
-	  params.get_object_parameter_vector<Interpolate>("k1"),
-	  params.get_object_parameter_vector<Interpolate>("k2"),
-	  params.get_parameter<double>("X_s"),
-      params.get_parameter<std::string>("varprefix"),
-	  params.get_parameter<std::string>("twinprefix"));
+  return neml::make_unique<LANLTiModel>(params);
 }
 
 ParameterSet LANLTiModel::parameters()
