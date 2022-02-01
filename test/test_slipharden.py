@@ -383,7 +383,7 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.current_slip = 0.1
     
     self.rhos = np.array([
-      2,3,2,2,3,2,2,1,4,5,1,2.0])*1e-6
+      2,3,2,2,3,2,2,1,4,5,1,2.0])*1e-5
 
     self.H = history.History()
 
@@ -397,12 +397,24 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
 
     self.T = 300.0
     
-    self.G_np = ra.random((12,12)) * 10
+    num_basal, num_prism, num_pyram = 3, 3, 6
+    num_ttwin, num_ctwin = 6, 6
+    ## basal plane
+    C1_single = np.array([50.0]*num_ttwin+[50.0]*num_ttwin)
+    C1 = np.stack([C1_single for _ in range(num_basal)])
+    ## prismatic plane
+    C2_single = np.array([100.0]*num_ttwin+[1000.0]*num_ttwin)
+    C2 = np.stack([C2_single for _ in range(num_prism)])
+    ## pyramidal plane
+    C3_single = np.array([250.0]*num_ttwin+[170.0]*num_ttwin)
+    C3 = np.stack([C3_single for _ in range(num_pyram)])
+    ## stack up each slip system
+    self.G_np = np.vstack((C1, C2, C3)).T
 
     self.G = matrix.SquareMatrix(12, type = "dense", data = self.G_np.flatten())
     
-    self.k1_v = 0.5
-    self.k2_v = 0.75
+    self.k1_v = 1.0
+    self.k2_v = 250.0
 
     self.k1 = np.ones((12,)) * self.k1_v
     self.k2 = np.ones((12,)) * self.k2_v
@@ -424,7 +436,7 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.model = slipharden.LANLTiModel(self.tau0, self.G, self.mu, self.k1, self.k2, X_s = self.X_s)
 
     self.g0 = 1.0
-    self.n = 3.0
+    self.n = 12.0
     self.sliprule = sliprules.PowerLawSlipRule(self.model, self.g0, self.n)
 
     self.fixed = history.History()
