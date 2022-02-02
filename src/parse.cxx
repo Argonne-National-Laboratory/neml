@@ -358,17 +358,17 @@ twin_systems get_twin( const rapidxml::xml_node<> * node)
     // Split by semicolon
     size_t curr = 0;
     size_t next = to.find(";");
-    std::string eta1s = to.substr(curr, next);
+    std::string eta1s = to.substr(curr, next-curr);
     strip(eta1s);
     curr = next + 1;
 
     next = to.find(";", curr);
-    std::string K1s = to.substr(curr, next);
+    std::string K1s = to.substr(curr, next-curr);
     strip(K1s);
     curr = next + 1;
     
     next = to.find(";", curr);
-    std::string eta2s = to.substr(curr, next);
+    std::string eta2s = to.substr(curr, next-curr);
     strip(eta2s);
     curr = next + 1;
     
