@@ -658,11 +658,19 @@ HCPLattice::HCPLattice(ParameterSet & params) :
         Vector({params.get_parameter<double>("a")/2,-sqrt(3)*params.get_parameter<double>("a")/2,0}),
         Vector({params.get_parameter<double>("a")/2,sqrt(3)*params.get_parameter<double>("a")/2,0}),
         Vector({0,0,params.get_parameter<double>("c")}),
-        get_group("622"), 
-        params.get_parameter<list_systems>("slip_systems"), 
-        params.get_parameter<twin_systems>("twin_systems"))
+        get_group("622"))
 {
+  list_systems isystems = params.get_parameter<list_systems>("slip_systems"); 
+  twin_systems tsystems = params.get_parameter<twin_systems>("twin_systems");
 
+
+  for (auto system : isystems) {
+    add_slip_system(system.first, system.second);
+  }
+  for (auto system : tsystems) {
+    add_twin_system(std::get<0>(system), std::get<1>(system),
+                    std::get<2>(system), std::get<3>(system));
+  }
 }
 
 std::string HCPLattice::type()
