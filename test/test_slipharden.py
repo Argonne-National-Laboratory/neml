@@ -17,7 +17,7 @@ class CommonSlipHardening():
     d = np.array(self.model.d_hist_d_s(self.S, self.Q, self.H, self.L, self.T, self.sliprule, self.fixed))
     nd = diff_history_symmetric(lambda s: self.model.hist(s, self.Q, self.H, self.L, self.T,
       self.sliprule, self.fixed), self.S)
-    
+
     self.assertTrue(np.allclose(nd.reshape(d.shape), d))
 
   def test_d_hist_d_hist(self):
@@ -383,7 +383,7 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     self.current_slip = 0.1
     
     self.rhos = np.array([
-      2,3,2,2,3,2,2,1,4,5,1,2.0])*1e-5
+      2,3,2,2,3,2,2,1,4,5,1,2.0])*1e-4
 
     self.H = history.History()
 
