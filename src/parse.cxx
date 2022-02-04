@@ -218,6 +218,8 @@ ParameterSet get_parameters(const rapidxml::xml_node<> * node)
 std::vector<std::shared_ptr<NEMLObject>> get_vector_object(
     const rapidxml::xml_node<> * node)
 {
+  if (is_empty(node)) return std::vector<std::shared_ptr<NEMLObject>>();
+
   std::vector<std::shared_ptr<NEMLObject>> joined;
 
   // A somewhat dangerous shortcut -- a list of text values should be
@@ -265,6 +267,8 @@ int get_int(const rapidxml::xml_node<> * node)
 
 std::vector<double> get_vector_double(const rapidxml::xml_node<> * node)
 {
+  if (is_empty(node)) return std::vector<double>();
+
   try {
     std::string text = get_string(node);
     return split_string(text);
@@ -400,12 +404,13 @@ size_t get_size_type(const rapidxml::xml_node<> * node)
 
 std::vector<size_t> get_vector_size_type(const rapidxml::xml_node<> * node)
 {
+  if (is_empty(node)) return std::vector<size_t>();
   try {
     std::string text = get_string(node);
     return split_string_size_type(text);
   }
   catch (std::exception & e) {
-    throw InvalidType(node->name(), get_type_of_node(node), "vector<double>");
+    throw InvalidType(node->name(), get_type_of_node(node), "vector<size_t>");
   }
 }
 
@@ -474,6 +479,12 @@ std::string & strip(std::string & s)
   s.erase(std::find_if(s.rbegin(), s.rend(), noblank).base(), s.end());
 
   return s;
+}
+
+bool is_empty(const rapidxml::xml_node<> * node)
+{
+  if (node->first_node() == NULL) return true;
+  return false;
 }
 
 } // namespace neml
