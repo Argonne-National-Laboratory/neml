@@ -31,6 +31,7 @@ Implementations
    sliphardening/SimpleLinearHardening
    sliphardening/VocePerSystemHardening
    sliphardening/FASlipHardening
+   sliphardening/LANLTiModel
 
 
 Class description

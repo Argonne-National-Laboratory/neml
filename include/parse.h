@@ -93,6 +93,9 @@ std::vector<int> split_string_int(std::string sval);
 /// Helper to strip strings
 std::string & strip(std::string & s);
 
+/// Check if node is blank
+bool is_empty(const rapidxml::xml_node<> * node);
+
 // Exceptions
 /// If a node is not found
 class NodeNotFound: public std::exception {
