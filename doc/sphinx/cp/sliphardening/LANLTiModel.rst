@@ -36,6 +36,7 @@ Parameters
    ``k1``, :code:`std::vector<double>`, Coefficient for trapping of dislocation, N
    ``k2``, :code:`std::vector<double>`, Coefficient for annihilation of dislocation, N
    ``X``, :code:`double`, Dislocation interaction parameter, 0.9
+   ``inivalue``, :code:`double`, Initial values of internal variables, 1.0e-6
 
 Class description
 -----------------
