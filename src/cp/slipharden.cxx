@@ -1032,7 +1032,7 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
   Lattice::SlipType stype = L.slip_type(g,i);	
   if (stype == Lattice::SlipType::Slip) {
     return X_s_ * L.burgers(g,i) * mu_[L.flat(g,i)]->value(T) 
-        * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])) 
+        * std::sqrt(history.get<double>(varnames_[L.flat(g,i)]))
 		+ tau_0_[L.flat(g,i)]->value(T);
 	} 
   else {
@@ -1043,12 +1043,12 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
 	    Lattice::SlipType otype = L.slip_type(g2,i2);
 	    if (otype == Lattice::SlipType::Slip){
 		  v += (*C_st_)(L.flat(g,i)-nslip_(),k2) * L.burgers(g2,i2)
-		   	  * history.get<double>(varnames_[k2]);
+		      * history.get<double>(varnames_[k2]);
 		}
 	  }
 	}
 	return v * L.burgers(g,i) * mu_[L.flat(g,i)]->value(T)
-			 + tau_0_[L.flat(g,i)]->value(T);
+	           + tau_0_[L.flat(g,i)]->value(T);
   }
 
 }  
@@ -1098,14 +1098,14 @@ History LANLTiModel::hist(const Symmetric & stress,
 	  size_t k = L.flat(g,i);
       Lattice::SlipType stype = L.slip_type(g,i);
 	  if (stype == Lattice::SlipType::Slip){
-        res.get<double>(varnames_[k]) = (k1_[k]->value(T) 
-			* std::sqrt(history.get<double>(varnames_[k])
+        res.get<double>(varnames_[k]) = (k1_[k]->value(T)
+		    * std::sqrt(history.get<double>(varnames_[k])
 			) - k2_[k]->value(T) * history.get<double>(varnames_[k])
 			) * fabs(R.slip(g, i, stress, Q, history, L, T, fixed));
 	  } 
 	  else{
-		res.get<double>(varnames_[k]) = fabs(R.slip(g, i, stress, Q, history, L,
-            T, fixed));  
+		res.get<double>(varnames_[k]) = fabs(R.slip(g, i,
+		    stress, Q, history, L, T, fixed));  
 	  }
     }
   }
@@ -1127,8 +1127,8 @@ History LANLTiModel::d_hist_d_s(const Symmetric & stress,
       Lattice::SlipType stype = L.slip_type(g,i);   
 	  size_t k = L.flat(g,i);
       if (stype == Lattice::SlipType::Slip){
-		double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
-	    res.get<Symmetric>(varnames_[k]) = (k1_[k]->value(T) 
+	    double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
+	    res.get<Symmetric>(varnames_[k]) = (k1_[k]->value(T)
 		    * std::sqrt(history.get<double>(varnames_[k])
 			) - k2_[k]->value(T) * history.get<double>(varnames_[k])
 			) * R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed)
@@ -1136,8 +1136,8 @@ History LANLTiModel::d_hist_d_s(const Symmetric & stress,
 
 	  } else{
 		double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
-        res.get<Symmetric>(varnames_[k]) = copysign(1.0, slip)
-			* R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed); 								
+		res.get<Symmetric>(varnames_[k]) = copysign(1.0, slip)
+		    * R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed); 								
 	  }
     }
   }
