@@ -498,6 +498,8 @@ class NEML_EXPORT LANLTiModel: public SlipHardening
 
  protected:
   size_t size() const {return tau_0_.size();};
+  size_t nslip_() const {return k1_.size();};
+  size_t ntwin_() const {return tau_0_.size()-k1_.size();};
   void consistency(Lattice & L) const;
 
  private:
@@ -505,6 +507,7 @@ class NEML_EXPORT LANLTiModel: public SlipHardening
   std::shared_ptr<SquareMatrix> C_st_;
   std::vector<std::shared_ptr<Interpolate>> mu_, k1_, k2_;
   double X_s_;
+  double inivalue_;
   std::string varprefix_, twinprefix_;
   std::vector<std::string> varnames_;
 };
