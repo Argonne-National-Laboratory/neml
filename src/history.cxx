@@ -263,6 +263,7 @@ History & History::zero()
 History History::history_derivative(const History & other) const
 {
   History deriv;
+  deriv.increase_store(size() * other.size());
 
   for (auto i1 : order_) {
     StorageType i1_type = type_.at(i1);

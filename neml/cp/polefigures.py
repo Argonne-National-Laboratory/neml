@@ -28,8 +28,9 @@ def project_lambert_equal_area(v):
     Parameters:
       v:        input vector
   """
-  return np.array([np.sqrt(2/(1+v[2]))*v[0]/np.sqrt(2),
-    np.sqrt(2/(1+v[2]))*v[0]/np.sqrt(2)])
+  return np.array([
+    np.sqrt(2/(1+v[2]))*v[0],
+    np.sqrt(2/(1+v[2]))*v[1]])
 
 def inverse_project_stereographic(pt):
   """
