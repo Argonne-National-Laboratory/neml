@@ -70,7 +70,7 @@ PYBIND11_MODULE(models, m) {
 
       .def("alpha", &NEMLModel::alpha)
       .def("elastic_strains",
-           [](NEMLModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double T_np1, py::array_t<double, py::array::c_style> h_np1) -> py::array_t<double>
+           [](NEMLModel & m, py::array_t<double, py::array::c_style> s_np1, double T_np1, py::array_t<double, py::array::c_style> h_np1) -> py::array_t<double>
            {
             auto e_np1 = alloc_vec<double>(6);
 
