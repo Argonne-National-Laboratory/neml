@@ -178,6 +178,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   size_t static_size_;
 
   bool elastic_predictor_, fallback_elastic_predictor_;
+  int force_divide_;
 };
 
 static Register<SingleCrystalModel> regSingleCrystalModel;

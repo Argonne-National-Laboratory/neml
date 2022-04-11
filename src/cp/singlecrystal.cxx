@@ -18,7 +18,8 @@ SingleCrystalModel::SingleCrystalModel(ParameterSet & params) :
     stored_hist_(false),
     postprocessors_(params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors")),
     elastic_predictor_(params.get_parameter<bool>("elastic_predictor")),
-    fallback_elastic_predictor_(params.get_parameter<bool>("fallback_elastic_predictor"))
+    fallback_elastic_predictor_(params.get_parameter<bool>("fallback_elastic_predictor")),
+    force_divide_(params.get_parameter<int>("force_divide"))
 {
   populate_history(stored_hist_);
   
@@ -56,6 +57,7 @@ ParameterSet SingleCrystalModel::parameters()
   pset.add_optional_parameter<std::vector<NEMLObject>>("postprocessors", {});
   pset.add_optional_parameter<bool>("elastic_predictor", false);
   pset.add_optional_parameter<bool>("fallback_elastic_predictor", true);
+  pset.add_optional_parameter<int>("force_divide", 0);
 
   return pset;
 }
@@ -214,9 +216,9 @@ int SingleCrystalModel::attempt_update_ld_inc_(
   /* Begin adaptive stepping */
   double dT = T_np1 - T_n;
   int progress = 0;
-  int cur_int_inc = pow(2, max_divide_);
-  int target = cur_int_inc;
-  int subdiv = 0;
+  int cur_int_inc = pow(2, max_divide_-force_divide_);
+  int target = pow(2, max_divide_);
+  int subdiv = force_divide_;
 
   // Use S_np1 and H_np1 to iterate
   S_np1.copy_data(S_n.data());
