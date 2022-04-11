@@ -270,11 +270,15 @@ Symmetric StandardKinematicModel::elastic_strains(
 
 Symmetric StandardKinematicModel::stress_increment(
     const Symmetric & stress,
-    const Symmetric & D, double dt, Lattice & lattice, const Orientation & Q,
+    const Symmetric & D, const Skew & W, double dt, Lattice & lattice, const Orientation & Q,
     const History & history, double T)
 {
   SymSymR4 C = emodel_->C(T,Q);
-  return C.dot(D*dt);
+  SymSymR4 S = emodel_->S(T,Q);
+  Symmetric e = S.dot(stress);
+  Skew O_s = W;
+  Symmetric net = Symmetric(e*O_s - O_s*e);
+  return C.dot(D - net) * dt;
 }
 
 bool StandardKinematicModel::use_nye() const
@@ -590,7 +594,7 @@ Symmetric DamagedStandardKinematicModel::elastic_strains(
 
 Symmetric DamagedStandardKinematicModel::stress_increment(
     const Symmetric & stress,
-    const Symmetric & D, double dt, Lattice & lattice, const Orientation & Q,
+    const Symmetric & D, const Skew & W, double dt, Lattice & lattice, const Orientation & Q,
     const History & history, double T)
 {
   SymSymR4 C = emodel_->C(T,Q);

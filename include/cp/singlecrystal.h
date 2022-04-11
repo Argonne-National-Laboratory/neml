@@ -21,17 +21,19 @@ class CrystalPostprocessor; // forward declaration
 /// Store the trial state for the single crystal model
 class SCTrialState: public TrialState {
  public:
-  SCTrialState(const Symmetric & d, const Skew & w, const Symmetric & S, const
-               History & H, const Orientation & Q, const Lattice & lattice,
+  SCTrialState(const Symmetric & d, const Skew & w, const Symmetric & S, 
+               const Symmetric & S_n, const History & H, 
+               const Orientation & Q, const Lattice & lattice,
                double T, double dt,
                const History & fixed) :
-      d(d), w(w), S(S), history(H), Q(Q), lattice(lattice), T(T), dt(dt),
+      d(d), w(w), S(S), S_n(S_n), history(H), Q(Q), lattice(lattice), T(T), dt(dt),
       fixed(fixed)
   {};
 
   Symmetric d;
   Skew w;
   Symmetric S;
+  Symmetric S_n;
   History history;
   Orientation Q;
   Lattice lattice;
@@ -174,6 +176,8 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   std::vector<std::shared_ptr<CrystalPostprocessor>> postprocessors_;
   std::vector<std::string> static_names_;
   size_t static_size_;
+
+  bool elastic_predictor_, fallback_elastic_predictor_;
 };
 
 static Register<SingleCrystalModel> regSingleCrystalModel;
