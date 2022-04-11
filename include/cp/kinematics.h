@@ -145,7 +145,9 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
 
   /// Helper to predict an elastic stress increment
   virtual Symmetric stress_increment(const Symmetric & stress,
-                                     const Symmetric & D, double dt, 
+                                     const Symmetric & D, 
+                                     const Skew & W,
+                                     double dt, 
                                      Lattice & lattice,
                                      const Orientation & Q,
                                      const History & history,
@@ -271,7 +273,9 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
   
   /// Helper to predict an elastic stress increment
   virtual Symmetric stress_increment(const Symmetric & stress,
-                                     const Symmetric & D, double dt, 
+                                     const Symmetric & D,
+                                     const Skew & W,
+                                     double dt, 
                                      Lattice & lattice,
                                      const Orientation & Q,
                                      const History & history,
@@ -373,7 +377,9 @@ class NEML_EXPORT DamagedStandardKinematicModel: public StandardKinematicModel {
 
   /// Helper to predict an elastic stress increment
   virtual Symmetric stress_increment(const Symmetric & stress,
-                                     const Symmetric & D, double dt, 
+                                     const Symmetric & D,
+                                     const Skew & W, 
+                                     double dt, 
                                      Lattice & lattice,
                                      const Orientation & Q,
                                      const History & history,

@@ -16,7 +16,9 @@ SingleCrystalModel::SingleCrystalModel(ParameterSet & params) :
     linesearch_(params.get_parameter<bool>("linesearch")),
     max_divide_(params.get_parameter<int>("max_divide")), 
     stored_hist_(false),
-    postprocessors_(params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors"))
+    postprocessors_(params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors")),
+    elastic_predictor_(params.get_parameter<bool>("elastic_predictor")),
+    fallback_elastic_predictor_(params.get_parameter<bool>("fallback_elastic_predictor"))
 {
   populate_history(stored_hist_);
   
@@ -52,6 +54,8 @@ ParameterSet SingleCrystalModel::parameters()
   pset.add_optional_parameter<bool>("linesearch", false);
   pset.add_optional_parameter<int>("max_divide", 6);
   pset.add_optional_parameter<std::vector<NEMLObject>>("postprocessors", {});
+  pset.add_optional_parameter<bool>("elastic_predictor", false);
+  pset.add_optional_parameter<bool>("fallback_elastic_predictor", true);
 
   return pset;
 }
@@ -129,19 +133,32 @@ int SingleCrystalModel::update_ld_inc(
    double & u_np1, double u_n,
    double & p_np1, double p_n)
 {
-  int ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
-                                T_np1, T_n, t_np1, t_n,
-                                s_np1, s_n, h_np1, h_n, 
-                                A_np1, B_np1, u_np1, u_n,
-                                p_np1, p_n, 0);
-  if (ier != 0) {
+  int ier;
+  // Try with a predictor
+  if (elastic_predictor_) {
     ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
                                     T_np1, T_n, t_np1, t_n,
                                     s_np1, s_n, h_np1, h_n, 
                                     A_np1, B_np1, u_np1, u_n,
                                     p_np1, p_n, 1);
   }
-
+  else {
+  // Base update (no elastic predictor)
+  ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                T_np1, T_n, t_np1, t_n,
+                                s_np1, s_n, h_np1, h_n, 
+                                A_np1, B_np1, u_np1, u_n,
+                                p_np1, p_n, 0);
+    // If it fails try with an elastic predictor
+    if ((ier != 0) && (fallback_elastic_predictor_)) {
+      ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                      T_np1, T_n, t_np1, t_n,
+                                      s_np1, s_n, h_np1, h_n, 
+                                      A_np1, B_np1, u_np1, u_n,
+                                      p_np1, p_n, 1);
+    }
+  }
+  
   return ier;
 
 }
@@ -216,17 +233,17 @@ int SingleCrystalModel::attempt_update_ld_inc_(
     Symmetric strial;
     if (trial_type == 1) {
       // Predict the elastic unload
-      strial = S_np1 + kinematics_->stress_increment(S_np1, D, dt * step,
+      strial = S_np1 + kinematics_->stress_increment(S_np1, D, W, dt * step,
                                                              local_lattice, Q_n,
                                                              H_np1, T_n+dT*step);
     }
     else {
       strial = S_np1;
     }
-
+    
     // Set the trial state
     SCTrialState trial(D, W,
-                       strial, H_np1, // Yes, really
+                       strial, S_n, H_np1, // Yes, really
                        Q_n, local_lattice,
                        T_n + dT * step, dt * step,
                        fixed);
@@ -361,7 +378,7 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
   History & fixed = ats->fixed;
 
   // Get actual residual components
-  Symmetric stress_res = S - ats->S - kinematics_->stress_rate(S, ats->d, ats->w, ats->Q,
+  Symmetric stress_res = S - ats->S_n - kinematics_->stress_rate(S, ats->d, ats->w, ats->Q,
                                                    H, ats->lattice, ats->T,
                                                    fixed) * ats->dt;
   History history_rate = kinematics_->history_rate(S, ats->d, ats->w, ats->Q,

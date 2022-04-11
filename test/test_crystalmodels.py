@@ -135,7 +135,7 @@ class TestSingleCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, 
         self.H_n, self.L, self.T, history.History())
 
-    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
+    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
         self.fixed)
 
     self.x = np.zeros((self.model.nparams,))
@@ -291,7 +291,7 @@ class TestComplicatedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, self.H_n, self.L, self.T,
         history.History())
 
-    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
+    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
         self.fixed)
 
     self.x = np.zeros((self.model.nparams,))
@@ -376,7 +376,7 @@ class TestNyeStuffCrystal(unittest.TestCase):
     self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, 
         self.H_n, self.L, self.T, history.History())
 
-    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
+    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
         self.fixed)
 
     self.x = np.zeros((self.model.nparams,))
@@ -490,7 +490,7 @@ class TestFakeDamagedCrystal(unittest.TestCase, CommonTangents, CommonSolver):
     self.fixed = self.kmodel.decouple(self.S_n, self.D, self.W, self.Q, self.H_n, self.L, self.T,
         history.History())
 
-    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
+    self.ts = singlecrystal.SCTrialState(self.D, self.W, self.S_n, self.S_n, self.H_n, self.Q, self.L, self.T, self.dt,
         self.fixed)
 
     self.x = np.zeros((self.model.nparams,))
