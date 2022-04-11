@@ -19,7 +19,9 @@ SingleCrystalModel::SingleCrystalModel(ParameterSet & params) :
     postprocessors_(params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors")),
     elastic_predictor_(params.get_parameter<bool>("elastic_predictor")),
     fallback_elastic_predictor_(params.get_parameter<bool>("fallback_elastic_predictor")),
-    force_divide_(params.get_parameter<int>("force_divide"))
+    force_divide_(params.get_parameter<int>("force_divide")),
+    elastic_predictor_first_step_(params.get_parameter<bool>(
+            "elastic_predictor_first_step"))
 {
   populate_history(stored_hist_);
   
@@ -58,6 +60,7 @@ ParameterSet SingleCrystalModel::parameters()
   pset.add_optional_parameter<bool>("elastic_predictor", false);
   pset.add_optional_parameter<bool>("fallback_elastic_predictor", true);
   pset.add_optional_parameter<int>("force_divide", 0);
+  pset.add_optional_parameter<bool>("elastic_predictor_first_step", false);
 
   return pset;
 }
@@ -136,6 +139,16 @@ int SingleCrystalModel::update_ld_inc(
    double & p_np1, double p_n)
 {
   int ier;
+  // First step
+  if ((t_n == 0.0) && elastic_predictor_first_step_) {
+    ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                    T_np1, T_n, t_np1, t_n,
+                                    s_np1, s_n, h_np1, h_n, 
+                                    A_np1, B_np1, u_np1, u_n,
+                                    p_np1, p_n, 1);
+    return ier;
+  }
+
   // Try with a predictor
   if (elastic_predictor_) {
     ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
