@@ -14,7 +14,7 @@ jobs:
             - run: sudo apt install build-essential cmake libblas-dev liblapack-dev python3-dev python3-networkx python3-numpy python3-scipy python3-matplotlib python3-nose
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON .
             - run: make -j 2
-            - run: nosetests3
+            - run: nosetests3 -v 
       test-base-linux:
             runs-on: ubuntu-latest
             strategy:
@@ -43,7 +43,7 @@ jobs:
             - run: pip3 install --user networkx numpy scipy matplotlib nose
             - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python3-config --prefix)/bin/python3.9 -D PYTHON_LIBRARY=$(python3-config --prefix)/lib/libpython3.9.dylib -D PYTHON_INCLUDE_DIR=$(python3-config --prefix)/include/python3.9 -D USE_OPENMP=OFF .
             - run: make -j 2
-            - run: ~/Library/Python/3.9/bin/nosetests
+            - run: ~/Library/Python/3.9/bin/nosetests -v
       test-base-mac:
             runs-on: macos-latest
             strategy:
@@ -79,7 +79,7 @@ jobs:
            - run: pip install nose
            - run: cmake . -G"MSYS Makefiles" -D"WRAP_PYTHON=ON" -D"CMAKE_BUILD_TYPE=${{ matrix.btype }}"
            - run: make -j 2
-           - run: nosetests
+           - run: nosetests -v
       test-base-windows:
            runs-on: windows-latest
            strategy:
