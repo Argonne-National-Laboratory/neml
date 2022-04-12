@@ -6,9 +6,9 @@ import unittest
 import numpy as np
 import scipy.interpolate as inter
 
-from common import differentiate_new
-from test_slipharden import CommonSlipHardening
-from test_sliprules import CommonSlipStrengthSlipRule, CommonSlipRule
+from test.common import differentiate_new
+from test.test_slipharden import CommonSlipHardening
+from test.test_sliprules import CommonSlipStrengthSlipRule, CommonSlipRule
 
 class PrecipitationModel:
   """

@@ -3,7 +3,7 @@ from neml import solvers, interpolate, models, elasticity, ri_flow, hardening, s
 import unittest
 import numpy as np
 
-from common import *
+from test.common import *
 
 class TestErrors(unittest.TestCase):
   def test_badobject(self):

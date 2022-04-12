@@ -1,13 +1,10 @@
-import sys
-sys.path.append('..')
-
 from neml import walker, history, elasticity
 from neml.math import tensors
 
-from common import *
-from nicediff import *
-from test_visco_flow import CommonFlowRule
-from test_general_flow import CommonGeneralFlow
+from test.common import *
+from test.nicediff import *
+from test.test_visco_flow import CommonFlowRule
+from test.test_general_flow import CommonGeneralFlow
 
 import numpy.linalg as la
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from neml.math import rotations, tensors
-from common import ms2ts
+from test.common import ms2ts
 
 import unittest
 import numpy as np

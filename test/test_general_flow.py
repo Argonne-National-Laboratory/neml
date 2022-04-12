@@ -1,8 +1,5 @@
-import sys
-sys.path.append('..')
-
 from neml import general_flow, visco_flow, elasticity, surfaces, hardening
-from common import *
+from test.common import *
 
 import unittest
 import numpy as np

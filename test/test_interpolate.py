@@ -1,7 +1,4 @@
-import sys
-sys.path.append('..')
-
-from common import *
+from test.common import *
 
 from neml import interpolate
 import unittest

@@ -4,8 +4,8 @@ from neml import history, interpolate
 from neml.math import tensors, rotations, matrix
 from neml.cp import crystallography, slipharden, sliprules
 
-from common import differentiate
-from nicediff import *
+from test.common import differentiate
+from test.nicediff import *
 
 import unittest
 import numpy as np

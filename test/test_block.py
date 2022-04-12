@@ -1,8 +1,5 @@
-import sys
-sys.path.append('..')
-
 from neml import models, block, elasticity, surfaces, hardening, ri_flow
-from common import *
+from test.common import *
 
 import unittest
 import numpy as np

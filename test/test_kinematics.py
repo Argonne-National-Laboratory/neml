@@ -4,9 +4,9 @@ from neml import history, interpolate, elasticity
 from neml.math import tensors, rotations
 from neml.cp import crystallography, slipharden, sliprules, inelasticity, kinematics, crystaldamage
 
-import common
-from common import differentiate
-from nicediff import *
+import test.common as common
+from test.common import differentiate
+from test.nicediff import *
 
 import unittest
 import numpy as np

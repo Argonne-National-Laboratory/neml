@@ -8,7 +8,7 @@ from neml import history, elasticity
 from neml.math import tensors, rotations, matrix
 from neml.cp import crystallography, slipharden, sliprules, postprocessors, singlecrystal, inelasticity, kinematics
 
-from common import *
+from test.common import *
 
 class TestPTRTwinReorientation(unittest.TestCase):
   def setUp(self):

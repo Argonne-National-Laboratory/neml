@@ -3,7 +3,7 @@
 from neml import elasticity
 from neml.math import tensors, projections
 
-import common
+import test.common as common
 
 import unittest
 import numpy as np

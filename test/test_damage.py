@@ -1,8 +1,5 @@
-import sys
-sys.path.append('..')
-
 from neml import interpolate, solvers, models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage, larsonmiller
-from common import *
+from test.common import *
 
 import unittest
 import numpy as np

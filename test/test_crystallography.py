@@ -3,7 +3,7 @@
 from neml.math import tensors, rotations
 from neml.cp import crystallography
 
-from common import differentiate
+from test.common import differentiate
 
 import unittest
 import numpy as np

@@ -1,10 +1,7 @@
-import sys
-sys.path.append('..')
-
 from neml import larsonmiller, interpolate
 import unittest
 
-from common import *
+from test.common import *
 
 import numpy as np
 

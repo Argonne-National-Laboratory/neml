@@ -2,7 +2,7 @@
 
 from neml.math import matrix
 
-import common
+import test.common as common
 
 import unittest
 import numpy as np

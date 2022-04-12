@@ -1,8 +1,5 @@
-import sys
-sys.path.append('..')
-
 from neml.surfaces import *
-from common import *
+from test.common import *
 
 import unittest
 import numpy as np

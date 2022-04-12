@@ -1,8 +1,5 @@
-import sys
-sys.path.append('..')
-
 from neml.math.nemlmath import *
-from common import *
+from test.common import *
 
 from neml.math import nemlmath
 

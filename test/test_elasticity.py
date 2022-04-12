@@ -1,11 +1,8 @@
-import sys
-sys.path.append('..')
-
 from neml import elasticity, interpolate
 from neml.math import tensors, rotations
 import unittest
 
-from common import *
+from test.common import *
 
 import numpy as np
 import numpy.linalg as la

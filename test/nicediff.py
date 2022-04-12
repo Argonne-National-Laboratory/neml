@@ -2,7 +2,7 @@ from __future__ import division
 
 import numpy as np
 
-from common import *
+from test.common import *
 
 from neml.math import tensors
 from neml import history

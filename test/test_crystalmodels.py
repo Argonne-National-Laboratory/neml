@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 import numpy.linalg as la
 
-import common
+import test.common as common
 
 class CommonTangents(object):
   def test_no_rots(self):
