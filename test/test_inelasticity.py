@@ -7,6 +7,7 @@ from neml.cp import crystallography, slipharden, sliprules, inelasticity
 from common import differentiate
 from nicediff import *
 
+
 import unittest
 import numpy as np
 import numpy.linalg as la
