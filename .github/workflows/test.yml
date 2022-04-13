@@ -79,7 +79,7 @@ jobs:
            - run: pip install nose
            - run: cmake . -G"MSYS Makefiles" -D"WRAP_PYTHON=ON" -D"CMAKE_BUILD_TYPE=${{ matrix.btype }}"
            - run: make -j 2
-           - run: nosetests -v
+           - run: nosetests -v --ignore-files="test_hucocks.py"
       test-base-windows:
            runs-on: windows-latest
            strategy:
