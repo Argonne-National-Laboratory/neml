@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include "windows.h"
+#include "nemlerror.h"
 
 namespace neml {
 
@@ -121,45 +122,43 @@ template <> constexpr ParamType GetParamType<std::vector<size_t>>() {return
 TYPE_VEC_SIZE_TYPE;}
 
 /// Error if you ask for a parameter that an object doesn't recognize
-class NEML_EXPORT UnknownParameter: public std::exception {
+class NEML_EXPORT UnknownParameter: public NEMLError {
  public:
   UnknownParameter(std::string object, std::string name) :
-      object_(object), name_(name)
+      NEMLError("Object of type " + object + " has no parameter " + name)
   {
-    std::stringstream ss;
-
-    ss << "Object of type " << object_ << " has no parameter "
-        << name_ << "!";
-
-    message_ = ss.str();
   }
-
-  const char* what() const throw()
-  {
-    return message_.c_str();
-  }
-
- private:
-  std::string object_, name_, message_;
 };
 
 /// Error to call if you try a bad cast
-class NEML_EXPORT WrongTypeError: public std::exception {
+class NEML_EXPORT WrongTypeError: public NEMLError {
  public:
-  WrongTypeError()
+  WrongTypeError() :
+      NEMLError("Cannot convert object to the correct type!")
   {
-    std::stringstream ss;
-    ss << "Cannot convert object to the correct type!";
-    message_ = ss.str();
-  };
+  }
+};
 
-  const char * what() const throw ()
+/// Error to throw if parameters are not completely defined
+class NEML_EXPORT UndefinedParameters: public NEMLError {
+ public:
+  UndefinedParameters(std::string name, std::vector<std::string> unassigned) :
+      NEMLError("Parameter set for object " + name + " has undefined parameters"),
+      unassigned_(unassigned)
   {
-    return message_.c_str();
   }
 
  private:
-  std::string message_;
+  std::vector<std::string> unassigned_;
+};
+
+/// Error to throw if the class isn't registered
+class NEML_EXPORT UnregisteredError: public NEMLError {
+ public:
+  UnregisteredError(std::string name) :
+      NEMLError("Object name " + name + " is not registered with the factory")
+  {
+  };
 };
 
 /// Parameters for objects created through the NEMLObject interface
@@ -336,57 +335,7 @@ class NEML_EXPORT Register {
   }
 };
 
-/// Error to throw if parameters are not completely defined
-class NEML_EXPORT UndefinedParameters: public std::exception {
- public:
-  UndefinedParameters(std::string name, std::vector<std::string> unassigned) :
-      name_(name), unassigned_(unassigned)
-  {
-    std::stringstream ss;
-
-    ss << "Parameter set for object " << name_ << " has undefined parameters:" << std::endl;
-
-    for (auto it = unassigned_.begin(); it != unassigned_.end(); ++it) {
-      ss << "\t" << *it << " ";
-    }
-
-    message_ = ss.str();
-  };
-
-  const char* what() const throw()
-  {
-    return message_.c_str();
-  }
-
- private:
-  std::string name_;
-  std::vector<std::string> unassigned_;
-  std::string message_;
-};
-
-/// Error to throw if the class isn't registered
-class NEML_EXPORT UnregisteredError: public std::exception {
- public:
-  UnregisteredError(std::string name) :
-      name_(name)
-  {
-    std::stringstream ss;
-    ss << "Object named " << name_ << " not registered with factory!";   
-    message_ = ss.str();
-  };
-
-  const char * what() const throw ()
-  {
-    return message_.c_str();
-  };
-
- private:
-  std::string name_;
-  std::string message_;
-};
-
-/// NEMLObjects are current pretty useless.  However, they are a hook
-/// for future work on serialization.
+/// NEMLObject base calls for serialization
 class NEML_EXPORT NEMLObject {
  public:
   NEMLObject(ParameterSet & params);

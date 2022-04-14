@@ -104,9 +104,9 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
       }
       nR = nRt;
       if (nsearch == mline) {
-        // Arguably it's better to let it fall through
-        // ier = MAX_ITERATIONS;
-        // break;
+        // Arguably it's better to let it fall through, but we could
+        // raise a NonlinearSolverError right now with a line search
+        // failed message
       }
     }
     else {
@@ -142,7 +142,8 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
 
   if (ier != SUCCESS) return ier;
 
-  if (i == p.miter) return MAX_ITERATIONS;
+  if (i == p.miter) 
+    throw NonlinearSolverError("Nonlinear solver exceeded maximum allowed iterations!");
 
   return SUCCESS;
 }
@@ -319,7 +320,7 @@ int nox(Solvable * system, double * x, TrialState * ts,
 
   // Check if we actually succeeded
   if (result != NOX::StatusTest::Converged) {
-    return MAX_ITERATIONS; 
+    throw NonlinearSolverError("Nonlinear solver exceeded maximum allowed iterations!");
   }
 
   // Get the solution

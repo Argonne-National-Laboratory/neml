@@ -63,7 +63,8 @@ int set_orientation_passive_batch(SingleCrystalModel & model, size_t n,
                                   double * const hist,
                                   std::vector<Orientation> orientations)
 {
-  if (orientations.size() != n) return INCOMPATIBLE_VECTORS;
+  if (orientations.size() != n) 
+    throw NEMLError("Vector of orientations does not match batch size");
   
   size_t nh = model.nstore();
 

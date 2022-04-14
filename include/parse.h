@@ -16,7 +16,6 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
-#include <exception>
 
 namespace neml {
 
@@ -97,141 +96,53 @@ std::string & strip(std::string & s);
 bool is_empty(const rapidxml::xml_node<> * node);
 
 // Exceptions
-/// If a node is not found
-class NodeNotFound: public std::exception {
+
+/// Generic class of parser errors which take line numbers
+class XMLParseError: public NEMLError {
  public:
-  NodeNotFound(std::string node_name, int line) :
-      node_name_(node_name), line_(line)
+  XMLParseError(std::string msg) :
+      NEMLError(msg)
   {
-    std::stringstream ss;
-    ss << "Node with name " << node_name_
-        << " was not found near line " << line_ << "!";
-    message_ = ss.str();
+    
   };
-
-  const char * what() const throw ()
-  {
-    return message_.c_str();
-  };
-
- private:
-  std::string node_name_;
-  int line_;
-  std::string message_;
-};
-
-/// If a node is not unique (and it should be)
-class DuplicateNode: public std::exception {
- public:
-  DuplicateNode(std::string node_name, int line) :
-      node_name_(node_name), line_(line)
-  {
-      std::stringstream ss;
-      ss << "Multiple nodes with name " << node_name_ << " were found!";
-      message_ = ss.str();
-  };
-
-    const char * what() const throw ()
-    {
-      return message_.c_str();
-    };
-
-  private:
-    std::string node_name_;
-    int line_;
-    std::string message_;
 };
 
 /// If the object can't be converted
-class InvalidType: public std::exception {
+class InvalidType: public XMLParseError {
  public:
   InvalidType(std::string name, std::string type, std::string ctype) :
-      name_(name), type_(type), ctype_(ctype)
+      XMLParseError("Node with name " + name + " and type " + type +
+                    "cannot be converted to the correct type " + ctype)
   {
-    std::stringstream ss;
-
-    ss << "Node with name " << name_ << " and type " << type_
-        << "cannot be converted to the correct type " << ctype_ << "!";
-
-    message_ = ss.str();
   };
-
-  const char * what() const throw ()
-  {
-    return message_.c_str();
-  };
-
- private:
-  std::string name_, type_, ctype_, message_;
 };
 
 /// If a parameter doesn't exist
-class UnknownParameterXML: public std::exception {
+class UnknownParameterXML: public XMLParseError {
  public:
   UnknownParameterXML(std::string name, std::string param) :
-      name_(name), param_(param)
+      XMLParseError("Object " + name + " does not have a parameter called " +
+                    param)
   {
-    std::stringstream ss;
-
-    ss << "Object " << name_ << " does not have a parameter called " << param_ << "!";
-
-    message_ = ss.str();
   };
-
-  const char * what() const throw ()
-  {
-    return message_.c_str();
-  };
-
- private:
-  std::string name_, param_, message_;
-
 };
 
 /// The object isn't in the factory
-class UnregisteredXML: public std::exception {
+class UnregisteredXML: public XMLParseError {
  public:
   UnregisteredXML(std::string name, std::string type) :
-      name_(name), type_(type)
+      XMLParseError("Unregistered type " + type + " for node named " + name)
   {
-    std::stringstream ss;
-
-    ss << "Node named " << name_ << " has an unregistered type of " << type_ << "!";
-
-    message_ = ss.str();
   };
-
-  const char * what() const throw ()
-  {
-    return message_.c_str();
-  };
-
- private:
-  std::string name_, type_, message_;
-
 };
 
 /// The model isn't in the file
-class ModelNotFound: public std::exception {
+class ModelNotFound: public XMLParseError {
  public:
   ModelNotFound(std::string name) :
-      name_(name)
+      XMLParseError("Model named " + name + " is not in the XML file!")
   {
-    std::stringstream ss;
-
-    ss << "Model named " << name_ << " is not in the XML file!";
-
-    message_ = ss.str();
   };
-
-  const char * what() const throw ()
-  {
-    return message_.c_str();
-  };
-
- private:
-  std::string name_, message_;
-
 };
 
 } // namespace neml

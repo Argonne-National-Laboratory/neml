@@ -16,11 +16,10 @@ PYBIND11_MODULE(parse, m) {
 
   m.def("get_object_string", &get_object_string);
 
-  py::register_exception<NodeNotFound>(m, "NodeNotFound");
-  py::register_exception<DuplicateNode>(m, "DuplicateNode");
   py::register_exception<InvalidType>(m, "InvalidType");
   py::register_exception<UnknownParameterXML>(m, "UnknownParameterXML");
   py::register_exception<UnregisteredXML>(m, "UnregisteredXML");
+  py::register_exception<ModelNotFound>(m, "ModelNotFound");
 }
 
 } // namespace neml
