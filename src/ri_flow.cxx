@@ -47,7 +47,7 @@ size_t RateIndependentAssociativeFlow::nhist() const
 int RateIndependentAssociativeFlow::init_hist(double * const h) const
 {
   if (hardening_->nhist() != surface_->nhist()) {
-    return INCOMPATIBLE_MODELS;
+    throw NEMLError("Hardening model and flow surface are not compatible");
   }
 
   return hardening_->init_hist(h);
@@ -232,7 +232,7 @@ size_t RateIndependentNonAssociativeHardening::nhist() const
 int RateIndependentNonAssociativeHardening::init_hist(double * const h) const
 {
   if (hardening_->ninter() != surface_->nhist()) {
-    return INCOMPATIBLE_MODELS;
+    throw NEMLError("Hardening model and flow surface are not compatible");
   }
 
   return hardening_->init_hist(h);

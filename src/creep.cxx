@@ -681,13 +681,13 @@ int CreepModel::update(const double * const s_np1,
   // Setup the trial state
   CreepModelTrialState ts;
   int ier = make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n, ts);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Solve for the new creep strain
   std::vector<double> xv(nparams());
   double * x = &xv[0];
   ier = solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, linesearch_});
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
   
   // Extract
   std::copy(x, x+6, e_np1);
@@ -733,12 +733,12 @@ int CreepModel::RJ(const double * const x, TrialState * ts,
   
   // Residual
   int ier = f(tss->s_np1, x, tss->t, tss->T, R);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
   for (int i=0; i<6; i++) R[i] = x[i] - tss->e_n[i] - R[i] * tss->dt;
 
   // Jacobian
   ier = df_de(tss->s_np1, x, tss->t, tss->T, J);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
   for (int i=0; i<36; i++) J[i] = -J[i] * tss->dt;
   for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
 
@@ -754,16 +754,16 @@ int CreepModel::calc_tangent_(const double * const e_np1,
   double J[36];
 
   ier = RJ(e_np1, &ts, R, J);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   ier = invert_mat(J, 6);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   for (int i=0; i<36; i++) J[i] = J[i] * ts.dt;
 
   double B[36];
   ier = df_ds(ts.s_np1, e_np1, ts.t, ts.T, B);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   mat_mat(6, 6, 6, J, B, A_np1);
 
@@ -909,12 +909,12 @@ int J2CreepModel::f(const double * const s, const double * const e, double t,
   // Get the direction
   std::copy(s, s+6, f);
   ier = sdir(f);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Get the rate
   double rate;
   ier = rule_->g(se, ee, t, T, rate);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Multiply the two together
   for (int i=0; i<6; i++) f[i] *= 3.0/2.0 * rate;
@@ -939,12 +939,12 @@ int J2CreepModel::df_ds(const double * const s, const double * const e,
   // Get the rate
   double rate;
   ier = rule_->g(se, ee, t, T, rate);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Get the rate derivative
   double drate;
   ier = rule_->dg_ds(se, ee, t, T, drate);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Get our usual funny identity tensor
   double ID[36];
@@ -990,25 +990,25 @@ int J2CreepModel::df_de(const double * const s, const double * const e, double t
   double s_dir[6];
   std::copy(s, s+6, s_dir);
   ier = sdir(s_dir);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Get the strain direction
   double e_dir[6];
   std::copy(e, e+6, e_dir);
   ier = edir(e_dir);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Get the derivative
   double drate;
   ier = rule_->dg_de(se, ee, t, T, drate);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Tack onto the direction
   for (int i=0; i<6; i++) e_dir[i] *= drate;
 
   // Form the final outer product
   ier = outer_vec(s_dir, 6, e_dir, 6, df);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   return 0;
 }
@@ -1025,12 +1025,12 @@ int J2CreepModel::df_dt(const double * const s, const double * const e,
   // Get the stress direction
   std::copy(s, s+6, df);
   ier = sdir(df);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Get the derivative
   double drate;
   ier = rule_->dg_dt(se, ee, t, T, drate);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Multiply
   for (int i=0; i<6; i++) df[i] *= 3.0/2.0 * drate;
@@ -1050,12 +1050,12 @@ int J2CreepModel::df_dT(const double * const s, const double * const e,
   // Get the stress direction
   std::copy(s, s+6, df);
   ier = sdir(df);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Get the derivative
   double drate;
   ier = rule_->dg_dT(se, ee, t, T, drate);
-  if (ier != SUCCESS) return ier;
+  if (ier != 0) return ier;
 
   // Multiply
   for (int i=0; i<6; i++) df[i] *= 3.0/2.0 * drate;

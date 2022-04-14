@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <sstream>
-#include <exception>
 
 namespace neml {
 

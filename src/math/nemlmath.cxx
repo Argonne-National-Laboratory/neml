@@ -934,7 +934,7 @@ int invert_mat(double * const A, int n)
   if (info > 0) {
     delete [] ipiv;
     delete [] work;
-    return LINALG_FAILURE;
+    throw LinalgError("Matrix could not be inverted!");
   }
 
   dgetri_(n, A, n, ipiv, work, lwork, info);
@@ -942,7 +942,7 @@ int invert_mat(double * const A, int n)
   delete [] ipiv;
   delete [] work;
 
-  if (info > 0) return LINALG_FAILURE;
+  if (info > 0) throw LinalgError("Matrix could not be inverted!");
 
   return 0;
 }
@@ -980,7 +980,7 @@ int solve_mat(const double * const A, int n, double * const x)
   delete [] ipiv;
   delete [] B;
 
-  if (info > 0) return LINALG_FAILURE;
+  if (info > 0) throw LinalgError("Matrix could not be inverted!");
   
   return 0;
 }

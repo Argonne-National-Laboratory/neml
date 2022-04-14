@@ -212,7 +212,7 @@ size_t PerzynaFlowRule::nhist() const
 int PerzynaFlowRule::init_hist(double * const h) const
 {
   if (surface_->nhist() != hardening_->nhist()) {
-    return INCOMPATIBLE_MODELS;
+    throw NEMLError("Hardening model and flow surface are not compatible");
   }
   return hardening_->init_hist(h);
 }
@@ -527,7 +527,7 @@ size_t ChabocheFlowRule::nhist() const
 int ChabocheFlowRule::init_hist(double * const h) const
 {
   if (surface_->nhist() != hardening_->ninter()) {
-    return INCOMPATIBLE_MODELS;
+    throw NEMLError("Hardening model and flow surface are not compatible");
   }
   return hardening_->init_hist(h);
 }
