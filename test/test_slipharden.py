@@ -379,7 +379,7 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     
     self.nslip = self.L.ntotal
     
-    self.current_rho = 1e-6
+    self.current_rho = 2e-6
     self.current_slip = 0.1
     
     self.rhos = np.array([

@@ -1015,10 +1015,13 @@ void LANLTiModel::populate_history(History & history) const
 
 void LANLTiModel::init_history(History & history) const
 {
-  size_t i = 0;
-  for (auto vn : varnames_) {
-    history.get<double>(vn) = inivalue_;
-    i++;
+  for (size_t i = 0; i < size(); i++) {
+    if (i < nslip_()) {
+      history.get<double>(varnames_[i]) = inivalue_; 
+    } 
+    else {
+      history.get<double>(varnames_[i]) = 0.0;
+    }
   }
 }
 
@@ -1032,7 +1035,7 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
   Lattice::SlipType stype = L.slip_type(g,i);	
   if (stype == Lattice::SlipType::Slip) {
     return X_s_ * L.burgers(g,i) * mu_[L.flat(g,i)]->value(T) 
-        * std::sqrt(history.get<double>(varnames_[L.flat(g,i)]))
+        * sqrt_dd(history.get<double>(varnames_[L.flat(g,i)]))
         + tau_0_[L.flat(g,i)]->value(T);
   } 
   else {
@@ -1043,7 +1046,7 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
         Lattice::SlipType otype = L.slip_type(g2,i2);
         if (otype == Lattice::SlipType::Slip) {
           v += (*C_st_)(L.flat(g,i)-nslip_(),k2) * L.burgers(g2,i2)
-              * history.get<double>(varnames_[k2]);
+              * dd(history.get<double>(varnames_[k2]));
         }
       }
     }
@@ -1065,7 +1068,7 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
   Lattice::SlipType stype = L.slip_type(g,i);
   if (stype == Lattice::SlipType::Slip) {
     res.get<double>(varnames_[L.flat(g,i)]) = X_s_ * L.burgers(g,i) * mu_[L.flat(g,i)]->value(T) 
-        * 1.0/(2.0 * std::sqrt(history.get<double>(varnames_[L.flat(g,i)])));	
+        * 1.0/(2.0 * sqrt_dd(history.get<double>(varnames_[L.flat(g,i)])));	
   }
   else {
     for (size_t g2 = 0; g2 < L.ngroup(); g2++) {
@@ -1098,8 +1101,9 @@ History LANLTiModel::hist(const Symmetric & stress,
       Lattice::SlipType stype = L.slip_type(g,i);
       if (stype == Lattice::SlipType::Slip) {
         res.get<double>(varnames_[k]) = (k1_[k]->value(T)
-                                         * std::sqrt(history.get<double>(varnames_[k])
-                                                    ) - k2_[k]->value(T) * history.get<double>(varnames_[k])
+                                         * sqrt_dd(history.get<double>(varnames_[k])
+                                                    ) - k2_[k]->value(T) *
+                                         dd(history.get<double>(varnames_[k]))
                                         ) * fabs(R.slip(g, i, stress, Q, history, L, T, fixed));
       } 
       else {
@@ -1128,7 +1132,7 @@ History LANLTiModel::d_hist_d_s(const Symmetric & stress,
       if (stype == Lattice::SlipType::Slip) {
         double slip = R.slip(g, i, stress, Q, history, L, T, fixed);
         res.get<Symmetric>(varnames_[k]) = (k1_[k]->value(T)
-                                            * std::sqrt(history.get<double>(varnames_[k])
+                                            * sqrt_dd(history.get<double>(varnames_[k])
                                                        ) - k2_[k]->value(T) * history.get<double>(varnames_[k])
                                            ) * R.d_slip_d_s(g, i, stress, Q, history, L, T, fixed)
             * copysign(1.0, slip);
@@ -1162,13 +1166,13 @@ History LANLTiModel::d_hist_d_h(const Symmetric & stress,
         double slip = R.slip(g, i, stress, Q, history, L, T, fixed);	  
         // self part
         res.get<double>(varnames_[k] + "_" + varnames_[k]) =
-            (k1_[k]->value(T) * 1.0 / (2.0 * std::sqrt(history.get<double>(varnames_[k]))) 				
+            (k1_[k]->value(T) * 1.0 / (2.0 * sqrt_dd(history.get<double>(varnames_[k]))) 				
              - k2_[k]->value(T)) * std::fabs(slip);
         // other parts		 
         for (size_t j = 0; j < size(); j++) {
           std::string other = varnames_[j];
           res.get<double>(varnames_[k] + "_" + other) += (k1_[k]->value(T) 
-                                                          * std::sqrt(history.get<double>(varnames_[k]))
+                                                          * sqrt_dd(history.get<double>(varnames_[k]))
                                                           - k2_[k]->value(T) * history.get<double>(varnames_[k])
                                                          ) * dslip.get<double>(other) * copysign(1.0, slip);
         } 
@@ -1206,7 +1210,7 @@ History LANLTiModel::d_hist_d_h_ext(const Symmetric & stress,
         History dslip = R.d_slip_d_h(g, i, stress, Q, history, L, T, fixed);
         for (auto vn : ext) {
           res.get<double>(varnames_[k] + "_" + vn) = (k1_[k]->value(T)
-                                                      * std::sqrt(history.get<double>(varnames_[k])
+                                                      * sqrt_dd(history.get<double>(varnames_[k])
                                                                  ) - k2_[k]->value(T) * history.get<double>(varnames_[k])
                                                      ) * dslip.get<double>(vn);
         }				

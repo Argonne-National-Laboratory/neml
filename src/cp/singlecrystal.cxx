@@ -248,12 +248,13 @@ int SingleCrystalModel::attempt_update_ld_inc_(
     Symmetric strial;
     if (trial_type == 1) {
       // Predict the elastic unload
-      strial = S_np1 + kinematics_->stress_increment(S_np1, D, W, dt * step,
+      strial = S_n + kinematics_->stress_increment(S_np1, D, W, dt * step,
                                                              local_lattice, Q_n,
-                                                             H_np1, T_n+dT*step);
+                                                             H_np1,
+                                                             T_n+dT*step);
     }
     else {
-      strial = S_np1;
+      strial = S_n;
     }
     
     // Set the trial state
@@ -405,7 +406,6 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
   for (size_t i = 0; i < H.size(); i++) {
     R[i+6] = H.rawptr()[i] - ats->history.rawptr()[i] - history_rate.rawptr()[i] * ats->dt;
   }
-
   // Get all the Jacobian contributions
   SymSymR4 dSdS = kinematics_->d_stress_rate_d_stress(S, ats->d, ats->w, ats->Q,
                                                     H, ats->lattice, ats->T,
