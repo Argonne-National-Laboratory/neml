@@ -274,11 +274,7 @@ Symmetric StandardKinematicModel::stress_increment(
     const History & history, double T)
 {
   SymSymR4 C = emodel_->C(T,Q);
-  SymSymR4 S = emodel_->S(T,Q);
-  Symmetric e = S.dot(stress);
-  Skew O_s = W;
-  Symmetric net = Symmetric(e*O_s - O_s*e);
-  return C.dot(D - net) * dt;
+  return C.dot(D) * dt;
 }
 
 bool StandardKinematicModel::use_nye() const
