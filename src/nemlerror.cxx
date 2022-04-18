@@ -4,12 +4,6 @@
 
 namespace neml {
 
-void py_error(int ier)
-{
-  if (ier != 0)
-    throw NEMLError("Unknown error!");
-}
-
 std::string string_error(int ier)
 {
   return "Unknown error";

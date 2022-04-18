@@ -124,10 +124,9 @@ PYBIND11_MODULE(batch, m) {
           double * p_n_ptr = arr2ptr<double>(p_n);
 
           // bye bye GIL
-          int ier;
           {
             py::gil_scoped_release release;
-            ier = evaluate_crystal_batch(model, n,
+            evaluate_crystal_batch(model, n,
                                          d_np1_ptr, d_n_ptr, w_np1_ptr, w_n_ptr,
                                          T_np1_ptr, T_n_ptr, t_np1, t_n,
                                          s_np1_ptr, s_n_ptr,
@@ -136,8 +135,6 @@ PYBIND11_MODULE(batch, m) {
                                          u_np1_ptr, u_n_ptr,
                                          p_np1_ptr, p_n_ptr, nthreads);
           }
-
-          py_error(ier);
 
           return std::make_tuple(s_np1, h_np1, A_np1, B_np1, u_np1, p_np1);
 
@@ -153,8 +150,7 @@ PYBIND11_MODULE(batch, m) {
         {
           int nh = model.nstore();
           auto h = alloc_mat<double>(n,nh);
-          int ier = init_history_batch(model, n, arr2ptr<double>(h));
-          py_error(ier);
+          init_history_batch(model, n, arr2ptr<double>(h));
           return h;
         }, "Batch initialize history");
   m.def("set_orientation_passive_batch",
@@ -174,11 +170,9 @@ PYBIND11_MODULE(batch, m) {
             throw std::runtime_error("History and input orientations are not compatible!");
           }
 
-          int ier = set_orientation_passive_batch(model, n, 
+          set_orientation_passive_batch(model, n, 
                                                   arr2ptr<double>(h),
                                                   qs);
-          py_error(ier);
-
         }, "Set passive orientations from a big vector");
   m.def("get_orientation_passive_batch",
         [](SingleCrystalModel & model, py::array_t<double, py::array::c_style>
@@ -195,11 +189,9 @@ PYBIND11_MODULE(batch, m) {
             throw std::runtime_error("History input not compatible with model");
           }
 
-          int ier = get_orientation_passive_batch(model, n, 
+          get_orientation_passive_batch(model, n, 
                                                   arr2ptr<double>(h),
                                                   res);
-          py_error(ier);
-
           return res;
         }, "Get passive orientations from a polycrystal.");
 

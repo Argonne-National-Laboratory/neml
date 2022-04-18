@@ -381,8 +381,7 @@ PYBIND11_MODULE(nemlmath, m) {
             throw LinalgError("a must be a 6-vector!");
           }
           
-          int ier = dev_vec(arr2ptr<double>(a));
-          py_error(ier);
+          dev_vec(arr2ptr<double>(a));
 
           return a;
 
@@ -529,8 +528,7 @@ PYBIND11_MODULE(nemlmath, m) {
           if (A.request().shape[0] != A.request().shape[1]) {
             throw LinalgError("Matrix is not square!");
           }
-          int ier = invert_mat(arr2ptr<double>(A), A.request().shape[0]);
-          py_error(ier);
+          invert_mat(arr2ptr<double>(A), A.request().shape[0]);
           // Should check non-singular
           return A;
         }, "Invert a matrix IN PLACE.");
@@ -583,8 +581,7 @@ PYBIND11_MODULE(nemlmath, m) {
          {
            double vals[3];
 
-           int ier = eigenvalues_sym(arr2ptr<double>(s), vals);
-           py_error(ier);
+           eigenvalues_sym(arr2ptr<double>(s), vals);
 
            return std::make_tuple(vals[0],vals[1],vals[2]);
          }, "Eigenvalues of a symmetric matrix.");
@@ -594,8 +591,7 @@ PYBIND11_MODULE(nemlmath, m) {
          {
            auto V = alloc_mat<double>(3,3);
            
-           int ier = eigenvectors_sym(arr2ptr<double>(s), arr2ptr<double>(V));
-           py_error(ier);
+           eigenvectors_sym(arr2ptr<double>(s), arr2ptr<double>(V));
 
            return V;
          }, "Eigenvectors of a symmetric matrix.");

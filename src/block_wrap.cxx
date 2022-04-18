@@ -147,19 +147,15 @@ PYBIND11_MODULE(block, m) {
           double * p_n_ptr = arr2ptr<double>(p_n);
 
           // Release the GIL and call the batch update
-          int ier;
           {
             py::gil_scoped_release release;
 
-            ier = block_evaluate(model, nblock, 
+            block_evaluate(model, nblock, 
                                  e_np1_ptr, e_n_ptr, T_np1_ptr, T_n_ptr,
                                  t_np1, t_n, s_np1_ptr, s_n_ptr,
                                  h_np1_ptr, h_n_ptr, A_np1_ptr,
                                  u_np1_ptr, u_n_ptr, p_np1_ptr, p_n_ptr);
           }
-
-          // Grab the GIL and check for errors
-          py_error(ier);
 
         }, "Block evaluate a bunch of models in tensor notation");
 

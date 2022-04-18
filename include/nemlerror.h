@@ -8,17 +8,6 @@
 
 namespace neml {
 
-// The global error codes
-typedef enum Error {
-  SUCCESS = 0,
-} Error;
-
-/// Translate an error code to an exception
-NEML_EXPORT void py_error(int ier);
-
-/// Translate an error code to a string
-NEML_EXPORT std::string string_error(int ier);
-
 class NEML_EXPORT NEMLError: public std::runtime_error {
  public:
   NEMLError(std::string msg);

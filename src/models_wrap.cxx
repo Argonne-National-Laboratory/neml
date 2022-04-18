@@ -24,8 +24,7 @@ PYBIND11_MODULE(models, m) {
            [](NEMLModel & m) -> py::array_t<double>
            {
             auto h = alloc_vec<double>(m.nstore());
-            int ier = m.init_store(arr2ptr<double>(h));
-            py_error(ier);
+            m.init_store(arr2ptr<double>(h));
             return h;
            }, "Initialize stored variables.")
 
@@ -34,8 +33,7 @@ PYBIND11_MODULE(models, m) {
            [](NEMLModel & m) -> py::array_t<double>
            {
             auto h = alloc_vec<double>(m.nhist());
-            int ier = m.init_hist(arr2ptr<double>(h));
-            py_error(ier);
+            m.init_hist(arr2ptr<double>(h));
             return h;
            }, "Initialize history variables.")
       .def("update_sd",
@@ -46,8 +44,7 @@ PYBIND11_MODULE(models, m) {
             auto A_np1 = alloc_mat<double>(6,6);
             double u_np1, p_np1;
 
-            int ier = m.update_sd(arr2ptr<double>(e_np1), arr2ptr<double>(e_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(s_np1), arr2ptr<double>(s_n), arr2ptr<double>(h_np1), arr2ptr<double>(h_n), arr2ptr<double>(A_np1), u_np1, u_n, p_np1, p_n);
-            py_error(ier);
+            m.update_sd(arr2ptr<double>(e_np1), arr2ptr<double>(e_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(s_np1), arr2ptr<double>(s_n), arr2ptr<double>(h_np1), arr2ptr<double>(h_n), arr2ptr<double>(A_np1), u_np1, u_n, p_np1, p_n);
 
             return std::make_tuple(s_np1, h_np1, A_np1, u_np1, p_np1);
 
@@ -61,8 +58,7 @@ PYBIND11_MODULE(models, m) {
             auto B_np1 = alloc_mat<double>(6,3);
             double u_np1, p_np1;
 
-            int ier = m.update_ld_inc(arr2ptr<double>(d_np1), arr2ptr<double>(d_n), arr2ptr<double>(w_np1), arr2ptr<double>(w_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(s_np1), arr2ptr<double>(s_n), arr2ptr<double>(h_np1), arr2ptr<double>(h_n), arr2ptr<double>(A_np1), arr2ptr<double>(B_np1), u_np1, u_n, p_np1, p_n);
-            py_error(ier);
+            m.update_ld_inc(arr2ptr<double>(d_np1), arr2ptr<double>(d_n), arr2ptr<double>(w_np1), arr2ptr<double>(w_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(s_np1), arr2ptr<double>(s_n), arr2ptr<double>(h_np1), arr2ptr<double>(h_n), arr2ptr<double>(A_np1), arr2ptr<double>(B_np1), u_np1, u_n, p_np1, p_n);
 
             return std::make_tuple(s_np1, h_np1, A_np1, B_np1, u_np1, p_np1);
 
@@ -74,10 +70,9 @@ PYBIND11_MODULE(models, m) {
            {
             auto e_np1 = alloc_vec<double>(6);
 
-            int ier = m.elastic_strains(
+            m.elastic_strains(
                 arr2ptr<double>(s_np1), T_np1,
                 arr2ptr<double>(h_np1), arr2ptr<double>(e_np1));
-            py_error(ier);
 
             return e_np1;
 
@@ -132,15 +127,13 @@ PYBIND11_MODULE(models, m) {
            [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSPPTrialState>
            {
               std::unique_ptr<SSPPTrialState> ts(new SSPPTrialState);
-              int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+              m.make_trial_state(arr2ptr<double>(e_np1),
                                           arr2ptr<double>(e_n),
                                           T_np1, T_n,
                                           t_np1, t_n,
                                           arr2ptr<double>(s_n),
                                           arr2ptr<double>(h_n),
                                           *ts);
-              py_error(ier);
-
               return ts;
            }, "Setup trial state for solve.")
       ;
@@ -157,15 +150,13 @@ PYBIND11_MODULE(models, m) {
            [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSRIPTrialState>
            {
               std::unique_ptr<SSRIPTrialState> ts(new SSRIPTrialState);
-              int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+              m.make_trial_state(arr2ptr<double>(e_np1),
                                           arr2ptr<double>(e_n),
                                           T_np1, T_n,
                                           t_np1, t_n,
                                           arr2ptr<double>(s_n),
                                           arr2ptr<double>(h_n),
                                           *ts);
-              py_error(ier);
-
               return ts;
            }, "Setup trial state for solve.")
       ;
@@ -183,15 +174,13 @@ PYBIND11_MODULE(models, m) {
            [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSCPTrialState>
            {
               std::unique_ptr<SSCPTrialState> ts(new SSCPTrialState);
-              int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+              m.make_trial_state(arr2ptr<double>(e_np1),
                                           arr2ptr<double>(e_n),
                                           T_np1, T_n,
                                           t_np1, t_n,
                                           arr2ptr<double>(s_n),
                                           arr2ptr<double>(h_n),
                                           *ts);
-              py_error(ier);
-
               return ts;
            }, "Setup trial state for solve.")
       ;
@@ -210,14 +199,13 @@ PYBIND11_MODULE(models, m) {
            [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<GITrialState>
            {
               std::unique_ptr<GITrialState> ts(new GITrialState);
-              int ier = m.make_trial_state(arr2ptr<double>(e_np1),
+              m.make_trial_state(arr2ptr<double>(e_np1),
                                           arr2ptr<double>(e_n),
                                           T_np1, T_n,
                                           t_np1, t_n,
                                           arr2ptr<double>(s_n),
                                           arr2ptr<double>(h_n),
                                           *ts);
-              py_error(ier);
               return ts;
            }, "Setup trial state for solve.")
       ;
