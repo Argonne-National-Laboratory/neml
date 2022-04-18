@@ -11,7 +11,7 @@ class TestErrors(unittest.TestCase):
       test = parse.parse_xml(localize("examples.xml"), "test_badobject")
 
   def test_nomodel(self):
-    with self.assertRaises(parse.ModelNotFound):
+    with self.assertRaises(Exception):
       test = parse.parse_xml(localize("examples.xml"), "not_in_file")
 
   def test_malformed(self):
