@@ -1046,7 +1046,7 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
         Lattice::SlipType otype = L.slip_type(g2,i2);
         if (otype == Lattice::SlipType::Slip) {
           v += (*C_st_)(L.flat(g,i)-nslip_(),k2) * L.burgers(g2,i2)
-              * dd(history.get<double>(varnames_[k2]));
+              * history.get<double>(varnames_[k2]);
         }
       }
     }
