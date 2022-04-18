@@ -84,10 +84,8 @@ int TVPFlowRule::s(const double * const s, const double * const alpha,
 
   double temp[6];
   double yv;
-  int ier = flow_->g(s, alpha, T, temp);
-  if (ier != 0) return ier;
-  ier = flow_->y(s, alpha, T, yv);
-  if (ier != 0) return ier;
+  flow_->g(s, alpha, T, temp);
+  flow_->y(s, alpha, T, yv);
   if (yv > NEML_STRAIN_RATE_LIMIT) 
     throw NEMLError("Strain rate exceeds rate limit");
   
@@ -95,14 +93,12 @@ int TVPFlowRule::s(const double * const s, const double * const alpha,
     erate[i] -= yv * temp[i];
   }
 
-  ier = flow_->g_temp(s, alpha, T, temp);
-  if (ier != 0) return ier;
+  flow_->g_temp(s, alpha, T, temp);
   for (int i=0; i<6; i++) {
     erate[i] -= Tdot * temp[i];
   }
 
-  ier = flow_->g_time(s, alpha, T, temp);
-  if (ier != 0) return ier;
+  flow_->g_time(s, alpha, T, temp);
   for (int i=0; i<6; i++) {
     erate[i] -= temp[i];
   }
@@ -122,33 +118,27 @@ int TVPFlowRule::ds_ds(const double * const s, const double * const alpha,
               double * const d_sdot)
 {
   double yv;
-  int ier = flow_->y(s, alpha, T, yv);
-  if (ier != 0) return ier;
+  flow_->y(s, alpha, T, yv);
 
   double work[36];
-  ier = flow_->dg_ds(s, alpha, T, work);
-  if (ier != 0) return ier;
+  flow_->dg_ds(s, alpha, T, work);
   for (int i=0; i<36; i++) {
     work[i] *= -yv;
   }
 
   double t1[6];
-  ier = flow_->g(s, alpha, T, t1);
-  if (ier != 0) return ier;
+  flow_->g(s, alpha, T, t1);
   double t2[6];
-  ier = flow_->dy_ds(s, alpha, T, t2);
-  if (ier != 0) return ier;
+  flow_->dy_ds(s, alpha, T, t2);
   outer_update_minus(t1, 6, t2, 6, work);
   
   double t3[36];
-  ier = flow_->dg_ds_temp(s, alpha, T, t3);
-  if (ier != 0) return ier;
+  flow_->dg_ds_temp(s, alpha, T, t3);
   for (int i=0; i<36; i++) {
     work[i] -= t3[i] * Tdot;
   }
 
-  ier = flow_->dg_ds_time(s, alpha, T, t3);
-  if (ier != 0) return ier;
+  flow_->dg_ds_time(s, alpha, T, t3);
   for (int i=0; i<36; i++) {
     work[i] -= t3[i];
   }
@@ -167,38 +157,32 @@ int TVPFlowRule::ds_da(const double * const s, const double * const alpha,
               double * const d_sdot)
 {
   double yv;
-  int ier = flow_->y(s, alpha, T, yv);
-  if (ier != 0) return ier;
+  flow_->y(s, alpha, T, yv);
   
   int sz = 6 * nhist();
   
   std::vector<double> workv(sz);
   double * work = &workv[0];
-  ier = flow_->dg_da(s, alpha, T, work);
-  if (ier != 0) return ier;
+  flow_->dg_da(s, alpha, T, work);
   for (int i=0; i<sz; i++) {
     work[i] *= -yv;
   }
 
   double t1[6];
-  ier = flow_->g(s, alpha, T, t1);
-  if (ier != 0) return ier;
+  flow_->g(s, alpha, T, t1);
   std::vector<double> t2v(nhist());
   double * t2 = &t2v[0];
-  ier = flow_->dy_da(s, alpha, T, t2);
-  if (ier != 0) return ier;
+  flow_->dy_da(s, alpha, T, t2);
   outer_update_minus(t1, 6, t2, nhist(), work);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
-  ier = flow_->dg_da_temp(s, alpha, T, t3);
-  if (ier != 0) return ier; 
+  flow_->dg_da_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) {
     work[i] -= t3[i] * Tdot;
   }
 
-  ier = flow_->dg_da_time(s, alpha, T, t3);
-  if (ier != 0) return ier;
+  flow_->dg_da_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) {
     work[i] -= t3[i];
   }
@@ -226,21 +210,17 @@ int TVPFlowRule::a(const double * const s, const double * const alpha,
               double * const adot)
 {
   double dg;
-  int ier = flow_->y(s, alpha, T, dg);
-  if (ier != 0) return 0;
+  flow_->y(s, alpha, T, dg);
 
-  ier = flow_->h(s, alpha, T, adot);
-  if (ier != 0) return 0;
+  flow_->h(s, alpha, T, adot);
   for (size_t i=0; i<nhist(); i++) adot[i] *= dg;
   
   std::vector<double> tempv(nhist());
   double * temp = &tempv[0];
-  ier = flow_->h_temp(s, alpha, T, temp);
-  if (ier != 0) return ier;
+  flow_->h_temp(s, alpha, T, temp);
   for (size_t i=0; i<nhist(); i++) adot[i] += temp[i] * Tdot;
 
-  ier = flow_->h_time(s, alpha, T, temp);
-  if (ier != 0) return ier;
+  flow_->h_time(s, alpha, T, temp);
   for (size_t i=0; i<nhist(); i++) adot[i] += temp[i];
 
   return 0;
@@ -253,34 +233,28 @@ int TVPFlowRule::da_ds(const double * const s, const double * const alpha,
               double * const d_adot)
 {
   double dg;
-  int ier = flow_->y(s, alpha, T, dg);
-  if (ier != 0) return ier;
+  flow_->y(s, alpha, T, dg);
 
   int sz = nhist() * 6;
 
-  ier = flow_->dh_ds(s, alpha, T, d_adot);
-  if (ier != 0) return ier;
+  flow_->dh_ds(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= dg;
 
   std::vector<double> t1v(nhist());
   double * t1 = &t1v[0];
-  ier = flow_->h(s, alpha, T, t1);
-  if (ier != 0) return ier;
+  flow_->h(s, alpha, T, t1);
 
   double t2[6];
-  ier = flow_->dy_ds(s, alpha, T, t2);
-  if (ier != 0) return ier;
+  flow_->dy_ds(s, alpha, T, t2);
 
   outer_update(t1, nhist(), t2, 6, d_adot);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
-  ier = flow_->dh_ds_temp(s, alpha, T, t3);
-  if (ier != 0) return ier;
+  flow_->dh_ds_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
 
-  ier = flow_->dh_ds_time(s, alpha, T, t3);
-  if (ier != 0) return ier;
+  flow_->dh_ds_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i];
 
   return 0;
@@ -293,36 +267,30 @@ int TVPFlowRule::da_da(const double * const s, const double * const alpha,
               double * const d_adot)
 {
   double dg;
-  int ier = flow_->y(s, alpha, T, dg);
-  if (ier != 0) return ier;
+  flow_->y(s, alpha, T, dg);
 
   int nh = nhist();
   int sz = nh * nh;
 
-  ier = flow_->dh_da(s, alpha, T, d_adot);
-  if (ier != 0) return ier;
+  flow_->dh_da(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= dg;
   
   std::vector<double> t1v(nh);
   double * t1 = &t1v[0];
-  ier = flow_->h(s, alpha, T, t1);
-  if (ier != 0) return ier;
+  flow_->h(s, alpha, T, t1);
   
   std::vector<double> t2v(nh);
   double * t2 = &t2v[0];
-  ier = flow_->dy_da(s, alpha, T, t2);
-  if (ier != 0) return ier;
+  flow_->dy_da(s, alpha, T, t2);
 
   outer_update(t1, nh, t2, nh, d_adot);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
-  ier = flow_->dh_da_temp(s, alpha, T, t3);
-  if (ier != 0) return ier;
+  flow_->dh_da_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
 
-  ier = flow_->dh_da_time(s, alpha, T, t3);
-  if (ier != 0) return ier;
+  flow_->dh_da_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i];
 
   return 0;
@@ -348,23 +316,19 @@ int TVPFlowRule::work_rate(const double * const s,
 
   double temp[6];
   double yv;
-  int ier = flow_->g(s, alpha, T, temp);
-  if (ier != 0) return ier;
-  ier = flow_->y(s, alpha, T, yv);
-  if (ier != 0) return ier;
+  flow_->g(s, alpha, T, temp);
+  flow_->y(s, alpha, T, yv);
 
   for (int i=0; i<6; i++) {
     erate[i] += yv * temp[i];
   }
 
-  ier = flow_->g_temp(s, alpha, T, temp);
-  if (ier != 0) return ier;
+  flow_->g_temp(s, alpha, T, temp);
   for (int i=0; i<6; i++) {
     erate[i] += Tdot * temp[i];
   }
 
-  ier = flow_->g_time(s, alpha, T, temp);
-  if (ier != 0) return ier;
+  flow_->g_time(s, alpha, T, temp);
   for (int i=0; i<6; i++) {
     erate[i] += temp[i];
   }

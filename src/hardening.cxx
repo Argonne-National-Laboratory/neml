@@ -420,8 +420,7 @@ size_t CombinedHardeningRule::nhist() const
 
 int CombinedHardeningRule::init_hist(double * const alpha) const
 {
-  int ier = iso_->init_hist(alpha);
-  if (ier != 0) return ier;
+  iso_->init_hist(alpha);
   return kin_->init_hist(&alpha[iso_->nhist()]);
 }
 
@@ -438,13 +437,11 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
   // Annoying this doesn't work nicely...
   std::vector<double> idv(iso_->nhist() * iso_->nhist());
   double * id = &idv[0];
-  int ier = iso_->dq_da(alpha, T, id);
-  if (ier != 0) return ier;
+  iso_->dq_da(alpha, T, id);
   
   std::vector<double> kdv(kin_->nhist() * kin_->nhist());
   double * kd = &kdv[0];
-  ier = kin_->dq_da(&alpha[iso_->nhist()], T, kd);
-  if (ier != 0) return ier;
+  kin_->dq_da(&alpha[iso_->nhist()], T, kd);
 
   std::fill(dqv, dqv + nhist()*nhist(), 0.0);
 

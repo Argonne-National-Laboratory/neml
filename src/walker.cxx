@@ -55,14 +55,11 @@ int WalkerKremplSwitchRule::s(const double * const s, const double * const alpha
 
   double temp[6];
   double yv;
-  int ier = flow_->g(s, alpha, T, temp);
-  if (ier != SUCCESS) return ier;
-  ier = flow_->y(s, alpha, T, yv);
-  if (ier != SUCCESS) return ier;
+  flow_->g(s, alpha, T, temp);
+  flow_->y(s, alpha, T, yv);
   
   double kap;
-  ier = kappa(edot, T, kap);
-  if (ier != SUCCESS) return ier;
+  kappa(edot, T, kap);
 
   for (int i=0; i<6; i++) {
     erate[i] -= yv * kap * temp[i];
@@ -83,26 +80,21 @@ int WalkerKremplSwitchRule::ds_ds(const double * const s, const double * const a
               double * const d_sdot)
 {
   double yv;
-  int ier = flow_->y(s, alpha, T, yv);
-  if (ier != SUCCESS) return ier;
+  flow_->y(s, alpha, T, yv);
 
   double kap;
-  ier = kappa(edot, T, kap);
-  if (ier != SUCCESS) return ier;
+  kappa(edot, T, kap);
 
   double work[36];
-  ier = flow_->dg_ds(s, alpha, T, work);
-  if (ier != SUCCESS) return ier;
+  flow_->dg_ds(s, alpha, T, work);
   for (int i=0; i<36; i++) {
     work[i] *= -yv * kap;
   }
 
   double t1[6];
-  ier = flow_->g(s, alpha, T, t1);
-  if (ier != SUCCESS) return ier;
+  flow_->g(s, alpha, T, t1);
   double t2[6];
-  ier = flow_->dy_ds(s, alpha, T, t2);
-  if (ier != SUCCESS) return ier;
+  flow_->dy_ds(s, alpha, T, t2);
   for (size_t i = 0; i < 6;  i++) t2[i] *= kap;
   outer_update_minus(t1, 6, t2, 6, work);
   
@@ -120,30 +112,25 @@ int WalkerKremplSwitchRule::ds_da(const double * const s, const double * const a
               double * const d_sdot)
 {
   double yv;
-  int ier = flow_->y(s, alpha, T, yv);
-  if (ier != SUCCESS) return ier;
+  flow_->y(s, alpha, T, yv);
  
   double kap;
-  ier = kappa(edot, T, kap);
-  if (ier != SUCCESS) return ier;
+  kappa(edot, T, kap);
 
   int sz = 6 * nhist();
   
   std::vector<double> workv(sz);
   double * work = &workv[0];
-  ier = flow_->dg_da(s, alpha, T, work);
-  if (ier != SUCCESS) return ier;
+  flow_->dg_da(s, alpha, T, work);
   for (int i=0; i<sz; i++) {
     work[i] *= -yv * kap;
   }
 
   double t1[6];
-  ier = flow_->g(s, alpha, T, t1);
-  if (ier != SUCCESS) return ier;
+  flow_->g(s, alpha, T, t1);
   std::vector<double> t2v(nhist());
   double * t2 = &t2v[0];
-  ier = flow_->dy_da(s, alpha, T, t2);
-  if (ier != SUCCESS) return ier;
+  flow_->dy_da(s, alpha, T, t2);
   for (size_t i = 0; i < nhist(); i++) t2[i] *= kap;
   outer_update_minus(t1, 6, t2, nhist(), work);
   
@@ -164,16 +151,13 @@ int WalkerKremplSwitchRule::ds_de(const double * const s, const double * const a
   double work[36];
   
   double yv;
-  int ier = flow_->y(s, alpha, T, yv);
-  if (ier != SUCCESS) return ier;
+  flow_->y(s, alpha, T, yv);
  
   double dkap[6];
-  ier = dkappa(edot, T, dkap);
-  if (ier != SUCCESS) return ier;
+  dkappa(edot, T, dkap);
 
   double g[6];
-  ier = flow_->g(s, alpha, T, g);
-  if (ier != SUCCESS) return ier;
+  flow_->g(s, alpha, T, g);
 
   for (size_t i = 0; i < 6; i++) g[i] *= yv;
 
@@ -182,8 +166,7 @@ int WalkerKremplSwitchRule::ds_de(const double * const s, const double * const a
   outer_update_minus(g, 6, dkap, 6, work);
 
   double C[36];
-  ier = elastic_->C(T, C);
-  if (ier != SUCCESS) return ier;
+  elastic_->C(T, C);
 
   mat_mat(6, 6, 6, C, work, d_sdot);
 
@@ -196,25 +179,20 @@ int WalkerKremplSwitchRule::a(const double * const s, const double * const alpha
               double * const adot)
 {
   double dg;
-  int ier = flow_->y(s, alpha, T, dg);
-  if (ier != SUCCESS) return 0;
+  flow_->y(s, alpha, T, dg);
 
   double kap;
-  ier = kappa(edot, T, kap);
-  if (ier != SUCCESS) return ier;
+  kappa(edot, T, kap);
 
-  ier = flow_->h(s, alpha, T, adot);
-  if (ier != SUCCESS) return 0;
+  flow_->h(s, alpha, T, adot);
   for (size_t i=0; i<nhist(); i++) adot[i] *= (dg * kap);
   
   std::vector<double> tempv(nhist());
   double * temp = &tempv[0];
-  ier = flow_->h_temp(s, alpha, T, temp);
-  if (ier != SUCCESS) return ier;
+  flow_->h_temp(s, alpha, T, temp);
   for (size_t i=0; i<nhist(); i++) adot[i] += temp[i] * Tdot;
 
-  ier = flow_->h_time(s, alpha, T, temp);
-  if (ier != SUCCESS) return ier;
+  flow_->h_time(s, alpha, T, temp);
   for (size_t i=0; i<nhist(); i++) adot[i] += (temp[i] * kap);
 
   return 0;
@@ -227,39 +205,32 @@ int WalkerKremplSwitchRule::da_ds(const double * const s, const double * const a
               double * const d_adot)
 {
   double dg;
-  int ier = flow_->y(s, alpha, T, dg);
-  if (ier != SUCCESS) return ier;
+  flow_->y(s, alpha, T, dg);
 
   double kap;
-  ier = kappa(edot, T, kap);
-  if (ier != SUCCESS) return ier;
+  kappa(edot, T, kap);
 
   int sz = nhist() * 6;
 
-  ier = flow_->dh_ds(s, alpha, T, d_adot);
-  if (ier != SUCCESS) return ier;
+  flow_->dh_ds(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= (dg * kap);
 
   std::vector<double> t1v(nhist());
   double * t1 = &t1v[0];
-  ier = flow_->h(s, alpha, T, t1);
-  if (ier != SUCCESS) return ier;
+  flow_->h(s, alpha, T, t1);
 
   double t2[6];
-  ier = flow_->dy_ds(s, alpha, T, t2);
-  if (ier != SUCCESS) return ier;
+  flow_->dy_ds(s, alpha, T, t2);
   for (size_t i = 0; i < 6; i++) t2[i] *= kap;
 
   outer_update(t1, nhist(), t2, 6, d_adot);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
-  ier = flow_->dh_ds_temp(s, alpha, T, t3);
-  if (ier != SUCCESS) return ier;
+  flow_->dh_ds_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
 
-  ier = flow_->dh_ds_time(s, alpha, T, t3);
-  if (ier != SUCCESS) return ier;
+  flow_->dh_ds_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * kap;
 
   return 0;
@@ -272,29 +243,24 @@ int WalkerKremplSwitchRule::da_da(const double * const s, const double * const a
               double * const d_adot)
 {
   double dg;
-  int ier = flow_->y(s, alpha, T, dg);
-  if (ier != SUCCESS) return ier;
+  flow_->y(s, alpha, T, dg);
 
   double kap;
-  ier = kappa(edot, T, kap);
-  if (ier != SUCCESS) return ier;
+  kappa(edot, T, kap);
 
   int nh = nhist();
   int sz = nh * nh;
 
-  ier = flow_->dh_da(s, alpha, T, d_adot);
-  if (ier != SUCCESS) return ier;
+  flow_->dh_da(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= dg * kap;
   
   std::vector<double> t1v(nh);
   double * t1 = &t1v[0];
-  ier = flow_->h(s, alpha, T, t1);
-  if (ier != SUCCESS) return ier;
+  flow_->h(s, alpha, T, t1);
   
   std::vector<double> t2v(nh);
   double * t2 = &t2v[0];
-  ier = flow_->dy_da(s, alpha, T, t2);
-  if (ier != SUCCESS) return ier;
+  flow_->dy_da(s, alpha, T, t2);
 
   for (int i = 0 ; i < nh; i++) t2[i] *= kap;
 
@@ -302,12 +268,10 @@ int WalkerKremplSwitchRule::da_da(const double * const s, const double * const a
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
-  ier = flow_->dh_da_temp(s, alpha, T, t3);
-  if (ier != SUCCESS) return ier;
+  flow_->dh_da_temp(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
 
-  ier = flow_->dh_da_time(s, alpha, T, t3);
-  if (ier != SUCCESS) return ier;
+  flow_->dh_da_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * kap;
 
   return 0;
@@ -319,23 +283,19 @@ int WalkerKremplSwitchRule::da_de(const double * const s, const double * const a
               double * const d_adot)
 {
   double dg;
-  int ier = flow_->y(s, alpha, T, dg);
-  if (ier != SUCCESS) return ier;
+  flow_->y(s, alpha, T, dg);
 
   double dkap[6];
-  ier = dkappa(edot, T, dkap);
-  if (ier != SUCCESS) return ier;
+  dkappa(edot, T, dkap);
 
   int nh = nhist();
   double * hr = new double [nh];
-  ier = flow_->h(s, alpha, T, hr);
-  if (ier != SUCCESS) return 0;
+  flow_->h(s, alpha, T, hr);
   for (int i = 0; i < nh; i++) hr[i] *= dg;
 
   outer_vec(hr, nh, dkap, 6, d_adot);
 
-  ier = flow_->h_time(s, alpha, T, hr);
-  if (ier != SUCCESS) return 0;
+  flow_->h_time(s, alpha, T, hr);
   outer_update(hr, nh, dkap, 6, d_adot);
 
   delete [] hr;
@@ -352,28 +312,23 @@ int WalkerKremplSwitchRule::work_rate(const double * const s,
   std::fill(erate, erate+6, 0.0);
 
   double kap;
-  int ier = kappa(edot, T, kap);
-  if (ier != SUCCESS) return ier;
+  kappa(edot, T, kap);
 
   double temp[6];
   double yv;
-  ier = flow_->g(s, alpha, T, temp);
-  if (ier != SUCCESS) return ier;
-  ier = flow_->y(s, alpha, T, yv);
-  if (ier != SUCCESS) return ier;
+  flow_->g(s, alpha, T, temp);
+  flow_->y(s, alpha, T, yv);
 
   for (int i=0; i<6; i++) {
     erate[i] += yv * kap * temp[i];
   }
 
-  ier = flow_->g_temp(s, alpha, T, temp);
-  if (ier != SUCCESS) return ier;
+  flow_->g_temp(s, alpha, T, temp);
   for (int i=0; i<6; i++) {
     erate[i] += Tdot * temp[i];
   }
 
-  ier = flow_->g_time(s, alpha, T, temp);
-  if (ier != SUCCESS) return ier;
+  flow_->g_time(s, alpha, T, temp);
   for (int i=0; i<6; i++) {
     erate[i] += temp[i];
   }

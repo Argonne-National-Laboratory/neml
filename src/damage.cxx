@@ -61,14 +61,12 @@ int NEMLScalarDamagedModel_sd::update_sd(
 
   // Make trial state
   SDTrialState tss;
-  int ier = make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n, tss);
-  if (ier != 0) return ier;
+  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n, tss);
   
   // Call solve
   std::vector<double> xv(nparams());
   double * x = &xv[0];
-  ier = solve(this, x, &tss, {rtol_, atol_, miter_, verbose_, linesearch_});
-  if (ier != 0) return ier;
+  solve(this, x, &tss, {rtol_, atol_, miter_, verbose_, linesearch_});
   
   // Do actual stress update
   double s_prime_np1[6];
@@ -77,11 +75,10 @@ int NEMLScalarDamagedModel_sd::update_sd(
   std::copy(s_n, s_n+6, s_prime_n);
   for (int i=0; i<6; i++) s_prime_n[i] /= (1-h_n[0]);
 
-  ier = base_->update_sd(e_np1, e_n, T_np1, T_n,
+  base_->update_sd(e_np1, e_n, T_np1, T_n,
                    t_np1, t_n, s_prime_np1, s_prime_n,
                    &h_np1[1], &h_n[1],
                    A_prime_np1, u_np1, u_n, p_np1, p_n);
-  if (ier != 0) return ier;
 
 
   for (int i=0; i<6; i++) s_np1[i] = (1-x[6]) * s_prime_np1[i];
@@ -92,11 +89,9 @@ int NEMLScalarDamagedModel_sd::update_sd(
   }
   
   // Create the tangent
-  ier = tangent_(e_np1, e_n, s_np1, s_n,
+  tangent_(e_np1, e_n, s_np1, s_n,
                  T_np1, T_n, t_np1, t_n, 
                  x[6], h_n[0], A_prime_np1, A_np1);
-  if (ier != 0) return ier;
-
   return 0;
 }
 
@@ -232,17 +227,14 @@ int NEMLScalarDamagedModel_sd::tangent_(
   for (int i=0; i<6; i++) s_prime_n[i] = s_n[i] / (1.0 - w_n);
 
   double dw_ds[6];
-  int ier = ddamage_ds(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+  ddamage_ds(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
              t_np1, t_n, dw_ds);
-  if (ier != 0) return ier;
   double dw_de[6];
-  ier = ddamage_de(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+  ddamage_de(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
              t_np1, t_n, dw_de);
-  if (ier != 0) return ier;
   double dw_dw;
-  ier = ddamage_dd(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+  ddamage_dd(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
              t_np1, t_n, &dw_dw);
-  if (ier != 0) return ier;
 
   double k1 = 1.0 - 1.0 / (1.0 - w_np1) * dot_vec(dw_ds, s_prime_np1, 6) - dw_dw;
   double B[36];
@@ -250,8 +242,7 @@ int NEMLScalarDamagedModel_sd::tangent_(
   for (int i=0; i<6; i++) B[CINDEX(i,i,6)] = 1.0;
   for (int i=0; i<6; i++) dw_ds[i] /= (k1 * (1.0 - w_np1));
   outer_update(s_prime_np1, 6, dw_ds, 6, B);
-  ier = invert_mat(B, 6);
-  if (ier != 0) return ier;
+  invert_mat(B, 6);
 
   double C[36];
   std::copy(A_prime, A_prime+36, C);
@@ -339,9 +330,8 @@ int CombinedDamageModel_sd::damage(
   *dd = d_n;
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di;
-    int ier = (*it)->damage(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    (*it)->damage(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, &di);
-    if (ier != 0) return ier;
     *dd += (di - d_n);
   }
   return 0;
@@ -358,9 +348,8 @@ int CombinedDamageModel_sd::ddamage_dd(
   *dd = 0.0;
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di;
-    int ier = (*it)->ddamage_dd(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    (*it)->ddamage_dd(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, &di);
-    if (ier != 0) return ier;
     *dd += di;
   }
 
@@ -378,9 +367,8 @@ int CombinedDamageModel_sd::ddamage_de(
   std::fill(dd, dd+6, 0.0);
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di[6];
-    int ier = (*it)->ddamage_de(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    (*it)->ddamage_de(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, di);
-    if (ier != 0) return ier;
     for (int i=0; i<6; i++) dd[i] += di[i];
   }
 
@@ -398,9 +386,8 @@ int CombinedDamageModel_sd::ddamage_ds(
   std::fill(dd, dd+6, 0.0);
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     double di[6];
-    int ier = (*it)->ddamage_ds(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
+    (*it)->ddamage_ds(d_np1, d_n, e_np1, e_n, s_np1, s_n, T_np1, T_n,
                t_np1, t_n, di);
-    if (ier != 0) return ier;
     for (int i=0; i<6; i++) dd[i] += di[i];
   }
 
@@ -413,8 +400,7 @@ int CombinedDamageModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel
   elastic_ = emodel;
   base_->set_elastic_model(emodel);
   for (auto it = models_.begin(); it != models_.end(); ++it) {
-    int ier = (*it)->set_elastic_model(emodel);
-    if (ier != 0) return ier;
+    (*it)->set_elastic_model(emodel);
   }
   return 0;
 }
@@ -1120,8 +1106,7 @@ int LarsonMillerCreepDamageModel_sd::damage(
   }
 
   double tR;
-  int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
-  if (ier != 0) return ier;
+  lmr_->tR(se * (1-d_np1), T_np1, tR);
   
   *dd = d_n + dt / tR;
 
@@ -1148,12 +1133,10 @@ int LarsonMillerCreepDamageModel_sd::ddamage_dd(
   double dt = t_np1 - t_n;
 
   double tR;
-  int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
-  if (ier != 0) return ier;
+  lmr_->tR(se * (1-d_np1), T_np1, tR);
 
   double dtR;
-  ier = lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
-  if (ier != 0) return ier;
+  lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
 
   *dd = (dt * dtR * se) / (tR * tR);
   
@@ -1192,12 +1175,10 @@ int LarsonMillerCreepDamageModel_sd::ddamage_ds(
   }
 
   double tR;
-  int ier = lmr_->tR(se * (1-d_np1), T_np1, tR);
-  if (ier != 0) return ier;
+  lmr_->tR(se * (1-d_np1), T_np1, tR);
 
   double dtR;
-  ier = lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
-  if (ier != 0) return ier;
+  lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
 
   double dse = -dtR * dt * (1-d_np1) / (tR * tR);
 
@@ -1256,8 +1237,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
     double * const dd) const
 {
   double fval;
-  int ier = f(s_np1, d_np1, T_np1, fval);
-  if (ier != 0) return ier;
+  f(s_np1, d_np1, T_np1, fval);
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
 
   if (deps == 0.0) {
@@ -1273,12 +1253,10 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_de(
   }
 
   double S[36];
-  ier = elastic_->S(T_np1, S);
-  if (ier != 0) return ier;
+  elastic_->S(T_np1, S);
 
   double dee[36];
-  ier = mat_vec(S, 6, ds, 6, dee);
-  if (ier != 0) return ier;
+  mat_vec(S, 6, ds, 6, dee);
 
   for (int i=0; i<6; i++) {
     dd[i] = (2.0 * fval) / (3.0 * deps) * (de[i] - dee[i]); 
@@ -1296,8 +1274,7 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
     double * const dd) const
 {
   double fval;
-  int ier = f(s_np1, d_np1, T_np1, fval);
-  if (ier != 0) return ier;
+  f(s_np1, d_np1, T_np1, fval);
   double deps = dep(s_np1, s_n, e_np1, e_n, T_np1);
 
   if (deps == 0.0) {
@@ -1313,24 +1290,20 @@ int NEMLStandardScalarDamagedModel_sd::ddamage_ds(
   }
 
   double S[36];
-  ier = elastic_->S(T_np1, S);
-  if (ier != 0) return ier;
+  elastic_->S(T_np1, S);
 
   double dee[36];
-  ier = mat_vec(S, 6, ds, 6, dee);
-  if (ier != 0) return ier;
+  mat_vec(S, 6, ds, 6, dee);
 
   double v1[6];
   for (int i=0; i<6; i++) {
     v1[i] = (2.0 * fval) / (3.0 * deps) * (dee[i] - de[i]); 
   }
 
-  ier = mat_vec(S, 6, v1, 6, dd);
-  if (ier != 0) return ier;
+  mat_vec(S, 6, v1, 6, dd);
 
   double dds[6];
-  ier = df_ds(s_np1, d_np1, T_np1, dds);
-  if (ier != 0) return ier;
+  df_ds(s_np1, d_np1, T_np1, dds);
 
   for (int i=0; i<6; i++) {
     dd[i] = dds[i] * deps + dd[i];

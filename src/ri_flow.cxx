@@ -60,8 +60,7 @@ int RateIndependentAssociativeFlow::f(const double* const s,
   std::vector<double> qv(nhist());
   double * q = &qv[0];
 
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   return surface_->f(s, q, T, fv);
 }
@@ -73,8 +72,7 @@ int RateIndependentAssociativeFlow::df_ds(const double* const s,
   std::vector<double> qv(nhist());
   double * q = &qv[0];
   
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
   
   return surface_->df_ds(s, q, T, dfv);
 }
@@ -85,18 +83,15 @@ int RateIndependentAssociativeFlow::df_da(const double* const s,
 {
   std::vector<double> qv(nhist());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
   
   std::vector<double> jacv(nhist() * nhist());
   double * jac = &jacv[0];
-  ier = hardening_->dq_da(alpha, T, jac);
-  if (ier != SUCCESS) return ier;
+  hardening_->dq_da(alpha, T, jac);
   
   std::vector<double> dqv(nhist());
   double * dq = &dqv[0];
-  ier = surface_->df_dq(s, q, T, dq);
-  if (ier != SUCCESS) return ier;
+  surface_->df_dq(s, q, T, dq);
 
   return mat_vec_trans(jac, nhist(), dq, nhist(), dfv);
 }
@@ -107,8 +102,7 @@ int RateIndependentAssociativeFlow::RateIndependentAssociativeFlow::g(const doub
 {
   std::vector<double> qv(nhist());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier; 
+  hardening_->q(alpha, T, q);
 
   return surface_->df_ds(s, q, T, gv);
 }
@@ -119,8 +113,7 @@ int RateIndependentAssociativeFlow::dg_ds(const double * const s,
 {
   std::vector<double> qv(nhist());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   return surface_->df_dsds(s, q, T, dgv);
 }
@@ -131,18 +124,15 @@ int RateIndependentAssociativeFlow::dg_da(const double * const s,
 {
   std::vector<double> qv(nhist());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
   
   std::vector<double> jacv(nhist() * nhist());
   double * jac = &jacv[0];
-  ier = hardening_->dq_da(alpha, T, jac);
-  if (ier != SUCCESS) return ier;
+  hardening_->dq_da(alpha, T, jac);
   
   std::vector<double> ddv(6 * nhist());
   double * dd = &ddv[0];
-  ier = surface_->df_dsdq(s, q, T, dd);
-  if (ier != SUCCESS) return ier;
+  surface_->df_dsdq(s, q, T, dd);
 
   return mat_mat(6, nhist(), nhist(), dd, jac, dgv);
 }
@@ -153,8 +143,7 @@ int RateIndependentAssociativeFlow::h(const double * const s,
 {
   std::vector<double> qv(nhist());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   return surface_->df_dq(s, q, T, hv);
 }
@@ -165,8 +154,7 @@ int RateIndependentAssociativeFlow::dh_ds(const double * const s,
 {
   std::vector<double> qv(nhist());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   return surface_->df_dqds(s, q, T, dhv);
 }
@@ -177,18 +165,15 @@ int RateIndependentAssociativeFlow::dh_da(const double * const s,
 {
   std::vector<double> qv(nhist());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   std::vector<double> jacv(nhist() * nhist());
   double * jac = &jacv[0];
-  ier = hardening_->dq_da(alpha, T, jac);
-  if (ier != SUCCESS) return ier;
+  hardening_->dq_da(alpha, T, jac);
 
   std::vector<double> ddv(nhist() * nhist());
   double * dd = &ddv[0];
-  ier = surface_->df_dqdq(s, q, T, dd);
-  if (ier != SUCCESS) return ier;
+  surface_->df_dqdq(s, q, T, dd);
 
   return mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
 }
@@ -244,8 +229,7 @@ int RateIndependentNonAssociativeHardening::f(const double* const s,
 {
   std::vector<double> qv(hardening_->ninter());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   return surface_->f(s, q, T, fv);
 }
@@ -256,8 +240,7 @@ int RateIndependentNonAssociativeHardening::df_ds(const double* const s,
 {
   std::vector<double> qv(hardening_->ninter());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
   
   return surface_->df_ds(s, q, T, dfv);
 }
@@ -268,18 +251,15 @@ int RateIndependentNonAssociativeHardening::df_da(const double* const s,
 {
   std::vector<double> qv(hardening_->ninter());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
  
   std::vector<double> jacv(hardening_->ninter() * nhist());
   double * jac = &jacv[0];
-  ier = hardening_->dq_da(alpha, T, jac);
-  if (ier != SUCCESS) return ier;
+  hardening_->dq_da(alpha, T, jac);
   
   std::vector<double> dqv(hardening_->ninter());
   double * dq = &dqv[0];
-  ier = surface_->df_dq(s, q, T, dq);
-  if (ier != SUCCESS) return ier;
+  surface_->df_dq(s, q, T, dq);
   
   return mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dfv);
 }
@@ -290,8 +270,7 @@ int RateIndependentNonAssociativeHardening::RateIndependentNonAssociativeHardeni
 {
   std::vector<double> qv(hardening_->ninter());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   return surface_->df_ds(s, q, T, gv);
 }
@@ -302,8 +281,7 @@ int RateIndependentNonAssociativeHardening::dg_ds(const double * const s,
 {
   std::vector<double> qv(hardening_->ninter());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return ier;
+  hardening_->q(alpha, T, q);
 
   return surface_->df_dsds(s, q, T, dgv);
 }
@@ -314,18 +292,15 @@ int RateIndependentNonAssociativeHardening::dg_da(const double * const s,
 {
   std::vector<double> qv(hardening_->ninter());
   double * q = &qv[0];
-  int ier = hardening_->q(alpha, T, q);
-  if (ier != SUCCESS) return  ier; 
+  hardening_->q(alpha, T, q);
 
   std::vector<double> jacv(hardening_->ninter() * nhist());
   double * jac = &jacv[0];
-  ier = hardening_->dq_da(alpha, T, jac);
-  if (ier != SUCCESS) return ier;
+  hardening_->dq_da(alpha, T, jac);
   
   std::vector<double> ddv(6 * hardening_->ninter());
   double * dd = &ddv[0];
-  ier = surface_->df_dsdq(s, q, T, dd);
-  if (ier != SUCCESS) return ier;
+  surface_->df_dsdq(s, q, T, dd);
 
   return mat_mat(6, nhist(), hardening_->ninter(), dd, jac, dgv);
 }
