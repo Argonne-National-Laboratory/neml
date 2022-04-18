@@ -680,14 +680,12 @@ int CreepModel::update(const double * const s_np1,
 {
   // Setup the trial state
   CreepModelTrialState ts;
-  int ier = make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n, ts);
-  if (ier != 0) return ier;
+  make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n, ts);
 
   // Solve for the new creep strain
   std::vector<double> xv(nparams());
   double * x = &xv[0];
-  ier = solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, linesearch_});
-  if (ier != 0) return ier;
+  solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, linesearch_});
   
   // Extract
   std::copy(x, x+6, e_np1);
@@ -732,13 +730,11 @@ int CreepModel::RJ(const double * const x, TrialState * ts,
   CreepModelTrialState * tss = static_cast<CreepModelTrialState *>(ts);
   
   // Residual
-  int ier = f(tss->s_np1, x, tss->t, tss->T, R);
-  if (ier != 0) return ier;
+  f(tss->s_np1, x, tss->t, tss->T, R);
   for (int i=0; i<6; i++) R[i] = x[i] - tss->e_n[i] - R[i] * tss->dt;
 
   // Jacobian
-  ier = df_de(tss->s_np1, x, tss->t, tss->T, J);
-  if (ier != 0) return ier;
+  df_de(tss->s_np1, x, tss->t, tss->T, J);
   for (int i=0; i<36; i++) J[i] = -J[i] * tss->dt;
   for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
 
@@ -749,21 +745,16 @@ int CreepModel::RJ(const double * const x, TrialState * ts,
 int CreepModel::calc_tangent_(const double * const e_np1, 
                               CreepModelTrialState & ts, double * const A_np1)
 {
-  int ier;
   double R[6];
   double J[36];
 
-  ier = RJ(e_np1, &ts, R, J);
-  if (ier != 0) return ier;
-
-  ier = invert_mat(J, 6);
-  if (ier != 0) return ier;
+  RJ(e_np1, &ts, R, J);
+  invert_mat(J, 6);
 
   for (int i=0; i<36; i++) J[i] = J[i] * ts.dt;
 
   double B[36];
-  ier = df_ds(ts.s_np1, e_np1, ts.t, ts.T, B);
-  if (ier != 0) return ier;
+  df_ds(ts.s_np1, e_np1, ts.t, ts.T, B);
 
   mat_mat(6, 6, 6, J, B, A_np1);
 
@@ -900,21 +891,17 @@ std::unique_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
 int J2CreepModel::f(const double * const s, const double * const e, double t,
                     double T, double * const f) const
 {
-  int ier = 0;
-
   // Gather the effective stresses
   double se = seq(s);
   double ee = eeq(e);
 
   // Get the direction
   std::copy(s, s+6, f);
-  ier = sdir(f);
-  if (ier != 0) return ier;
+  sdir(f);
 
   // Get the rate
   double rate;
-  ier = rule_->g(se, ee, t, T, rate);
-  if (ier != 0) return ier;
+  rule_->g(se, ee, t, T, rate);
 
   // Multiply the two together
   for (int i=0; i<6; i++) f[i] *= 3.0/2.0 * rate;
@@ -925,8 +912,6 @@ int J2CreepModel::f(const double * const s, const double * const e, double t,
 int J2CreepModel::df_ds(const double * const s, const double * const e, 
                         double t, double T, double * const df) const
 {
-  int ier = 0;
-
   // Gather the effective stresses
   double se = seq(s);
   double ee = eeq(e);
@@ -934,17 +919,15 @@ int J2CreepModel::df_ds(const double * const s, const double * const e,
   // Get the direction
   double dir[6];
   std::copy(s, s+6, dir);
-  ier = sdir(dir);
+  sdir(dir);
 
   // Get the rate
   double rate;
-  ier = rule_->g(se, ee, t, T, rate);
-  if (ier != 0) return ier;
+  rule_->g(se, ee, t, T, rate);
 
   // Get the rate derivative
   double drate;
-  ier = rule_->dg_ds(se, ee, t, T, drate);
-  if (ier != 0) return ier;
+  rule_->dg_ds(se, ee, t, T, drate);
 
   // Get our usual funny identity tensor
   double ID[36];
@@ -967,7 +950,7 @@ int J2CreepModel::df_ds(const double * const s, const double * const e,
   }
 
   double A[36];
-  ier = outer_vec(dir, 6, dir, 6, A);
+  outer_vec(dir, 6, dir, 6, A);
   for (int i=0; i<36; i++) A[i] *= 3.0/2.0 * (drate - rate / se);
   for (int i=0; i<6; i++) A[CINDEX(i,i,6)] += rate / se;
   
@@ -980,8 +963,6 @@ int J2CreepModel::df_ds(const double * const s, const double * const e,
 int J2CreepModel::df_de(const double * const s, const double * const e, double t, double T, 
               double * const df) const
 {
-  int ier = 0;
-
   // Gather the effective stresses
   double se = seq(s);
   double ee = eeq(e);
@@ -989,26 +970,22 @@ int J2CreepModel::df_de(const double * const s, const double * const e, double t
   // Get the stress direction
   double s_dir[6];
   std::copy(s, s+6, s_dir);
-  ier = sdir(s_dir);
-  if (ier != 0) return ier;
+  sdir(s_dir);
 
   // Get the strain direction
   double e_dir[6];
   std::copy(e, e+6, e_dir);
-  ier = edir(e_dir);
-  if (ier != 0) return ier;
+  edir(e_dir);
 
   // Get the derivative
   double drate;
-  ier = rule_->dg_de(se, ee, t, T, drate);
-  if (ier != 0) return ier;
+  rule_->dg_de(se, ee, t, T, drate);
 
   // Tack onto the direction
   for (int i=0; i<6; i++) e_dir[i] *= drate;
 
   // Form the final outer product
-  ier = outer_vec(s_dir, 6, e_dir, 6, df);
-  if (ier != 0) return ier;
+  outer_vec(s_dir, 6, e_dir, 6, df);
 
   return 0;
 }
@@ -1016,21 +993,17 @@ int J2CreepModel::df_de(const double * const s, const double * const e, double t
 int J2CreepModel::df_dt(const double * const s, const double * const e, 
                         double t, double T, double * const df) const 
 {
-  int ier = 0;
-
   // Gather the effective quantities
   double se = seq(s);
   double ee = eeq(e);
   
   // Get the stress direction
   std::copy(s, s+6, df);
-  ier = sdir(df);
-  if (ier != 0) return ier;
+  sdir(df);
 
   // Get the derivative
   double drate;
-  ier = rule_->dg_dt(se, ee, t, T, drate);
-  if (ier != 0) return ier;
+  rule_->dg_dt(se, ee, t, T, drate);
 
   // Multiply
   for (int i=0; i<6; i++) df[i] *= 3.0/2.0 * drate;
@@ -1041,21 +1014,17 @@ int J2CreepModel::df_dt(const double * const s, const double * const e,
 int J2CreepModel::df_dT(const double * const s, const double * const e,
                         double t, double T, double * const df) const
 {
-  int ier = 0;
-
   // Gather the effective quantities
   double se = seq(s);
   double ee = eeq(e);
   
   // Get the stress direction
   std::copy(s, s+6, df);
-  ier = sdir(df);
-  if (ier != 0) return ier;
+  sdir(df);
 
   // Get the derivative
   double drate;
-  ier = rule_->dg_dT(se, ee, t, T, drate);
-  if (ier != 0) return ier;
+  rule_->dg_dT(se, ee, t, T, drate);
 
   // Multiply
   for (int i=0; i<6; i++) df[i] *= 3.0/2.0 * drate;
@@ -1080,16 +1049,15 @@ double J2CreepModel::eeq(const double * const e) const
 
 int J2CreepModel::sdir(double * const s) const
 {
-  int ier = 0;
   double se = seq(s);
   if (se < std::numeric_limits<double>::epsilon()) {
     std::fill(s, s+6, 0.0);
   }
   else {  
-    ier = dev_vec(s);
+    dev_vec(s);
     for (int i=0; i<6; i++) s[i] /= se;
   }
-  return ier;
+  return 0;
 }
 
 int J2CreepModel::edir(double * const e) const

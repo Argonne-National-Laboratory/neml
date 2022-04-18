@@ -138,44 +138,47 @@ int SingleCrystalModel::update_ld_inc(
    double & u_np1, double u_n,
    double & p_np1, double p_n)
 {
-  int ier;
   // First step
   if ((t_n == 0.0) && elastic_predictor_first_step_) {
-    ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+    attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
                                     T_np1, T_n, t_np1, t_n,
                                     s_np1, s_n, h_np1, h_n, 
                                     A_np1, B_np1, u_np1, u_n,
                                     p_np1, p_n, 1);
-    return ier;
+    return 0;
   }
 
   // Try with a predictor
   if (elastic_predictor_) {
-    ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+    attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
                                     T_np1, T_n, t_np1, t_n,
                                     s_np1, s_n, h_np1, h_n, 
                                     A_np1, B_np1, u_np1, u_n,
                                     p_np1, p_n, 1);
   }
   else {
-  // Base update (no elastic predictor)
-  ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
-                                T_np1, T_n, t_np1, t_n,
-                                s_np1, s_n, h_np1, h_n, 
-                                A_np1, B_np1, u_np1, u_n,
-                                p_np1, p_n, 0);
-    // If it fails try with an elastic predictor
-    if ((ier != 0) && (fallback_elastic_predictor_)) {
-      ier =  attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
-                                      T_np1, T_n, t_np1, t_n,
-                                      s_np1, s_n, h_np1, h_n, 
-                                      A_np1, B_np1, u_np1, u_n,
-                                      p_np1, p_n, 1);
+    // Base update (no elastic predictor)
+    try {
+      attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                                    T_np1, T_n, t_np1, t_n,
+                                    s_np1, s_n, h_np1, h_n, 
+                                    A_np1, B_np1, u_np1, u_n,
+                                    p_np1, p_n, 0);
+    }
+    catch (const NEMLError & e) {
+      // If it fails try with an elastic predictor
+      if (fallback_elastic_predictor_)
+        attempt_update_ld_inc_(d_np1, d_n, w_np1, w_n,
+                               T_np1, T_n, t_np1, t_n,
+                               s_np1, s_n, h_np1, h_n, 
+                               A_np1, B_np1, u_np1, u_n,
+                               p_np1, p_n, 1);
+      else
+        throw e;
     }
   }
   
-  return ier;
-
+  return 0;
 }
 
 int SingleCrystalModel::attempt_update_ld_inc_(
@@ -265,9 +268,10 @@ int SingleCrystalModel::attempt_update_ld_inc_(
                        fixed);
 
     // Solve the update
-    int ier = solve_substep_(&trial, S_np1, H_np1);
-
-    if (ier != 0) {
+    try {
+      solve_substep_(&trial, S_np1, H_np1);
+    }
+    catch (const NEMLError & e) {
       subdiv++;
       cur_int_inc /= 2;
 
@@ -283,31 +287,29 @@ int SingleCrystalModel::attempt_update_ld_inc_(
         if (verbose_) {
           std::cout << "Adaptive substepping failed!" << std::endl;
         }
-        return ier;
+        throw NonlinearSolverError("Exceeded maximum adaptive subdivisions");
       }
+      continue;
     }
-    else {
-      progress += cur_int_inc;
-      if (verbose_) {
-        std::cout << "Adaptive substep succeeded" << std::endl;
-        std::cout << "Current progress " << progress << " out of " << target <<
-            std::endl;
-      }
-      
-      // Calc tangent if we're going to be done
-      if (progress == target) {
-        // Tangent
-        calc_tangents_(S_np1, H_np1, &trial, A_np1, B_np1);
+    progress += cur_int_inc;
+    if (verbose_) {
+      std::cout << "Adaptive substep succeeded" << std::endl;
+      std::cout << "Current progress " << progress << " out of " << target <<
+          std::endl;
+    }
+    
+    // Calc tangent if we're going to be done
+    if (progress == target) {
+      // Tangent
+      calc_tangents_(S_np1, H_np1, &trial, A_np1, B_np1);
 
-        // Calculate the new rotation, if requested
-        if (update_rotation_) {
-          HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
-        }
-        else {
-          HF_np1.get<Orientation>("rotation") = Q_n;
-        }
+      // Calculate the new rotation, if requested
+      if (update_rotation_) {
+        HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
       }
-
+      else {
+        HF_np1.get<Orientation>("rotation") = Q_n;
+      }
     }
   }
   /* End adaptive stepping */
@@ -766,16 +768,13 @@ int SingleCrystalModel::solve_substep_(SCTrialState * ts,
 {
   std::vector<double> xv(nparams());
   double * x = &xv[0];
-  int ier = solve(this, x, ts, {rtol_, atol_, miter_, verbose_, linesearch_});
-
-  // Only dump into new stress and hist if we pass
-  if (ier != 0) return ier;
+  solve(this, x, ts, {rtol_, atol_, miter_, verbose_, linesearch_});
 
   // Dump the results
   stress.copy_data(x);
   hist.copy_data(&x[6]);
 
-  return ier;
+  return 0;
 }
 
 std::vector<std::string> SingleCrystalModel::not_updated_() const

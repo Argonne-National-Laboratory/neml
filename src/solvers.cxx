@@ -44,10 +44,7 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
     J = new double [n*n];
   }
 
-  int ier = 0;
-
-  ier = system->RJ(x, ts, R, J);
-  if (ier != SUCCESS) return ier;
+  system->RJ(x, ts, R, J);
 
   double nR = norm2_vec(R, n);
   double nR0 = nR;
@@ -73,8 +70,7 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
   {
     if ((nR < p.atol) || ((nR / nR0) < p.rtol)) break;
 
-    ier = solve_mat(J, n, R);
-    if (ier != SUCCESS) break;
+    solve_mat(J, n, R);
 
     if (p.linesearch) {
       int nsearch = 0;
@@ -87,11 +83,7 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
       bool linesearch_error = false;
       while (nsearch < mline) {
         for (int j=0; j<n; j++) x[j] = x_orig[j] - alpha * dir[j];
-        ier = system->RJ(x, ts, R, J);
-        if (ier != SUCCESS) {
-          linesearch_error = true;
-          break;
-        }
+        system->RJ(x, ts, R, J);
         nRt = norm2_vec(R, n);
         if (nRt < nR) break;
         alpha /= 2.0;
@@ -111,8 +103,7 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
     }
     else {
       for (int j=0; j<n; j++) x[j] -= R[j];
-      ier = system->RJ(x, ts, R, J);
-      if (ier != SUCCESS) break;
+      system->RJ(x, ts, R, J);
       nR = norm2_vec(R, n);
     }
     i++;
@@ -140,12 +131,10 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
     delete [] J;
   }
 
-  if (ier != SUCCESS) return ier;
-
   if (i == p.miter) 
     throw NonlinearSolverError("Nonlinear solver exceeded maximum allowed iterations!");
 
-  return SUCCESS;
+  return 0;
 }
 
 /// Helper to get numerical jacobian

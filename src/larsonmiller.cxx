@@ -55,9 +55,8 @@ int LarsonMillerRelation::tR(double s, double T, double & t)
   LMTrialState ts;
   ts.stress = s;
   double x[1];
-  int ier = solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, 
+  solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, 
                   linesearch_});
-  if (ier != 0) return ier;
 
   // x has LMP
   t = pow(10.0, x[0] / T - C_);
@@ -70,9 +69,8 @@ int LarsonMillerRelation::dtR_ds(double s, double T, double & dt)
   LMTrialState ts;
   ts.stress = s;
   double x[1];
-  int ier = solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, 
+  solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, 
                   linesearch_});
-  if (ier != 0) return ier;
   
   double LMP = x[0];
   
