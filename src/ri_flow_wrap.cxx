@@ -21,8 +21,7 @@ PYBIND11_MODULE(ri_flow, m) {
            [](RateIndependentFlowRule & m) -> py::array_t<double>
            {
             auto h = alloc_vec<double>(m.nhist());
-            int ier = m.init_hist(arr2ptr<double>(h));
-            py_error(ier);
+            m.init_hist(arr2ptr<double>(h));
             return h;
            }, "Initialize history variables.")
 
@@ -30,24 +29,21 @@ PYBIND11_MODULE(ri_flow, m) {
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> double
            {
             double fv;
-            int ier = m.f(arr2ptr<double>(s), arr2ptr<double>(alpha), T, fv);
-            py_error(ier);
+            m.f(arr2ptr<double>(s), arr2ptr<double>(alpha), T, fv);
             return fv;
            }, "Yield surface value.")
       .def("df_ds",
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(6);
-            int ier = m.df_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.df_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Yield surface derivative with respect to stress.")
       .def("df_da",
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(m.nhist());
-            int ier = m.df_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.df_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Yield surface derivative with respect to history.")
 
@@ -55,24 +51,21 @@ PYBIND11_MODULE(ri_flow, m) {
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(6);
-            int ier = m.g(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.g(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Flow rule.")
       .def("dg_ds",
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(6,6);
-            int ier = m.dg_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dg_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Flow rule derivative with respect to stress.")
       .def("dg_da",
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(6,m.nhist());
-            int ier = m.dg_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dg_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Flow rule derivative with respect to history.")
 
@@ -80,24 +73,21 @@ PYBIND11_MODULE(ri_flow, m) {
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(m.nhist());
-            int ier = m.h(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.h(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule.")
       .def("dh_ds",
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),6);
-            int ier = m.dh_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule derivative with respect to stress.")
       .def("dh_da",
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),m.nhist());
-            int ier = m.dh_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule derivative with respect to history.")
       ;

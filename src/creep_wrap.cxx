@@ -26,8 +26,7 @@ PYBIND11_MODULE(creep, m) {
             auto e_np1 = alloc_vec<double>(6);
             auto A_np1 = alloc_mat<double>(6,6);
 
-            int ier = m.update(arr2ptr<double>(s_np1), arr2ptr<double>(e_np1), arr2ptr<double>(e_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(A_np1));
-            py_error(ier);
+            m.update(arr2ptr<double>(s_np1), arr2ptr<double>(e_np1), arr2ptr<double>(e_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(A_np1));
 
             return std::make_tuple(e_np1, A_np1);
 
@@ -37,8 +36,7 @@ PYBIND11_MODULE(creep, m) {
            [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
            {
             auto fv = alloc_vec<double>(6);
-            int ier = m.f(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(fv));
-            py_error(ier);
+            m.f(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(fv));
             return fv;
            }, "Evaluate creep rate.")
 
@@ -46,8 +44,7 @@ PYBIND11_MODULE(creep, m) {
            [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
            {
             auto dfv = alloc_mat<double>(6,6);
-            int ier = m.df_ds(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            py_error(ier);
+            m.df_ds(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
             return dfv;
            }, "Evaluate creep rate derivative wrt stress.")
 
@@ -55,8 +52,7 @@ PYBIND11_MODULE(creep, m) {
            [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
            {
             auto dfv = alloc_mat<double>(6,6);
-            int ier = m.df_de(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            py_error(ier);
+            m.df_de(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
             return dfv;
            }, "Evaluate creep rate derivative wrt strain.")
 
@@ -64,8 +60,7 @@ PYBIND11_MODULE(creep, m) {
            [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
            {
             auto dfv = alloc_vec<double>(6);
-            int ier = m.df_dt(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            py_error(ier);
+            m.df_dt(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
             return dfv;
            }, "Evaluate creep rate derivative wrt time.")
 
@@ -73,8 +68,7 @@ PYBIND11_MODULE(creep, m) {
            [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
            {
             auto dfv = alloc_vec<double>(6);
-            int ier = m.df_dT(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            py_error(ier);
+            m.df_dT(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
             return dfv;
            }, "Evaluate creep rate derivative wrt temperature.")
 
@@ -83,10 +77,9 @@ PYBIND11_MODULE(creep, m) {
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::unique_ptr<CreepModelTrialState>
            {
             std::unique_ptr<CreepModelTrialState> ts(new CreepModelTrialState);
-            int ier = m.make_trial_state(arr2ptr<double>(s_np1),
+            m.make_trial_state(arr2ptr<double>(s_np1),
                                          arr2ptr<double>(e_n),
                                          T_np1, T_n, t_np1, t_n, *ts);
-            py_error(ier);
 
             return ts;
 
@@ -105,8 +98,7 @@ PYBIND11_MODULE(creep, m) {
            [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
            {
             double gv;
-            int ier = m.g(seq, eeq, t, T, gv);
-            py_error(ier);
+            m.g(seq, eeq, t, T, gv);
             return gv;
            }, "Evaluate creep rate.")
 
@@ -114,8 +106,7 @@ PYBIND11_MODULE(creep, m) {
            [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
            {
             double gv;
-            int ier = m.dg_ds(seq, eeq, t, T, gv);
-            py_error(ier);
+            m.dg_ds(seq, eeq, t, T, gv);
             return gv;
            }, "Evaluate creep rate derivative wrt stress.")
 
@@ -123,8 +114,7 @@ PYBIND11_MODULE(creep, m) {
            [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
            {
             double gv;
-            int ier = m.dg_de(seq, eeq, t, T, gv);
-            py_error(ier);
+            m.dg_de(seq, eeq, t, T, gv);
             return gv;
            }, "Evaluate creep rate derivative wrt strain.")
 
@@ -132,8 +122,7 @@ PYBIND11_MODULE(creep, m) {
            [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
            {
             double gv;
-            int ier = m.dg_dt(seq, eeq, t, T, gv);
-            py_error(ier);
+            m.dg_dt(seq, eeq, t, T, gv);
             return gv;
            }, "Evaluate creep rate wrt time.")
 
@@ -141,8 +130,7 @@ PYBIND11_MODULE(creep, m) {
            [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
            {
             double gv;
-            int ier = m.dg_dT(seq, eeq, t, T, gv);
-            py_error(ier);
+            m.dg_dT(seq, eeq, t, T, gv);
             return gv;
            }, "Evaluate creep rate wrt temperature.")
       ;

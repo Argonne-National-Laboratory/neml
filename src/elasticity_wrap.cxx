@@ -20,8 +20,7 @@ PYBIND11_MODULE(elasticity, m) {
            [](const LinearElasticModel & m, double T) -> py::array_t<double>
            {
             auto C = alloc_mat<double>(6,6);
-            int ier = m.C(T, arr2ptr<double>(C));
-            py_error(ier);
+            m.C(T, arr2ptr<double>(C));
             return C;
            }, "Return stiffness elasticity matrix.")
 
@@ -29,8 +28,7 @@ PYBIND11_MODULE(elasticity, m) {
            [](const LinearElasticModel & m, double T) -> py::array_t<double>
            {
             auto S = alloc_mat<double>(6,6);
-            int ier = m.S(T, arr2ptr<double>(S));
-            py_error(ier);
+            m.S(T, arr2ptr<double>(S));
             return S;
            }, "Return compliance elasticity matrix.")
       .def("C_tensor",

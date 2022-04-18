@@ -28,24 +28,21 @@ PYBIND11_MODULE(larsonmiller, m) {
            [](LarsonMillerRelation & m, double t, double T) -> double
            {
             double s;
-            int ier = m.sR(t, T, s);
-            py_error(ier);
+            m.sR(t, T, s);
             return s;
            }, "The rupture stress as a function of time and temperature.")
       .def("tR", 
            [](LarsonMillerRelation & m, double s, double T) -> double
            {
             double t;
-            int ier = m.tR(s, T, t);
-            py_error(ier);
+            m.tR(s, T, t);
             return t;
            }, "The rupture time as a function of stress and temperature.")
       .def("dtR_ds", 
            [](LarsonMillerRelation & m, double s, double T) -> double
            {
             double dt;
-            int ier = m.dtR_ds(s, T, dt);
-            py_error(ier);
+            m.dtR_ds(s, T, dt);
             return dt;
            }, "The derivative of the time to rupture with respect to stress.")
     ;

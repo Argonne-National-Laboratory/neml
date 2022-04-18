@@ -21,8 +21,7 @@ PYBIND11_MODULE(surfaces, m) {
            {
             double fv;
 
-            int ier = m.f(arr2ptr<double>(s), arr2ptr<double>(h), T, fv);
-            py_error(ier);
+            m.f(arr2ptr<double>(s), arr2ptr<double>(h), T, fv);
 
             return fv;
            }, "Yield function")
@@ -32,8 +31,7 @@ PYBIND11_MODULE(surfaces, m) {
            {
             auto deriv = alloc_vec<double>(6);
             
-            int ier = m.df_ds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
-            py_error(ier);
+            m.df_ds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
 
             return deriv;
            }, "Yield function gradient wrt. deviatoric stress")
@@ -42,8 +40,7 @@ PYBIND11_MODULE(surfaces, m) {
            {
             auto deriv = alloc_vec<double>(m.nhist());
             
-            int ier = m.df_dq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
-            py_error(ier);
+            m.df_dq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
 
             return deriv;
            }, "Yield function gradient wrt. the history")
@@ -53,8 +50,7 @@ PYBIND11_MODULE(surfaces, m) {
            {
             auto deriv = alloc_mat<double>(6,6);
             
-            int ier = m.df_dsds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
-            py_error(ier);
+            m.df_dsds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
 
             return deriv;
            }, "Yield function Hessian: stress-stress")
@@ -64,8 +60,7 @@ PYBIND11_MODULE(surfaces, m) {
            {
             auto deriv = alloc_mat<double>(6,m.nhist());
             
-            int ier = m.df_dsdq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
-            py_error(ier);
+            m.df_dsdq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
 
             return deriv;
            }, "Yield function Hessian: stress-history")
@@ -75,8 +70,7 @@ PYBIND11_MODULE(surfaces, m) {
            {
             auto deriv = alloc_mat<double>(m.nhist(),6);
             
-            int ier = m.df_dqds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
-            py_error(ier);
+            m.df_dqds(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
 
             return deriv;
            }, "Yield function Hessian: history-stress")
@@ -86,8 +80,7 @@ PYBIND11_MODULE(surfaces, m) {
            {
             auto deriv = alloc_mat<double>(m.nhist(),m.nhist());
             
-            int ier = m.df_dqdq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
-            py_error(ier);
+            m.df_dqdq(arr2ptr<double>(s), arr2ptr<double>(h), T, arr2ptr<double>(deriv));
 
             return deriv;
            }, "Yield function Hessian: history-history")

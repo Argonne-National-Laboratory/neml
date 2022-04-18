@@ -34,8 +34,7 @@ PYBIND11_MODULE(solvers, m) {
            [](Solvable & m, TrialState & ts) -> py::array_t<double>
            {
             auto x = alloc_vec<double>(m.nparams());
-            int ier = m.init_x(arr2ptr<double>(x), &ts);
-            py_error(ier);
+            m.init_x(arr2ptr<double>(x), &ts);
             return x;
            }, "Initialize guess.")
       .def("RJ",
@@ -44,8 +43,7 @@ PYBIND11_MODULE(solvers, m) {
             auto R = alloc_vec<double>(m.nparams());
             auto J = alloc_mat<double>(m.nparams(), m.nparams());
             
-            int ier = m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
-            py_error(ier);
+            m.RJ(arr2ptr<double>(x), &ts, arr2ptr<double>(R), arr2ptr<double>(J));
 
             return std::make_tuple(R, J);
            }, "Residual and jacobian.")
@@ -57,10 +55,8 @@ PYBIND11_MODULE(solvers, m) {
         {
           auto x = alloc_vec<double>(system->nparams());
           
-          int ier = solve(system.get(), arr2ptr<double>(x), &ts, 
+          solve(system.get(), arr2ptr<double>(x), &ts, 
                           {rtol, atol, miter, verbose, linesearch});
-          py_error(ier);
-
           return x;
         }, "Solve a nonlinear system", 
         py::arg("solvable"), py::arg("trial_state"), py::arg("rtol") = 1.0e-6, py::arg("atol") = 1.0e-8,

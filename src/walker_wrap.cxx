@@ -31,8 +31,7 @@ PYBIND11_MODULE(walker, m) {
               py::array::c_style> eps, double T) -> double
            {
              double res;
-             int ier = m.kappa(arr2ptr<double>(eps), T, res);
-             py_error(ier);
+             m.kappa(arr2ptr<double>(eps), T, res);
              return res;
            }, "Rate sliding function")
       .def("dkappa",
@@ -40,8 +39,7 @@ PYBIND11_MODULE(walker, m) {
               py::array::c_style> eps, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(6);
-            int ier = m.dkappa(arr2ptr<double>(eps), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dkappa(arr2ptr<double>(eps), T, arr2ptr<double>(f));
             return f;
            }, "Derivative of the kappa function wrt strain rate.")
       ;

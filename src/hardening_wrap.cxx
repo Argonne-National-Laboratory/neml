@@ -134,8 +134,7 @@ PYBIND11_MODULE(hardening, m) {
            [](const NonAssociativeHardening & m) -> py::array_t<double>
            {
             auto v = alloc_vec<double>(m.nhist());
-            int ier = m.init_hist(arr2ptr<double>(v));
-            py_error(ier);
+            m.init_hist(arr2ptr<double>(v));
             return v;
            }, "Initialize history.")
         
@@ -143,8 +142,7 @@ PYBIND11_MODULE(hardening, m) {
            [](const NonAssociativeHardening & m, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto q = alloc_vec<double>(m.ninter());
-            int ier = m.q(arr2ptr<double>(alpha), T, arr2ptr<double>(q));
-            py_error(ier);
+            m.q(arr2ptr<double>(alpha), T, arr2ptr<double>(q));
             return q;
            }, "Map alpha to q.")
 
@@ -152,8 +150,7 @@ PYBIND11_MODULE(hardening, m) {
            [](const NonAssociativeHardening & m, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto D = alloc_mat<double>(m.ninter(), m.nhist());
-            int ier = m.dq_da(arr2ptr<double>(alpha), T, arr2ptr<double>(D));
-            py_error(ier);
+            m.dq_da(arr2ptr<double>(alpha), T, arr2ptr<double>(D));
             return D;
            }, "Gradient of map")
 
@@ -161,24 +158,21 @@ PYBIND11_MODULE(hardening, m) {
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(m.nhist());
-            int ier = m.h(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.h(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule.")
       .def("dh_ds",
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),6);
-            int ier = m.dh_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule derivative with respect to stress.")
       .def("dh_da",
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),m.nhist());
-            int ier = m.dh_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_da(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule derivative with respect to history.")
 
@@ -187,24 +181,21 @@ PYBIND11_MODULE(hardening, m) {
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(m.nhist());
-            int ier = m.h_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.h_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule, time part.")
       .def("dh_ds_time",
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),6);
-            int ier = m.dh_ds_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_ds_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule (time) derivative with respect to stress.")
       .def("dh_da_time",
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),m.nhist());
-            int ier = m.dh_da_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_da_time(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule (time) derivative with respect to history.")
 
@@ -212,24 +203,21 @@ PYBIND11_MODULE(hardening, m) {
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_vec<double>(m.nhist());
-            int ier = m.h_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.h_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule, temperature part.")
       .def("dh_ds_temp",
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),6);
-            int ier = m.dh_ds_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_ds_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule (temperature) derivative with respect to stress.")
       .def("dh_da_temp",
            [](NonAssociativeHardening & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
             auto f = alloc_mat<double>(m.nhist(),m.nhist());
-            int ier = m.dh_da_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
-            py_error(ier);
+            m.dh_da_temp(arr2ptr<double>(s), arr2ptr<double>(alpha), T, arr2ptr<double>(f));
             return f;
            }, "Hardening rule (temperature) derivative with respect to history.")
       ;
