@@ -21,11 +21,11 @@ class NEML_EXPORT HardeningRule: public NEMLObject {
   /// The number of history variables
   virtual size_t nhist() const = 0;
   /// Initialize the history
-  virtual int init_hist(double * const alpha) const = 0;
+  virtual void init_hist(double * const alpha) const = 0;
   /// The map between strain-like and stress-like variables
-  virtual int q(const double * const alpha, double T, double * const qv) const = 0;
+  virtual void q(const double * const alpha, double T, double * const qv) const = 0;
   /// The derivative of the map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const = 0;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const = 0;
 };
 
 /// Isotropic hardening rules
@@ -35,12 +35,12 @@ class NEML_EXPORT IsotropicHardeningRule: public HardeningRule {
   /// Number of strain-like history variable, defaults to 1
   virtual size_t nhist() const;
   /// Initialize the history, defaults to initializing one variable to 0.0
-  virtual int init_hist(double * const alpha) const;
+  virtual void init_hist(double * const alpha) const;
   /// Map between the strain variables and the single isotropic hardening
   /// parameter
-  virtual int q(const double * const alpha, double T, double * const qv) const = 0;
+  virtual void q(const double * const alpha, double T, double * const qv) const = 0;
   /// Derivative of the map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const = 0;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const = 0;
 };
 
 /// Linear, isotropic hardening
@@ -57,9 +57,9 @@ class NEML_EXPORT LinearIsotropicHardeningRule: public IsotropicHardeningRule {
   static ParameterSet parameters();
 
   /// q = -s0 - K * alpha[0]
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
 
   /// Getter for the yield stress
   double s0(double T) const;
@@ -89,9 +89,9 @@ class NEML_EXPORT InterpolatedIsotropicHardeningRule: public IsotropicHardeningR
   static ParameterSet parameters();
 
   /// q = -interpolate(T)
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of the map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
 
  private:
   const std::shared_ptr<const Interpolate> flow_;
@@ -115,9 +115,9 @@ class NEML_EXPORT VoceIsotropicHardeningRule: public IsotropicHardeningRule {
   static ParameterSet parameters();
 
   /// q = -s0 - R * (1 - exp(-d * alpha[0]))
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
 
   /// Getter for initial yield stress
   double s0(double T) const;
@@ -146,9 +146,9 @@ class NEML_EXPORT PowerLawIsotropicHardeningRule: public IsotropicHardeningRule 
   static ParameterSet parameters();
 
   /// q = -s0 - A * alpha[0]**n
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
 
  private:
   const std::shared_ptr<const Interpolate> s0_, A_, n_;
@@ -170,9 +170,9 @@ class NEML_EXPORT CombinedIsotropicHardeningRule: public IsotropicHardeningRule 
   static ParameterSet parameters();
 
   /// q = Sum(q_i(alpha))
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
 
   /// Getter on the number of combined rules
   size_t nrules() const;
@@ -191,12 +191,12 @@ class NEML_EXPORT KinematicHardeningRule: public HardeningRule {
   /// Number of history variables (6)
   virtual size_t nhist() const;
   /// Initialize the 6 backstress components to zero
-  virtual int init_hist(double * const alpha) const;
+  virtual void init_hist(double * const alpha) const;
 
   /// Map between the backstrain and the backstress
-  virtual int q(const double * const alpha, double T, double * const qv) const = 0;
+  virtual void q(const double * const alpha, double T, double * const qv) const = 0;
   /// Derivative of the map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const = 0;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const = 0;
 };
 
 /// Simple linear kinematic hardening
@@ -213,9 +213,9 @@ class NEML_EXPORT LinearKinematicHardeningRule: public KinematicHardeningRule {
   static ParameterSet parameters();
 
   /// q = -H * alpha[:6]
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of the map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
 
   /// Getter for the hardening coefficieint
   double H(double T) const;
@@ -242,11 +242,11 @@ class NEML_EXPORT CombinedHardeningRule: public HardeningRule {
   /// Sum of the two model nhists
   virtual size_t nhist() const;
   /// Call init_hist on each model
-  virtual int init_hist(double * const alpha) const;
+  virtual void init_hist(double * const alpha) const;
   /// q[0] = isotropic model, q[1:7] = kinematic model
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of the map
-  virtual int dq_da(const double * const alpha, double T, double * const dqv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
 
  private:
   std::shared_ptr<IsotropicHardeningRule> iso_;
@@ -265,41 +265,41 @@ class NEML_EXPORT NonAssociativeHardening: public NEMLObject {
   virtual size_t nhist() const = 0; // How many internal variables it stores
 
   /// Initialize the strain-like variables
-  virtual int init_hist(double * const alpha) const = 0;
+  virtual void init_hist(double * const alpha) const = 0;
 
   /// Map from strain to stress
-  virtual int q(const double * const alpha, double T, double * const qv) const = 0;
+  virtual void q(const double * const alpha, double T, double * const qv) const = 0;
   /// Derivative of the map
-  virtual int dq_da(const double * const alpha, double T, double * const qv) const = 0;
+  virtual void dq_da(const double * const alpha, double T, double * const qv) const = 0;
 
   /// Hardening proportional to the equivalent inelastic strain
-  virtual int h(const double * const s, const double * const alpha, double T,
+  virtual void h(const double * const s, const double * const alpha, double T,
                 double * const hv) const = 0;
   /// Derivative of h wrt stress
-  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const = 0;
   /// Derivative of h wrt history
-  virtual int dh_da(const double * const s, const double * const alpha, double T,
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const = 0;
 
   /// Hardening proportional to time
-  virtual int h_time(const double * const s, const double * const alpha, double T,
+  virtual void h_time(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h_time wrt stress
-  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h_time wrt history
-  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
   /// Hardening proportional to the temperature rate
-  virtual int h_temp(const double * const s, const double * const alpha, double T,
+  virtual void h_temp(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h_temp wrt stress
-  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h_temp wrt history
-  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 };
 
@@ -396,48 +396,48 @@ class NEML_EXPORT Chaboche: public NonAssociativeHardening {
   virtual size_t nhist() const; // How many internal variables it stores
 
   /// Initialize everything to zero
-  virtual int init_hist(double * const alpha) const;
+  virtual void init_hist(double * const alpha) const;
 
   /// Map the isotropic variable, map the backstresses
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
-  virtual int dq_da(const double * const alpha, double T, double * const qv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const qv) const;
 
   /// Hardening proportional to inelastic strain rate
   /// Assume associated isotropic hardening, each backstress is
   /// -2/3 * C * X/norm(X) - sqrt(2/3) gamma(ep) * X
-  virtual int h(const double * const s, const double * const alpha, double T,
+  virtual void h(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h wrt stress
-  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h wrt history
-  virtual int dh_da(const double * const s, const double * const alpha, double T,
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
   /// Hardening proportional to time
   /// Zero for the isotropic part, -A sqrt(3/2) pow(norm(X), a-1) * X
   /// for each backstress
-  virtual int h_time(const double * const s, const double * const alpha, double T,
+  virtual void h_time(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h_time wrt stress
-  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h_time wrt history
-  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
   /// Hardening proportional to the temperature rate
   /// Zero for the isotropic part
   /// Zero for each backstress if noniso = False
   /// -sqrt(2/3) * dC/dT / C * X for each backstress if noniso = True
-  virtual int h_temp(const double * const s, const double * const alpha, double T,
+  virtual void h_temp(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h_temp wrt stress
-  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h_temp wrt history
-  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
   /// Getter for the number of backstresses
@@ -485,43 +485,43 @@ class NEML_EXPORT ChabocheVoceRecovery: public NonAssociativeHardening {
   virtual size_t nhist() const; // How many internal variables it stores
 
   /// Initialize internal variables
-  virtual int init_hist(double * const alpha) const;
+  virtual void init_hist(double * const alpha) const;
 
   /// Map the isotropic variable, map the backstresses
-  virtual int q(const double * const alpha, double T, double * const qv) const;
+  virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of map
-  virtual int dq_da(const double * const alpha, double T, double * const qv) const;
+  virtual void dq_da(const double * const alpha, double T, double * const qv) const;
 
   /// Hardening proportional to inelastic strain rate
   /// Assume associated isotropic hardening, each backstress is
   /// -2/3 * C * X/norm(X) - sqrt(2/3) gamma(ep) * X
-  virtual int h(const double * const s, const double * const alpha, double T,
+  virtual void h(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h wrt stress
-  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h wrt history
-  virtual int dh_da(const double * const s, const double * const alpha, double T,
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
   /// Hardening proportional to time
-  virtual int h_time(const double * const s, const double * const alpha, double T,
+  virtual void h_time(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h_time wrt stress
-  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h_time wrt history
-  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
   /// Hardening proportional to the temperature rate
-  virtual int h_temp(const double * const s, const double * const alpha, double T,
+  virtual void h_temp(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Derivative of h_temp wrt stress
-  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Derivative of h_temp wrt history
-  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
   /// Getter for the number of backstresses

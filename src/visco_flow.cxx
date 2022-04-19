@@ -214,7 +214,9 @@ int PerzynaFlowRule::init_hist(double * const h) const
   if (surface_->nhist() != hardening_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
-  return hardening_->init_hist(h);
+  hardening_->init_hist(h);
+
+  return 0;
 }
 
 // Rate rule
@@ -509,7 +511,8 @@ int ChabocheFlowRule::init_hist(double * const h) const
   if (surface_->nhist() != hardening_->ninter()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
-  return hardening_->init_hist(h);
+  hardening_->init_hist(h);
+  return 0;
 }
 
 // Rate rule
@@ -640,57 +643,66 @@ int ChabocheFlowRule::dg_da(const double * const s, const double * const alpha, 
 int ChabocheFlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  return hardening_->h(s, alpha, T, hv);
+  hardening_->h(s, alpha, T, hv);
+  return 0;
 }
 
 int ChabocheFlowRule::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  return hardening_->dh_ds(s, alpha, T, dhv);
+  hardening_->dh_ds(s, alpha, T, dhv);
+  return 0;
 }
 
 int ChabocheFlowRule::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  return hardening_->dh_da(s, alpha, T, dhv);
+  hardening_->dh_da(s, alpha, T, dhv);
+  return 0;
 }
 
 // Hardening rule wrt time
 int ChabocheFlowRule::h_time(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  return hardening_->h_time(s, alpha, T, hv);
+  hardening_->h_time(s, alpha, T, hv);
+  return 0;
 }
 
 int ChabocheFlowRule::dh_ds_time(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  return hardening_->dh_ds_time(s, alpha, T, dhv);
+  hardening_->dh_ds_time(s, alpha, T, dhv);
+  return 0;
 }
 
 int ChabocheFlowRule::dh_da_time(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  return hardening_->dh_da_time(s, alpha, T, dhv);
+  hardening_->dh_da_time(s, alpha, T, dhv);
+  return 0;
 }
 
 // Hardening rule wrt temperature
 int ChabocheFlowRule::h_temp(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  return hardening_->h_temp(s, alpha, T, hv);
+  hardening_->h_temp(s, alpha, T, hv);
+  return 0;
 }
 
 int ChabocheFlowRule::dh_ds_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  return hardening_->dh_ds_temp(s, alpha, T, dhv);
+  hardening_->dh_ds_temp(s, alpha, T, dhv);
+  return 0;
 }
 
 int ChabocheFlowRule::dh_da_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  return hardening_->dh_da_temp(s, alpha, T, dhv);
+  hardening_->dh_da_temp(s, alpha, T, dhv);
+  return 0;
 }
 
 YaguchiGr91FlowRule::YaguchiGr91FlowRule(ParameterSet & params) : 

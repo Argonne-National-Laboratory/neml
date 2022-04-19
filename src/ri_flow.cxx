@@ -50,7 +50,8 @@ int RateIndependentAssociativeFlow::init_hist(double * const h) const
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
 
-  return hardening_->init_hist(h);
+  hardening_->init_hist(h);
+  return 0;
 }
 
 int RateIndependentAssociativeFlow::f(const double* const s, 
@@ -220,7 +221,9 @@ int RateIndependentNonAssociativeHardening::init_hist(double * const h) const
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
 
-  return hardening_->init_hist(h);
+  hardening_->init_hist(h);
+
+  return 0;
 }
 
 int RateIndependentNonAssociativeHardening::f(const double* const s, 
@@ -309,21 +312,24 @@ int RateIndependentNonAssociativeHardening::h(const double * const s,
                                       const double * const alpha, double T,
                                       double * const hv) const
 {
-  return hardening_->h(s, alpha, T, hv);
+  hardening_->h(s, alpha, T, hv);
+  return 0;
 }
 
 int RateIndependentNonAssociativeHardening::dh_ds(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dhv) const
 {
-  return hardening_->dh_ds(s, alpha, T, dhv);
+  hardening_->dh_ds(s, alpha, T, dhv);
+  return 0;
 }
 
 int RateIndependentNonAssociativeHardening::dh_da(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dhv) const
 {
-  return hardening_->dh_da(s, alpha, T, dhv);
+  hardening_->dh_da(s, alpha, T, dhv);
+  return 0;
 }
 
 } // namespace neml

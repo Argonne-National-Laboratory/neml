@@ -26,11 +26,10 @@ size_t IsotropicHardeningRule::nhist() const
   return 1;
 }
 
-int IsotropicHardeningRule::init_hist(double * const alpha) const
+void IsotropicHardeningRule::init_hist(double * const alpha) const
 {
   alpha[0] = 0.0;
 
-  return 0;
 }
 
 // Implementation of linear hardening
@@ -62,20 +61,18 @@ std::unique_ptr<NEMLObject> LinearIsotropicHardeningRule::initialize(ParameterSe
   return neml::make_unique<LinearIsotropicHardeningRule>(params); 
 }
 
-int LinearIsotropicHardeningRule::q(const double * const alpha, 
+void LinearIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
   qv[0] = -s0_->value(T) - K_->value(T) * alpha[0];
 
-  return 0;
 }
 
-int LinearIsotropicHardeningRule::dq_da(const double * const alpha, 
+void LinearIsotropicHardeningRule::dq_da(const double * const alpha, 
                                     double T, double * const dqv) const
 {
   dqv[0] = -K_->value(T);
 
-  return 0;
 }
 
 double LinearIsotropicHardeningRule::s0(double T) const
@@ -117,19 +114,17 @@ std::unique_ptr<NEMLObject> InterpolatedIsotropicHardeningRule::initialize(Param
       ); 
 }
 
-int InterpolatedIsotropicHardeningRule::q(const double * const alpha,
+void InterpolatedIsotropicHardeningRule::q(const double * const alpha,
                                           double T, double * const qv) const
 {
   qv[0] = -flow_->value(alpha[0]);
-  return 0;
 }
 
-int InterpolatedIsotropicHardeningRule::dq_da(const double * const alpha,
+void InterpolatedIsotropicHardeningRule::dq_da(const double * const alpha,
                                               double T,
                                               double * const dqv) const
 {
   dqv[0] = -flow_->derivative(alpha[0]);
-  return 0;
 }
 
 // Implementation of voce hardening
@@ -164,20 +159,18 @@ std::unique_ptr<NEMLObject> VoceIsotropicHardeningRule::initialize(ParameterSet 
   return neml::make_unique<VoceIsotropicHardeningRule>(params); 
 }
 
-int VoceIsotropicHardeningRule::q(const double * const alpha, 
+void VoceIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
   qv[0] = -s0_->value(T) - R_->value(T) * (1.0 - exp(-d_->value(T) * alpha[0]));
 
-  return 0;
 }
 
-int VoceIsotropicHardeningRule::dq_da(const double * const alpha, 
+void VoceIsotropicHardeningRule::dq_da(const double * const alpha, 
                                     double T, double * const dqv) const
 {
   dqv[0] = -d_->value(T) * R_->value(T) * exp(-d_->value(T) * alpha[0]);
 
-  return 0;
 }
 
 double VoceIsotropicHardeningRule::s0(double T) const
@@ -227,15 +220,14 @@ std::unique_ptr<NEMLObject> PowerLawIsotropicHardeningRule::initialize(Parameter
   return neml::make_unique<PowerLawIsotropicHardeningRule>(params); 
 }
 
-int PowerLawIsotropicHardeningRule::q(const double * const alpha, 
+void PowerLawIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
   qv[0] = -s0_->value(T) - A_->value(T) * pow(alpha[0], n_->value(T));
 
-  return 0;
 }
 
-int PowerLawIsotropicHardeningRule::dq_da(const double * const alpha, 
+void PowerLawIsotropicHardeningRule::dq_da(const double * const alpha, 
                                     double T, double * const dqv) const
 {
   if (alpha[0] == 0.0) {
@@ -245,7 +237,6 @@ int PowerLawIsotropicHardeningRule::dq_da(const double * const alpha,
     dqv[0] = -A_->value(T) * n_->value(T) * pow(alpha[0], n_->value(T) - 1);
   }
 
-  return 0;
 }
 
 // Implementation of combined isotropic class
@@ -278,34 +269,26 @@ std::unique_ptr<NEMLObject> CombinedIsotropicHardeningRule::initialize(Parameter
       ); 
 }
 
-int CombinedIsotropicHardeningRule::q(const double * const alpha, 
+void CombinedIsotropicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
   double qi;
-  int err = 0;
   qv[0] = 0.0;
   for (auto it = rules_.begin(); it != rules_.end(); ++it) {
-    err = (*it)->q(alpha, T, &qi);
+    (*it)->q(alpha, T, &qi);
     qv[0] += qi;
-    if (err != 0) return err;
   }
-
-  return err;
 }
 
-int CombinedIsotropicHardeningRule::dq_da(const double * const alpha, 
+void CombinedIsotropicHardeningRule::dq_da(const double * const alpha, 
                                     double T, double * const dqv) const
 {
   double dqi;
-  int err = 0;
   dqv[0] = 0.0;
   for (auto it = rules_.begin(); it != rules_.end(); ++it) {
-    err = (*it)->dq_da(alpha, T, &dqi);
+    (*it)->dq_da(alpha, T, &dqi);
     dqv[0] += dqi;
-    if (err != 0) return err;
   }
-
-  return err;
 }
 
 size_t CombinedIsotropicHardeningRule::nrules() const 
@@ -325,11 +308,10 @@ size_t KinematicHardeningRule::nhist() const
   return 6;
 }
 
-int KinematicHardeningRule::init_hist(double * const alpha) const
+void KinematicHardeningRule::init_hist(double * const alpha) const
 {
   for (int i=0; i<6; i++) alpha[i] = 0.0;
 
-  return 0;
 }
 
 // Implementation of linear kinematic hardening
@@ -359,17 +341,16 @@ std::unique_ptr<NEMLObject> LinearKinematicHardeningRule::initialize(ParameterSe
   return neml::make_unique<LinearKinematicHardeningRule>(params); 
 }
 
-int LinearKinematicHardeningRule::q(const double * const alpha, 
+void LinearKinematicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
   for (int i=0; i<6; i++) {
     qv[i] = -H_->value(T) * alpha[i];
   }
 
-  return 0;
 }
 
-int LinearKinematicHardeningRule::dq_da(const double * const alpha, 
+void LinearKinematicHardeningRule::dq_da(const double * const alpha, 
                                     double T, double * const dqv) const
 {
   std::fill(dqv, dqv+36, 0.0);
@@ -377,7 +358,6 @@ int LinearKinematicHardeningRule::dq_da(const double * const alpha,
     dqv[CINDEX(i,i,6)] = -H_->value(T);
   }
 
-  return 0;
 }
 
 double LinearKinematicHardeningRule::H(double T) const
@@ -418,20 +398,20 @@ size_t CombinedHardeningRule::nhist() const
   return iso_->nhist() + kin_->nhist();
 }
 
-int CombinedHardeningRule::init_hist(double * const alpha) const
+void CombinedHardeningRule::init_hist(double * const alpha) const
 {
   iso_->init_hist(alpha);
   return kin_->init_hist(&alpha[iso_->nhist()]);
 }
 
-int CombinedHardeningRule::q(const double * const alpha, double T, 
+void CombinedHardeningRule::q(const double * const alpha, double T, 
                              double * const qv) const
 {
   iso_->q(alpha, T, qv);
   return kin_->q(&alpha[iso_->nhist()], T, &qv[iso_->nhist()]);
 }
 
-int CombinedHardeningRule::dq_da(const double * const alpha, double T, 
+void CombinedHardeningRule::dq_da(const double * const alpha, double T, 
                                  double * const dqv) const
 {
   // Annoying this doesn't work nicely...
@@ -458,7 +438,6 @@ int CombinedHardeningRule::dq_da(const double * const alpha, double T,
     }
   }
 
-  return 0;
 }
 
 NonAssociativeHardening::NonAssociativeHardening(ParameterSet & params) :
@@ -468,53 +447,47 @@ NonAssociativeHardening::NonAssociativeHardening(ParameterSet & params) :
 }
 
 // Provide zeros for these
-int NonAssociativeHardening::h_time(const double * const s, 
+void NonAssociativeHardening::h_time(const double * const s, 
                                     const double * const alpha, double T,
                                     double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
-  return 0;
 }
 
-int NonAssociativeHardening::dh_ds_time(const double * const s,
+void NonAssociativeHardening::dh_ds_time(const double * const s,
                                         const double * const alpha, double T,
                                         double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*6, 0.0);
-  return 0;
 }
 
-int NonAssociativeHardening::dh_da_time(const double * const s,
+void NonAssociativeHardening::dh_da_time(const double * const s,
                                         const double * const alpha, double T,
                                         double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*nhist(), 0.0);
-  return 0;
 }
 
 // Provide zeros for these
-int NonAssociativeHardening::h_temp(const double * const s,
+void NonAssociativeHardening::h_temp(const double * const s,
                                     const double * const alpha, double T,
                                     double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
-  return 0;
 }
 
-int NonAssociativeHardening::dh_ds_temp(const double * const s,
+void NonAssociativeHardening::dh_ds_temp(const double * const s,
                                         const double * const alpha, double T,
                                         double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*6, 0.0);
-  return 0;
 }
 
-int NonAssociativeHardening::dh_da_temp(const double * const s,
+void NonAssociativeHardening::dh_da_temp(const double * const s,
                                         const double * const alpha, double T,
                                         double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*nhist(), 0.0);
-  return 0;
 }
 
 // Begin non-associative hardening rules
@@ -561,7 +534,7 @@ double ConstantGamma::gamma(double ep, double T) const {
 }
 
 double ConstantGamma::dgamma(double ep, double T) const {
-  return 0;
+  return 0.0;
 }
 
 double ConstantGamma::g(double T) const {
@@ -673,13 +646,12 @@ size_t Chaboche::nhist() const
   return 1 + 6 * n_;
 }
 
-int Chaboche::init_hist(double * const alpha) const
+void Chaboche::init_hist(double * const alpha) const
 {
   std::fill(alpha, alpha+nhist(), 0.0);
-  return 0;
 }
 
-int Chaboche::q(const double * const alpha, double T, double * const qv) const
+void Chaboche::q(const double * const alpha, double T, double * const qv) const
 {
   iso_->q(alpha, T, qv);
   std::fill(qv+1, qv+7, 0.0);
@@ -692,10 +664,9 @@ int Chaboche::q(const double * const alpha, double T, double * const qv) const
       qv[j+1] += alpha[1+i*6+j];
     }
   }
-  return 0;
 }
 
-int Chaboche::dq_da(const double * const alpha, double T, double * const qv) const
+void Chaboche::dq_da(const double * const alpha, double T, double * const qv) const
 {
   std::fill(qv, qv+(ninter()*nhist()), 0.0);
   iso_->dq_da(alpha, T, qv); // fills in (0,0)
@@ -708,10 +679,9 @@ int Chaboche::dq_da(const double * const alpha, double T, double * const qv) con
       qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
     }
   }
-  return 0;
 }
 
-int Chaboche::h(const double * const s, const double * const alpha, double T,
+void Chaboche::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
   hv[0] = sqrt(2.0/3.0); // Isotropic part
@@ -734,10 +704,9 @@ int Chaboche::h(const double * const s, const double * const alpha, double T,
     }
   }
 
-  return 0;
 }
 
-int Chaboche::dh_ds(const double * const s, const double * const alpha, double T,
+void Chaboche::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   std::fill(dhv, dhv + nhist()*6, 0.0);
@@ -790,10 +759,9 @@ int Chaboche::dh_ds(const double * const s, const double * const alpha, double T
     }
   }
   
-  return 0;
 }
 
-int Chaboche::dh_da(const double * const s, const double * const alpha, double T,
+void Chaboche::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   // Again, there should be no earthly reason the compiler can't do this
@@ -853,14 +821,12 @@ int Chaboche::dh_da(const double * const s, const double * const alpha, double T
     }
   }
 
-  return 0;
 }
 
-int Chaboche::h_time(const double * const s, const double * const alpha, 
+void Chaboche::h_time(const double * const s, const double * const alpha, 
                      double T, double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
-  if (not relax_) return 0;
  
   std::vector<double> A = eval_vector(A_, T);
   std::vector<double> a = eval_vector(a_, T);
@@ -876,25 +842,21 @@ int Chaboche::h_time(const double * const s, const double * const alpha,
     }
   }
 
-  return 0;
 }
 
-int Chaboche::dh_ds_time(const double * const s, const double * const alpha, 
+void Chaboche::dh_ds_time(const double * const s, const double * const alpha, 
                          double T, double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*6, 0.0);
-  if (not relax_) return 0;
 
   // Also return if relax
 
-  return 0;
 }
 
-int Chaboche::dh_da_time(const double * const s, const double * const alpha,
+void Chaboche::dh_da_time(const double * const s, const double * const alpha,
                          double T, double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*nhist(), 0.0);
-  if (not relax_) return 0;
 
   std::vector<double> A = eval_vector(A_, T);
   std::vector<double> a = eval_vector(a_, T);
@@ -928,14 +890,12 @@ int Chaboche::dh_da_time(const double * const s, const double * const alpha,
     }
   }
 
-  return 0;
 }
 
-int Chaboche::h_temp(const double * const s, const double * const alpha, double T,
+void Chaboche::h_temp(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
-  if (not noniso_) return 0;
 
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
@@ -946,21 +906,18 @@ int Chaboche::h_temp(const double * const s, const double * const alpha, double 
       hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
     }
   }
-  return 0;
 }
 
-int Chaboche::dh_ds_temp(const double * const s, const double * const alpha, double T,
+void Chaboche::dh_ds_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*6, 0.0);
-  return 0;
 }
 
-int Chaboche::dh_da_temp(const double * const s, const double * const alpha, double T,
+void Chaboche::dh_da_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*nhist(), 0.0);
-  if (not noniso_) return 0;
 
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
@@ -973,7 +930,6 @@ int Chaboche::dh_da_temp(const double * const s, const double * const alpha, dou
     }
   }
 
-  return 0;
 }
 
 int Chaboche::n() const
@@ -1058,13 +1014,12 @@ size_t ChabocheVoceRecovery::nhist() const
   return 1 + 6 * n_;
 }
 
-int ChabocheVoceRecovery::init_hist(double * const alpha) const
+void ChabocheVoceRecovery::init_hist(double * const alpha) const
 {
   std::fill(alpha, alpha+nhist(), 0.0);
-  return 0;
 }
 
-int ChabocheVoceRecovery::q(const double * const alpha, double T, double * const qv) const
+void ChabocheVoceRecovery::q(const double * const alpha, double T, double * const qv) const
 {
   // Isotropic part
   qv[0] = -(s0_->value(T) + alpha[0]);
@@ -1079,10 +1034,9 @@ int ChabocheVoceRecovery::q(const double * const alpha, double T, double * const
       qv[j+1] += alpha[1+i*6+j];
     }
   }
-  return 0;
 }
 
-int ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * const qv) const
+void ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * const qv) const
 {
   std::fill(qv, qv+(ninter()*nhist()), 0.0);
 
@@ -1097,10 +1051,9 @@ int ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * c
       qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
     }
   }
-  return 0;
 }
 
-int ChabocheVoceRecovery::h(const double * const s, const double * const alpha, double T,
+void ChabocheVoceRecovery::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
   // Isotropic
@@ -1125,10 +1078,9 @@ int ChabocheVoceRecovery::h(const double * const s, const double * const alpha, 
     }
   }
 
-  return 0;
 }
 
-int ChabocheVoceRecovery::dh_ds(const double * const s, const double * const alpha, double T,
+void ChabocheVoceRecovery::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   std::fill(dhv, dhv + nhist()*6, 0.0);
@@ -1181,10 +1133,9 @@ int ChabocheVoceRecovery::dh_ds(const double * const s, const double * const alp
     }
   }
   
-  return 0;
 }
 
-int ChabocheVoceRecovery::dh_da(const double * const s, const double * const alpha, double T,
+void ChabocheVoceRecovery::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   // Again, there should be no earthly reason the compiler can't do this
@@ -1246,10 +1197,9 @@ int ChabocheVoceRecovery::dh_da(const double * const s, const double * const alp
     }
   }
 
-  return 0;
 }
 
-int ChabocheVoceRecovery::h_time(const double * const s, const double * const alpha, 
+void ChabocheVoceRecovery::h_time(const double * const s, const double * const alpha, 
                      double T, double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
@@ -1273,20 +1223,18 @@ int ChabocheVoceRecovery::h_time(const double * const s, const double * const al
     }
   }
 
-  return 0;
 }
 
-int ChabocheVoceRecovery::dh_ds_time(const double * const s, const double * const alpha, 
+void ChabocheVoceRecovery::dh_ds_time(const double * const s, const double * const alpha, 
                          double T, double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*6, 0.0);
 
   // Also return if relax
 
-  return 0;
 }
 
-int ChabocheVoceRecovery::dh_da_time(const double * const s, const double * const alpha,
+void ChabocheVoceRecovery::dh_da_time(const double * const s, const double * const alpha,
                          double T, double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*nhist(), 0.0);
@@ -1327,14 +1275,12 @@ int ChabocheVoceRecovery::dh_da_time(const double * const s, const double * cons
     }
   }
 
-  return 0;
 }
 
-int ChabocheVoceRecovery::h_temp(const double * const s, const double * const alpha, double T,
+void ChabocheVoceRecovery::h_temp(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
-  if (not noniso_) return 0;
 
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
@@ -1345,21 +1291,18 @@ int ChabocheVoceRecovery::h_temp(const double * const s, const double * const al
       hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
     }
   }
-  return 0;
 }
 
-int ChabocheVoceRecovery::dh_ds_temp(const double * const s, const double * const alpha, double T,
+void ChabocheVoceRecovery::dh_ds_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*6, 0.0);
-  return 0;
 }
 
-int ChabocheVoceRecovery::dh_da_temp(const double * const s, const double * const alpha, double T,
+void ChabocheVoceRecovery::dh_da_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*nhist(), 0.0);
-  if (not noniso_) return 0;
 
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
@@ -1371,8 +1314,6 @@ int ChabocheVoceRecovery::dh_da_temp(const double * const s, const double * cons
       dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
     }
   }
-
-  return 0;
 }
 
 int ChabocheVoceRecovery::n() const
