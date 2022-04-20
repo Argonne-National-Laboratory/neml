@@ -71,7 +71,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
           double * Fe) const;
   
   /// Large deformation incremental update
-  virtual int update_ld_inc(
+  virtual void update_ld_inc(
        const double * const d_np1, const double * const d_n,
        const double * const w_np1, const double * const w_n,
        double T_np1, double T_n,
@@ -85,13 +85,13 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   /// Number of stored history variables
   virtual size_t nhist() const;
   /// Initialize history raw pointer array
-  virtual int init_hist(double * const hist) const;
+  virtual void init_hist(double * const hist) const;
 
   /// Instantaneous CTE
   virtual double alpha(double T) const;
 
   /// Helper to calculate the elastic strain
-  virtual int elastic_strains(const double * const s_np1,
+  virtual void elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const;
 
@@ -128,7 +128,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   void update_nye(double * const hist, const double * const nye) const;
 
  private:
-  int attempt_update_ld_inc_(
+  void attempt_update_ld_inc_(
        const double * const d_np1, const double * const d_n,
        const double * const w_np1, const double * const w_n,
        double T_np1, double T_n,
@@ -154,7 +154,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
                         const Orientation & Q_n, const History & H_np1,
                         const History & H_n) const;
 
-  int solve_substep_(SCTrialState * ts, Symmetric & stress, History & hist);
+  void solve_substep_(SCTrialState * ts, Symmetric & stress, History & hist);
 
   std::vector<std::string> not_updated_() const;
 

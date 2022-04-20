@@ -21,10 +21,10 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
   virtual size_t nhist() const;
   /// Initialize base according to the base model and damage according to
   /// init_damage
-  virtual int init_hist(double * const hist) const;
+  virtual void init_hist(double * const hist) const;
 
   /// The damaged stress update
-  virtual int update_sd(
+  virtual void update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -37,10 +37,10 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
   /// Number of damage variables
   virtual size_t ndamage() const = 0;
   /// Setup the damage variables
-  virtual int init_damage(double * const damage) const = 0;
+  virtual void init_damage(double * const damage) const = 0;
 
   /// Override the elastic model
-  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+  virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  protected:
    std::shared_ptr<NEMLModel_sd> base_;
@@ -67,7 +67,7 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   NEMLScalarDamagedModel_sd(ParameterSet & params);
 
   /// Stress update using the scalar damage model
-  virtual int update_sd(
+  virtual void update_sd(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -80,7 +80,7 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   /// Equal to 1
   virtual size_t ndamage() const;
   /// Initialize to zero
-  virtual int init_damage(double * const damage) const;
+  virtual void init_damage(double * const damage) const;
 
   /// Number of parameters for the solver
   virtual size_t nparams() const;
@@ -100,28 +100,28 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   virtual double d_guess() const {return 0;};
 
   /// The scalar damage model
-  virtual int damage(double d_np1, double d_n,
+  virtual void damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const = 0;
   /// Derivative with respect to the damage variable
-  virtual int ddamage_dd(double d_np1, double d_n,
+  virtual void ddamage_dd(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const = 0;
   /// Derivative with respect to the strain
-  virtual int ddamage_de(double d_np1, double d_n,
+  virtual void ddamage_de(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const = 0;
   /// Derivative with respect to the stress
-  virtual int ddamage_ds(double d_np1, double d_n,
+  virtual void ddamage_ds(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
@@ -129,12 +129,12 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
                      double * const dd) const = 0;
 
  protected:
-  int tangent_(const double * const e_np1, const double * const e_n,
+  void tangent_(const double * const e_np1, const double * const e_n,
                const double * const s_np1, const double * const s_n,
                double T_np1, double T_n, double t_np1, double t_n,
                double w_np1, double w_n, const double * const A_prime,
                double * const A);
-  int ekill_update_(double T_np1, const double * const e_np1, 
+  void ekill_update_(double T_np1, const double * const e_np1, 
                     double * const s_np1, 
                     double * const h_np1, const double * const h_n,
                     double * A_np1, 
@@ -167,35 +167,35 @@ class NEML_EXPORT CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// The combined damage variable
-  virtual int damage(double d_np1, double d_n,
+  virtual void damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative with respect to damage
-  virtual int ddamage_dd(double d_np1, double d_n,
+  virtual void ddamage_dd(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative with respect to strain
-  virtual int ddamage_de(double d_np1, double d_n,
+  virtual void ddamage_de(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative with respect to stress
-  virtual int ddamage_ds(double d_np1, double d_n,
+  virtual void ddamage_ds(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
 
-  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+  virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
 
  protected:
@@ -220,28 +220,28 @@ class NEML_EXPORT ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// The damage function d_np1 = d_n + (se / A)**xi (1 - d_np1)**(-phi) * dt
-  virtual int damage(double d_np1, double d_n,
+  virtual void damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt damage
-  virtual int ddamage_dd(double d_np1, double d_n,
+  virtual void ddamage_dd(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt strain
-  virtual int ddamage_de(double d_np1, double d_n,
+  virtual void ddamage_de(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt stress
-  virtual int ddamage_ds(double d_np1, double d_n,
+  virtual void ddamage_ds(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
@@ -263,8 +263,8 @@ static Register<ClassicalCreepDamageModel_sd> regClassicalCreepDamageModel_sd;
 class NEML_EXPORT EffectiveStress: public NEMLObject {
  public:
   EffectiveStress(ParameterSet & params);
-  virtual int effective(const double * const s, double & eff) const = 0;
-  virtual int deffective(const double * const s, double * const deff) const = 0;
+  virtual void effective(const double * const s, double & eff) const = 0;
+  virtual void deffective(const double * const s, double * const deff) const = 0;
 };
 
 /// von Mises stress
@@ -280,8 +280,8 @@ class NEML_EXPORT VonMisesEffectiveStress: public EffectiveStress
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual int effective(const double * const s, double & eff) const;
-  virtual int deffective(const double * const s, double * const deff) const;
+  virtual void effective(const double * const s, double & eff) const;
+  virtual void deffective(const double * const s, double * const deff) const;
 };
 
 static Register<VonMisesEffectiveStress> regVonMisesEffectiveStress;
@@ -299,8 +299,8 @@ class NEML_EXPORT MeanEffectiveStress: public EffectiveStress
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual int effective(const double * const s, double & eff) const;
-  virtual int deffective(const double * const s, double * const deff) const;
+  virtual void effective(const double * const s, double & eff) const;
+  virtual void deffective(const double * const s, double * const deff) const;
 };
 
 static Register<MeanEffectiveStress> regMeanEffectiveStress;
@@ -318,8 +318,8 @@ class NEML_EXPORT HuddlestonEffectiveStress: public EffectiveStress
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual int effective(const double * const s, double & eff) const;
-  virtual int deffective(const double * const s, double * const deff) const;
+  virtual void effective(const double * const s, double & eff) const;
+  virtual void deffective(const double * const s, double * const deff) const;
 
  private:
   double b_;
@@ -340,8 +340,8 @@ class NEML_EXPORT MaxPrincipalEffectiveStress: public EffectiveStress
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual int effective(const double * const s, double & eff) const;
-  virtual int deffective(const double * const s, double * const deff) const;
+  virtual void effective(const double * const s, double & eff) const;
+  virtual void deffective(const double * const s, double * const deff) const;
 };
 
 static Register<MaxPrincipalEffectiveStress> regMaxPrincipalEffectiveStress;
@@ -359,8 +359,8 @@ class NEML_EXPORT MaxSeveralEffectiveStress: public EffectiveStress
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual int effective(const double * const s, double & eff) const;
-  virtual int deffective(const double * const s, double * const deff) const;
+  virtual void effective(const double * const s, double & eff) const;
+  virtual void deffective(const double * const s, double * const deff) const;
 
  private:
   void select_(const double * const s, size_t & ind, double & value) const;
@@ -384,8 +384,8 @@ class NEML_EXPORT SumSeveralEffectiveStress: public EffectiveStress
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual int effective(const double * const s, double & eff) const;
-  virtual int deffective(const double * const s, double * const deff) const;
+  virtual void effective(const double * const s, double & eff) const;
+  virtual void deffective(const double * const s, double * const deff) const;
 
  private:
   std::vector<std::shared_ptr<EffectiveStress>> measures_;
@@ -411,28 +411,28 @@ class NEML_EXPORT ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// The damage function d_np1 = d_n + (se / A)**xi * (1-d_np1)**xi * (1 - d_np1)**(-phi) * dt
-  virtual int damage(double d_np1, double d_n,
+  virtual void damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt damage
-  virtual int ddamage_dd(double d_np1, double d_n,
+  virtual void ddamage_dd(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt strain
-  virtual int ddamage_de(double d_np1, double d_n,
+  virtual void ddamage_de(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt stress
-  virtual int ddamage_ds(double d_np1, double d_n,
+  virtual void ddamage_ds(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
@@ -461,28 +461,28 @@ class NEML_EXPORT LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   
   /// The damage function d_np1 = d_n + 1/tr(s*(1-w), T) * dt
-  virtual int damage(double d_np1, double d_n, 
+  virtual void damage(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt damage
-  virtual int ddamage_dd(double d_np1, double d_n, 
+  virtual void ddamage_dd(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt strain
-  virtual int ddamage_de(double d_np1, double d_n, 
+  virtual void ddamage_de(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt stress
-  virtual int ddamage_ds(double d_np1, double d_n, 
+  virtual void ddamage_ds(double d_np1, double d_n, 
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
@@ -504,28 +504,28 @@ class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedMod
   NEMLStandardScalarDamagedModel_sd(ParameterSet & params);
 
   /// Damage, now only proportional to the inelastic effective strain
-  virtual int damage(double d_np1, double d_n,
+  virtual void damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt damage
-  virtual int ddamage_dd(double d_np1, double d_n,
+  virtual void ddamage_dd(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt strain
-  virtual int ddamage_de(double d_np1, double d_n,
+  virtual void ddamage_de(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt stress
-  virtual int ddamage_ds(double d_np1, double d_n,
+  virtual void ddamage_ds(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
@@ -533,13 +533,13 @@ class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedMod
                      double * const dd) const;
 
   /// The part of the damage rate proportional to the inelastic strain rate
-  virtual int f(const double * const s_np1, double d_np1,
+  virtual void f(const double * const s_np1, double d_np1,
                 double T_np1, double & f) const = 0;
   /// Derivative with respect to stress
-  virtual int df_ds(const double * const s_np1, double d_np1,
+  virtual void df_ds(const double * const s_np1, double d_np1,
                    double T_np1, double * const df) const = 0;
   /// Derivative with respect to damage
-  virtual int df_dd(const double * const s_np1, double d_np1,
+  virtual void df_dd(const double * const s_np1, double d_np1,
                    double T_np1, double & df) const = 0;
 
  protected:
@@ -567,28 +567,28 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
   virtual double d_guess() const {return eps_;};
 
   /// damage rate = n * d**((n-1)/n) * W_dot / W_crit
-  virtual int damage(double d_np1, double d_n,
+  virtual void damage(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt damage
-  virtual int ddamage_dd(double d_np1, double d_n,
+  virtual void ddamage_dd(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt strain
-  virtual int ddamage_de(double d_np1, double d_n,
+  virtual void ddamage_de(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const;
   /// Derivative of damage wrt stress
-  virtual int ddamage_ds(double d_np1, double d_n,
+  virtual void ddamage_ds(double d_np1, double d_n,
                      const double * const e_np1, const double * const e_n,
                      const double * const s_np1, const double * const s_n,
                      double T_np1, double T_n,
@@ -626,13 +626,13 @@ class NEML_EXPORT NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedM
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Damage = A * s_eq**a (times the inelastic strain rate)
-  virtual int f(const double * const s_np1, double d_np1,
+  virtual void f(const double * const s_np1, double d_np1,
                 double T_np1, double & f) const;
   /// Derivative of f wrt stress
-  virtual int df_ds(const double * const s_np1, double d_np1, double T_np1,
+  virtual void df_ds(const double * const s_np1, double d_np1, double T_np1,
                 double * const df) const;
   /// Derivative of f wrt damage
-  virtual int df_dd(const double * const s_np1, double d_np1, double T_np1,
+  virtual void df_dd(const double * const s_np1, double d_np1, double T_np1,
                 double & df) const;
 
  protected:
@@ -661,13 +661,13 @@ class NEML_EXPORT NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarD
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// damage rate is (d + k0)**af / W0 * s_eq
-  virtual int f(const double * const s_np1, double d_np1,
+  virtual void f(const double * const s_np1, double d_np1,
                 double T_np1, double & f) const;
   /// Derivative of damage wrt stress
-  virtual int df_ds(const double * const s_np1, double d_np1, double T_np1,
+  virtual void df_ds(const double * const s_np1, double d_np1, double T_np1,
                 double * const df) const;
   /// Derivative of damage wrt damage
-  virtual int df_dd(const double * const s_np1, double d_np1, double T_np1,
+  virtual void df_dd(const double * const s_np1, double d_np1, double T_np1,
                 double & df) const;
 
  protected:

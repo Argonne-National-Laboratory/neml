@@ -127,7 +127,7 @@ void SingleCrystalModel::Fe(double * const stress, double * const hist,
   FE = ((Symmetric::id() + estrain) * RR).inverse();
 }
 
-int SingleCrystalModel::update_ld_inc(
+void SingleCrystalModel::update_ld_inc(
    const double * const d_np1, const double * const d_n,
    const double * const w_np1, const double * const w_n,
    double T_np1, double T_n,
@@ -145,7 +145,7 @@ int SingleCrystalModel::update_ld_inc(
                                     s_np1, s_n, h_np1, h_n, 
                                     A_np1, B_np1, u_np1, u_n,
                                     p_np1, p_n, 1);
-    return 0;
+    return;
   }
 
   // Try with a predictor
@@ -177,11 +177,9 @@ int SingleCrystalModel::update_ld_inc(
         throw e;
     }
   }
-  
-  return 0;
 }
 
-int SingleCrystalModel::attempt_update_ld_inc_(
+void SingleCrystalModel::attempt_update_ld_inc_(
    const double * const d_np1, const double * const d_n,
    const double * const w_np1, const double * const w_n,
    double T_np1, double T_n,
@@ -330,8 +328,6 @@ int SingleCrystalModel::attempt_update_ld_inc_(
   // Update model based on any post-processors
   for (auto pp : postprocessors_)
     pp->act(*this, local_lattice, T_np1, D, W, HF_np1, HF_n);
-
-  return 0;
 }
 
 size_t SingleCrystalModel::nhist() const
@@ -339,12 +335,11 @@ size_t SingleCrystalModel::nhist() const
   return stored_hist_.size();
 }
 
-int SingleCrystalModel::init_hist(double * const hist) const
+void SingleCrystalModel::init_hist(double * const hist) const
 {
   std::fill(hist, hist+nhist(), 0.0); // Shuts it up about initialized memory
   History h = gather_history_(hist);
   init_history(h);
-  return 0;
 }
 
 double SingleCrystalModel::alpha(double T) const
@@ -352,7 +347,7 @@ double SingleCrystalModel::alpha(double T) const
   return alpha_->value(T);
 }
 
-int SingleCrystalModel::elastic_strains(
+void SingleCrystalModel::elastic_strains(
     const double * const s_np1,
     double T_np1, const double * const h_np1,
     double * const e_np1) const
@@ -365,8 +360,6 @@ int SingleCrystalModel::elastic_strains(
                                                    h.get<Orientation>("rotation"), 
                                                    h, T_np1);
   std::copy(estrain.data(), estrain.data()+6, e_np1);
-
-  return 0;
 }
 
 size_t SingleCrystalModel::nparams() const
@@ -759,7 +752,7 @@ double SingleCrystalModel::calc_work_inc_(
   return dU - dE;
 }
 
-int SingleCrystalModel::solve_substep_(SCTrialState * ts,
+void SingleCrystalModel::solve_substep_(SCTrialState * ts,
                                        Symmetric & stress,
                                        History & hist)
 {
@@ -770,8 +763,6 @@ int SingleCrystalModel::solve_substep_(SCTrialState * ts,
   // Dump the results
   stress.copy_data(x);
   hist.copy_data(&x[6]);
-
-  return 0;
 }
 
 std::vector<std::string> SingleCrystalModel::not_updated_() const
