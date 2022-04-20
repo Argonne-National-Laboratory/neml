@@ -17,7 +17,7 @@ class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
   size_t n() const;
 
   virtual size_t nhist() const;
-  virtual int init_hist(double * const hist) const;
+  virtual void init_hist(double * const hist) const;
 
   double * history(double * const store, size_t i) const;
   double * stress(double * const store, size_t i) const;
@@ -53,7 +53,7 @@ class NEML_EXPORT TaylorModel: public PolycrystalModel
   virtual void init_store(double * const store) const;
 
   /// Large strain incremental update
-  virtual int update_ld_inc(
+  virtual void update_ld_inc(
      const double * const d_np1, const double * const d_n,
      const double * const w_np1, const double * const w_n,
      double T_np1, double T_n,
@@ -65,7 +65,7 @@ class NEML_EXPORT TaylorModel: public PolycrystalModel
      double & p_np1, double p_n);
 
   virtual double alpha(double T) const;
-  virtual int elastic_strains(const double * const s_np1,
+  virtual void elastic_strains(const double * const s_np1,
                               double T_np1, const double * const h_np1,
                               double * const e_np1) const;
 };

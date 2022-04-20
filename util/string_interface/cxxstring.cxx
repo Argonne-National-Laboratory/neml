@@ -44,25 +44,15 @@ int main(int argc, char** argv)
 
   double estrain[6];
 
-  int ier;
-
   for (int i=0; i<n; i++) {
     t_np1 = (i+1) * t / ((double) n);
     std::fill(e_np1, e_np1+6, 0.0);
     e_np1[0] = (i+1) * e / ((double) n);
 
-    ier = model->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
+    model->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
                            h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
 
-    if (ier != 0) {
-      throw std::runtime_error("Update went bad");
-    }
-
-    ier = model->elastic_strains(s_np1, T_np1, h_np1, estrain);
-
-    if (ier != 0) {
-      throw std::runtime_error("Elastic strains went bad");
-    }
+    model->elastic_strains(s_np1, T_np1, h_np1, estrain);
 
     std::copy(e_np1, e_np1+6, e_n);
     std::copy(s_np1, s_np1+6, s_n);

@@ -35,7 +35,7 @@ NEMLModel_sd::NEMLModel_sd(ParameterSet & params) :
 
 }
 
-int NEMLModel_sd::update_ld_inc(
+void NEMLModel_sd::update_ld_inc(
     const double * const d_np1, const double * const d_n,
     const double * const w_np1, const double * const w_n,
     double T_np1, double T_n,
@@ -69,7 +69,6 @@ int NEMLModel_sd::update_ld_inc(
 
   calc_tangent_(D, W, base_A_np1, s_np1, A_np1, B_np1);
 
-  return 0;
 }
 
 size_t NEMLModel_sd::nstore() const
@@ -93,7 +92,7 @@ const std::shared_ptr<const LinearElasticModel> NEMLModel_sd::elastic() const
   return elastic_;
 }
 
-int NEMLModel_sd::elastic_strains(const double * const s_np1,
+void NEMLModel_sd::elastic_strains(const double * const s_np1,
                                            double T_np1, 
                                            const double * const h_np1,
                                            double * const e_np1) const
@@ -102,16 +101,14 @@ int NEMLModel_sd::elastic_strains(const double * const s_np1,
   elastic_->S(T_np1, S);
   mat_vec(S, 6, s_np1, 6, e_np1);
 
-  return 0;
 }
 
-int NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+void NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
-  return 0;
 }
 
-int NEMLModel_sd::calc_tangent_(const double * const D, const double * const W,
+void NEMLModel_sd::calc_tangent_(const double * const D, const double * const W,
                                 const double * const C, const double * const S,
                                 double * const A, double * const B)
 {
@@ -146,7 +143,6 @@ int NEMLModel_sd::calc_tangent_(const double * const D, const double * const W,
   // IMPORTANT TODO: go back and find where you dropped the factor of 2...
   for (int i=0; i<18; i++) B[i] *= 2.0;
 
-  return 0;
 }
 
 // NEMLModel_ldi implementation
@@ -156,7 +152,7 @@ NEMLModel_ldi::NEMLModel_ldi(ParameterSet & params) :
 
 }
 
-int NEMLModel_ldi::update_sd(
+void NEMLModel_ldi::update_sd(
    const double * const e_np1, const double * const e_n,
    double T_np1, double T_n,
    double t_np1, double t_n,
@@ -168,7 +164,7 @@ int NEMLModel_ldi::update_sd(
 {
   double W[3] = {0,0,0};
   double B[18];
-  return update_ld_inc(e_np1, e_n, W, W, T_np1, T_n, t_np1, t_n,
+  update_ld_inc(e_np1, e_n, W, W, T_np1, T_n, t_np1, t_n,
                        s_np1, s_n, h_np1, h_n, A_np1, B, u_np1, u_n,
                        p_np1, p_n);
 }
@@ -196,7 +192,7 @@ SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
 
 }
 
-int SubstepModel_sd::update_sd(
+void SubstepModel_sd::update_sd(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -306,10 +302,9 @@ int SubstepModel_sd::update_sd(
   delete [] A_new;
   delete [] E_inc;
 
-  return 0;
 }
 
-int SubstepModel_sd::update_step(
+void SubstepModel_sd::update_step(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -349,7 +344,8 @@ int SubstepModel_sd::update_step(
     work_and_energy(ts, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
                     h_np1, h_n, u_np1, u_n, p_np1, p_n); 
     delete ts;
-    return 0;
+
+    return;
   }
   
   // Solve the system
@@ -381,8 +377,6 @@ int SubstepModel_sd::update_step(
 
   delete [] x;
   delete ts;
-
-  return 0;
 }
 
 // Implementation of small strain elasticity
@@ -420,12 +414,11 @@ size_t SmallStrainElasticity::nhist() const
   return 0;
 }
 
-int SmallStrainElasticity::init_hist(double * const hist) const
+void SmallStrainElasticity::init_hist(double * const hist) const
 {
-  return 0;
 }
 
-int SmallStrainElasticity::update_sd(
+void SmallStrainElasticity::update_sd(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
@@ -447,7 +440,6 @@ int SmallStrainElasticity::update_sd(
   u_np1 = u_n + dot_vec(ds, de, 6);
   p_np1 = p_n;
 
-  return 0;
 }
 
 // Implementation of perfect plasticity
@@ -497,9 +489,8 @@ size_t SmallStrainPerfectPlasticity::nhist() const
   return 0;
 }
 
-int SmallStrainPerfectPlasticity::init_hist(double * const hist) const
+void SmallStrainPerfectPlasticity::init_hist(double * const hist) const
 {
-  return 0;
 }
 
 TrialState * SmallStrainPerfectPlasticity::setup(
@@ -529,7 +520,7 @@ bool SmallStrainPerfectPlasticity::elastic_step(
   return fv <= 0.0;
 }
 
-int SmallStrainPerfectPlasticity::update_internal(
+void SmallStrainPerfectPlasticity::update_internal(
     const double * const x,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -538,10 +529,9 @@ int SmallStrainPerfectPlasticity::update_internal(
     double * const h_np1, const double * const h_n)
 {
   std::copy(x, x+6, s_np1);
-  return 0;
 }
 
-int SmallStrainPerfectPlasticity::strain_partial(
+void SmallStrainPerfectPlasticity::strain_partial(
     const TrialState * ts,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -559,10 +549,9 @@ int SmallStrainPerfectPlasticity::strain_partial(
     }
   }
 
-  return 0;
 }
 
-int SmallStrainPerfectPlasticity::work_and_energy(
+void SmallStrainPerfectPlasticity::work_and_energy(
     const TrialState * ts,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -593,7 +582,6 @@ int SmallStrainPerfectPlasticity::work_and_energy(
   sub_vec(e_np1, e_n, 6, de);
   u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
 
-  return 0;
 }
 
 size_t SmallStrainPerfectPlasticity::nparams() const
@@ -664,7 +652,7 @@ double SmallStrainPerfectPlasticity::ys(double T) const
 }
 
 // Make this public for ease of testing
-int SmallStrainPerfectPlasticity::make_trial_state(
+void SmallStrainPerfectPlasticity::make_trial_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n, double t_np1, double t_n,
     const double * const s_n, const double * const h_n,
@@ -687,7 +675,6 @@ int SmallStrainPerfectPlasticity::make_trial_state(
   mat_vec(ts.C, 6, de, 6, ts.s_tr);
   for (size_t i = 0; i < 6; i++) ts.s_tr[i] = s_n[i] + ts.s_tr[i];
 
-  return 0;
 }
 
 // Implementation of small strain rate independent plasticity
@@ -739,10 +726,9 @@ size_t SmallStrainRateIndependentPlasticity::nhist() const
   return flow_->nhist();
 }
 
-int SmallStrainRateIndependentPlasticity::init_hist(double * const hist) const
+void SmallStrainRateIndependentPlasticity::init_hist(double * const hist) const
 {
   flow_->init_hist(hist);
-  return 0;
 }
 
 TrialState * SmallStrainRateIndependentPlasticity::setup(
@@ -773,7 +759,7 @@ bool SmallStrainRateIndependentPlasticity::elastic_step(
   return fv <= 0.0;
 }
 
-int SmallStrainRateIndependentPlasticity::update_internal(
+void SmallStrainRateIndependentPlasticity::update_internal(
     const double * const x,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -783,10 +769,9 @@ int SmallStrainRateIndependentPlasticity::update_internal(
 {
   std::copy(x, x+6, s_np1);
   std::copy(x+6, x+6+nhist(), h_np1);
-  return 0;
 }
 
-int SmallStrainRateIndependentPlasticity::strain_partial(
+void SmallStrainRateIndependentPlasticity::strain_partial(
     const TrialState * ts,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -803,10 +788,9 @@ int SmallStrainRateIndependentPlasticity::strain_partial(
       de[CINDEX(i,j,6)] = tss->C[CINDEX(i,j,6)];
     }
   }
-  return 0;
 }
 
-int SmallStrainRateIndependentPlasticity::work_and_energy(
+void SmallStrainRateIndependentPlasticity::work_and_energy(
     const TrialState * ts,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -837,7 +821,6 @@ int SmallStrainRateIndependentPlasticity::work_and_energy(
   sub_vec(e_np1, e_n, 6, de);
   u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
 
-  return 0;
 }
 
 size_t SmallStrainRateIndependentPlasticity::nparams() const
@@ -982,7 +965,7 @@ const std::shared_ptr<const LinearElasticModel> SmallStrainRateIndependentPlasti
   return elastic_;
 }
 
-int SmallStrainRateIndependentPlasticity::make_trial_state(
+void SmallStrainRateIndependentPlasticity::make_trial_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n, double t_np1, double t_n,
     const double * const s_n, const double * const h_n,
@@ -1008,7 +991,6 @@ int SmallStrainRateIndependentPlasticity::make_trial_state(
   mat_vec(ts.C, 6, ee, 6, ts.s_tr);
   // Store temp
   ts.T = T_np1;
-  return 0;
 }
 
 // Implement creep + plasticity
@@ -1067,13 +1049,13 @@ size_t SmallStrainCreepPlasticity::nhist() const
   return plastic_->nhist() + 6;
 }
 
-int SmallStrainCreepPlasticity::init_hist(double * const hist) const
+void SmallStrainCreepPlasticity::init_hist(double * const hist) const
 {
   std::fill(hist, hist+6, 0.0);
-  return plastic_->init_hist(&hist[6]);
+  plastic_->init_hist(&hist[6]);
 }
 
-int SmallStrainCreepPlasticity::update_sd(
+void SmallStrainCreepPlasticity::update_sd(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
@@ -1127,7 +1109,6 @@ int SmallStrainCreepPlasticity::update_sd(
   sub_vec(creep_new, creep_old, 6, dec);
   p_np1 += dot_vec(ds, dec, 6) / 2.0;
   
-  return 0;
 }
 
 size_t SmallStrainCreepPlasticity::nparams() const
@@ -1188,7 +1169,7 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   for (int i=0; i<36; i++) J[i] *= sf_;
 }
 
-int SmallStrainCreepPlasticity::make_trial_state(
+void SmallStrainCreepPlasticity::make_trial_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n, double t_np1, double t_n,
     const double * const s_n, const double * const h_n,
@@ -1208,10 +1189,9 @@ int SmallStrainCreepPlasticity::make_trial_state(
 
   std::copy(h_n, h_n+6, ts.ep_strain);
 
-  return 0;
 }
 
-int SmallStrainCreepPlasticity::form_tangent_(
+void SmallStrainCreepPlasticity::form_tangent_(
     double * const A, double * const B, double * const A_np1)
 {
   // Okay, what we really want to do is
@@ -1244,13 +1224,12 @@ int SmallStrainCreepPlasticity::form_tangent_(
   std::copy(A,A+36,A_np1);
   for (int i=0; i<36; i++) A_np1[i] -= D[i];
 
-  return 0;
 }
 
-int SmallStrainCreepPlasticity::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+void SmallStrainCreepPlasticity::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
-  return plastic_->set_elastic_model(emodel);
+  plastic_->set_elastic_model(emodel);
 }
 
 // Start general integrator implementation
@@ -1328,7 +1307,7 @@ bool GeneralIntegrator::elastic_step(
   return false;
 }
 
-int GeneralIntegrator::update_internal(
+void GeneralIntegrator::update_internal(
     const double * const x,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -1339,10 +1318,9 @@ int GeneralIntegrator::update_internal(
   std::copy(x, x+6, s_np1);
   std::copy(x+6, x+6+nhist(), h_np1);
 
-  return 0;
 }
 
-int GeneralIntegrator::strain_partial(
+void GeneralIntegrator::strain_partial(
     const TrialState * ts,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -1376,10 +1354,9 @@ int GeneralIntegrator::strain_partial(
 
   delete [] ehist;
 
-  return 0;
 }
 
-int GeneralIntegrator::work_and_energy(
+void GeneralIntegrator::work_and_energy(
     const TrialState * ts,
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
@@ -1406,7 +1383,6 @@ int GeneralIntegrator::work_and_energy(
   rule_->work_rate(s_n, h_n, tss->e_dot, T_n, tss->Tdot, p_dot_n);
   p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * tss->dt;
 
-  return 0;
 }
 
 size_t GeneralIntegrator::nhist() const
@@ -1414,11 +1390,9 @@ size_t GeneralIntegrator::nhist() const
   return rule_->nhist();
 }
 
-int GeneralIntegrator::init_hist(double * const hist) const
+void GeneralIntegrator::init_hist(double * const hist) const
 {
   rule_->init_hist(hist);
-
-  return 0;
 }
 
 size_t GeneralIntegrator::nparams() const
@@ -1506,7 +1480,7 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
 }
 
 
-int GeneralIntegrator::make_trial_state(
+void GeneralIntegrator::make_trial_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n, double t_np1, double t_n,
     const double * const s_n, const double * const h_n,
@@ -1547,15 +1521,13 @@ int GeneralIntegrator::make_trial_state(
   if ((t_n == 0.0) && (skip_first_))
     std::copy(s_n, s_n+6, ts.s_guess);
 
-  return 0;
 }
 
-int GeneralIntegrator::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+void GeneralIntegrator::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
   rule_->set_elastic_model(emodel);
 
-  return 0;
 }
 
 // Start KMRegimeModel
@@ -1599,7 +1571,7 @@ std::unique_ptr<NEMLObject> KMRegimeModel::initialize(ParameterSet & params)
   return neml::make_unique<KMRegimeModel>(params); 
 }
 
-int KMRegimeModel::update_sd(
+void KMRegimeModel::update_sd(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -1631,7 +1603,7 @@ size_t KMRegimeModel::nhist() const
   return models_[0]->nhist();
 }
 
-int KMRegimeModel::init_hist(double * const hist) const
+void KMRegimeModel::init_hist(double * const hist) const
 {
   return models_[0]->init_hist(hist);
 }
@@ -1652,13 +1624,12 @@ double KMRegimeModel::activation_energy_(const double * const e_np1,
   return kboltz_ * T_np1 / (mu* pow(b_, 3.0)) * log(eps0_ / rate);
 }
 
-int KMRegimeModel::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+void KMRegimeModel::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     (*it)->set_elastic_model(emodel);
   }
-  return 0;
 }
 
 } // namespace neml
