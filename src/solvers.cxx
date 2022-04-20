@@ -12,21 +12,21 @@
 namespace neml {
 
 // This function is configured by the build
-int solve(Solvable * system, double * x, TrialState * ts,
+void solve(Solvable * system, double * x, TrialState * ts,
           SolverParameters p, double * R, double * J)
 {
 #ifdef SOLVER_NOX
-  return nox(system, x, ts, p.atol, p.miter, p.verbose, R, J);
+  nox(system, x, ts, p.atol, p.miter, p.verbose, R, J);
 #elif SOLVER_NEWTON
   // Actually selected the newton solver
-  return newton(system, x, ts, p, R, J);
+  newton(system, x, ts, p, R, J);
 #else
   // Default solver: plain NR
-  return newton(system, x, ts, p, R, J);
+  newton(system, x, ts, p, R, J);
 #endif
 }
 
-int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, double * R,
+void newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, double * R,
            double * J)
 {
   int mline = 10;
@@ -133,12 +133,10 @@ int newton(Solvable * system, double * x, TrialState * ts, SolverParameters p, d
 
   if (i == p.miter) 
     throw NonlinearSolverError("Nonlinear solver exceeded maximum allowed iterations!");
-
-  return 0;
 }
 
 /// Helper to get numerical jacobian
-int diff_jac(Solvable * system, const double * const x, TrialState * ts,
+void diff_jac(Solvable * system, const double * const x, TrialState * ts,
              double * const nJ, double eps)
 {
   std::vector<double> R0v(system->nparams());
@@ -163,8 +161,6 @@ int diff_jac(Solvable * system, const double * const x, TrialState * ts,
       nJ[CINDEX(j,i,system->nparams())] = (nR[j] - R0[j]) / dx;
     }
   }
-  
-  return 0;
 }
 
 /// Helper to get checksum
@@ -253,7 +249,7 @@ bool NOXSolver::computeJacobian(NOX::LAPACK::Matrix<double>& J,
 }
 
 
-int nox(Solvable * system, double * x, TrialState * ts,
+void nox(Solvable * system, double * x, TrialState * ts,
         double tol, int miter, bool verbose, double * R,
         double * J)
 {
@@ -340,9 +336,6 @@ int nox(Solvable * system, double * x, TrialState * ts,
       delete [] J;
     }
   }
-
-
-  return 0;
 }
 
 #endif
@@ -358,18 +351,16 @@ size_t TestPower::nparams() const
   return 1;
 }
 
-int TestPower::init_x(double * const x, TrialState * ts)
+void TestPower::init_x(double * const x, TrialState * ts)
 {
   x[0] = x0_;
-  return 0;
 }
 
-int TestPower::RJ(const double * const x, TrialState * ts, double * const R, 
+void TestPower::RJ(const double * const x, TrialState * ts, double * const R, 
        double * const J)
 {
   R[0] = A_ * std::pow(x[0], n_) + b_;
   J[0] = A_ * n_ * std::pow(x[0], n_-1.0);
-  return 0;
 }
 
 

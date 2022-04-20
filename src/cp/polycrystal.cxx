@@ -118,9 +118,9 @@ size_t TaylorModel::nstore() const
   return nhist();
 }
 
-int TaylorModel::init_store(double * const store) const
+void TaylorModel::init_store(double * const store) const
 {
-  return init_hist(store);
+  init_hist(store);
 }
 
 int TaylorModel::update_ld_inc(
@@ -158,7 +158,7 @@ int TaylorModel::update_ld_inc(
     std::copy(w_np1, w_np1+3, w(h_np1, i));
   }
 
-  int ier = evaluate_crystal_batch(*model_, n(), 
+  evaluate_crystal_batch(*model_, n(), 
                          d(h_np1, 0), d(h_n, 0),
                          w(h_np1, 0), w(h_n, 0),
                          Ts_np1, Ts_n,
@@ -196,7 +196,7 @@ int TaylorModel::update_ld_inc(
   u_np1 += u_n;
   p_np1 += p_n;
 
-  return ier;
+  return 0;
 }
 
 double TaylorModel::alpha(double T) const

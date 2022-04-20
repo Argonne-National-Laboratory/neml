@@ -40,12 +40,12 @@ size_t WalkerKremplSwitchRule::nhist() const
   return flow_->nhist();
 }
 
-int WalkerKremplSwitchRule::init_hist(double * const h)
+void WalkerKremplSwitchRule::init_hist(double * const h)
 {
   return flow_->init_hist(h);
 }
 
-int WalkerKremplSwitchRule::s(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::s(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const sdot)
@@ -69,12 +69,9 @@ int WalkerKremplSwitchRule::s(const double * const s, const double * const alpha
   elastic_->C(T, C);
 
   mat_vec(C, 6, erate, 6, sdot);
-
-  return 0;
-
 }
 
-int WalkerKremplSwitchRule::ds_ds(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::ds_ds(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_sdot)
@@ -102,11 +99,9 @@ int WalkerKremplSwitchRule::ds_ds(const double * const s, const double * const a
   elastic_->C(T, t3);
 
   mat_mat(6,6,6, t3, work, d_sdot);
-
-  return 0;
 }
 
-int WalkerKremplSwitchRule::ds_da(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::ds_da(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_sdot)
@@ -138,12 +133,9 @@ int WalkerKremplSwitchRule::ds_da(const double * const s, const double * const a
   elastic_->C(T, C);
 
   mat_mat(6, nhist(), 6, C, work, d_sdot);
-
-  return 0;
-
 }
 
-int WalkerKremplSwitchRule::ds_de(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::ds_de(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_sdot)
@@ -169,11 +161,9 @@ int WalkerKremplSwitchRule::ds_de(const double * const s, const double * const a
   elastic_->C(T, C);
 
   mat_mat(6, 6, 6, C, work, d_sdot);
-
-  return 0;
 }
 
-int WalkerKremplSwitchRule::a(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::a(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const adot)
@@ -194,12 +184,9 @@ int WalkerKremplSwitchRule::a(const double * const s, const double * const alpha
 
   flow_->h_time(s, alpha, T, temp);
   for (size_t i=0; i<nhist(); i++) adot[i] += (temp[i] * kap);
-
-  return 0;
-
 }
 
-int WalkerKremplSwitchRule::da_ds(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::da_ds(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_adot)
@@ -232,12 +219,9 @@ int WalkerKremplSwitchRule::da_ds(const double * const s, const double * const a
 
   flow_->dh_ds_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * kap;
-
-  return 0;
-  
 }
 
-int WalkerKremplSwitchRule::da_da(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::da_da(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_adot)
@@ -273,11 +257,9 @@ int WalkerKremplSwitchRule::da_da(const double * const s, const double * const a
 
   flow_->dh_da_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i] * kap;
-
-  return 0;
 }
 
-int WalkerKremplSwitchRule::da_de(const double * const s, const double * const alpha,
+void WalkerKremplSwitchRule::da_de(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_adot)
@@ -299,11 +281,9 @@ int WalkerKremplSwitchRule::da_de(const double * const s, const double * const a
   outer_update(hr, nh, dkap, 6, d_adot);
 
   delete [] hr;
-
-  return 0;
 }
 
-int WalkerKremplSwitchRule::work_rate(const double * const s,
+void WalkerKremplSwitchRule::work_rate(const double * const s,
                                     const double * const alpha,
                                     const double * const edot, double T,
                                     double Tdot, double & p_dot)
@@ -334,27 +314,22 @@ int WalkerKremplSwitchRule::work_rate(const double * const s,
   }
 
   p_dot = dot_vec(s, erate, 6);
-  
-  return 0;
 }
 
-int WalkerKremplSwitchRule::elastic_strains(const double * const s_np1, double T_np1,
+void WalkerKremplSwitchRule::elastic_strains(const double * const s_np1, double T_np1,
                                  double * const e_np1) const
 {
   double S[36];
   elastic_->S(T_np1, S);
   mat_vec(S, 6, s_np1, 6, e_np1);
-
-  return 0;
 }
 
-int WalkerKremplSwitchRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+void WalkerKremplSwitchRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
-  return 0;
 }
 
-int WalkerKremplSwitchRule::kappa(const double * const edot, double T, double &
+void WalkerKremplSwitchRule::kappa(const double * const edot, double T, double &
                                   kap)
 {
   double edev[6];
@@ -364,11 +339,9 @@ int WalkerKremplSwitchRule::kappa(const double * const edot, double T, double &
   double de = std::sqrt(2.0/3.0) * norm2_vec(edev, 6);
 
   kap = 1.0 - lambda_->value(T) + lambda_->value(T) * de / eps0_;
-
-  return 0;
 }
 
-int WalkerKremplSwitchRule::dkappa(const double * const edot, double T,
+void WalkerKremplSwitchRule::dkappa(const double * const edot, double T,
                                    double * const dkap)
 {
   std::copy(edot, edot+6, dkap);
@@ -377,15 +350,13 @@ int WalkerKremplSwitchRule::dkappa(const double * const edot, double T,
   if (norm2_vec(dkap, 6) == 0.0) {
     for (size_t i = 0; i < 6; i++)
       dkap[i] = 0.0;
-    return 0;
+    return;
   }
 
   double fact = lambda_->value(T)  / eps0_ * std::sqrt(2.0/3.0) / norm2_vec(dkap, 6);
 
   for (size_t i = 0; i < 6; i++)
     dkap[i] *= fact;
-
-  return 0;
 }
 
 void WalkerKremplSwitchRule::override_guess(double * const x)
@@ -1563,59 +1534,53 @@ size_t WrappedViscoPlasticFlowRule::nhist() const
   return blank_hist_().size();
 }
 
-int WrappedViscoPlasticFlowRule::init_hist(double * const h) const
+void WrappedViscoPlasticFlowRule::init_hist(double * const h) const
 {
   // Pointless memory error
   std::fill(h, h+nhist(), 0.0);
   // Actual stuff
   History hv = gather_hist_(h);
   initialize_hist(hv);
-  return 0;
 }
 
 // Rate rule
-int WrappedViscoPlasticFlowRule::y(const double* const s, const double* const alpha, double T,
+void WrappedViscoPlasticFlowRule::y(const double* const s, const double* const alpha, double T,
               double & yv) const
 {
   y(make_state_(s, alpha, T), yv);
-  return 0;
 }
 
-int WrappedViscoPlasticFlowRule::dy_ds(const double* const s, const double* const alpha, double T,
+void WrappedViscoPlasticFlowRule::dy_ds(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
   Symmetric res(dyv);
   dy_ds(make_state_(s, alpha, T), res);
-  return 0;
 }
 
-int WrappedViscoPlasticFlowRule::dy_da(const double* const s, const double* const alpha, double T,
+void WrappedViscoPlasticFlowRule::dy_da(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
   // This is transposed, but that doesn't matter as it's flat
   History res = gather_derivative_<double>(dyv);
   dy_da(make_state_(s, alpha, T), res);
-  return 0;
 }
 
 // Flow rule
-int WrappedViscoPlasticFlowRule::g(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::g(const double * const s, const double * const alpha, double T,
               double * const gv) const
 {
   Symmetric res(gv);
   g(make_state_(s, alpha, T), res);
-  return 0;
 }
 
-int WrappedViscoPlasticFlowRule::dg_ds(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dg_ds(const double * const s, const double * const alpha, double T,
               double * const dgv) const
 {
   SymSymR4 res(dgv);
   dg_ds(make_state_(s, alpha, T), res);
-  return 0;
 }
 
-int WrappedViscoPlasticFlowRule::dg_da(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dg_da(const double * const s, const double * const alpha, double T,
              double * const dgv) const
 {
   // This is transposed and it does matter
@@ -1627,28 +1592,24 @@ int WrappedViscoPlasticFlowRule::dg_da(const double * const s, const double * co
     for (size_t j = 0; j < 6; j++)
       dgv[CINDEX(j,i,nhist())] = temp[CINDEX(i,j,6)];
   delete [] temp;
-
-  return 0;
 }
 
 // Hardening rule
-int WrappedViscoPlasticFlowRule::h(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
   History res = gather_hist_(hv);
   h(make_state_(s, alpha, T), res);
-  return 0;
 }
 
-int WrappedViscoPlasticFlowRule::dh_ds(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   History res = gather_derivative_<Symmetric>(dhv);
   dh_ds(make_state_(s, alpha, T), res);
-  return 0;
 }
 
-int WrappedViscoPlasticFlowRule::dh_da(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   // Very messed up
@@ -1660,16 +1621,14 @@ int WrappedViscoPlasticFlowRule::dh_da(const double * const s, const double * co
   res.unravel_hh(blank_hist_(), dhv);
 
   delete [] temp;
-  return 0;
 }
 
 // Hardening rule wrt time
-int WrappedViscoPlasticFlowRule::h_time(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::h_time(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
   History res = gather_hist_(hv);
   h_time(make_state_(s, alpha, T), res);
-  return 0;
 }
 
 void WrappedViscoPlasticFlowRule::h_time(const State & state, History & res) const
@@ -1677,12 +1636,11 @@ void WrappedViscoPlasticFlowRule::h_time(const State & state, History & res) con
   res.zero();
 }
 
-int WrappedViscoPlasticFlowRule::dh_ds_time(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dh_ds_time(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   History res = gather_derivative_<Symmetric>(dhv);
   dh_ds_time(make_state_(s, alpha, T), res);
-  return 0;
 }
 
 void WrappedViscoPlasticFlowRule::dh_ds_time(const State & state, History & res) const
@@ -1690,7 +1648,7 @@ void WrappedViscoPlasticFlowRule::dh_ds_time(const State & state, History & res)
   res.zero();
 }
 
-int WrappedViscoPlasticFlowRule::dh_da_time(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dh_da_time(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   // Very messed up
@@ -1702,7 +1660,6 @@ int WrappedViscoPlasticFlowRule::dh_da_time(const double * const s, const double
   res.unravel_hh(blank_hist_(), dhv);
 
   delete [] temp;
-  return 0;
 }
 
 void WrappedViscoPlasticFlowRule::dh_da_time(const State & state, History & res) const
@@ -1711,12 +1668,11 @@ void WrappedViscoPlasticFlowRule::dh_da_time(const State & state, History & res)
 }
 
 // Hardening rule wrt temperature
-int WrappedViscoPlasticFlowRule::h_temp(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::h_temp(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
   History res = gather_hist_(hv);
   h_temp(make_state_(s, alpha, T), res);
-  return 0;
 }
 
 void WrappedViscoPlasticFlowRule::h_temp(const State & state, History & res) const
@@ -1724,12 +1680,11 @@ void WrappedViscoPlasticFlowRule::h_temp(const State & state, History & res) con
   res.zero();
 }
 
-int WrappedViscoPlasticFlowRule::dh_ds_temp(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dh_ds_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   History res = gather_derivative_<Symmetric>(dhv);
   dh_ds_temp(make_state_(s, alpha, T), res);
-  return 0;
 }
 
 void WrappedViscoPlasticFlowRule::dh_ds_temp(const State & state, History & res) const
@@ -1737,12 +1692,11 @@ void WrappedViscoPlasticFlowRule::dh_ds_temp(const State & state, History & res)
   res.zero();
 }
 
-int WrappedViscoPlasticFlowRule::dh_da_temp(const double * const s, const double * const alpha, double T,
+void WrappedViscoPlasticFlowRule::dh_da_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
   History res = gather_derivative_<History>(dhv);
   dh_da_temp(make_state_(s, alpha, T), res);
-  return 0;
 }
 
 void WrappedViscoPlasticFlowRule::dh_da_temp(const State & state, History & res) const

@@ -33,7 +33,7 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
    /// Total number of stored internal variables
    virtual size_t nstore() const = 0;
    /// Initialize the internal variables
-   virtual int init_store(double * const store) const = 0;
+   virtual void init_store(double * const store) const = 0;
 
    /// Small strain update interface
    virtual int update_sd(
@@ -102,7 +102,7 @@ class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
    /// Number of stored variables
    virtual size_t nstore() const;
    /// Initialize stored variables
-   virtual int init_store(double * const store) const;
+   virtual void init_store(double * const store) const;
 
    /// Number of stored variables that are true material history
    virtual size_t nhist() const = 0;
@@ -142,7 +142,7 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
    /// Number of stored variables
    virtual size_t nstore() const;
    /// Initialize stored variables
-   virtual int init_store(double * const store) const;
+   virtual void init_store(double * const store) const;
 
    /// Number of stored variables that are true material history
    virtual size_t nhist() const = 0;
@@ -364,9 +364,9 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
   /// Number of nonlinear equations to solve in the integration
   virtual size_t nparams() const;
   /// Setup an initial guess for the nonlinear solution
-  virtual int init_x(double * const x, TrialState * ts);
+  virtual void init_x(double * const x, TrialState * ts);
   /// Integration residual and jacobian equations
-  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+  virtual void RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
   /// Setup the trial state
@@ -506,10 +506,10 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   /// Number of solver parameters
   virtual size_t nparams() const;
   /// Setup an iteration vector in the solver
-  virtual int init_x(double * const x, TrialState * ts);
+  virtual void init_x(double * const x, TrialState * ts);
   /// Solver function returning the residual and jacobian of the nonlinear
   /// system of equations integrating the model
-  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+  virtual void RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
   /// Return the elastic model for subobjects
@@ -564,9 +564,9 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
   /// The number of parameters in the nonlinear equation
   virtual size_t nparams() const;
   /// Initialize the nonlinear solver
-  virtual int init_x(double * const x, TrialState * ts);
+  virtual void init_x(double * const x, TrialState * ts);
   /// Residual equation to solve and corresponding jacobian
-  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+  virtual void RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
   /// Setup a trial state from known information
@@ -666,9 +666,9 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   /// Number of nonlinear equations
   virtual size_t nparams() const;
   /// Initialize a guess for the nonlinear iterations
-  virtual int init_x(double * const x, TrialState * ts);
+  virtual void init_x(double * const x, TrialState * ts);
   /// The residual and jacobian for the nonlinear solve
-  virtual int RJ(const double * const x, TrialState * ts,
+  virtual void RJ(const double * const x, TrialState * ts,
                  double * const R, double * const J);
 
   /// Initialize a trial state

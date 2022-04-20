@@ -14,20 +14,18 @@ GeneralFlowRule::GeneralFlowRule(ParameterSet & params) :
 {
 }
 
-int GeneralFlowRule::work_rate(const double * const s,
+void GeneralFlowRule::work_rate(const double * const s,
                                             const double * const alpha,
                                             const double * const edot, double T,
                                             double Tdot, double & p_dot)
 {
   // By default don't calculate plastic work
   p_dot = 0.0;
-  return 0;
 }
 
-int GeneralFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel>
+void GeneralFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel>
                                        emodel)
 {
-  return 0;
 }
 
 void GeneralFlowRule::override_guess(double * const x)
@@ -69,12 +67,13 @@ size_t TVPFlowRule::nhist() const
   return flow_->nhist();
 }
 
-int TVPFlowRule::init_hist(double * const h)
+void TVPFlowRule::init_hist(double * const h)
 {
-  return flow_->init_hist(h);
+  flow_->init_hist(h);
+
 }
 
-int TVPFlowRule::s(const double * const s, const double * const alpha,
+void TVPFlowRule::s(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const sdot)
@@ -108,11 +107,10 @@ int TVPFlowRule::s(const double * const s, const double * const alpha,
 
   mat_vec(C, 6, erate, 6, sdot);
 
-  return 0;
 
 }
 
-int TVPFlowRule::ds_ds(const double * const s, const double * const alpha,
+void TVPFlowRule::ds_ds(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_sdot)
@@ -147,11 +145,10 @@ int TVPFlowRule::ds_ds(const double * const s, const double * const alpha,
 
   mat_mat(6,6,6, t3, work, d_sdot);
 
-  return 0;
 
 }
 
-int TVPFlowRule::ds_da(const double * const s, const double * const alpha,
+void TVPFlowRule::ds_da(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_sdot)
@@ -192,19 +189,18 @@ int TVPFlowRule::ds_da(const double * const s, const double * const alpha,
 
   mat_mat(6, nhist(), 6, C, work, d_sdot);
 
-  return 0;
 
 }
 
-int TVPFlowRule::ds_de(const double * const s, const double * const alpha,
+void TVPFlowRule::ds_de(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_sdot)
 {
-  return elastic_->C(T, d_sdot);
+  elastic_->C(T, d_sdot);
 }
 
-int TVPFlowRule::a(const double * const s, const double * const alpha,
+void TVPFlowRule::a(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const adot)
@@ -223,11 +219,10 @@ int TVPFlowRule::a(const double * const s, const double * const alpha,
   flow_->h_time(s, alpha, T, temp);
   for (size_t i=0; i<nhist(); i++) adot[i] += temp[i];
 
-  return 0;
 
 }
 
-int TVPFlowRule::da_ds(const double * const s, const double * const alpha,
+void TVPFlowRule::da_ds(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_adot)
@@ -257,11 +252,10 @@ int TVPFlowRule::da_ds(const double * const s, const double * const alpha,
   flow_->dh_ds_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i];
 
-  return 0;
   
 }
 
-int TVPFlowRule::da_da(const double * const s, const double * const alpha,
+void TVPFlowRule::da_da(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_adot)
@@ -293,20 +287,18 @@ int TVPFlowRule::da_da(const double * const s, const double * const alpha,
   flow_->dh_da_time(s, alpha, T, t3);
   for (int i=0; i<sz; i++) d_adot[i] += t3[i];
 
-  return 0;
 }
 
-int TVPFlowRule::da_de(const double * const s, const double * const alpha,
+void TVPFlowRule::da_de(const double * const s, const double * const alpha,
               const double * const edot, double T,
               double Tdot,
               double * const d_adot)
 {
   std::fill(d_adot, d_adot+(nhist()*6), 0.0);
 
-  return 0;
 }
 
-int TVPFlowRule::work_rate(const double * const s,
+void TVPFlowRule::work_rate(const double * const s,
                                     const double * const alpha,
                                     const double * const edot, double T,
                                     double Tdot, double & p_dot)
@@ -334,24 +326,20 @@ int TVPFlowRule::work_rate(const double * const s,
   }
 
   p_dot = dot_vec(s, erate, 6);
-  
-  return 0;
 }
 
-int TVPFlowRule::elastic_strains(const double * const s_np1, double T_np1,
+void TVPFlowRule::elastic_strains(const double * const s_np1, double T_np1,
                                  double * const e_np1) const
 {
   double S[36];
   elastic_->S(T_np1, S);
   mat_vec(S, 6, s_np1, 6, e_np1);
 
-  return 0;
 }
 
-int TVPFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
+void TVPFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
-  return 0;
 }
 
 void TVPFlowRule::override_guess(double * const x)

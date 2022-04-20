@@ -111,7 +111,7 @@ size_t NEMLScalarDamagedModel_sd::nparams() const
   return 7;
 }
 
-int NEMLScalarDamagedModel_sd::init_x(double * const x, TrialState * ts)
+void NEMLScalarDamagedModel_sd::init_x(double * const x, TrialState * ts)
 {
   SDTrialState * tss = static_cast<SDTrialState *>(ts);
   std::copy(tss->s_n, tss->s_n+6, x);
@@ -124,11 +124,9 @@ int NEMLScalarDamagedModel_sd::init_x(double * const x, TrialState * ts)
   else {
     x[6] = tss->w_n;
   }
-
-  return 0;
 }
 
-int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts, 
+void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts, 
                                   double * const R, double * const J)
 {
   SDTrialState * tss = static_cast<SDTrialState *>(ts);
@@ -137,7 +135,6 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_curr[6];
   for (int i=0; i<6; i++)  s_prime_curr[i] = s_curr[i] / (1-w_curr);
 
-  int res;
   double s_prime_np1[6];
   double s_prime_n[6];
   double A_prime_np1[36];
@@ -149,18 +146,16 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   std::copy(tss->s_n, tss->s_n+6, s_prime_n);
   for (int i=0; i<6; i++) s_prime_n[i] /= (1-tss->w_n);
 
-  res = base_->update_sd(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
+  base_->update_sd(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
                    tss->t_np1, tss->t_n, s_prime_np1, s_prime_n,
                    h_np1, &tss->h_n[0],
                    A_prime_np1, u_np1, tss->u_n, p_np1, tss->p_n);
-  if (res != 0) return res;
   
   for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * s_prime_np1[i];
 
   double w_np1;
-  res = damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
          tss->T_np1, tss->T_n, tss->t_np1, tss->t_n, &w_np1);
-  if (res != 0) return res;
   R[6] = w_curr - w_np1;
 
   std::fill(J, J+49, 0.0);
@@ -172,26 +167,22 @@ int NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   }
 
   double ws[6];
-  res = ddamage_ds(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  ddamage_ds(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, ws);
-  if (res != 0) return res;
   for (int i=0; i<6; i++) {
     J[CINDEX(6,i,7)] = -ws[i] / (1 - w_curr); 
   }
   
   double ww;
-  res = ddamage_dd(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  ddamage_dd(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, &ww);
-  if (res != 0) return res;
   
   J[CINDEX(6,6,7)] = 1.0 - ww - dot_vec(ws, s_curr, 6) / pow(1-w_curr,2.0);
-
-  return 0;
 }
 
-int NEMLScalarDamagedModel_sd::make_trial_state(
+void NEMLScalarDamagedModel_sd::make_trial_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n, double t_np1, double t_n,
     const double * const s_n, const double * const h_n,
@@ -210,8 +201,6 @@ int NEMLScalarDamagedModel_sd::make_trial_state(
   tss.u_n = u_n;
   tss.p_n = p_n;
   tss.w_n = h_n[0];
-
-  return 0;
 }
 
 int NEMLScalarDamagedModel_sd::tangent_(
@@ -758,26 +747,26 @@ int MaxPrincipalEffectiveStress::effective(const double * const s, double & eff)
 {
   double vals[3];
 
-  int ier = eigenvalues_sym(s, vals);
+  eigenvalues_sym(s, vals);
   eff = vals[2];
 
   if (eff < 0.0) eff = 0.0;
 
-  return ier;
+  return 0;
 }
 
 int MaxPrincipalEffectiveStress::deffective(const double * const s, double * const deff) const
 {
   double vectors[9];
   double values[3];
-  int ier = eigenvalues_sym(s, values);
+  eigenvalues_sym(s, values);
 
   if (values[2] < 0.0) {
     std::fill(deff, deff+6, 0.0);
     return 0.0;
   }
 
-  ier = eigenvectors_sym(s, vectors);
+  eigenvectors_sym(s, vectors);
   double * v = &(vectors[6]);
 
   double full[9];
@@ -797,7 +786,7 @@ int MaxPrincipalEffectiveStress::deffective(const double * const s, double * con
 
   sym(full, deff);
 
-  return ier;
+  return 0;
 }
 
 

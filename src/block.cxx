@@ -137,7 +137,7 @@ const double m42t4_array[2916] =
   0, 0, 0};
 
 
-int block_evaluate(
+void block_evaluate(
     std::shared_ptr<NEMLModel> model,
     size_t nblock,
     const double * const e_np1, const double * const e_n,
@@ -162,32 +162,24 @@ int block_evaluate(
   
   size_t nh = model->nstore();
 
-  int * ier = new int[nblock];
-
 #ifdef USE_OMP
 #pragma omp parallel for
 #endif
-  for (size_t i = 0; i < nblock; i++) {
-    ier[i] = model->update_sd(
-        &e_np1_local[i*6], &e_n_local[i*6], T_np1[i], T_n[i], t_np1, t_n,
-        &s_np1_local[i*6], &s_n_local[i*6], &h_np1[i*nh], &h_n[i*nh],
-        &A_np1_local[i*36], u_np1[i], u_n[i], p_np1[i], p_n[i]);
-  }
-
-  for (size_t i = 0; i < nblock; i++) {
-    if (ier[i] != 0) {
-      int error = ier[i];
-      delete [] ier;
-      delete [] e_np1_local;
-      delete [] e_n_local;
-      delete [] s_np1_local;
-      delete [] s_n_local;
-      delete [] A_np1_local; 
-      return error;
+  try {
+    for (size_t i = 0; i < nblock; i++) {
+      model->update_sd(
+          &e_np1_local[i*6], &e_n_local[i*6], T_np1[i], T_n[i], t_np1, t_n,
+          &s_np1_local[i*6], &s_n_local[i*6], &h_np1[i*nh], &h_n[i*nh],
+          &A_np1_local[i*36], u_np1[i], u_n[i], p_np1[i], p_n[i]);
     }
   }
-  
-  delete [] ier;
+  catch (const NEMLError & e) {
+    delete [] e_np1_local;
+    delete [] e_n_local;
+    delete [] s_np1_local;
+    delete [] s_n_local;
+    delete [] A_np1_local; 
+  }
 
   m2t(s_np1_local, s_np1, nblock);
   m42t4(A_np1_local, A_np1, nblock);
@@ -198,8 +190,6 @@ int block_evaluate(
   delete [] s_np1_local;
   delete [] s_n_local;
   delete [] A_np1_local;
-  
-  return 0;
 }
 
 void t2m(const double * const tensor, double * const mandel, size_t nblock)

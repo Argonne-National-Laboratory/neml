@@ -27,21 +27,21 @@ class NEML_EXPORT LarsonMillerRelation: public NEMLObject, public Solvable {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   
   /// Stress as a function of rupture time (not really used)
-  int sR(double t, double T, double & s) const;
+  void sR(double t, double T, double & s) const;
 
   /// Rupture time as a function of stress
-  int tR(double s, double T, double & t);
+  void tR(double s, double T, double & t);
 
   /// Derivative of rupture time with respect to stress
-  int dtR_ds(double s, double T, double & dt);
+  void dtR_ds(double s, double T, double & dt);
 
   /// Number of solver parameters
   virtual size_t nparams() const;
   /// Setup an iteration vector in the solver
-  virtual int init_x(double * const x, TrialState * ts);
+  virtual void init_x(double * const x, TrialState * ts);
   /// Solver function returning the residual and jacobian of the nonlinear
   /// system of equations integrating the model
-  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+  virtual void RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
  protected:

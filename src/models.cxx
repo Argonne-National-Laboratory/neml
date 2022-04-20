@@ -77,12 +77,10 @@ size_t NEMLModel_sd::nstore() const
   return nhist() + 6;
 }
 
-int NEMLModel_sd::init_store(double * const store) const
+void NEMLModel_sd::init_store(double * const store) const
 {
   init_hist(&store[0]);
   std::fill(&store[nhist()], &store[nhist()]+6, 0.0);
-
-  return 0;
 }
 
 double NEMLModel_sd::alpha(double T) const
@@ -102,7 +100,9 @@ int NEMLModel_sd::elastic_strains(const double * const s_np1,
 {
   double S[36];
   elastic_->S(T_np1, S);
-  return mat_vec(S, 6, s_np1, 6, e_np1);
+  mat_vec(S, 6, s_np1, 6, e_np1);
+
+  return 0;
 }
 
 int NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
@@ -178,10 +178,9 @@ size_t NEMLModel_ldi::nstore() const
   return nhist();
 }
 
-int NEMLModel_ldi::init_store(double * const store) const
+void NEMLModel_ldi::init_store(double * const store) const
 {
   init_hist(&store[0]);
-  return 0;
 }
 
 SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
@@ -602,16 +601,14 @@ size_t SmallStrainPerfectPlasticity::nparams() const
   return 7;
 }
 
-int SmallStrainPerfectPlasticity::init_x(double * const x, TrialState * ts)
+void SmallStrainPerfectPlasticity::init_x(double * const x, TrialState * ts)
 {
   SSPPTrialState * tss = static_cast<SSPPTrialState *>(ts);
   std::copy(tss->s_tr, tss->s_tr+6, x);
   x[6] = 0.0;
-
-  return 0;
 }
 
-int SmallStrainPerfectPlasticity::RJ(
+void SmallStrainPerfectPlasticity::RJ(
     const double * const x, TrialState * ts, double * const R,
     double * const J)
 {
@@ -658,8 +655,6 @@ int SmallStrainPerfectPlasticity::RJ(
 
   // J22
   J[CINDEX(6,6,7)] = 0.0;
-
-  return 0;
 }
 
 // Getter
@@ -746,7 +741,8 @@ size_t SmallStrainRateIndependentPlasticity::nhist() const
 
 int SmallStrainRateIndependentPlasticity::init_hist(double * const hist) const
 {
-  return flow_->init_hist(hist);
+  flow_->init_hist(hist);
+  return 0;
 }
 
 TrialState * SmallStrainRateIndependentPlasticity::setup(
@@ -850,16 +846,15 @@ size_t SmallStrainRateIndependentPlasticity::nparams() const
   return 6 + flow_->nhist() + 1;
 }
 
-int SmallStrainRateIndependentPlasticity::init_x(double * const x, TrialState * ts)
+void SmallStrainRateIndependentPlasticity::init_x(double * const x, TrialState * ts)
 {
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
   std::copy(tss->s_tr, tss->s_tr+6, x);
   std::copy(&tss->h_tr[0], &tss->h_tr[0]+flow_->nhist(), &x[6]);
   x[6+flow_->nhist()] = 0.0; // consistency parameter
-  return 0;
 }
 
-int SmallStrainRateIndependentPlasticity::RJ(const double * const x, 
+void SmallStrainRateIndependentPlasticity::RJ(const double * const x, 
                                              TrialState * ts, 
                                              double * const R, double * const J)
 {
@@ -980,8 +975,6 @@ int SmallStrainRateIndependentPlasticity::RJ(const double * const x,
 
   // J33
   J[CINDEX((6+nh), (6+nh), n)] = 0.0;
-  
-  return 0;
 }
 
 const std::shared_ptr<const LinearElasticModel> SmallStrainRateIndependentPlasticity::elastic() const
@@ -1143,17 +1136,15 @@ size_t SmallStrainCreepPlasticity::nparams() const
   return 6;
 }
 
-int SmallStrainCreepPlasticity::init_x(double * const x, TrialState * ts)
+void SmallStrainCreepPlasticity::init_x(double * const x, TrialState * ts)
 {
   SSCPTrialState * tss = static_cast<SSCPTrialState*>(ts);
 
   // Start out at last step's value
   std::copy(tss->ep_strain, tss->ep_strain + 6, x);
-  
-  return 0;
 }
 
-int SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts, 
+void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts, 
                                    double * const R, double * const J)
 {
   SSCPTrialState * tss = static_cast<SSCPTrialState*>(ts);
@@ -1195,8 +1186,6 @@ int SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   mat_mat(6, 6, 6, B, A_np1, J);
   for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
   for (int i=0; i<36; i++) J[i] *= sf_;
-
-  return 0;
 }
 
 int SmallStrainCreepPlasticity::make_trial_state(
@@ -1427,7 +1416,9 @@ size_t GeneralIntegrator::nhist() const
 
 int GeneralIntegrator::init_hist(double * const hist) const
 {
-  return rule_->init_hist(hist);
+  rule_->init_hist(hist);
+
+  return 0;
 }
 
 size_t GeneralIntegrator::nparams() const
@@ -1435,18 +1426,16 @@ size_t GeneralIntegrator::nparams() const
   return 6 + nhist();
 }
 
-int GeneralIntegrator::init_x(double * const x, TrialState * ts)
+void GeneralIntegrator::init_x(double * const x, TrialState * ts)
 {
   GITrialState * tss = static_cast<GITrialState*>(ts);
   std::copy(tss->s_guess, tss->s_guess+6, x);
   std::copy(tss->h_n.begin(), tss->h_n.end(), &x[6]);
 
   rule_->override_guess(x);
-
-  return 0;
 }
 
-int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
+void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
                           double * const R, double * const J)
 {
   GITrialState * tss = static_cast<GITrialState*>(ts);
@@ -1514,8 +1503,6 @@ int GeneralIntegrator::RJ(const double * const x, TrialState * ts,
       J[CINDEX((i+6),(j+6),nparams)] = -J22[CINDEX(i,j,nhist)];
     }
   }
-  
-  return 0;
 }
 
 
@@ -1566,7 +1553,9 @@ int GeneralIntegrator::make_trial_state(
 int GeneralIntegrator::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
 {
   elastic_ = emodel;
-  return rule_->set_elastic_model(emodel);
+  rule_->set_elastic_model(emodel);
+
+  return 0;
 }
 
 // Start KMRegimeModel

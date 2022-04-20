@@ -85,12 +85,12 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   /// Number of parameters for the solver
   virtual size_t nparams() const;
   /// Initialize the solver vector
-  virtual int init_x(double * const x, TrialState * ts);
+  virtual void init_x(double * const x, TrialState * ts);
   /// The actual nonlinear residual and Jacobian to solve
-  virtual int RJ(const double * const x, TrialState * ts,double * const R,
+  virtual void RJ(const double * const x, TrialState * ts,double * const R,
                  double * const J);
   /// Setup a trial state from known information
-  int make_trial_state(const double * const e_np1, const double * const e_n,
+  void make_trial_state(const double * const e_np1, const double * const e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
                        const double * const s_n, const double * const h_n,
                        double u_n, double p_n,

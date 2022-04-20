@@ -20,36 +20,36 @@ class NEML_EXPORT RateIndependentFlowRule: public NEMLObject {
   /// Number of history variables
   virtual size_t nhist() const = 0;
   /// Setup the history at time zero
-  virtual int init_hist(double * const h) const = 0;
+  virtual void init_hist(double * const h) const = 0;
 
   /// Yield surface
-  virtual int f(const double* const s, const double* const alpha, double T,
+  virtual void f(const double* const s, const double* const alpha, double T,
                 double & fv) const = 0;
   /// Partial derivative of the surface wrt stress
-  virtual int df_ds(const double* const s, const double* const alpha, double T,
+  virtual void df_ds(const double* const s, const double* const alpha, double T,
                 double * const dfv) const = 0;
   /// Partial derivative of the surface wrt history
-  virtual int df_da(const double* const s, const double* const alpha, double T,
+  virtual void df_da(const double* const s, const double* const alpha, double T,
                 double * const dfv) const = 0;
 
   /// Flow function
-  virtual int g(const double * const s, const double * const alpha, double T,
+  virtual void g(const double * const s, const double * const alpha, double T,
                 double * const gv) const = 0;
   /// Partial derivative of the flow function wrt stress
-  virtual int dg_ds(const double * const s, const double * const alpha, double T,
+  virtual void dg_ds(const double * const s, const double * const alpha, double T,
                 double * const dgv) const = 0;
   /// Partial derivative of the flow function wrt history
-  virtual int dg_da(const double * const s, const double * const alpha, double T,
+  virtual void dg_da(const double * const s, const double * const alpha, double T,
                double * const dgv) const = 0;
 
   /// Hardening rule
-  virtual int h(const double * const s, const double * const alpha, double T,
+  virtual void h(const double * const s, const double * const alpha, double T,
                 double * const hv) const = 0;
   /// Partial derivative of the hardening rule wrt. stress
-  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const = 0;
   /// Partial derivative of the hardening rule wrt. history
-  virtual int dh_da(const double * const s, const double * const alpha, double T,
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const = 0;
 };
 
@@ -69,36 +69,36 @@ class NEML_EXPORT RateIndependentAssociativeFlow: public RateIndependentFlowRule
   /// History size according to the HardeningRule
   virtual size_t nhist() const;
   /// Initialize history with the HardeningRule
-  virtual int init_hist(double * const h) const;
+  virtual void init_hist(double * const h) const;
 
   /// Yield surface
-  virtual int f(const double* const s, const double* const alpha, double T,
+  virtual void f(const double* const s, const double* const alpha, double T,
                 double & fv) const;
   /// Partial derivative of the surface wrt stress
-  virtual int df_ds(const double* const s, const double* const alpha, double T,
+  virtual void df_ds(const double* const s, const double* const alpha, double T,
                 double * const dfv) const;
   /// Partial derivative of the surface wrt history
-  virtual int df_da(const double* const s, const double* const alpha, double T,
+  virtual void df_da(const double* const s, const double* const alpha, double T,
                 double * const dfv) const;
 
   /// Flow function
-  virtual int g(const double * const s, const double * const alpha, double T,
+  virtual void g(const double * const s, const double * const alpha, double T,
                 double * const gv) const;
   /// Partial derivative of the flow function wrt stress
-  virtual int dg_ds(const double * const s, const double * const alpha, double T,
+  virtual void dg_ds(const double * const s, const double * const alpha, double T,
                 double * const dgv) const;
   /// Partial derivative of the flow function wrt history
-  virtual int dg_da(const double * const s, const double * const alpha, double T,
+  virtual void dg_da(const double * const s, const double * const alpha, double T,
                double * const dgv) const;
 
   /// Hardening rule
-  virtual int h(const double * const s, const double * const alpha, double T,
+  virtual void h(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Partial derivative of the hardening rule wrt. stress
-  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Partial derivative of the hardening rule wrt. history
-  virtual int dh_da(const double * const s, const double * const alpha, double T,
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
  private:
@@ -130,36 +130,36 @@ class NEML_EXPORT RateIndependentNonAssociativeHardening: public RateIndependent
   /// History size according to the HardeningRule
   virtual size_t nhist() const;
   /// Initialize history with the HardeningRule
-  virtual int init_hist(double * const h) const;
+  virtual void init_hist(double * const h) const;
 
   /// Yield surface
-  virtual int f(const double* const s, const double* const alpha, double T,
+  virtual void f(const double* const s, const double* const alpha, double T,
                 double & fv) const;
   /// Partial derivative of the surface wrt stress
-  virtual int df_ds(const double* const s, const double* const alpha, double T,
+  virtual void df_ds(const double* const s, const double* const alpha, double T,
                 double * const dfv) const;
   /// Partial derivative of the surface wrt history
-  virtual int df_da(const double* const s, const double* const alpha, double T,
+  virtual void df_da(const double* const s, const double* const alpha, double T,
                 double * const dfv) const;
 
   /// Flow function
-  virtual int g(const double * const s, const double * const alpha, double T,
+  virtual void g(const double * const s, const double * const alpha, double T,
                 double * const gv) const;
   /// Partial derivative of the flow function wrt stress
-  virtual int dg_ds(const double * const s, const double * const alpha, double T,
+  virtual void dg_ds(const double * const s, const double * const alpha, double T,
                 double * const dgv) const;
   /// Partial derivative of the flow function wrt history
-  virtual int dg_da(const double * const s, const double * const alpha, double T,
+  virtual void dg_da(const double * const s, const double * const alpha, double T,
                double * const dgv) const;
 
   /// Hardening rule
-  virtual int h(const double * const s, const double * const alpha, double T,
+  virtual void h(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Partial derivative of the hardening rule wrt. stress
-  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Partial derivative of the hardening rule wrt. history
-  virtual int dh_da(const double * const s, const double * const alpha, double T,
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
 
  private:

@@ -44,17 +44,16 @@ size_t RateIndependentAssociativeFlow::nhist() const
   return hardening_->nhist();
 }
 
-int RateIndependentAssociativeFlow::init_hist(double * const h) const
+void RateIndependentAssociativeFlow::init_hist(double * const h) const
 {
   if (hardening_->nhist() != surface_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
 
   hardening_->init_hist(h);
-  return 0;
 }
 
-int RateIndependentAssociativeFlow::f(const double* const s, 
+void RateIndependentAssociativeFlow::f(const double* const s, 
                                       const double* const alpha, double T,
                                       double & fv) const
 {
@@ -63,10 +62,10 @@ int RateIndependentAssociativeFlow::f(const double* const s,
 
   hardening_->q(alpha, T, q);
 
-  return surface_->f(s, q, T, fv);
+  surface_->f(s, q, T, fv);
 }
 
-int RateIndependentAssociativeFlow::df_ds(const double* const s, 
+void RateIndependentAssociativeFlow::df_ds(const double* const s, 
                                           const double* const alpha, double T,
                                           double * const dfv) const
 {
@@ -75,10 +74,10 @@ int RateIndependentAssociativeFlow::df_ds(const double* const s,
   
   hardening_->q(alpha, T, q);
   
-  return surface_->df_ds(s, q, T, dfv);
+  surface_->df_ds(s, q, T, dfv);
 }
 
-int RateIndependentAssociativeFlow::df_da(const double* const s, 
+void RateIndependentAssociativeFlow::df_da(const double* const s, 
                                           const double* const alpha, double T,
                                           double * const dfv) const
 {
@@ -94,10 +93,10 @@ int RateIndependentAssociativeFlow::df_da(const double* const s,
   double * dq = &dqv[0];
   surface_->df_dq(s, q, T, dq);
 
-  return mat_vec_trans(jac, nhist(), dq, nhist(), dfv);
+  mat_vec_trans(jac, nhist(), dq, nhist(), dfv);
 }
 
-int RateIndependentAssociativeFlow::RateIndependentAssociativeFlow::g(const double * const s, 
+void RateIndependentAssociativeFlow::RateIndependentAssociativeFlow::g(const double * const s, 
                                       const double * const alpha, double T,
                                       double * const gv) const
 {
@@ -105,10 +104,10 @@ int RateIndependentAssociativeFlow::RateIndependentAssociativeFlow::g(const doub
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
-  return surface_->df_ds(s, q, T, gv);
+  surface_->df_ds(s, q, T, gv);
 }
 
-int RateIndependentAssociativeFlow::dg_ds(const double * const s, 
+void RateIndependentAssociativeFlow::dg_ds(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dgv) const
 {
@@ -116,10 +115,10 @@ int RateIndependentAssociativeFlow::dg_ds(const double * const s,
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
-  return surface_->df_dsds(s, q, T, dgv);
+  surface_->df_dsds(s, q, T, dgv);
 }
 
-int RateIndependentAssociativeFlow::dg_da(const double * const s, 
+void RateIndependentAssociativeFlow::dg_da(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dgv) const
 {
@@ -135,10 +134,10 @@ int RateIndependentAssociativeFlow::dg_da(const double * const s,
   double * dd = &ddv[0];
   surface_->df_dsdq(s, q, T, dd);
 
-  return mat_mat(6, nhist(), nhist(), dd, jac, dgv);
+  mat_mat(6, nhist(), nhist(), dd, jac, dgv);
 }
 
-int RateIndependentAssociativeFlow::h(const double * const s,
+void RateIndependentAssociativeFlow::h(const double * const s,
                                       const double * const alpha, double T,
                                       double * const hv) const
 {
@@ -146,10 +145,10 @@ int RateIndependentAssociativeFlow::h(const double * const s,
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
-  return surface_->df_dq(s, q, T, hv);
+  surface_->df_dq(s, q, T, hv);
 }
 
-int RateIndependentAssociativeFlow::dh_ds(const double * const s, 
+void RateIndependentAssociativeFlow::dh_ds(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dhv) const
 {
@@ -157,10 +156,10 @@ int RateIndependentAssociativeFlow::dh_ds(const double * const s,
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
-  return surface_->df_dqds(s, q, T, dhv);
+  surface_->df_dqds(s, q, T, dhv);
 }
 
-int RateIndependentAssociativeFlow::dh_da(const double * const s, 
+void RateIndependentAssociativeFlow::dh_da(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dhv) const
 {
@@ -176,7 +175,7 @@ int RateIndependentAssociativeFlow::dh_da(const double * const s,
   double * dd = &ddv[0];
   surface_->df_dqdq(s, q, T, dd);
 
-  return mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
+  mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
 }
 
 
@@ -215,7 +214,7 @@ size_t RateIndependentNonAssociativeHardening::nhist() const
   return hardening_->nhist();
 }
 
-int RateIndependentNonAssociativeHardening::init_hist(double * const h) const
+void RateIndependentNonAssociativeHardening::init_hist(double * const h) const
 {
   if (hardening_->ninter() != surface_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
@@ -223,10 +222,9 @@ int RateIndependentNonAssociativeHardening::init_hist(double * const h) const
 
   hardening_->init_hist(h);
 
-  return 0;
 }
 
-int RateIndependentNonAssociativeHardening::f(const double* const s, 
+void RateIndependentNonAssociativeHardening::f(const double* const s, 
                                       const double* const alpha, double T,
                                       double & fv) const
 {
@@ -234,10 +232,10 @@ int RateIndependentNonAssociativeHardening::f(const double* const s,
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
-  return surface_->f(s, q, T, fv);
+  surface_->f(s, q, T, fv);
 }
 
-int RateIndependentNonAssociativeHardening::df_ds(const double* const s, 
+void RateIndependentNonAssociativeHardening::df_ds(const double* const s, 
                                           const double* const alpha, double T,
                                           double * const dfv) const
 {
@@ -245,10 +243,10 @@ int RateIndependentNonAssociativeHardening::df_ds(const double* const s,
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
   
-  return surface_->df_ds(s, q, T, dfv);
+  surface_->df_ds(s, q, T, dfv);
 }
 
-int RateIndependentNonAssociativeHardening::df_da(const double* const s, 
+void RateIndependentNonAssociativeHardening::df_da(const double* const s, 
                                           const double* const alpha, double T,
                                           double * const dfv) const
 {
@@ -264,10 +262,10 @@ int RateIndependentNonAssociativeHardening::df_da(const double* const s,
   double * dq = &dqv[0];
   surface_->df_dq(s, q, T, dq);
   
-  return mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dfv);
+  mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dfv);
 }
 
-int RateIndependentNonAssociativeHardening::RateIndependentNonAssociativeHardening::g(const double * const s, 
+void RateIndependentNonAssociativeHardening::RateIndependentNonAssociativeHardening::g(const double * const s, 
                                       const double * const alpha, double T,
                                       double * const gv) const
 {
@@ -275,10 +273,10 @@ int RateIndependentNonAssociativeHardening::RateIndependentNonAssociativeHardeni
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
-  return surface_->df_ds(s, q, T, gv);
+  surface_->df_ds(s, q, T, gv);
 }
 
-int RateIndependentNonAssociativeHardening::dg_ds(const double * const s, 
+void RateIndependentNonAssociativeHardening::dg_ds(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dgv) const
 {
@@ -286,10 +284,10 @@ int RateIndependentNonAssociativeHardening::dg_ds(const double * const s,
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
-  return surface_->df_dsds(s, q, T, dgv);
+  surface_->df_dsds(s, q, T, dgv);
 }
 
-int RateIndependentNonAssociativeHardening::dg_da(const double * const s, 
+void RateIndependentNonAssociativeHardening::dg_da(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dgv) const
 {
@@ -305,31 +303,28 @@ int RateIndependentNonAssociativeHardening::dg_da(const double * const s,
   double * dd = &ddv[0];
   surface_->df_dsdq(s, q, T, dd);
 
-  return mat_mat(6, nhist(), hardening_->ninter(), dd, jac, dgv);
+  mat_mat(6, nhist(), hardening_->ninter(), dd, jac, dgv);
 }
 
-int RateIndependentNonAssociativeHardening::h(const double * const s,
+void RateIndependentNonAssociativeHardening::h(const double * const s,
                                       const double * const alpha, double T,
                                       double * const hv) const
 {
   hardening_->h(s, alpha, T, hv);
-  return 0;
 }
 
-int RateIndependentNonAssociativeHardening::dh_ds(const double * const s, 
+void RateIndependentNonAssociativeHardening::dh_ds(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dhv) const
 {
   hardening_->dh_ds(s, alpha, T, dhv);
-  return 0;
 }
 
-int RateIndependentNonAssociativeHardening::dh_da(const double * const s, 
+void RateIndependentNonAssociativeHardening::dh_da(const double * const s, 
                                           const double * const alpha, double T,
                                           double * const dhv) const
 {
   hardening_->dh_da(s, alpha, T, dhv);
-  return 0;
 }
 
 } // namespace neml

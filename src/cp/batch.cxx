@@ -6,7 +6,7 @@
 
 namespace neml {
 
-int evaluate_crystal_batch(SingleCrystalModel & model, size_t n, 
+void evaluate_crystal_batch(SingleCrystalModel & model, size_t n, 
                            const double * const d_np1, const double * const d_n, 
                            const double * const w_np1, const double * const w_n, 
                            const double * const T_np1, const double * const T_n, 
@@ -19,7 +19,6 @@ int evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
                            int nthreads)
 {
   size_t nh = model.nstore();
-  int * ier = new int [n];
   
   #ifdef USE_OMP
   omp_set_num_threads(nthreads);
@@ -29,37 +28,23 @@ int evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
 #pragma omp parallel for
 #endif
   for (size_t i=0; i<n; i++) {
-    ier[i] = model.update_ld_inc(&d_np1[i*6], &d_n[i*6], &w_np1[i*3], &w_n[i*3],
+    model.update_ld_inc(&d_np1[i*6], &d_n[i*6], &w_np1[i*3], &w_n[i*3],
                                  T_np1[i], T_n[i], t_np1, t_n, &s_np1[i*6],
                                  &s_n[i*6], &h_np1[i*nh], &h_n[i*nh],
                                  &A_np1[i*36], &B_np1[i*18], 
                                  u_np1[i], u_n[i], p_np1[i], p_n[i]);
   }
-  
-  int ret = 0;
-  for (size_t i = 0; i<n; i++) {
-    if (ier[i] != 0) {
-      ret = ier[i];
-      break;
-    }
-  }
-
-  delete [] ier;
-
-  return ret;
 }
 
-int init_history_batch(SingleCrystalModel & model, size_t n, double * const hist)
+void init_history_batch(SingleCrystalModel & model, size_t n, double * const hist)
 {
   size_t nh = model.nstore();
   for (size_t i=0; i<n; i++) {
-    int ier = model.init_store(&hist[i*nh]);
-    if (ier !=0) return ier;
+    model.init_store(&hist[i*nh]);
   }
-  return 0;
 }
 
-int set_orientation_passive_batch(SingleCrystalModel & model, size_t n,
+void set_orientation_passive_batch(SingleCrystalModel & model, size_t n,
                                   double * const hist,
                                   std::vector<Orientation> orientations)
 {
@@ -71,11 +56,9 @@ int set_orientation_passive_batch(SingleCrystalModel & model, size_t n,
   for (size_t i=0; i<n; i++) {
     model.set_passive_orientation(&hist[i*nh], orientations[i]);
   }
-
-  return 0;
 }
 
-int get_orientation_passive_batch(SingleCrystalModel & model, size_t n,
+void get_orientation_passive_batch(SingleCrystalModel & model, size_t n,
                                   double * const hist,
                                   std::vector<Orientation> & orientations)
 {
@@ -85,8 +68,6 @@ int get_orientation_passive_batch(SingleCrystalModel & model, size_t n,
   for (size_t i=0; i<n; i++) {
     orientations[i] = model.get_passive_orientation(&hist[i*nh]);
   }
-
-  return 0;
 }
 
 } // namespace neml

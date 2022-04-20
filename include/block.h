@@ -8,7 +8,7 @@ namespace neml {
 //  Update an entire block of models
 //  Input data must be in row major order (i.e. nblock is the first axes)
 //  Input and output must be as full tensors (not Mandel vectors)
-NEML_EXPORT int block_evaluate(
+NEML_EXPORT void block_evaluate(
     std::shared_ptr<NEMLModel> model,
     size_t nblock,
     const double * const e_np1, const double * const e_n,
