@@ -4,11 +4,6 @@
 
 namespace neml {
 
-std::string string_error(int ier)
-{
-  return "Unknown error";
-}
-
 NEMLError::NEMLError(std::string msg) :
     std::runtime_error(msg.c_str())
 {
