@@ -62,7 +62,7 @@ size_t IsoKinJ2::nhist() const
   return 7;
 }
 
-int IsoKinJ2::f(const double* const s, const double* const q, double T,
+void IsoKinJ2::f(const double* const s, const double* const q, double T,
               double & fv) const
 {
   double sdev[6];
@@ -70,29 +70,26 @@ int IsoKinJ2::f(const double* const s, const double* const q, double T,
   dev_vec(sdev);
   add_vec(sdev, &q[1], 6, sdev);
   fv = norm2_vec(sdev, 6) + sqrt(2.0/3.0) * q[0];
-  return 0;
 }
 
-int IsoKinJ2::df_ds(const double* const s, const double* const q, double T,
+void IsoKinJ2::df_ds(const double* const s, const double* const q, double T,
               double * const df) const
 {
   std::copy(s, s+6, df);
   dev_vec(df);
   add_vec(df, &q[1], 6, df);
   normalize_vec(df, 6);
-  return 0;
 }
 
-int IsoKinJ2::df_dq(const double* const s, const double* const q, double T,
+void IsoKinJ2::df_dq(const double* const s, const double* const q, double T,
               double * const df) const
 {
   df[0] = sqrt(2.0/3.0);
   df_ds(s, q, T, &df[1]);
 
-  return 0;
 }
 
-int IsoKinJ2::df_dsds(const double* const s, const double* const q, double T,
+void IsoKinJ2::df_dsds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   double n[6];
@@ -129,10 +126,9 @@ int IsoKinJ2::df_dsds(const double* const s, const double* const q, double T,
     }
   }
 
-  return 0;
 }
 
-int IsoKinJ2::df_dqdq(const double* const s, const double* const q, double T,
+void IsoKinJ2::df_dqdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+nhist()*nhist(), 0.0);
@@ -164,10 +160,9 @@ int IsoKinJ2::df_dqdq(const double* const s, const double* const q, double T,
     }
   }
 
-  return 0;
 }
 
-int IsoKinJ2::df_dsdq(const double* const s, const double* const q, double T,
+void IsoKinJ2::df_dsdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+6*nhist(), 0.0);
@@ -198,10 +193,9 @@ int IsoKinJ2::df_dsdq(const double* const s, const double* const q, double T,
     }
   }
 
-  return 0;
 }
 
-int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
+void IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+nhist()*6, 0.0);
@@ -215,7 +209,6 @@ int IsoKinJ2::df_dqds(const double* const s, const double* const q, double T,
     }
   }
 
-  return 0;
 }
 
 // J2I1 implementation
@@ -253,7 +246,7 @@ size_t IsoKinJ2I1::nhist() const
   return 7;
 }
 
-int IsoKinJ2I1::f(const double* const s, const double* const q, double T,
+void IsoKinJ2I1::f(const double* const s, const double* const q, double T,
               double & fv) const
 {
   double sdev[6];
@@ -263,10 +256,9 @@ int IsoKinJ2I1::f(const double* const s, const double* const q, double T,
   fv = norm2_vec(sdev, 6) + sqrt(2.0/3.0) * q[0] + 
       copysign(h_->value(T) * pow( fabs(s[0] + s[1] + s[2]), l_->value(T) ),
                s[0] + s[1] + s[2]);
-  return 0;
 }
 
-int IsoKinJ2I1::df_ds(const double* const s, const double* const q, double T,
+void IsoKinJ2I1::df_ds(const double* const s, const double* const q, double T,
               double * const df) const
 {
   std::copy(s, s+6, df);
@@ -285,10 +277,9 @@ int IsoKinJ2I1::df_ds(const double* const s, const double* const q, double T,
   }
   add_vec(df, dsh, 6, df);
 
-  return 0;
 }
 
-int IsoKinJ2I1::df_dq(const double* const s, const double* const q, double T,
+void IsoKinJ2I1::df_dq(const double* const s, const double* const q, double T,
               double * const df) const
 {
   df[0] = sqrt(2.0/3.0);
@@ -297,10 +288,9 @@ int IsoKinJ2I1::df_dq(const double* const s, const double* const q, double T,
   add_vec(&df[1], &q[1], 6, &df[1]);
   normalize_vec(&df[1], 6);
 
-  return 0;
 }
 
-int IsoKinJ2I1::df_dsds(const double* const s, const double* const q, double T,
+void IsoKinJ2I1::df_dsds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   double n[6];
@@ -345,10 +335,9 @@ int IsoKinJ2I1::df_dsds(const double* const s, const double* const q, double T,
   }
   outer_update(iv2, 6, jv, 6, ddf);
 
-  return 0;
 }
 
-int IsoKinJ2I1::df_dqdq(const double* const s, const double* const q, double T,
+void IsoKinJ2I1::df_dqdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+nhist()*nhist(), 0.0);
@@ -377,10 +366,9 @@ int IsoKinJ2I1::df_dqdq(const double* const s, const double* const q, double T,
     }
   }
 
-  return 0;
 }
 
-int IsoKinJ2I1::df_dsdq(const double* const s, const double* const q, double T,
+void IsoKinJ2I1::df_dsdq(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+6*nhist(), 0.0);
@@ -409,10 +397,9 @@ int IsoKinJ2I1::df_dsdq(const double* const s, const double* const q, double T,
     }
   }
 
-  return 0;
 }
 
-int IsoKinJ2I1::df_dqds(const double* const s, const double* const q, double T,
+void IsoKinJ2I1::df_dqds(const double* const s, const double* const q, double T,
               double * const ddf) const
 {
   std::fill(ddf, ddf+nhist()*6, 0.0);
@@ -453,8 +440,6 @@ int IsoKinJ2I1::df_dqds(const double* const s, const double* const q, double T,
       ddf[CINDEX((i+1),j,6)] = ss[CINDEX(i,j,6)];
     }
   }
-
-  return 0;
 }
 
 std::string IsoJ2I1::type()

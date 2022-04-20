@@ -98,9 +98,9 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   /// Number of nonlinear equations to solve in the integration
   virtual size_t nparams() const;
   /// Setup an initial guess for the nonlinear solution
-  virtual int init_x(double * const x, TrialState * ts);
+  virtual void init_x(double * const x, TrialState * ts);
   /// Integration residual and jacobian equations
-  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+  virtual void RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
   /// Get the current orientation in the active convention (raw ptr history)

@@ -19,62 +19,62 @@ class NEML_EXPORT GeneralFlowRule: public NEMLObject {
   /// Number of history variables
   virtual size_t nhist() const = 0;
   /// Initialize the history at time zero
-  virtual int init_hist(double * const h) = 0;
+  virtual void init_hist(double * const h) = 0;
 
   /// Stress rate
-  virtual int s(const double * const s, const double * const alpha,
+  virtual void s(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const sdot) = 0;
   /// Partial of stress rate wrt stress
-  virtual int ds_ds(const double * const s, const double * const alpha,
+  virtual void ds_ds(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot) = 0;
   /// Partial of stress rate wrt history
-  virtual int ds_da(const double * const s, const double * const alpha,
+  virtual void ds_da(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot) = 0;
   /// Partial of stress rate wrt strain rate
-  virtual int ds_de(const double * const s, const double * const alpha,
+  virtual void ds_de(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot) = 0;
 
   /// History rate
-  virtual int a(const double * const s, const double * const alpha,
+  virtual void a(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const adot) = 0;
   /// Partial of history rate wrt stress
-  virtual int da_ds(const double * const s, const double * const alpha,
+  virtual void da_ds(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot) = 0;
   /// Partial of history rate wrt history
-  virtual int da_da(const double * const s, const double * const alpha,
+  virtual void da_da(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot) = 0;
   /// Partial of history rate wrt strain rate
-  virtual int da_de(const double * const s, const double * const alpha,
+  virtual void da_de(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot) = 0;
 
   /// The implementation needs to define inelastic dissipation
-  virtual int work_rate(const double * const s, const double * const alpha,
+  virtual void work_rate(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double & p_rate);
 
   /// The implementation needs to define elastic strain
-  virtual int elastic_strains(const double * const s_np1, double T_np1,
+  virtual void elastic_strains(const double * const s_np1, double T_np1,
                               double * const e_np1) const = 0;
 
   /// Set a new elastic model
-  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+  virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
   /// Optional method for modifying the initial guess
   virtual void override_guess(double * const x);
@@ -97,62 +97,62 @@ class NEML_EXPORT TVPFlowRule : public GeneralFlowRule {
   /// Number of history variables
   virtual size_t nhist() const;
   /// Initialize history
-  virtual int init_hist(double * const h);
+  virtual void init_hist(double * const h);
 
   /// Stress rate
-  virtual int s(const double * const s, const double * const alpha,
+  virtual void s(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const sdot);
   /// Partial of stress rate wrt stress
-  virtual int ds_ds(const double * const s, const double * const alpha,
+  virtual void ds_ds(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot);
   /// Partial of stress rate wrt history
-  virtual int ds_da(const double * const s, const double * const alpha,
+  virtual void ds_da(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot);
   /// Partial of stress rate wrt strain rate
-  virtual int ds_de(const double * const s, const double * const alpha,
+  virtual void ds_de(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot);
 
   /// History rate
-  virtual int a(const double * const s, const double * const alpha,
+  virtual void a(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const adot);
   /// Partial of history rate wrt stress
-  virtual int da_ds(const double * const s, const double * const alpha,
+  virtual void da_ds(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
   /// Partial of history rate wrt history
-  virtual int da_da(const double * const s, const double * const alpha,
+  virtual void da_da(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
   /// Partial of history rate wrt strain rate
-  virtual int da_de(const double * const s, const double * const alpha,
+  virtual void da_de(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
 
   /// The implementation needs to define inelastic dissipation
-  virtual int work_rate(const double * const s, const double * const alpha,
+  virtual void work_rate(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double & p_rate);
 
   /// The implementation needs to define elastic strain
-  virtual int elastic_strains(const double * const s_np1, double T_np1,
+  virtual void elastic_strains(const double * const s_np1, double T_np1,
                               double * const e_np1) const;
 
   /// Set a new elastic model
-  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+  virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
   /// Override the initial guess
   virtual void override_guess(double * const x);

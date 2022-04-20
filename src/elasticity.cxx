@@ -92,20 +92,20 @@ std::unique_ptr<NEMLObject> IsotropicLinearElasticModel::initialize(ParameterSet
   return neml::make_unique<IsotropicLinearElasticModel>(params); 
 }
 
-int IsotropicLinearElasticModel::C(double T, double * const Cv) const
+void IsotropicLinearElasticModel::C(double T, double * const Cv) const
 {
   double G, K;
   get_GK_(T, G, K);
 
-  return C_calc_(G, K, Cv);
+  C_calc_(G, K, Cv);
 }
 
-int IsotropicLinearElasticModel::S(double T, double * const Sv) const
+void IsotropicLinearElasticModel::S(double T, double * const Sv) const
 {
   double G, K;
   get_GK_(T, G, K);
 
-  return S_calc_(G, K, Sv);
+  S_calc_(G, K, Sv);
 }
 
 double IsotropicLinearElasticModel::E(double T) const
@@ -132,7 +132,7 @@ double IsotropicLinearElasticModel::K(double T) const
   return K;
 }
 
-int IsotropicLinearElasticModel::C_calc_(double G, double K, double * const Cv) const
+void IsotropicLinearElasticModel::C_calc_(double G, double K, double * const Cv) const
 {
   double l = K - 2.0/3.0 * G;
 
@@ -153,11 +153,9 @@ int IsotropicLinearElasticModel::C_calc_(double G, double K, double * const Cv) 
   Cv[21] = 2.0 * G;
   Cv[28] = 2.0 * G;
   Cv[35] = 2.0 * G;
-
-  return 0;
 }
 
-int IsotropicLinearElasticModel::S_calc_(double G, double K, double * const Sv) const
+void IsotropicLinearElasticModel::S_calc_(double G, double K, double * const Sv) const
 {
   double l = K - 2.0/3.0 * G;
   
@@ -182,8 +180,6 @@ int IsotropicLinearElasticModel::S_calc_(double G, double K, double * const Sv) 
   Sv[21] = c;
   Sv[28] = c;
   Sv[35] = c;
-
-  return 0;
 }
 
 void IsotropicLinearElasticModel::get_GK_(double T, double & G, double & K) const
@@ -278,7 +274,7 @@ std::unique_ptr<NEMLObject> CubicLinearElasticModel::initialize(ParameterSet & p
   return neml::make_unique<CubicLinearElasticModel>(params); 
 }
 
-int CubicLinearElasticModel::C(double T, double * const Cv) const
+void CubicLinearElasticModel::C(double T, double * const Cv) const
 {
   double C1, C2, C3;
   get_components_(T, C1, C2, C3);
@@ -300,14 +296,12 @@ int CubicLinearElasticModel::C(double T, double * const Cv) const
   Cv[21] = C3;
   Cv[28] = C3;
   Cv[35] = C3;
-
-  return 0;
 }
 
-int CubicLinearElasticModel::S(double T, double * const Sv) const
+void CubicLinearElasticModel::S(double T, double * const Sv) const
 {
   C(T, Sv);
-  return invert_mat(Sv, 6);
+  invert_mat(Sv, 6);
 }
 
 void CubicLinearElasticModel::get_components_(double T, 
@@ -372,7 +366,7 @@ std::unique_ptr<NEMLObject> TransverseIsotropicLinearElasticModel::initialize(Pa
   return neml::make_unique<TransverseIsotropicLinearElasticModel>(params); 
 }
 
-int TransverseIsotropicLinearElasticModel::C(double T, double * const Cv) const
+void TransverseIsotropicLinearElasticModel::C(double T, double * const Cv) const
 {
   double C11, C33, C12, C13, C44;
   get_components_(T, C11, C33, C12, C13, C44);
@@ -393,14 +387,12 @@ int TransverseIsotropicLinearElasticModel::C(double T, double * const Cv) const
   Cv[21] = C44;
   Cv[28] = C44;
   Cv[35] = (C11-C12)/2;
-
-  return 0;
 }
 
-int TransverseIsotropicLinearElasticModel::S(double T, double * const Sv) const
+void TransverseIsotropicLinearElasticModel::S(double T, double * const Sv) const
 {
   C(T, Sv);
-  return invert_mat(Sv, 6);
+  invert_mat(Sv, 6);
 }
 
 void TransverseIsotropicLinearElasticModel::get_components_(double T, 

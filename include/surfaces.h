@@ -31,27 +31,27 @@ class NEML_EXPORT YieldSurface: public NEMLObject {
   virtual size_t nhist() const = 0;
 
   /// Yield function
-  virtual int f(const double* const s, const double* const q, double T,
+  virtual void f(const double* const s, const double* const q, double T,
                 double & fv) const = 0;
 
   /// Gradient wrt stress
-  virtual int df_ds(const double* const s, const double* const q, double T,
+  virtual void df_ds(const double* const s, const double* const q, double T,
                 double * const df) const = 0;
   /// Gradient wrt history
-  virtual int df_dq(const double* const s, const double* const q, double T,
+  virtual void df_dq(const double* const s, const double* const q, double T,
                 double * const df) const = 0;
 
   /// Hessian dsds
-  virtual int df_dsds(const double* const s, const double* const q, double T,
+  virtual void df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
   /// Hessian dqdq
-  virtual int df_dqdq(const double* const s, const double* const q, double T,
+  virtual void df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
   /// Hessian dsdq
-  virtual int df_dsdq(const double* const s, const double* const q, double T,
+  virtual void df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
   /// Hessian dqds
-  virtual int df_dqds(const double* const s, const double* const q, double T,
+  virtual void df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const = 0;
 };
 
@@ -73,88 +73,81 @@ class NEML_EXPORT IsoFunction: public YieldSurface {
   }
 
   /// Just call with zero kinematic hardening
-  virtual int f(const double* const s, const double* const q, double T,
+  virtual void f(const double* const s, const double* const q, double T,
                 double & fv) const
   {
     double * qn = expand_hist_(q);
-    int ier = base_->f(s, qn, T, fv);
+    base_->f(s, qn, T, fv);
     delete [] qn;
-    return ier;
   }
 
   /// Call with zero kinematic hardening
-  virtual int df_ds(const double* const s, const double* const q, double T,
+  virtual void df_ds(const double* const s, const double* const q, double T,
                 double * const df) const
   {
     double * qn = expand_hist_(q);
-    int ier = base_->df_ds(s, qn, T, df);
+    base_->df_ds(s, qn, T, df);
     delete [] qn;
-    return ier;
   }
 
   /// Call with zero kinematic hardening
-  virtual int df_dq(const double* const s, const double* const q, double T,
+  virtual void df_dq(const double* const s, const double* const q, double T,
                 double * const df) const
   {
     double * qn = expand_hist_(q);
     double * dfn = new double[base_->nhist()];
-    int ier = base_->df_dq(s, qn, T, dfn);
+     base_->df_dq(s, qn, T, dfn);
     df[0] = dfn[0];
     delete [] qn;
     delete [] dfn;
-    return ier;
   }
 
   /// Call with zero kinematic hardening
-  virtual int df_dsds(const double* const s, const double* const q, double T,
+  virtual void df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
     double * qn = expand_hist_(q);
-    int ier = base_->df_dsds(s, qn, T, ddf);
+    base_->df_dsds(s, qn, T, ddf);
     delete [] qn;
-    return ier;
   }
 
   /// Call with zero kinematic hardening
-  virtual int df_dqdq(const double* const s, const double* const q, double T,
+  virtual void df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
     double * qn = expand_hist_(q);
     double * ddfn = new double[(base_->nhist())*(base_->nhist())];
-    int ier = base_->df_dqdq(s, qn, T, ddfn);
+    base_->df_dqdq(s, qn, T, ddfn);
     ddf[0] = ddfn[0];
     delete [] qn;
     delete [] ddfn;
-    return ier;
   }
 
   /// Call with zero kinematic hardening
-  virtual int df_dsdq(const double* const s, const double* const q, double T,
+  virtual void df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
     // This one is annoying
     double * qn = expand_hist_(q);
     double * ddfn = new double[6*(base_->nhist())];
-    int ier = base_->df_dsdq(s, qn, T, ddfn);
+     base_->df_dsdq(s, qn, T, ddfn);
     for (int i=0; i<6; i++) {
       ddf[i] = ddfn[CINDEX(i,0,base_->nhist())];
     }
     delete [] qn;
     delete [] ddfn;
-    return ier;
   }
 
   /// Call with zero kinematic hardening
-  virtual int df_dqds(const double* const s, const double* const q, double T,
+  virtual void df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const
   {
     double * qn = expand_hist_(q);
     double * ddfn = new double[(base_->nhist())*6];
-    int ier = base_->df_dqds(s, qn, T, ddfn);
+    base_->df_dqds(s, qn, T, ddfn);
     std::copy(ddfn,ddfn+6,ddf);
     delete [] qn;
     delete [] ddfn;
-    return ier;
   }
 
  private:
@@ -193,27 +186,27 @@ class NEML_EXPORT IsoKinJ2: public YieldSurface {
   virtual size_t nhist() const;
 
   /// J2(stress + backstress) + sqrt(2/3) * isotropic
-  virtual int f(const double* const s, const double* const q, double T,
+  virtual void f(const double* const s, const double* const q, double T,
                 double & fv) const;
 
   /// Gradient wrt stress
-  virtual int df_ds(const double* const s, const double* const q, double T,
+  virtual void df_ds(const double* const s, const double* const q, double T,
                 double * const df) const;
   /// Gradient wrt history
-  virtual int df_dq(const double* const s, const double* const q, double T,
+  virtual void df_dq(const double* const s, const double* const q, double T,
                 double * const df) const;
 
   /// Hessian dsds
-  virtual int df_dsds(const double* const s, const double* const q, double T,
+  virtual void df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
   /// Hessian dqdq
-  virtual int df_dqdq(const double* const s, const double* const q, double T,
+  virtual void df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
   /// Hessian dsdq
-  virtual int df_dsdq(const double* const s, const double* const q, double T,
+  virtual void df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
   /// Hessian dqds
-  virtual int df_dqds(const double* const s, const double* const q, double T,
+  virtual void df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
 
 };
@@ -270,27 +263,27 @@ class NEML_EXPORT IsoKinJ2I1: public YieldSurface {
 
   /// J2(stress + backstress) + isotropic + sign(mean_stress) * h *
   /// |mean_stress|^l
-  virtual int f(const double* const s, const double* const q, double T,
+  virtual void f(const double* const s, const double* const q, double T,
                 double & fv) const;
 
   /// Gradient wrt stress
-  virtual int df_ds(const double* const s, const double* const q, double T,
+  virtual void df_ds(const double* const s, const double* const q, double T,
                 double * const df) const;
   /// Gradient wrt q
-  virtual int df_dq(const double* const s, const double* const q, double T,
+  virtual void df_dq(const double* const s, const double* const q, double T,
                 double * const df) const;
 
   /// Hessian dsds
-  virtual int df_dsds(const double* const s, const double* const q, double T,
+  virtual void df_dsds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
   /// Hessian dqdq
-  virtual int df_dqdq(const double* const s, const double* const q, double T,
+  virtual void df_dqdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
   /// Hessian dsdq
-  virtual int df_dsdq(const double* const s, const double* const q, double T,
+  virtual void df_dsdq(const double* const s, const double* const q, double T,
                 double * const ddf) const;
   /// Hessian dqds
-  virtual int df_dqds(const double* const s, const double* const q, double T,
+  virtual void df_dqds(const double* const s, const double* const q, double T,
                 double * const ddf) const;
 
  private:

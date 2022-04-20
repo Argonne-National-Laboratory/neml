@@ -32,68 +32,68 @@ class NEML_EXPORT WalkerKremplSwitchRule : public GeneralFlowRule {
   /// Number of history variables
   virtual size_t nhist() const;
   /// Initialize history
-  virtual int init_hist(double * const h);
+  virtual void init_hist(double * const h);
 
   /// Stress rate
-  virtual int s(const double * const s, const double * const alpha,
+  virtual void s(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const sdot);
   /// Partial of stress rate wrt stress
-  virtual int ds_ds(const double * const s, const double * const alpha,
+  virtual void ds_ds(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot);
   /// Partial of stress rate wrt history
-  virtual int ds_da(const double * const s, const double * const alpha,
+  virtual void ds_da(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot);
   /// Partial of stress rate wrt strain rate
-  virtual int ds_de(const double * const s, const double * const alpha,
+  virtual void ds_de(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_sdot);
 
   /// History rate
-  virtual int a(const double * const s, const double * const alpha,
+  virtual void a(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const adot);
   /// Partial of history rate wrt stress
-  virtual int da_ds(const double * const s, const double * const alpha,
+  virtual void da_ds(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
   /// Partial of history rate wrt history
-  virtual int da_da(const double * const s, const double * const alpha,
+  virtual void da_da(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
   /// Partial of history rate wrt strain rate
-  virtual int da_de(const double * const s, const double * const alpha,
+  virtual void da_de(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double * const d_adot);
 
   /// The implementation needs to define inelastic dissipation
-  virtual int work_rate(const double * const s, const double * const alpha,
+  virtual void work_rate(const double * const s, const double * const alpha,
                 const double * const edot, double T,
                 double Tdot,
                 double & p_rate);
 
   /// The implementation needs to define elastic strain
-  virtual int elastic_strains(const double * const s_np1, double T_np1,
+  virtual void elastic_strains(const double * const s_np1, double T_np1,
                               double * const e_np1) const;
 
   /// Set a new elastic model
-  virtual int set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
+  virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
   
   /// The kappa function controlling rate sensitivity (public for testing)
-  int kappa(const double * const edot, double T, double & kap);
+  void kappa(const double * const edot, double T, double & kap);
 
   /// Derivative of kappa wrt the strain rate (public for testing)
-  int dkappa(const double * const edot, double T, double * const dkap);
+  void dkappa(const double * const edot, double T, double * const dkap);
 
   /// Override initial guess
   virtual void override_guess(double * const x);
@@ -518,84 +518,84 @@ class NEML_EXPORT WrappedViscoPlasticFlowRule : public ViscoPlasticFlowRule {
   /// Number of history variables (from the hardening model)
   virtual size_t nhist() const;
   /// Initialize history at time zero
-  virtual int init_hist(double * const h) const;
+  virtual void init_hist(double * const h) const;
 
   /// Scalar inelastic strain rate
-  virtual int y(const double* const s, const double* const alpha, double T,
+  virtual void y(const double* const s, const double* const alpha, double T,
                 double & yv) const;
   /// Wrapped scalar inelastic strain rate
   virtual void y(const State & state, double & res) const = 0;
   /// Derivative of y wrt stress
-  virtual int dy_ds(const double* const s, const double* const alpha, double T,
+  virtual void dy_ds(const double* const s, const double* const alpha, double T,
                 double * const dyv) const;
   /// Wrapped derivative of y wrt stress
   virtual void dy_ds(const State & state, Symmetric & res) const = 0;
   /// Derivative of y wrt history
-  virtual int dy_da(const double* const s, const double* const alpha, double T,
+  virtual void dy_da(const double* const s, const double* const alpha, double T,
                 double * const dyv) const;
   /// Wrapped derivative of y wrt history
   virtual void dy_da(const State & state, History & res) const = 0;
 
   /// Flow rule proportional to the scalar strain rate
-  virtual int g(const double * const s, const double * const alpha, double T,
+  virtual void g(const double * const s, const double * const alpha, double T,
                 double * const gv) const;
   /// Wrapped flow rule proportional to the scalar strain rate
   virtual void g(const State & state, Symmetric & res) const = 0;
   /// Derivative of g wrt stress
-  virtual int dg_ds(const double * const s, const double * const alpha, double T,
+  virtual void dg_ds(const double * const s, const double * const alpha, double T,
                 double * const dgv) const;
   /// Wrapped derivative of g wrt stress
   virtual void dg_ds(const State & state, SymSymR4 & res) const = 0;
   /// Derivative of g wrt history
-  virtual int dg_da(const double * const s, const double * const alpha, double T,
+  virtual void dg_da(const double * const s, const double * const alpha, double T,
                double * const dgv) const;
   /// Wrapped derivative of g wrt history
   virtual void dg_da(const State & state, History & res) const = 0;
 
   /// Hardening rule proportional to the scalar strain rate
-  virtual int h(const double * const s, const double * const alpha, double T,
+  virtual void h(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Wrapped hardening rule proportional to the scalar strain rate
   virtual void h(const State & state, History & res) const = 0;
   /// Derivative of h wrt stress
-  virtual int dh_ds(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Wrapped derivative of h wrt stress
   virtual void dh_ds(const State & state, History & res) const = 0;
   /// Derivative of h wrt history
-  virtual int dh_da(const double * const s, const double * const alpha, double T,
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Wrapped derivative of h wrt history
   virtual void dh_da(const State & state, History & res) const = 0;
 
   /// Hardening rule proportional to time
-  virtual int h_time(const double * const s, const double * const alpha, double T,
+  virtual void h_time(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Wrapped hardening rule proportional to time
   virtual void h_time(const State & state, History & res) const;
   /// Derivative of h_time wrt stress
-  virtual int dh_ds_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Wrapped derivative of h_time wrt stress
   virtual void dh_ds_time(const State & state, History & res) const;
   /// Derivative of h_time wrt history
-  virtual int dh_da_time(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_time(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Wrapped derivative of h_time wrt history
   virtual void dh_da_time(const State & state, History & res) const;
 
   /// Hardening rule proportional to temperature rate
-  virtual int h_temp(const double * const s, const double * const alpha, double T,
+  virtual void h_temp(const double * const s, const double * const alpha, double T,
                 double * const hv) const;
   /// Wrapped hardening rule proportional to temperature rate
   virtual void h_temp(const State & state, History & res) const;
   /// Derivative of h_temp wrt stress
-  virtual int dh_ds_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_ds_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Wrapped derivative of h_temp wrt stress
   virtual void dh_ds_temp(const State & state, History & res) const;
   /// Derivative of h_temp wrt history
-  virtual int dh_da_temp(const double * const s, const double * const alpha, double T,
+  virtual void dh_da_temp(const double * const s, const double * const alpha, double T,
                 double * const dhv) const;
   /// Wrapped derivative of h_temp wrt history
   virtual void dh_da_temp(const State & state, History & res) const;

@@ -44,19 +44,19 @@ class NEML_EXPORT Solvable {
   /// Number of parameters in the nonlinear equation
   virtual size_t nparams() const = 0;
   /// Initialize a guess to start the solution iterations
-  virtual int init_x(double * const x, TrialState * ts) = 0;
+  virtual void init_x(double * const x, TrialState * ts) = 0;
   /// Nonlinear residual equations and corresponding jacobian
-  virtual int RJ(const double * const x, TrialState * ts, double * const R,
+  virtual void RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J) = 0;
 };
 
 /// Call the built-in solver
-int NEML_EXPORT solve(Solvable * system, double * x, TrialState * ts,
+void NEML_EXPORT solve(Solvable * system, double * x, TrialState * ts,
                       SolverParameters p, double * R = nullptr,
                       double * J = nullptr);
 
 /// Default solver: plain NR
-int NEML_EXPORT newton(Solvable * system, double * x, TrialState * ts,
+void NEML_EXPORT newton(Solvable * system, double * x, TrialState * ts,
           SolverParameters p, double * R, double * J);
 
 #ifdef SOLVER_NOX
@@ -82,14 +82,14 @@ class NEML_EXPORT NOXSolver: public NOX::LAPACK::Interface {
 };
 
 /// Interface to nox
-int NEML_EXPORT nox(Solvable * system, double * x, TrialState * ts,
+void NEML_EXPORT nox(Solvable * system, double * x, TrialState * ts,
         double tol, int miter, bool verbose, double * R,
         double * J);
 
 #endif
 
 /// Helper to get numerical jacobian
-int NEML_EXPORT diff_jac(Solvable * system, const double * const x, TrialState * ts,
+void NEML_EXPORT diff_jac(Solvable * system, const double * const x, TrialState * ts,
              double * const nJ, double eps = 1.0e-9);
 /// Helper to get checksum
 double NEML_EXPORT diff_jac_check(Solvable * system, const double * const x, TrialState * ts,
@@ -102,8 +102,8 @@ class NEML_EXPORT TestPower: public Solvable {
   virtual ~TestPower() {}; // clang...
 
   size_t nparams() const;
-  int init_x(double * const x, TrialState * ts);
-  int RJ(const double * const x, TrialState * ts, double * const R,
+  void init_x(double * const x, TrialState * ts);
+  void RJ(const double * const x, TrialState * ts, double * const R,
                  double * const J);
 
  private:

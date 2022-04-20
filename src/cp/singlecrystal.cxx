@@ -374,15 +374,14 @@ size_t SingleCrystalModel::nparams() const
   return 6 + nhist() - static_size_;
 }
 
-int SingleCrystalModel::init_x(double * const x, TrialState * ts)
+void SingleCrystalModel::init_x(double * const x, TrialState * ts)
 {
   SCTrialState * ats = static_cast<SCTrialState*>(ts);
   std::copy(ats->S.data(), ats->S.data()+6, x);
   std::copy(ats->history.rawptr(), ats->history.rawptr()+ats->history.size(), &x[6]);
-  return 0;
 }
 
-int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
+void SingleCrystalModel::RJ(const double * const x, TrialState * ts,
                            double * const R, double * const J)
 {
   // Cast trial state
@@ -452,8 +451,6 @@ int SingleCrystalModel::RJ(const double * const x, TrialState * ts,
   for (size_t i = 0; i<nparams(); i++) {
     J[CINDEX(i,i,nparams())] += 1.0;
   }
-
-  return 0;
 }
 
 Orientation SingleCrystalModel::get_active_orientation(

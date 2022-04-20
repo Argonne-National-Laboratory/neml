@@ -9,7 +9,7 @@
 
 namespace neml {
 
-int SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, double * const SS)
+void SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, double * const SS)
 {
 	SS[0] = sqrt(2)*(-M[24]*W[1] + M[30]*W[2]);
 	SS[1] = sqrt(2)*(-M[25]*W[1] + M[31]*W[2]);
@@ -47,11 +47,9 @@ int SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, 
 	SS[33] = -M[21]*W[1] + M[27]*W[0] - sqrt(2)*M[3]*W[2] + sqrt(2)*M[9]*W[2];
 	SS[34] = sqrt(2)*M[10]*W[2] - M[22]*W[1] + M[28]*W[0] - sqrt(2)*M[4]*W[2];
 	SS[35] = sqrt(2)*M[11]*W[2] - M[23]*W[1] + M[29]*W[0] - sqrt(2)*M[5]*W[2];
- 
-  return 0;
 }
 
-int SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, double * const SS)
+void SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, double * const SS)
 {
 	SS[0] = sqrt(2)*(-D[4]*M[6] + D[5]*M[12]);
 	SS[1] = sqrt(2)*(-D[4]*M[7] + D[5]*M[13]);
@@ -89,11 +87,9 @@ int SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, 
 	SS[33] = -sqrt(2)*D[0]*M[15] + sqrt(2)*D[1]*M[15] - D[3]*M[9] + D[4]*M[3];
 	SS[34] = -sqrt(2)*D[0]*M[16] + sqrt(2)*D[1]*M[16] - D[3]*M[10] + D[4]*M[4];
 	SS[35] = -sqrt(2)*D[0]*M[17] + sqrt(2)*D[1]*M[17] - D[3]*M[11] + D[4]*M[5];
-
-  return 0;
 }
 
-int SpecialSymSymR4Sym(const double * const D, const double * const M, double * const SW)
+void SpecialSymSymR4Sym(const double * const D, const double * const M, double * const SW)
 {
 	SW[0] = -sqrt(2)*D[1]*M[3]/2 + sqrt(2)*D[2]*M[3]/2 + sqrt(2)*D[3]*M[1]/2 - sqrt(2)*D[3]*M[2]/2 + D[4]*M[5]/2 - D[5]*M[4]/2;
 	SW[1] = sqrt(2)*D[0]*M[4]/2 - sqrt(2)*D[2]*M[4]/2 - D[3]*M[5]/2 - sqrt(2)*D[4]*M[0]/2 + sqrt(2)*D[4]*M[2]/2 + D[5]*M[3]/2;
@@ -113,11 +109,9 @@ int SpecialSymSymR4Sym(const double * const D, const double * const M, double * 
 	SW[15] = -sqrt(2)*D[1]*M[33]/2 + sqrt(2)*D[2]*M[33]/2 + sqrt(2)*D[3]*M[31]/2 - sqrt(2)*D[3]*M[32]/2 + D[4]*M[35]/2 - D[5]*M[34]/2;
 	SW[16] = sqrt(2)*D[0]*M[34]/2 - sqrt(2)*D[2]*M[34]/2 - D[3]*M[35]/2 - sqrt(2)*D[4]*M[30]/2 + sqrt(2)*D[4]*M[32]/2 + D[5]*M[33]/2;
 	SW[17] = -sqrt(2)*D[0]*M[35]/2 + sqrt(2)*D[1]*M[35]/2 + D[3]*M[34]/2 - D[4]*M[33]/2 + sqrt(2)*D[5]*M[30]/2 - sqrt(2)*D[5]*M[31]/2;
-
-  return 0;
 }
 
-int transform_fourth(const double * const D, const double * const W, double * const M)
+void transform_fourth(const double * const D, const double * const W, double * const M)
 {
 	M[0] = D[0];
 	M[1] = sqrt(2)*D[5]/2 - W[2]/2;
@@ -200,11 +194,9 @@ int transform_fourth(const double * const D, const double * const W, double * co
 	M[78] = sqrt(2)*D[16]/2 - W[7]/2;
 	M[79] = sqrt(2)*D[15]/2 + W[6]/2;
 	M[80] = D[14];
-
-  return 0;
 }
 
-int truesdell_tangent_outer(const double * const S, double * const M)
+void truesdell_tangent_outer(const double * const S, double * const M)
 {
 	M[0] = S[0];
 	M[1] = sqrt(2)*S[5];
@@ -287,11 +279,9 @@ int truesdell_tangent_outer(const double * const S, double * const M)
 	M[78] = sqrt(2)*S[4];
 	M[79] = sqrt(2)*S[3];
 	M[80] = S[2];
-  
-  return 0;
 }
 
-int full2skew(const double * const A, double * const M)
+void full2skew(const double * const A, double * const M)
 {
 	M[0] = -A[5];
 	M[1] = A[2];
@@ -311,11 +301,9 @@ int full2skew(const double * const A, double * const M)
 	M[15] = -sqrt(2)*A[14];
 	M[16] = sqrt(2)*A[11];
 	M[17] = -sqrt(2)*A[10];
-
-  return 0;
 }
 
-int skew2full(const double * const M, double * const A)
+void skew2full(const double * const M, double * const A)
 {
 	A[0] = 0;
 	A[1] = -M[2];
@@ -398,11 +386,9 @@ int skew2full(const double * const M, double * const A)
 	A[78] = -M[7];
 	A[79] = M[6];
 	A[80] = 0;
-
-  return 0;
 }
 
-int full2wws(const double * const A, double * const M)
+void full2wws(const double * const A, double * const M)
 {
 	M[0] = -A[45];
 	M[1] = -A[49];
@@ -422,11 +408,9 @@ int full2wws(const double * const A, double * const M)
 	M[15] = -sqrt(2)*A[14];
 	M[16] = -sqrt(2)*A[11];
 	M[17] = -sqrt(2)*A[10];
-
-  return 0;
 }
 
-int wws2full(const double * const M, double * const A)
+void wws2full(const double * const M, double * const A)
 {
 	A[0] = 0;
 	A[1] = 0;
@@ -509,11 +493,9 @@ int wws2full(const double * const M, double * const A)
 	A[78] = 0;
 	A[79] = 0;
 	A[80] = 0;
-  
-  return 0;
 }
 
-int full2mandel(const double * const A, double * const M)
+void full2mandel(const double * const A, double * const M)
 {
 	M[0] = A[0];
 	M[1] = A[4];
@@ -551,11 +533,9 @@ int full2mandel(const double * const A, double * const M)
 	M[33] = 2*A[14];
 	M[34] = 2*A[11];
 	M[35] = 2*A[10];
-
-  return 0;
 }
 
-int mandel2full(const double * const M, double * const A)
+void mandel2full(const double * const M, double * const A)
 {
 	A[0] = M[0];
 	A[1] = sqrt(2)*M[5]/2;
@@ -638,11 +618,9 @@ int mandel2full(const double * const M, double * const A)
 	A[78] = sqrt(2)*M[16]/2;
 	A[79] = sqrt(2)*M[15]/2;
 	A[80] = M[14];
-  
-  return 0;
 }
 
-int truesdell_update_sym(const double * const D, const double * const W,
+void truesdell_update_sym(const double * const D, const double * const W,
                          const double * const Sn, const double * const So,
                          double * const Snp1)
 {
@@ -655,15 +633,13 @@ int truesdell_update_sym(const double * const D, const double * const W,
 
   truesdell_mat(D, W, mat);
 
-  int ier = solve_mat(mat, 9, rhs_full);
+  solve_mat(mat, 9, rhs_full);
   sym(rhs_full, rhs_mandel);
 
   add_vec(Sn, rhs_mandel, 6, Snp1);
-
-  return ier;
 }
 
-int truesdell_mat(const double * const D, const double * const W,
+void truesdell_mat(const double * const D, const double * const W,
                   double * const M)
 {
 	M[0] = -D[0] + D[1] + D[2] + 1;
@@ -747,11 +723,9 @@ int truesdell_mat(const double * const D, const double * const W,
 	M[78] = -sqrt(2)*D[4]/2 + W[1];
 	M[79] = -sqrt(2)*D[3]/2 - W[0];
 	M[80] = D[0] + D[1] - D[2] + 1;
-
-  return 0;
 }
 
-int truesdell_rhs(const double * const D, const double * const W,
+void truesdell_rhs(const double * const D, const double * const W,
                   const double * const Sn, const double * const So,
                   double * const St)
 {
@@ -761,11 +735,9 @@ int truesdell_rhs(const double * const D, const double * const W,
 	St[3] = sqrt(2)*(-sqrt(2)*D[0]*Sn[3]/2 + sqrt(2)*D[3]*Sn[1]/2 + sqrt(2)*D[3]*Sn[2]/2 + D[4]*Sn[5]/2 + D[5]*Sn[4]/2 + Sn[1]*W[0] - Sn[2]*W[0] + sqrt(2)*Sn[4]*W[2]/2 - sqrt(2)*Sn[5]*W[1]/2 + sqrt(2)*So[3]/2);
 	St[4] = sqrt(2)*(-sqrt(2)*D[1]*Sn[4]/2 + D[3]*Sn[5]/2 + sqrt(2)*D[4]*Sn[0]/2 + sqrt(2)*D[4]*Sn[2]/2 + D[5]*Sn[3]/2 - Sn[0]*W[1] + Sn[2]*W[1] - sqrt(2)*Sn[3]*W[2]/2 + sqrt(2)*Sn[5]*W[0]/2 + sqrt(2)*So[4]/2);
 	St[5] = sqrt(2)*(-sqrt(2)*D[2]*Sn[5]/2 + D[3]*Sn[4]/2 + D[4]*Sn[3]/2 + sqrt(2)*D[5]*Sn[0]/2 + sqrt(2)*D[5]*Sn[1]/2 + Sn[0]*W[2] - Sn[1]*W[2] + sqrt(2)*Sn[3]*W[1]/2 - sqrt(2)*Sn[4]*W[0]/2 + sqrt(2)*So[5]/2);
-
-  return 0;
 }
 
-int sym(const double * const A, double * const v)
+void sym(const double * const A, double * const v)
 {
   v[0] = A[0];
   v[1] = A[4];
@@ -773,11 +745,9 @@ int sym(const double * const A, double * const v)
   v[3] = sqrt(2.0) * A[5];
   v[4] = sqrt(2.0) * A[2];
   v[5] = sqrt(2.0) * A[1];
-
-  return 0;
 }
 
-int usym(const double * const v, double * const A)
+void usym(const double * const v, double * const A)
 {
   A[0] = v[0];
   A[1] = v[5] / sqrt(2.0);
@@ -788,19 +758,16 @@ int usym(const double * const v, double * const A)
   A[6] = v[4] / sqrt(2.0);
   A[7] = v[3] / sqrt(2.0);
   A[8] = v[2];
-
-  return 0;
 }
 
-int skew(const double * const A, double * const v)
+void skew(const double * const A, double * const v)
 {
   v[0] = -A[5];
   v[1] = A[2];
   v[2] = -A[1];
-  return 0;
 }
 
-int uskew(const double * const v, double * const A)
+void uskew(const double * const v, double * const A)
 {
   A[0] = 0;
   A[1] = -v[2];
@@ -811,35 +778,27 @@ int uskew(const double * const v, double * const A)
   A[6] = -v[1];
   A[7] = v[0];
   A[8] = 0;
-
-  return 0;
 }
 
-int minus_vec(double * const a, int n)
+void minus_vec(double * const a, int n)
 {
   for (int i=0; i<n; i++) {
     a[i] = -a[i];
   }
-
-  return 0;
 }
 
-int add_vec(const double * const a, const double * const b, int n, double * const c)
+void add_vec(const double * const a, const double * const b, int n, double * const c)
 {
   for (int i=0; i<n; i++) {
     c[i] = a[i] + b[i];
   }
-
-  return 0;
 }
 
-int sub_vec(const double * const a, const double * const b, int n, double * const c)
+void sub_vec(const double * const a, const double * const b, int n, double * const c)
 {
   for (int i=0; i<n; i++) {
     c[i] = a[i] - b[i];
   }
-  
-  return 0;
 }
 
 double dot_vec(const double * const a, const double * const b, int n)
@@ -856,74 +815,61 @@ double norm2_vec(const double * const a, int n)
   return sqrt(dot_vec(a, a, n));
 }
 
-int normalize_vec(double * const a, int n)
+void normalize_vec(double * const a, int n)
 {
   double nv = norm2_vec(a, n);
   if (fabs(nv) < std::numeric_limits<double>::epsilon()) {
     std::fill(a, a+n, 0.0);
-    return 0;
+    return;
   }
   for (int i=0; i<n; i++) {
     a[i] /= nv;
   }
-  return 0;
 }
 
-int dev_vec(double * const a)
+void dev_vec(double * const a)
 {
   double tr = (a[0] + a[1] + a[2]) / 3.0;
   for (int i=0; i<3; i++) {
     a[i] -= tr;
   }
-
-  return 0;
 }
 
-int outer_vec(const double * const a, int na, const double * const b, int nb, double * const C)
+void outer_vec(const double * const a, int na, const double * const b, int nb, double * const C)
 {
   for (int i=0; i < na; i++) {
     for (int j=0; j < nb; j++) {
       C[CINDEX(i,j,nb)] = a[i] * b[j];
     }
   }
-
-  return 0;
 }
 
 // Problem?
-int outer_update(const double * const a, int na, const double * const b, 
+void outer_update(const double * const a, int na, const double * const b, 
                  int nb, double * const C)
 {
   dger_(nb, na, 1.0, b, 1, a, 1, C, nb);
-
-  return 0;
 }
 
-int outer_update_minus(const double * const a, int na, const double * const b, 
+void outer_update_minus(const double * const a, int na, const double * const b, 
                        int nb, double * const C)
 {
   dger_(nb, na, -1.0, b, 1, a, 1, C, nb);
-
-  return 0;
 }
 
-int mat_vec(const double * const A, int m, const double * const b, int n, 
+void mat_vec(const double * const A, int m, const double * const b, int n, 
             double * const c)
 {
   dgemv_("T", n, m, 1.0, A, n, b, 1, 0.0, c, 1);
-
-  return 0;
 }
 
-int mat_vec_trans(const double * const A, int m, const double * const b, int n, 
+void mat_vec_trans(const double * const A, int m, const double * const b, int n, 
             double * const c)
 {
   dgemv_("N", m, n, 1.0, A, m, b, 1, 0.0, c, 1);
-
-  return 0;
 }
 
-int invert_mat(double * const A, int n)
+void invert_mat(double * const A, int n)
 {
   int * ipiv = new int[n + 1];
   int lwork = n * n;
@@ -943,28 +889,22 @@ int invert_mat(double * const A, int n)
   delete [] work;
 
   if (info > 0) throw LinalgError("Matrix could not be inverted!");
-
-  return 0;
 }
 
-int mat_mat(int m, int n, int k, const double * const A,
+void mat_mat(int m, int n, int k, const double * const A,
             const double * const B, double * const C)
 {
   dgemm_("N", "N", n, m, k, 1.0, B, n, A, k, 0.0, C, n);
-
-  return 0;
 }
 
-int mat_mat_ABT(int m, int n, int k, const double * const A,
+void mat_mat_ABT(int m, int n, int k, const double * const A,
             const double * const B, double * const C)
 {
   // Provide as A_mk B_nk
   dgemm_("T", "N", n, m, k, 1.0, B, k, A, k, 0.0, C, n);
-
-  return 0;
 }
 
-int solve_mat(const double * const A, int n, double * const x)
+void solve_mat(const double * const A, int n, double * const x)
 {
   int info;
   int * ipiv = new int [n];
@@ -981,8 +921,6 @@ int solve_mat(const double * const A, int n, double * const x)
   delete [] B;
 
   if (info > 0) throw LinalgError("Matrix could not be inverted!");
-  
-  return 0;
 }
 
 /*
@@ -1170,7 +1108,7 @@ bool isclose(double a, double b)
   return fabs(a - b) <= (ATOL + RTOL * fabs(b));
 }
 
-int rotate_matrix(int m, int n, const double * const A,
+void rotate_matrix(int m, int n, const double * const A,
                   const double * const B, double * C)
 {
   double * temp = new double[m*n];
@@ -1184,8 +1122,6 @@ int rotate_matrix(int m, int n, const double * const A,
   dgemm_("N", "N", m, m, n, 1.0, temp, m, A, n, 0.0, C, m);
 
   delete [] temp;
-
-  return 0;
 }
 
 int fact(int n)
@@ -1198,7 +1134,7 @@ double factorial(int n)
   return (double) fact(n);
 }
 
-int eigenvalues_sym(const double * const s, double * values)
+void eigenvalues_sym(const double * const s, double * values)
 {
   double F[9];
   usym(s, F);
@@ -1209,10 +1145,10 @@ int eigenvalues_sym(const double * const s, double * values)
 
   dsyev_("N", "U", 3, F, 3, values, work, swork, info);
 
-  return info;
+  if (info != 0) throw LinalgError("Eigenvalue calculation failed");
 }
 
-int eigenvectors_sym(const double * const s, double * vectors)
+void eigenvectors_sym(const double * const s, double * vectors)
 {
   usym(s, vectors);
 
@@ -1223,7 +1159,7 @@ int eigenvectors_sym(const double * const s, double * vectors)
 
   dsyev_("V", "U", 3, vectors, 3, values, work, swork, info);
 
-  return info;
+  if (info != 0) throw LinalgError("Eigenvector calculation failed");
 }
 
 double I1(const double * const s)

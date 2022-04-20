@@ -50,7 +50,7 @@ class NEML_EXPORT TaylorModel: public PolycrystalModel
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   virtual size_t nstore() const;
-  virtual int init_store(double * const store) const;
+  virtual void init_store(double * const store) const;
 
   /// Large strain incremental update
   virtual int update_ld_inc(

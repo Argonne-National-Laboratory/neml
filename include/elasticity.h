@@ -22,9 +22,9 @@ class NEML_EXPORT LinearElasticModel: public NEMLObject {
   LinearElasticModel(ParameterSet & params);
 
   /// The stiffness tensor, in Mandel notation
-  virtual int C(double T, double * const Cv) const = 0;
+  virtual void C(double T, double * const Cv) const = 0;
   /// The compliance tensor, in Mandel notation
-  virtual int S(double T, double * const Sv) const = 0;
+  virtual void S(double T, double * const Sv) const = 0;
 
   /// The stiffness tensor in a tensor object
   SymSymR4 C(double T) const;
@@ -57,9 +57,9 @@ class NEML_EXPORT IsotropicLinearElasticModel: public LinearElasticModel {
   static ParameterSet parameters();
 
   /// Implement the stiffness tensor
-  virtual int C(double T, double * const Cv) const;
+  virtual void C(double T, double * const Cv) const;
   /// Implement the compliance tensor
-  virtual int S(double T, double * const Sv) const;
+  virtual void S(double T, double * const Sv) const;
 
   /// The Young's modulus
   virtual double E(double T) const;
@@ -69,8 +69,8 @@ class NEML_EXPORT IsotropicLinearElasticModel: public LinearElasticModel {
   virtual double K(double T) const;
 
  private:
-  int C_calc_(double G, double K, double * const Cv) const;
-  int S_calc_(double G, double K, double * const Sv) const;
+  void C_calc_(double G, double K, double * const Cv) const;
+  void S_calc_(double G, double K, double * const Sv) const;
 
   void get_GK_(double T, double & G, double & K) const;
 
@@ -95,9 +95,9 @@ class NEML_EXPORT CubicLinearElasticModel: public LinearElasticModel {
   static ParameterSet parameters();
 
   /// Implement the stiffness tensor
-  virtual int C(double T, double * const Cv) const;
+  virtual void C(double T, double * const Cv) const;
   /// Implement the compliance tensor
-  virtual int S(double T, double * const Sv) const;
+  virtual void S(double T, double * const Sv) const;
 
  private:
   void get_components_(double T, double & C1, double & C2, double & C3) const;
@@ -122,9 +122,9 @@ class NEML_EXPORT TransverseIsotropicLinearElasticModel: public LinearElasticMod
   static ParameterSet parameters();
 
   /// Implement the stiffness tensor
-  virtual int C(double T, double * const Cv) const;
+  virtual void C(double T, double * const Cv) const;
   /// Implement the compliance tensor
-  virtual int S(double T, double * const Sv) const;
+  virtual void S(double T, double * const Sv) const;
 
  private:
   void get_components_(double T, double & C11, double & C33, double & C12,

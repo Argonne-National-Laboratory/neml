@@ -34,72 +34,72 @@ const double idsym[81] = {1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.5,0.
 const double idskew[81] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,-0.5,0.0,0.0,0.0,-0.5,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-0.5,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
 /// Specialty crystal plasticity operator: M_kmab*W_ml - W_km*M_mlab
-NEML_EXPORT int SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, double * const SS);
+NEML_EXPORT void SymSymR4SkewmSkewSymR4SymR4(const double * const M, const double * const W, double * const SS);
 
 /// Specialty crystal plasticity operator: D_km * M_mlab - M_kmab D_ml
-NEML_EXPORT int SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, double * const SS);
+NEML_EXPORT void SymSkewR4SymmSkewSymR4SymR4(const double * const D, const double * const M, double * const SS);
 
 /// Specialty operator for the skew part of the tangent: C_ijkb * e_ka - C_ijal * e_bl
-NEML_EXPORT int SpecialSymSymR4Sym(const double * const D, const double * const M, double * const SW);
+NEML_EXPORT void SpecialSymSymR4Sym(const double * const D, const double * const M, double * const SW);
 
-/// Convert the symmetric and skew parts into a complete fourth order
-NEML_EXPORT int transform_fourth(const double * const D, const double * const W, double * const M);
+/// Convert the symmetric and skew parts voido a complete fourth order
+NEML_EXPORT void transform_fourth(const double * const D, const double * const W, double * const M);
 
 /// The outer product used in constructing the truesdell tangent
-NEML_EXPORT int truesdell_tangent_outer(const double * const S, double * const M);
+NEML_EXPORT void truesdell_tangent_outer(const double * const S, double * const M);
 
 /// Convert a 9x9 to a skew derivative matrix
-NEML_EXPORT int full2skew(const double * const A, double * const M);
+NEML_EXPORT void full2skew(const double * const A, double * const M);
 
 /// Convert a skew derivative matrix to a 9x9
-NEML_EXPORT int skew2full(const double * const M, double * const A);
+NEML_EXPORT void skew2full(const double * const M, double * const A);
 
-/// Convert a 9x9 into a ws matrix
-NEML_EXPORT int full2wws(const double * const A, double * const M);
+/// Convert a 9x9 voido a ws matrix
+NEML_EXPORT void full2wws(const double * const A, double * const M);
 
-/// Convert a 3x6 ws matrix into a 9x9
-NEML_EXPORT int wws2full(const double * const M, double * const A);
+/// Convert a 3x6 ws matrix voido a 9x9
+NEML_EXPORT void wws2full(const double * const M, double * const A);
 
 /// Convert a 9x9 to a mandel matrix
-NEML_EXPORT int full2mandel(const double * const A, double * const M);
+NEML_EXPORT void full2mandel(const double * const A, double * const M);
 
 /// Convert a mandel matrix to a full 9x9
-NEML_EXPORT int mandel2full(const double * const M, double * const A);
+NEML_EXPORT void mandel2full(const double * const M, double * const A);
 
 /// Convect a symmetric tensor with a Truesdell rate
-NEML_EXPORT int truesdell_update_sym(const double * const D, const double * const W,
+NEML_EXPORT void truesdell_update_sym(const double * const D, const double * const W,
                          const double * const Sn, const double * const So,
                          double * const Snp1);
 
 /// Form the 9x9 matrix used in the update
-NEML_EXPORT int truesdell_mat(const double * const D, const double * const W,
+NEML_EXPORT void truesdell_mat(const double * const D, const double * const W,
                   double * const M);
 
 /// Form the RHS of the update, as a symmetric vector
-NEML_EXPORT int truesdell_rhs(const double * const D, const double * const W,
+NEML_EXPORT void truesdell_rhs(const double * const D, const double * const W,
                   const double * const Sn, const double * const So,
                   double * const St);
 
 /// Convert a full symmetric rank 2 to a Mandel vector
-NEML_EXPORT int sym(const double * const A, double * const v);
+NEML_EXPORT void sym(const double * const A, double * const v);
 
 /// Convert a symmetric vector to a full matrix
-NEML_EXPORT int usym(const double * const v, double * const A);
+NEML_EXPORT void usym(const double * const v, double * const A);
 
 /// Convert a full skew rank 2 to a skew vector
-NEML_EXPORT int skew(const double * const A, double * const v);
+NEML_EXPORT void skew(const double * const A, double * const v);
 
 /// Convert a skew vector to a full matrix
-NEML_EXPORT int uskew(const double * const v, double * const A);
+NEML_EXPORT void uskew(const double * const v, double * const A);
 
 /// Negate a vector in place
-NEML_EXPORT int minus_vec(double * const a, int n);
+NEML_EXPORT void minus_vec(double * const a, int n);
 
 /// Add vectors
-NEML_EXPORT int add_vec(const double * const a, const double * const b, int n, double * const c);
+NEML_EXPORT void add_vec(const double * const a, const double * const b, int n, double * const c);
 
 /// Subtract vectors
-NEML_EXPORT int sub_vec(const double * const a, const double * const b, int n, double * const c);
+NEML_EXPORT void sub_vec(const double * const a, const double * const b, int n, double * const c);
 
 /// Compute a dot product
 NEML_EXPORT double dot_vec(const double * const a, const double * const b, int n);
@@ -108,37 +108,37 @@ NEML_EXPORT double dot_vec(const double * const a, const double * const b, int n
 NEML_EXPORT double norm2_vec(const double * const a, int n);
 
 /// Normalize a vector in place (2-norm)
-NEML_EXPORT int normalize_vec(double * const a, int n);
+NEML_EXPORT void normalize_vec(double * const a, int n);
 
 /// Return the deviatoric vector
-NEML_EXPORT int dev_vec(double * const a);
+NEML_EXPORT void dev_vec(double * const a);
 
 /// Outer product of two vectors
-NEML_EXPORT int outer_vec(const double * const a, int na, const double * const b, int nb, double * const C);
+NEML_EXPORT void outer_vec(const double * const a, int na, const double * const b, int nb, double * const C);
 
 /// Rank 2 update
-NEML_EXPORT int outer_update(const double * const a, int na, const double * const b, int nb, double * const C);
+NEML_EXPORT void outer_update(const double * const a, int na, const double * const b, int nb, double * const C);
 
 /// Rank 2 update
-NEML_EXPORT int outer_update_minus(const double * const a, int na, const double * const b, int nb, double * const C);
+NEML_EXPORT void outer_update_minus(const double * const a, int na, const double * const b, int nb, double * const C);
 
 /// Matrix-vector c = A . b
-NEML_EXPORT int mat_vec(const double * const A, int m, const double * const b, int n, double * const c);
+NEML_EXPORT void mat_vec(const double * const A, int m, const double * const b, int n, double * const c);
 
 /// Matrix-vector c = A.T . b
-NEML_EXPORT int mat_vec_trans(const double * const A, int m, const double * const b, int n, double * const c);
+NEML_EXPORT void mat_vec_trans(const double * const A, int m, const double * const b, int n, double * const c);
 
 // Matrix-matrix C = A . B
-NEML_EXPORT int mat_mat(int m, int n, int k, const double * const A, const double * const B, double * const C);
+NEML_EXPORT void mat_mat(int m, int n, int k, const double * const A, const double * const B, double * const C);
 
 // Matrix-matrix C = A . B.T
-NEML_EXPORT int mat_mat_ABT(int m, int n, int k, const double * const A, const double * const B, double * const C);
+NEML_EXPORT void mat_mat_ABT(int m, int n, int k, const double * const A, const double * const B, double * const C);
 
 /// Invert a matrix in place
-NEML_EXPORT int invert_mat(double* const A, int n);
+NEML_EXPORT void invert_mat(double* const A, int n);
 
 /// Solve unsymmetric system
-NEML_EXPORT int solve_mat(const double * const A, int n, double * const x);
+NEML_EXPORT void solve_mat(const double * const A, int n, double * const x);
 
 /// Get the condition number of a matrix
 NEML_EXPORT double condition(const double * const A, int n);
@@ -179,7 +179,7 @@ NEML_EXPORT void qmult_vec(const double * const As, const double * const B,
 NEML_EXPORT bool isclose(double a, double b);
 
 /// Perform A * B * A.T
-NEML_EXPORT int rotate_matrix(int m, int n, const double * const A,
+NEML_EXPORT void rotate_matrix(int m, int n, const double * const A,
                   const double * const B, double * C);
 
 /// Factorial
@@ -189,10 +189,10 @@ NEML_EXPORT int fact(int n);
 NEML_EXPORT double factorial(int n);
 
 /// Get the eigenvalues of a symmetric 3x3 matrix in Mandel notation
-NEML_EXPORT int eigenvalues_sym(const double * const s, double * values);
+NEML_EXPORT void eigenvalues_sym(const double * const s, double * values);
 
 /// Get the eigenvectors of a symmetric 3x3 matrix (row major)
-NEML_EXPORT int eigenvectors_sym(const double * const s, double * vectors);
+NEML_EXPORT void eigenvectors_sym(const double * const s, double * vectors);
 
 /// First principal invariant
 NEML_EXPORT double I1(const double * const s);

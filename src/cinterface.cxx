@@ -62,7 +62,7 @@ int nstore_nemlmodel(NEMLMODEL * model)
 void init_store_nemlmodel(NEMLMODEL * model, double * store, int * ier)
 {
   try {
-    *ier = model->init_store(store);
+    model->init_store(store);
   }
   catch (...) {
     *ier = -1;
