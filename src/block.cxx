@@ -165,20 +165,21 @@ void block_evaluate(
 #ifdef USE_OMP
 #pragma omp parallel for
 #endif
-  try {
-    for (size_t i = 0; i < nblock; i++) {
+  for (size_t i = 0; i < nblock; i++) { 
+    try {
       model->update_sd(
           &e_np1_local[i*6], &e_n_local[i*6], T_np1[i], T_n[i], t_np1, t_n,
           &s_np1_local[i*6], &s_n_local[i*6], &h_np1[i*nh], &h_n[i*nh],
           &A_np1_local[i*36], u_np1[i], u_n[i], p_np1[i], p_n[i]);
     }
-  }
-  catch (const NEMLError & e) {
-    delete [] e_np1_local;
-    delete [] e_n_local;
-    delete [] s_np1_local;
-    delete [] s_n_local;
-    delete [] A_np1_local; 
+    catch (const NEMLError & e) {
+      delete [] e_np1_local;
+      delete [] e_n_local;
+      delete [] s_np1_local;
+      delete [] s_n_local;
+      delete [] A_np1_local; 
+      return;
+    }
   }
 
   m2t(s_np1_local, s_np1, nblock);
