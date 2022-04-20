@@ -162,8 +162,9 @@ void block_evaluate(
   
   size_t nh = model->nstore();
 
+  bool failed = false;
 #ifdef USE_OMP
-#pragma omp parallel for
+#pragma omp parallel for reduction(|| : failed)
 #endif
   for (size_t i = 0; i < nblock; i++) { 
     try {
@@ -173,17 +174,14 @@ void block_evaluate(
           &A_np1_local[i*36], u_np1[i], u_n[i], p_np1[i], p_n[i]);
     }
     catch (const NEMLError & e) {
-      delete [] e_np1_local;
-      delete [] e_n_local;
-      delete [] s_np1_local;
-      delete [] s_n_local;
-      delete [] A_np1_local; 
-      return;
+      failed = true;
     }
   }
-
-  m2t(s_np1_local, s_np1, nblock);
-  m42t4(A_np1_local, A_np1, nblock);
+  
+  if (!failed) {
+    m2t(s_np1_local, s_np1, nblock);
+    m42t4(A_np1_local, A_np1, nblock);
+  }
 
   // Free the temps
   delete [] e_np1_local;
