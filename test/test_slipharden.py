@@ -35,9 +35,8 @@ class CommonSlipHardening():
       for i in range(self.L.nslip(g)):
         nd = diff_history_scalar(lambda h: self.model.hist_to_tau(g, i, h, self.L, self.T, self.fixed), self.H)
         d = self.model.d_hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
-
         self.assertTrue(np.allclose(np.array(nd), np.array(d)))
-
+    
 class TestConstantHardening(unittest.TestCase, CommonSlipHardening):
   def setUp(self):
     self.L = crystallography.CubicLattice(1.0)
@@ -379,11 +378,11 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     
     self.nslip = self.L.ntotal
     
-    self.current_rho = 2e-6
+    self.current_rho = 2.0e-2
     self.current_slip = 0.1
     
     self.rhos = np.array([
-      2,3,2,2,3,2,2,1,4,5,1,2.0])*1e-4
+      2,3,2,2,3,2,2,1,4,5,1,2.0])*2.0e-2
 
     self.H = history.History()
 
@@ -400,13 +399,13 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     num_basal, num_prism, num_pyram = 3, 3, 6
     num_ttwin, num_ctwin = 6, 6
     ## basal plane
-    C1_single = np.array([50.0]*num_ttwin+[50.0]*num_ttwin)
+    C1_single = np.array([0.5]*num_ttwin+[0.5]*num_ttwin)
     C1 = np.stack([C1_single for _ in range(num_basal)])
     ## prismatic plane
-    C2_single = np.array([100.0]*num_ttwin+[1000.0]*num_ttwin)
+    C2_single = np.array([1.0]*num_ttwin+[2.0]*num_ttwin)
     C2 = np.stack([C2_single for _ in range(num_prism)])
     ## pyramidal plane
-    C3_single = np.array([250.0]*num_ttwin+[170.0]*num_ttwin)
+    C3_single = np.array([0.25]*num_ttwin+[0.174]*num_ttwin)
     C3 = np.stack([C3_single for _ in range(num_pyram)])
     ## stack up each slip system
     self.G_np = np.vstack((C1, C2, C3)).T
@@ -456,8 +455,8 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
         burger[iq] = self.L.burgers(g,i)
         iq += 1
     
-    check[:12] = self.X_s * burger[:12] * self.mu[:12] * np.sqrt(np.array(self.H)[:12]) + self.tau0[:12]
-    check[12:] = self.G_np.dot(np.array(self.H)[:12] * burger[:12]) * self.mu[12:] * burger[12:] + self.tau0[12:]
+    check[:12] = self.X_s * burger[:12] * self.mu[:12] * np.array(self.H)[:12] + self.tau0[:12]
+    check[12:] = self.G_np.dot(np.array(self.H)[:12]**2.0 * burger[:12]) * self.mu[12:] * burger[12:] + self.tau0[12:]
     
     self.assertTrue(np.allclose(direct, check))
 
@@ -469,7 +468,7 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
       self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))])
     
     act = np.abs(srates)
-    act[:12] *= self.k1 * np.sqrt(self.rhos) - self.k2*self.rhos
+    act[:12] *= 0.5*(self.k1 - self.k2*self.rhos)
     
     self.assertTrue(np.allclose(direct, act))
 
