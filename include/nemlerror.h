@@ -11,6 +11,10 @@ namespace neml {
 class NEML_EXPORT NEMLError: public std::runtime_error {
  public:
   NEMLError(std::string msg);
+  std::string message() const;
+  
+ private:
+  std::string msg_;
 
 };
 
