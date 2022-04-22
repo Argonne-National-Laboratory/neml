@@ -1046,8 +1046,9 @@ double LANLTiModel::hist_to_tau(size_t g, size_t i,
         Lattice::SlipType otype = L.slip_type(g2,i2);
         if (otype == Lattice::SlipType::Slip) {
           double sqddi = history.get<double>(varnames_[k2]);
-          v += (*C_st_)(L.flat(g,i)-nslip_(),k2) * L.burgers(g2,i2)
-              * sqddi * sqddi;
+          if (sqddi > 0)
+            v += (*C_st_)(L.flat(g,i)-nslip_(),k2) * L.burgers(g2,i2)
+                * sqddi * sqddi;
         }
       }
     }
@@ -1076,9 +1077,11 @@ History LANLTiModel::d_hist_to_tau(size_t g, size_t i,
         size_t k2 = L.flat(g2,i2);
         Lattice::SlipType otype = L.slip_type(g2,i2);
         if (otype == Lattice::SlipType::Slip) {
-          res.get<double>(varnames_[k2]) = 2.0*(*C_st_)(L.flat(g,i)-nslip_(),k2)
-              * L.burgers(g2,i2) * mu_[L.flat(g,i)]->value(T) * L.burgers(g,i)
-              * history.get<double>(varnames_[k2]);
+          double sqddi = history.get<double>(varnames_[k2]);
+          if (sqddi > 0)
+            res.get<double>(varnames_[k2]) = 2.0*(*C_st_)(L.flat(g,i)-nslip_(),k2)
+                * L.burgers(g2,i2) * mu_[L.flat(g,i)]->value(T) * L.burgers(g,i)
+                * sqddi;
         }
       }
     }
