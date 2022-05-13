@@ -34,46 +34,13 @@ PYBIND11_MODULE(damage, m) {
       ;
 
   py::class_<NEMLScalarDamagedModel_sd, NEMLDamagedModel_sd, Solvable, std::shared_ptr<NEMLScalarDamagedModel_sd>>(m, "NEMLScalarDamagedModel_sd")
-      .def("damage",
-           [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> double
-           {
-            double damage;
-            m.damage(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
-                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
-                     T_np1, T_n,
-                     t_np1, t_n, &damage);
-            return damage;
-           }, "The damage evolution equation.")
-      .def("ddamage_dd",
-           [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> double
-           {
-            double ddamage;
-            m.ddamage_dd(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
-                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
-                     T_np1, T_n,
-                     t_np1, t_n, &ddamage);
-            return ddamage;
-           }, "The derivative of the damage evolution equation wrt. damage.")
-      .def("ddamage_de",
-           [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> py::array_t<double>
-           {
-            auto ddamage = alloc_vec<double>(6);
-            m.ddamage_de(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
-                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
-                     T_np1, T_n,
-                     t_np1, t_n, arr2ptr<double>(ddamage));
-            return ddamage;
-           }, "The derivative of the damage evolution equation wrt. strain.") 
-      .def("ddamage_ds",
-           [](NEMLScalarDamagedModel_sd & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> py::array_t<double>
-           {
-            auto ddamage = alloc_vec<double>(6);
-            m.ddamage_ds(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
-                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
-                     T_np1, T_n,
-                     t_np1, t_n, arr2ptr<double>(ddamage));
-            return ddamage;
-           }, "The derivative of the damage evolution equation wrt. stress.") 
+      PICKLEABLE(NEMLScalarDamagedModel_sd)
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return create_object_python<NEMLScalarDamagedModel_sd>(args, kwargs,
+                                                              {"elastic", "base",
+                                                              "damage"});
+        }))
       .def("make_trial_state",
            [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::unique_ptr<SDTrialState>
            {
@@ -89,38 +56,80 @@ PYBIND11_MODULE(damage, m) {
            }, "Make a trial state, mostly for testing.")
       ;
 
-  py::class_<CombinedDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<CombinedDamageModel_sd>>(m, "CombinedDamageModel_sd")
-      PICKLEABLE(CombinedDamageModel_sd)
+  py::class_<ScalarDamage, NEMLObject, std::shared_ptr<ScalarDamage>>(m,
+                                                                      "ScalarDamage")
+      .def("damage",
+           [](ScalarDamage & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> double
+           {
+            double damage;
+            m.damage(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
+                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
+                     T_np1, T_n,
+                     t_np1, t_n, &damage);
+            return damage;
+           }, "The damage evolution equation.")
+      .def("ddamage_dd",
+           [](ScalarDamage & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> double
+           {
+            double ddamage;
+            m.ddamage_dd(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
+                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
+                     T_np1, T_n,
+                     t_np1, t_n, &ddamage);
+            return ddamage;
+           }, "The derivative of the damage evolution equation wrt. damage.")
+      .def("ddamage_de",
+           [](ScalarDamage & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> py::array_t<double>
+           {
+            auto ddamage = alloc_vec<double>(6);
+            m.ddamage_de(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
+                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
+                     T_np1, T_n,
+                     t_np1, t_n, arr2ptr<double>(ddamage));
+            return ddamage;
+           }, "The derivative of the damage evolution equation wrt. strain.") 
+      .def("ddamage_ds",
+           [](ScalarDamage & m, double d_np1, double d_n, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> s_n, double T_np1, double T_n, double t_np1, double t_n) -> py::array_t<double>
+           {
+            auto ddamage = alloc_vec<double>(6);
+            m.ddamage_ds(d_np1, d_n, arr2ptr<double>(e_np1), arr2ptr<double>(e_n),
+                     arr2ptr<double>(s_np1), arr2ptr<double>(s_n),
+                     T_np1, T_n,
+                     t_np1, t_n, arr2ptr<double>(ddamage));
+            return ddamage;
+           }, "The derivative of the damage evolution equation wrt. stress.")
+      .def_property_readonly("d_init", &ScalarDamage::d_init)
+      ;
+
+  py::class_<CombinedDamage, ScalarDamage, std::shared_ptr<CombinedDamage>>(m, "CombinedDamage")
+      PICKLEABLE(CombinedDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<CombinedDamageModel_sd>(args, kwargs,
+          return create_object_python<CombinedDamage>(args, kwargs,
                                                               {"elastic",
-                                                              "models",
-                                                              "base"});
+                                                              "models"});
         }))
       ;
 
-  py::class_<ClassicalCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ClassicalCreepDamageModel_sd>>(m, "ClassicalCreepDamageModel_sd")
-      PICKLEABLE(ClassicalCreepDamageModel_sd)
+  py::class_<ClassicalCreepDamage, ScalarDamage, std::shared_ptr<ClassicalCreepDamage>>(m, "ClassicalCreepDamage")
+      PICKLEABLE(ClassicalCreepDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<ClassicalCreepDamageModel_sd>(args, kwargs,
+          return create_object_python<ClassicalCreepDamage>(args, kwargs,
                                                                     {"elastic",
                                                                     "A", "xi",
-                                                                    "phi", 
-                                                                    "base"});
+                                                                    "phi"});
         }))
       ;
 
-  py::class_<NEMLWorkDamagedModel_sd, NEMLScalarDamagedModel_sd,
-      std::shared_ptr<NEMLWorkDamagedModel_sd>>(m, "NEMLWorkDamagedModel_sd")
-      PICKLEABLE(NEMLWorkDamagedModel_sd)
+  py::class_<WorkDamage, ScalarDamage,
+      std::shared_ptr<WorkDamage>>(m, "WorkDamage")
+      PICKLEABLE(WorkDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<NEMLWorkDamagedModel_sd>(args, kwargs,
+          return create_object_python<WorkDamage>(args, kwargs,
                                                                     {"elastic",
-                                                                    "Wcrit", "n",
-                                                                    "base"});
+                                                                    "Wcrit", "n"});
         }))
       ;
 
@@ -183,33 +192,31 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
-  py::class_<ModularCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<ModularCreepDamageModel_sd>>(m, "ModularCreepDamageModel_sd")
-      PICKLEABLE(ModularCreepDamageModel_sd)
+  py::class_<ModularCreepDamage, ScalarDamage, std::shared_ptr<ModularCreepDamage>>(m, "ModularCreepDamage")
+      PICKLEABLE(ModularCreepDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<ModularCreepDamageModel_sd>(args, kwargs,
+          return create_object_python<ModularCreepDamage>(args, kwargs,
                                                                     {"elastic",
                                                                     "A", "xi",
-                                                                    "phi", "estress", 
-                                                                    "base"});
+                                                                    "phi", "estress"});
         }))
       ;
 
-  py::class_<LarsonMillerCreepDamageModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<LarsonMillerCreepDamageModel_sd>>(m, "LarsonMillerCreepDamageModel_sd")
-      PICKLEABLE(LarsonMillerCreepDamageModel_sd)
+  py::class_<LarsonMillerCreepDamage, ScalarDamage, std::shared_ptr<LarsonMillerCreepDamage>>(m, "LarsonMillerCreepDamage")
+      PICKLEABLE(LarsonMillerCreepDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<LarsonMillerCreepDamageModel_sd>(args, kwargs,
+          return create_object_python<LarsonMillerCreepDamage>(args, kwargs,
                                                                     {"elastic",
                                                                     "lmr",
-                                                                    "estress", 
-                                                                    "base"});
+                                                                    "estress"});
         }))
       ;
 
-  py::class_<NEMLStandardScalarDamagedModel_sd, NEMLScalarDamagedModel_sd, std::shared_ptr<NEMLStandardScalarDamagedModel_sd>>(m, "NEMLStandardScalarDamagedModel_sd")
+  py::class_<StandardScalarDamage, ScalarDamage, std::shared_ptr<StandardScalarDamage>>(m, "StandardScalarDamage")
       .def("f",
-           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
+           [](StandardScalarDamage & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
            {
             double fv;
             m.f(arr2ptr<double>(s_np1), d_np1, T_np1, fv);
@@ -217,7 +224,7 @@ PYBIND11_MODULE(damage, m) {
             return fv;
            }, "The damage evolution function.")
       .def("df_ds",
-           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> py::array_t<double>
+           [](StandardScalarDamage & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> py::array_t<double>
            {
             auto dfv = alloc_vec<double>(6);
             m.df_ds(arr2ptr<double>(s_np1), d_np1, T_np1, arr2ptr<double>(dfv));
@@ -225,7 +232,7 @@ PYBIND11_MODULE(damage, m) {
             return dfv;
            }, "The derivative of the damage function wrt. stress.")
       .def("df_dd",
-           [](NEMLStandardScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
+           [](StandardScalarDamage & m, py::array_t<double, py::array::c_style> s_np1, double d_np1, double T_np1) -> double
            {
             double dfv;
             m.df_dd(arr2ptr<double>(s_np1), d_np1, T_np1, dfv);
@@ -235,23 +242,22 @@ PYBIND11_MODULE(damage, m) {
 
       ;
 
-  py::class_<NEMLPowerLawDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLPowerLawDamagedModel_sd>>(m, "NEMLPowerLawDamagedModel_sd")
-      PICKLEABLE(NEMLPowerLawDamagedModel_sd)
+  py::class_<PowerLawDamage, StandardScalarDamage, std::shared_ptr<PowerLawDamage>>(m, "PowerLawDamage")
+      PICKLEABLE(PowerLawDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<NEMLPowerLawDamagedModel_sd>(args, kwargs, 
+          return create_object_python<PowerLawDamage>(args, kwargs, 
                                                                    {"elastic",
-                                                                   "A", "a",
-                                                                   "base"});
+                                                                   "A", "a"});
         }))
       ;
 
-  py::class_<NEMLExponentialWorkDamagedModel_sd, NEMLStandardScalarDamagedModel_sd, std::shared_ptr<NEMLExponentialWorkDamagedModel_sd>>(m, "NEMLExponentialWorkDamagedModel_sd")
-      PICKLEABLE(NEMLExponentialWorkDamagedModel_sd)
+  py::class_<ExponentialWorkDamage, StandardScalarDamage, std::shared_ptr<ExponentialWorkDamage>>(m, "ExponentialWorkDamage")
+      PICKLEABLE(ExponentialWorkDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
-          return create_object_python<NEMLExponentialWorkDamagedModel_sd>(
-              args, kwargs, {"elastic", "W0", "k0", "af", "base"});
+          return create_object_python<ExponentialWorkDamage>(
+              args, kwargs, {"elastic", "W0", "k0", "af"});
         }))
       ;
 }

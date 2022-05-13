@@ -49,10 +49,10 @@ def check_regression(tdir):
   print(tdir)
   reference, run = rtt(tdir)
 
-  print(reference[1])
-  print(run[1])
+  print(reference[-1])
+  print(run[-1])
   
-  assert(np.allclose(reference,run))
+  assert(np.allclose(reference,run, atol = 1e-2))
 
 def check_restart_regression(tdir):
   print(tdir)

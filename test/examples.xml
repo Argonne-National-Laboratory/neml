@@ -22,16 +22,13 @@
     </flow>
   </test_badobject>
 
-  <test_powerdamage type="NEMLPowerLawDamagedModel_sd">
+  <test_powerdamage type="NEMLScalarDamagedModel_sd">
     <elastic type="IsotropicLinearElasticModel">
       <m1>92000.0</m1>
       <m1_type>youngs</m1_type>
       <m2>0.3</m2>
       <m2_type>poissons</m2_type>
     </elastic>
-
-    <A>2.0e-5</A>
-    <a>2.2</a>
 
     <base type="SmallStrainRateIndependentPlasticity">
       <elastic type="IsotropicLinearElasticModel">
@@ -48,6 +45,18 @@
         </hardening>
       </flow>
     </base>
+    
+    <damage type="PowerLawDamage">
+      <elastic type="IsotropicLinearElasticModel">
+        <m1>92000.0</m1>
+        <m1_type>youngs</m1_type>
+        <m2>0.3</m2>
+        <m2_type>poissons</m2_type>
+      </elastic>
+      <A>2.0e-5</A>
+      <a>2.2</a>
+    </damage>
+
   </test_powerdamage>
 
   <test_j2iso type="SmallStrainRateIndependentPlasticity">

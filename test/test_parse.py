@@ -91,8 +91,10 @@ class TestPowerLawDamage(CompareMats, unittest.TestCase):
 
     a = 2.2
     A = 2e-5
-    self.model2 = damage.NEMLPowerLawDamagedModel_sd(elastic, 
-        A, a, bmodel)
+    dmodel = damage.PowerLawDamage(elastic, A, a)
+    
+    self.model2 = damage.NEMLScalarDamagedModel_sd(elastic, 
+        bmodel, dmodel)
 
     self.T = 300.0
     self.tmax = 10.0

@@ -17,7 +17,7 @@ class CommonStandardDamageModel(object):
     return np.sqrt(3.0/2.0 * np.dot(sdev, sdev))
 
   def test_damage(self):
-    d_model = self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
+    d_model = self.dmodel.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     S = self.elastic.S(self.T_np1)
     dS = self.s_np1 - self.s_n
@@ -26,20 +26,20 @@ class CommonStandardDamageModel(object):
     
     dp = np.sqrt(2.0/3.0 * (np.dot(de, de) + np.dot(dee, dee) - 
       2.0 * np.dot(dee, de)))
-    f = self.model.f(self.s_np1, self.d_np1, self.T_np1)
+    f = self.dmodel.f(self.s_np1, self.d_np1, self.T_np1)
     d_calcd = self.d_n + f * dp
 
     self.assertTrue(np.isclose(d_model, d_calcd))
 
   def test_function_derivative_s(self):
-    d_model = self.model.df_ds(self.stress, self.d_np1, self.T)
-    d_calcd = differentiate(lambda x: self.model.f(x, self.d_np1, self.T),
+    d_model = self.dmodel.df_ds(self.stress, self.d_np1, self.T)
+    d_calcd = differentiate(lambda x: self.dmodel.f(x, self.d_np1, self.T),
         self.stress)
     self.assertTrue(np.allclose(d_model, d_calcd))
 
   def test_function_derivative_d(self):
-    d_model = self.model.df_dd(self.stress, self.d, self.T)
-    d_calcd = differentiate(lambda x: self.model.f(self.s_np1, x, self.T),
+    d_model = self.dmodel.df_dd(self.stress, self.d, self.T)
+    d_calcd = differentiate(lambda x: self.dmodel.f(self.s_np1, x, self.T),
         self.d)
     self.assertTrue(np.isclose(d_model, d_calcd))
 
@@ -51,29 +51,27 @@ class CommonScalarDamageModel(object):
     self.assertTrue(np.allclose(self.model.init_damage(), np.zeros((1,))))
 
   def test_ddamage_ddamage(self):
-    dd_model = self.model.ddamage_dd(self.d_np1, self.d_n, self.e_np1, self.e_n,
+    dd_model = self.dmodel.ddamage_dd(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
-    dfn = lambda d: self.model.damage(d, self.d_n, self.e_np1, self.e_n,
+    dfn = lambda d: self.dmodel.damage(d, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.d_np1)
 
-    print(dd_model, dd_calcd)
-    
     self.assertTrue(np.isclose(dd_model, dd_calcd))
 
   def test_ddamage_dstrain(self):
-    dd_model = self.model.ddamage_de(self.d_np1, self.d_n, self.e_np1, self.e_n,
+    dd_model = self.dmodel.ddamage_de(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
-    dfn = lambda e: self.model.damage(self.d_np1, self.d_n, e, self.e_n,
+    dfn = lambda e: self.dmodel.damage(self.d_np1, self.d_n, e, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.e_np1)[0]
 
     self.assertTrue(np.allclose(dd_model, dd_calcd, rtol = 1.0e-3))
 
   def test_ddamage_dstress(self):
-    dd_model = self.model.ddamage_ds(self.d_np1, self.d_n, self.e_np1, self.e_n,
+    dd_model = self.dmodel.ddamage_ds(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
-    dfn = lambda s: self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
+    dfn = lambda s: self.dmodel.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         s, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.s_np1)[0]
 
@@ -110,7 +108,7 @@ class CommonScalarDamageModel(object):
         self.t_np1, self.t_n, self.s_n / (1-self.d_n), self.hist_n[1:],
         self.u_n, self.p_n)
     R_calc[:6] = s_trial - (1-w_trial) * s_p_np1
-    d_np1 = self.model.damage(w_trial, self.d_n, self.e_np1, self.e_n, 
+    d_np1 = self.dmodel.damage(w_trial, self.d_n, self.e_np1, self.e_n, 
         s_trial / (1 - w_trial), self.s_n / (1-self.d_n), self.T_np1,
         self.T_n, self.t_np1, self.t_n)
     R_calc[6] = w_trial - d_np1
@@ -201,8 +199,10 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.fn = interpolate.PolynomialInterpolate([0.1,5.0, 1e-8])
     self.n = 2.1
 
-    self.model = damage.NEMLWorkDamagedModel_sd(
-        self.elastic, self.fn, self.n, self.bmodel, verbose = False)
+    self.dmodel = damage.WorkDamage(self.elastic, self.fn, self.n)
+
+    self.model = damage.NEMLScalarDamagedModel_sd(self.elastic, self.bmodel, 
+            self.dmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0]) * 0.75
     self.T = 100.0
@@ -241,7 +241,7 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.Wdot = np.dot(self.s_np1*(1.0-self.d_np1), self.dp) / self.dt
 
   def test_definition(self):
-    damage = self.model.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
+    damage = self.dmodel.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     should = self.d_n + self.n * self.d_np1**((self.n-1)/self.n) * self.Wdot * self.dt / self.fn.value(self.Wdot) 
 
@@ -274,9 +274,9 @@ class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     self.phi = 1.914
     self.A = 10000000.0
 
-    self.model = damage.ClassicalCreepDamageModel_sd(
-        self.elastic, 
-        self.A, self.xi, self.phi, self.bmodel)
+    self.dmodel = damage.ClassicalCreepDamage(self.elastic, self.A, self.xi, self.phi)
+    self.model = damage.NEMLScalarDamagedModel_sd(
+        self.elastic, self.bmodel, self.dmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -433,11 +433,10 @@ class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
     self.phi = 1.914
     self.A = 10000000.0
 
-    self.model = damage.ModularCreepDamageModel_sd(
-        self.elastic, 
-        self.A, self.xi, self.phi,
-        self.effective_model(),
-        self.bmodel)
+    self.dmodel = damage.ModularCreepDamage(self.elastic, 
+            self.A, self.xi, self.phi, self.effective_model())
+    self.model = damage.NEMLScalarDamagedModel_sd(
+        self.elastic, self.bmodel, self.dmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -526,9 +525,11 @@ class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, CommonDamagedMode
 
     self.lmr = larsonmiller.LarsonMillerRelation(self.fn, self.C)
     self.effective = damage.VonMisesEffectiveStress()
-
-    self.model = damage.LarsonMillerCreepDamageModel_sd(
-        self.elastic, self.lmr, self.effective, self.bmodel)
+    
+    self.dmodel = damage.LarsonMillerCreepDamage(
+            self.elastic, self.lmr, self.effective)
+    self.model = damage.NEMLScalarDamagedModel_sd(
+        self.elastic, self.bmodel, self.dmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -565,7 +566,7 @@ class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, CommonDamagedMode
     se = self.effective.effective(self.stress)
     tR = self.lmr.tR(se, self.T)
     exact = self.d_n + self.dt / tR
-    model = self.model.damage(self.d_np1, self.d_n, 
+    model = self.dmodel.damage(self.d_np1, self.d_n, 
         self.e_np1, self.e_n, self.s_np1, self.s_n,
         self.T_np1, self.T_n, self.t_np1, self.t_n)
     self.assertTrue(np.isclose(exact, model))
@@ -593,11 +594,12 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
 
-    self.A = 8.0e-6
+    self.A = 8.0e-4
     self.a = 2.2
-
-    self.model = damage.NEMLPowerLawDamagedModel_sd(self.elastic, self.A, self.a, 
-        self.bmodel)
+    
+    self.dmodel = damage.PowerLawDamage(self.elastic, self.A, self.a)
+    self.model = damage.NEMLScalarDamagedModel_sd(self.elastic,
+        self.bmodel, self.dmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -631,7 +633,7 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     self.ttarget = 10.0
 
   def test_function(self):
-    f_model = self.model.f(self.stress, self.d_np1, self.T)
+    f_model = self.dmodel.f(self.stress, self.d_np1, self.T)
     f_calcd = self.A * self.effective(self.stress) ** self.a
     self.assertTrue(np.isclose(f_model, f_calcd))
 
@@ -661,10 +663,11 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     self.W0 = 10.0
     self.k0 = 0.0001
     self.a = 2.0
-
-    self.model = damage.NEMLExponentialWorkDamagedModel_sd(
-        self.elastic, self.W0, self.k0, 
-        self.a, self.bmodel)
+    
+    self.dmodel = damage.ExponentialWorkDamage(
+            self.elastic, self.W0, self.k0, self.a)
+    self.model = damage.NEMLScalarDamagedModel_sd(
+        self.elastic, self.bmodel, self.dmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
@@ -698,7 +701,7 @@ class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel,
     self.ttarget = 10.0
 
   def test_function(self):
-    f_model = self.model.f(self.stress, self.d_np1, self.T)
+    f_model = self.dmodel.f(self.stress, self.d_np1, self.T)
     f_calcd = (self.d_np1 + self.k0) ** self.a * self.effective(self.stress) / self.W0
 
     self.assertTrue(np.isclose(f_model, f_calcd))
@@ -731,20 +734,23 @@ class TestCombinedDamage(unittest.TestCase, CommonScalarDamageModel,
     self.k0 = 0.0001
     self.a0 = 2.0
 
-    self.model1 = damage.NEMLExponentialWorkDamagedModel_sd(
+    self.model1 = damage.ExponentialWorkDamage(
         self.elastic, self.W0, self.k0, 
-        self.a0, self.bmodel)
+        self.a0)
 
     self.W02 = 10.0
     self.k02 = 0.001
     self.a02 = 1.5
 
-    self.model2 = damage.NEMLExponentialWorkDamagedModel_sd(
+    self.model2 = damage.ExponentialWorkDamage(
         self.elastic, self.W02, self.k02, 
-        self.a02, self.bmodel)
+        self.a02)
 
-    self.model = damage.CombinedDamageModel_sd(self.elastic, 
-        [self.model1, self.model2], self.bmodel)
+    self.dmodel = damage.CombinedDamage(self.elastic, 
+        [self.model1, self.model2])
+    
+    self.model = damage.NEMLScalarDamagedModel_sd(
+        self.elastic, self.bmodel, self.dmodel)
 
     self.stress = np.array([100,-50.0,300.0,-99,50.0,125.0])
     self.T = 100.0
