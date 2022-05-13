@@ -11,6 +11,9 @@
 
 namespace neml {
 
+// Forward declaration
+class ScalarDamage;
+
 /// Small strain damage model
 class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
  public:
@@ -66,6 +69,13 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   /// flag
   NEMLScalarDamagedModel_sd(ParameterSet & params);
 
+  /// String type for the object system
+  static std::string type();
+  /// Return the default parameters
+  static ParameterSet parameters();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+
   /// Stress update using the scalar damage model
   virtual void update_sd(
       const double * const e_np1, const double * const e_n,
@@ -96,38 +106,6 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
                        double u_n, double p_n,
                        SDTrialState & tss);
 
-  /// Initial value of damage, overridable for models with singularities
-  virtual double d_guess() const {return 0;};
-
-  /// The scalar damage model
-  virtual void damage(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const = 0;
-  /// Derivative with respect to the damage variable
-  virtual void ddamage_dd(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const = 0;
-  /// Derivative with respect to the strain
-  virtual void ddamage_de(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const = 0;
-  /// Derivative with respect to the stress
-  virtual void ddamage_ds(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const = 0;
-
  protected:
   void tangent_(const double * const e_np1, const double * const e_n,
                const double * const s_np1, const double * const s_n,
@@ -142,6 +120,7 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
                     double & p_np1, double p_n);
 
  protected:
+  std::shared_ptr<ScalarDamage> dmodel_;
   double rtol_;
   double atol_;
   int miter_;
@@ -152,12 +131,54 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   double sfact_;
 };
 
+static Register<NEMLScalarDamagedModel_sd> regNEMLScalarDamagedModel_sd;
+
+/// Scalar damage model
+class NEML_EXPORT ScalarDamage: public NEMLObject {
+ public:
+  ScalarDamage(ParameterSet & params);
+
+  /// The combined damage variable
+  virtual void damage(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+  /// Derivative with respect to damage
+  virtual void ddamage_dd(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+  /// Derivative with respect to strain
+  virtual void ddamage_de(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+  /// Derivative with respect to stress
+  virtual void ddamage_ds(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const = 0;
+  /// Initial value of the damage, overridable for models with singularities
+  virtual double d_init() const { return 0;};
+
+ protected:
+  std::shared_ptr<LinearElasticModel> elastic_;
+};
+
 /// Stack multiple scalar damage models together
-class NEML_EXPORT CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT CombinedDamage: public ScalarDamage {
  public:
   /// Parameters: elastic model, vector of damage models, the base model
   /// CTE, solver tolerance, solver max iterations, and a verbosity flag
-  CombinedDamageModel_sd(ParameterSet & params);
+  CombinedDamage(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -195,22 +216,19 @@ class NEML_EXPORT CombinedDamageModel_sd: public NEMLScalarDamagedModel_sd {
                      double t_np1, double t_n,
                      double * const dd) const;
 
-  virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
-
-
  protected:
-  const std::vector<std::shared_ptr<NEMLScalarDamagedModel_sd>> models_;
+  const std::vector<std::shared_ptr<ScalarDamage>> models_;
 };
 
-static Register<CombinedDamageModel_sd> regCombinedDamageModel_sd;
+static Register<CombinedDamage> regCombinedDamage;
 
 /// Classical Hayhurst-Leckie-Rabotnov-Kachanov damage
-class NEML_EXPORT ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT ClassicalCreepDamage: public ScalarDamage {
  public:
   /// Parameters are the elastic model, the parameters A, xi, phi, the
   /// base model, the CTE, the solver tolerance, maximum iterations,
   /// and the verbosity flag.
-  ClassicalCreepDamageModel_sd(ParameterSet & params);
+  ClassicalCreepDamage(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -257,9 +275,9 @@ class NEML_EXPORT ClassicalCreepDamageModel_sd: public NEMLScalarDamagedModel_sd
   std::shared_ptr<Interpolate> phi_;
 };
 
-static Register<ClassicalCreepDamageModel_sd> regClassicalCreepDamageModel_sd;
+static Register<ClassicalCreepDamage> regClassicalCreepDamage;
 
-/// Base class of modular effective stresses used by ModularCreepDamageModel_sd
+/// Base class of modular effective stresses used by ModularCreepDamage
 class NEML_EXPORT EffectiveStress: public NEMLObject {
  public:
   EffectiveStress(ParameterSet & params);
@@ -399,9 +417,9 @@ static Register<SumSeveralEffectiveStress> regSumSeveralEffectiveStress;
 //      1) You can change the effective stress measure
 //      2) There is an extra (1-w)^xi term in the formulation to make the
 //         results match the old analytic solutions
-class NEML_EXPORT ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT ModularCreepDamage: public ScalarDamage {
  public:
-  ModularCreepDamageModel_sd(ParameterSet & params);
+  ModularCreepDamage(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -446,12 +464,12 @@ class NEML_EXPORT ModularCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
   std::shared_ptr<EffectiveStress> estress_;
 };
 
-static Register<ModularCreepDamageModel_sd> regModularCreepDamageModel_sd;
+static Register<ModularCreepDamage> regModularCreepDamage;
 
 /// Time-fraction ASME damage using a generic Larson-Miller relation and effective stress
-class NEML_EXPORT LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT LarsonMillerCreepDamage: public ScalarDamage {
  public:
-  LarsonMillerCreepDamageModel_sd(ParameterSet & params);
+  LarsonMillerCreepDamage(ParameterSet & params);
   
   /// String type for the object system
   static std::string type();
@@ -494,14 +512,14 @@ class NEML_EXPORT LarsonMillerCreepDamageModel_sd: public NEMLScalarDamagedModel
   std::shared_ptr<EffectiveStress> estress_;
 };
 
-static Register<LarsonMillerCreepDamageModel_sd> regLarsonMillerCreepDamageModel_sd;
+static Register<LarsonMillerCreepDamage> regLarsonMillerCreepDamage;
 
 /// A standard damage model where the damage rate goes as the plastic strain
-class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT StandardScalarDamage: public ScalarDamage {
  public:
   /// Parameters: elastic model, base model, CTE, solver tolerance,
   /// solver maximum number of iterations, verbosity flag
-  NEMLStandardScalarDamagedModel_sd(ParameterSet & params);
+  StandardScalarDamage(ParameterSet & params);
 
   /// Damage, now only proportional to the inelastic effective strain
   virtual void damage(double d_np1, double d_n,
@@ -550,11 +568,11 @@ class NEML_EXPORT NEMLStandardScalarDamagedModel_sd: public NEMLScalarDamagedMod
 };
 
 /// The isothermal form of my pet work-based damage model
-class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
+class NEML_EXPORT WorkDamage: public ScalarDamage {
  public:
   /// Parameters: elastic model, base model, CTE, solver tolerance,
   /// solver maximum number of iterations, verbosity flag
-  NEMLWorkDamagedModel_sd(ParameterSet & params);
+  WorkDamage(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -608,15 +626,15 @@ class NEML_EXPORT NEMLWorkDamagedModel_sd: public NEMLScalarDamagedModel_sd {
   double eps_;
 };
 
-static Register<NEMLWorkDamagedModel_sd> regNEMLWorkDamagedModel_sd;
+static Register<WorkDamage> regWorkDamage;
 
 /// Simple power law damage
-class NEML_EXPORT NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
+class NEML_EXPORT PowerLawDamage: public StandardScalarDamage {
  public:
   /// Parameters are an elastic model, the constants A and a, the base
   /// material model, the CTE, a solver tolerance, solver maximum number
   /// of iterations, and a verbosity flag
-  NEMLPowerLawDamagedModel_sd(ParameterSet & params);
+  PowerLawDamage(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -643,15 +661,15 @@ class NEML_EXPORT NEMLPowerLawDamagedModel_sd: public NEMLStandardScalarDamagedM
   std::shared_ptr<Interpolate> a_;
 };
 
-static Register<NEMLPowerLawDamagedModel_sd> regNEMLPowerLawDamagedModel_sd;
+static Register<PowerLawDamage> regPowerLawDamage;
 
 /// Simple exponential damage model
-class NEML_EXPORT NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarDamagedModel_sd {
+class NEML_EXPORT ExponentialWorkDamage: public StandardScalarDamage {
  public:
   /// Parameters are the elastic model, parameters W0, k0, and af, the
   /// base material model, the CTE, a solver tolerance, maximum number
   /// of iterations, and a verbosity flag.
-  NEMLExponentialWorkDamagedModel_sd(ParameterSet & params);
+  ExponentialWorkDamage(ParameterSet & params);
 
   /// String type for the object system
   static std::string type();
@@ -679,7 +697,7 @@ class NEML_EXPORT NEMLExponentialWorkDamagedModel_sd: public NEMLStandardScalarD
   std::shared_ptr<Interpolate> af_;
 };
 
-static Register<NEMLExponentialWorkDamagedModel_sd> regNEMLExponentialWorkDamagedModel_sd;
+static Register<ExponentialWorkDamage> regExponentialWorkDamage;
 
 } //namespace neml
 

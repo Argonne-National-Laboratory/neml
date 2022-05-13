@@ -1,17 +1,5 @@
 <material>
-  <model type="ModularCreepDamageModel_sd">
-    <verbose>false</verbose>
-    <linesearch>true</linesearch>
-    <estress type="VonMisesEffectiveStress"/>
-    <ekill>true</ekill>
-    <dkill>0.8</dkill>
-
-    <atol>1.0e-6</atol>    
-
-    <A>800.75</A>
-    <xi>6.7</xi>
-    <phi>9.267</phi>
-
+  <model type="NEMLScalarDamagedModel_sd">
     <elastic type="IsotropicLinearElasticModel">
       <m1>156000</m1>
       <m1_type>youngs</m1_type>
@@ -55,5 +43,17 @@
         </rule>
       </creep>
     </base>
+    <damage type="ModularCreepDamage">
+      <elastic type="IsotropicLinearElasticModel">
+        <m1>156000</m1>
+        <m1_type>youngs</m1_type>
+        <m2>0.31</m2>
+        <m2_type>poissons</m2_type>
+      </elastic>
+      <A>800.75</A>
+      <xi>6.7</xi>
+      <phi>9.267</phi>
+      <estress type="VonMisesEffectiveStress"/>
+    </damage>
   </model>
 </material>

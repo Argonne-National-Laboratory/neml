@@ -153,22 +153,19 @@ class TestCompoundMaterials(unittest.TestCase):
     W0 = 10.0
     k0 = 0.0001
     a0 = 2.0
-
-    model1 = damage.NEMLExponentialWorkDamagedModel_sd(
-        self.elastic1, W0, k0, 
-        a0, bmodel)
-
+    
     W02 = 10.0
     k02 = 0.001
     a02 = 1.5
+   
+    model = damage.NEMLScalarDamagedModel_sd(
+        self.elastic1, bmodel, 
+        damage.CombinedDamage(self.elastic1, 
+            [
+                damage.ExponentialWorkDamage(self.elastic1, W0, k0, a0),
+                damage.ExponentialWorkDamage(self.elastic1, W02, k02, a02)
+                ]))
 
-    model2 = damage.NEMLExponentialWorkDamagedModel_sd(
-        self.elastic1, W02, k02, 
-        a02, bmodel)
-
-    model = damage.CombinedDamageModel_sd(self.elastic1, 
-        [model1, model2], bmodel)
-    
     self.very_close(model, self.emodel1)
     
     model.set_elastic_model(self.elastic2)
