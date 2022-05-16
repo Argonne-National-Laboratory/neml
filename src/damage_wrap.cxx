@@ -101,6 +101,37 @@ PYBIND11_MODULE(damage, m) {
       .def_property_readonly("d_init", &ScalarDamage::d_init)
       ;
 
+  py::class_<ScalarDamageRate, ScalarDamage, std::shared_ptr<ScalarDamageRate>>(m, "ScalarDamageRate")
+      .def("damage_rate",
+           [](ScalarDamageRate & m, double d, py::array_t<double, py::array::c_style> e, py::array_t<double, py::array::c_style> s, double T, double t) -> double
+           {
+            double drate;
+            m.damage_rate(d, arr2ptr<double>(e), arr2ptr<double>(s), T, t, &drate);
+            return drate;
+           }, "The damage rate")
+      .def("ddamage_rate_dd",
+           [](ScalarDamageRate & m, double d, py::array_t<double, py::array::c_style> e, py::array_t<double, py::array::c_style> s, double T, double t) -> double
+           {
+            double drate;
+            m.ddamage_rate_dd(d, arr2ptr<double>(e), arr2ptr<double>(s), T, t, &drate);
+            return drate;
+           }, "The derivative of the damage rate with respect to the scalar damage") 
+      .def("ddamage_rate_de",
+           [](ScalarDamageRate & m, double d, py::array_t<double, py::array::c_style> e, py::array_t<double, py::array::c_style> s, double T, double t) -> py::array_t<double>
+           {
+            auto ddamage = alloc_vec<double>(6);
+            m.ddamage_rate_de(d, arr2ptr<double>(e), arr2ptr<double>(s), T, t, arr2ptr<double>(ddamage));
+            return ddamage;
+           }, "The derivative of the damage rate with respect to the strain")
+      .def("ddamage_rate_ds",
+           [](ScalarDamageRate & m, double d, py::array_t<double, py::array::c_style> e, py::array_t<double, py::array::c_style> s, double T, double t) -> py::array_t<double>
+           {
+            auto ddamage = alloc_vec<double>(6);
+            m.ddamage_rate_ds(d, arr2ptr<double>(e), arr2ptr<double>(s), T, t, arr2ptr<double>(ddamage));
+            return ddamage;
+           }, "The derivative of the damage rate with respect to the stress") 
+      ;
+
   py::class_<CombinedDamage, ScalarDamage, std::shared_ptr<CombinedDamage>>(m, "CombinedDamage")
       PICKLEABLE(CombinedDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
@@ -111,7 +142,7 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
-  py::class_<ClassicalCreepDamage, ScalarDamage, std::shared_ptr<ClassicalCreepDamage>>(m, "ClassicalCreepDamage")
+  py::class_<ClassicalCreepDamage, ScalarDamageRate, std::shared_ptr<ClassicalCreepDamage>>(m, "ClassicalCreepDamage")
       PICKLEABLE(ClassicalCreepDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
