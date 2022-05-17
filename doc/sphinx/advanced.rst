@@ -12,7 +12,6 @@ individual components in NEML and generate XML input and the python bindings.
    :maxdepth: 1
    
    integration
-   advanced/errors
    advanced/math
    advanced/history
    advanced/solvers

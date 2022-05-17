@@ -39,11 +39,10 @@ Implementations
 The generic interface described here could have any number of damage 
 variables and could modify the stress with those variables in any way.
 The more standard damage model, depending on a single scalar damage 
-variable is implemented as a NEMLScalarDamagedModel_sd.
+variable is implemented as a :cpp:class:`neml::NEMLScalarDamagedModel_sd`.
 
 .. toctree::
    damage/scalar
-   damage/combined
 
 Class description
 -----------------
