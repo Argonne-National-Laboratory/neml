@@ -435,7 +435,7 @@ class TestSumSeveralEffectiveStress(unittest.TestCase, CommonEffectiveStress):
 
     self.assertTrue(np.isclose(base, self.es.effective(self.stress)))
 
-class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
+class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel, CommonScalarDamageRate):
   def complete(self):
     self.E = 92000.0
     self.nu = 0.3
@@ -526,7 +526,8 @@ class TestHuddlestonPrincipal(unittest.TestCase, BaseModularDamage):
   def effective_model(self):
     return damage.HuddlestonEffectiveStress(0.24)
 
-class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, CommonDamagedModel):
+class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, 
+        CommonDamagedModel, CommonScalarDamageRate):
   def setUp(self):
     self.E = 92000.0
     self.nu = 0.3
