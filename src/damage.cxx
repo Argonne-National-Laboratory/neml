@@ -313,6 +313,68 @@ ScalarDamage::ScalarDamage(ParameterSet & params) :
 
 }
 
+ScalarDamageRate::ScalarDamageRate(ParameterSet & params) :
+    ScalarDamage(params)
+{
+
+}
+
+void ScalarDamageRate::damage(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  damage_rate(d_np1, e_np1, s_np1, T_np1, t_np1, dd);
+
+  *dd = (*dd) * (t_np1 - t_n) + d_n;
+}
+
+void ScalarDamageRate::ddamage_dd(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  ddamage_rate_dd(d_np1, e_np1, s_np1, T_np1, t_np1, dd);
+
+  *dd = (*dd) * (t_np1 - t_n);
+}
+
+void ScalarDamageRate::ddamage_de(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  ddamage_rate_de(d_np1, e_np1, s_np1, T_np1, t_np1, dd);
+  
+  double dt = t_np1 - t_n;
+  for (size_t i = 0; i < 6; i++)
+    dd[i] *= dt;
+}
+
+void ScalarDamageRate::ddamage_ds(
+    double d_np1, double d_n, 
+    const double * const e_np1, const double * const e_n,
+    const double * const s_np1, const double * const s_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const dd) const
+{
+  ddamage_rate_ds(d_np1, e_np1, s_np1, T_np1, t_np1, dd);
+
+  double dt = t_np1 - t_n;
+  for (size_t i = 0; i < 6; i++)
+    dd[i] *= dt;
+}
+
 CombinedDamage::CombinedDamage(ParameterSet & params) :
       ScalarDamage(params),
       models_(params.get_object_parameter_vector<ScalarDamage>("models"))
@@ -408,7 +470,7 @@ void CombinedDamage::ddamage_ds(
 }
 
 ClassicalCreepDamage::ClassicalCreepDamage(ParameterSet & params) :
-      ScalarDamage(params),
+      ScalarDamageRate(params),
       A_(params.get_object_parameter<Interpolate>("A")),
       xi_(params.get_object_parameter<Interpolate>("xi")),
       phi_(params.get_object_parameter<Interpolate>("phi"))
@@ -439,79 +501,64 @@ std::unique_ptr<NEMLObject> ClassicalCreepDamage::initialize(ParameterSet & para
   return neml::make_unique<ClassicalCreepDamage>(params); 
 }
 
-void ClassicalCreepDamage::damage(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ClassicalCreepDamage::damage_rate(
+    double d, const double * const e,
+    const double * const s, double T, double t, 
     double * const dd) const
 {
-  double xi = xi_->value(T_np1);
-  double A = A_->value(T_np1);
-  double phi = phi_->value(T_np1);
+  double xi = xi_->value(T);
+  double A = A_->value(T);
+  double phi = phi_->value(T);
 
-  double se = this->se(s_np1);
-  double dt = t_np1 - t_n;
+  double se = this->se(s);
 
-  *dd = d_n + pow(se / A, xi) * pow(1.0 - d_np1, -phi) * dt;
+  *dd = pow(se / A, xi) * pow(1.0 - d, -phi);
 }
 
-void ClassicalCreepDamage::ddamage_dd(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ClassicalCreepDamage::ddamage_rate_dd(
+    double d, const double * const e,
+    const double * const s, double T, double t, 
     double * const dd) const
 {
-  double xi = xi_->value(T_np1);
-  double A = A_->value(T_np1);
-  double phi = phi_->value(T_np1);
+  double xi = xi_->value(T);
+  double A = A_->value(T);
+  double phi = phi_->value(T);
 
-  double se = this->se(s_np1);
-  double dt = t_np1 - t_n;
+  double se = this->se(s);
 
-  *dd = pow(se / A, xi) * phi * pow(1.0 - d_np1, -(phi + 1.0)) * dt;
+  *dd = pow(se / A, xi) * phi * pow(1.0 - d, -(phi + 1.0));
 }
 
-void ClassicalCreepDamage::ddamage_de(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ClassicalCreepDamage::ddamage_rate_de(
+    double d, const double * const e,
+    const double * const s, double T, double t, 
     double * const dd) const
 {
   std::fill(dd, dd+6, 0.0);
 }
 
-void ClassicalCreepDamage::ddamage_ds(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ClassicalCreepDamage::ddamage_rate_ds(
+    double d, const double * const e,
+    const double * const s, double T, double t, 
     double * const dd) const
 {
-  double xi = xi_->value(T_np1);
-  double A = A_->value(T_np1);
-  double phi = phi_->value(T_np1);
+  double xi = xi_->value(T);
+  double A = A_->value(T);
+  double phi = phi_->value(T);
 
-  double se = this->se(s_np1);
-  double dt = t_np1 - t_n;
+  double se = this->se(s);
 
   if (se == 0.0) {
     std::fill(dd, dd+6, 0.0);
     return;
   }
 
-  std::copy(s_np1, s_np1+6, dd);
-  double s_m = (s_np1[0] + s_np1[1] + s_np1[2]) / 3.0;
+  std::copy(s, s+6, dd);
+  double s_m = (s[0] + s[1] + s[2]) / 3.0;
   for (int i=0; i<3; i++) dd[i] -= s_m;
 
   double sf = 3.0 * xi / (2.0 * A * se) * pow(se/A, xi - 1.0) * 
-      pow(1 - d_np1, -phi) * dt;
+      pow(1 - d, -phi);
   for (int i=0; i<6; i++) dd[i] *= sf;
 }
 
@@ -873,7 +920,7 @@ void SumSeveralEffectiveStress::deffective(const double * const s, double * cons
 }
 
 ModularCreepDamage::ModularCreepDamage(ParameterSet & params) :
-      ScalarDamage(params),
+      ScalarDamageRate(params),
       A_(params.get_object_parameter<Interpolate>("A")), 
       xi_(params.get_object_parameter<Interpolate>("xi")),
       phi_(params.get_object_parameter<Interpolate>("phi")), 
@@ -905,84 +952,73 @@ std::unique_ptr<NEMLObject> ModularCreepDamage::initialize(ParameterSet & params
   return neml::make_unique<ModularCreepDamage>(params); 
 }
 
-void ModularCreepDamage::damage(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ModularCreepDamage::damage_rate(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
     double * const dd) const
 {
-  double xi = xi_->value(T_np1);
-  double A = A_->value(T_np1);
-  double phi = phi_->value(T_np1);
+  double xi = xi_->value(T);
+  double A = A_->value(T);
+  double phi = phi_->value(T);
 
   double se;
-  estress_->effective(s_np1, se);
-  double dt = t_np1 - t_n;
+  estress_->effective(s, se);
   
-  *dd = d_n + pow(se / A, xi) * pow(1.0 - d_np1, xi-phi) * dt;
+  *dd = pow(se / A, xi) * pow(1.0 - d, xi-phi);
 }
 
-void ModularCreepDamage::ddamage_dd(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ModularCreepDamage::ddamage_rate_dd(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
     double * const dd) const
 {
-  double xi = xi_->value(T_np1);
-  double A = A_->value(T_np1);
-  double phi = phi_->value(T_np1);
+  double xi = xi_->value(T);
+  double A = A_->value(T);
+  double phi = phi_->value(T);
 
   double se;
-  estress_->effective(s_np1, se);
-  double dt = t_np1 - t_n;
+  estress_->effective(s, se);
 
-  *dd = pow(se / A, xi) * (phi-xi) * pow(1.0 - d_np1, xi-phi - 1.0) * dt;
+  *dd = pow(se / A, xi) * (phi-xi) * pow(1.0 - d, xi-phi - 1.0);
 }
 
-void ModularCreepDamage::ddamage_de(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ModularCreepDamage::ddamage_rate_de(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
     double * const dd) const
 {
   std::fill(dd, dd+6, 0.0);
 }
 
-void ModularCreepDamage::ddamage_ds(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void ModularCreepDamage::ddamage_rate_ds(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
     double * const dd) const
 {
-  double xi = xi_->value(T_np1);
-  double A = A_->value(T_np1);
-  double phi = phi_->value(T_np1);
+  double xi = xi_->value(T);
+  double A = A_->value(T);
+  double phi = phi_->value(T);
 
   double se;
-  estress_->effective(s_np1, se);
-  double dt = t_np1 - t_n;
+  estress_->effective(s, se);
 
   if (se == 0.0) {
     std::fill(dd, dd+6, 0.0);
     return;
   }
 
-  double scalar = pow(se / A, xi - 1.0) * xi / A * pow(1.0 - d_np1, xi-phi) * dt;
+  double scalar = pow(se / A, xi - 1.0) * xi / A * pow(1.0 - d, xi-phi);
   
-  estress_->deffective(s_np1, dd);
+  estress_->deffective(s, dd);
   for (int i=0; i<6; i++) dd[i] *= scalar;
 }
 
 LarsonMillerCreepDamage::LarsonMillerCreepDamage(ParameterSet & params) :
-      ScalarDamage(params),
+      ScalarDamageRate(params),
       lmr_(params.get_object_parameter<LarsonMillerRelation>("lmr")), 
       estress_(params.get_object_parameter<EffectiveStress>("estress"))
 {
@@ -1009,40 +1045,14 @@ std::unique_ptr<NEMLObject> LarsonMillerCreepDamage::initialize(ParameterSet & p
   return neml::make_unique<LarsonMillerCreepDamage>(params); 
 }
 
-void LarsonMillerCreepDamage::damage(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void LarsonMillerCreepDamage::damage_rate(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
     double * const dd) const
 {
   double se;
-  estress_->effective(s_np1, se);
-  double dt = t_np1 - t_n;
-
-  // The usual problem
-  if (se == 0.0) {
-    *dd = d_n;
-    return;
-  }
-
-  double tR;
-  lmr_->tR(se * (1-d_np1), T_np1, tR);
-  
-  *dd = d_n + dt / tR;
-}
-
-void LarsonMillerCreepDamage::ddamage_dd(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const dd) const
-{
-  double se;
-  estress_->effective(s_np1, se);
+  estress_->effective(s, se);
 
   // The usual problem
   if (se == 0.0) {
@@ -1050,39 +1060,53 @@ void LarsonMillerCreepDamage::ddamage_dd(
     return;
   }
 
-  double dt = t_np1 - t_n;
-
   double tR;
-  lmr_->tR(se * (1-d_np1), T_np1, tR);
-
-  double dtR;
-  lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
-
-  *dd = (dt * dtR * se) / (tR * tR);
+  lmr_->tR(se * (1-d), T, tR);
+  
+  *dd = 1.0 / tR;
 }
 
-void LarsonMillerCreepDamage::ddamage_de(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void LarsonMillerCreepDamage::ddamage_rate_dd(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
+    double * const dd) const
+{
+  double se;
+  estress_->effective(s, se);
+
+  // The usual problem
+  if (se == 0.0) {
+    *dd = 0.0;
+    return;
+  }
+
+  double tR;
+  lmr_->tR(se * (1-d), T, tR);
+
+  double dtR;
+  lmr_->dtR_ds(se * (1-d), T, dtR);
+
+  *dd = (dtR * se) / (tR * tR);
+}
+
+void LarsonMillerCreepDamage::ddamage_rate_de(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
     double * const dd) const
 {
   std::fill(dd, dd+6, 0.0);
 }
 
-void LarsonMillerCreepDamage::ddamage_ds(
-    double d_np1, double d_n, 
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
+void LarsonMillerCreepDamage::ddamage_rate_ds(
+    double d, const double * const e,
+    const double * const s,
+    double T, double t,
     double * const dd) const
 {
   double se;
-  estress_->effective(s_np1, se);
-  double dt = t_np1 - t_n;
+  estress_->effective(s, se);
 
   // The usual problem
   if (se == 0.0) {
@@ -1091,14 +1115,14 @@ void LarsonMillerCreepDamage::ddamage_ds(
   }
 
   double tR;
-  lmr_->tR(se * (1-d_np1), T_np1, tR);
+  lmr_->tR(se * (1-d), T, tR);
 
   double dtR;
-  lmr_->dtR_ds(se * (1-d_np1), T_np1, dtR);
+  lmr_->dtR_ds(se * (1-d), T, dtR);
 
-  double dse = -dtR * dt * (1-d_np1) / (tR * tR);
+  double dse = -dtR * (1-d) / (tR * tR);
 
-  estress_->deffective(s_np1, dd);
+  estress_->deffective(s, dd);
   for (int i=0; i<6; i++) dd[i] *= dse;
 }
 

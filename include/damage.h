@@ -172,11 +172,66 @@ class NEML_EXPORT ScalarDamage: public NEMLObject {
                      double T_np1, double T_n,
                      double t_np1, double t_n,
                      double * const dd) const = 0;
-  /// Initial value of the damage, overridable for models with singularities
+  /// Initial value of the damage, overrideable for models with singularities
   virtual double d_init() const { return 0;};
 
  protected:
   std::shared_ptr<LinearElasticModel> elastic_;
+};
+
+/// Damage model where you provide the damage rate
+class NEML_EXPORT ScalarDamageRate: public ScalarDamage {
+ public:
+  ScalarDamageRate(ParameterSet & params);
+
+  /// The combined damage variable
+  virtual void damage(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative with respect to damage
+  virtual void ddamage_dd(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative with respect to strain
+  virtual void ddamage_de(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+  /// Derivative with respect to stress
+  virtual void ddamage_ds(double d_np1, double d_n,
+                     const double * const e_np1, const double * const e_n,
+                     const double * const s_np1, const double * const s_n,
+                     double T_np1, double T_n,
+                     double t_np1, double t_n,
+                     double * const dd) const;
+
+  /// The damage rate
+  virtual void damage_rate(double d, const double * const e, 
+                           const double * const s, double T, double t,
+                           double * const dd) const = 0;
+
+  /// Derivative of damage rate wrt damage
+  virtual void ddamage_rate_dd(double d, const double * const e, 
+                               const double * const s, double T, double t,
+                               double * const dd) const = 0; 
+  
+  /// Derivative of damage rate wrt strain
+  virtual void ddamage_rate_de(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const = 0;
+
+  /// Derivative of damage rate wrt stress
+  virtual void ddamage_rate_ds(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const = 0;
 };
 
 /// Stack multiple scalar damage models together
@@ -229,7 +284,7 @@ class NEML_EXPORT CombinedDamage: public ScalarDamage {
 static Register<CombinedDamage> regCombinedDamage;
 
 /// Classical Hayhurst-Leckie-Rabotnov-Kachanov damage
-class NEML_EXPORT ClassicalCreepDamage: public ScalarDamage {
+class NEML_EXPORT ClassicalCreepDamage: public ScalarDamageRate {
  public:
   /// Parameters are the elastic model, the parameters A, xi, phi, the
   /// base model, the CTE, the solver tolerance, maximum iterations,
@@ -243,34 +298,25 @@ class NEML_EXPORT ClassicalCreepDamage: public ScalarDamage {
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  /// The damage function d_np1 = d_n + (se / A)**xi (1 - d_np1)**(-phi) * dt
-  virtual void damage(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt damage
-  virtual void ddamage_dd(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt strain
-  virtual void ddamage_de(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt stress
-  virtual void ddamage_ds(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
+  /// The damage rate
+  virtual void damage_rate(double d, const double * const e, 
+                           const double * const s, double T, double t,
+                           double * const dd) const;
+
+  /// Derivative of damage rate wrt damage
+  virtual void ddamage_rate_dd(double d, const double * const e, 
+                               const double * const s, double T, double t,
+                               double * const dd) const; 
+  
+  /// Derivative of damage rate wrt strain
+  virtual void ddamage_rate_de(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const;
+
+  /// Derivative of damage rate wrt stress
+  virtual void ddamage_rate_ds(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const;
 
  protected:
   double se(const double * const s) const;
@@ -423,7 +469,7 @@ static Register<SumSeveralEffectiveStress> regSumSeveralEffectiveStress;
 //      1) You can change the effective stress measure
 //      2) There is an extra (1-w)^xi term in the formulation to make the
 //         results match the old analytic solutions
-class NEML_EXPORT ModularCreepDamage: public ScalarDamage {
+class NEML_EXPORT ModularCreepDamage: public ScalarDamageRate {
  public:
   ModularCreepDamage(ParameterSet & params);
 
@@ -434,34 +480,25 @@ class NEML_EXPORT ModularCreepDamage: public ScalarDamage {
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  /// The damage function d_np1 = d_n + (se / A)**xi * (1-d_np1)**xi * (1 - d_np1)**(-phi) * dt
-  virtual void damage(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt damage
-  virtual void ddamage_dd(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt strain
-  virtual void ddamage_de(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt stress
-  virtual void ddamage_ds(double d_np1, double d_n,
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
+  /// The damage rate
+  virtual void damage_rate(double d, const double * const e, 
+                           const double * const s, double T, double t,
+                           double * const dd) const;
+
+  /// Derivative of damage rate wrt damage
+  virtual void ddamage_rate_dd(double d, const double * const e, 
+                               const double * const s, double T, double t,
+                               double * const dd) const; 
+  
+  /// Derivative of damage rate wrt strain
+  virtual void ddamage_rate_de(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const;
+
+  /// Derivative of damage rate wrt stress
+  virtual void ddamage_rate_ds(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const;
 
  protected:
   std::shared_ptr<Interpolate> A_;
@@ -473,7 +510,7 @@ class NEML_EXPORT ModularCreepDamage: public ScalarDamage {
 static Register<ModularCreepDamage> regModularCreepDamage;
 
 /// Time-fraction ASME damage using a generic Larson-Miller relation and effective stress
-class NEML_EXPORT LarsonMillerCreepDamage: public ScalarDamage {
+class NEML_EXPORT LarsonMillerCreepDamage: public ScalarDamageRate {
  public:
   LarsonMillerCreepDamage(ParameterSet & params);
   
@@ -484,34 +521,25 @@ class NEML_EXPORT LarsonMillerCreepDamage: public ScalarDamage {
   /// Initialize from a parameter set
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   
-  /// The damage function d_np1 = d_n + 1/tr(s*(1-w), T) * dt
-  virtual void damage(double d_np1, double d_n, 
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt damage
-  virtual void ddamage_dd(double d_np1, double d_n, 
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt strain
-  virtual void ddamage_de(double d_np1, double d_n, 
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
-  /// Derivative of damage wrt stress
-  virtual void ddamage_ds(double d_np1, double d_n, 
-                     const double * const e_np1, const double * const e_n,
-                     const double * const s_np1, const double * const s_n,
-                     double T_np1, double T_n,
-                     double t_np1, double t_n,
-                     double * const dd) const;
+  /// The damage rate
+  virtual void damage_rate(double d, const double * const e, 
+                           const double * const s, double T, double t,
+                           double * const dd) const;
+
+  /// Derivative of damage rate wrt damage
+  virtual void ddamage_rate_dd(double d, const double * const e, 
+                               const double * const s, double T, double t,
+                               double * const dd) const; 
+  
+  /// Derivative of damage rate wrt strain
+  virtual void ddamage_rate_de(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const;
+
+  /// Derivative of damage rate wrt stress
+  virtual void ddamage_rate_ds(double d, const double * const e,
+                               const double * const s, double T, double t,
+                               double * const dd) const;
 
  protected:
   std::shared_ptr<LarsonMillerRelation> lmr_;

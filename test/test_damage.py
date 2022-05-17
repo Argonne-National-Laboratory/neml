@@ -43,6 +43,34 @@ class CommonStandardDamageModel(object):
         self.d)
     self.assertTrue(np.isclose(d_model, d_calcd))
 
+class CommonScalarDamageRate(object):
+    def test_ddamage_rate_ddamage(self):
+        dd_model = self.dmodel.ddamage_rate_dd(self.d_np1, self.e_np1,
+            self.s_np1, self.T_np1, self.t_np1)
+        dfn = lambda d: self.dmodel.damage_rate(d, self.e_np1,
+            self.s_np1, self.T_np1, self.t_np1)
+        dd_calcd = differentiate(dfn, self.d_np1)
+
+        self.assertTrue(np.isclose(dd_model, dd_calcd))
+
+    def test_ddamage_rate_dstrain(self):
+        dd_model = self.dmodel.ddamage_rate_de(self.d_np1, self.e_np1,
+            self.s_np1, self.T_np1, self.t_np1)
+        dfn = lambda e: self.dmodel.damage_rate(self.d_np1, e,
+            self.s_np1, self.T_np1, self.t_np1)
+        dd_calcd = differentiate(dfn, self.e_np1)
+
+        self.assertTrue(np.allclose(dd_model, dd_calcd))
+
+    def test_ddamage_rate_dstress(self):
+        dd_model = self.dmodel.ddamage_rate_ds(self.d_np1, self.e_np1,
+            self.s_np1, self.T_np1, self.t_np1)
+        dfn = lambda s: self.dmodel.damage_rate(self.d_np1, self.e_np1,
+            s, self.T_np1, self.t_np1)
+        dd_calcd = differentiate(dfn, self.s_np1)
+
+        self.assertTrue(np.allclose(dd_model, dd_calcd))
+
 class CommonScalarDamageModel(object):
   def test_ndamage(self):
     self.assertEqual(self.model.ndamage, 1)
@@ -248,7 +276,7 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.assertAlmostEqual(damage, should)
 
 class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
-    CommonDamagedModel):
+    CommonDamagedModel, CommonScalarDamageRate):
   def setUp(self):
     self.E = 92000.0
     self.nu = 0.3
@@ -407,7 +435,7 @@ class TestSumSeveralEffectiveStress(unittest.TestCase, CommonEffectiveStress):
 
     self.assertTrue(np.isclose(base, self.es.effective(self.stress)))
 
-class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel):
+class BaseModularDamage(CommonScalarDamageModel, CommonDamagedModel, CommonScalarDamageRate):
   def complete(self):
     self.E = 92000.0
     self.nu = 0.3
@@ -498,7 +526,8 @@ class TestHuddlestonPrincipal(unittest.TestCase, BaseModularDamage):
   def effective_model(self):
     return damage.HuddlestonEffectiveStress(0.24)
 
-class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, CommonDamagedModel):
+class TestLMDamage(unittest.TestCase, CommonScalarDamageModel, 
+        CommonDamagedModel, CommonScalarDamageRate):
   def setUp(self):
     self.E = 92000.0
     self.nu = 0.3
