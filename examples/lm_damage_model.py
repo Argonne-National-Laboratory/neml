@@ -24,8 +24,8 @@ if __name__ == "__main__":
   C = 28.0
   lmr = larsonmiller.LarsonMillerRelation(fn, C)
   estress = damage.VonMisesEffectiveStress()
-  model = damage.LarsonMillerCreepDamageModel_sd(
-      emodel, lmr, estress, bmodel)
+  model = damage.NEMLScalarDamagedModel_sd(
+          emodel, bmodel, damage.LarsonMillerCreepDamage(emodel, lmr, estress))
   
   T = 550 + 273.15
 

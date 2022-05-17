@@ -43,8 +43,9 @@ if __name__ == "__main__":
   scmodel = creep.NormalizedPowerLawCreep(s0, n)
   cfmodel = creep.J2CreepModel(scmodel)
   cmodel = models.SmallStrainCreepPlasticity(emodel, bmodel, cfmodel)
-  model = damage.ModularCreepDamageModel_sd(emodel, A, xi, phi,
-      damage.VonMisesEffectiveStress(), cmodel)
+  model = damage.NEMLScalarDamagedModel_sd(emodel, cmodel,
+          damage.ModularCreepDamage(emodel, A, xi, phi,
+              damage.VonMisesEffectiveStress()))
 
   res = drivers.creep(model, s, srate, tf, nsteps = 1000)
 
