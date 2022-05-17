@@ -33,10 +33,12 @@ if __name__ == "__main__":
   scmodel = creep.PowerLawCreep(A, n)
   cfmodel = creep.J2CreepModel(scmodel)
   cmodel = models.SmallStrainCreepPlasticity(emodel, bmodel, cfmodel)
-  model = damage.ClassicalCreepDamageModel_sd(emodel, S, xi, phi, cmodel)
+  model = damage.NEMLScalarDamagedModel_sd(emodel,  cmodel,
+          damage.ClassicalCreepDamage(emodel, S, xi, phi))
 
-  model2 = damage.ModularCreepDamageModel_sd(emodel, S, xi, phi,
-      damage.VonMisesEffectiveStress(), cmodel)
+  model2 = damage.NEMLScalarDamagedModel_sd(emodel,  cmodel,
+          damage.ModularCreepDamage(emodel, S, xi, phi, 
+              damage.VonMisesEffectiveStress()))
 
   # Computed life
   srange = np.linspace(s0/2,s0, 10)

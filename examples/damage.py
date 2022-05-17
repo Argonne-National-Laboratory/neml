@@ -31,10 +31,12 @@ def simple_ex():
 
   A = 0.0e-6
   a = 2.2
-  model_off = damage.NEMLPowerLawDamagedModel_sd(elastic, A, a, bmodel)
+  model_off = damage.NEMLScalarDamagedModel_sd(elastic, bmodel, 
+          damage.PowerLawDamage(elastic, A, a))
 
   A = 2e-5
-  model_on = damage.NEMLPowerLawDamagedModel_sd(elastic, A, a, bmodel)
+  model_on = damage.NEMLScalarDamagedModel_sd(elastic, bmodel,
+          damage.PowerLawDamage(elastic, A, a))
 
   res_off = drivers.uniaxial_test(model_off, 1.0e-2, emax = 0.13)
   res_on = drivers.uniaxial_test(model_on, 1.0e-2, emax = 0.13)
@@ -66,7 +68,8 @@ def unload_ex():
 
   A = 2e-5
   a = 2.2
-  model = damage.NEMLPowerLawDamagedModel_sd(elastic, A, a, bmodel)
+  model = damage.NEMLScalarDamagedModel_sd(elastic, bmodel,
+          damage.PowerLawDamage(elastic, A, a))
 
   driver = drivers.Driver_sd(model)
   nsteps = 25
@@ -138,8 +141,8 @@ def creep_ex():
   A_damg = 1.0e-2
   a_damg = 1.0
 
-  model = damage.NEMLPowerLawDamagedModel_sd(elastic, A_damg, a_damg, bmodel,
-      verbose = False)
+  model = damage.NEMLScalarDamagedModel_sd(elastic, bmodel,
+          damage.PowerLawDamage(elastic, A_damg, a_damg))
 
   #res = drivers.uniaxial_test(model, 1.0e-2, emax = 0.25)
   #plt.plot(res['strain'], res['stress'])

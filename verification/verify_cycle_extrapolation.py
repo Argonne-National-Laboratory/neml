@@ -47,8 +47,9 @@ if __name__ == "__main__":
     A          = 1e4
     xi         = 4.0
     phi        = 2.0
-
-    model = damage.ModularCreepDamageModel_sd(elastic, A, xi, phi,damage.VonMisesEffectiveStress(),bmodel)
+    
+    model = damage.NEMLScalarDamagedModel_sd(elastic, bmodel, 
+            damage.ModularCreepDamage(elastic, A, xi, phi, damage.VonMisesEffectiveStress()))
 
     emax    = np.array([ 2.0  , 2.0  , 1.0   , 2.0  ])/200.0
     R       = np.array([ -1.0 , -1.0 , -1.0  , -1.0 ])
