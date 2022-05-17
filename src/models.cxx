@@ -24,6 +24,9 @@ void NEMLModel::save(std::string file_name, std::string model_name)
   outfile << representation;
   outfile.close();
 }
+double NEMLModel::get_damage(const double *const h_np1) { return 0.0; }
+bool NEMLModel::should_del_element(const double *const h_np1) { return false; }
+bool NEMLModel::is_damage_model() const { return false; }
 
 // NEMLModel_sd implementation
 NEMLModel_sd::NEMLModel_sd(ParameterSet & params) :
