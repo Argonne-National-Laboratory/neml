@@ -105,6 +105,12 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
                        const double * const s_n, const double * const h_n,
                        double u_n, double p_n,
                        SDTrialState & tss);
+  /// Used to find the damage value from the history
+  virtual double get_damage(const double *const h_np1);
+  /// Used to determine if element should be deleted
+  virtual bool should_del_element(const double *const h_np1);
+  /// Used to determine if this is a damage model
+  virtual bool is_damage_model() const;
 
  protected:
   void tangent_(const double * const e_np1, const double * const e_n,

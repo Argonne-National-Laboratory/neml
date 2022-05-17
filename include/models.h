@@ -69,6 +69,12 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
    virtual void elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
+   /// Used to find the damage value from the history
+   virtual double get_damage(const double *const h_np1);
+   /// Used to determine if element should be deleted
+   virtual bool should_del_element(const double *const h_np1);
+   /// Used to determine if this is a damage model
+   virtual bool is_damage_model() const;
 };
 
 /// Large deformation incremental update model

@@ -298,6 +298,13 @@ void NEMLScalarDamagedModel_sd::ekill_update_(double T_np1,
     u_np1 = u_n;
   }
 }
+double NEMLScalarDamagedModel_sd::get_damage(const double *const h_np1) {
+  return h_np1[0];
+}
+bool NEMLScalarDamagedModel_sd::should_del_element(const double *const h_np1) {
+  return get_damage(h_np1) > dkill_;
+}
+bool NEMLScalarDamagedModel_sd::is_damage_model() const { return true; }
 
 ScalarDamage::ScalarDamage(ParameterSet & params) :
     NEMLObject(params),
