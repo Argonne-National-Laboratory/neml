@@ -27,15 +27,10 @@ Parameters
    ``elastic``, :cpp:class:`neml::LinearElasticModel`, Elasticity model, No
    ``A``, :cpp:class:`neml::Interpolate`, Prefactor, No
    ``a``, :cpp:class:`neml::Interpolate`, Stress exponent, No
-   ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
-   ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
-   ``tol``, :code:`double`, Solver tolerance, ``1.0e-8``
-   ``miter``, :code:`int`, Maximum solver iterations, ``50``
-   ``verbose``, :code:`bool`, Verbosity flag, ``false``
 
 Class description
 -----------------
 
-.. doxygenclass:: neml::NEMLPowerLawDamagedModel_sd
+.. doxygenclass:: neml::PowerLawDamage
    :members:
    :undoc-members:

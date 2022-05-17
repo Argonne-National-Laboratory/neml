@@ -25,6 +25,6 @@ Implementations
 Class description
 -----------------
 
-.. doxygenclass:: neml::NEMLStandardScalarDamagedModel_sd
+.. doxygenclass:: neml::StandardScalarDamage
    :members:
    :undoc-members:

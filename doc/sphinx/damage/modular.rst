@@ -8,12 +8,10 @@ This object implements the classical Hayhurst-Leckie-Rabotnov-Kachanov creep dam
 The damage update is given by 
 
 .. math::
-   \omega_{n+1} = \omega_{n} + \left(\frac{\sigma_{eff}}{A}\right)^\xi 
-      \left(1 - \omega_{n+1}\right)^{\xi-\phi} \Delta t_{n+1}
+   \dot{\omega} = \left(\frac{\sigma_{eff}}{A}\right)^\xi 
+      \left(1 - \omega\right)^{\xi-\phi}
 
 where :math:`\sigma_{eff}` is a modular effective stress, defined by a :ref:`effective-stress` object.
-
-This class has the option for element extinction, useful in FEA simulations of damage.  If the ``ekill`` option is set to true once the material point reaches a damage threshold of ``dkill`` the constitutive response will be replaced by a linear elastic response with an elastic stiffness of :math:`\mathbf{\mathfrak{C}}/f` where the factor :math:`f` is given by the parameter ``sfact``.
 
 .. toctree::
    effective/effective
@@ -30,18 +28,10 @@ Parameters
    ``xi``, :cpp:class:`neml::Interpolate`, Stress exponent, No
    ``phi``, :cpp:class:`neml::Interpolate`, Damage exponent, No
    ``estress``,:cpp:class:`neml::EffectiveStress`, Effective stress, No
-   ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
-   ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
-   ``tol``, :code:`double`, Solver tolerance, ``1.0e-8``
-   ``miter``, :code:`int`, Maximum solver iterations, ``50``
-   ``verbose``, :code:`bool`, Verbosity flag, ``false``
-   ``ekill``, :code:`bool`, Trigger element death, ``false``
-   ``dkill``, :code:`double`, Critical damage threshold, ``0.5``
-   ``sfact``, :code:`double`, Stiffness factor for dead element, ``100000``
 
 Class description
 -----------------
 
-.. doxygenclass:: neml::ModularCreepDamageModel_sd
+.. doxygenclass:: neml::ModularCreepDamage
    :members:
    :undoc-members:

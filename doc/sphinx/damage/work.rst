@@ -32,16 +32,11 @@ Parameters
    ``elastic``, :cpp:class:`neml::LinearElasticModel`, Elasticity model, No
    ``Wcrit``, :cpp:class:`neml::Interpolate`, Critical work, No
    ``n``, :code:`double`, Damage exponent, No
-   ``base``, :cpp:class:`neml::NEMLModel_sd`, Base material model, No
-   ``alpha``, :cpp:class:`neml::Interpolate`, Thermal expansion coefficient, ``0.0``
-   ``tol``, :code:`double`, Solver tolerance, ``1.0e-8``
-   ``miter``, :code:`int`, Maximum solver iterations, ``50``
-   ``verbose``, :code:`bool`, Verbosity flag, ``false``
    ``eps``, :code:`double`, Numerical offset``, ``1.0e-30``
 
 Class description
 -----------------
 
-.. doxygenclass:: neml::NEMLWorkDamagedModel_sd
+.. doxygenclass:: neml::WorkDamage
    :members:
    :undoc-members:
