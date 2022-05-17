@@ -223,7 +223,7 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
-  py::class_<ModularCreepDamage, ScalarDamage, std::shared_ptr<ModularCreepDamage>>(m, "ModularCreepDamage")
+  py::class_<ModularCreepDamage, ScalarDamageRate, std::shared_ptr<ModularCreepDamage>>(m, "ModularCreepDamage")
       PICKLEABLE(ModularCreepDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
@@ -234,7 +234,7 @@ PYBIND11_MODULE(damage, m) {
         }))
       ;
 
-  py::class_<LarsonMillerCreepDamage, ScalarDamage, std::shared_ptr<LarsonMillerCreepDamage>>(m, "LarsonMillerCreepDamage")
+  py::class_<LarsonMillerCreepDamage, ScalarDamageRate, std::shared_ptr<LarsonMillerCreepDamage>>(m, "LarsonMillerCreepDamage")
       PICKLEABLE(LarsonMillerCreepDamage)
       .def(py::init([](py::args args, py::kwargs kwargs)
         {
