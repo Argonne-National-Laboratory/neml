@@ -30,9 +30,9 @@ class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Actual (unscaled) f
   double f(const History & history) const;
@@ -207,9 +207,9 @@ class NEML_EXPORT DislocationSpacingHardening: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -283,9 +283,9 @@ class NEML_EXPORT HuCocksHardening: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,

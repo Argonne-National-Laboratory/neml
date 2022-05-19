@@ -18,20 +18,29 @@ size_t PolycrystalModel::n() const
   return q0s_.size();
 }
 
-size_t PolycrystalModel::nhist() const
-{
-  return (model_->nstore() + 6 + 6 + 3) * n();
-}
-
-void PolycrystalModel::init_hist(double * const hist) const
+void PolycrystalModel::populate_hist(History & hist) const
 {
   for (size_t i = 0; i < n(); i++) {
-    model_->init_store(history(hist, i));
-    model_->set_active_orientation(history(hist,i), *q0s_[i]);
+    // TODO: fix this somehow
+    hist.add("history_"+std::to_string(i), TYPE_BLANK, model_->nstore());
+    hist.add<Symmetric>("stress_"+std::to_string(i));
+    hist.add<Symmetric>("deformation_rate_"+std::to_string(i));
+    hist.add<Skew>("vorticity_"+std::to_string(i));
+  }
+}
 
-    std::fill(stress(hist, i), stress(hist, i) + 6, 0);
-    std::fill(d(hist, i), d(hist, i) + 6, 0);
-    std::fill(w(hist, i), w(hist, i) + 3, 0);
+void PolycrystalModel::init_hist(History & hist) const
+{
+  for (size_t i = 0; i < n(); i++) {
+    History subhist(hist.get_data("history_"+std::to_string(i)));
+    model_->populate_store(subhist);
+    model_->init_store_object(subhist);
+    model_->set_active_orientation(subhist.rawptr(), *q0s_[i]);
+
+    hist.get<Symmetric>("stress_"+std::to_string(i)) = Symmetric::zero();
+    hist.get<Symmetric>("deformation_rate_"+std::to_string(i)) = 
+        Symmetric::zero();
+    hist.get<Skew>("vorticity_"+std::to_string(i)) = Skew::zero();
   }
 }
 
@@ -109,16 +118,6 @@ ParameterSet TaylorModel::parameters()
 std::unique_ptr<NEMLObject> TaylorModel::initialize(ParameterSet & params)
 {
   return neml::make_unique<TaylorModel>(params);
-}
-
-size_t TaylorModel::nstore() const
-{
-  return nhist();
-}
-
-void TaylorModel::init_store(double * const store) const
-{
-  init_hist(store);
 }
 
 void TaylorModel::update_ld_inc(

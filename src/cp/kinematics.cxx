@@ -76,14 +76,14 @@ ParameterSet StandardKinematicModel::parameters()
   return pset;
 }
 
-void StandardKinematicModel::populate_history(History & history) const
+void StandardKinematicModel::populate_hist(History & history) const
 {
-  imodel_->populate_history(history);
+  imodel_->populate_hist(history);
 }
 
-void StandardKinematicModel::init_history(History & history) const
+void StandardKinematicModel::init_hist(History & history) const
 {
-  imodel_->init_history(history);
+  imodel_->init_hist(history);
 }
 
 double StandardKinematicModel::strength(const History & history, Lattice & L,
@@ -311,16 +311,16 @@ ParameterSet DamagedStandardKinematicModel::parameters()
   return pset;
 }
 
-void DamagedStandardKinematicModel::populate_history(History & history) const
+void DamagedStandardKinematicModel::populate_hist(History & history) const
 {
-  imodel_->populate_history(history);
-  dmodel_->populate_history(history);
+  imodel_->populate_hist(history);
+  dmodel_->populate_hist(history);
 }
 
-void DamagedStandardKinematicModel::init_history(History & history) const
+void DamagedStandardKinematicModel::init_hist(History & history) const
 {
-  imodel_->init_history(history);
-  dmodel_->init_history(history);
+  imodel_->init_hist(history);
+  dmodel_->init_hist(history);
 }
 
 Symmetric DamagedStandardKinematicModel::stress_rate(
@@ -602,7 +602,7 @@ Symmetric DamagedStandardKinematicModel::stress_increment(
 std::vector<std::string> DamagedStandardKinematicModel::inames_() const
 {
   History ihist;
-  imodel_->populate_history(ihist);
+  imodel_->populate_hist(ihist);
   return ihist.items();
 }
 

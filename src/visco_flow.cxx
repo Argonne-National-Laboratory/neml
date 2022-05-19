@@ -13,6 +13,13 @@ ViscoPlasticFlowRule::ViscoPlasticFlowRule(ParameterSet & params) :
 
 }
 
+size_t ViscoPlasticFlowRule::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
+}
+
 // Default implementation of flow rule wrt time
 void ViscoPlasticFlowRule::g_time(const double * const s, 
                                  const double * const alpha, double T, 
@@ -699,18 +706,18 @@ std::unique_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
   return neml::make_unique<PerzynaFlowRule>(params); 
 }
 
-size_t PerzynaFlowRule::nhist() const
-{
-  return hardening_->nhist();
-}
-
-void PerzynaFlowRule::init_hist(double * const h) const
+void PerzynaFlowRule::populate_hist(History & hist) const
 {
   if (surface_->nhist() != hardening_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
-  hardening_->init_hist(h);
 
+  hardening_->populate_hist(hist);
+}
+
+void PerzynaFlowRule::init_hist(History & hist) const
+{
+  hardening_->init_hist(hist);
 }
 
 // Rate rule
@@ -1106,17 +1113,17 @@ std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params) 
   return neml::make_unique<ChabocheFlowRule>(params);
 }
 
-size_t ChabocheFlowRule::nhist() const
-{
-  return hardening_->nhist();
-}
-
-void ChabocheFlowRule::init_hist(double * const h) const
+void ChabocheFlowRule::populate_hist(History & hist) const
 {
   if (surface_->nhist() != hardening_->ninter()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
-  hardening_->init_hist(h);
+  hardening_->populate_hist(hist);
+}
+
+void ChabocheFlowRule::init_hist(History & hist) const
+{
+  hardening_->init_hist(hist);
 }
 
 // Rate rule
@@ -1321,30 +1328,25 @@ std::unique_ptr<NEMLObject> YaguchiGr91FlowRule::initialize(ParameterSet & param
 }
 
 
-size_t YaguchiGr91FlowRule::nhist() const
+void YaguchiGr91FlowRule::populate_hist(History & hist) const
 {
   // Order:
   // 0-5  X1
   // 6-11 X2
   // 12   Q
   // 13   sa
-  return 14;
+  hist.add<Symmetric>("X1");
+  hist.add<Symmetric>("X2");
+  hist.add<double>("Q");
+  hist.add<double>("sa");
 }
 
-void YaguchiGr91FlowRule::init_hist(double * const h) const
+void YaguchiGr91FlowRule::init_hist(History & hist) const
 {
-  // This also hardcoded from the paper
-  
-  // Xs
-  std::fill(h, h+12, 0.0);
-
-  // Q
-  h[12] = 0.0;
-
-  // sa
-  h[13] = 0.0;
-
-
+  hist.get<Symmetric>("X1") = Symmetric::zero();
+  hist.get<Symmetric>("X2") = Symmetric::zero();
+  hist.get<double>("Q") = 0.0;
+  hist.get<double>("sa") = 0.0;
 }
 
 // Rate rule
@@ -1368,7 +1370,6 @@ void YaguchiGr91FlowRule::y(const double* const s, const double* const alpha, do
   else {
     yv = 0.0;
   }
-
 }
 
 void YaguchiGr91FlowRule::dy_ds(const double* const s, const double* const alpha, double T,

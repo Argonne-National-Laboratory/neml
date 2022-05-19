@@ -15,13 +15,21 @@ NEMLDamagedModel_sd::NEMLDamagedModel_sd(ParameterSet & params) :
 
 size_t NEMLDamagedModel_sd::nhist() const
 {
-  return ndamage() + base_->nhist();
+  History h;
+  populate_hist(h);
+  return h.size();
 }
 
-void NEMLDamagedModel_sd::init_hist(double * const hist) const
+void NEMLDamagedModel_sd::populate_hist(History & hist) const
+{
+  populate_damage(hist);
+  base_->populate_hist(hist);
+}
+
+void NEMLDamagedModel_sd::init_hist(History & hist) const
 {
   init_damage(hist);
-  base_->init_hist(&hist[ndamage()]);
+  base_->init_hist(hist);
 }
 
 void NEMLDamagedModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
@@ -135,9 +143,14 @@ size_t NEMLScalarDamagedModel_sd::ndamage() const
   return 1;
 }
 
-void NEMLScalarDamagedModel_sd::init_damage(double * const damage) const
+void NEMLScalarDamagedModel_sd::populate_damage(History & hist) const
 {
-  damage[0] = dmodel_->d_init();
+  hist.add<double>("damage");
+}
+
+void NEMLScalarDamagedModel_sd::init_damage(History & hist) const
+{
+  hist.get<double>("damage") = dmodel_->d_init();
 }
 
 size_t NEMLScalarDamagedModel_sd::nparams() const

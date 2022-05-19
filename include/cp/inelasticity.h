@@ -21,9 +21,9 @@ class NEML_EXPORT InelasticModel: public NEMLObject {
  public:
   InelasticModel(ParameterSet & params);
   /// Populate a history object with the correct variables
-  virtual void populate_history(History & history) const = 0;
+  virtual void populate_hist(History & history) const = 0;
   /// Actually initialize the history object with the starting values
-  virtual void init_history(History & history) const = 0;
+  virtual void init_hist(History & history) const = 0;
 
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T,
@@ -103,9 +103,9 @@ class NEML_EXPORT NoInelasticity: public InelasticModel {
   static ParameterSet parameters();
 
   /// Add history variables (none needed)
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Define initial history (none)
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T,
@@ -185,9 +185,9 @@ class NEML_EXPORT AsaroInelasticity: public InelasticModel {
   static ParameterSet parameters();
 
   /// Populate the history, deferred to the SlipRule
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Initialize the history with the starting values, deferred to the SlipRule
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T,
@@ -277,9 +277,9 @@ class NEML_EXPORT PowerLawInelasticity: public InelasticModel {
   static ParameterSet parameters();
 
   /// Setup history variables (none used in this implementation)
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Initialize the history variables (n/a)
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T,
@@ -377,9 +377,9 @@ class NEML_EXPORT CombinedInelasticity: public InelasticModel {
                           const History & fixed) const;
 
   /// Setup all history variables
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Initialize history with actual values
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Sum the symmetric parts of the plastic deformation rates
   virtual Symmetric d_p(const Symmetric & stress,

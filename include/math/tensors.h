@@ -247,6 +247,9 @@ class NEML_EXPORT Skew: public Tensor {
   /// Skew a general tensor
   Skew(const RankTwo & other);
 
+  static Skew zero() { return
+    Skew(std::vector<double>({0,0,0}));};
+
   RankTwo to_full() const;
 
   Skew opposite() const;

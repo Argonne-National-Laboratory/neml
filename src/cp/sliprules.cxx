@@ -87,17 +87,17 @@ size_t SlipMultiStrengthSlipRule::nstrength() const
   return strengths_.size();
 }
 
-void SlipMultiStrengthSlipRule::populate_history(History & history) const
+void SlipMultiStrengthSlipRule::populate_hist(History & history) const
 {
   for (auto strength : strengths_) {
-    strength->populate_history(history);
+    strength->populate_hist(history);
   }
 }
 
-void SlipMultiStrengthSlipRule::init_history(History & history) const
+void SlipMultiStrengthSlipRule::init_hist(History & history) const
 {
   for (auto strength : strengths_) {
-    strength->init_history(history);
+    strength->init_hist(history);
   }
 }
 

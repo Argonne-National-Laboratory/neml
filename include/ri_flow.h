@@ -4,6 +4,7 @@
 #include "objects.h"
 #include "surfaces.h"
 #include "hardening.h"
+#include "history.h"
 #include "math/nemlmath.h"
 
 #include "windows.h"
@@ -16,11 +17,13 @@ namespace neml {
 class NEML_EXPORT RateIndependentFlowRule: public NEMLObject {
  public:
   RateIndependentFlowRule(ParameterSet & params);
-
-  /// Number of history variables
-  virtual size_t nhist() const = 0;
+  
+  /// Setup internal state
+  virtual void populate_hist(History & h) const = 0;
   /// Setup the history at time zero
-  virtual void init_hist(double * const h) const = 0;
+  virtual void init_hist(History & h) const = 0;
+  /// Number of history variables, get rid of this eventually
+  virtual size_t nhist() const;
 
   /// Yield surface
   virtual void f(const double* const s, const double* const alpha, double T,
@@ -66,10 +69,10 @@ class NEML_EXPORT RateIndependentAssociativeFlow: public RateIndependentFlowRule
   /// Initialize from a parameter set
   static ParameterSet parameters();
 
-  /// History size according to the HardeningRule
-  virtual size_t nhist() const;
-  /// Initialize history with the HardeningRule
-  virtual void init_hist(double * const h) const;
+  /// Setup internal state
+  virtual void populate_hist(History & h) const;
+  /// Setup the history at time zero
+  virtual void init_hist(History & h) const;
 
   /// Yield surface
   virtual void f(const double* const s, const double* const alpha, double T,
@@ -127,10 +130,10 @@ class NEML_EXPORT RateIndependentNonAssociativeHardening: public RateIndependent
   /// Initialize from a parameter set
   static ParameterSet parameters();
 
-  /// History size according to the HardeningRule
-  virtual size_t nhist() const;
-  /// Initialize history with the HardeningRule
-  virtual void init_hist(double * const h) const;
+  /// Setup internal state
+  virtual void populate_hist(History & h) const;
+  /// Setup the history at time zero
+  virtual void init_hist(History & h) const;
 
   /// Yield surface
   virtual void f(const double* const s, const double* const alpha, double T,

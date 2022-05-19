@@ -33,9 +33,9 @@ class NEML_EXPORT SlipHardening: public NEMLObject
   virtual void set_varnames(std::vector<std::string> vars) = 0;
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const = 0;
+  virtual void populate_hist(History & history) const = 0;
   /// Setup history
-  virtual void init_history(History & history) const = 0;
+  virtual void init_hist(History & history) const = 0;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -116,9 +116,9 @@ class NEML_EXPORT FixedStrengthHardening: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -174,9 +174,9 @@ class NEML_EXPORT VocePerSystemHardening: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -239,9 +239,9 @@ class NEML_EXPORT FASlipHardening: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -303,9 +303,9 @@ class NEML_EXPORT GeneralLinearHardening: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -380,9 +380,9 @@ class NEML_EXPORT SimpleLinearHardening: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -454,9 +454,9 @@ class NEML_EXPORT LANLTiModel: public SlipHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Map the set of history variables to the slip system hardening
   virtual double hist_to_tau(size_t g, size_t i, const History & history,
@@ -550,9 +550,9 @@ class NEML_EXPORT SlipSingleStrengthHardening: public SlipSingleHardening
   virtual void set_varnames(std::vector<std::string> vars);
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// The rate of the history
   virtual History hist(const Symmetric & stress,
@@ -656,9 +656,9 @@ class NEML_EXPORT SumSlipSingleStrengthHardening: public SlipSingleHardening
   static ParameterSet parameters();
 
   /// Request whatever history you will need
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Setup history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// The rate of the history
   virtual History hist(const Symmetric & stress,

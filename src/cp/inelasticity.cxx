@@ -43,12 +43,12 @@ std::unique_ptr<NEMLObject> NoInelasticity::initialize(ParameterSet & params)
   return neml::make_unique<NoInelasticity>(params); 
 }
 
-void NoInelasticity::populate_history(History & history) const
+void NoInelasticity::populate_hist(History & history) const
 {
   return;
 }
 
-void NoInelasticity::init_history(History & history) const
+void NoInelasticity::init_hist(History & history) const
 {
   return;
 }
@@ -169,14 +169,14 @@ std::unique_ptr<NEMLObject> AsaroInelasticity::initialize(ParameterSet & params)
   return neml::make_unique<AsaroInelasticity>(params); 
 }
 
-void AsaroInelasticity::populate_history(History & history) const
+void AsaroInelasticity::populate_hist(History & history) const
 {
-  rule_->populate_history(history);
+  rule_->populate_hist(history);
 }
 
-void AsaroInelasticity::init_history(History & history) const
+void AsaroInelasticity::init_hist(History & history) const
 {
-  rule_->init_history(history);
+  rule_->init_hist(history);
 }
 
 double AsaroInelasticity::strength(const History & history, Lattice & L,
@@ -359,12 +359,12 @@ std::unique_ptr<NEMLObject> PowerLawInelasticity::initialize(ParameterSet & para
   return neml::make_unique<PowerLawInelasticity>(params);
 }
 
-void PowerLawInelasticity::populate_history(History & history) const
+void PowerLawInelasticity::populate_hist(History & history) const
 {
   return;
 }
 
-void PowerLawInelasticity::init_history(History & history) const
+void PowerLawInelasticity::init_hist(History & history) const
 {
   return;
 }
@@ -508,18 +508,18 @@ std::unique_ptr<NEMLObject> CombinedInelasticity::initialize(ParameterSet & para
   return neml::make_unique<CombinedInelasticity>(params); 
 }
 
-void CombinedInelasticity::populate_history(History & history) const
+void CombinedInelasticity::populate_hist(History & history) const
 {
   for (auto model : models_) {
-    model->populate_history(history);
+    model->populate_hist(history);
   }
   return;
 }
 
-void CombinedInelasticity::init_history(History & history) const
+void CombinedInelasticity::init_hist(History & history) const
 {
   for (auto model : models_) {
-    model->init_history(history);
+    model->init_hist(history);
   }
   return;
 }
