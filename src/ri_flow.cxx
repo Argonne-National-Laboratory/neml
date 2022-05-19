@@ -10,6 +10,13 @@ RateIndependentFlowRule::RateIndependentFlowRule(ParameterSet & params) :
 
 }
 
+size_t RateIndependentFlowRule::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
+}
+
 RateIndependentAssociativeFlow::RateIndependentAssociativeFlow(ParameterSet &
                                                                params) :
     RateIndependentFlowRule(params),
@@ -39,18 +46,17 @@ std::unique_ptr<NEMLObject> RateIndependentAssociativeFlow::initialize(Parameter
   return neml::make_unique<RateIndependentAssociativeFlow>(params); 
 }
 
-size_t RateIndependentAssociativeFlow::nhist() const
-{
-  return hardening_->nhist();
-}
-
-void RateIndependentAssociativeFlow::init_hist(double * const h) const
+void RateIndependentAssociativeFlow::populate_hist(History & hist) const
 {
   if (hardening_->nhist() != surface_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
+  hardening_->populate_hist(hist);
+}
 
-  hardening_->init_hist(h);
+void RateIndependentAssociativeFlow::init_hist(History & hist) const
+{
+  hardening_->init_hist(hist);
 }
 
 void RateIndependentAssociativeFlow::f(const double* const s, 
@@ -209,19 +215,17 @@ std::unique_ptr<NEMLObject> RateIndependentNonAssociativeHardening::initialize(P
   return neml::make_unique<RateIndependentNonAssociativeHardening>(params); 
 }
 
-size_t RateIndependentNonAssociativeHardening::nhist() const
-{
-  return hardening_->nhist();
-}
-
-void RateIndependentNonAssociativeHardening::init_hist(double * const h) const
+void RateIndependentNonAssociativeHardening::populate_hist(History & hist) const
 {
   if (hardening_->ninter() != surface_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
+  hardening_->populate_hist(hist);
+}
 
-  hardening_->init_hist(h);
-
+void RateIndependentNonAssociativeHardening::init_hist(History & hist) const
+{
+  hardening_->populate_hist(hist);
 }
 
 void RateIndependentNonAssociativeHardening::f(const double* const s, 

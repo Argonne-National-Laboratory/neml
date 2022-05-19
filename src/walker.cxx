@@ -37,12 +37,19 @@ std::unique_ptr<NEMLObject> WalkerKremplSwitchRule::initialize(ParameterSet & pa
 
 size_t WalkerKremplSwitchRule::nhist() const
 {
-  return flow_->nhist();
+  History h;
+  populate_hist(h);
+  return h.size();
 }
 
-void WalkerKremplSwitchRule::init_hist(double * const h)
+void WalkerKremplSwitchRule::populate_hist(History & hist) const
 {
-  return flow_->init_hist(h);
+  return flow_->populate_hist(hist);
+}
+
+void WalkerKremplSwitchRule::init_hist(History & hist) const
+{
+  return flow_->init_hist(hist);
 }
 
 void WalkerKremplSwitchRule::s(const double * const s, const double * const alpha,
@@ -1529,20 +1536,6 @@ State WrappedViscoPlasticFlowRule::make_state_(const double * const s, const dou
   return State(Symmetric(s), gather_hist_(alpha), T);
 }
 
-size_t WrappedViscoPlasticFlowRule::nhist() const
-{
-  return blank_hist_().size();
-}
-
-void WrappedViscoPlasticFlowRule::init_hist(double * const h) const
-{
-  // Pointless memory error
-  std::fill(h, h+nhist(), 0.0);
-  // Actual stuff
-  History hv = gather_hist_(h);
-  initialize_hist(hv);
-}
-
 // Rate rule
 void WrappedViscoPlasticFlowRule::y(const double* const s, const double* const alpha, double T,
               double & yv) const
@@ -1744,7 +1737,7 @@ void TestFlowRule::populate_hist(History & h) const
   h.add<double>("iso");
 }
 
-void TestFlowRule::initialize_hist(History & h) const
+void TestFlowRule::init_hist(History & h) const
 {
   h.get<double>("alpha") = 0.0;
   h.get<double>("iso") = s0_;
@@ -1891,7 +1884,7 @@ void WalkerFlowRule::populate_hist(History & h) const
   }
 }
 
-void WalkerFlowRule::initialize_hist(History & h) const
+void WalkerFlowRule::init_hist(History & h) const
 {
   h.get<double>("alpha") = 0;
   h.get<double>(R_->name()) = R_->initial_value();

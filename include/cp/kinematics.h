@@ -21,9 +21,9 @@ class NEML_EXPORT KinematicModel: public NEMLObject {
  public:
   KinematicModel(ParameterSet & params);
   /// Populate history with the correct variable names and types
-  virtual void populate_history(History & history) const = 0;
+  virtual void populate_hist(History & history) const = 0;
   /// Initialize history with actual starting values
-  virtual void init_history(History & history) const = 0;
+  virtual void init_hist(History & history) const = 0;
 
   /// Helper for external models that want a strength
   virtual double strength(const History & history, Lattice & L, double T,
@@ -171,9 +171,9 @@ class NEML_EXPORT StandardKinematicModel: public KinematicModel {
   static ParameterSet parameters();
 
   /// Populate a history object with the correct variables
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Initialize the history object with the starting values
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Helper for external models that want a strength
   virtual double strength(const History & history, Lattice & L, double T,
@@ -305,9 +305,9 @@ class NEML_EXPORT DamagedStandardKinematicModel: public StandardKinematicModel {
   static ParameterSet parameters();
 
   /// Populate a history object with the correct variables
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Initialize the history object with the starting values
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Stress rate
   virtual Symmetric stress_rate(

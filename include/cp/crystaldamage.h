@@ -32,9 +32,9 @@ class NEML_EXPORT CrystalDamageModel: public NEMLObject {
   virtual void set_varnames(std::vector<std::string> names);
 
   /// Setup whatever history variables the model requires
-  virtual void populate_history(History & history) const;
+  virtual void populate_hist(History & history) const;
   /// Initialize history
-  virtual void init_history(History & history) const = 0;
+  virtual void init_hist(History & history) const = 0;
 
   /// Returns the current projection operator
   virtual SymSymR4 projection(
@@ -85,7 +85,7 @@ class NEML_EXPORT NilDamageModel: public CrystalDamageModel {
   static ParameterSet parameters();
 
   /// Initialize history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Returns the current projection operator
   virtual SymSymR4 projection(
@@ -136,7 +136,7 @@ class NEML_EXPORT PlanarDamageModel: public CrystalDamageModel {
   static ParameterSet parameters();
 
   /// Initialize history
-  virtual void init_history(History & history) const;
+  virtual void init_hist(History & history) const;
 
   /// Returns the current projection operator
   virtual SymSymR4 projection(

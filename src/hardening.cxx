@@ -15,21 +15,27 @@ HardeningRule::HardeningRule(ParameterSet & params) :
 
 }
 
+size_t HardeningRule::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
+}
+
 IsotropicHardeningRule::IsotropicHardeningRule(ParameterSet & params) :
     HardeningRule(params)
 {
 
 }
 
-size_t IsotropicHardeningRule::nhist() const
+void IsotropicHardeningRule::populate_hist(History & h) const
 {
-  return 1;
+  h.add<double>("alpha");
 }
 
-void IsotropicHardeningRule::init_hist(double * const alpha) const
+void IsotropicHardeningRule::init_hist(History & h) const
 {
-  alpha[0] = 0.0;
-
+  h.get<double>("alpha") = 0.0;
 }
 
 // Implementation of linear hardening
@@ -303,15 +309,14 @@ KinematicHardeningRule::KinematicHardeningRule(ParameterSet & params) :
 }
 
 // Implementation of kinematic base class
-size_t KinematicHardeningRule::nhist() const
+void KinematicHardeningRule::populate_hist(History & hist) const
 {
-  return 6;
+  hist.add<Symmetric>("backstress");
 }
 
-void KinematicHardeningRule::init_hist(double * const alpha) const
+void KinematicHardeningRule::init_hist(History & hist) const
 {
-  for (int i=0; i<6; i++) alpha[i] = 0.0;
-
+  hist.get<Symmetric>("backstress") = Symmetric::zero();
 }
 
 // Implementation of linear kinematic hardening
@@ -393,15 +398,16 @@ std::unique_ptr<NEMLObject> CombinedHardeningRule::initialize(ParameterSet & par
   return neml::make_unique<CombinedHardeningRule>(params); 
 }
 
-size_t CombinedHardeningRule::nhist() const
+void CombinedHardeningRule::populate_hist(History & hist) const
 {
-  return iso_->nhist() + kin_->nhist();
+  iso_->populate_hist(hist);
+  kin_->populate_hist(hist);
 }
 
-void CombinedHardeningRule::init_hist(double * const alpha) const
+void CombinedHardeningRule::init_hist(History & hist) const
 {
-  iso_->init_hist(alpha);
-  return kin_->init_hist(&alpha[iso_->nhist()]);
+  iso_->init_hist(hist);
+  kin_->init_hist(hist);
 }
 
 void CombinedHardeningRule::q(const double * const alpha, double T, 
@@ -444,6 +450,13 @@ NonAssociativeHardening::NonAssociativeHardening(ParameterSet & params) :
     NEMLObject(params)
 {
 
+}
+
+size_t NonAssociativeHardening::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
 }
 
 // Provide zeros for these
@@ -641,14 +654,18 @@ size_t Chaboche::ninter() const
   return 1 + 6;
 }
 
-size_t Chaboche::nhist() const
+void Chaboche::populate_hist(History & h) const
 {
-  return 1 + 6 * n_;
+  h.add<double>("alpha");
+  for (size_t i = 0; i < n_; i++)
+    h.add<Symmetric>("backstress_"+std::to_string(i));
 }
 
-void Chaboche::init_hist(double * const alpha) const
+void Chaboche::init_hist(History & h) const
 {
-  std::fill(alpha, alpha+nhist(), 0.0);
+  h.get<double>("alpha") = 0.0;
+  for (size_t i = 0; i < n_; i++)
+    h.get<Symmetric>("backstress_"+std::to_string(i)) = Symmetric::zero();
 }
 
 void Chaboche::q(const double * const alpha, double T, double * const qv) const
@@ -1009,14 +1026,18 @@ size_t ChabocheVoceRecovery::ninter() const
   return 1 + 6;
 }
 
-size_t ChabocheVoceRecovery::nhist() const
+void ChabocheVoceRecovery::populate_hist(History & h) const
 {
-  return 1 + 6 * n_;
+  h.add<double>("alpha");
+  for (size_t i = 0; i < n_; i++)
+    h.add<Symmetric>("backstress_"+std::to_string(i));
 }
 
-void ChabocheVoceRecovery::init_hist(double * const alpha) const
+void ChabocheVoceRecovery::init_hist(History & h) const
 {
-  std::fill(alpha, alpha+nhist(), 0.0);
+  h.get<double>("alpha") = 0.0;
+  for (size_t i = 0; i < n_; i++)
+    h.get<Symmetric>("backstress_"+std::to_string(i)) = Symmetric::zero();
 }
 
 void ChabocheVoceRecovery::q(const double * const alpha, double T, double * const qv) const

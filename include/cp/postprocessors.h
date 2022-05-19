@@ -16,8 +16,8 @@ class NEML_EXPORT CrystalPostprocessor: public NEMLObject {
  public:
   CrystalPostprocessor(ParameterSet & params);
 
-  virtual void populate_history(const Lattice & L, History & history) const = 0;
-  virtual void init_history(const Lattice & L, History & history) const = 0;
+  virtual void populate_hist(const Lattice & L, History & history) const = 0;
+  virtual void init_hist(const Lattice & L, History & history) const = 0;
 
   virtual void act(SingleCrystalModel & model, const Lattice &,
                    const double & T, const Symmetric & D,
@@ -37,8 +37,8 @@ class NEML_EXPORT PTRTwinReorientation: public CrystalPostprocessor {
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
-  virtual void populate_history(const Lattice & L, History & history) const;
-  virtual void init_history(const Lattice & L, History & history) const;
+  virtual void populate_hist(const Lattice & L, History & history) const;
+  virtual void init_hist(const Lattice & L, History & history) const;
 
   virtual void act(SingleCrystalModel & model, const Lattice &,
                    const double & T, const Symmetric & D,

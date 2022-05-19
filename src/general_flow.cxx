@@ -14,6 +14,13 @@ GeneralFlowRule::GeneralFlowRule(ParameterSet & params) :
 {
 }
 
+size_t GeneralFlowRule::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
+}
+
 void GeneralFlowRule::work_rate(const double * const s,
                                             const double * const alpha,
                                             const double * const edot, double T,
@@ -62,15 +69,14 @@ std::unique_ptr<NEMLObject> TVPFlowRule::initialize(ParameterSet & params)
 }
 
 
-size_t TVPFlowRule::nhist() const
+void TVPFlowRule::populate_hist(History & h) const
 {
-  return flow_->nhist();
+  flow_->populate_hist(h);
 }
 
-void TVPFlowRule::init_hist(double * const h)
+void TVPFlowRule::init_hist(History & h) const
 {
   flow_->init_hist(h);
-
 }
 
 void TVPFlowRule::s(const double * const s, const double * const alpha,

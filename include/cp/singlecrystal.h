@@ -57,10 +57,9 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Setup blank history
-  void populate_history(History & history) const;
-
+  void populate_hist(History & history) const;
   /// Actually initialize history
-  void init_history(History & history) const;
+  void init_hist(History & history) const;
 
   /// Useful methods for external models that want an idea of an average
   /// strength
@@ -81,11 +80,6 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
        double * const A_np1, double * const B_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n);
-
-  /// Number of stored history variables
-  virtual size_t nhist() const;
-  /// Initialize history raw pointer array
-  virtual void init_hist(double * const hist) const;
 
   /// Instantaneous CTE
   virtual double alpha(double T) const;

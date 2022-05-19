@@ -3,6 +3,7 @@
 
 #include "interpolate.h"
 #include "objects.h"
+#include "history.h"
 
 #include "windows.h"
 
@@ -18,10 +19,13 @@ namespace neml {
 class NEML_EXPORT HardeningRule: public NEMLObject {
  public:
   HardeningRule(ParameterSet & params);
-  /// The number of history variables
-  virtual size_t nhist() const = 0;
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const = 0;
   /// Initialize the history
-  virtual void init_hist(double * const alpha) const = 0;
+  virtual void init_hist(History & h) const = 0;
+  /// This should be replaced at some point
+  virtual size_t nhist() const;
+
   /// The map between strain-like and stress-like variables
   virtual void q(const double * const alpha, double T, double * const qv) const = 0;
   /// The derivative of the map
@@ -32,10 +36,10 @@ class NEML_EXPORT HardeningRule: public NEMLObject {
 class NEML_EXPORT IsotropicHardeningRule: public HardeningRule {
  public:
   IsotropicHardeningRule(ParameterSet & params);
-  /// Number of strain-like history variable, defaults to 1
-  virtual size_t nhist() const;
-  /// Initialize the history, defaults to initializing one variable to 0.0
-  virtual void init_hist(double * const alpha) const;
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const;
+  /// Initialize the history
+  virtual void init_hist(History & h) const;
   /// Map between the strain variables and the single isotropic hardening
   /// parameter
   virtual void q(const double * const alpha, double T, double * const qv) const = 0;
@@ -188,10 +192,10 @@ static Register<CombinedIsotropicHardeningRule> regCombinedIsotropicHardeningRul
 class NEML_EXPORT KinematicHardeningRule: public HardeningRule {
  public:
   KinematicHardeningRule(ParameterSet & params);
-  /// Number of history variables (6)
-  virtual size_t nhist() const;
-  /// Initialize the 6 backstress components to zero
-  virtual void init_hist(double * const alpha) const;
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const;
+  /// Initialize the history
+  virtual void init_hist(History & h) const;
 
   /// Map between the backstrain and the backstress
   virtual void q(const double * const alpha, double T, double * const qv) const = 0;
@@ -239,10 +243,10 @@ class NEML_EXPORT CombinedHardeningRule: public HardeningRule {
   /// Default parameters
   static ParameterSet parameters();
 
-  /// Sum of the two model nhists
-  virtual size_t nhist() const;
-  /// Call init_hist on each model
-  virtual void init_hist(double * const alpha) const;
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const;
+  /// Initialize the history
+  virtual void init_hist(History & h) const;
   /// q[0] = isotropic model, q[1:7] = kinematic model
   virtual void q(const double * const alpha, double T, double * const qv) const;
   /// Derivative of the map
@@ -261,11 +265,13 @@ class NEML_EXPORT NonAssociativeHardening: public NEMLObject {
   NonAssociativeHardening(ParameterSet & params);
   /// How many stress-like variables
   virtual size_t ninter() const = 0; // How many "q" variables it spits out
-  /// How many strain-like variables
-  virtual size_t nhist() const = 0; // How many internal variables it stores
-
-  /// Initialize the strain-like variables
-  virtual void init_hist(double * const alpha) const = 0;
+  
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const;
+  /// Initialize the history
+  virtual void init_hist(History & h) const;
+  /// Number of history variables, can be removed in the future
+  virtual size_t nhist() const;
 
   /// Map from strain to stress
   virtual void q(const double * const alpha, double T, double * const qv) const = 0;
@@ -392,11 +398,11 @@ class NEML_EXPORT Chaboche: public NonAssociativeHardening {
 
   /// 1 (isotropic) + 6 (backstress) = 7
   virtual size_t ninter() const; // How many "q" variables it spits out
-  /// 1 (isotropic) + n_backstresses * 6
-  virtual size_t nhist() const; // How many internal variables it stores
 
-  /// Initialize everything to zero
-  virtual void init_hist(double * const alpha) const;
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const;
+  /// Initialize the history
+  virtual void init_hist(History & h) const;
 
   /// Map the isotropic variable, map the backstresses
   virtual void q(const double * const alpha, double T, double * const qv) const;
@@ -481,11 +487,11 @@ class NEML_EXPORT ChabocheVoceRecovery: public NonAssociativeHardening {
 
   /// 1 (isotropic) + 6 (backstress) = 7
   virtual size_t ninter() const; // How many "q" variables it spits out
-  /// 1 (isotropic) + n_backstresses * 6
-  virtual size_t nhist() const; // How many internal variables it stores
-
-  /// Initialize internal variables
-  virtual void init_hist(double * const alpha) const;
+  
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const;
+  /// Initialize the history
+  virtual void init_hist(History & h) const;
 
   /// Map the isotropic variable, map the backstresses
   virtual void q(const double * const alpha, double T, double * const qv) const;

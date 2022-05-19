@@ -24,9 +24,49 @@ void NEMLModel::save(std::string file_name, std::string model_name)
   outfile << representation;
   outfile.close();
 }
-double NEMLModel::get_damage(const double *const h_np1) { return 0.0; }
-bool NEMLModel::should_del_element(const double *const h_np1) { return false; }
-bool NEMLModel::is_damage_model() const { return false; }
+
+size_t NEMLModel::nstore() const
+{
+  History h;
+  populate_store(h);
+  return h.size();
+}
+
+void NEMLModel::init_store(double * const store) const
+{
+  History h(store);
+  populate_store(h);
+  init_store_object(h);
+}
+
+size_t NEMLModel::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
+}
+
+void NEMLModel::init_hist(double * const hist) const
+{
+  History h(hist);
+  populate_hist(h);
+  init_hist(h);
+}
+
+double NEMLModel::get_damage(const double *const h_np1) 
+{ 
+  return 0.0; 
+}
+
+bool NEMLModel::should_del_element(const double *const h_np1)
+{
+  return false;
+}
+
+bool NEMLModel::is_damage_model() const 
+{
+  return false;
+}
 
 // NEMLModel_sd implementation
 NEMLModel_sd::NEMLModel_sd(ParameterSet & params) :
@@ -74,15 +114,16 @@ void NEMLModel_sd::update_ld_inc(
 
 }
 
-size_t NEMLModel_sd::nstore() const
+void NEMLModel_sd::init_store_object(History & h) const
 {
-  return nhist() + 6;
+  init_hist(h);
+  h.get<Symmetric>("small_stress") = Symmetric::zero();
 }
 
-void NEMLModel_sd::init_store(double * const store) const
+void NEMLModel_sd::populate_store(History & h) const
 {
-  init_hist(&store[0]);
-  std::fill(&store[nhist()], &store[nhist()]+6, 0.0);
+  populate_hist(h);
+  h.add<Symmetric>("small_stress");
 }
 
 double NEMLModel_sd::alpha(double T) const
@@ -172,14 +213,14 @@ void NEMLModel_ldi::update_sd(
                        p_np1, p_n);
 }
 
-size_t NEMLModel_ldi::nstore() const
+void NEMLModel_ldi::init_store_object(History & h) const
 {
-  return nhist();
+  init_hist(h);
 }
 
-void NEMLModel_ldi::init_store(double * const store) const
+void NEMLModel_ldi::populate_store(History & h) const
 {
-  init_hist(&store[0]);
+  populate_hist(h);
 }
 
 SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
@@ -412,12 +453,11 @@ std::unique_ptr<NEMLObject> SmallStrainElasticity::initialize(ParameterSet & par
   return neml::make_unique<SmallStrainElasticity>(params);
 }
 
-size_t SmallStrainElasticity::nhist() const
+void SmallStrainElasticity::populate_hist(History & h) const
 {
-  return 0;
 }
 
-void SmallStrainElasticity::init_hist(double * const hist) const
+void SmallStrainElasticity::init_hist(History & h) const
 {
 }
 
@@ -487,13 +527,14 @@ std::unique_ptr<NEMLObject> SmallStrainPerfectPlasticity::initialize(ParameterSe
   return neml::make_unique<SmallStrainPerfectPlasticity>(params); 
 }
 
-size_t SmallStrainPerfectPlasticity::nhist() const
+void SmallStrainPerfectPlasticity::populate_hist(History & h) const
 {
-  return 0;
+
 }
 
-void SmallStrainPerfectPlasticity::init_hist(double * const hist) const
+void SmallStrainPerfectPlasticity::init_hist(History & h) const
 {
+
 }
 
 TrialState * SmallStrainPerfectPlasticity::setup(
@@ -681,7 +722,6 @@ void SmallStrainPerfectPlasticity::make_trial_state(
 }
 
 // Implementation of small strain rate independent plasticity
-//
 SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     ParameterSet & params) : 
       SubstepModel_sd(params),
@@ -724,12 +764,12 @@ std::unique_ptr<NEMLObject> SmallStrainRateIndependentPlasticity::initialize(Par
   return neml::make_unique<SmallStrainRateIndependentPlasticity>(params); 
 }
 
-size_t SmallStrainRateIndependentPlasticity::nhist() const
+void SmallStrainRateIndependentPlasticity::populate_hist(History & hist) const
 {
-  return flow_->nhist();
+  flow_->populate_hist(hist);
 }
 
-void SmallStrainRateIndependentPlasticity::init_hist(double * const hist) const
+void SmallStrainRateIndependentPlasticity::init_hist(History & hist) const
 {
   flow_->init_hist(hist);
 }
@@ -829,15 +869,15 @@ void SmallStrainRateIndependentPlasticity::work_and_energy(
 size_t SmallStrainRateIndependentPlasticity::nparams() const
 {
   // My convention: plastic strain, history, consistency parameter
-  return 6 + flow_->nhist() + 1;
+  return 6 + nhist() + 1;
 }
 
 void SmallStrainRateIndependentPlasticity::init_x(double * const x, TrialState * ts)
 {
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
   std::copy(tss->s_tr, tss->s_tr+6, x);
-  std::copy(&tss->h_tr[0], &tss->h_tr[0]+flow_->nhist(), &x[6]);
-  x[6+flow_->nhist()] = 0.0; // consistency parameter
+  std::copy(&tss->h_tr[0], &tss->h_tr[0]+nhist(), &x[6]);
+  x[6+nhist()] = 0.0; // consistency parameter
 }
 
 void SmallStrainRateIndependentPlasticity::RJ(const double * const x, 
@@ -847,7 +887,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
 
   // Again no idea why the compiler can't do this
-  int nh = flow_->nhist();
+  int nh = nhist();
 
   // Setup from current state
   const double * const s_np1 = &x[0];
@@ -984,7 +1024,7 @@ void SmallStrainRateIndependentPlasticity::make_trial_state(
   mat_vec(S_n, 6, s_n, 6, ee_n);
   sub_vec(e_n, ee_n, 6, ts.ep_tr);
 
-  ts.h_tr.resize(flow_->nhist());
+  ts.h_tr.resize(nhist());
   std::copy(h_n, h_n+nhist(), ts.h_tr.begin());
   // Calculate the trial stress
   double ee[6];
@@ -1046,16 +1086,16 @@ std::unique_ptr<NEMLObject> SmallStrainCreepPlasticity::initialize(ParameterSet 
   return neml::make_unique<SmallStrainCreepPlasticity>(params); 
 }
 
-size_t SmallStrainCreepPlasticity::nhist() const
+void SmallStrainCreepPlasticity::populate_hist(History & hist) const
 {
-  // The elastic-plastic strain + the plastic model history
-  return plastic_->nhist() + 6;
+  plastic_->populate_hist(hist);
+  hist.add<Symmetric>("plastic_strain");
 }
 
-void SmallStrainCreepPlasticity::init_hist(double * const hist) const
+void SmallStrainCreepPlasticity::init_hist(History & hist) const
 {
-  std::fill(hist, hist+6, 0.0);
-  plastic_->init_hist(&hist[6]);
+  hist.get<Symmetric>("plastic_strain") = Symmetric::zero();
+  plastic_->init_hist(hist);
 }
 
 void SmallStrainCreepPlasticity::update_sd(
@@ -1388,12 +1428,12 @@ void GeneralIntegrator::work_and_energy(
 
 }
 
-size_t GeneralIntegrator::nhist() const
+void GeneralIntegrator::populate_hist(History & hist) const
 {
-  return rule_->nhist();
+  rule_->populate_hist(hist);
 }
 
-void GeneralIntegrator::init_hist(double * const hist) const
+void GeneralIntegrator::init_hist(History & hist) const
 {
   rule_->init_hist(hist);
 }
@@ -1601,12 +1641,12 @@ void KMRegimeModel::update_sd(
                                    p_np1, p_n);
 }
 
-size_t KMRegimeModel::nhist() const
+void KMRegimeModel::populate_hist(History & hist) const
 {
-  return models_[0]->nhist();
+  return models_[0]->populate_hist(hist);
 }
 
-void KMRegimeModel::init_hist(double * const hist) const
+void KMRegimeModel::init_hist(History & hist) const
 {
   return models_[0]->init_hist(hist);
 }
