@@ -28,11 +28,13 @@ class NEML_EXPORT WalkerKremplSwitchRule : public GeneralFlowRule {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
   /// Initialize from parameter set
   static ParameterSet parameters();
-
+  
   /// Number of history variables
   virtual size_t nhist() const;
+  /// Setup internal state
+  virtual void populate_hist(History & hist) const;
   /// Initialize history
-  virtual void init_hist(double * const h);
+  virtual void init_hist(History & hist) const;
 
   /// Stress rate
   virtual void s(const double * const s, const double * const alpha,
@@ -510,16 +512,6 @@ class NEML_EXPORT WrappedViscoPlasticFlowRule : public ViscoPlasticFlowRule {
   /// Default constructor sets up the structs for the conversion
   WrappedViscoPlasticFlowRule(ParameterSet & params);
 
-  /// Populate a history object
-  virtual void populate_hist(History & h) const = 0;
-  /// Initialize with starting values
-  virtual void initialize_hist(History & h) const = 0;
-
-  /// Number of history variables (from the hardening model)
-  virtual size_t nhist() const;
-  /// Initialize history at time zero
-  virtual void init_hist(double * const h) const;
-
   /// Scalar inelastic strain rate
   virtual void y(const double* const s, const double* const alpha, double T,
                 double & yv) const;
@@ -660,7 +652,7 @@ class NEML_EXPORT TestFlowRule: public WrappedViscoPlasticFlowRule
 
   /// Populate a history object
   virtual void populate_hist(History & h) const;
-  virtual void initialize_hist(History & h) const;
+  virtual void init_hist(History & h) const;
 
   // Scalar inelastic strain rate
   virtual void y(const State & state, double & res) const;
@@ -705,7 +697,7 @@ class NEML_EXPORT WalkerFlowRule: public WrappedViscoPlasticFlowRule
   /// Populate a history object
   virtual void populate_hist(History & h) const;
   /// Initialize history with time zero values
-  virtual void initialize_hist(History & h) const;
+  virtual void init_hist(History & h) const;
 
   // Scalar inelastic strain rate
   virtual void y(const State & state, double & res) const;

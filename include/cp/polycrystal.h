@@ -15,9 +15,9 @@ class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
   PolycrystalModel(ParameterSet & params);
 
   size_t n() const;
-
-  virtual size_t nhist() const;
-  virtual void init_hist(double * const hist) const;
+  
+  virtual void populate_hist(History & hist) const;
+  virtual void init_hist(History & hist) const;
 
   double * history(double * const store, size_t i) const;
   double * stress(double * const store, size_t i) const;
@@ -48,9 +48,6 @@ class NEML_EXPORT TaylorModel: public PolycrystalModel
   static ParameterSet parameters();
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
-  virtual size_t nstore() const;
-  virtual void init_store(double * const store) const;
 
   /// Large strain incremental update
   virtual void update_ld_inc(

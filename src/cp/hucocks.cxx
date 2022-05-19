@@ -85,13 +85,13 @@ void HuCocksPrecipitationModel::set_varnames(std::vector<std::string> vars)
   varnames_ = vars;
 }
 
-void HuCocksPrecipitationModel::populate_history(History & history) const
+void HuCocksPrecipitationModel::populate_hist(History & history) const
 {
   for (auto vn : varnames_)
     history.add<double>(vn);
 }
 
-void HuCocksPrecipitationModel::init_history(History & history) const
+void HuCocksPrecipitationModel::init_hist(History & history) const
 {
   history.get<double>(varnames_[0]) = f_init_ / fs_;
   history.get<double>(varnames_[1]) = r_init_ / rs_;
@@ -565,14 +565,14 @@ void DislocationSpacingHardening::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void DislocationSpacingHardening::populate_history(History & history) const
+void DislocationSpacingHardening::populate_hist(History & history) const
 {
   for (auto vn : varnames_) {
     history.add<double>(vn);
   }
 }
 
-void DislocationSpacingHardening::init_history(History & history) const
+void DislocationSpacingHardening::init_hist(History & history) const
 {
   for (auto vn : varnames_) {
     history.get<double>(vn) = L0_;
@@ -812,19 +812,19 @@ void HuCocksHardening::set_varnames(std::vector<std::string> vars)
   throw std::runtime_error("Cannot override varnames for HuCocksHardening");
 }
 
-void HuCocksHardening::populate_history(History & history) const
+void HuCocksHardening::populate_hist(History & history) const
 {
-  dmodel_->populate_history(history);
+  dmodel_->populate_hist(history);
   for (auto pmodel : pmodels_)
-    pmodel->populate_history(history);
+    pmodel->populate_hist(history);
 }
 
-void HuCocksHardening::init_history(History & history) const
+void HuCocksHardening::init_hist(History & history) const
 {
   history.zero();
-  dmodel_->init_history(history);
+  dmodel_->init_hist(history);
   for (auto pmodel : pmodels_)
-    pmodel->init_history(history);
+    pmodel->init_hist(history);
 }
 
 double HuCocksHardening::hist_to_tau(size_t g, size_t i, 
@@ -925,7 +925,7 @@ History HuCocksHardening::d_hist_d_s(const Symmetric & stress,
   // These are zero
   for (size_t i = 0; i < pmodels_.size(); i++) {
     History pm;
-    pmodels_[i]->populate_history(pm);
+    pmodels_[i]->populate_hist(pm);
     History zero = pm.derivative<Symmetric>().zero();
     res.add_union(zero);
   }
@@ -944,7 +944,7 @@ History HuCocksHardening::d_hist_d_h(const Symmetric & stress,
   std::vector<History> phists;
   for (auto pmodel : pmodels_) {
     History pm;
-    pmodel->populate_history(pm);
+    pmodel->populate_hist(pm);
     phists.push_back(pm.zero());
   }
 

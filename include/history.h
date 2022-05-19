@@ -19,7 +19,8 @@ enum StorageType {
   TYPE_SYMMETRIC = 3,
   TYPE_SKEW      = 4,
   TYPE_ROT       = 5,
-  TYPE_SYMSYM    = 6
+  TYPE_SYMSYM    = 6,
+  TYPE_BLANK     = 7
 };
 
 // Black magic to map a type to the enum
@@ -123,6 +124,13 @@ class NEML_EXPORT History {
     error_if_not_exists_(name);
     error_if_wrong_type_(name, GetStorageType<T>());
     return T(&(storage_[loc_.at(name)]));
+  }
+
+  /// Get a pointer to the raw location of an item
+  double * get_data(std::string name)
+  {
+    error_if_not_exists_(name);
+    return &(storage_[loc_.at(name)]);
   }
 
   /// Get the location map

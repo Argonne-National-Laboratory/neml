@@ -22,9 +22,10 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
 
   /// How many history variables?  Equal to base_history + ndamage
   virtual size_t nhist() const;
+  /// Populate the internal variables
+  virtual void populate_hist(History & hist) const;
   /// Initialize base according to the base model and damage according to
-  /// init_damage
-  virtual void init_hist(double * const hist) const;
+  virtual void init_hist(History & hist) const;
 
   /// The damaged stress update
   virtual void update_sd(
@@ -39,8 +40,10 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
 
   /// Number of damage variables
   virtual size_t ndamage() const = 0;
+  /// Populate the damage variables
+  virtual void populate_damage(History & hist) const = 0;
   /// Setup the damage variables
-  virtual void init_damage(double * const damage) const = 0;
+  virtual void init_damage(History & hist) const = 0;
 
   /// Override the elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
@@ -89,8 +92,10 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
 
   /// Equal to 1
   virtual size_t ndamage() const;
+  /// Populate damage
+  virtual void populate_damage(History & hist) const;
   /// Initialize to zero
-  virtual void init_damage(double * const damage) const;
+  virtual void init_damage(History & hist) const;
 
   /// Number of parameters for the solver
   virtual size_t nparams() const;

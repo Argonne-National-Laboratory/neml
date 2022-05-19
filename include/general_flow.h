@@ -16,10 +16,12 @@ class NEML_EXPORT GeneralFlowRule: public NEMLObject {
  public:
   GeneralFlowRule(ParameterSet & params);
 
-  /// Number of history variables
-  virtual size_t nhist() const = 0;
+  /// Setup internal state
+  virtual void populate_hist(History & h) const = 0;
   /// Initialize the history at time zero
-  virtual void init_hist(double * const h) = 0;
+  virtual void init_hist(History & h) const = 0;
+  /// Number of history variables
+  virtual size_t nhist() const;
 
   /// Stress rate
   virtual void s(const double * const s, const double * const alpha,
@@ -94,10 +96,10 @@ class NEML_EXPORT TVPFlowRule : public GeneralFlowRule {
   /// Initialize from parameter set
   static ParameterSet parameters();
 
-  /// Number of history variables
-  virtual size_t nhist() const;
+  // Setup internal state
+  virtual void populate_hist(History & h) const;
   /// Initialize history
-  virtual void init_hist(double * const h);
+  virtual void init_hist(History & h) const;
 
   /// Stress rate
   virtual void s(const double * const s, const double * const alpha,

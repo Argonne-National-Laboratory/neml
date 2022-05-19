@@ -27,7 +27,7 @@ void CrystalDamageModel::set_varnames(std::vector<std::string> names)
   varnames_ = names;
 }
 
-void CrystalDamageModel::populate_history(History & history) const
+void CrystalDamageModel::populate_hist(History & history) const
 {
   for (auto name : varnames_)
     history.add<double>(name);
@@ -56,7 +56,7 @@ ParameterSet NilDamageModel::parameters()
   return pset;
 }
 
-void NilDamageModel::init_history(History & history) const
+void NilDamageModel::init_hist(History & history) const
 {
   history.get<double>("whatever") = 0.0;
 }
@@ -170,7 +170,7 @@ ParameterSet PlanarDamageModel::parameters()
   return pset;
 }
 
-void PlanarDamageModel::init_history(History & history) const
+void PlanarDamageModel::init_hist(History & history) const
 {
   for (auto vn : varnames_)
     history.get<double>(vn) = damage_->setup();

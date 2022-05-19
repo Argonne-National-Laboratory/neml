@@ -23,7 +23,7 @@ SingleCrystalModel::SingleCrystalModel(ParameterSet & params) :
     elastic_predictor_first_step_(params.get_parameter<bool>(
             "elastic_predictor_first_step"))
 {
-  populate_history(stored_hist_);
+  populate_hist(stored_hist_);
   
   // Really dumb way to get the names of the parameters that stay fixed during
   // the update
@@ -70,11 +70,11 @@ std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params
   return neml::make_unique<SingleCrystalModel>(params);
 }
 
-void SingleCrystalModel::populate_history(History & history) const
+void SingleCrystalModel::populate_hist(History & history) const
 {
   populate_static_(history);
 
-  kinematics_->populate_history(history);
+  kinematics_->populate_hist(history);
 }
 
 void SingleCrystalModel::populate_static_(History & history) const
@@ -85,10 +85,10 @@ void SingleCrystalModel::populate_static_(History & history) const
     history.add<RankTwo>("nye");
   }
   for (auto pp : postprocessors_)
-    pp->populate_history(*lattice_, history);
+    pp->populate_hist(*lattice_, history);
 }
 
-void SingleCrystalModel::init_history(History & history) const
+void SingleCrystalModel::init_hist(History & history) const
 {
   history.get<Orientation>("rotation") = *q0_;
   history.get<Orientation>("rotation0") = *q0_;
@@ -96,9 +96,9 @@ void SingleCrystalModel::init_history(History & history) const
     history.get<RankTwo>("nye") = RankTwo({0,0,0,0,0,0,0,0,0});
   }
   for (auto pp : postprocessors_)
-    pp->init_history(*lattice_, history);
+    pp->init_hist(*lattice_, history);
 
-  kinematics_->init_history(history);
+  kinematics_->init_hist(history);
 }
 
 double SingleCrystalModel::strength(double * const hist, double T) const
@@ -328,18 +328,6 @@ void SingleCrystalModel::attempt_update_ld_inc_(
   // Update model based on any post-processors
   for (auto pp : postprocessors_)
     pp->act(*this, local_lattice, T_np1, D, W, HF_np1, HF_n);
-}
-
-size_t SingleCrystalModel::nhist() const
-{
-  return stored_hist_.size();
-}
-
-void SingleCrystalModel::init_hist(double * const hist) const
-{
-  std::fill(hist, hist+nhist(), 0.0); // Shuts it up about initialized memory
-  History h = gather_history_(hist);
-  init_history(h);
 }
 
 double SingleCrystalModel::alpha(double T) const

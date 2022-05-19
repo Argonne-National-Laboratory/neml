@@ -8,6 +8,7 @@
 #include "general_flow.h"
 #include "interpolate.h"
 #include "creep.h"
+#include "history.h"
 
 #include "windows.h"
 
@@ -31,11 +32,15 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
    virtual void save(std::string file_name, std::string model_name);
 
    /// Total number of stored internal variables
-   virtual size_t nstore() const = 0;
-   /// Initialize the internal variables
-   virtual void init_store(double * const store) const = 0;
+   virtual size_t nstore() const;
+   /// Initialize the internal variables, raw pointer
+   virtual void init_store(double * const store) const;
+   /// Initialize the internal variables, history object
+   virtual void init_store_object(History & history) const = 0;
+   /// Populate the model state
+   virtual void populate_store(History & history) const = 0;
 
-   /// Small strain update interface
+   /// Raw data small strain update interface
    virtual void update_sd(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
@@ -46,7 +51,7 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
 
-   /// Large strain incremental update
+   /// Raw data large strain incremental update
    virtual void update_ld_inc(
        const double * const d_np1, const double * const d_n,
        const double * const w_np1, const double * const w_n,
@@ -57,11 +62,15 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
        double * const A_np1, double * const B_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
-
-   /// Number of internal variables that are true material history
-   virtual size_t nhist() const = 0;
-   /// Initialize the history variables
-   virtual void init_hist(double * const hist) const = 0;
+  
+   /// Number of model internal variables
+   virtual size_t nhist() const;
+   /// Populate the actual history, wrapped object
+   virtual void populate_hist(History & hist) const = 0;
+   /// Populate the actual history, raw data
+   virtual void init_hist(double * const hist) const;
+   /// Initialize the history variables, wrapped object
+   virtual void init_hist(History & hist) const = 0;
 
    /// Instantaneous thermal expansion coefficient as a function of temperature
    virtual double alpha(double T) const = 0;
@@ -105,15 +114,10 @@ class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
 
-   /// Number of stored variables
-   virtual size_t nstore() const;
    /// Initialize stored variables
-   virtual void init_store(double * const store) const;
-
-   /// Number of stored variables that are true material history
-   virtual size_t nhist() const = 0;
-   /// Initialize the stored history
-   virtual void init_hist(double * const hist) const = 0;
+   virtual void init_store_object(History & h) const;
+   /// Populate the model state
+   virtual void populate_store(History & history) const;
 };
 
 /// Small deformation stress update
@@ -145,15 +149,10 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
        double & u_np1, double u_n,
        double & p_np1, double p_n);
 
-   /// Number of stored variables
-   virtual size_t nstore() const;
    /// Initialize stored variables
-   virtual void init_store(double * const store) const;
-
-   /// Number of stored variables that are true material history
-   virtual size_t nhist() const = 0;
-   /// Initialize the stored history
-   virtual void init_hist(double * const hist) const = 0;
+   virtual void init_store_object(History & h) const;
+   /// Populate the model state
+   virtual void populate_store(History & history) const;
 
    /// Provide the instantaneous CTE
    virtual double alpha(double T) const;
@@ -179,7 +178,6 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
   private:
    std::shared_ptr<Interpolate> alpha_;
    bool truesdell_;
-
 };
 
 /// Adaptive integration, tangent using the usual trick
@@ -288,10 +286,12 @@ class NEML_EXPORT SmallStrainElasticity: public NEMLModel_sd {
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-  /// Number of history variables (=0)
-  virtual size_t nhist() const;
+  
+  /// Populate internal variables (none)
+  virtual void populate_hist(History & h) const;
+
   /// Initialize history (none to setup)
-  virtual void init_hist(double * const hist) const;
+  virtual void init_hist(History & h) const;
 };
 
 static Register<SmallStrainElasticity> regSmallStrainElasticity;
@@ -361,11 +361,11 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
   static ParameterSet parameters();
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
-  /// Number of history variables (=0)
-  virtual size_t nhist() const;
+  
+  /// Populate the internal variables (nothing)
+  virtual void populate_hist(History & h) const;
   /// Initialize history (nothing to do)
-  virtual void init_hist(double * const hist) const;
+  virtual void init_hist(History & h) const;
   
   /// Number of nonlinear equations to solve in the integration
   virtual size_t nparams() const;
@@ -456,11 +456,11 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   static ParameterSet parameters();
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
-  /// Number of history variables
-  virtual size_t nhist() const;
+  
+  /// Populate internal variables
+  virtual void populate_hist(History & h) const;
   /// Initialize history at time zero
-  virtual void init_hist(double * const hist) const;
+  virtual void init_hist(History & h) const;
 
   /// Setup the trial state
   virtual TrialState * setup(
@@ -561,11 +561,11 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
       double * const A_np1,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
-
-  /// Number of history variables matches the base model
-  virtual size_t nhist() const;
+  
+  /// Populate list of internal variables
+  virtual void populate_hist(History & hist) const;
   /// Passes call for initial history to base model
-  virtual void init_hist(double * const hist) const;
+  virtual void init_hist(History & hist) const;
 
   /// The number of parameters in the nonlinear equation
   virtual size_t nparams() const;
@@ -664,10 +664,10 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
       double & u_np1, double u_n,
       double & p_np1, double p_n);
 
-  /// Number of history variables
-  virtual size_t nhist() const;
+  /// Populate internal variables
+  virtual void populate_hist(History & hist) const;
   /// Initialize the history at time zero
-  virtual void init_hist(double * const hist) const;
+  virtual void init_hist(History & hist) const;
 
   /// Number of nonlinear equations
   virtual size_t nparams() const;
@@ -734,10 +734,10 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
       double & u_np1, double u_n,
       double & p_np1, double p_n);
 
-  /// The number of model history variables
-  virtual size_t nhist() const;
+  /// Populate internal variables
+  virtual void populate_hist(History & hist) const;
   /// Initialize history at time zero
-  virtual void init_hist(double * const hist) const;
+  virtual void init_hist(History & hist) const;
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);

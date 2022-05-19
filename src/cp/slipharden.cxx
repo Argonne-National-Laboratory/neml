@@ -25,7 +25,7 @@ History SlipHardening::cache(CacheType type) const
 void SlipHardening::init_cache_()
 {
   blank_ = make_unique<History>();
-  populate_history(*blank_);
+  populate_hist(*blank_);
   blank_->zero();
 
   double_ = make_unique<History>((*blank_).derivative<double>());
@@ -91,11 +91,11 @@ void FixedStrengthHardening::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void FixedStrengthHardening::populate_history(History & history) const
+void FixedStrengthHardening::populate_hist(History & history) const
 {
 }
 
-void FixedStrengthHardening::init_history(History & history) const
+void FixedStrengthHardening::init_hist(History & history) const
 {
 }
 
@@ -199,14 +199,14 @@ void VocePerSystemHardening::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void VocePerSystemHardening::populate_history(History & history) const
+void VocePerSystemHardening::populate_hist(History & history) const
 {
   for (auto vn : varnames_) {
     history.add<double>(vn);
   }
 }
 
-void VocePerSystemHardening::init_history(History & history) const
+void VocePerSystemHardening::init_hist(History & history) const
 {
   size_t i = 0;
   for (auto vn : varnames_) {
@@ -383,14 +383,14 @@ void FASlipHardening::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void FASlipHardening::populate_history(History & history) const
+void FASlipHardening::populate_hist(History & history) const
 {
   for (auto vn : varnames_) {
     history.add<double>(vn);
   }
 }
 
-void FASlipHardening::init_history(History & history) const
+void FASlipHardening::init_hist(History & history) const
 {
   size_t i = 0;
   for (auto vn : varnames_) {
@@ -563,14 +563,14 @@ void GeneralLinearHardening::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void GeneralLinearHardening::populate_history(History & history) const
+void GeneralLinearHardening::populate_hist(History & history) const
 {
   for (auto vn : varnames_) {
     history.add<double>(vn);
   }
 }
 
-void GeneralLinearHardening::init_history(History & history) const
+void GeneralLinearHardening::init_hist(History & history) const
 {
   size_t i = 0;
   for (auto vn : varnames_) {
@@ -790,14 +790,14 @@ void SimpleLinearHardening::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void SimpleLinearHardening::populate_history(History & history) const
+void SimpleLinearHardening::populate_hist(History & history) const
 {
   for (auto vn : varnames_) {
     history.add<double>(vn);
   }
 }
 
-void SimpleLinearHardening::init_history(History & history) const
+void SimpleLinearHardening::init_hist(History & history) const
 {
   size_t i = 0;
   for (auto vn : varnames_) {
@@ -1006,14 +1006,14 @@ void LANLTiModel::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void LANLTiModel::populate_history(History & history) const
+void LANLTiModel::populate_hist(History & history) const
 {
   for (auto vn : varnames_) {
     history.add<double>(vn);
   }
 }
 
-void LANLTiModel::init_history(History & history) const
+void LANLTiModel::init_hist(History & history) const
 {
   for (size_t i = 0; i < size(); i++) {
     if (i < nslip_()) {
@@ -1271,12 +1271,12 @@ void SlipSingleStrengthHardening::set_varnames(std::vector<std::string> vars)
   init_cache_();
 }
 
-void SlipSingleStrengthHardening::populate_history(History & history) const
+void SlipSingleStrengthHardening::populate_hist(History & history) const
 {
   history.add<double>(var_name_);
 }
 
-void SlipSingleStrengthHardening::init_history(History & history) const
+void SlipSingleStrengthHardening::init_hist(History & history) const
 {
   history.get<double>(var_name_) = init_strength();
 }
@@ -1429,14 +1429,14 @@ ParameterSet SumSlipSingleStrengthHardening::parameters()
   return pset;
 }
 
-void SumSlipSingleStrengthHardening::populate_history(History & history) const
+void SumSlipSingleStrengthHardening::populate_hist(History & history) const
 {
   for (size_t i = 0; i < nmodels(); i++) {
     history.add<double>("strength"+std::to_string(i));
   }
 }
 
-void SumSlipSingleStrengthHardening::init_history(History & history) const
+void SumSlipSingleStrengthHardening::init_hist(History & history) const
 {
   for (size_t i = 0; i < nmodels(); i++) {
     history.get<double>("strength"+std::to_string(i)) = models_[i]->init_strength();
