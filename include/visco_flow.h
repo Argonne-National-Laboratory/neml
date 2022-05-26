@@ -15,16 +15,9 @@
 namespace neml {
 
 /// ABC describing viscoplastic flow
-class NEML_EXPORT ViscoPlasticFlowRule: public NEMLObject {
+class NEML_EXPORT ViscoPlasticFlowRule: public HistoryNEMLObject {
  public:
   ViscoPlasticFlowRule(ParameterSet & params);
-
-  /// Number of history variables
-  virtual void populate_hist(History & hist) const = 0;
-  /// Initialize history at time zero
-  virtual void init_hist(History & hist) const = 0;
-  /// Number of history variables, temporary
-  virtual size_t nhist() const;
 
   /// Scalar flow rate
   virtual void y(const double* const s, const double* const alpha, double T,

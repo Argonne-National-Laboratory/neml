@@ -5,7 +5,7 @@
 namespace neml {
 
 SlipHardening::SlipHardening(ParameterSet & params): 
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
 }

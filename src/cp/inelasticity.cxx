@@ -5,7 +5,7 @@
 namespace neml {
 
 InelasticModel::InelasticModel(ParameterSet & params) : 
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
 }

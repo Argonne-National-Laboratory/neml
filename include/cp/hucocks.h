@@ -12,7 +12,7 @@ namespace neml {
 
 /// Implementation of a single chemistry <-> size model
 //  For details see Hu et al. MSE A, 2020
-class NEML_EXPORT HuCocksPrecipitationModel: public NEMLObject
+class NEML_EXPORT HuCocksPrecipitationModel: public HistoryNEMLObject
 {
  public:
   HuCocksPrecipitationModel(ParameterSet & params);

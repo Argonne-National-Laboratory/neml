@@ -15,16 +15,7 @@ PYBIND11_MODULE(ri_flow, m) {
 
   m.doc() = "Rate independent flow models.";
   
-  py::class_<RateIndependentFlowRule, NEMLObject, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")
-      .def_property_readonly("nhist", &RateIndependentFlowRule::nhist, "Number of history variables.")
-      .def("init_hist",
-           [](RateIndependentFlowRule & m) -> py::array_t<double>
-           {
-            auto h = alloc_vec<double>(m.nhist());
-            m.init_hist(arr2ptr<double>(h));
-            return h;
-           }, "Initialize history variables.")
-
+  py::class_<RateIndependentFlowRule, HistoryNEMLObject, std::shared_ptr<RateIndependentFlowRule>>(m, "RateIndenpendentFlowRule")
       .def("f",
            [](RateIndependentFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> double
            {

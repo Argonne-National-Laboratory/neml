@@ -5,16 +5,9 @@
 namespace neml {
 
 RateIndependentFlowRule::RateIndependentFlowRule(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
-}
-
-size_t RateIndependentFlowRule::nhist() const
-{
-  History h;
-  populate_hist(h);
-  return h.size();
 }
 
 RateIndependentAssociativeFlow::RateIndependentAssociativeFlow(ParameterSet &

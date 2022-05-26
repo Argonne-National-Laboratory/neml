@@ -10,15 +10,8 @@
 namespace neml {
 
 GeneralFlowRule::GeneralFlowRule(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
-}
-
-size_t GeneralFlowRule::nhist() const
-{
-  History h;
-  populate_hist(h);
-  return h.size();
 }
 
 void GeneralFlowRule::work_rate(const double * const s,
