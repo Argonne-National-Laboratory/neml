@@ -8,16 +8,9 @@
 namespace neml {
 
 ViscoPlasticFlowRule::ViscoPlasticFlowRule(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
-}
-
-size_t ViscoPlasticFlowRule::nhist() const
-{
-  History h;
-  populate_hist(h);
-  return h.size();
 }
 
 // Default implementation of flow rule wrt time

@@ -12,16 +12,9 @@
 namespace neml {
 
 /// ABC for a completely general flow rule...
-class NEML_EXPORT GeneralFlowRule: public NEMLObject {
+class NEML_EXPORT GeneralFlowRule: public HistoryNEMLObject {
  public:
   GeneralFlowRule(ParameterSet & params);
-
-  /// Setup internal state
-  virtual void populate_hist(History & h) const = 0;
-  /// Initialize the history at time zero
-  virtual void init_hist(History & h) const = 0;
-  /// Number of history variables
-  virtual size_t nhist() const;
 
   /// Stress rate
   virtual void s(const double * const s, const double * const alpha,

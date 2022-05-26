@@ -12,8 +12,8 @@ PYBIND11_MODULE(postprocessors, m) {
   m.doc() = "Crystal plasticity postprocessors";
 
   py::class_<CrystalPostprocessor, NEMLObject, std::shared_ptr<CrystalPostprocessor>>(m,"CrystalPostprocessor")
-      .def("populate_history", &CrystalPostprocessor::populate_history)
-      .def("init_history", &CrystalPostprocessor::init_history)
+      .def("populate_history", &CrystalPostprocessor::populate_hist)
+      .def("init_history", &CrystalPostprocessor::init_hist)
       .def("act", &CrystalPostprocessor::act)
       ;
 

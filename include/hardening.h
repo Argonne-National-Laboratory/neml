@@ -16,15 +16,9 @@ namespace neml {
 /// Interface for a generic hardening rule
 //    1) Take alpha to q
 //    2) Give the gradient of that function
-class NEML_EXPORT HardeningRule: public NEMLObject {
+class NEML_EXPORT HardeningRule: public HistoryNEMLObject {
  public:
   HardeningRule(ParameterSet & params);
-  /// Setup the internal state
-  virtual void populate_hist(History & h) const = 0;
-  /// Initialize the history
-  virtual void init_hist(History & h) const = 0;
-  /// This should be replaced at some point
-  virtual size_t nhist() const;
 
   /// The map between strain-like and stress-like variables
   virtual void q(const double * const alpha, double T, double * const qv) const = 0;
@@ -260,19 +254,12 @@ class NEML_EXPORT CombinedHardeningRule: public HardeningRule {
 static Register<CombinedHardeningRule> regCombinedHardeningRule;
 
 /// ABC of a non-associative hardening rule
-class NEML_EXPORT NonAssociativeHardening: public NEMLObject {
+class NEML_EXPORT NonAssociativeHardening: public HistoryNEMLObject {
  public:
   NonAssociativeHardening(ParameterSet & params);
   /// How many stress-like variables
   virtual size_t ninter() const = 0; // How many "q" variables it spits out
   
-  /// Setup the internal state
-  virtual void populate_hist(History & h) const;
-  /// Initialize the history
-  virtual void init_hist(History & h) const;
-  /// Number of history variables, can be removed in the future
-  virtual size_t nhist() const;
-
   /// Map from strain to stress
   virtual void q(const double * const alpha, double T, double * const qv) const = 0;
   /// Derivative of the map
@@ -458,7 +445,7 @@ class NEML_EXPORT Chaboche: public NonAssociativeHardening {
  private:
   std::shared_ptr<IsotropicHardeningRule> iso_;
   const std::vector<std::shared_ptr<Interpolate>> c_;  
-  const int n_;
+  const size_t n_;
   std::vector<std::shared_ptr<GammaModel>> gmodels_;
 
   const std::vector<std::shared_ptr<Interpolate>> A_;
@@ -545,7 +532,7 @@ class NEML_EXPORT ChabocheVoceRecovery: public NonAssociativeHardening {
   const std::shared_ptr<Interpolate> r2_;
 
   const std::vector<std::shared_ptr<Interpolate>> c_;  
-  const int n_;
+  const size_t n_;
   std::vector<std::shared_ptr<GammaModel>> gmodels_;
 
   const std::vector<std::shared_ptr<Interpolate>> A_;

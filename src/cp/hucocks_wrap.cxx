@@ -15,7 +15,7 @@ PYBIND11_MODULE(hucocks, m) {
 
   m.doc() = "Objects for the Hu & Cocks 316H model";
 
-  py::class_<HuCocksPrecipitationModel, NEMLObject,
+  py::class_<HuCocksPrecipitationModel, HistoryNEMLObject,
       std::shared_ptr<HuCocksPrecipitationModel>>(m,
                                                   "HuCocksPrecipitationModel")
     .def(py::init([](py::args args, py::kwargs kwargs)
@@ -26,8 +26,6 @@ PYBIND11_MODULE(hucocks, m) {
                   }))
     .def("varnames", &HuCocksPrecipitationModel::varnames)
     .def("set_varnames", &HuCocksPrecipitationModel::set_varnames)
-    .def("populate_history", &HuCocksPrecipitationModel::populate_history)
-    .def("init_history", &HuCocksPrecipitationModel::init_history)
     .def("f", &HuCocksPrecipitationModel::f)
     .def("r", &HuCocksPrecipitationModel::r)
     .def("N", &HuCocksPrecipitationModel::N)

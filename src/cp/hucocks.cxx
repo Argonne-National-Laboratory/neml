@@ -4,7 +4,7 @@ namespace neml {
 
 HuCocksPrecipitationModel::HuCocksPrecipitationModel(
     ParameterSet & params) :
-      NEMLObject(params),
+      HistoryNEMLObject(params),
       c0_(params.get_object_parameter_vector<Interpolate>("c0")), 
       cp_(params.get_object_parameter_vector<Interpolate>("cp")), 
       ceq_(params.get_object_parameter_vector<Interpolate>("ceq")),

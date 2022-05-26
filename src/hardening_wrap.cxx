@@ -15,17 +15,7 @@ PYBIND11_MODULE(hardening, m) {
 
   m.doc() = "Various hardening rules.";
 
-  py::class_<HardeningRule, NEMLObject, std::shared_ptr<HardeningRule>>(m, "HardeningRule")
-      .def_property_readonly("nhist", &HardeningRule::nhist, "Number of history variables.")
-
-      .def("init_hist",
-           [](const HardeningRule & m) -> py::array_t<double>
-           {
-            auto v = alloc_vec<double>(m.nhist());
-            m.init_hist(arr2ptr<double>(v));
-            return v;
-           }, "Initialize history.")
-        
+  py::class_<HardeningRule, HistoryNEMLObject, std::shared_ptr<HardeningRule>>(m, "HardeningRule")
       .def("q",
            [](const HardeningRule & m, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>
            {
@@ -128,15 +118,6 @@ PYBIND11_MODULE(hardening, m) {
 
   py::class_<NonAssociativeHardening, NEMLObject, std::shared_ptr<NonAssociativeHardening>>(m, "NonAssociativeHardening")
       .def_property_readonly("ninter", &NonAssociativeHardening::ninter, "Number of q variables.")
-      .def_property_readonly("nhist", &NonAssociativeHardening::nhist, "Number of a variables.")
-
-      .def("init_hist",
-           [](const NonAssociativeHardening & m) -> py::array_t<double>
-           {
-            auto v = alloc_vec<double>(m.nhist());
-            m.init_hist(arr2ptr<double>(v));
-            return v;
-           }, "Initialize history.")
         
       .def("q",
            [](const NonAssociativeHardening & m, py::array_t<double, py::array::c_style> alpha, double T) -> py::array_t<double>

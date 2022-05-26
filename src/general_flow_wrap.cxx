@@ -14,16 +14,7 @@ PYBIND11_MODULE(general_flow, m) {
 
   m.doc() = "General flow models where subclass functions define everything.";
 
-  py::class_<GeneralFlowRule, NEMLObject, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
-      .def_property_readonly("nhist", &GeneralFlowRule::nhist, "Number of history variables.")
-      .def("init_hist",
-           [](GeneralFlowRule & m) -> py::array_t<double>
-           {
-            auto h = alloc_vec<double>(m.nhist());
-            m.init_hist(arr2ptr<double>(h));
-            return h;
-           }, "Initialize history variables.")
-
+  py::class_<GeneralFlowRule, HistoryNEMLObject, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
       .def("s",
            [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
            {

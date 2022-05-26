@@ -35,13 +35,6 @@ std::unique_ptr<NEMLObject> WalkerKremplSwitchRule::initialize(ParameterSet & pa
 }
 
 
-size_t WalkerKremplSwitchRule::nhist() const
-{
-  History h;
-  populate_hist(h);
-  return h.size();
-}
-
 void WalkerKremplSwitchRule::populate_hist(History & hist) const
 {
   return flow_->populate_hist(hist);
