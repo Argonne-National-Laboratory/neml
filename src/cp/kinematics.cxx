@@ -3,7 +3,7 @@
 namespace neml {
 
 KinematicModel::KinematicModel(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 }
 

@@ -23,14 +23,10 @@ namespace neml {
 class SlipHardening;
 
 /// Abstract base class for a slip rule
-class NEML_EXPORT SlipRule: public NEMLObject
+class NEML_EXPORT SlipRule: public HistoryNEMLObject
 {
  public:
   SlipRule(ParameterSet & params);
-  /// Populate the history object with the appropriate variable names and types
-  virtual void populate_hist(History & history) const = 0;
-  /// Actually set the history to their initial values
-  virtual void init_hist(History & history) const = 0;
 
   /// Helper for models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T,

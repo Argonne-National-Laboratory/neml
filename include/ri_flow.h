@@ -14,17 +14,10 @@
 namespace neml {
 
 /// ABC describing rate independent flow
-class NEML_EXPORT RateIndependentFlowRule: public NEMLObject {
+class NEML_EXPORT RateIndependentFlowRule: public HistoryNEMLObject {
  public:
   RateIndependentFlowRule(ParameterSet & params);
   
-  /// Setup internal state
-  virtual void populate_hist(History & h) const = 0;
-  /// Setup the history at time zero
-  virtual void init_hist(History & h) const = 0;
-  /// Number of history variables, get rid of this eventually
-  virtual size_t nhist() const;
-
   /// Yield surface
   virtual void f(const double* const s, const double* const alpha, double T,
                 double & fv) const = 0;

@@ -267,6 +267,20 @@ inline History History::derivative<History>() const
   return history_derivative(*this);
 }
 
+/// NEMLObject that maintains some internal state variables
+class NEML_EXPORT HistoryNEMLObject: public NEMLObject {
+ public:
+  HistoryNEMLObject(ParameterSet & params);
+  virtual ~HistoryNEMLObject() {};
+
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const = 0;
+  /// Initialize the history
+  virtual void init_hist(History & h) const = 0;
+  /// This should be replaced at some point
+  virtual size_t nhist() const;
+};
+
 } // namespace neml
 
 #endif // HISTORY_H

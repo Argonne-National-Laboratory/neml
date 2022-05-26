@@ -3,7 +3,7 @@
 namespace neml {
 
 SlipRule::SlipRule(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
 }

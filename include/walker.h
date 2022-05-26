@@ -29,8 +29,6 @@ class NEML_EXPORT WalkerKremplSwitchRule : public GeneralFlowRule {
   /// Initialize from parameter set
   static ParameterSet parameters();
   
-  /// Number of history variables
-  virtual size_t nhist() const;
   /// Setup internal state
   virtual void populate_hist(History & hist) const;
   /// Initialize history

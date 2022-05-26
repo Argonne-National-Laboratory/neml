@@ -17,13 +17,9 @@
 namespace neml {
 
 /// Describes the stress, history, and rotation rates
-class NEML_EXPORT KinematicModel: public NEMLObject {
+class NEML_EXPORT KinematicModel: public HistoryNEMLObject {
  public:
   KinematicModel(ParameterSet & params);
-  /// Populate history with the correct variable names and types
-  virtual void populate_hist(History & history) const = 0;
-  /// Initialize history with actual starting values
-  virtual void init_hist(History & history) const = 0;
 
   /// Helper for external models that want a strength
   virtual double strength(const History & history, Lattice & L, double T,

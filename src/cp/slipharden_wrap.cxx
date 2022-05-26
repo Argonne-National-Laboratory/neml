@@ -14,8 +14,6 @@ PYBIND11_MODULE(slipharden, m) {
   py::class_<SlipHardening, NEMLObject, std::shared_ptr<SlipHardening>>(m, "SlipHardening")
       .def_property_readonly("varnames", &SlipHardening::varnames)
       .def("set_varnames", &SlipHardening::set_varnames)
-      .def("populate_history", &SlipHardening::populate_history)
-      .def("init_history", &SlipHardening::init_history)
       .def("hist_to_tau", &SlipHardening::hist_to_tau)
       .def("d_hist_to_tau", &SlipHardening::d_hist_to_tau)
       .def("hist", &SlipHardening::hist)

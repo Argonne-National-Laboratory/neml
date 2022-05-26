@@ -156,6 +156,15 @@ PYBIND11_MODULE(history, m) {
               return mat;
              }, "Unravel to c-style array")
       ;
+      py::class_<HistoryNEMLObject, NEMLObject,
+          std::shared_ptr<HistoryNEMLObject>>(m, "HistoryNEMLObject")
+        .def("populate_hist", &HistoryNEMLObject::populate_hist,
+             "Populate a blank history object with the names/types")
+        .def("init_hist", &HistoryNEMLObject::init_hist,
+             "Initialize the history with the initial conditions")
+        .def_property_readonly("nhist", &HistoryNEMLObject::nhist, 
+                               "Number of internal variables")
+      ;
 }
 
 } // namespace neml

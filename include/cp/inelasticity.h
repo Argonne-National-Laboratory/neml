@@ -17,13 +17,9 @@ namespace neml {
 /// A inelastic model supplying D_p and W_p
 //  A complete model for implicit rotations would include the derivatives wrt
 //  the orientation.  Similarly it would include all the w_p derivatives.
-class NEML_EXPORT InelasticModel: public NEMLObject {
+class NEML_EXPORT InelasticModel: public HistoryNEMLObject {
  public:
   InelasticModel(ParameterSet & params);
-  /// Populate a history object with the correct variables
-  virtual void populate_hist(History & history) const = 0;
-  /// Actually initialize the history object with the starting values
-  virtual void init_hist(History & history) const = 0;
 
   /// Helper for external models that want an average strength
   virtual double strength(const History & history, Lattice & L, double T,

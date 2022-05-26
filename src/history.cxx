@@ -413,4 +413,17 @@ double * History::start_loc(std::string name)
   return &(storage_[loc_.at(name)]);
 }
 
+HistoryNEMLObject::HistoryNEMLObject(ParameterSet & params) :
+    NEMLObject(params)
+{
+
+}
+
+size_t HistoryNEMLObject::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
+}
+
 } // namespace neml

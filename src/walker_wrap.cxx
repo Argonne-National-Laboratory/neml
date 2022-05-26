@@ -276,21 +276,6 @@ PYBIND11_MODULE(walker, m) {
   py::class_<WrappedViscoPlasticFlowRule, ViscoPlasticFlowRule,
       std::shared_ptr<WrappedViscoPlasticFlowRule>>(m,
                                                     "WrappedViscoPlasticFlowRule")
-    .def("populate_hist",
-         [](WrappedViscoPlasticFlowRule & m) -> History
-         {
-          History h;
-          m.populate_hist(h);
-          return h;
-         }, "Return a blank history")
-    .def("initialize_hist", 
-         [](WrappedViscoPlasticFlowRule & m) -> History
-         {
-          History h;
-          m.populate_hist(h);
-          m.initialize_hist(h);
-          return h;
-         }, "Initialize the history, including setting the initial conditions.")
     .def("y_wrap",
          [](WrappedViscoPlasticFlowRule & m, State & state) -> double
          {
