@@ -64,7 +64,7 @@ class CommonFlowRule(object):
     num = differentiate(dfn, stress)
     exact = self.model.dy_ds(stress, hist, self.T)
 
-    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-6))
+    self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3, atol = 1.0e-4))
 
   def test_dy_da(self):
     stress = self.gen_stress()
@@ -73,7 +73,7 @@ class CommonFlowRule(object):
     dfn = lambda a: self.model.y(stress, a, self.T)
     num = differentiate(dfn, hist)
     exact = self.model.dy_da(stress, hist, self.T)
- 
+
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dg_ds(self):
@@ -83,6 +83,9 @@ class CommonFlowRule(object):
     dfn = lambda s: self.model.g(s, hist, self.T)
     num = differentiate(dfn, stress)
     exact = self.model.dg_ds(stress, hist, self.T)
+    
+    print(num)
+    print(exact)
 
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
@@ -196,6 +199,76 @@ class CommonFlowRule(object):
 
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
+class TestSuperimposedPerzyna(unittest.TestCase, CommonFlowRule):
+  def setUp(self):
+    self.s0_1 = 60.0
+    self.R_1 = 150.0
+    self.d_1 = 10.0
+
+    self.n_1 = 5.0
+    self.eta_1 = 20.0
+
+    self.surface_1 = surfaces.IsoJ2()
+    self.hrule_1 = hardening.VoceIsotropicHardeningRule(self.s0_1, self.R_1, self.d_1)
+    self.g_1 = visco_flow.GPowerLaw(self.n_1, self.eta_1)
+
+    self.model_1 = visco_flow.PerzynaFlowRule(self.surface_1, self.hrule_1, self.g_1)
+
+    self.s0_2 = 100.0
+    self.R_2 = 130.0
+    self.d_2 = 5.0
+
+    self.n_2 = 6.0
+    self.eta_2 = 30.0
+
+    self.surface_2 = surfaces.IsoJ2()
+    self.hrule_2 = hardening.VoceIsotropicHardeningRule(self.s0_2, self.R_2, self.d_2)
+    self.g_2 = visco_flow.GPowerLaw(self.n_2, self.eta_2)
+
+    self.model_2 = visco_flow.PerzynaFlowRule(self.surface_2, self.hrule_2, self.g_2)
+
+    self.model = visco_flow.SuperimposedViscoPlasticFlowRule([self.model_1, self.model_2])
+
+    self.hist0 = np.zeros((2,))
+    self.T = 300.0
+
+  def test_superposition(self):
+    # Sum y
+    y1 = self.model_1.y(self.gen_stress(), self.gen_hist()[:1], self.T)
+    y2 = self.model_2.y(self.gen_stress(), self.gen_hist()[1:], self.T)
+    ysum = y1 + y2
+    self.assertAlmostEqual(self.model.y(self.gen_stress(), self.gen_hist(), self.T),
+            ysum)
+
+    # Sum g
+    self.assertTrue(np.allclose(self.model.g(self.gen_stress(), self.gen_hist(), self.T),
+            (y1*self.model_1.g(self.gen_stress(), self.gen_hist()[:1], self.T) + 
+            y2*self.model_2.g(self.gen_stress(), self.gen_hist()[1:], self.T))/ysum))
+    self.assertTrue(np.allclose(self.model.g_time(self.gen_stress(), self.gen_hist(), self.T),
+            (y1*self.model_1.g_time(self.gen_stress(), self.gen_hist()[:1], self.T) + 
+            y2*self.model_2.g_time(self.gen_stress(), self.gen_hist()[1:], self.T))/ysum))
+    self.assertTrue(np.allclose(self.model.g_temp(self.gen_stress(), self.gen_hist(), self.T),
+            (y1*self.model_1.g_temp(self.gen_stress(), self.gen_hist()[:1], self.T) + 
+            y2*self.model_2.g_temp(self.gen_stress(), self.gen_hist()[1:], self.T))/ysum))
+
+    # Concatenate history
+    htotal = np.zeros((self.model.nhist,))
+    htotal[:1] = self.model_1.h(self.gen_stress(), self.gen_hist()[:1], self.T)
+    htotal[1:] = self.model_2.h(self.gen_stress(), self.gen_hist()[1:], self.T)
+    self.assertTrue(np.allclose(self.model.h(self.gen_stress(), self.gen_hist(), self.T), htotal))
+
+    htotal = np.zeros((self.model.nhist,))
+    htotal[:1] = self.model_1.h_time(self.gen_stress(), self.gen_hist()[:1], self.T)
+    htotal[1:] = self.model_2.h_time(self.gen_stress(), self.gen_hist()[1:], self.T)
+    self.assertTrue(np.allclose(self.model.h_time(self.gen_stress(), self.gen_hist(), self.T), htotal))
+
+    htotal = np.zeros((self.model.nhist,))
+    htotal[:1] = self.model_1.h_temp(self.gen_stress(), self.gen_hist()[:1], self.T)
+    htotal[1:] = self.model_2.h_temp(self.gen_stress(), self.gen_hist()[1:], self.T)
+    self.assertTrue(np.allclose(self.model.h_temp(self.gen_stress(), self.gen_hist(), self.T), htotal))
+
+  def gen_hist(self):
+    return np.array([0.01, 0.02])
 
 class TestPerzynaIsoJ2Voce(unittest.TestCase, CommonFlowRule):
   def setUp(self):

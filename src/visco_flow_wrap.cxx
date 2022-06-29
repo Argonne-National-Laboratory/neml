@@ -180,6 +180,13 @@ PYBIND11_MODULE(visco_flow, m) {
 
       ;
 
+  py::class_<SuperimposedViscoPlasticFlowRule, ViscoPlasticFlowRule, std::shared_ptr<SuperimposedViscoPlasticFlowRule>>(m, "SuperimposedViscoPlasticFlowRule")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<SuperimposedViscoPlasticFlowRule>(args, kwargs, {"flow_rules"});
+      }))
+      ;
+
   py::class_<GFlow, NEMLObject, std::shared_ptr<GFlow>>(m, "GFlow")
       .def("g", &GFlow::g, "g function in Perzyna model")
       .def("dg", &GFlow::dg, "Derivative of g wrt f")
