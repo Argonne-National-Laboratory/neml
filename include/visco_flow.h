@@ -98,6 +98,109 @@ class NEML_EXPORT ViscoPlasticFlowRule: public NEMLObject {
   virtual void override_guess(double * const guess);
 };
 
+/// Superimpose multiple flow rules into a composite model
+class NEML_EXPORT SuperimposedViscoPlasticFlowRule : public ViscoPlasticFlowRule
+{
+ public:
+  SuperimposedViscoPlasticFlowRule(ParameterSet & params);
+
+  /// String type for the object system
+  static std::string type();
+  /// Default parameters
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Initialize from parameters
+  static ParameterSet parameters();
+
+  /// Number of individual models being summed
+  size_t nmodels() const;
+
+  /// Number of history variables
+  virtual size_t nhist() const;
+  /// Initialize history at time zero
+  virtual void init_hist(double * const h) const;
+
+  /// Scalar flow rate
+  virtual void y(const double* const s, const double* const alpha, double T,
+                double & yv) const;
+  /// Derivative of scalar flow wrt stress
+  virtual void dy_ds(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
+  /// Derivative of scalar flow wrt history
+  virtual void dy_da(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
+
+  /// Contribution towards the flow proportional to the scalar inelastic
+  /// strain rate
+  virtual void g(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  /// Derivative of g wrt stress
+  virtual void dg_ds(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  /// Derivative of g wrt history
+  virtual void dg_da(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
+
+  /// Contribution towards the flow proportional directly to time
+  virtual void g_time(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  /// Derivative of g_time wrt stress
+  virtual void dg_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  /// Derivative of g_time wrt history
+  virtual void dg_da_time(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
+
+  /// Contribution towards the flow proportional to the temperature rate
+  virtual void g_temp(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  /// Derivative of g_temp wrt stress
+  virtual void dg_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  /// Derivative of g_temp wrt history
+  virtual void dg_da_temp(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
+
+  /// Hardening rate proportional to the scalar inelastic strain rate
+  virtual void h(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  /// Derivative of h wrt stress
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  /// Derivative of h wrt history
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  /// Hardening rate proportional directly to time
+  virtual void h_time(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  /// Derivative of h_time wrt stress
+  virtual void dh_ds_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  /// Derivative of h_time wrt history
+  virtual void dh_da_time(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+  /// Hardening rate proportional to the temperature rate
+  virtual void h_temp(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  /// Derivative of h_temp wrt. stress
+  virtual void dh_ds_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  /// Derivative of h_temp wrt history
+  virtual void dh_da_temp(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+ protected:
+  double * model_history_(double * const h, size_t i) const;
+  const double * model_history_(const double * const h, size_t i) const;
+
+ protected:
+  std::vector<std::shared_ptr<ViscoPlasticFlowRule>> rules_;
+  std::vector<size_t> offsets_;
+};
+
+static Register<SuperimposedViscoPlasticFlowRule> regSuperimposedViscoPlasticFlowRule;
+
 /// The "g" function in the Perzyna model -- often a power law
 class NEML_EXPORT GFlow: public NEMLObject {
  public:
