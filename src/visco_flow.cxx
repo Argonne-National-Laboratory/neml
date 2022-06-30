@@ -244,103 +244,245 @@ void SuperimposedViscoPlasticFlowRule::dg_da(const double * const s,
                                              double * const dgv) const
 {
   std::fill(dgv, dgv+6*nhist(), 0.0);
-  return;
+  
+  double yv;
+  y(s, alpha, T, yv);
+  
+  double yi;
+  double gi[6];
+
   for (size_t i = 0; i < nmodels(); i++) {
     double * dgvi = new double [6*rules_[i]->nhist()];
+    double * dyi = new double [rules_[i]->nhist()]; 
+    rules_[i]->y(s, model_history_(alpha, i), T, yi);
+    rules_[i]->g(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_da(s, model_history_(alpha,i), T, dgvi);
-    for (size_t a = 0; a < 6; a++)
-      for (size_t b = 0; b < rules_[i]->nhist(); b++)
-        dgv[CINDEX(a,b+offsets_[i],nhist())] = dgvi[CINDEX(a,b,rules_[i]->nhist())];
+    rules_[i]->dy_da(s, model_history_(alpha, i), T, dyi);
+
+    for (size_t a = 0; a < 6; a++) {
+      for (size_t b = 0; b < rules_[i]->nhist(); b++) {
+        dgv[CINDEX(a,b+offsets_[i],nhist())] =
+            yi*dgvi[CINDEX(a,b,rules_[i]->nhist())] + 
+            gi[a] * dyi[b];
+      }
+    }
+
     delete [] dgvi;
+    delete [] dyi;
   }
+
+  for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+
+  double * dy = new double [nhist()];
+  double gv[6];
+  dy_da(s, alpha, T, dy);
+  g(s, alpha, T, gv);
+
+  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+
+  outer_update_minus(gv, 6, dy, nhist(), dgv);
+
+  delete [] dy;
 }
 
 void SuperimposedViscoPlasticFlowRule::g_time(const double * const s, 
-                                              const double * const alpha,
-                                              double T,
-                                              double * const gv) const
+                                         const double * const alpha, double T,
+                                         double * const gv) const
 {
   std::fill(gv, gv+6, 0.0);
+  double ysum = 0.0;
+  double yi;
   double gvi[6];
   for (size_t i = 0; i < nmodels(); i++) {
+    rules_[i]->y(s, model_history_(alpha, i), T, yi);
     rules_[i]->g_time(s, model_history_(alpha, i), T, gvi);
+    for (size_t j = 0; j < 6; j++) gvi[j] *= yi;
+    ysum += yi;
     add_vec(gv, gvi, 6, gv);
   }
+  if (ysum > 0)
+    for (size_t j = 0; j < 6; j++) gv[j] /= ysum;
 }
 
 void SuperimposedViscoPlasticFlowRule::dg_ds_time(const double * const s, 
-                                                  const double * const alpha, 
-                                                  double T,
-                                                  double * const dgv) const
+                                             const double * const alpha, 
+                                             double T,
+                                             double * const dgv) const
 {
-  std::fill(dgv, dgv+6*6, 0.0);
-  return;
+  double yv;
+  y(s, alpha, T, yv); 
+  
+  double yi;
   double dgvi[36];
+  double dyvi[6];
+  double gi[6];
+
+  std::fill(dgv, dgv+36, 0.0);
+
   for (size_t i = 0; i < nmodels(); i++) {
+    rules_[i]->y(s, model_history_(alpha, i), T, yi);
+    rules_[i]->g_time(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_ds_time(s, model_history_(alpha, i), T, dgvi);
-    add_vec(dgv, dgvi, 36, dgv);
+    rules_[i]->dy_ds(s, model_history_(alpha, i), T, dyvi);
+    for (size_t j = 0; j < 36; j++) dgv[j] += yi * dgvi[j];
+    outer_update(gi, 6, dyvi, 6, dgv);
   }
+  for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
+  
+  double dy[6];
+  dy_ds(s, alpha, T, dy);
+  double gv[6];
+  g_time(s, alpha, T, gv);
+  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+
+  outer_update_minus(gv, 6, dy, 6, dgv);
 }
 
 void SuperimposedViscoPlasticFlowRule::dg_da_time(const double * const s, 
-                                                  const double * const alpha, 
-                                                  double T,
-                                                  double * const dgv) const
+                                             const double * const alpha, 
+                                             double T,
+                                             double * const dgv) const
 {
   std::fill(dgv, dgv+6*nhist(), 0.0);
-  return;
+  
+  double yv;
+  y(s, alpha, T, yv);
+  
+  double yi;
+  double gi[6];
+
   for (size_t i = 0; i < nmodels(); i++) {
     double * dgvi = new double [6*rules_[i]->nhist()];
+    double * dyi = new double [rules_[i]->nhist()]; 
+    rules_[i]->y(s, model_history_(alpha, i), T, yi);
+    rules_[i]->g_time(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_da_time(s, model_history_(alpha,i), T, dgvi);
-    for (size_t a = 0; a < 6; a++)
-      for (size_t b = 0; b < rules_[i]->nhist(); b++)
-        dgv[CINDEX(a,b+offsets_[i],nhist())] = dgvi[CINDEX(a,b,rules_[i]->nhist())];
+    rules_[i]->dy_da(s, model_history_(alpha, i), T, dyi);
+
+    for (size_t a = 0; a < 6; a++) {
+      for (size_t b = 0; b < rules_[i]->nhist(); b++) {
+        dgv[CINDEX(a,b+offsets_[i],nhist())] =
+            yi*dgvi[CINDEX(a,b,rules_[i]->nhist())] + 
+            gi[a] * dyi[b];
+      }
+    }
+
     delete [] dgvi;
+    delete [] dyi;
   }
+
+  for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+
+  double * dy = new double [nhist()];
+  double gv[6];
+  dy_da(s, alpha, T, dy);
+  g_time(s, alpha, T, gv);
+
+  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+
+  outer_update_minus(gv, 6, dy, nhist(), dgv);
+
+  delete [] dy;
 }
 
 void SuperimposedViscoPlasticFlowRule::g_temp(const double * const s, 
-                                              const double * const alpha, 
-                                              double T,
-                                              double * const gv) const
+                                         const double * const alpha, double T,
+                                         double * const gv) const
 {
   std::fill(gv, gv+6, 0.0);
+  double ysum = 0.0;
+  double yi;
   double gvi[6];
   for (size_t i = 0; i < nmodels(); i++) {
+    rules_[i]->y(s, model_history_(alpha, i), T, yi);
     rules_[i]->g_temp(s, model_history_(alpha, i), T, gvi);
+    for (size_t j = 0; j < 6; j++) gvi[j] *= yi;
+    ysum += yi;
     add_vec(gv, gvi, 6, gv);
   }
+  if (ysum > 0)
+    for (size_t j = 0; j < 6; j++) gv[j] /= ysum;
 }
 
 void SuperimposedViscoPlasticFlowRule::dg_ds_temp(const double * const s, 
-                                                  const double * const alpha, 
-                                                  double T,
-                                                  double * const dgv) const
+                                             const double * const alpha, 
+                                             double T,
+                                             double * const dgv) const
 {
-  std::fill(dgv, dgv+6*6, 0.0);
-  return;
+  double yv;
+  y(s, alpha, T, yv); 
+  
+  double yi;
   double dgvi[36];
+  double dyvi[6];
+  double gi[6];
+
+  std::fill(dgv, dgv+36, 0.0);
+
   for (size_t i = 0; i < nmodels(); i++) {
+    rules_[i]->y(s, model_history_(alpha, i), T, yi);
+    rules_[i]->g_temp(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_ds_temp(s, model_history_(alpha, i), T, dgvi);
-    add_vec(dgv, dgvi, 36, dgv);
+    rules_[i]->dy_ds(s, model_history_(alpha, i), T, dyvi);
+    for (size_t j = 0; j < 36; j++) dgv[j] += yi * dgvi[j];
+    outer_update(gi, 6, dyvi, 6, dgv);
   }
+  for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
+  
+  double dy[6];
+  dy_ds(s, alpha, T, dy);
+  double gv[6];
+  g_temp(s, alpha, T, gv);
+  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+
+  outer_update_minus(gv, 6, dy, 6, dgv);
 }
 
 void SuperimposedViscoPlasticFlowRule::dg_da_temp(const double * const s, 
-                                                  const double * const alpha,
-                                                  double T,
-                                                  double * const dgv) const
+                                             const double * const alpha, 
+                                             double T,
+                                             double * const dgv) const
 {
   std::fill(dgv, dgv+6*nhist(), 0.0);
-  return;
+  
+  double yv;
+  y(s, alpha, T, yv);
+  
+  double yi;
+  double gi[6];
+
   for (size_t i = 0; i < nmodels(); i++) {
     double * dgvi = new double [6*rules_[i]->nhist()];
+    double * dyi = new double [rules_[i]->nhist()]; 
+    rules_[i]->y(s, model_history_(alpha, i), T, yi);
+    rules_[i]->g_temp(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_da_temp(s, model_history_(alpha,i), T, dgvi);
-    for (size_t a = 0; a < 6; a++)
-      for (size_t b = 0; b < rules_[i]->nhist(); b++)
-        dgv[CINDEX(a,b+offsets_[i],nhist())] = dgvi[CINDEX(a,b,rules_[i]->nhist())];
+    rules_[i]->dy_da(s, model_history_(alpha, i), T, dyi);
+
+    for (size_t a = 0; a < 6; a++) {
+      for (size_t b = 0; b < rules_[i]->nhist(); b++) {
+        dgv[CINDEX(a,b+offsets_[i],nhist())] =
+            yi*dgvi[CINDEX(a,b,rules_[i]->nhist())] + 
+            gi[a] * dyi[b];
+      }
+    }
+
     delete [] dgvi;
+    delete [] dyi;
   }
+
+  for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+
+  double * dy = new double [nhist()];
+  double gv[6];
+  dy_da(s, alpha, T, dy);
+  g_temp(s, alpha, T, gv);
+
+  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+
+  outer_update_minus(gv, 6, dy, nhist(), dgv);
+
+  delete [] dy;
 }
 
 void SuperimposedViscoPlasticFlowRule::h(const double * const s, 
