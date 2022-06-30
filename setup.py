@@ -111,8 +111,8 @@ setup (
     # Get the python files
     packages=find_packages(),
     # Locate tests
-    test_suite='nose.collector',
-    tests_require=['nose'],
+    test_suite='nose2.collector.collector',
+    tests_require=['nose2'],
     # Python dependencies
     install_requires=[
       'numpy',
