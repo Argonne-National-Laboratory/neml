@@ -84,9 +84,6 @@ class CommonFlowRule(object):
     num = differentiate(dfn, stress)
     exact = self.model.dg_ds(stress, hist, self.T)
     
-    print(num)
-    print(exact)
-
     self.assertTrue(np.allclose(num, exact, rtol = 1.0e-3))
 
   def test_dg_da(self):
