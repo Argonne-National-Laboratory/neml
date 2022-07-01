@@ -299,6 +299,65 @@ class NEML_EXPORT PerzynaFlowRule : public ViscoPlasticFlowRule {
 
 static Register<PerzynaFlowRule> regPerzynaFlowRule;
 
+/// Linear viscous perfect plasticity
+class NEML_EXPORT LinearViscousFlow : public ViscoPlasticFlowRule {
+ public:
+  /// Parameters: just a surface and a drag stress
+  LinearViscousFlow(ParameterSet & params);
+
+  /// String type for the object system
+  static std::string type();
+  /// Default parameters
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Initialize from parameters
+  static ParameterSet parameters();
+
+  /// Number of history variables
+  virtual size_t nhist() const;
+  /// Initialize history at time zero
+  virtual void init_hist(double * const h) const;
+
+  /// Scalar strain rate
+  virtual void y(const double* const s, const double* const alpha, double T,
+                double & yv) const;
+  /// Derivative of y wrt stress
+  virtual void dy_ds(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
+  /// Derivative of y wrt history
+  virtual void dy_da(const double* const s, const double* const alpha, double T,
+                double * const dyv) const;
+
+  /// Flow rule proportional to the scalar strain rate
+  virtual void g(const double * const s, const double * const alpha, double T,
+                double * const gv) const;
+  /// Derivative of g wrt stress
+  virtual void dg_ds(const double * const s, const double * const alpha, double T,
+                double * const dgv) const;
+  /// Derivative of g wrt history
+  virtual void dg_da(const double * const s, const double * const alpha, double T,
+               double * const dgv) const;
+
+  /// Hardening rule proportional to the scalar strain rate
+  virtual void h(const double * const s, const double * const alpha, double T,
+                double * const hv) const;
+  /// Derivative of h wrt stress
+  virtual void dh_ds(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+  /// Derivative of h wrt history
+  virtual void dh_da(const double * const s, const double * const alpha, double T,
+                double * const dhv) const;
+
+ protected:
+  std::vector<double> fake_hist_() const;
+
+ private:
+  std::shared_ptr<YieldSurface> surface_;
+  std::shared_ptr<Interpolate> eta_;
+};
+
+static Register<LinearViscousFlow> regLinearViscousFLow;
+
+
 /// Various Chaboche type fluidity models.
 //
 //  These depend only on the equivalent plastic strain

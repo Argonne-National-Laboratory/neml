@@ -35,6 +35,7 @@ Implementations
    
    vp_flow/superimposed
    vp_flow/perzyna
+   vp_flow/linear
    vp_flow/chaboche
    vp_flow/yaguchi
 
