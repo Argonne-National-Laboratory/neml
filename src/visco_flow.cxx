@@ -227,13 +227,15 @@ void SuperimposedViscoPlasticFlowRule::dg_ds(const double * const s,
     for (size_t j = 0; j < 36; j++) dgv[j] += yi * dgvi[j];
     outer_update(gi, 6, dyvi, 6, dgv);
   }
-  for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
+  if (yv > 0)
+    for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
   
   double dy[6];
   dy_ds(s, alpha, T, dy);
   double gv[6];
   g(s, alpha, T, gv);
-  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+  if (yv > 0)
+    for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
   outer_update_minus(gv, 6, dy, 6, dgv);
 }
@@ -270,15 +272,17 @@ void SuperimposedViscoPlasticFlowRule::dg_da(const double * const s,
     delete [] dgvi;
     delete [] dyi;
   }
-
-  for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+  
+  if (yv > 0)
+    for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
 
   double * dy = new double [nhist()];
   double gv[6];
   dy_da(s, alpha, T, dy);
   g(s, alpha, T, gv);
-
-  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+  
+  if (yv > 0)
+    for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
   outer_update_minus(gv, 6, dy, nhist(), dgv);
 
@@ -327,13 +331,16 @@ void SuperimposedViscoPlasticFlowRule::dg_ds_time(const double * const s,
     for (size_t j = 0; j < 36; j++) dgv[j] += yi * dgvi[j];
     outer_update(gi, 6, dyvi, 6, dgv);
   }
-  for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
+  if (yv > 0)
+    for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
   
   double dy[6];
   dy_ds(s, alpha, T, dy);
   double gv[6];
   g_time(s, alpha, T, gv);
-  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+
+  if (yv > 0)
+    for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
   outer_update_minus(gv, 6, dy, 6, dgv);
 }
@@ -370,15 +377,17 @@ void SuperimposedViscoPlasticFlowRule::dg_da_time(const double * const s,
     delete [] dgvi;
     delete [] dyi;
   }
-
-  for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+  
+  if (yv > 0)
+    for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
 
   double * dy = new double [nhist()];
   double gv[6];
   dy_da(s, alpha, T, dy);
   g_time(s, alpha, T, gv);
-
-  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+  
+  if (yv > 0)
+    for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
   outer_update_minus(gv, 6, dy, nhist(), dgv);
 
@@ -427,13 +436,15 @@ void SuperimposedViscoPlasticFlowRule::dg_ds_temp(const double * const s,
     for (size_t j = 0; j < 36; j++) dgv[j] += yi * dgvi[j];
     outer_update(gi, 6, dyvi, 6, dgv);
   }
-  for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
+  if (yv > 0)
+    for (size_t i = 0; i < 36; i++) dgv[i] /= yv;
   
   double dy[6];
   dy_ds(s, alpha, T, dy);
   double gv[6];
   g_temp(s, alpha, T, gv);
-  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+  if (yv > 0)
+    for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
   outer_update_minus(gv, 6, dy, 6, dgv);
 }
@@ -470,15 +481,17 @@ void SuperimposedViscoPlasticFlowRule::dg_da_temp(const double * const s,
     delete [] dgvi;
     delete [] dyi;
   }
-
-  for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+  
+  if (yv > 0)
+    for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
 
   double * dy = new double [nhist()];
   double gv[6];
   dy_da(s, alpha, T, dy);
   g_temp(s, alpha, T, gv);
-
-  for (size_t i = 0; i < 6; i++) gv[i] /= yv;
+  
+  if (yv > 0)
+    for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
   outer_update_minus(gv, 6, dy, nhist(), dgv);
 
@@ -851,6 +864,120 @@ void PerzynaFlowRule::dh_da(const double * const s, const double * const alpha, 
   surface_->df_dqdq(s, q, T, dd);
 
   mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
+}
+
+LinearViscousFlow::LinearViscousFlow(ParameterSet & params) :
+    ViscoPlasticFlowRule(params),
+    surface_(params.get_object_parameter<YieldSurface>("surface")),
+    eta_(params.get_object_parameter<Interpolate>("eta"))
+{
+  
+}
+
+std::string LinearViscousFlow::type()
+{
+  return "LinearViscousFlow";
+}
+
+ParameterSet LinearViscousFlow::parameters()
+{
+  ParameterSet pset(LinearViscousFlow::type());
+
+  pset.add_parameter<NEMLObject>("surface");
+  pset.add_parameter<NEMLObject>("eta");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> LinearViscousFlow::initialize(ParameterSet & params)
+{
+  return neml::make_unique<LinearViscousFlow>(params); 
+}
+
+size_t LinearViscousFlow::nhist() const
+{
+  return 0;
+}
+
+void LinearViscousFlow::init_hist(double * const h) const
+{
+  return;
+}
+
+// Zero history of the correct size
+std::vector<double> LinearViscousFlow::fake_hist_() const
+{
+  std::vector<double> h(surface_->nhist());
+  std::fill(h.begin(), h.end(), 0.0);
+  return h;
+}
+
+// Rate rule
+void LinearViscousFlow::y(const double* const s, const double* const alpha, double T,
+              double & yv) const
+{
+  auto h = fake_hist_();
+
+  double fv;
+  surface_->f(s, &h[0], T, fv);
+  
+  yv = 3.0 / 2.0 * fv / eta_->value(T);
+}
+
+void LinearViscousFlow::dy_ds(const double* const s, const double* const alpha, double T,
+              double * const dyv) const
+{
+  auto h = fake_hist_();
+
+  surface_->df_ds(s, &h[0], T, dyv);
+  for (size_t i = 0; i < 6; i++)
+    dyv[i] = 3.0 / 2.0 * dyv[i] / eta_->value(T);
+}
+
+void LinearViscousFlow::dy_da(const double* const s, const double* const alpha, double T,
+              double * const dyv) const
+{
+  return;
+}
+
+// Flow rule
+void LinearViscousFlow::g(const double * const s, const double * const alpha, double T,
+              double * const gv) const
+{
+  auto h = fake_hist_();
+  surface_->df_ds(s, &h[0], T, gv);
+}
+
+void LinearViscousFlow::dg_ds(const double * const s, const double * const alpha, double T,
+              double * const dgv) const
+{
+  auto h = fake_hist_();
+  surface_->df_dsds(s, &h[0], T, dgv);
+}
+
+void LinearViscousFlow::dg_da(const double * const s, const double * const alpha, double T,
+             double * const dgv) const
+{
+  return;
+}
+
+// Hardening rule
+void LinearViscousFlow::h(const double * const s, const double * const alpha, double T,
+              double * const hv) const
+{
+  return;
+}
+
+void LinearViscousFlow::dh_ds(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  return;
+}
+
+void LinearViscousFlow::dh_da(const double * const s, const double * const alpha, double T,
+              double * const dhv) const
+{
+  return;
 }
 
 FluidityModel::FluidityModel(ParameterSet & params) :

@@ -187,6 +187,14 @@ PYBIND11_MODULE(visco_flow, m) {
       }))
       ;
 
+  py::class_<LinearViscousFlow, ViscoPlasticFlowRule, std::shared_ptr<LinearViscousFlow>>(m, "LinearViscousFlow")
+    .def(py::init([](py::args args, py::kwargs kwargs)
+      {
+        return create_object_python<LinearViscousFlow>(args, kwargs, {"surface",
+                                                     "eta"});
+      }))
+      ;
+
   py::class_<GFlow, NEMLObject, std::shared_ptr<GFlow>>(m, "GFlow")
       .def("g", &GFlow::g, "g function in Perzyna model")
       .def("dg", &GFlow::dg, "Derivative of g wrt f")

@@ -267,6 +267,19 @@ class TestSuperimposedPerzyna(unittest.TestCase, CommonFlowRule):
   def gen_hist(self):
     return np.array([0.01, 0.02])
 
+class TestLinearViscous(unittest.TestCase, CommonFlowRule):
+  def setUp(self):
+    self.eta = 20.0
+
+    self.surface = surfaces.IsoJ2()
+    self.model = visco_flow.LinearViscousFlow(self.surface, self.eta)
+
+    self.hist0 = np.zeros((0,))
+    self.T = 300.0
+
+  def gen_hist(self):
+    return np.zeros((0,))
+
 class TestPerzynaIsoJ2Voce(unittest.TestCase, CommonFlowRule):
   def setUp(self):
     self.s0 = 180.0
