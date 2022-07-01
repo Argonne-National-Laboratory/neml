@@ -653,11 +653,18 @@ class NEML_EXPORT WorkDamage: public ScalarDamage {
       const double * const stress_np1, const double * const stress_n,
       double T_np1, double T_n, double t_np1, double t_n,
       double d_np1, double d_n) const;
+  
+  /// Get the critical work, accounting for log scaling if requested
+  double Wcrit(double Wdot) const;
+  
+  /// Get the derivative of the critical work, accounting for log scaling
+  double dWcrit(double Wdot) const;
                   
  protected:
   std::shared_ptr<Interpolate> Wcrit_;
   double n_;
   double eps_;
+  bool log_;
 };
 
 static Register<WorkDamage> regWorkDamage;

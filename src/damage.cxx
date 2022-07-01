@@ -1274,7 +1274,8 @@ WorkDamage::WorkDamage(ParameterSet & params) :
       ScalarDamage(params), 
       Wcrit_(params.get_object_parameter<Interpolate>("Wcrit")),
       n_(params.get_parameter<double>("n")),
-      eps_(params.get_parameter<double>("eps"))
+      eps_(params.get_parameter<double>("eps")),
+      log_(params.get_parameter<bool>("log"))
 {
 }
 
@@ -1291,6 +1292,7 @@ ParameterSet WorkDamage::parameters()
   pset.add_parameter<NEMLObject>("Wcrit");
   pset.add_parameter<double>("n");
   pset.add_optional_parameter<double>("eps", 1e-30);
+  pset.add_optional_parameter<bool>("log", false);
 
   return pset;
 }
@@ -1321,7 +1323,7 @@ void WorkDamage::damage(double d_np1, double d_n,
 
   double dt = t_np1 - t_n;
 
-  double val = Wcrit_->value(wrate);
+  double val = Wcrit(wrate);
 
   *dd = d_n + n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) * 
       wrate * dt / val;
@@ -1346,8 +1348,8 @@ void WorkDamage::ddamage_dd(double d_np1, double d_n,
     return;
   }
 
-  double val = Wcrit_->value(wrate);
-  double deriv = Wcrit_->derivative(wrate);
+  double val = Wcrit(wrate);
+  double deriv = dWcrit(wrate);
   double dt = t_np1 - t_n;
 
   double S[36];
@@ -1381,8 +1383,8 @@ void WorkDamage::ddamage_de(double d_np1, double d_n,
     return;
   }
 
-  double val = Wcrit_->value(wrate);
-  double dval = Wcrit_->derivative(wrate);
+  double val = Wcrit(wrate);
+  double dval = dWcrit(wrate);
 
   double fact = n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) / val * 
       (1.0 - wrate / val * dval) * (1.0 - std::fabs(d_np1));
@@ -1407,8 +1409,8 @@ void WorkDamage::ddamage_ds(double d_np1, double d_n,
     return;
   }
 
-  double val = Wcrit_->value(wrate);
-  double dval = Wcrit_->derivative(wrate);
+  double val = Wcrit(wrate);
+  double dval = dWcrit(wrate);
 
   double S[36];
   elastic_->S(T_np1, S);
@@ -1464,6 +1466,23 @@ double WorkDamage::workrate(
   }
 
   return fabs(dot_vec(stress_np1, dp, 6) / dt * (1.0 - d_np1));
+}
+
+double WorkDamage::Wcrit(double Wdot) const
+{
+  if (log_)
+    return std::pow(10.0, Wcrit_->value(std::log10(Wdot)));
+
+  return Wcrit_->value(Wdot);
+}
+
+double WorkDamage::dWcrit(double Wdot) const
+{
+  if (log_)
+    return std::pow(10.0, Wcrit_->value(std::log10(Wdot))) * 
+        Wcrit_->derivative(std::log10(Wdot)) / Wdot;
+
+  return Wcrit_->derivative(Wdot);
 }
 
 PowerLawDamage::PowerLawDamage(ParameterSet & params) :
