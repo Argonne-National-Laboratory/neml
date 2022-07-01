@@ -22,6 +22,11 @@ In principle, the critical work might also depend on temperatures.
 However, at least for one material (Alloy 617) the temperature dependence
 is relatively negligible.
 
+If requested the model will first take the log of the work rate
+before passing it to the :math:`W_{crit}` function and uses :math:`10^f` of the
+returned value.  This means the user is providing the function on a log-log
+scale.
+
 Parameters
 ----------
 
@@ -32,7 +37,8 @@ Parameters
    ``elastic``, :cpp:class:`neml::LinearElasticModel`, Elasticity model, No
    ``Wcrit``, :cpp:class:`neml::Interpolate`, Critical work, No
    ``n``, :code:`double`, Damage exponent, No
-   ``eps``, :code:`double`, Numerical offset``, ``1.0e-30``
+   ``eps``, :code:`double`, Numerical offset, ``1.0e-30``
+   ``log``, :code:`bool`, Log transform the work to failure relation, ``false``
 
 Class description
 -----------------
