@@ -345,7 +345,7 @@ class TestWorkDamageLog(unittest.TestCase, CommonScalarDamageModel,
   def test_definition(self):
     damage = self.dmodel.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
-    should = self.d_n + self.n * self.d_np1**((self.n-1)/self.n) * self.Wdot * self.dt / np.exp(self.fn.value(np.log(self.Wdot)))
+    should = self.d_n + self.n * self.d_np1**((self.n-1)/self.n) * self.Wdot * self.dt / 10.0**(self.fn.value(np.log10(self.Wdot)))
 
     self.assertAlmostEqual(damage, should)
 
