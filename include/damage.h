@@ -647,6 +647,9 @@ class NEML_EXPORT WorkDamage: public ScalarDamage {
                      double t_np1, double t_n,
                      double * const dd) const;
 
+  /// Initial value of the damage, overrideable for models with singularities
+  virtual double d_init() const { return eps_ ;};
+
  protected:
   double workrate(
       const double * const strain_np1, const double * const strain_n,
