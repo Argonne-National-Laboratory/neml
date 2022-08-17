@@ -5,7 +5,7 @@ on:
 jobs:
       build_wheels_linux_mac:
             env:
-                  CIBW_SKIP: cp310-* *-manylinux_i686 pp* *_ppc641e *_s390x *_aarch64 *musllinux* 
+                  CIBW_SKIP: cp311-* *-manylinux_i686 pp* *_ppc641e *_s390x *_aarch64 *musllinux* 
                   CIBW_BEFORE_ALL_LINUX: yum -y install cmake cmake3 blas-devel lapack-devel && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake 10 --slave /usr/local/bin/ctest ctest /usr/bin/ctest --slave /usr/local/bin/cpack cpack /usr/bin/cpack --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake --family cmake && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 --family cmake
                   CIBW_BEFORE_ALL_MACOS: brew install cmake openblas superlu gfortran
                   CIBW_BEFORE_BUILD: "cmake -DCMAKE_BUILD_TYPE=Release -DUSE_OPENMP=OFF . && cmake --build . && rm CMakeCache.txt && rm -rf CMakeFiles && pip install -r requirements.txt"
