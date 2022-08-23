@@ -110,10 +110,10 @@ class NEML_EXPORT SuperimposedViscoPlasticFlowRule : public ViscoPlasticFlowRule
   /// Number of individual models being summed
   size_t nmodels() const;
 
-  /// Number of history variables
-  virtual size_t nhist() const;
+  /// Populate a blank history object
+  virtual void populate_hist(History & hist) const;
   /// Initialize history at time zero
-  virtual void init_hist(double * const h) const;
+  virtual void init_hist(History & hist) const;
 
   /// Scalar flow rate
   virtual void y(const double* const s, const double* const alpha, double T,
@@ -252,7 +252,7 @@ class NEML_EXPORT PerzynaFlowRule : public ViscoPlasticFlowRule {
   /// Initialize from parameters
   static ParameterSet parameters();
 
-  /// Number of history variables
+  /// Populate a blank history object
   virtual void populate_hist(History & hist) const;
   /// Initialize history at time zero
   virtual void init_hist(History & hist) const;
@@ -308,10 +308,10 @@ class NEML_EXPORT LinearViscousFlow : public ViscoPlasticFlowRule {
   /// Initialize from parameters
   static ParameterSet parameters();
 
-  /// Number of history variables
-  virtual size_t nhist() const;
+  /// Populate a blank history object
+  virtual void populate_hist(History & hist) const;
   /// Initialize history at time zero
-  virtual void init_hist(double * const h) const;
+  virtual void init_hist(History & hist) const;
 
   /// Scalar strain rate
   virtual void y(const double* const s, const double* const alpha, double T,
