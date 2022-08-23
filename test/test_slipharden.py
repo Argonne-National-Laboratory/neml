@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from neml import history, interpolate
+from neml import interpolate
 from neml.math import tensors, rotations, matrix
 from neml.cp import crystallography, slipharden, sliprules
 
@@ -581,8 +581,8 @@ class TestVoceHardening(unittest.TestCase, CommonPlasticSlipHardening,
 
   def test_initialize_hist(self):
     H = history.History()
-    self.model.populate_history(H)
-    self.model.init_history(H)
+    self.model.populate_hist(H)
+    self.model.init_hist(H)
     self.assertTrue(np.isclose(H.get_scalar('strength'), 0.0))
 
   def test_static_strength(self):
@@ -644,8 +644,8 @@ class TestNyeVoceHardening(unittest.TestCase, CommonPlasticSlipHardening,
     
   def test_initialize_hist(self):
     H = history.History()
-    self.model.populate_history(H)
-    self.model.init_history(H)
+    self.model.populate_hist(H)
+    self.model.init_hist(H)
     self.assertTrue(np.isclose(H.get_scalar('strength'), 0.0))
 
   def test_static_strength(self):
@@ -701,8 +701,8 @@ class TestVoceHardeningMoveVar(unittest.TestCase, CommonPlasticSlipHardening,
 
   def test_initialize_hist(self):
     H = history.History()
-    self.model.populate_history(H)
-    self.model.init_history(H)
+    self.model.populate_hist(H)
+    self.model.init_hist(H)
     self.assertTrue(np.isclose(H.get_scalar(self.vname), 0.0))
 
   def test_static_strength(self):
@@ -770,8 +770,8 @@ class TestMultiVoceHardening(unittest.TestCase,
 
   def test_initialize_hist(self):
     H = history.History()
-    self.model.populate_history(H)
-    self.model.init_history(H)
+    self.model.populate_hist(H)
+    self.model.init_hist(H)
     self.assertTrue(np.isclose(H.get_scalar('strength0'), 0.0))
     self.assertTrue(np.isclose(H.get_scalar('strength1'), 0.0))
 
@@ -831,8 +831,8 @@ class TestLinearSlipHardening(unittest.TestCase, CommonPlasticSlipHardening,
     
   def test_initialize_hist(self):
     H = history.History()
-    self.model.populate_history(H)
-    self.model.init_history(H)
+    self.model.populate_hist(H)
+    self.model.init_hist(H)
     self.assertTrue(np.isclose(H.get_scalar('strength'), 0.0))
 
   def test_static_strength(self):

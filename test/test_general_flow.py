@@ -103,7 +103,7 @@ class CommonGeneralFlow(object):
 class CommonTVPFlow(object):
   def test_history(self):
     self.assertEqual(len(self.h_n), self.model.nhist)
-    self.assertTrue(np.allclose(self.h_n, self.model.init_hist()))
+    self.assertTrue(np.allclose(self.h_n, self.model.initial_history()))
 
   def test_srate(self):
     t_np1 = self.gen_t()

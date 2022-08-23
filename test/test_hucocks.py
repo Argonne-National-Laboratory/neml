@@ -593,8 +593,8 @@ class TestHuCocksHardening(unittest.TestCase, CommonSlipHardening):
       Paranoid check on the history state, given this is a kinda complicated model
     """
     H1 = history.History()
-    self.model.populate_history(H1)
-    self.model.init_history(H1)
+    self.model.populate_hist(H1)
+    self.model.init_hist(H1)
 
     self.assertEqual(len(np.array(H1)), 12+3+3)
     

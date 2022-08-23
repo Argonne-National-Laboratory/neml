@@ -218,7 +218,7 @@ void RateIndependentNonAssociativeHardening::populate_hist(History & hist) const
 
 void RateIndependentNonAssociativeHardening::init_hist(History & hist) const
 {
-  hardening_->populate_hist(hist);
+  hardening_->init_hist(hist);
 }
 
 void RateIndependentNonAssociativeHardening::f(const double* const s, 

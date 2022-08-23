@@ -12,6 +12,7 @@ namespace neml {
 
 PYBIND11_MODULE(ri_flow, m) {
   py::module::import("neml.objects");
+  py::module::import("neml.history");
 
   m.doc() = "Rate independent flow models.";
   

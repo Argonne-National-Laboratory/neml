@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import hardening, interpolate
+from neml import hardening, interpolate, history
 import unittest
 
 from common import *
@@ -15,7 +15,7 @@ class CommonHardening(object):
   """
   def test_history(self):
     self.assertEqual(self.model.nhist, len(self.hist0))
-    self.assertTrue(np.allclose(self.model.init_hist(), self.hist0))
+    self.assertTrue(np.allclose(self.model.initial_history(), self.hist0))
 
   def test_gradient(self):
     dfn = lambda x: self.model.q(x, self.T)
@@ -175,7 +175,7 @@ class CommonNonAssociative(object):
   def test_history(self):
     self.assertEqual(self.model.nhist, len(self.hist0))
     self.assertEqual(self.model.ninter, self.conform)
-    self.assertTrue(np.allclose(self.model.init_hist(), self.hist0))
+    self.assertTrue(np.allclose(self.model.initial_history(), self.hist0))
 
   def gen_stress(self):
     s = np.array([-150,200,-50,80,-20,30])

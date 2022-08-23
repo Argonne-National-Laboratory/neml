@@ -162,6 +162,13 @@ PYBIND11_MODULE(history, m) {
              "Populate a blank history object with the names/types")
         .def("init_hist", &HistoryNEMLObject::init_hist,
              "Initialize the history with the initial conditions")
+        .def("initial_history", [](HistoryNEMLObject & m) -> History
+             {
+              History h;
+              m.populate_hist(h);
+              m.init_hist(h);
+              return h;
+             }, "Return a fully initialized history object")
         .def_property_readonly("nhist", &HistoryNEMLObject::nhist, 
                                "Number of internal variables")
       ;
