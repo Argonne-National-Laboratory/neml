@@ -22,6 +22,7 @@ PYBIND11_MODULE(damage, m) {
   py::class_<NEMLDamagedModel_sd, NEMLModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd")
       .def_property_readonly("ndamage", &NEMLDamagedModel_sd::ndamage, "Number of damage variables.")
       .def("init_damage", &NEMLDamagedModel_sd::init_damage)
+      .def("populate_damage", &NEMLDamagedModel_sd::populate_damage)
       ;
 
   py::class_<SDTrialState, TrialState>(m, "SDTrialState")

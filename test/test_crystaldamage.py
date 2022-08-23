@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from neml import history, interpolate
+from neml import interpolate
 from neml.math import tensors, rotations, matrix, projections
 from neml.cp import crystallography, sliprules, crystaldamage, slipharden
 
@@ -94,8 +94,8 @@ class TestPlanarDamageModel(unittest.TestCase, CommonCrystalDamageModel):
         self.nfunc, self.L)
 
     self.huse = history.History()
-    self.hmodel.populate_history(self.huse)
-    self.model.populate_history(self.huse)
+    self.hmodel.populate_hist(self.huse)
+    self.model.populate_hist(self.huse)
 
     for i in range(12):
       self.huse.set_scalar("strength"+str(i), 2.0)
@@ -162,8 +162,8 @@ class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
     self.model = crystaldamage.NilDamageModel()
 
     self.huse = history.History()
-    self.hmodel.populate_history(self.huse)
-    self.model.populate_history(self.huse)
+    self.hmodel.populate_hist(self.huse)
+    self.model.populate_hist(self.huse)
 
     for i in range(12):
       self.huse.set_scalar("strength"+str(i), 25.0)
@@ -177,10 +177,10 @@ class TestNilDamageModel(unittest.TestCase, CommonCrystalDamageModel):
 
   def test_hist(self):
     test = history.History()
-    self.model.populate_history(test)
+    self.model.populate_hist(test)
     self.assertEqual(test.size, 1)
     self.assertEqual(test.items, ["whatever"])
-    self.model.init_history(test)
+    self.model.init_hist(test)
     self.assertAlmostEqual(test.get_scalar("whatever"), 0.0)
 
   def test_projection(self):

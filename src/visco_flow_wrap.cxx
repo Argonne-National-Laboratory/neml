@@ -11,6 +11,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 PYBIND11_MODULE(visco_flow, m) {
   py::module::import("neml.objects");
+  py::module::import("neml.history");
 
   m.doc() = "Viscoplastic flow models.";
 

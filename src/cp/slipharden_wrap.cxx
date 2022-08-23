@@ -11,7 +11,9 @@ namespace neml {
 PYBIND11_MODULE(slipharden, m) {
   m.doc() = "Crystal plasticity slip rate relations";
 
-  py::class_<SlipHardening, NEMLObject, std::shared_ptr<SlipHardening>>(m, "SlipHardening")
+  py::module::import("neml.history");
+
+  py::class_<SlipHardening, HistoryNEMLObject, std::shared_ptr<SlipHardening>>(m, "SlipHardening")
       .def_property_readonly("varnames", &SlipHardening::varnames)
       .def("set_varnames", &SlipHardening::set_varnames)
       .def("hist_to_tau", &SlipHardening::hist_to_tau)
