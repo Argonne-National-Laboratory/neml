@@ -204,12 +204,12 @@ class TestStandardKinematics(unittest.TestCase, CommonKinematics):
 
   def test_setup_history(self):
     H1 = history.History()
-    self.model.populate_history(H1)
-    self.model.init_history(H1)
+    self.model.populate_hist(H1)
+    self.model.init_hist(H1)
 
     H2 = history.History()
-    self.imodel.populate_history(H2)
-    self.imodel.init_history(H2)
+    self.imodel.populate_hist(H2)
+    self.imodel.init_hist(H2)
 
     self.assertTrue(np.allclose(np.array(H1), np.array(H2)))
 

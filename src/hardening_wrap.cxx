@@ -12,6 +12,7 @@ namespace neml {
 
 PYBIND11_MODULE(hardening, m) {
   py::module::import("neml.objects");
+  py::module::import("neml.history");
 
   m.doc() = "Various hardening rules.";
 
@@ -116,7 +117,7 @@ PYBIND11_MODULE(hardening, m) {
         }))
       ;
 
-  py::class_<NonAssociativeHardening, NEMLObject, std::shared_ptr<NonAssociativeHardening>>(m, "NonAssociativeHardening")
+  py::class_<NonAssociativeHardening, HistoryNEMLObject, std::shared_ptr<NonAssociativeHardening>>(m, "NonAssociativeHardening")
       .def_property_readonly("ninter", &NonAssociativeHardening::ninter, "Number of q variables.")
         
       .def("q",

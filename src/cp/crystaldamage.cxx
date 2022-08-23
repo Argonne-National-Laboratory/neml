@@ -6,7 +6,7 @@ namespace neml {
 
 CrystalDamageModel::CrystalDamageModel(ParameterSet & params, 
                                        std::vector<std::string> vars) :
-    NEMLObject(params),
+    HistoryNEMLObject(params),
     varnames_(vars)
 {
 

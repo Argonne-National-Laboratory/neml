@@ -12,6 +12,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 namespace neml {
 PYBIND11_MODULE(walker, m) {
   py::module::import("neml.objects");
+  py::module::import("neml.history");
   py::module::import("neml.general_flow");
   py::module::import("neml.visco_flow");
 

@@ -17,7 +17,7 @@ class SlipPlaneDamage;
 class TransformationFunction;
 
 /// Abstract base class for slip plane damage models
-class NEML_EXPORT CrystalDamageModel: public NEMLObject {
+class NEML_EXPORT CrystalDamageModel: public HistoryNEMLObject {
  public:
   CrystalDamageModel(ParameterSet & params,
                      std::vector<std::string> vars);

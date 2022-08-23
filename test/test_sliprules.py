@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from neml import history, interpolate
+from neml import interpolate
 from neml.math import tensors, rotations, matrix
 from neml.cp import crystallography, slipharden, sliprules
 
@@ -43,14 +43,14 @@ class CommonSlipRule(object):
 class CommonSlipMultiStrengthSlipRule(object):
   def test_setup_history(self):
     model_hist = history.History()
-    self.model.populate_history(model_hist)
-    self.model.init_history(model_hist)
+    self.model.populate_hist(model_hist)
+    self.model.init_hist(model_hist)
     
     manual_hist = history.History()
     for strength in self.strengths:
       Hs = history.History()
-      strength.populate_history(Hs)
-      strength.init_history(Hs)
+      strength.populate_hist(Hs)
+      strength.init_hist(Hs)
       manual_hist.add_union(Hs)
 
     self.assertTrue(np.allclose(np.array(model_hist),
@@ -194,8 +194,8 @@ class TestKinematicPowerLawSlipComplicated(unittest.TestCase, CommonSlipRule):
 
     self.model = sliprules.KinematicPowerLawSlipRule(self.backstrength, self.isostrength, self.flowresistance, self.g0, self.n)
 
-    self.model.populate_history(self.H)
-    self.model.init_history(self.H)
+    self.model.populate_hist(self.H)
+    self.model.init_hist(self.H)
 
     self.strength_values = np.linspace(0,10,36) + 5.0
     self.H.copy_data(self.strength_values)
@@ -205,12 +205,12 @@ class TestKinematicPowerLawSlipComplicated(unittest.TestCase, CommonSlipRule):
 class CommonSlipStrengthSlipRule(CommonSlipMultiStrengthSlipRule):
   def test_init_hist(self):
     H1 = history.History()
-    self.model.populate_history(H1)
-    self.model.init_history(H1)
+    self.model.populate_hist(H1)
+    self.model.init_hist(H1)
 
     H2 = history.History()
-    self.strengthmodel.populate_history(H2)
-    self.strengthmodel.init_history(H2)
+    self.strengthmodel.populate_hist(H2)
+    self.strengthmodel.init_hist(H2)
 
     self.assertTrue(np.allclose(np.array(H1),
       np.array(H2)))

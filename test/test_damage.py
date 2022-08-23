@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import interpolate, solvers, models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage, larsonmiller
+from neml import interpolate, solvers, models, elasticity, ri_flow, hardening, surfaces, visco_flow, general_flow, creep, damage, larsonmiller, history
 from common import *
 
 import unittest
@@ -76,7 +76,10 @@ class CommonScalarDamageModel(object):
     self.assertEqual(self.model.ndamage, 1)
 
   def test_init_damage(self):
-    self.assertTrue(np.allclose(self.model.init_damage(), np.zeros((1,))))
+    h = history.History()
+    self.model.populate_damage(h)
+    self.model.init_damage(h)
+    self.assertTrue(np.allclose(h, np.zeros((1,))))
 
   def test_ddamage_ddamage(self):
     dd_model = self.dmodel.ddamage_dd(self.d_np1, self.d_n, self.e_np1, self.e_n,
@@ -158,13 +161,6 @@ class CommonScalarDamageModel(object):
 class CommonDamagedModel(object):
   def test_nstore(self):
     self.assertEqual(self.model.nstore, self.bmodel.nstore + self.model.ndamage)
-
-  def test_store(self):
-    base = self.bmodel.init_store()
-    damg = self.model.init_damage()
-    comp = list(damg) + list(base)
-    fromm = self.model.init_store()
-    self.assertTrue(np.allclose(fromm, comp))
   
   def test_tangent_proportional_strain(self):
     t_n = 0.0
