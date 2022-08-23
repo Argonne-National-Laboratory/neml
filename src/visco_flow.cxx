@@ -142,15 +142,16 @@ size_t SuperimposedViscoPlasticFlowRule::nmodels() const
   return rules_.size();
 }
 
-size_t SuperimposedViscoPlasticFlowRule::nhist() const
-{
-  return offsets_[nmodels()];
-}
-
-void SuperimposedViscoPlasticFlowRule::init_hist(double * const h) const
+void SuperimposedViscoPlasticFlowRule::populate_hist(History & hist) const
 {
   for (size_t i = 0; i < nmodels(); i++)
-    rules_[i]->init_hist(model_history_(h, i));
+    rules_[i]->populate_hist(hist);
+}
+
+void SuperimposedViscoPlasticFlowRule::init_hist(History & hist) const
+{
+  for (size_t i = 0; i < nmodels(); i++)
+    rules_[i]->init_hist(hist);
 }
 
 void SuperimposedViscoPlasticFlowRule::y(const double* const s, 
@@ -894,12 +895,12 @@ std::unique_ptr<NEMLObject> LinearViscousFlow::initialize(ParameterSet & params)
   return neml::make_unique<LinearViscousFlow>(params); 
 }
 
-size_t LinearViscousFlow::nhist() const
+void LinearViscousFlow::init_hist(History & h) const
 {
-  return 0;
+  return;
 }
 
-void LinearViscousFlow::init_hist(double * const h) const
+void LinearViscousFlow::populate_hist(History & h) const
 {
   return;
 }
