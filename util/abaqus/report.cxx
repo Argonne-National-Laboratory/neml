@@ -17,7 +17,7 @@ int main(int argc, char ** argv) {
 
   double * ihist = new double[n];
   
-  model->init_hist(ihist);
+  model->init_store(ihist);
 
   std::cout << std::endl;
   
