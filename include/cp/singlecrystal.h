@@ -121,6 +121,12 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   /// Actually update the Nye tensor
   void update_nye(double * const hist, const double * const nye) const;
 
+  /// Split internal variables into static and actual parts
+  std::tuple<History,History> split_state(const History & h) const;
+
+  /// Number of actual internal variables
+  size_t nupdated() const;
+
  private:
   void attempt_update_ld_inc_(
        const double * const d_np1, const double * const d_n,
