@@ -23,7 +23,7 @@ namespace neml {
 /// NEML material model interface definitions
 //  All material models inherit from this base class.  It defines interfaces
 //  and provides the methods for reading in material parameters.
-class NEML_EXPORT NEMLModel: public NEMLObject {
+class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
   public:
    NEMLModel(ParameterSet & params);
    virtual ~NEMLModel() {};
@@ -63,15 +63,6 @@ class NEML_EXPORT NEMLModel: public NEMLObject {
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
   
-   /// Number of model internal variables
-   virtual size_t nhist() const;
-   /// Populate the actual history, wrapped object
-   virtual void populate_hist(History & hist) const = 0;
-   /// Populate the actual history, raw data
-   virtual void init_hist(double * const hist) const;
-   /// Initialize the history variables, wrapped object
-   virtual void init_hist(History & hist) const = 0;
-
    /// Instantaneous thermal expansion coefficient as a function of temperature
    virtual double alpha(double T) const = 0;
    /// Elastic strain for a given stress, temperature, and history state

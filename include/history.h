@@ -279,6 +279,18 @@ class NEML_EXPORT HistoryNEMLObject: public NEMLObject {
   virtual void init_hist(History & h) const = 0;
   /// This should be replaced at some point
   virtual size_t nhist() const;
+
+  /// Set the object prefix
+  void set_variable_prefix(std::string prefix);
+  /// Get the prefix
+  std::string get_variable_prefix() const;
+  /// Assemble a complete variable name
+  std::string prefix(std::string basename) const;
+  /// Assemble a complete derivative name
+  std::string dprefix(std::string a, std::string b) const;
+
+ protected:
+  std::string prefix_;
 };
 
 } // namespace neml

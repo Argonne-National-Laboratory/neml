@@ -11,7 +11,7 @@
 namespace neml {
 
 NEMLModel::NEMLModel(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
 }
@@ -37,20 +37,6 @@ void NEMLModel::init_store(double * const store) const
   History h(store);
   populate_store(h);
   init_store_object(h);
-}
-
-size_t NEMLModel::nhist() const
-{
-  History h;
-  populate_hist(h);
-  return h.size();
-}
-
-void NEMLModel::init_hist(double * const hist) const
-{
-  History h(hist);
-  populate_hist(h);
-  init_hist(h);
 }
 
 double NEMLModel::get_damage(const double *const h_np1) 
@@ -117,13 +103,13 @@ void NEMLModel_sd::update_ld_inc(
 void NEMLModel_sd::init_store_object(History & h) const
 {
   init_hist(h);
-  h.get<Symmetric>("small_stress") = Symmetric::zero();
+  h.get<Symmetric>(prefix("small_stress")) = Symmetric::zero();
 }
 
 void NEMLModel_sd::populate_store(History & h) const
 {
   populate_hist(h);
-  h.add<Symmetric>("small_stress");
+  h.add<Symmetric>(prefix("small_stress"));
 }
 
 double NEMLModel_sd::alpha(double T) const
@@ -766,6 +752,7 @@ std::unique_ptr<NEMLObject> SmallStrainRateIndependentPlasticity::initialize(Par
 
 void SmallStrainRateIndependentPlasticity::populate_hist(History & hist) const
 {
+  flow_->set_variable_prefix(get_variable_prefix());
   flow_->populate_hist(hist);
 }
 
@@ -1088,13 +1075,14 @@ std::unique_ptr<NEMLObject> SmallStrainCreepPlasticity::initialize(ParameterSet 
 
 void SmallStrainCreepPlasticity::populate_hist(History & hist) const
 {
+  plastic_->set_variable_prefix(get_variable_prefix());
   plastic_->populate_hist(hist);
-  hist.add<Symmetric>("plastic_strain");
+  hist.add<Symmetric>(prefix("plastic_strain"));
 }
 
 void SmallStrainCreepPlasticity::init_hist(History & hist) const
 {
-  hist.get<Symmetric>("plastic_strain") = Symmetric::zero();
+  hist.get<Symmetric>(prefix("plastic_strain")) = Symmetric::zero();
   plastic_->init_hist(hist);
 }
 
@@ -1430,6 +1418,7 @@ void GeneralIntegrator::work_and_energy(
 
 void GeneralIntegrator::populate_hist(History & hist) const
 {
+  rule_->set_variable_prefix(get_variable_prefix());
   rule_->populate_hist(hist);
 }
 
@@ -1643,6 +1632,9 @@ void KMRegimeModel::update_sd(
 
 void KMRegimeModel::populate_hist(History & hist) const
 {
+  for (auto model : models_)
+    model->set_variable_prefix(get_variable_prefix());
+
   return models_[0]->populate_hist(hist);
 }
 

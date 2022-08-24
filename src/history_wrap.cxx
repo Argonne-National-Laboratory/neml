@@ -171,6 +171,9 @@ PYBIND11_MODULE(history, m) {
              }, "Return a fully initialized history object")
         .def_property_readonly("nhist", &HistoryNEMLObject::nhist, 
                                "Number of internal variables")
+        .def_property("variable_prefix", &HistoryNEMLObject::get_variable_prefix,
+                      &HistoryNEMLObject::set_variable_prefix)
+        .def("prefix", &HistoryNEMLObject::prefix)
       ;
 }
 

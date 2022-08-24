@@ -64,6 +64,7 @@ std::unique_ptr<NEMLObject> TVPFlowRule::initialize(ParameterSet & params)
 
 void TVPFlowRule::populate_hist(History & h) const
 {
+  flow_->set_variable_prefix(get_variable_prefix());
   flow_->populate_hist(h);
 }
 

@@ -13,16 +13,10 @@ NEMLDamagedModel_sd::NEMLDamagedModel_sd(ParameterSet & params) :
 
 }
 
-size_t NEMLDamagedModel_sd::nhist() const
-{
-  History h;
-  populate_hist(h);
-  return h.size();
-}
-
 void NEMLDamagedModel_sd::populate_hist(History & hist) const
 {
   populate_damage(hist);
+  base_->set_variable_prefix(get_variable_prefix());
   base_->populate_hist(hist);
 }
 
@@ -145,12 +139,12 @@ size_t NEMLScalarDamagedModel_sd::ndamage() const
 
 void NEMLScalarDamagedModel_sd::populate_damage(History & hist) const
 {
-  hist.add<double>("damage");
+  hist.add<double>(prefix("damage"));
 }
 
 void NEMLScalarDamagedModel_sd::init_damage(History & hist) const
 {
-  hist.get<double>("damage") = dmodel_->d_init();
+  hist.get<double>(prefix("damage")) = dmodel_->d_init();
 }
 
 size_t NEMLScalarDamagedModel_sd::nparams() const
