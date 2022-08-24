@@ -11,6 +11,8 @@ namespace neml {
 PYBIND11_MODULE(history, m) {
   m.doc() = "Internal variable tracking system.";
 
+  py::module::import("neml.objects");
+
   py::class_<History, std::shared_ptr<History>>(m, "History",
                                                 py::buffer_protocol())
       .def(py::init<>())

@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from neml import hardening, interpolate, history
+from neml import hardening, interpolate
 import unittest
 
 from common import *

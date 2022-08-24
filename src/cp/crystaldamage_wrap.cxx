@@ -11,8 +11,6 @@ namespace neml {
 PYBIND11_MODULE(crystaldamage, m) {
   m.doc() = "Crystal plasticity damage models";
 
-  py::module::import("neml.history");
-
   py::class_<CrystalDamageModel, HistoryNEMLObject,
       std::shared_ptr<CrystalDamageModel>>(m, "CrystalDamageModel")
     .def_property_readonly("nvars", &CrystalDamageModel::nvars)
