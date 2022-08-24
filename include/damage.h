@@ -20,8 +20,6 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
   /// Input is an elastic model, an undamaged base material, and the CTE
   NEMLDamagedModel_sd(ParameterSet & params);
 
-  /// How many history variables?  Equal to base_history + ndamage
-  virtual size_t nhist() const;
   /// Populate the internal variables
   virtual void populate_hist(History & hist) const;
   /// Initialize base according to the base model and damage according to

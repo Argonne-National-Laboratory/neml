@@ -115,6 +115,9 @@ SuperimposedViscoPlasticFlowRule::SuperimposedViscoPlasticFlowRule(ParameterSet 
   for (size_t i = 1; i <= rules_.size(); i++) {
     offsets_[i] = offsets_[i-1] + rules_[i-1]->nhist();
   }
+
+  for (size_t i = 0; i < nmodels(); i++)
+    rules_[i]->set_variable_prefix("model"+std::to_string(i)+"_");
 }
 
 std::string SuperimposedViscoPlasticFlowRule::type()
@@ -705,6 +708,9 @@ void PerzynaFlowRule::populate_hist(History & hist) const
   if (surface_->nhist() != hardening_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
+  
+  // We want to make sure the variable prefix remains the same
+  hardening_->set_variable_prefix(get_variable_prefix());
 
   hardening_->populate_hist(hist);
 }
@@ -1112,6 +1118,10 @@ void ChabocheFlowRule::populate_hist(History & hist) const
   if (surface_->nhist() != hardening_->ninter()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
+  
+  // Make sure the variable prefix stays the same
+  hardening_->set_variable_prefix(get_variable_prefix());
+
   hardening_->populate_hist(hist);
 }
 
@@ -1329,18 +1339,18 @@ void YaguchiGr91FlowRule::populate_hist(History & hist) const
   // 6-11 X2
   // 12   Q
   // 13   sa
-  hist.add<Symmetric>("X1");
-  hist.add<Symmetric>("X2");
-  hist.add<double>("Q");
-  hist.add<double>("sa");
+  hist.add<Symmetric>(prefix("X1"));
+  hist.add<Symmetric>(prefix("X2"));
+  hist.add<double>(prefix("Q"));
+  hist.add<double>(prefix("sa"));
 }
 
 void YaguchiGr91FlowRule::init_hist(History & hist) const
 {
-  hist.get<Symmetric>("X1") = Symmetric::zero();
-  hist.get<Symmetric>("X2") = Symmetric::zero();
-  hist.get<double>("Q") = 0.0;
-  hist.get<double>("sa") = 0.0;
+  hist.get<Symmetric>(prefix("X1")) = Symmetric::zero();
+  hist.get<Symmetric>(prefix("X2")) = Symmetric::zero();
+  hist.get<double>(prefix("Q")) = 0.0;
+  hist.get<double>(prefix("sa")) = 0.0;
 }
 
 // Rate rule
