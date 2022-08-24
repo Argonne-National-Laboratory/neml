@@ -104,8 +104,7 @@ void SingleCrystalModel::init_hist(History & history) const
 double SingleCrystalModel::strength(double * const hist, double T) const
 {
   History h_total = gather_history_(hist);
-  History h = h_total.split(not_updated_());
-  History f = h_total.split(not_updated_(), false);
+  auto [h, f] = split_state(h_total);
   return kinematics_->strength(h, *lattice_, T, f);
 }
 
@@ -223,9 +222,8 @@ void SingleCrystalModel::attempt_update_ld_inc_(
   // orientation groups
   Orientation Q_n = HF_n.get<Orientation>("rotation");
   
-  History H_np1 = HF_np1.split(not_updated_());
-  History H_n = HF_n.split(not_updated_());
-  History F_n = HF_n.split(not_updated_(), false);
+  auto [H_np1, F_np1] = split_state(HF_np1);
+  auto [H_n, F_n] = split_state(HF_n);
 
   /* Begin adaptive stepping */
   double dT = T_np1 - T_n;
@@ -352,7 +350,7 @@ void SingleCrystalModel::elastic_strains(
 
 size_t SingleCrystalModel::nparams() const
 {
-  return 6 + nhist() - static_size_;
+  return 6 + nupdated();
 }
 
 void SingleCrystalModel::init_x(double * const x, TrialState * ts)
@@ -507,6 +505,22 @@ void SingleCrystalModel::update_nye(double * const hist,
     History h = gather_history_(hist);
     h.get<RankTwo>("nye") = RankTwo(std::vector<double>(nye,nye+9));
   }
+}
+
+std::tuple<History,History> SingleCrystalModel::split_state(const History & h) const
+{
+  History h1 = h.split(not_updated_());
+  History h2 = h.split(not_updated_(), false);
+
+  return std::tie(h1,h2);
+}
+
+size_t SingleCrystalModel::nupdated() const
+{
+  History h;
+  populate_hist(h);
+  auto [actual, not_updated] = split_state(h);
+  return actual.size();
 }
 
 History SingleCrystalModel::gather_history_(double * data) const
