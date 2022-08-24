@@ -37,6 +37,7 @@ std::unique_ptr<NEMLObject> WalkerKremplSwitchRule::initialize(ParameterSet & pa
 
 void WalkerKremplSwitchRule::populate_hist(History & hist) const
 {
+  flow_->set_variable_prefix(get_variable_prefix());
   return flow_->populate_hist(hist);
 }
 
@@ -1693,7 +1694,7 @@ void WrappedViscoPlasticFlowRule::dh_da_temp(const State & state, History & res)
 TestFlowRule::TestFlowRule(ParameterSet & params)
   : WrappedViscoPlasticFlowRule(params), 
     eps0_(params.get_parameter<double>("eps0")), 
-    D_(params.get_parameter<double>("D")), 
+    D_(params.get_parameter<double>(prefix("D"))), 
     n_(params.get_parameter<double>("n")), 
     s0_(params.get_parameter<double>("s0")), 
     K_(params.get_parameter<double>("K"))
@@ -1726,19 +1727,19 @@ ParameterSet TestFlowRule::parameters()
 
 void TestFlowRule::populate_hist(History & h) const
 {
-  h.add<double>("alpha");
-  h.add<double>("iso");
+  h.add<double>(prefix("alpha"));
+  h.add<double>(prefix("iso"));
 }
 
 void TestFlowRule::init_hist(History & h) const
 {
-  h.get<double>("alpha") = 0.0;
-  h.get<double>("iso") = s0_;
+  h.get<double>(prefix("alpha")) = 0.0;
+  h.get<double>(prefix("iso")) = s0_;
 }
 
 void TestFlowRule::y(const State & state, double & res) const
 {
-  double h = (std::sqrt(3.0/2.0) * state.S.dev().norm() - state.h.get<double>("iso"))
+  double h = (std::sqrt(3.0/2.0) * state.S.dev().norm() - state.h.get<double>(prefix("iso")))
       / D_;
   if (h > 0.0) {
     res = eps0_ * std::pow(h, n_);
@@ -1750,7 +1751,7 @@ void TestFlowRule::y(const State & state, double & res) const
 
 void TestFlowRule::dy_ds(const State & state, Symmetric & res) const
 {
-  double h = (std::sqrt(3.0/2.0) * state.S.dev().norm() - state.h.get<double>("iso"))
+  double h = (std::sqrt(3.0/2.0) * state.S.dev().norm() - state.h.get<double>(prefix("iso")))
       / D_;
   if (h > 0.0) {
     res = eps0_ * n_ * std::pow(h, n_-1.0) * std::sqrt(3.0/2.0) * state.S.dev()
@@ -1763,11 +1764,11 @@ void TestFlowRule::dy_ds(const State & state, Symmetric & res) const
 
 void TestFlowRule::dy_da(const State & state, History & res) const
 {
-  double h = (std::sqrt(3.0/2.0) * state.S.dev().norm() - state.h.get<double>("iso"))
+  double h = (std::sqrt(3.0/2.0) * state.S.dev().norm() - state.h.get<double>(prefix("iso")))
       / D_;
   res.zero();
   if (h > 0.0) {
-    res.get<double>("iso") = -eps0_ * n_ * std::pow(h, n_-1.0) / D_;
+    res.get<double>(prefix("iso")) = -eps0_ * n_ * std::pow(h, n_-1.0) / D_;
   }
 }
 
@@ -1795,8 +1796,8 @@ void TestFlowRule::dg_da(const State & state, History & res) const
 
 void TestFlowRule::h(const State & state, History & res) const
 {
-  res.get<double>("alpha") = 1.0;
-  res.get<double>("iso") = K_;
+  res.get<double>(prefix("alpha")) = 1.0;
+  res.get<double>(prefix("iso")) = K_;
 }
 
 void TestFlowRule::dh_ds(const State & state, History & res) const
@@ -1817,13 +1818,13 @@ WalkerFlowRule::WalkerFlowRule(ParameterSet & params) :
     n_(params.get_object_parameter<Interpolate>("n")),
     k_(params.get_object_parameter<Interpolate>("k")),
     m_(params.get_object_parameter<Interpolate>("m")),
-    R_(params.get_object_parameter<IsotropicHardening>("R")),
-    D_(params.get_object_parameter<DragStress>("D")),
+    R_(params.get_object_parameter<IsotropicHardening>(prefix("R"))),
+    D_(params.get_object_parameter<DragStress>(prefix("D"))),
     X_(params.get_object_parameter_vector<KinematicHardening>("X"))
 {
   // The variable names to something canonical
-  R_->set_name("R");
-  D_->set_name("D");
+  R_->set_name(prefix("R"));
+  D_->set_name(prefix("D"));
   int i = 0;
   for (auto X : X_) {
     X->set_name("X" + std::to_string(i));
@@ -1869,21 +1870,21 @@ ParameterSet WalkerFlowRule::parameters()
 
 void WalkerFlowRule::populate_hist(History & h) const
 {
-  h.add<double>("alpha");
-  h.add<double>(R_->name());
-  h.add<double>(D_->name());
+  h.add<double>(prefix("alpha"));
+  h.add<double>(prefix(R_->name()));
+  h.add<double>(prefix(D_->name()));
   for (auto X : X_) {
-    h.add<Symmetric>(X->name());
+    h.add<Symmetric>(prefix(X->name()));
   }
 }
 
 void WalkerFlowRule::init_hist(History & h) const
 {
-  h.get<double>("alpha") = 0;
-  h.get<double>(R_->name()) = R_->initial_value();
-  h.get<double>(D_->name()) = D_->initial_value();
+  h.get<double>(prefix("alpha")) = 0;
+  h.get<double>(prefix(R_->name())) = R_->initial_value();
+  h.get<double>(prefix(D_->name())) = D_->initial_value();
   for (auto X : X_) {
-    h.get<Symmetric>(X->name()) = X->initial_value();
+    h.get<Symmetric>(prefix(X->name())) = X->initial_value();
   }
 }
 
@@ -1899,7 +1900,7 @@ void WalkerFlowRule::dy_ds(const State & state, Symmetric & res) const
     res = Symmetric::zero();
   else
     res = prefactor_(state) * dflow_(state) * 
-        std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * 
+        std::sqrt(3.0/2.0)/(state.h.get<double>(prefix("D")) * d.norm()) * 
         SymSymR4::id_dev().dot(d);
 }
 
@@ -1908,12 +1909,12 @@ void WalkerFlowRule::dy_da(const State & state, History & res) const
   // These are very annoying because it covers all the history variables...
   
   // alpha
-  res.get<double>("alpha") = eps0_->value(state.T) * 
-      softening_->dphi(state.h.get<double>("alpha"), state.T) * 
+  res.get<double>(prefix("alpha")) = eps0_->value(state.T) * 
+      softening_->dphi(state.h.get<double>(prefix("alpha")), state.T) * 
       scaling_->value(state.T) * flow_(state);
 
   // R
-  double D = state.h.get<double>("D");
+  double D = state.h.get<double>(prefix("D"));
   double D0 = D_->D_0(state.T);
   double Dx = D_->D_xi(state.T);
   double m = m_->value(state.T);
@@ -1921,27 +1922,27 @@ void WalkerFlowRule::dy_da(const State & state, History & res) const
   double Dr = 1.0e-8;
   if ((D - D0) > 0) Dr = (D-D0)/Dx;
   
-  res.get<double>("R") = -prefactor_(state) * dflow_(state) * 
+  res.get<double>(prefix("R")) = -prefactor_(state) * dflow_(state) * 
       std::pow(Dr, m) / D;
 
   // D
   Symmetric d = state.S.dev() - TX_(state);
   double k = k_->value(state.T);
-  double R = state.h.get<double>("R");
+  double R = state.h.get<double>(prefix("R"));
   double p1 = -(k + R) * m * std::pow(Dr, m-1.0) / (Dx*D);
   double p2 = -(std::sqrt(3.0/2.0) * d.norm() - (k + R) * std::pow(Dr, m)) / (D*D);
 
-  res.get<double>("D") = prefactor_(state) * dflow_(state) * 
+  res.get<double>(prefix("D")) = prefactor_(state) * dflow_(state) * 
       (p1 + p2);
 
   // The backstresses
   for (auto X : X_)
     if (d.norm() == 0) {
-      res.get<Symmetric>(X->name()) = Symmetric::zero();
+      res.get<Symmetric>(prefix(X->name())) = Symmetric::zero();
     }
     else {
-      res.get<Symmetric>(X->name()) = -prefactor_(state) * dflow_(state) * 
-          std::sqrt(3.0/2.0)/(state.h.get<double>("D") * d.norm()) * d;
+      res.get<Symmetric>(prefix(X->name())) = -prefactor_(state) * dflow_(state) * 
+          std::sqrt(3.0/2.0)/(state.h.get<double>(prefix("D")) * d.norm()) * d;
     }
 }
 
@@ -1962,30 +1963,30 @@ void WalkerFlowRule::dg_ds(const State & state, SymSymR4 & res) const
 
 void WalkerFlowRule::dg_da(const State & state, History & res) const
 {
-  res.get<Symmetric>("alpha") = Symmetric::zero();
-  res.get<Symmetric>("R") = Symmetric::zero();
-  res.get<Symmetric>("D") = Symmetric::zero();
+  res.get<Symmetric>(prefix("alpha")) = Symmetric::zero();
+  res.get<Symmetric>(prefix("R")) = Symmetric::zero();
+  res.get<Symmetric>(prefix("D")) = Symmetric::zero();
 
   SymSymR4 G = G_(state);
   for (auto X : X_)
-    res.get<SymSymR4>(X->name()) = -G;
+    res.get<SymSymR4>(prefix(X->name())) = -G;
 }
 
 void WalkerFlowRule::h(const State & state, History & res) const
 {
   // Scalar variables
-  res.get<double>("alpha") = 1.0;
+  res.get<double>(prefix("alpha")) = 1.0;
   auto ss = scalar_state_(state);
-  ss.h = state.h.get<double>("R");
-  res.get<double>("R") = R_->ratep(ss);
-  ss.h = state.h.get<double>("D");
-  res.get<double>("D") = D_->ratep(ss);
+  ss.h = state.h.get<double>(prefix("R"));
+  res.get<double>(prefix("R")) = R_->ratep(ss);
+  ss.h = state.h.get<double>(prefix("D"));
+  res.get<double>(prefix("D")) = D_->ratep(ss);
   
   // Backstresses
   auto Ss = symmetric_state_(state);
   for (auto X : X_) {
-    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
-    res.get<Symmetric>(X->name()) = X->ratep(Ss);
+    Ss.h.copy_data(state.h.get<Symmetric>(prefix(X->name())).data());
+    res.get<Symmetric>(prefix(X->name())) = X->ratep(Ss);
   }
 }
 
@@ -1993,7 +1994,7 @@ void WalkerFlowRule::dh_ds(const State & state, History & res) const
 {
   // Again highly annoying, but at least there's a pattern here
   // Alpha
-  res.get<Symmetric>("alpha") = Symmetric::zero();
+  res.get<Symmetric>(prefix("alpha")) = Symmetric::zero();
   
   // Common junk
   Symmetric dy;
@@ -2004,15 +2005,15 @@ void WalkerFlowRule::dh_ds(const State & state, History & res) const
   auto ss = scalar_state_(state);  
 
   // R
-  ss.h = state.h.get<double>("R");
-  res.get<Symmetric>("R") = 
+  ss.h = state.h.get<double>(prefix("R"));
+  res.get<Symmetric>(prefix("R")) = 
         R_->d_ratep_d_s(ss) 
       + R_->d_ratep_d_adot(ss) * dy
       + dg.dot(R_->d_ratep_d_g(ss)).transpose();
 
   // D
-  ss.h = state.h.get<double>("D");
-  res.get<Symmetric>("D") = 
+  ss.h = state.h.get<double>(prefix("D"));
+  res.get<Symmetric>(prefix("D")) = 
         D_->d_ratep_d_s(ss) 
       + D_->d_ratep_d_adot(ss) * dy
       + dg.dot(D_->d_ratep_d_g(ss)).transpose();
@@ -2020,8 +2021,8 @@ void WalkerFlowRule::dh_ds(const State & state, History & res) const
   // Backstresses
   auto Ss = symmetric_state_(state);
   for (auto X : X_) {
-    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
-    res.get<SymSymR4>(X->name()) = 
+    Ss.h.copy_data(state.h.get<Symmetric>(prefix(X->name())).data());
+    res.get<SymSymR4>(prefix(X->name())) = 
           X->d_ratep_d_s(Ss)
         + douter(X->d_ratep_d_adot(Ss), dy)
         + X->d_ratep_d_g(Ss).dot(dg);
@@ -2049,81 +2050,81 @@ void WalkerFlowRule::dh_da(const State & state, History & res) const
   // (zero)
 
   // R
-  ss.h = state.h.get<double>("R");
+  ss.h = state.h.get<double>(prefix("R"));
   // a
-  res.get<double>("R_alpha") =
+  res.get<double>(dprefix("R", "alpha")) =
         R_->d_ratep_d_a(ss)
-      + R_->d_ratep_d_adot(ss) * dy.get<double>("alpha")
-      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+      + R_->d_ratep_d_adot(ss) * dy.get<double>(prefix("alpha"))
+      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>(prefix("alpha")));
   // R
-  res.get<double>("R_R") =
+  res.get<double>(dprefix("R","R")) =
         R_->d_ratep_d_h(ss)
-      + R_->d_ratep_d_adot(ss) * dy.get<double>("R")
-      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("R"));
+      + R_->d_ratep_d_adot(ss) * dy.get<double>(prefix("R"))
+      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>(prefix("R")));
   // D
-  res.get<double>("R_D") =
+  res.get<double>(dprefix("R", "D")) =
         R_->d_ratep_d_D(ss)
-      + R_->d_ratep_d_adot(ss) * dy.get<double>("D")
-      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("D"));
+      + R_->d_ratep_d_adot(ss) * dy.get<double>(prefix("D"))
+      + R_->d_ratep_d_g(ss).contract(dg.get<Symmetric>(prefix("D")));
   // backstresses
   for (auto X: X_) {
-    res.get<Symmetric>("R_" + X->name()) = 
-          R_->d_ratep_d_adot(ss) * dy.get<Symmetric>(X->name())
-        + dg.get<SymSymR4>(X->name()).dot(R_->d_ratep_d_g(ss)).transpose();
+    res.get<Symmetric>(dprefix("R", X->name())) = 
+          R_->d_ratep_d_adot(ss) * dy.get<Symmetric>(prefix(X->name()))
+        + dg.get<SymSymR4>(prefix(X->name())).dot(R_->d_ratep_d_g(ss)).transpose();
   }
 
   // D
-  ss.h = state.h.get<double>("D");
+  ss.h = state.h.get<double>(prefix("D"));
   // a
-  res.get<double>("D_alpha") =
+  res.get<double>(dprefix("D","alpha")) =
         D_->d_ratep_d_a(ss)
-      + D_->d_ratep_d_adot(ss) * dy.get<double>("alpha")
-      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+      + D_->d_ratep_d_adot(ss) * dy.get<double>(prefix("alpha"))
+      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>(prefix("alpha")));
   // R
-  res.get<double>("D_R") =
-        D_->d_ratep_d_adot(ss) * dy.get<double>("R")
-      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("R"));
+  res.get<double>(dprefix("D","R")) =
+        D_->d_ratep_d_adot(ss) * dy.get<double>(prefix("R"))
+      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>(prefix("R")));
   // D
-  res.get<double>("D_D") =
+  res.get<double>(dprefix("D","D")) =
         D_->d_ratep_d_h(ss)
-      + D_->d_ratep_d_adot(ss) * dy.get<double>("D")
-      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>("D"));
+      + D_->d_ratep_d_adot(ss) * dy.get<double>(prefix("D"))
+      + D_->d_ratep_d_g(ss).contract(dg.get<Symmetric>(prefix("D")));
   // backstresses
   for (auto X: X_) {
-    res.get<Symmetric>("D_" + X->name()) = 
-          D_->d_ratep_d_adot(ss) * dy.get<Symmetric>(X->name())
+    res.get<Symmetric>(dprefix("D", X->name())) = 
+          D_->d_ratep_d_adot(ss) * dy.get<Symmetric>(prefix(X->name()))
         + dg.get<SymSymR4>(X->name()).dot(D_->d_ratep_d_g(ss)).transpose();
   }
 
   // And the backstresses...
   auto Ss = symmetric_state_(state);
   for (auto X : X_) {
-    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data()); 
+    Ss.h.copy_data(state.h.get<Symmetric>(prefix(X->name())).data()); 
     // a
-    res.get<Symmetric>(X->name() + "_alpha") = 
+    res.get<Symmetric>(dprefix(X->name(),"alpha")) = 
           X->d_ratep_d_a(Ss)
-        + X->d_ratep_d_adot(Ss) * dy.get<double>("alpha")
-        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>("alpha"));
+        + X->d_ratep_d_adot(Ss) * dy.get<double>(prefix("alpha"))
+        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>(prefix("alpha")));
 
     // R
-    res.get<Symmetric>(X->name() + "_R") = 
-        X->d_ratep_d_adot(Ss) * dy.get<double>("R")
-        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>("R"));
+    res.get<Symmetric>(dprefix(X->name(), "R")) = 
+        X->d_ratep_d_adot(Ss) * dy.get<double>(prefix("R"))
+        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>(prefix("R")));
 
     // D
-    res.get<Symmetric>(X->name() + "_D") = 
+    res.get<Symmetric>(dprefix(X->name(), "D")) = 
           X->d_ratep_d_D(Ss)
-        + X->d_ratep_d_adot(Ss) * dy.get<double>("D")
-        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>("D"));
+        + X->d_ratep_d_adot(Ss) * dy.get<double>(prefix("D"))
+        + X->d_ratep_d_g(Ss).dot(dg.get<Symmetric>(prefix("D")));
 
     // backstresses
     for (auto Y : X_) {
-      if (Y->name() == X->name()) {
-        res.get<SymSymR4>(X->name() + "_" + Y->name()) = X->d_ratep_d_h(Ss);
+      if (prefix(Y->name()) == prefix(X->name())) {
+        res.get<SymSymR4>(dprefix(X->name(), Y->name())) = X->d_ratep_d_h(Ss);
       }
-      res.get<SymSymR4>(X->name() + "_" + Y->name()) += 
-            douter(X->d_ratep_d_adot(Ss), dy.get<Symmetric>(Y->name()))
-          + X->d_ratep_d_g(Ss).dot(dg.get<SymSymR4>(Y->name()));
+      res.get<SymSymR4>(dprefix(X->name() ,Y->name())) += 
+            douter(X->d_ratep_d_adot(Ss), dy.get<Symmetric>(prefix(Y->name())))
+          + X->d_ratep_d_g(Ss).dot(dg.get<SymSymR4>(prefix(Y->name())));
     }
   }
 }
@@ -2131,18 +2132,18 @@ void WalkerFlowRule::dh_da(const State & state, History & res) const
 void WalkerFlowRule::h_time(const State & state, History & res) const
 {
   // Scalar variables
-  res.get<double>("alpha") = 0.0;
+  res.get<double>(prefix("alpha")) = 0.0;
   auto ss = scalar_state_(state);
-  ss.h = state.h.get<double>("R");
-  res.get<double>("R") = R_->ratet(ss);
-  ss.h = state.h.get<double>("D");
-  res.get<double>("D") = D_->ratet(ss);
+  ss.h = state.h.get<double>(prefix("R"));
+  res.get<double>(prefix("R")) = R_->ratet(ss);
+  ss.h = state.h.get<double>(prefix("D"));
+  res.get<double>(prefix("D")) = D_->ratet(ss);
   
   // Backstresses
   auto Ss = symmetric_state_(state);
   for (auto X : X_) {
-    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
-    res.get<Symmetric>(X->name()) = X->ratet(Ss);
+    Ss.h.copy_data(state.h.get<Symmetric>(prefix(X->name())).data());
+    res.get<Symmetric>(prefix(X->name())) = X->ratet(Ss);
   }
 }
 
@@ -2150,7 +2151,7 @@ void WalkerFlowRule::dh_ds_time(const State & state, History & res) const
 {
   // Again highly annoying, but at least there's a pattern here
   // Alpha
-  res.get<Symmetric>("alpha") = Symmetric::zero();
+  res.get<Symmetric>(prefix("alpha")) = Symmetric::zero();
   
   // Common junk
   Symmetric dy;
@@ -2161,15 +2162,15 @@ void WalkerFlowRule::dh_ds_time(const State & state, History & res) const
   auto ss = scalar_state_(state);  
 
   // R
-  ss.h = state.h.get<double>("R");
-  res.get<Symmetric>("R") = 
+  ss.h = state.h.get<double>(prefix("R"));
+  res.get<Symmetric>(prefix("R")) = 
         R_->d_ratet_d_s(ss) 
       + R_->d_ratet_d_adot(ss) * dy
       + dg.dot(R_->d_ratet_d_g(ss)).transpose();
 
   // D
-  ss.h = state.h.get<double>("D");
-  res.get<Symmetric>("D") = 
+  ss.h = state.h.get<double>(prefix("D"));
+  res.get<Symmetric>(prefix("D")) = 
         D_->d_ratet_d_s(ss) 
       + D_->d_ratet_d_adot(ss) * dy
       + dg.dot(D_->d_ratet_d_g(ss)).transpose();
@@ -2177,8 +2178,8 @@ void WalkerFlowRule::dh_ds_time(const State & state, History & res) const
   // Backstresses
   auto Ss = symmetric_state_(state);
   for (auto X : X_) {
-    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data());
-    res.get<SymSymR4>(X->name()) = 
+    Ss.h.copy_data(state.h.get<Symmetric>(prefix(X->name())).data());
+    res.get<SymSymR4>(prefix(X->name())) = 
           X->d_ratet_d_s(Ss)
         + douter(X->d_ratet_d_adot(Ss), dy)
         + X->d_ratet_d_g(Ss).dot(dg);
@@ -2206,81 +2207,81 @@ void WalkerFlowRule::dh_da_time(const State & state, History & res) const
   // (zero)
 
   // R
-  ss.h = state.h.get<double>("R");
+  ss.h = state.h.get<double>(prefix("R"));
   // a
-  res.get<double>("R_alpha") =
+  res.get<double>(dprefix("R","alpha")) =
         R_->d_ratet_d_a(ss)
-      + R_->d_ratet_d_adot(ss) * dy.get<double>("alpha")
-      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+      + R_->d_ratet_d_adot(ss) * dy.get<double>(prefix("alpha"))
+      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>(prefix("alpha")));
   // R
-  res.get<double>("R_R") =
+  res.get<double>(dprefix("R","R")) =
         R_->d_ratet_d_h(ss)
-      + R_->d_ratet_d_adot(ss) * dy.get<double>("R")
-      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("R"));
+      + R_->d_ratet_d_adot(ss) * dy.get<double>(prefix("R"))
+      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>(prefix("R")));
   // D
-  res.get<double>("R_D") =
+  res.get<double>(dprefix("R", "D")) =
         R_->d_ratet_d_D(ss)
-      + R_->d_ratet_d_adot(ss) * dy.get<double>("D")
-      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("D"));
+      + R_->d_ratet_d_adot(ss) * dy.get<double>(prefix("D"))
+      + R_->d_ratet_d_g(ss).contract(dg.get<Symmetric>(prefix("D")));
   // backstresses
   for (auto X: X_) {
-    res.get<Symmetric>("R_" + X->name()) = 
-          R_->d_ratet_d_adot(ss) * dy.get<Symmetric>(X->name())
-        + dg.get<SymSymR4>(X->name()).dot(R_->d_ratet_d_g(ss)).transpose();
+    res.get<Symmetric>(dprefix("R", X->name())) = 
+          R_->d_ratet_d_adot(ss) * dy.get<Symmetric>(prefix(X->name()))
+        + dg.get<SymSymR4>(prefix(X->name())).dot(R_->d_ratet_d_g(ss)).transpose();
   }
 
   // D
-  ss.h = state.h.get<double>("D");
+  ss.h = state.h.get<double>(prefix("D"));
   // a
-  res.get<double>("D_alpha") =
+  res.get<double>(dprefix("D","alpha")) =
         D_->d_ratet_d_a(ss)
-      + D_->d_ratet_d_adot(ss) * dy.get<double>("alpha")
-      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("alpha"));
+      + D_->d_ratet_d_adot(ss) * dy.get<double>(prefix("alpha"))
+      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>(prefix("alpha")));
   // R
-  res.get<double>("D_R") =
-        D_->d_ratet_d_adot(ss) * dy.get<double>("R")
-      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("R"));
+  res.get<double>(dprefix("D","R")) =
+        D_->d_ratet_d_adot(ss) * dy.get<double>(prefix("R"))
+      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>(prefix("R")));
   // D
-  res.get<double>("D_D") =
+  res.get<double>(dprefix("D","D")) =
         D_->d_ratet_d_h(ss)
-      + D_->d_ratet_d_adot(ss) * dy.get<double>("D")
-      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>("D"));
+      + D_->d_ratet_d_adot(ss) * dy.get<double>(prefix("D"))
+      + D_->d_ratet_d_g(ss).contract(dg.get<Symmetric>(prefix("D")));
   // backstresses
   for (auto X: X_) {
-    res.get<Symmetric>("D_" + X->name()) = 
-          D_->d_ratet_d_adot(ss) * dy.get<Symmetric>(X->name())
-        + dg.get<SymSymR4>(X->name()).dot(D_->d_ratet_d_g(ss)).transpose();
+    res.get<Symmetric>(dprefix("D",X->name())) = 
+          D_->d_ratet_d_adot(ss) * dy.get<Symmetric>(prefix(X->name()))
+        + dg.get<SymSymR4>(prefix(X->name())).dot(D_->d_ratet_d_g(ss)).transpose();
   }
 
   // And the backstresses...
   auto Ss = symmetric_state_(state);
   for (auto X : X_) {
-    Ss.h.copy_data(state.h.get<Symmetric>(X->name()).data()); 
+    Ss.h.copy_data(state.h.get<Symmetric>(prefix(X->name())).data()); 
     // a
-    res.get<Symmetric>(X->name() + "_alpha") = 
+    res.get<Symmetric>(dprefix(X->name(), "alpha")) = 
           X->d_ratet_d_a(Ss)
-        + X->d_ratet_d_adot(Ss) * dy.get<double>("alpha")
-        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>("alpha"));
+        + X->d_ratet_d_adot(Ss) * dy.get<double>(prefix("alpha"))
+        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>(prefix("alpha")));
 
     // R
-    res.get<Symmetric>(X->name() + "_R") = 
-        X->d_ratet_d_adot(Ss) * dy.get<double>("R")
-        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>("R"));
+    res.get<Symmetric>(dprefix(X->name(), "R")) = 
+        X->d_ratet_d_adot(Ss) * dy.get<double>(prefix("R"))
+        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>(prefix("R")));
 
     // D
-    res.get<Symmetric>(X->name() + "_D") = 
+    res.get<Symmetric>(dprefix(X->name(), "D")) = 
           X->d_ratet_d_D(Ss)
-        + X->d_ratet_d_adot(Ss) * dy.get<double>("D")
-        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>("D"));
+        + X->d_ratet_d_adot(Ss) * dy.get<double>(prefix("D"))
+        + X->d_ratet_d_g(Ss).dot(dg.get<Symmetric>(prefix("D")));
 
     // backstresses
     for (auto Y : X_) {
-      if (Y->name() == X->name()) {
-        res.get<SymSymR4>(X->name() + "_" + Y->name()) = X->d_ratet_d_h(Ss);
+      if (prefix(Y->name()) == prefix(X->name())) {
+        res.get<SymSymR4>(dprefix(X->name(), Y->name())) = X->d_ratet_d_h(Ss);
       }
-      res.get<SymSymR4>(X->name() + "_" + Y->name()) += 
-            douter(X->d_ratet_d_adot(Ss), dy.get<Symmetric>(Y->name()))
-          + X->d_ratet_d_g(Ss).dot(dg.get<SymSymR4>(Y->name()));
+      res.get<SymSymR4>(dprefix(X->name(), Y->name())) += 
+            douter(X->d_ratet_d_adot(Ss), dy.get<Symmetric>(prefix(Y->name())))
+          + X->d_ratet_d_g(Ss).dot(dg.get<SymSymR4>(prefix(Y->name())));
     }
   }
 }
@@ -2289,7 +2290,7 @@ Symmetric WalkerFlowRule::TX_(const State & state) const
 {
   Symmetric res = Symmetric::zero();
   for (auto X : X_)
-    res += state.h.get<Symmetric>(X->name());
+    res += state.h.get<Symmetric>(prefix(X->name()));
   return res;
 }
 
@@ -2298,9 +2299,9 @@ ScalarInternalVariable::VariableState WalkerFlowRule::scalar_state_(
 {
   ScalarInternalVariable::VariableState vstate;
 
-  vstate.a = state.h.get<double>("alpha");
+  vstate.a = state.h.get<double>(prefix("alpha"));
   y(state, vstate.adot);
-  vstate.D = state.h.get<double>("D");
+  vstate.D = state.h.get<double>(prefix("D"));
   vstate.s = state.S;
   g(state, vstate.g);
   vstate.T = state.T;
@@ -2313,9 +2314,9 @@ SymmetricInternalVariable::VariableState WalkerFlowRule::symmetric_state_(
 {
   SymmetricInternalVariable::VariableState vstate;
   
-  vstate.a = state.h.get<double>("alpha");
+  vstate.a = state.h.get<double>(prefix("alpha"));
   y(state, vstate.adot);
-  vstate.D = state.h.get<double>("D");
+  vstate.D = state.h.get<double>(prefix("D"));
   vstate.s = state.S;
   g(state, vstate.g);
   vstate.T = state.T;
@@ -2326,7 +2327,7 @@ SymmetricInternalVariable::VariableState WalkerFlowRule::symmetric_state_(
 double WalkerFlowRule::prefactor_(const State & state) const
 {
   return eps0_->value(state.T) * 
-      softening_->phi(state.h.get<double>("alpha"), state.T) * 
+      softening_->phi(state.h.get<double>(prefix("alpha")), state.T) * 
       scaling_->value(state.T);
 }
 
@@ -2334,7 +2335,7 @@ double WalkerFlowRule::flow_(const State & state) const
 {
   Symmetric d = state.S.dev() - TX_(state);
   double Y = Y_(state);
-  double h = (std::sqrt(3.0/2.0) * d.norm() - Y) / state.h.get<double>("D");
+  double h = (std::sqrt(3.0/2.0) * d.norm() - Y) / state.h.get<double>(prefix("D"));
   if (h <= 0.0)
     return 0.0;
   else
@@ -2345,7 +2346,7 @@ double WalkerFlowRule::dflow_(const State & state) const
 {
   Symmetric d = state.S.dev() - TX_(state);
   double Y = Y_(state);
-  double h = (std::sqrt(3.0/2.0) * d.norm() - Y) / state.h.get<double>("D");
+  double h = (std::sqrt(3.0/2.0) * d.norm() - Y) / state.h.get<double>(prefix("D"));
   if (h <= 0.0)
     return 0.0;
   else
@@ -2354,9 +2355,9 @@ double WalkerFlowRule::dflow_(const State & state) const
 
 double WalkerFlowRule::Y_(const State & state) const
 {
-  double xi = (state.h.get<double>("D") - D_->D_0(state.T)) / D_->D_xi(state.T);
+  double xi = (state.h.get<double>(prefix("D")) - D_->D_0(state.T)) / D_->D_xi(state.T);
   if (xi < 0.0) xi = 0.0;
-  return (k_->value(state.T) + state.h.get<double>("R")) * std::pow(xi,
+  return (k_->value(state.T) + state.h.get<double>(prefix("R"))) * std::pow(xi,
                                                                     m_->value(state.T));
 }
 

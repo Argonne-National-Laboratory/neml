@@ -23,12 +23,12 @@ IsotropicHardeningRule::IsotropicHardeningRule(ParameterSet & params) :
 
 void IsotropicHardeningRule::populate_hist(History & h) const
 {
-  h.add<double>("alpha");
+  h.add<double>(prefix("alpha"));
 }
 
 void IsotropicHardeningRule::init_hist(History & h) const
 {
-  h.get<double>("alpha") = 0.0;
+  h.get<double>(prefix("alpha")) = 0.0;
 }
 
 // Implementation of linear hardening
@@ -304,12 +304,12 @@ KinematicHardeningRule::KinematicHardeningRule(ParameterSet & params) :
 // Implementation of kinematic base class
 void KinematicHardeningRule::populate_hist(History & hist) const
 {
-  hist.add<Symmetric>("backstress");
+  hist.add<Symmetric>(prefix("backstress"));
 }
 
 void KinematicHardeningRule::init_hist(History & hist) const
 {
-  hist.get<Symmetric>("backstress") = Symmetric::zero();
+  hist.get<Symmetric>(prefix("backstress")) = Symmetric::zero();
 }
 
 // Implementation of linear kinematic hardening
@@ -642,16 +642,16 @@ size_t Chaboche::ninter() const
 
 void Chaboche::populate_hist(History & h) const
 {
-  h.add<double>("alpha");
+  h.add<double>(prefix("alpha"));
   for (size_t i = 0; i < n_; i++)
-    h.add<Symmetric>("backstress_"+std::to_string(i));
+    h.add<Symmetric>(prefix("backstress_"+std::to_string(i)));
 }
 
 void Chaboche::init_hist(History & h) const
 {
-  h.get<double>("alpha") = 0.0;
+  h.get<double>(prefix("alpha")) = 0.0;
   for (size_t i = 0; i < n_; i++)
-    h.get<Symmetric>("backstress_"+std::to_string(i)) = Symmetric::zero();
+    h.get<Symmetric>(prefix("backstress_"+std::to_string(i))) = Symmetric::zero();
 }
 
 void Chaboche::q(const double * const alpha, double T, double * const qv) const
@@ -1014,16 +1014,16 @@ size_t ChabocheVoceRecovery::ninter() const
 
 void ChabocheVoceRecovery::populate_hist(History & h) const
 {
-  h.add<double>("alpha");
+  h.add<double>(prefix("alpha"));
   for (size_t i = 0; i < n_; i++)
-    h.add<Symmetric>("backstress_"+std::to_string(i));
+    h.add<Symmetric>(prefix("backstress_"+std::to_string(i)));
 }
 
 void ChabocheVoceRecovery::init_hist(History & h) const
 {
-  h.get<double>("alpha") = 0.0;
+  h.get<double>(prefix("alpha")) = 0.0;
   for (size_t i = 0; i < n_; i++)
-    h.get<Symmetric>("backstress_"+std::to_string(i)) = Symmetric::zero();
+    h.get<Symmetric>(prefix("backstress_"+std::to_string(i))) = Symmetric::zero();
 }
 
 void ChabocheVoceRecovery::q(const double * const alpha, double T, double * const qv) const

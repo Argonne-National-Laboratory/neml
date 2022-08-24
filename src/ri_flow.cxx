@@ -44,6 +44,7 @@ void RateIndependentAssociativeFlow::populate_hist(History & hist) const
   if (hardening_->nhist() != surface_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
+  hardening_->set_variable_prefix(get_variable_prefix());
   hardening_->populate_hist(hist);
 }
 
@@ -213,6 +214,7 @@ void RateIndependentNonAssociativeHardening::populate_hist(History & hist) const
   if (hardening_->ninter() != surface_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
+  hardening_->set_variable_prefix(get_variable_prefix());
   hardening_->populate_hist(hist);
 }
 

@@ -414,7 +414,7 @@ double * History::start_loc(std::string name)
 }
 
 HistoryNEMLObject::HistoryNEMLObject(ParameterSet & params) :
-    NEMLObject(params)
+    NEMLObject(params), prefix_("")
 {
 
 }
@@ -424,6 +424,26 @@ size_t HistoryNEMLObject::nhist() const
   History h;
   populate_hist(h);
   return h.size();
+}
+
+void HistoryNEMLObject::set_variable_prefix(std::string prefix)
+{
+  prefix_ = prefix;
+}
+
+std::string HistoryNEMLObject::get_variable_prefix() const
+{
+  return prefix_;
+}
+
+std::string HistoryNEMLObject::prefix(std::string basename) const
+{
+  return prefix_ + basename;
+}
+
+std::string HistoryNEMLObject::dprefix(std::string a, std::string b) const
+{
+  return prefix(a) + "_" + prefix(b);
 }
 
 } // namespace neml
