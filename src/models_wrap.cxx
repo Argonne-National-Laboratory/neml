@@ -14,7 +14,6 @@ namespace neml {
 PYBIND11_MODULE(models, m) {
   py::module::import("neml.objects");
   py::module::import("neml.solvers");
-  py::module::import("neml.history");
 
   m.doc() = "Base class for all material models.";
   
