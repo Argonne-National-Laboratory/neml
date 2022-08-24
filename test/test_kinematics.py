@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from neml import history, interpolate, elasticity
+from neml import interpolate, elasticity
 from neml.math import tensors, rotations
 from neml.cp import crystallography, slipharden, sliprules, inelasticity, kinematics, crystaldamage
 

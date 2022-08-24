@@ -12,7 +12,6 @@ namespace neml {
 
 PYBIND11_MODULE(hardening, m) {
   py::module::import("neml.objects");
-  py::module::import("neml.history");
 
   m.doc() = "Various hardening rules.";
 
