@@ -57,9 +57,14 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Setup blank history
-  void populate_hist(History & history) const;
+  void populate_state(History & history) const;
   /// Actually initialize history
-  void init_hist(History & history) const;
+  void init_state(History & history) const;
+  
+  /// Not changing state
+  void populate_static(History & history) const;
+  /// Static stat
+  void init_static(History & history) const;
 
   /// Useful methods for external models that want an idea of an average
   /// strength
@@ -121,12 +126,6 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   /// Actually update the Nye tensor
   void update_nye(double * const hist, const double * const nye) const;
 
-  /// Split internal variables into static and actual parts
-  std::tuple<History,History> split_state(const History & h) const;
-
-  /// Number of actual internal variables
-  size_t nupdated() const;
-
  private:
   void attempt_update_ld_inc_(
        const double * const d_np1, const double * const d_n,
@@ -138,10 +137,6 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
        double * const A_np1, double * const B_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n, int trial_type);
-
-  History gather_history_(double * data) const;
-  History gather_history_(const double * data) const;
-  History gather_blank_history_() const;
 
   void calc_tangents_(Symmetric & S, History & H,
                       SCTrialState * ts, double * const A, double * const B);
@@ -156,10 +151,6 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
   void solve_substep_(SCTrialState * ts, Symmetric & stress, History & hist);
 
-  std::vector<std::string> not_updated_() const;
-
-  void populate_static_(History & history) const;
-
  private:
   std::shared_ptr<KinematicModel> kinematics_;
   std::shared_ptr<Lattice> lattice_;
@@ -171,11 +162,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   bool verbose_, linesearch_;
   int max_divide_;
 
-  History stored_hist_;
-
   std::vector<std::shared_ptr<CrystalPostprocessor>> postprocessors_;
-  std::vector<std::string> static_names_;
-  size_t static_size_;
 
   bool elastic_predictor_, fallback_elastic_predictor_;
   int force_divide_;

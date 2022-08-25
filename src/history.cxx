@@ -426,6 +426,18 @@ size_t HistoryNEMLObject::nhist() const
   return h.size();
 }
 
+void HistoryNEMLObject::init_store(double * const h) const
+{
+  History hist(h);
+  populate_hist(hist);
+  init_hist(hist);
+}
+
+size_t HistoryNEMLObject::nstore() const
+{
+  return nhist();
+}
+
 void HistoryNEMLObject::set_variable_prefix(std::string prefix)
 {
   prefix_ = prefix;
