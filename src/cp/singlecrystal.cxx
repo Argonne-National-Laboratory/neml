@@ -122,16 +122,16 @@ void SingleCrystalModel::Fe(double * const stress, double * const hist,
   FE = ((Symmetric::id() + estrain) * RR).inverse();
 }
 
-void SingleCrystalModel::update_ld_inc(
-   const double * const d_np1, const double * const d_n,
-   const double * const w_np1, const double * const w_n,
-   double T_np1, double T_n,
-   double t_np1, double t_n,
-   double * const s_np1, const double * const s_n,
-   double * const h_np1, const double * const h_n,
-   double * const A_np1, double * const B_np1,
-   double & u_np1, double u_n,
-   double & p_np1, double p_n)
+void SingleCrystalModel::update_ld_inc_interface(
+    const Symmetric & d_np1, const Symmetric & d_n,
+    const Skew & w_np1, const Skew & w_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & s_np1, const Symmetric & s_n,
+    History & h_np1, const History & h_n,
+    SymSymR4 & A_np1, SymSkewR4 & B_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
   // First step
   if ((t_n == 0.0) && elastic_predictor_first_step_) {
@@ -175,40 +175,25 @@ void SingleCrystalModel::update_ld_inc(
 }
 
 void SingleCrystalModel::attempt_update_ld_inc_(
-   const double * const d_np1, const double * const d_n,
-   const double * const w_np1, const double * const w_n,
-   double T_np1, double T_n,
-   double t_np1, double t_n,
-   double * const s_np1, const double * const s_n,
-   double * const h_np1, const double * const h_n,
-   double * const A_np1, double * const B_np1,
-   double & u_np1, double u_n,
-   double & p_np1, double p_n, int trial_type)
+    const Symmetric & d_np1, const Symmetric & d_n,
+    const Skew & w_np1, const Skew & w_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & s_np1, const Symmetric & s_n,
+    History & h_np1, const History & h_n,
+    SymSymR4 & A_np1, SymSkewR4 & B_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n, int trial_type)
 {
-  // Shut up a pointless memory error
-  std::fill(h_np1, h_np1+nhist(), 0.0);
-
-  // Setup everything in the appropriate wrappers
-  const Symmetric D_np1(d_np1);
-  const Skew W_np1(w_np1);
-  const Symmetric D_n(d_n);
-  const Skew W_n(w_n);
-
   double dt = t_np1 - t_n;
   
   // This is why I shouldn't do that this way
   Symmetric D;
   Skew W;
   if (dt != 0.0) {
-    D = (D_np1 - D_n) / dt;
-    W = (W_np1 - W_n) / dt;
+    D = (d_np1 - d_n) / dt;
+    W = (w_np1 - w_n) / dt;
   }
-
-  Symmetric S_np1(s_np1);
-  const Symmetric S_n(s_n);
-
-  History HF_np1 = gather_history_(h_np1);
-  const History HF_n = gather_history_(h_n);
 
   // There is a subtle race condition if you don't copy the lattice
   // because that object now caches data
@@ -216,10 +201,10 @@ void SingleCrystalModel::attempt_update_ld_inc_(
 
   // As the update is decoupled, split the histories into hardening/
   // orientation groups
-  Orientation Q_n = HF_n.get<Orientation>("rotation");
+  Orientation Q_n = h_n.get<Orientation>("rotation");
   
-  auto [H_np1, F_np1] = split_state(HF_np1);
-  auto [H_n, F_n] = split_state(HF_n);
+  auto [H_np1, F_np1] = split_state(h_np1);
+  auto [H_n, F_n] = split_state(h_n);
 
   /* Begin adaptive stepping */
   double dT = T_np1 - T_n;
@@ -229,39 +214,39 @@ void SingleCrystalModel::attempt_update_ld_inc_(
   int subdiv = force_divide_;
 
   // Use S_np1 and H_np1 to iterate
-  S_np1.copy_data(S_n.data());
+  s_np1.copy_data(s_n.data());
   H_np1.copy_data(H_n.rawptr());
   
   while (progress < target) {
     double step = 1.0 / pow(2, subdiv);
 
     // Decouple the updates
-    History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
+    History fixed = kinematics_->decouple(s_np1, D, W, Q_n, H_np1, 
                                           local_lattice, T_n + dT *
                                           step, F_n);
     
     Symmetric strial;
     if (trial_type == 1) {
       // Predict the elastic unload
-      strial = S_n + kinematics_->stress_increment(S_np1, D, W, dt * step,
+      strial = s_n + kinematics_->stress_increment(s_np1, D, W, dt * step,
                                                              local_lattice, Q_n,
                                                              H_np1,
                                                              T_n+dT*step);
     }
     else {
-      strial = S_n;
+      strial = s_n;
     }
     
     // Set the trial state
     SCTrialState trial(D, W,
-                       strial, S_n, H_np1, // Yes, really
+                       strial, s_n, H_np1, // Yes, really
                        Q_n, local_lattice,
                        T_n + dT * step, dt * step,
                        fixed);
 
     // Solve the update
     try {
-      solve_substep_(&trial, S_np1, H_np1);
+      solve_substep_(&trial, s_np1, H_np1);
     }
     catch (const NEMLError & e) {
       subdiv++;
@@ -293,14 +278,14 @@ void SingleCrystalModel::attempt_update_ld_inc_(
     // Calc tangent if we're going to be done
     if (progress == target) {
       // Tangent
-      calc_tangents_(S_np1, H_np1, &trial, A_np1, B_np1);
+      calc_tangents_(s_np1, H_np1, &trial, A_np1.s(), B_np1.s());
 
       // Calculate the new rotation, if requested
       if (update_rotation_) {
-        HF_np1.get<Orientation>("rotation") = update_rot_(S_np1, H_np1, &trial);
+        h_np1.get<Orientation>("rotation") = update_rot_(s_np1, H_np1, &trial);
       }
       else {
-        HF_np1.get<Orientation>("rotation") = Q_n;
+        h_np1.get<Orientation>("rotation") = Q_n;
       }
     }
   }
@@ -312,16 +297,16 @@ void SingleCrystalModel::attempt_update_ld_inc_(
   }
 
   // Calculate the new energy
-  u_np1 = u_n + calc_energy_inc_(D_np1, D_n, S_np1, S_n);
+  u_np1 = u_n + calc_energy_inc_(d_np1, d_n, s_np1, s_n);
   
   // Calculate the new dissipation
-  p_np1 = p_n + calc_work_inc_(D_np1, D_n, S_np1, S_n, T_np1, T_n, 
-                               HF_np1.get<Orientation>("rotation"), Q_n,
+  p_np1 = p_n + calc_work_inc_(d_np1, d_n, s_np1, s_n, T_np1, T_n, 
+                               h_np1.get<Orientation>("rotation"), Q_n,
                                H_np1, H_n);
 
   // Update model based on any post-processors
   for (auto pp : postprocessors_)
-    pp->act(*this, local_lattice, T_np1, D, W, HF_np1, HF_n);
+    pp->act(*this, local_lattice, T_np1, D, W, h_np1, h_n);
 }
 
 double SingleCrystalModel::alpha(double T) const

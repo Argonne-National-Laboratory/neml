@@ -16,6 +16,61 @@ NEMLModel::NEMLModel(ParameterSet & params) :
 
 }
 
+void NEMLModel::update_sd(
+    const double * const e_np1, const double * const e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    double * const s_np1, const double * const s_n,
+    double * const h_np1, const double * const h_n,
+    double * const A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
+{
+  // Wrap everything and just call the interface
+  Symmetric E_np1(e_np1);
+  Symmetric E_n(e_n);
+
+  Symmetric S_np1(s_np1);
+  Symmetric S_n(s_n);
+
+  History H_np1 = gather_history_(h_np1);
+  History H_n = gather_history_(h_n);
+
+  SymSymR4 A(A_np1);
+
+  update_sd_interface(E_np1, E_n, T_np1, T_n, t_np1, t_n, S_np1, S_n,
+                      H_np1, H_n, A, u_np1, u_n, p_np1, p_n);
+}
+
+void NEMLModel::update_ld_inc(
+     const double * const d_np1, const double * const d_n,
+     const double * const w_np1, const double * const w_n,
+     double T_np1, double T_n,
+     double t_np1, double t_n,
+     double * const s_np1, const double * const s_n,
+     double * const h_np1, const double * const h_n,
+     double * const A_np1, double * const B_np1,
+     double & u_np1, double u_n,
+     double & p_np1, double p_n)
+{
+  // Wrap everything and just call the interface
+  Symmetric D_np1(d_np1);
+  Symmetric D_n(d_n);
+  Skew W_np1(w_np1);
+  Skew W_n(w_n);
+  Symmetric S_np1(s_np1);
+  Symmetric S_n(s_n);
+  SymSymR4 A(A_np1);
+  SymSkewR4 B(B_np1);
+
+  History H_np1 = gather_history_(h_np1);
+  History H_n = gather_history_(h_n);
+
+  update_ld_inc_interface(D_np1, D_n, W_np1, W_n, T_np1, T_n, t_np1, t_n, 
+                S_np1, S_n, H_np1, H_n, A, B, u_np1, u_n, 
+                p_np1, p_n);
+}
+
 void NEMLModel::save(std::string file_name, std::string model_name)
 {
   std::string representation = serialize(model_name, "materials");
@@ -116,54 +171,56 @@ NEMLModel_sd::NEMLModel_sd(ParameterSet & params) :
 
 }
 
-void NEMLModel_sd::update_ld_inc(
-    const double * const d_np1, const double * const d_n,
-    const double * const w_np1, const double * const w_n,
-    double T_np1, double T_n,
+void NEMLModel_sd::update_ld_inc_interface(
+    const Symmetric & d_np1, const Symmetric & d_n, 
+    const Skew & w_np1, const Skew & w_n, 
+    double T_np1, double T_n, 
     double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
-    double * const A_np1, double * const B_np1,
+    Symmetric & s_np1, const Symmetric & s_n,
+    History & h_np1, const History & h_n,
+    SymSymR4 & A_np1, SymSkewR4 & B_np1,
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
+  Symmetric D = d_np1 - d_n;
+  Skew W = w_np1 - w_n;
+  if (not truesdell_)
+    D = Symmetric::zero();
+
   double base_A_np1[36];
-  
-  double D[6];
-  double W[3];
   double dS[6];
 
-  sub_vec(d_np1, d_n, 6, D);
-  sub_vec(w_np1, w_n, 3, W);
+  update_sd(d_np1.data(), d_n.data(), 
+            T_np1, T_n, t_np1, t_n, 
+            h_np1.rawptr(), h_n.rawptr(),
+            h_np1.rawptr(), h_n.rawptr(),
+            base_A_np1, u_np1, u_n, p_np1, p_n);
   
-  // If not the Truesdell rate then use the Jaumann rate
-  if (not truesdell_) {
-    std::fill(D, D+6, 0.0);
-  }
-  
-  update_sd(d_np1, d_n, T_np1, T_n, t_np1, t_n, &h_np1[0], &h_n[0],
-                   h_np1, h_n, base_A_np1, u_np1, u_n, p_np1, p_n);
-
-  sub_vec(&h_np1[0], &h_n[0], 6, dS);  
+  sub_vec(h_np1.rawptr(), h_n.rawptr(), 6, dS);  
  
-  truesdell_update_sym(D, W, s_n, dS, s_np1);
+  truesdell_update_sym(D.data(), W.data(), s_n.data(), dS,
+                       s_np1.s());
 
-  calc_tangent_(D, W, base_A_np1, s_np1, A_np1, B_np1);
+  calc_tangent_(D.data(), W.data(), base_A_np1, s_np1.data(),
+                A_np1.s(), B_np1.s());
 }
 
-void NEMLModel_sd::update_sd(
-       const double * const e_np1, const double * const e_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n)
+void NEMLModel_sd::update_sd_interface(
+    const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & s_np1, Symmetric & s_n,
+    History & h_np1, const History & h_n,
+    SymSymR4 & A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
-  update_sd_actual(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
-            &h_np1[nstatic()], &h_n[nstatic()], 
-            A_np1, u_np1, u_n, p_np1, p_n);
+  auto [H_np1, F_np1] = split_state(h_np1);
+  auto [H_n, F_n] = split_state(h_n);
+  
+  update_sd_state(e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_np1.s(), s_n.data(),
+            H_np1.rawptr(), H_n.rawptr(), 
+            A_np1.s(), u_np1, u_n, p_np1, p_n);
 }
 
 void NEMLModel_sd::init_static(History & h) const
@@ -173,7 +230,7 @@ void NEMLModel_sd::init_static(History & h) const
 
 void NEMLModel_sd::populate_static(History & h) const
 {
-  // This is a legacy from the old flat vector system.  Composite
+  // This is a legacy from the old flat vector system.  Composite models
   // expect to only have this added one time.
   if (!h.contains("small_stress"))
     h.add<Symmetric>(prefix("small_stress"));
@@ -249,19 +306,19 @@ NEMLModel_ldi::NEMLModel_ldi(ParameterSet & params) :
 
 }
 
-void NEMLModel_ldi::update_sd(
-   const double * const e_np1, const double * const e_n,
-   double T_np1, double T_n,
-   double t_np1, double t_n,
-   double * const s_np1, const double * const s_n,
-   double * const h_np1, const double * const h_n,
-   double * const A_np1,
-   double & u_np1, double u_n,
-   double & p_np1, double p_n)
+void NEMLModel_ldi::update_sd_interface(
+    const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & s_np1, Symmetric & s_n,
+    History & h_np1, const History & h_n,
+    SymSymR4 & A_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
-  double W[3] = {0,0,0};
-  double B[18];
-  update_ld_inc(e_np1, e_n, W, W, T_np1, T_n, t_np1, t_n,
+  Skew W;
+  SymSkewR4 B;
+  update_ld_inc_interface(e_np1, e_n, W, W, T_np1, T_n, t_np1, t_n,
                        s_np1, s_n, h_np1, h_n, A_np1, B, u_np1, u_n,
                        p_np1, p_n);
 }
@@ -279,7 +336,7 @@ SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
 
 }
 
-void SubstepModel_sd::update_sd_actual(
+void SubstepModel_sd::update_sd_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -504,7 +561,7 @@ void SmallStrainElasticity::init_state(History & h) const
 {
 }
 
-void SmallStrainElasticity::update_sd_actual(
+void SmallStrainElasticity::update_sd_state(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
@@ -1143,7 +1200,7 @@ void SmallStrainCreepPlasticity::init_state(History & hist) const
   plastic_->init_hist(hist);
 }
 
-void SmallStrainCreepPlasticity::update_sd_actual(
+void SmallStrainCreepPlasticity::update_sd_state(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
@@ -1167,7 +1224,7 @@ void SmallStrainCreepPlasticity::update_sd_actual(
 
   // Do the plastic update to get the new history and stress
   double A[36];
-  plastic_->update_sd_actual(x, ts.ep_strain, T_np1, T_n,
+  plastic_->update_sd_state(x, ts.ep_strain, T_np1, T_n,
                              t_np1, t_n, s_np1, s_n,
                              &h_np1[6], &h_n[6],
                              A, u_np1, u_n, p_np1, p_n);
@@ -1231,7 +1288,7 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   double * hist = (h_np1.empty() ? nullptr : &h_np1[0]);
   double * hist_tss = (tss->h_n.empty() ? nullptr : &(tss->h_n[0]));
 
-  plastic_->update_sd_actual(x, tss->ep_strain, tss->T_np1, tss->T_n,
+  plastic_->update_sd_state(x, tss->ep_strain, tss->T_np1, tss->T_n,
                       tss->t_np1, tss->t_n, s_np1, tss->s_n,
                       hist, hist_tss, A_np1,
                       u_np1, u_n, p_np1, p_n);
@@ -1660,7 +1717,7 @@ std::unique_ptr<NEMLObject> KMRegimeModel::initialize(ParameterSet & params)
   return neml::make_unique<KMRegimeModel>(params); 
 }
 
-void KMRegimeModel::update_sd_actual(
+void KMRegimeModel::update_sd_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -1677,12 +1734,12 @@ void KMRegimeModel::update_sd_actual(
   // error check at some point
   for (size_t i=0; i<gs_.size(); i++) {
     if (g < gs_[i]) {
-      return models_[i]->update_sd_actual(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
+      return models_[i]->update_sd_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
                                    s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
                                    p_np1, p_n);
     }
   }
-  return models_.back()->update_sd_actual(e_np1, e_n, T_np1, T_n, t_np1, t_n,
+  return models_.back()->update_sd_state(e_np1, e_n, T_np1, T_n, t_np1, t_n,
                                    s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
                                    p_np1, p_n);
 }

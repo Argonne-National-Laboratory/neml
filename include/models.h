@@ -55,7 +55,18 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
        double * const h_np1, const double * const h_n,
        double * const A_np1,
        double & u_np1, double u_n,
-       double & p_np1, double p_n) = 0;
+       double & p_np1, double p_n);
+
+   /// Small strain update, wrapped objects
+   virtual void update_sd_interface(
+       const Symmetric & e_np1, const Symmetric & e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & s_np1, Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n) {}; // Fix after all updated
 
    /// Raw data large strain incremental update
    virtual void update_ld_inc(
@@ -67,7 +78,19 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
        double * const h_np1, const double * const h_n,
        double * const A_np1, double * const B_np1,
        double & u_np1, double u_n,
-       double & p_np1, double p_n) = 0;
+       double & p_np1, double p_n);
+
+   /// Large strain incremental update, wrapped objects
+   virtual void update_ld_inc_interface(
+       const Symmetric & d_np1, const Symmetric & d_n,
+       const Skew & w_np1, const Skew & w_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & s_np1, const Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1, SymSkewR4 & B_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n) {}; // Fix after all updated
   
    /// Instantaneous thermal expansion coefficient as a function of temperature
    virtual double alpha(double T) const = 0;
@@ -110,28 +133,16 @@ class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
   public:
     NEMLModel_ldi(ParameterSet & params);
 
-   /// The small strain stress update interface
-   virtual void update_sd(
-       const double * const e_np1, const double * const e_n,
+   /// Small strain update, wrapped objects
+   virtual void update_sd_interface(
+       const Symmetric & e_np1, const Symmetric & e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
+       Symmetric & s_np1, Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n);
-
-   /// Large strain incremental update
-   virtual void update_ld_inc(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n) = 0;
 };
 
 /// Small deformation stress update
@@ -140,19 +151,19 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
     /// All small strain models use small strain elasticity and CTE
     NEMLModel_sd(ParameterSet & params);
 
-   /// Vector interface can go here
-   virtual void update_sd(
-       const double * const e_np1, const double * const e_n,
+   /// Small strain update, wrapped objects
+   virtual void update_sd_interface(
+       const Symmetric & e_np1, const Symmetric & e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
+       Symmetric & s_np1, Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1,
        double & u_np1, double u_n,
-       double & p_np1, double p_n);
+       double & p_np1, double p_n); 
 
-   /// The small strain stress update interface
-   virtual void update_sd_actual(
+   /// The small strain stress update interface with just the state variables
+   virtual void update_sd_state(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
@@ -163,14 +174,14 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
        double & p_np1, double p_n) = 0;
 
    /// Large strain incremental update
-   virtual void update_ld_inc(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
+   virtual void update_ld_inc_interface(
+       const Symmetric & d_np1, const Symmetric & d_n,
+       const Skew & w_np1, const Skew & w_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
+       Symmetric & s_np1, const Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1, SymSkewR4 & B_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n);
 
@@ -211,7 +222,7 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
   SubstepModel_sd(ParameterSet & params);
 
   /// Complete substep update
-  virtual void update_sd_actual(
+  virtual void update_sd_state(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -302,7 +313,7 @@ class NEML_EXPORT SmallStrainElasticity: public NEMLModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Small strain stress update
-  virtual void update_sd_actual(
+  virtual void update_sd_state(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -577,7 +588,7 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Small strain stress update
-  virtual void update_sd_actual(
+  virtual void update_sd_state(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -749,7 +760,7 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// The small strain stress update
-  virtual void update_sd_actual(
+  virtual void update_sd_state(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,

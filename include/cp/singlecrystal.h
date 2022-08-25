@@ -75,16 +75,16 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
           double * Fe) const;
   
   /// Large deformation incremental update
-  virtual void update_ld_inc(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n);
+  virtual void update_ld_inc_interface(
+      const Symmetric & d_np1, const Symmetric & d_n,
+      const Skew & w_np1, const Skew & w_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n,
+      SymSymR4 & A_np1, SymSkewR4 & B_np1,
+      double & u_np1, double u_n, 
+      double & p_np1, double p_n);
 
   /// Instantaneous CTE
   virtual double alpha(double T) const;
@@ -128,15 +128,15 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
  private:
   void attempt_update_ld_inc_(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n, int trial_type);
+      const Symmetric & d_np1, const Symmetric & d_n,
+      const Skew & w_np1, const Skew & w_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n,
+      SymSymR4 & A_np1, SymSkewR4 & B_np1,
+      double & u_np1, double u_n, 
+      double & p_np1, double p_n, int trial_type);
 
   void calc_tangents_(Symmetric & S, History & H,
                       SCTrialState * ts, double * const A, double * const B);

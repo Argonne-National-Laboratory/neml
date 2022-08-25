@@ -45,6 +45,7 @@ NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(ParameterSet & params) :
       dkill_(params.get_parameter<double>("dkill")), 
       sfact_(params.get_parameter<double>("sfact"))
 {
+  cache_history_();
 }
 
 std::string NEMLScalarDamagedModel_sd::type()
@@ -81,7 +82,7 @@ std::unique_ptr<NEMLObject> NEMLScalarDamagedModel_sd::initialize(ParameterSet &
   return neml::make_unique<NEMLScalarDamagedModel_sd>(params); 
 }
 
-void NEMLScalarDamagedModel_sd::update_sd_actual(
+void NEMLScalarDamagedModel_sd::update_sd_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -112,7 +113,7 @@ void NEMLScalarDamagedModel_sd::update_sd_actual(
   std::copy(s_n, s_n+6, s_prime_n);
   for (int i=0; i<6; i++) s_prime_n[i] /= (1-h_n[0]);
 
-  base_->update_sd(e_np1, e_n, T_np1, T_n,
+  base_->update_sd_state(e_np1, e_n, T_np1, T_n,
                    t_np1, t_n, s_prime_np1, s_prime_n,
                    &h_np1[1], &h_n[1],
                    A_prime_np1, u_np1, u_n, p_np1, p_n);
@@ -179,7 +180,7 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_np1[6];
   double s_prime_n[6];
   double A_prime_np1[36];
-  std::vector<double> h_np1_v(base_->nhist());
+  std::vector<double> h_np1_v(base_->nstate());
   double * h_np1 = &h_np1_v[0];
   double u_np1;
   double p_np1;
@@ -187,7 +188,7 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   std::copy(tss->s_n, tss->s_n+6, s_prime_n);
   for (int i=0; i<6; i++) s_prime_n[i] /= (1-tss->w_n);
 
-  base_->update_sd(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
+  base_->update_sd_state(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
                    tss->t_np1, tss->t_n, s_prime_np1, s_prime_n,
                    h_np1, &tss->h_n[0],
                    A_prime_np1, u_np1, tss->u_n, p_np1, tss->p_n);
@@ -237,8 +238,8 @@ void NEMLScalarDamagedModel_sd::make_trial_state(
   tss.t_np1 = t_np1;
   tss.t_n = t_n;
   std::copy(s_n, s_n+6, tss.s_n);
-  tss.h_n.resize(base_->nhist());
-  std::copy(h_n+1, h_n+base_->nhist()+1, tss.h_n.begin());
+  tss.h_n.resize(base_->nstate());
+  std::copy(h_n+1, h_n+base_->nstate()+1, tss.h_n.begin());
   tss.u_n = u_n;
   tss.p_n = p_n;
   tss.w_n = h_n[0];
@@ -291,7 +292,7 @@ void NEMLScalarDamagedModel_sd::ekill_update_(double T_np1,
                                              double & u_np1, double u_n,
                                              double & p_np1, double p_n)
 {
-  std::copy(h_n, h_n + nhist(), h_np1);
+  std::copy(h_n, h_n + nstate(), h_np1);
   h_np1[0] = 1.0;
   elastic_->C(T_np1, A_np1);
   for (int i=0; i<36; i++) A_np1[i] /= sfact_;
