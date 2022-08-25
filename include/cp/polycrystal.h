@@ -19,6 +19,9 @@ class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
   virtual void populate_hist(History & hist) const;
   virtual void init_hist(History & hist) const;
 
+  virtual void populate_state(History & hist) const {};
+  virtual void init_state(History & hist) const {};
+
   double * history(double * const store, size_t i) const;
   double * stress(double * const store, size_t i) const;
   double * d(double * const store, size_t i) const;

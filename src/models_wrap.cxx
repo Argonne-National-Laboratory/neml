@@ -19,14 +19,6 @@ PYBIND11_MODULE(models, m) {
   
   py::class_<NEMLModel, HistoryNEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def("save", &NEMLModel::save)
-      .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
-      .def("init_store",
-           [](NEMLModel & m) -> py::array_t<double>
-           {
-            auto h = alloc_vec<double>(m.nstore());
-            m.init_store(arr2ptr<double>(h));
-            return h;
-           }, "Initialize stored variables.")
       .def("update_sd",
            [](NEMLModel & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, double, double>
            {

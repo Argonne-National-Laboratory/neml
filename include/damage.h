@@ -21,12 +21,12 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
   NEMLDamagedModel_sd(ParameterSet & params);
 
   /// Populate the internal variables
-  virtual void populate_hist(History & hist) const;
+  virtual void populate_state(History & hist) const;
   /// Initialize base according to the base model and damage according to
-  virtual void init_hist(History & hist) const;
+  virtual void init_state(History & hist) const;
 
   /// The damaged stress update
-  virtual void update_sd(
+  virtual void update_sd_actual(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -78,7 +78,7 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Stress update using the scalar damage model
-  virtual void update_sd(
+  virtual void update_sd_actual(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
