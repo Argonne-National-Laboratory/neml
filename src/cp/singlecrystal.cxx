@@ -15,7 +15,6 @@ SingleCrystalModel::SingleCrystalModel(ParameterSet & params) :
     verbose_(params.get_parameter<bool>("verbose")),
     linesearch_(params.get_parameter<bool>("linesearch")),
     max_divide_(params.get_parameter<int>("max_divide")), 
-    stored_hist_(false),
     postprocessors_(params.get_object_parameter_vector<CrystalPostprocessor>("postprocessors")),
     elastic_predictor_(params.get_parameter<bool>("elastic_predictor")),
     fallback_elastic_predictor_(params.get_parameter<bool>("fallback_elastic_predictor")),
@@ -23,15 +22,7 @@ SingleCrystalModel::SingleCrystalModel(ParameterSet & params) :
     elastic_predictor_first_step_(params.get_parameter<bool>(
             "elastic_predictor_first_step"))
 {
-  populate_hist(stored_hist_);
-  
-  // Really dumb way to get the names of the parameters that stay fixed during
-  // the update
-  // Look to fix this
-  History h;
-  populate_static_(h);
-  static_names_ = h.get_order();
-  static_size_ = h.size();
+  cache_history_();
 }
 
 std::string SingleCrystalModel::type()
@@ -70,15 +61,15 @@ std::unique_ptr<NEMLObject> SingleCrystalModel::initialize(ParameterSet & params
   return neml::make_unique<SingleCrystalModel>(params);
 }
 
-void SingleCrystalModel::populate_hist(History & history) const
+void SingleCrystalModel::populate_state(History & history) const
 {
-  populate_static_(history);
-
   kinematics_->populate_hist(history);
 }
 
-void SingleCrystalModel::populate_static_(History & history) const
+void SingleCrystalModel::populate_static(History & history) const
 {
+  NEMLModel_ldi::populate_static(history);
+
   history.add<Orientation>("rotation");
   history.add<Orientation>("rotation0");
   if (use_nye()) {
@@ -88,8 +79,15 @@ void SingleCrystalModel::populate_static_(History & history) const
     pp->populate_hist(*lattice_, history);
 }
 
-void SingleCrystalModel::init_hist(History & history) const
+void SingleCrystalModel::init_state(History & history) const
 {
+  kinematics_->init_hist(history);
+}
+
+void SingleCrystalModel::init_static(History & history) const
+{
+  NEMLModel_ldi::init_static(history);
+
   history.get<Orientation>("rotation") = *q0_;
   history.get<Orientation>("rotation0") = *q0_;
   if (use_nye()) {
@@ -97,8 +95,6 @@ void SingleCrystalModel::init_hist(History & history) const
   }
   for (auto pp : postprocessors_)
     pp->init_hist(*lattice_, history);
-
-  kinematics_->init_hist(history);
 }
 
 double SingleCrystalModel::strength(double * const hist, double T) const
@@ -350,7 +346,7 @@ void SingleCrystalModel::elastic_strains(
 
 size_t SingleCrystalModel::nparams() const
 {
-  return 6 + nupdated();
+  return 6 + nstate();
 }
 
 void SingleCrystalModel::init_x(double * const x, TrialState * ts)
@@ -505,41 +501,6 @@ void SingleCrystalModel::update_nye(double * const hist,
     History h = gather_history_(hist);
     h.get<RankTwo>("nye") = RankTwo(std::vector<double>(nye,nye+9));
   }
-}
-
-std::tuple<History,History> SingleCrystalModel::split_state(const History & h) const
-{
-  History h1 = h.split(not_updated_());
-  History h2 = h.split(not_updated_(), false);
-
-  return std::tie(h1,h2);
-}
-
-size_t SingleCrystalModel::nupdated() const
-{
-  History h;
-  populate_hist(h);
-  auto [actual, not_updated] = split_state(h);
-  return actual.size();
-}
-
-History SingleCrystalModel::gather_history_(double * data) const
-{
-  History h = gather_blank_history_();
-  h.set_data(data);
-  return h;
-}
-
-History SingleCrystalModel::gather_history_(const double * data) const
-{
-  History h = gather_blank_history_();
-  h.set_data(const_cast<double*>(data));
-  return h;
-}
-
-History SingleCrystalModel::gather_blank_history_() const
-{
-  return stored_hist_;
 }
 
 void SingleCrystalModel::calc_tangents_(Symmetric & S, History & H,
@@ -765,11 +726,6 @@ void SingleCrystalModel::solve_substep_(SCTrialState * ts,
   // Dump the results
   stress.copy_data(x);
   hist.copy_data(&x[6]);
-}
-
-std::vector<std::string> SingleCrystalModel::not_updated_() const
-{
-  return static_names_;
 }
 
 } // namespace neml

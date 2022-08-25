@@ -13,14 +13,14 @@ NEMLDamagedModel_sd::NEMLDamagedModel_sd(ParameterSet & params) :
 
 }
 
-void NEMLDamagedModel_sd::populate_hist(History & hist) const
+void NEMLDamagedModel_sd::populate_state(History & hist) const
 {
   populate_damage(hist);
   base_->set_variable_prefix(get_variable_prefix());
   base_->populate_hist(hist);
 }
 
-void NEMLDamagedModel_sd::init_hist(History & hist) const
+void NEMLDamagedModel_sd::init_state(History & hist) const
 {
   init_damage(hist);
   base_->init_hist(hist);
@@ -81,7 +81,7 @@ std::unique_ptr<NEMLObject> NEMLScalarDamagedModel_sd::initialize(ParameterSet &
   return neml::make_unique<NEMLScalarDamagedModel_sd>(params); 
 }
 
-void NEMLScalarDamagedModel_sd::update_sd(
+void NEMLScalarDamagedModel_sd::update_sd_actual(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,

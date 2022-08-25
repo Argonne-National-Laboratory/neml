@@ -25,18 +25,26 @@ void NEMLModel::save(std::string file_name, std::string model_name)
   outfile.close();
 }
 
-size_t NEMLModel::nstore() const
+void NEMLModel::populate_hist(History & h) const
 {
-  History h;
-  populate_store(h);
-  return h.size();
+  populate_static(h);
+  populate_state(h);
 }
 
-void NEMLModel::init_store(double * const store) const
+void NEMLModel::init_hist(History & h) const
 {
-  History h(store);
-  populate_store(h);
-  init_store_object(h);
+  init_static(h);
+  init_state(h);
+}
+
+void NEMLModel::populate_static(History & h) const
+{
+  // Nothing by default
+}
+
+void NEMLModel::init_static(History & h) const
+{
+  // Nothing by default
 }
 
 double NEMLModel::get_damage(const double *const h_np1) 
@@ -52,6 +60,50 @@ bool NEMLModel::should_del_element(const double *const h_np1)
 bool NEMLModel::is_damage_model() const 
 {
   return false;
+}
+
+std::tuple<History,History> NEMLModel::split_state(const History & h) const
+{
+  History h1 = h.split(stored_static_.items());
+  History h2 = h.split(stored_static_.items(), false);
+
+  return std::tie(h1,h2);
+}
+
+size_t NEMLModel::nstate() const
+{
+  return stored_state_.size();
+}
+
+size_t NEMLModel::nstatic() const
+{
+  return stored_static_.size();
+}
+
+void NEMLModel::cache_history_()
+{
+  populate_hist(stored_hist_);
+  populate_state(stored_state_);
+  populate_static(stored_static_);
+}
+
+History NEMLModel::gather_history_(double * data) const
+{
+  History h = gather_blank_history_();
+  h.set_data(data);
+  return h;
+}
+
+History NEMLModel::gather_history_(const double * data) const
+{
+  History h = gather_blank_history_();
+  h.set_data(const_cast<double*>(data));
+  return h;
+}
+
+History NEMLModel::gather_blank_history_() const
+{
+  return stored_hist_;
 }
 
 // NEMLModel_sd implementation
@@ -89,27 +141,42 @@ void NEMLModel_sd::update_ld_inc(
     std::fill(D, D+6, 0.0);
   }
   
-  update_sd(d_np1, d_n, T_np1, T_n, t_np1, t_n, &h_np1[nhist()], &h_n[nhist()],
-                   &h_np1[0], &h_n[0], base_A_np1, u_np1, u_n, p_np1, p_n);
+  update_sd(d_np1, d_n, T_np1, T_n, t_np1, t_n, &h_np1[0], &h_n[0],
+                   h_np1, h_n, base_A_np1, u_np1, u_n, p_np1, p_n);
 
-  sub_vec(&h_np1[nhist()], &h_n[nhist()], 6, dS);  
+  sub_vec(&h_np1[0], &h_n[0], 6, dS);  
  
   truesdell_update_sym(D, W, s_n, dS, s_np1);
 
   calc_tangent_(D, W, base_A_np1, s_np1, A_np1, B_np1);
-
 }
 
-void NEMLModel_sd::init_store_object(History & h) const
+void NEMLModel_sd::update_sd(
+       const double * const e_np1, const double * const e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       double * const s_np1, const double * const s_n,
+       double * const h_np1, const double * const h_n,
+       double * const A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n)
 {
-  init_hist(h);
+  update_sd_actual(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
+            &h_np1[nstatic()], &h_n[nstatic()], 
+            A_np1, u_np1, u_n, p_np1, p_n);
+}
+
+void NEMLModel_sd::init_static(History & h) const
+{
   h.get<Symmetric>(prefix("small_stress")) = Symmetric::zero();
 }
 
-void NEMLModel_sd::populate_store(History & h) const
+void NEMLModel_sd::populate_static(History & h) const
 {
-  populate_hist(h);
-  h.add<Symmetric>(prefix("small_stress"));
+  // This is a legacy from the old flat vector system.  Composite
+  // expect to only have this added one time.
+  if (!h.contains("small_stress"))
+    h.add<Symmetric>(prefix("small_stress"));
 }
 
 double NEMLModel_sd::alpha(double T) const
@@ -199,16 +266,6 @@ void NEMLModel_ldi::update_sd(
                        p_np1, p_n);
 }
 
-void NEMLModel_ldi::init_store_object(History & h) const
-{
-  init_hist(h);
-}
-
-void NEMLModel_ldi::populate_store(History & h) const
-{
-  populate_hist(h);
-}
-
 SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
     NEMLModel_sd(params), 
     rtol_(params.get_parameter<double>("rtol")),
@@ -222,7 +279,7 @@ SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
 
 }
 
-void SubstepModel_sd::update_sd(
+void SubstepModel_sd::update_sd_actual(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -249,8 +306,8 @@ void SubstepModel_sd::update_sd(
   std::copy(e_n, e_n+6, e_past);
   double s_past[6];
   std::copy(s_n, s_n+6, s_past);
-  double * h_past = new double [nhist()];
-  std::copy(h_n, h_n+nhist(), h_past);
+  double * h_past = new double [nstate()];
+  std::copy(h_n, h_n+nstate(), h_past);
   double T_past = T_n;
   double t_past = t_n;
   double u_past = u_n;
@@ -310,7 +367,7 @@ void SubstepModel_sd::update_sd(
     cs += cm;
     std::copy(e_next, e_next+6, e_past);
     std::copy(s_np1, s_np1+6, s_past);
-    std::copy(h_np1, h_np1+nhist(), h_past);
+    std::copy(h_np1, h_np1+nstate(), h_past);
     std::copy(A_new, A_new+(nparams()*6), A_old);
 
     T_past = T_next;
@@ -358,7 +415,7 @@ void SubstepModel_sd::update_step(
     mat_vec(C, 6, de, 6, s_np1);
     for (size_t i = 0; i < 6; i++) s_np1[i] += s_n[i];
     // History
-    std::copy(h_n, h_n+nhist(), h_np1);
+    std::copy(h_n, h_n+nstate(), h_np1);
     // Jacobian for substepping
     std::fill(A, A+(nparams()*nparams()), 0.0);
     for (size_t i = 0; i < 6; i++) A[CINDEX(i,i,nparams())] = 1.0;
@@ -413,7 +470,7 @@ void SubstepModel_sd::update_step(
 SmallStrainElasticity::SmallStrainElasticity(ParameterSet & params) :
     NEMLModel_sd(params)
 {
-
+  cache_history_();
 }
 
 std::string SmallStrainElasticity::type()
@@ -439,15 +496,15 @@ std::unique_ptr<NEMLObject> SmallStrainElasticity::initialize(ParameterSet & par
   return neml::make_unique<SmallStrainElasticity>(params);
 }
 
-void SmallStrainElasticity::populate_hist(History & h) const
+void SmallStrainElasticity::populate_state(History & h) const
 {
 }
 
-void SmallStrainElasticity::init_hist(History & h) const
+void SmallStrainElasticity::init_state(History & h) const
 {
 }
 
-void SmallStrainElasticity::update_sd(
+void SmallStrainElasticity::update_sd_actual(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
@@ -477,7 +534,7 @@ SmallStrainPerfectPlasticity::SmallStrainPerfectPlasticity(ParameterSet & params
       surface_(params.get_object_parameter<YieldSurface>("surface")),
       ys_(params.get_object_parameter<Interpolate>("ys"))
 {
-
+  cache_history_();
 }
 
 std::string SmallStrainPerfectPlasticity::type()
@@ -513,12 +570,12 @@ std::unique_ptr<NEMLObject> SmallStrainPerfectPlasticity::initialize(ParameterSe
   return neml::make_unique<SmallStrainPerfectPlasticity>(params); 
 }
 
-void SmallStrainPerfectPlasticity::populate_hist(History & h) const
+void SmallStrainPerfectPlasticity::populate_state(History & h) const
 {
 
 }
 
-void SmallStrainPerfectPlasticity::init_hist(History & h) const
+void SmallStrainPerfectPlasticity::init_state(History & h) const
 {
 
 }
@@ -713,7 +770,7 @@ SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
       SubstepModel_sd(params),
       flow_(params.get_object_parameter<RateIndependentFlowRule>("flow"))
 {
-
+  cache_history_();
 }
 
 std::string SmallStrainRateIndependentPlasticity::type()
@@ -750,13 +807,13 @@ std::unique_ptr<NEMLObject> SmallStrainRateIndependentPlasticity::initialize(Par
   return neml::make_unique<SmallStrainRateIndependentPlasticity>(params); 
 }
 
-void SmallStrainRateIndependentPlasticity::populate_hist(History & hist) const
+void SmallStrainRateIndependentPlasticity::populate_state(History & hist) const
 {
   flow_->set_variable_prefix(get_variable_prefix());
   flow_->populate_hist(hist);
 }
 
-void SmallStrainRateIndependentPlasticity::init_hist(History & hist) const
+void SmallStrainRateIndependentPlasticity::init_state(History & hist) const
 {
   flow_->init_hist(hist);
 }
@@ -798,7 +855,7 @@ void SmallStrainRateIndependentPlasticity::update_internal(
     double * const h_np1, const double * const h_n)
 {
   std::copy(x, x+6, s_np1);
-  std::copy(x+6, x+6+nhist(), h_np1);
+  std::copy(x+6, x+6+nstate(), h_np1);
 }
 
 void SmallStrainRateIndependentPlasticity::strain_partial(
@@ -856,15 +913,15 @@ void SmallStrainRateIndependentPlasticity::work_and_energy(
 size_t SmallStrainRateIndependentPlasticity::nparams() const
 {
   // My convention: plastic strain, history, consistency parameter
-  return 6 + nhist() + 1;
+  return 6 + nstate() + 1;
 }
 
 void SmallStrainRateIndependentPlasticity::init_x(double * const x, TrialState * ts)
 {
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
   std::copy(tss->s_tr, tss->s_tr+6, x);
-  std::copy(&tss->h_tr[0], &tss->h_tr[0]+nhist(), &x[6]);
-  x[6+nhist()] = 0.0; // consistency parameter
+  std::copy(&tss->h_tr[0], &tss->h_tr[0]+nstate(), &x[6]);
+  x[6+nstate()] = 0.0; // consistency parameter
 }
 
 void SmallStrainRateIndependentPlasticity::RJ(const double * const x, 
@@ -874,7 +931,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
 
   // Again no idea why the compiler can't do this
-  int nh = nhist();
+  int nh = nstate();
 
   // Setup from current state
   const double * const s_np1 = &x[0];
@@ -1011,8 +1068,8 @@ void SmallStrainRateIndependentPlasticity::make_trial_state(
   mat_vec(S_n, 6, s_n, 6, ee_n);
   sub_vec(e_n, ee_n, 6, ts.ep_tr);
 
-  ts.h_tr.resize(nhist());
-  std::copy(h_n, h_n+nhist(), ts.h_tr.begin());
+  ts.h_tr.resize(nstate());
+  std::copy(h_n, h_n+nstate(), ts.h_tr.begin());
   // Calculate the trial stress
   double ee[6];
   sub_vec(e_np1, ts.ep_tr, 6, ee);
@@ -1038,7 +1095,7 @@ SmallStrainCreepPlasticity::SmallStrainCreepPlasticity(
       verbose_(params.get_parameter<bool>("verbose")),
       linesearch_(params.get_parameter<bool>("linesearch"))
 {
-
+  cache_history_();
 }
 
 std::string SmallStrainCreepPlasticity::type()
@@ -1073,20 +1130,20 @@ std::unique_ptr<NEMLObject> SmallStrainCreepPlasticity::initialize(ParameterSet 
   return neml::make_unique<SmallStrainCreepPlasticity>(params); 
 }
 
-void SmallStrainCreepPlasticity::populate_hist(History & hist) const
+void SmallStrainCreepPlasticity::populate_state(History & hist) const
 {
   plastic_->set_variable_prefix(get_variable_prefix());
   plastic_->populate_hist(hist);
   hist.add<Symmetric>(prefix("plastic_strain"));
 }
 
-void SmallStrainCreepPlasticity::init_hist(History & hist) const
+void SmallStrainCreepPlasticity::init_state(History & hist) const
 {
   hist.get<Symmetric>(prefix("plastic_strain")) = Symmetric::zero();
   plastic_->init_hist(hist);
 }
 
-void SmallStrainCreepPlasticity::update_sd(
+void SmallStrainCreepPlasticity::update_sd_actual(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
@@ -1110,7 +1167,7 @@ void SmallStrainCreepPlasticity::update_sd(
 
   // Do the plastic update to get the new history and stress
   double A[36];
-  plastic_->update_sd(x, ts.ep_strain, T_np1, T_n,
+  plastic_->update_sd_actual(x, ts.ep_strain, T_np1, T_n,
                              t_np1, t_n, s_np1, s_n,
                              &h_np1[6], &h_n[6],
                              A, u_np1, u_n, p_np1, p_n);
@@ -1165,7 +1222,7 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   double s_np1[6];
   double A_np1[36];
   std::vector<double> h_np1;
-  h_np1.resize(plastic_->nhist());
+  h_np1.resize(plastic_->nstate());
   double u_np1, u_n;
   double p_np1, p_n;
   u_n = 0.0;
@@ -1174,7 +1231,7 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   double * hist = (h_np1.empty() ? nullptr : &h_np1[0]);
   double * hist_tss = (tss->h_n.empty() ? nullptr : &(tss->h_n[0]));
 
-  plastic_->update_sd(x, tss->ep_strain, tss->T_np1, tss->T_n,
+  plastic_->update_sd_actual(x, tss->ep_strain, tss->T_np1, tss->T_n,
                       tss->t_np1, tss->t_n, s_np1, tss->s_n,
                       hist, hist_tss, A_np1,
                       u_np1, u_n, p_np1, p_n);
@@ -1206,7 +1263,7 @@ void SmallStrainCreepPlasticity::make_trial_state(
     const double * const s_n, const double * const h_n,
     SSCPTrialState & ts)
 {
-  int nh = plastic_->nhist();
+  int nh = plastic_->nstate();
   ts.h_n.resize(nh);
 
   std::copy(e_np1, e_np1+6, ts.e_np1);
@@ -1269,7 +1326,7 @@ GeneralIntegrator::GeneralIntegrator(ParameterSet & params) :
     rule_(params.get_object_parameter<GeneralFlowRule>("rule")),
     skip_first_(params.get_parameter<bool>("skip_first_step"))
 {
-
+  cache_history_();
 }
 
 std::string GeneralIntegrator::type()
@@ -1347,7 +1404,7 @@ void GeneralIntegrator::update_internal(
     double * const h_np1, const double * const h_n)
 {
   std::copy(x, x+6, s_np1);
-  std::copy(x+6, x+6+nhist(), h_np1);
+  std::copy(x+6, x+6+nstate(), h_np1);
 
 }
 
@@ -1374,10 +1431,10 @@ void GeneralIntegrator::strain_partial(
 
   delete [] estress;
 
-  double * ehist = new double [6*nhist()];
+  double * ehist = new double [6*nstate()];
 
   rule_->da_de(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, ehist);
-  for (size_t i = 0; i < nhist(); i++) {
+  for (size_t i = 0; i < nstate(); i++) {
     for (size_t j = 0; j < 6; j++) {
       de[CINDEX((i+6),j,6)] = ehist[CINDEX(i,j,6)];
     }
@@ -1416,20 +1473,20 @@ void GeneralIntegrator::work_and_energy(
 
 }
 
-void GeneralIntegrator::populate_hist(History & hist) const
+void GeneralIntegrator::populate_state(History & hist) const
 {
   rule_->set_variable_prefix(get_variable_prefix());
   rule_->populate_hist(hist);
 }
 
-void GeneralIntegrator::init_hist(History & hist) const
+void GeneralIntegrator::init_state(History & hist) const
 {
   rule_->init_hist(hist);
 }
 
 size_t GeneralIntegrator::nparams() const
 {
-  return 6 + nhist();
+  return 6 + nstate();
 }
 
 void GeneralIntegrator::init_x(double * const x, TrialState * ts)
@@ -1453,7 +1510,7 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   // Helps with vectorization
   // Really as I declared both const this shouldn't be necessary but hey
   // I don't design optimizing compilers for a living
-  int nhist = this->nhist();
+  int nstate = this->nstate();
   int nparams = this->nparams();
 
   // Residual calculation
@@ -1462,7 +1519,7 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
     R[i] = s_np1[i] - tss->s_n[i] - R[i] * tss->dt;
   }
   rule_->a(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, &R[6]);
-  for (int i=0; i<nhist; i++) {
+  for (int i=0; i<nstate; i++) {
     R[i+6] = h_np1[i] - tss->h_n[i] - R[i+6] * tss->dt;
   }
 
@@ -1477,36 +1534,36 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
     }
   }
   
-  std::vector<double> J12v(6*nhist);
+  std::vector<double> J12v(6*nstate);
   double * J12 = &J12v[0];
   rule_->ds_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J12);
   for (int i=0; i<6; i++) {
-    for (int j=0; j<nhist; j++) {
-      J[CINDEX(i,(j+6),nparams)] = -J12[CINDEX(i,j,nhist)] * tss->dt;
+    for (int j=0; j<nstate; j++) {
+      J[CINDEX(i,(j+6),nparams)] = -J12[CINDEX(i,j,nstate)] * tss->dt;
     }
   }
   
-  std::vector<double> J21v(nhist*6);
+  std::vector<double> J21v(nstate*6);
   double * J21 = &J21v[0];
   rule_->da_ds(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J21);
-  for (int i=0; i<nhist; i++) {
+  for (int i=0; i<nstate; i++) {
     for (int j=0; j<6; j++) {
       J[CINDEX((i+6),j,nparams)] = -J21[CINDEX(i,j,6)] * tss->dt;
     }
   }
   
-  std::vector<double> J22v(nhist*nhist);
+  std::vector<double> J22v(nstate*nstate);
   double * J22 = &J22v[0];
   rule_->da_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J22);
 
   // More vectorization
   double dt = tss->dt;
-  for (int i=0; i<nhist*nhist; i++) J22[i] *= dt;
-  for (int i=0; i<nhist; i++) J22[CINDEX(i,i,nhist)] -= 1.0;
+  for (int i=0; i<nstate*nstate; i++) J22[i] *= dt;
+  for (int i=0; i<nstate; i++) J22[CINDEX(i,i,nstate)] -= 1.0;
 
-  for (int i=0; i<nhist; i++) {
-    for (int j=0; j<nhist; j++) {
-      J[CINDEX((i+6),(j+6),nparams)] = -J22[CINDEX(i,j,nhist)];
+  for (int i=0; i<nstate; i++) {
+    for (int j=0; j<nstate; j++) {
+      J[CINDEX((i+6),(j+6),nparams)] = -J22[CINDEX(i,j,nstate)];
     }
   }
 }
@@ -1538,8 +1595,8 @@ void GeneralIntegrator::make_trial_state(
   std::copy(s_n, s_n+6, ts.s_n);
 
   // Last history
-  ts.h_n.resize(nhist());
-  std::copy(h_n, h_n+nhist(), ts.h_n.begin());
+  ts.h_n.resize(nstate());
+  std::copy(h_n, h_n+nstate(), ts.h_n.begin());
 
   // Elastic guess
   double C[36];
@@ -1571,7 +1628,7 @@ KMRegimeModel::KMRegimeModel(ParameterSet & params) :
     b_(params.get_parameter<double>("b")), 
     eps0_(params.get_parameter<double>("eps0"))
 {
-
+  cache_history_();
 }
 
 std::string KMRegimeModel::type()
@@ -1603,7 +1660,7 @@ std::unique_ptr<NEMLObject> KMRegimeModel::initialize(ParameterSet & params)
   return neml::make_unique<KMRegimeModel>(params); 
 }
 
-void KMRegimeModel::update_sd(
+void KMRegimeModel::update_sd_actual(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
@@ -1620,17 +1677,17 @@ void KMRegimeModel::update_sd(
   // error check at some point
   for (size_t i=0; i<gs_.size(); i++) {
     if (g < gs_[i]) {
-      return models_[i]->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
+      return models_[i]->update_sd_actual(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
                                    s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
                                    p_np1, p_n);
     }
   }
-  return models_.back()->update_sd(e_np1, e_n, T_np1, T_n, t_np1, t_n,
+  return models_.back()->update_sd_actual(e_np1, e_n, T_np1, T_n, t_np1, t_n,
                                    s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
                                    p_np1, p_n);
 }
 
-void KMRegimeModel::populate_hist(History & hist) const
+void KMRegimeModel::populate_state(History & hist) const
 {
   for (auto model : models_)
     model->set_variable_prefix(get_variable_prefix());
@@ -1638,7 +1695,7 @@ void KMRegimeModel::populate_hist(History & hist) const
   return models_[0]->populate_hist(hist);
 }
 
-void KMRegimeModel::init_hist(History & hist) const
+void KMRegimeModel::init_state(History & hist) const
 {
   return models_[0]->init_hist(hist);
 }

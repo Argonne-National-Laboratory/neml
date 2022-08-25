@@ -33,8 +33,8 @@ void PolycrystalModel::init_hist(History & hist) const
 {
   for (size_t i = 0; i < n(); i++) {
     History subhist(hist.get_data("history_"+std::to_string(i)));
-    model_->populate_store(subhist);
-    model_->init_store_object(subhist);
+    model_->populate_hist(subhist);
+    model_->init_hist(subhist);
     model_->set_active_orientation(subhist.rawptr(), *q0s_[i]);
 
     hist.get<Symmetric>("stress_"+std::to_string(i)) = Symmetric::zero();

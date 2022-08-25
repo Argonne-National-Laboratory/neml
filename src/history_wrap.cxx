@@ -164,6 +164,15 @@ PYBIND11_MODULE(history, m) {
              "Populate a blank history object with the names/types")
         .def("init_hist", &HistoryNEMLObject::init_hist,
              "Initialize the history with the initial conditions")
+        .def_property_readonly("nstore", &HistoryNEMLObject::nstore, 
+                               "Number of variables the program needs to store.")
+        .def("init_store",
+             [](HistoryNEMLObject & m) -> py::array_t<double>
+             {
+              auto h = alloc_vec<double>(m.nstore());
+              m.init_store(arr2ptr<double>(h));
+              return h;
+             }, "Initialize stored variables.")
         .def("initial_history", [](HistoryNEMLObject & m) -> History
              {
               History h;
