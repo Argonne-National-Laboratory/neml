@@ -122,11 +122,10 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   virtual bool is_damage_model() const;
 
  protected:
-  void tangent_(const double * const e_np1, const double * const e_n,
-               const double * const s_np1, const double * const s_n,
-               double T_np1, double T_n, double t_np1, double t_n,
-               double w_np1, double w_n, const double * const A_prime,
-               double * const A);
+  SymSymR4 tangent_(const Symmetric & e_np1, const Symmetric & e_n,
+                    const Symmetric & s_np1, const Symmetric & s_n,
+                    double T_np1, double T_n, double t_np1, double t_n,
+                    double w_np1, double w_n, const SymSymR4 & A_prime);
   void ekill_update_(double T_np1, const Symmetric & e_np1, 
                     Symmetric & s_np1, 
                     History & h_np1, const History & h_n,

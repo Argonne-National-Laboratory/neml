@@ -92,15 +92,8 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
-  const double * e_np1 = E_np1.data();
-  const double * e_n = E_n.data();
-  double * s_np1 = S_np1.s();
-  const double * s_n = S_n.data();
-  double * h_np1 = H_np1.rawptr();
-  const double * h_n = H_n.rawptr();
-  double * A_np1 = AA_np1.s();
-
-  if (ekill_ and (h_n[0] >= dkill_)) {
+  // Check is this is dead
+  if (ekill_ and (H_n.get<double>(prefix("damage")) >= dkill_)) {
     ekill_update_(T_np1, E_np1, S_np1, H_np1, H_n, AA_np1, u_np1, u_n, p_np1, p_n);
     return;
   }
@@ -115,7 +108,7 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   
   // Do actual stress update
   Symmetric S_prime_np1;
-  Symmetric S_prime_n = S_n / (1-h_n[0]);
+  Symmetric S_prime_n = S_n / (1-H_n.get<double>(prefix("damage")));
   SymSymR4 A_prime_np1;
   
   // Split the history
@@ -126,20 +119,21 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
                    t_np1, t_n, S_prime_np1, S_prime_n,
                    base_np1, base_n,
                    A_prime_np1, u_np1, u_n, p_np1, p_n);
-
-
-  for (int i=0; i<6; i++) s_np1[i] = (1-x[6]) * S_prime_np1.data()[i];
-  h_np1[0] = x[6];
-
-  if (ekill_ and (h_np1[0] >= dkill_)) {
+  
+  // Fix up stress and store damage
+  double w = x[6];
+  S_np1 = (1-w) * S_prime_np1;
+  H_np1.get<double>(prefix("damage")) = w;
+  
+  // Check for death
+  if (ekill_ and (H_np1.get<double>(prefix("damage")) >= dkill_)) {
     ekill_update_(T_np1, E_np1, S_np1, H_np1, H_n, AA_np1, u_np1, u_n, p_np1, p_n);
     return;
   }
   
   // Create the tangent
-  tangent_(e_np1, e_n, s_np1, s_n,
-                 T_np1, T_n, t_np1, t_n, 
-                 x[6], h_n[0], A_prime_np1.data(), A_np1);
+  AA_np1 = tangent_(E_np1, E_n, S_np1, S_n, T_np1, T_n, t_np1, t_n, 
+                    w, H_n.get<double>(prefix("damage")), A_prime_np1);
 }
 
 size_t NEMLScalarDamagedModel_sd::ndamage() const
@@ -181,28 +175,29 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
                                   double * const R, double * const J)
 {
   SDTrialState * tss = static_cast<SDTrialState *>(ts);
-  const double * s_curr = x;
+  Symmetric s_curr(x);
   double w_curr = x[6];
-  double s_prime_curr[6];
-  for (int i=0; i<6; i++)  s_prime_curr[i] = s_curr[i] / (1-w_curr);
+  Symmetric s_prime_curr = s_curr / (1-w_curr);
 
-  Symmetric S_prime_np1;
-  Symmetric S_prime_n = Symmetric(tss->s_n) / (1-tss->w_n);
+  Symmetric s_prime_np1;
+  Symmetric s_prime_n = tss->s_n / (1-tss->w_n);
   SymSymR4 A_prime_np1;
   
-  History H_np1 = base_->gather_blank_state_();
+  History h_np1 = base_->gather_blank_state_();
   double u_np1;
   double p_np1;
   
-  base_->update_sd_state(Symmetric(tss->e_np1), Symmetric(tss->e_n), tss->T_np1, tss->T_n,
-                   tss->t_np1, tss->t_n, S_prime_np1, S_prime_n,
-                   H_np1, tss->h_n,
+  base_->update_sd_state(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
+                   tss->t_np1, tss->t_n, s_prime_np1, s_prime_n,
+                   h_np1, tss->h_n,
                    A_prime_np1, u_np1, tss->u_n, p_np1, tss->p_n);
   
-  for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * S_prime_np1.data()[i];
+  // Through the 6th component
+  Symmetric Rv(R);
+  Rv = s_curr - (1-w_curr) * s_prime_np1;
 
   double w_np1;
-  dmodel_->damage(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr, S_prime_n.data(),
+  dmodel_->damage(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr.data(), s_prime_n.data(),
          tss->T_np1, tss->T_n, tss->t_np1, tss->t_n, &w_np1);
   R[6] = w_curr - w_np1;
 
@@ -211,23 +206,23 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
     J[CINDEX(i,i,7)] = 1.0; 
   }
   for (int i=0; i<6; i++) {
-    J[CINDEX(i,6,7)] = S_prime_np1.data()[i];
+    J[CINDEX(i,6,7)] = s_prime_np1(i);
   }
 
-  double ws[6];
-  dmodel_->ddamage_ds(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr, S_prime_n.data(),
+  Symmetric ws;;
+  dmodel_->ddamage_ds(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr.data(), s_prime_n.data(),
          tss->T_np1, tss->T_n,
-         tss->t_np1, tss->t_n, ws);
+         tss->t_np1, tss->t_n, ws.s());
   for (int i=0; i<6; i++) {
-    J[CINDEX(6,i,7)] = -ws[i] / (1 - w_curr); 
+    J[CINDEX(6,i,7)] = -ws(i) / (1 - w_curr); 
   }
   
   double ww;
-  dmodel_->ddamage_dd(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr, S_prime_n.data(),
+  dmodel_->ddamage_dd(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr.data(), s_prime_n.data(),
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, &ww);
   
-  J[CINDEX(6,6,7)] = 1.0 - ww - dot_vec(ws, s_curr, 6) / pow(1-w_curr,2.0);
+  J[CINDEX(6,6,7)] = 1.0 - ww - ws.contract(s_curr) / pow(1-w_curr,2.0);
 }
 
 SDTrialState NEMLScalarDamagedModel_sd::make_trial_state(
@@ -243,42 +238,35 @@ SDTrialState NEMLScalarDamagedModel_sd::make_trial_state(
                       base_n);
 }
 
-void NEMLScalarDamagedModel_sd::tangent_(
-    const double * const e_np1, const double * const e_n,
-    const double * const s_np1, const double * const s_n,
+SymSymR4 NEMLScalarDamagedModel_sd::tangent_(
+    const Symmetric & e_np1, const Symmetric & e_n,
+    const Symmetric & s_np1, const Symmetric & s_n,
     double T_np1, double T_n, double t_np1, double t_n,
-    double w_np1, double w_n, const double * const A_prime,
-    double * const A)
+    double w_np1, double w_n, const SymSymR4 & A_prime)
 {
-  double s_prime_np1[6];
-  for (int i=0; i<6; i++) s_prime_np1[i] = s_np1[i] / (1.0 - w_np1);
-  double s_prime_n[6];
-  for (int i=0; i<6; i++) s_prime_n[i] = s_n[i] / (1.0 - w_n);
-
-  double dw_ds[6];
-  dmodel_->ddamage_ds(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
-             t_np1, t_n, dw_ds);
-  double dw_de[6];
-  dmodel_->ddamage_de(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
-             t_np1, t_n, dw_de);
+  // Just collecting pieces
+  Symmetric s_prime_np1 = s_np1 / (1.0 - w_np1);
+  Symmetric s_prime_n = s_n / (1.0 - w_n);
+  
+  Symmetric dw_ds;
+  dmodel_->ddamage_ds(w_np1, w_n, e_np1.data(), e_n.data(), s_prime_np1.data(), s_prime_n.data(), T_np1, T_n,
+             t_np1, t_n, dw_ds.s());
+  Symmetric dw_de;
+  dmodel_->ddamage_de(w_np1, w_n, e_np1.data(), e_n.data(), s_prime_np1.data(), s_prime_n.data(), T_np1, T_n,
+             t_np1, t_n, dw_de.s());
   double dw_dw;
-  dmodel_->ddamage_dd(w_np1, w_n, e_np1, e_n, s_prime_np1, s_prime_n, T_np1, T_n,
+  dmodel_->ddamage_dd(w_np1, w_n, e_np1.data(), e_n.data(), s_prime_np1.data(), s_prime_n.data(), T_np1, T_n,
              t_np1, t_n, &dw_dw);
 
-  double k1 = 1.0 - 1.0 / (1.0 - w_np1) * dot_vec(dw_ds, s_prime_np1, 6) - dw_dw;
-  double B[36];
-  std::fill(B, B+36, 0);
-  for (int i=0; i<6; i++) B[CINDEX(i,i,6)] = 1.0;
-  for (int i=0; i<6; i++) dw_ds[i] /= (k1 * (1.0 - w_np1));
-  outer_update(s_prime_np1, 6, dw_ds, 6, B);
-  invert_mat(B, 6);
+  // Actual tensor math
+  double k1 = 1.0 - 1.0 / (1.0 - w_np1) * dw_ds.contract(s_prime_np1) - dw_dw;
+  dw_ds /= (k1 * (1.0 - w_np1));
+  SymSymR4 B = (SymSymR4::id() + douter(s_prime_np1, dw_ds)).inverse();
+  
+  dw_de /= k1;
+  SymSymR4 C = A_prime * (1-w_np1) - douter(s_prime_np1, dw_de);
 
-  double C[36];
-  std::copy(A_prime, A_prime+36, C);
-  for (int i=0; i<36; i++) C[i] *= (1 - w_np1);
-  for (int i=0; i<6; i++) dw_de[i] /= k1;
-  outer_update_minus(s_prime_np1, 6, dw_de, 6, C);
-  mat_mat(6, 6, 6, B, C, A);
+  return B.dot(C);
 }
 
 void NEMLScalarDamagedModel_sd::ekill_update_(
