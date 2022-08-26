@@ -53,13 +53,20 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
 /// Scalar damage trial state
 class SDTrialState: public TrialState {
  public:
-  SDTrialState() {};
-  double e_np1[6];
-  double e_n[6];
-  double T_np1, T_n, t_np1, t_n, u_n, p_n;
-  double s_n[6];
-  double w_n;
-  std::vector<double> h_n;
+  SDTrialState(const Symmetric & e_np1, const Symmetric & e_n, 
+               const Symmetric & s_n,
+               double T_np1, double T_n, double t_np1, 
+               double t_n, double u_n, double p_n, double w_n,
+               const History & h_n) :
+      e_np1(e_np1), e_n(e_n), s_n(s_n), T_np1(T_np1), T_n(t_n),
+      t_np1(t_np1), t_n(t_n), u_n(u_n), p_n(p_n), w_n(w_n),
+      h_n(h_n)
+  {};
+  Symmetric e_np1;
+  Symmetric e_n;
+  Symmetric s_n;
+  double T_np1, T_n, t_np1, t_n, u_n, p_n, w_n;
+  History h_n;
 };
 
 /// Special case where the damage variable is a scalar
@@ -103,9 +110,9 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   virtual void RJ(const double * const x, TrialState * ts,double * const R,
                  double * const J);
   /// Setup a trial state from known information
-  SDTrialState make_trial_state(const double * const e_np1, const double * const e_n,
+  SDTrialState make_trial_state(const Symmetric & e_np1, const Symmetric & e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
+                       const Symmetric & s_n, const History & h_n,
                        double u_n, double p_n);
   /// Used to find the damage value from the history
   virtual double get_damage(const double *const h_np1);

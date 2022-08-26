@@ -17,13 +17,13 @@ void NEMLDamagedModel_sd::populate_state(History & hist) const
 {
   populate_damage(hist);
   base_->set_variable_prefix(get_variable_prefix());
-  base_->populate_hist(hist);
+  base_->populate_state(hist);
 }
 
 void NEMLDamagedModel_sd::init_state(History & hist) const
 {
   init_damage(hist);
-  base_->init_hist(hist);
+  base_->init_state(hist);
 }
 
 void NEMLDamagedModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
@@ -106,7 +106,7 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   }
 
   // Make trial state
-  SDTrialState tss = make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n);
+  SDTrialState tss = make_trial_state(E_np1, E_n, T_np1, T_n, t_np1, t_n, S_n, H_n, u_n, p_n);
   
   // Call solve
   std::vector<double> xv(nparams());
@@ -165,7 +165,7 @@ size_t NEMLScalarDamagedModel_sd::nparams() const
 void NEMLScalarDamagedModel_sd::init_x(double * const x, TrialState * ts)
 {
   SDTrialState * tss = static_cast<SDTrialState *>(ts);
-  std::copy(tss->s_n, tss->s_n+6, x);
+  std::copy(tss->s_n.data(), tss->s_n.data()+6, x);
   // This provides a way for a particular model give a better guess at 
   // the initial damage for the first step.  Some models can be singular
   // for w = 0
@@ -191,19 +191,18 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   SymSymR4 A_prime_np1;
   
   History H_np1 = base_->gather_blank_state_();
-  History H_n = base_->gather_state_(&(tss->h_n)[0]);
   double u_np1;
   double p_np1;
   
   base_->update_sd_state(Symmetric(tss->e_np1), Symmetric(tss->e_n), tss->T_np1, tss->T_n,
                    tss->t_np1, tss->t_n, S_prime_np1, S_prime_n,
-                   H_np1, H_n,
+                   H_np1, tss->h_n,
                    A_prime_np1, u_np1, tss->u_n, p_np1, tss->p_n);
   
   for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * S_prime_np1.data()[i];
 
   double w_np1;
-  dmodel_->damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, S_prime_n.data(),
+  dmodel_->damage(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr, S_prime_n.data(),
          tss->T_np1, tss->T_n, tss->t_np1, tss->t_n, &w_np1);
   R[6] = w_curr - w_np1;
 
@@ -216,7 +215,7 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   }
 
   double ws[6];
-  dmodel_->ddamage_ds(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, S_prime_n.data(),
+  dmodel_->ddamage_ds(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr, S_prime_n.data(),
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, ws);
   for (int i=0; i<6; i++) {
@@ -224,7 +223,7 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   }
   
   double ww;
-  dmodel_->ddamage_dd(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, S_prime_n.data(),
+  dmodel_->ddamage_dd(w_curr, tss->w_n, tss->e_np1.data(), tss->e_n.data(), s_prime_curr, S_prime_n.data(),
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, &ww);
   
@@ -232,25 +231,16 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
 }
 
 SDTrialState NEMLScalarDamagedModel_sd::make_trial_state(
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & e_np1, const Symmetric & e_n,
     double T_np1, double T_n, double t_np1, double t_n,
-    const double * const s_n, const double * const h_n,
+    const Symmetric & s_n, const History & h_n,
     double u_n, double p_n)
 {
-  SDTrialState tss = SDTrialState();
-  std::copy(e_np1, e_np1+6, tss.e_np1);
-  std::copy(e_n, e_n+6, tss.e_n);
-  tss.T_np1 = T_np1;
-  tss.T_n = T_n;
-  tss.t_np1 = t_np1;
-  tss.t_n = t_n;
-  std::copy(s_n, s_n+6, tss.s_n);
-  tss.h_n.resize(base_->nstate());
-  std::copy(h_n+1, h_n+base_->nstate()+1, tss.h_n.begin());
-  tss.u_n = u_n;
-  tss.p_n = p_n;
-  tss.w_n = h_n[0];
-  return tss;
+  History base_n = h_n.split({prefix("damage")});
+  return SDTrialState(e_np1, e_n, s_n, 
+                      T_np1, T_n, t_np1, t_n,
+                      u_n, p_n, h_n.get<double>(prefix("damage")),
+                      base_n);
 }
 
 void NEMLScalarDamagedModel_sd::tangent_(
