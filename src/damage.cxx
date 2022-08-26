@@ -106,8 +106,7 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   }
 
   // Make trial state
-  SDTrialState tss;
-  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n, tss);
+  SDTrialState tss = make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, u_n, p_n);
   
   // Call solve
   std::vector<double> xv(nparams());
@@ -232,13 +231,13 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   J[CINDEX(6,6,7)] = 1.0 - ww - dot_vec(ws, s_curr, 6) / pow(1-w_curr,2.0);
 }
 
-void NEMLScalarDamagedModel_sd::make_trial_state(
+SDTrialState NEMLScalarDamagedModel_sd::make_trial_state(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n, double t_np1, double t_n,
     const double * const s_n, const double * const h_n,
-    double u_n, double p_n,
-    SDTrialState & tss)
+    double u_n, double p_n)
 {
+  SDTrialState tss = SDTrialState();
   std::copy(e_np1, e_np1+6, tss.e_np1);
   std::copy(e_n, e_n+6, tss.e_n);
   tss.T_np1 = T_np1;
@@ -251,6 +250,7 @@ void NEMLScalarDamagedModel_sd::make_trial_state(
   tss.u_n = u_n;
   tss.p_n = p_n;
   tss.w_n = h_n[0];
+  return tss;
 }
 
 void NEMLScalarDamagedModel_sd::tangent_(

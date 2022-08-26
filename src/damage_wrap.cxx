@@ -37,17 +37,14 @@ PYBIND11_MODULE(damage, m) {
                                                               "damage"});
         }))
       .def("make_trial_state",
-           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::unique_ptr<SDTrialState>
+           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> SDTrialState
            {
-            std::unique_ptr<SDTrialState> ts(new SDTrialState);
-            m.make_trial_state(arr2ptr<double>(e_np1),
+            return m.make_trial_state(arr2ptr<double>(e_np1),
                                          arr2ptr<double>(e_n),
                                          T_np1, T_n, t_np1, t_n,
                                          arr2ptr<double>(s_n),
                                          arr2ptr<double>(h_n),
-                                         u_n, p_n, *ts);
-
-            return ts;
+                                         u_n, p_n);
            }, "Make a trial state, mostly for testing.")
       ;
 

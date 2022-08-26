@@ -53,7 +53,7 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
 /// Scalar damage trial state
 class SDTrialState: public TrialState {
  public:
-  virtual ~SDTrialState() {};
+  SDTrialState() {};
   double e_np1[6];
   double e_n[6];
   double T_np1, T_n, t_np1, t_n, u_n, p_n;
@@ -103,11 +103,10 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   virtual void RJ(const double * const x, TrialState * ts,double * const R,
                  double * const J);
   /// Setup a trial state from known information
-  void make_trial_state(const double * const e_np1, const double * const e_n,
+  SDTrialState make_trial_state(const double * const e_np1, const double * const e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
                        const double * const s_n, const double * const h_n,
-                       double u_n, double p_n,
-                       SDTrialState & tss);
+                       double u_n, double p_n);
   /// Used to find the damage value from the history
   virtual double get_damage(const double *const h_np1);
   /// Used to determine if element should be deleted
