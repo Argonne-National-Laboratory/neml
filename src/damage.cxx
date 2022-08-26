@@ -101,7 +101,7 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   double * A_np1 = AA_np1.s();
 
   if (ekill_ and (h_n[0] >= dkill_)) {
-    ekill_update_(T_np1, e_np1, s_np1, h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
+    ekill_update_(T_np1, E_np1, S_np1, H_np1, H_n, AA_np1, u_np1, u_n, p_np1, p_n);
     return;
   }
 
@@ -120,8 +120,8 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   SymSymR4 A_prime_np1;
   
   // Split the history
-  History base_np1 = H_np1.split({"damage"});
-  History base_n = H_n.split({"damage"});
+  History base_np1 = H_np1.split({prefix("damage")});
+  History base_n = H_n.split({prefix("damage")});
 
   base_->update_sd_state(E_np1, E_n, T_np1, T_n,
                    t_np1, t_n, S_prime_np1, S_prime_n,
@@ -133,7 +133,7 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   h_np1[0] = x[6];
 
   if (ekill_ and (h_np1[0] >= dkill_)) {
-    ekill_update_(T_np1, e_np1, s_np1, h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
+    ekill_update_(T_np1, E_np1, S_np1, H_np1, H_n, AA_np1, u_np1, u_n, p_np1, p_n);
     return;
   }
   
@@ -291,20 +291,17 @@ void NEMLScalarDamagedModel_sd::tangent_(
   mat_mat(6, 6, 6, B, C, A);
 }
 
-void NEMLScalarDamagedModel_sd::ekill_update_(double T_np1, 
-                                             const double * const e_np1,
-                                             double * const s_np1,
-                                             double * const h_np1,
-                                             const double * const h_n,
-                                             double * const A_np1, 
-                                             double & u_np1, double u_n,
-                                             double & p_np1, double p_n)
+void NEMLScalarDamagedModel_sd::ekill_update_(
+    double T_np1, const Symmetric & e_np1, Symmetric & s_np1, 
+    History & h_np1, const History & h_n,
+    SymSymR4 & A_np1, 
+    double & u_np1, double u_n, 
+    double & p_np1, double p_n)
 {
-  std::copy(h_n, h_n + nstate(), h_np1);
-  h_np1[0] = 1.0;
-  elastic_->C(T_np1, A_np1);
-  for (int i=0; i<36; i++) A_np1[i] /= sfact_;
-  mat_vec(A_np1, 6, e_np1, 6, s_np1);
+  h_np1.copy_data(h_n.rawptr());
+  h_np1.get<double>(prefix("damage")) = 1.0;
+  A_np1 = elastic_->C(T_np1) / sfact_;
+  s_np1 = A_np1.dot(e_np1);
   if (u_n > 0.0) {
     p_np1 = p_n + u_n;
     u_np1 = 0.0;
@@ -314,13 +311,22 @@ void NEMLScalarDamagedModel_sd::ekill_update_(double T_np1,
     u_np1 = u_n;
   }
 }
-double NEMLScalarDamagedModel_sd::get_damage(const double *const h_np1) {
-  return h_np1[0];
+double NEMLScalarDamagedModel_sd::get_damage(const double *const h_np1)
+{
+  History h = gather_history_(h_np1);
+  return h.get<double>(prefix("damage"));
 }
-bool NEMLScalarDamagedModel_sd::should_del_element(const double *const h_np1) {
-  return get_damage(h_np1) > dkill_;
+
+bool NEMLScalarDamagedModel_sd::should_del_element(const double *const h_np1)
+{
+  History h = gather_history_(h_np1);
+  return h.get<double>(prefix("damage")) > dkill_;
 }
-bool NEMLScalarDamagedModel_sd::is_damage_model() const { return true; }
+
+bool NEMLScalarDamagedModel_sd::is_damage_model() const 
+{
+  return true;
+}
 
 ScalarDamage::ScalarDamage(ParameterSet & params) :
     NEMLObject(params),
