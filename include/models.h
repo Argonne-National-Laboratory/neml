@@ -364,12 +364,18 @@ class SSRIPTrialState : public TrialState {
 /// Small strain creep+plasticity trial state
 class SSCPTrialState : public TrialState {
  public:
-  virtual ~SSCPTrialState() {};
-  double ep_strain[6];            // Current plastic strain
-  double e_n[6], e_np1[6];        // Previous and next total strain
-  double s_n[6];                  // Previous stress
+  SSCPTrialState(const Symmetric & ep_strain, const Symmetric & e_n,
+                 const Symmetric & e_np1, const Symmetric & s_n,
+                 double T_n, double T_np1, double t_n, double t_np1,
+                 const History & h_n) :
+      ep_strain(ep_strain), e_n(e_n), e_np1(e_np1), s_n(s_n), 
+      T_n(T_n), T_np1(T_np1), t_n(t_n), t_np1(t_np1), h_n(h_n)
+  {};
+  Symmetric ep_strain;            // Current plastic strain
+  Symmetric e_n, e_np1;           // Previous and next total strain
+  Symmetric s_n;                  // Previous stress
   double T_n, T_np1, t_n, t_np1;  // Next and previous time and temperature
-  std::vector<double> h_n;        // Previous history vector
+  History h_n;                    // Previous history vector
 };
 
 /// General inelastic integrator trial state
@@ -617,10 +623,10 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
                  double * const J);
 
   /// Setup a trial state from known information
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       SSCPTrialState & ts);
+  std::shared_ptr<SSCPTrialState> make_trial_state(
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, double t_np1, double t_n,
+      const Symmetric & s_n, const History & h_n);
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);

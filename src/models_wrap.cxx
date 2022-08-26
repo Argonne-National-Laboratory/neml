@@ -154,17 +154,14 @@ PYBIND11_MODULE(models, m) {
                                                                   "creep"});
         }))
       .def("make_trial_state",
-           [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSCPTrialState>
+           [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::shared_ptr<SSCPTrialState>
            {
-              std::unique_ptr<SSCPTrialState> ts(new SSCPTrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
+              return m.make_trial_state(Symmetric(arr2ptr<double>(e_np1)),
+                                        Symmetric(arr2ptr<double>(e_n)),
+                                        T_np1, T_n,
+                                        t_np1, t_n,
+                                        Symmetric(arr2ptr<double>(s_n)),
+                                        m.gather_state_(arr2ptr<double>(h_n)));
            }, "Setup trial state for solve.")
       ;
 

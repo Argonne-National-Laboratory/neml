@@ -1225,27 +1225,27 @@ void SmallStrainCreepPlasticity::update_sd_state(
   History base_n = plastic_->gather_state_(H_n.rawptr());
   
   // Solve the system to get the update
-  SSCPTrialState ts;
-  make_trial_state(E_np1.data(), E_n.data(), T_np1, T_n, t_np1, t_n, S_n.data(),
-                   H_n.rawptr(), ts);
+  std::shared_ptr<SSCPTrialState> ts = make_trial_state(E_np1, E_n, 
+                                       T_np1, T_n, t_np1, t_n, S_n,
+                                       H_n);
 
   std::vector<double> xv(nparams());
   double * x = &xv[0];
-  solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, linesearch_});
+  solve(this, x, ts.get(), {rtol_, atol_, miter_, verbose_, linesearch_});
 
   // Store the ep strain
   H_np1.get<Symmetric>(prefix("plastic_strain")) = Symmetric(x);
 
   // Do the plastic update to get the new history and stress
   SymSymR4 A;
-  plastic_->update_sd_state(Symmetric(x), Symmetric(ts.ep_strain),
+  plastic_->update_sd_state(Symmetric(x), ts->ep_strain,
                             T_np1, T_n,
                             t_np1, t_n, S_np1, S_n,
                             base_np1, base_n,
                             A, u_np1, u_n, p_np1, p_n);
 
   // Do the creep update to get a tangent component
-  Symmetric creep_old = E_n - Symmetric(ts.ep_strain);
+  Symmetric creep_old = E_n - ts->ep_strain;
   Symmetric creep_new;
   SymSymR4 B;
   creep_->update(S_np1.data(), creep_new.s(), creep_old.s(), T_np1, T_n,
@@ -1255,11 +1255,7 @@ void SmallStrainCreepPlasticity::update_sd_state(
   AA_np1 = form_tangent_(A, B);
 
   // Energy calculation (trapezoid rule)
-  auto [du, dp] = trapezoid_energy(
-      E_np1, E_n, 
-      Symmetric(creep_new),
-      Symmetric(creep_old),
-      S_np1, S_n);
+  auto [du, dp] = trapezoid_energy(E_np1, E_n, creep_new, creep_old, S_np1, S_n);
   u_np1 = u_n + du;
   p_np1 += dp;
 }
@@ -1275,7 +1271,7 @@ void SmallStrainCreepPlasticity::init_x(double * const x, TrialState * ts)
   SSCPTrialState * tss = static_cast<SSCPTrialState*>(ts);
 
   // Start out at last step's value
-  std::copy(tss->ep_strain, tss->ep_strain + 6, x);
+  std::copy(tss->ep_strain.data(), tss->ep_strain.data() + 6, x);
 }
 
 void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts, 
@@ -1286,66 +1282,47 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   // First update the elastic-plastic model
   Symmetric S_np1;
   SymSymR4 A_np1;
-  
-  double * h_np1 = new double[plastic_->nstate()];
-  History H_np1 = plastic_->gather_state_(&h_np1[0]);
-  History H_n = plastic_->gather_state_(tss->h_n.data());
+  History H_np1 = plastic_->gather_blank_state_();
 
   double u_np1, u_n;
   double p_np1, p_n;
   u_n = 0.0;
   p_n = 0.0;
 
-  plastic_->update_sd_state(Symmetric(x), Symmetric(tss->ep_strain),
+  Symmetric ep_np1(x);
+  plastic_->update_sd_state(ep_np1, tss->ep_strain,
                             tss->T_np1, tss->T_n,
                             tss->t_np1, tss->t_n, S_np1, 
-                            Symmetric(tss->s_n),
-                            H_np1, H_n, A_np1,
+                            tss->s_n,
+                            H_np1, tss->h_n, A_np1,
                             u_np1, u_n, p_np1, p_n);
 
   // Then update the creep strain
-  double creep_old[6];
-  double creep_new[6];
-  double B[36];
-  for (int i=0; i<6; i++) {
-    creep_old[i] = tss->e_n[i] - tss->ep_strain[i];
-  }
-  creep_->update(S_np1.data(), creep_new, creep_old, tss->T_np1, tss->T_n,
-                 tss->t_np1, tss->t_n, B);
+  Symmetric creep_old = tss->e_n - tss->ep_strain;
+  Symmetric creep_new;
+  SymSymR4 B;
+  creep_->update(S_np1.data(), creep_new.s(), creep_old.data(), tss->T_np1, tss->T_n,
+                 tss->t_np1, tss->t_n, B.s());
 
   // Form the residual
-  for (int i=0; i<6; i++) {
-    R[i] = (x[i] + creep_new[i] - tss->e_np1[i]) * sf_;
-  }
+  Symmetric Rs(R);
+  Rs = (ep_np1 + creep_new - tss->e_np1) * sf_;
   
   // The Jacobian is a straightforward combination of the two derivatives
-  mat_mat(6, 6, 6, B, A_np1.data(), J);
-  for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
-  for (int i=0; i<36; i++) J[i] *= sf_;
-
-  delete [] h_np1;
+  SymSymR4 Js(J);
+  Js = (B.dot(A_np1) + SymSymR4::id()) * sf_;
 }
 
-void SmallStrainCreepPlasticity::make_trial_state(
-    const double * const e_np1, const double * const e_n,
+std::shared_ptr<SSCPTrialState>
+SmallStrainCreepPlasticity::make_trial_state(
+    const Symmetric & e_np1, const Symmetric & e_n,
     double T_np1, double T_n, double t_np1, double t_n,
-    const double * const s_n, const double * const h_n,
-    SSCPTrialState & ts)
+    const Symmetric & s_n, const History & h_n)
 {
-  int nh = plastic_->nstate();
-  ts.h_n.resize(nh);
-
-  std::copy(e_np1, e_np1+6, ts.e_np1);
-  std::copy(e_n, e_n+6, ts.e_n);
-  std::copy(s_n, s_n+6, ts.s_n);
-  ts.T_n = T_n;
-  ts.T_np1 = T_np1;
-  ts.t_n = t_n;
-  ts.t_np1 = t_np1;
-  std::copy(h_n, h_n + nh, ts.h_n.begin());
-
-  std::copy(h_n + nh, h_n+ nh + 6, ts.ep_strain);
-
+  return std::make_shared<SSCPTrialState>(
+      h_n.get<Symmetric>(prefix("plastic_strain")),
+      e_n, e_np1, s_n, T_n, T_np1, t_n, t_np1,
+      plastic_->gather_state_(h_n.rawptr()));
 }
 
 SymSymR4 SmallStrainCreepPlasticity::form_tangent_(
