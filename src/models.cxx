@@ -161,6 +161,25 @@ History NEMLModel::gather_blank_history_() const
   return stored_hist_;
 }
 
+History NEMLModel::gather_state_(double * data) const
+{
+  History h = gather_blank_state_();
+  h.set_data(data);
+  return h;
+}
+
+History NEMLModel::gather_state_(const double * data) const
+{
+  History h = gather_blank_state_();
+  h.set_data(const_cast<double*>(data));
+  return h;
+}
+
+History NEMLModel::gather_blank_state_() const
+{
+  return stored_state_;
+}
+
 // NEMLModel_sd implementation
 NEMLModel_sd::NEMLModel_sd(ParameterSet & params) :
       NEMLModel(params), 
@@ -218,9 +237,9 @@ void NEMLModel_sd::update_sd_interface(
   auto [H_np1, F_np1] = split_state(h_np1);
   auto [H_n, F_n] = split_state(h_n);
   
-  update_sd_state(e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_np1.s(), s_n.data(),
-            H_np1.rawptr(), H_n.rawptr(), 
-            A_np1.s(), u_np1, u_n, p_np1, p_n);
+  update_sd_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
+            H_np1, H_n, 
+            A_np1, u_np1, u_n, p_np1, p_n);
 }
 
 void NEMLModel_sd::init_static(History & h) const
@@ -337,16 +356,24 @@ SubstepModel_sd::SubstepModel_sd(ParameterSet & params) :
 }
 
 void SubstepModel_sd::update_sd_state(
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & E_np1, const Symmetric & E_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
-    double * const A_np1,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
-// Setup the substep parameters
+  const double * e_np1 = E_np1.data();
+  const double * e_n = E_n.data();
+  double * s_np1 = S_np1.s();
+  const double * s_n = S_n.data();
+  double * h_np1 = H_np1.rawptr();
+  const double * h_n = H_n.rawptr();
+  double * A_np1 = AA_np1.s();
+
+  // Setup the substep parameters
   int nd = 0;                     // Number of times we subdivided
   int tf = pow(2, max_divide_);   // Total integer step count
   int cm = tf;                    // Attempted integer step (sf = cm/tf)
@@ -445,7 +472,6 @@ void SubstepModel_sd::update_sd_state(
   delete [] A_old;
   delete [] A_new;
   delete [] E_inc;
-
 }
 
 void SubstepModel_sd::update_step(
@@ -562,27 +588,24 @@ void SmallStrainElasticity::init_state(History & h) const
 }
 
 void SmallStrainElasticity::update_sd_state(
-       const double * const e_np1, const double * const e_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n)
+    const Symmetric & E_np1, const Symmetric & E_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
-  elastic_->C(T_np1, A_np1);
-  mat_vec(A_np1, 6, e_np1, 6, s_np1);
+  AA_np1 = elastic_->C(T_np1);
+  S_np1 = AA_np1.dot(E_np1);
 
-  // Energy calculation (trapezoid rule)
-  double de[6];
-  double ds[6];
-  sub_vec(e_np1, e_n, 6, de);
-  add_vec(s_np1, s_n, 6, ds);
-  for (int i=0; i<6; i++) ds[i] /= 2.0;
-  u_np1 = u_n + dot_vec(ds, de, 6);
-  p_np1 = p_n;
-
+  auto [du, dp] = trapezoid_energy(E_np1, E_n,
+                                   Symmetric::zero(),
+                                   Symmetric::zero(),
+                                   S_np1, S_n);
+  u_np1 = u_n + du;
+  p_np1 = p_n + dp;
 }
 
 // Implementation of perfect plasticity
@@ -1201,59 +1224,60 @@ void SmallStrainCreepPlasticity::init_state(History & hist) const
 }
 
 void SmallStrainCreepPlasticity::update_sd_state(
-       const double * const e_np1, const double * const e_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n)
+    const Symmetric & E_np1, const Symmetric & E_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
 {
-
+  // Split out the history
+  History base_np1 = plastic_->gather_state_(&H_np1.rawptr()[6]);
+  History base_n = plastic_->gather_state_(&H_n.rawptr()[6]);
+  
   // Solve the system to get the update
   SSCPTrialState ts;
-  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n, ts);
+  make_trial_state(E_np1.data(), E_n.data(), T_np1, T_n, t_np1, t_n, S_n.data(),
+                   H_n.rawptr(), ts);
 
   std::vector<double> xv(nparams());
   double * x = &xv[0];
   solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, linesearch_});
 
   // Store the ep strain
-  std::copy(x, x+6, h_np1);
+  H_np1.get<Symmetric>(prefix("plastic_strain")) = Symmetric(x);
 
   // Do the plastic update to get the new history and stress
-  double A[36];
-  plastic_->update_sd_state(x, ts.ep_strain, T_np1, T_n,
-                             t_np1, t_n, s_np1, s_n,
-                             &h_np1[6], &h_n[6],
-                             A, u_np1, u_n, p_np1, p_n);
+  SymSymR4 A;
+  plastic_->update_sd_state(Symmetric(x), Symmetric(ts.ep_strain),
+                            T_np1, T_n,
+                            t_np1, t_n, S_np1, S_n,
+                            base_np1, base_n,
+                            A, u_np1, u_n, p_np1, p_n);
 
   // Do the creep update to get a tangent component
   double creep_old[6];
   double creep_new[6];
   double B[36];
   for (int i=0; i<6; i++) {
-    creep_old[i] = e_n[i] - ts.ep_strain[i];
+    creep_old[i] = E_n.data()[i] - ts.ep_strain[i];
   }
-  creep_->update(s_np1, creep_new, creep_old, T_np1, T_n,
+  creep_->update(S_np1.data(), creep_new, creep_old, T_np1, T_n,
                  t_np1, t_n, B);
 
   // Form the relatively simple tangent
-  form_tangent_(A, B, A_np1);
+  form_tangent_(A.s(), B, AA_np1.s());
 
   // Energy calculation (trapezoid rule)
-  double de[6];
-  double ds[6];
-  sub_vec(e_np1, e_n, 6, de);
-  add_vec(s_np1, s_n, 6, ds);
-  u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
-  
-  // Extra dissipation from the creep material
-  double dec[6];
-  sub_vec(creep_new, creep_old, 6, dec);
-  p_np1 += dot_vec(ds, dec, 6) / 2.0;
-  
+  auto [du, dp] = trapezoid_energy(
+      E_np1, E_n, 
+      Symmetric(creep_new),
+      Symmetric(creep_old),
+      S_np1, S_n);
+  u_np1 = u_n + du;
+  p_np1 += dp;
 }
 
 size_t SmallStrainCreepPlasticity::nparams() const
@@ -1276,22 +1300,24 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   SSCPTrialState * tss = static_cast<SSCPTrialState*>(ts);
 
   // First update the elastic-plastic model
-  double s_np1[6];
-  double A_np1[36];
-  std::vector<double> h_np1;
-  h_np1.resize(plastic_->nstate());
+  Symmetric S_np1;
+  SymSymR4 A_np1;
+  
+  double * h_np1 = new double[plastic_->nstate()];
+  History H_np1 = plastic_->gather_state_(&h_np1[0]);
+  History H_n = plastic_->gather_state_(tss->h_n.data());
+
   double u_np1, u_n;
   double p_np1, p_n;
   u_n = 0.0;
   p_n = 0.0;
 
-  double * hist = (h_np1.empty() ? nullptr : &h_np1[0]);
-  double * hist_tss = (tss->h_n.empty() ? nullptr : &(tss->h_n[0]));
-
-  plastic_->update_sd_state(x, tss->ep_strain, tss->T_np1, tss->T_n,
-                      tss->t_np1, tss->t_n, s_np1, tss->s_n,
-                      hist, hist_tss, A_np1,
-                      u_np1, u_n, p_np1, p_n);
+  plastic_->update_sd_state(Symmetric(x), Symmetric(tss->ep_strain),
+                            tss->T_np1, tss->T_n,
+                            tss->t_np1, tss->t_n, S_np1, 
+                            Symmetric(tss->s_n),
+                            H_np1, H_n, A_np1,
+                            u_np1, u_n, p_np1, p_n);
 
   // Then update the creep strain
   double creep_old[6];
@@ -1300,7 +1326,7 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   for (int i=0; i<6; i++) {
     creep_old[i] = tss->e_n[i] - tss->ep_strain[i];
   }
-  creep_->update(s_np1, creep_new, creep_old, tss->T_np1, tss->T_n,
+  creep_->update(S_np1.data(), creep_new, creep_old, tss->T_np1, tss->T_n,
                  tss->t_np1, tss->t_n, B);
 
   // Form the residual
@@ -1309,9 +1335,11 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   }
   
   // The Jacobian is a straightforward combination of the two derivatives
-  mat_mat(6, 6, 6, B, A_np1, J);
+  mat_mat(6, 6, 6, B, A_np1.data(), J);
   for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
   for (int i=0; i<36; i++) J[i] *= sf_;
+
+  delete [] h_np1;
 }
 
 void SmallStrainCreepPlasticity::make_trial_state(
@@ -1718,29 +1746,29 @@ std::unique_ptr<NEMLObject> KMRegimeModel::initialize(ParameterSet & params)
 }
 
 void KMRegimeModel::update_sd_state(
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & E_np1, const Symmetric & E_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
-    double * const A_np1,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
   // Calculate activation energy
-  double g = activation_energy_(e_np1, e_n, T_np1, t_np1, t_n);
+  double g = activation_energy_(E_np1.data(), E_n.data(), T_np1, t_np1, t_n);
 
   // Note this relies on everything being sorted.  You probably want to
   // error check at some point
   for (size_t i=0; i<gs_.size(); i++) {
     if (g < gs_[i]) {
-      return models_[i]->update_sd_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
-                                   s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
+      return models_[i]->update_sd_state(E_np1, E_n, T_np1, T_n, t_np1, t_n, 
+                                   S_np1, S_n, H_np1, H_n, AA_np1, u_np1, u_n,
                                    p_np1, p_n);
     }
   }
-  return models_.back()->update_sd_state(e_np1, e_n, T_np1, T_n, t_np1, t_n,
-                                   s_np1, s_n, h_np1, h_n, A_np1, u_np1, u_n,
+  return models_.back()->update_sd_state(E_np1, E_n, T_np1, T_n, t_np1, t_n,
+                                   S_np1, S_n, H_np1, H_n, AA_np1, u_np1, u_n,
                                    p_np1, p_n);
 }
 
@@ -1779,6 +1807,21 @@ void KMRegimeModel::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel
   for (auto it = models_.begin(); it != models_.end(); ++it) {
     (*it)->set_elastic_model(emodel);
   }
+}
+
+std::tuple<double,double> trapezoid_energy(
+    const Symmetric & e_np1, const Symmetric & e_n,
+    const Symmetric & ep_np1, const Symmetric & ep_n,
+    const Symmetric & s_np1, const Symmetric & s_n)
+{
+  Symmetric de = e_np1 - e_n;
+  Symmetric dp = ep_np1 - ep_n;
+  Symmetric ds = s_np1 + s_n;
+  
+  double du = ds.contract(de)/2.0;
+  double dw = ds.contract(dp)/2.0;
+
+  return std::tie(du,dw);
 }
 
 } // namespace neml

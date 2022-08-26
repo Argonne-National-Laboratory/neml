@@ -110,17 +110,22 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
    /// Number of static variables
    size_t nstatic() const;
 
+   /// Quickly setup history
+   History gather_history_(double * data) const;
+   History gather_history_(const double * data) const;
+   History gather_blank_history_() const;
+
+   /// Quickly setup state
+   History gather_state_(double * data) const;
+   History gather_state_(const double * data) const;
+   History gather_blank_state_() const;
+
   protected:
    /// Split internal variables into static and actual parts
    std::tuple<History,History> split_state(const History & h) const;
 
    /// Cache history objects with a view to increasing performance
    void cache_history_();
-
-   /// Quickly setup history
-   History gather_history_(double * data) const;
-   History gather_history_(const double * data) const;
-   History gather_blank_history_() const;
 
   protected:
    History stored_hist_;
@@ -164,12 +169,12 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
 
    /// The small strain stress update interface with just the state variables
    virtual void update_sd_state(
-       const double * const e_np1, const double * const e_n,
+       const Symmetric & E_np1, const Symmetric & E_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
 
@@ -223,14 +228,14 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
 
   /// Complete substep update
   virtual void update_sd_state(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
 
   /// Single step update
   virtual void update_step(
@@ -314,14 +319,14 @@ class NEML_EXPORT SmallStrainElasticity: public NEMLModel_sd {
 
   /// Small strain stress update
   virtual void update_sd_state(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
   
   /// Populate internal variables (none)
   virtual void populate_state(History & h) const;
@@ -589,14 +594,14 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
 
   /// Small strain stress update
   virtual void update_sd_state(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
   
   /// Populate list of internal variables
   virtual void populate_state(History & hist) const;
@@ -761,14 +766,14 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
 
   /// The small strain stress update
   virtual void update_sd_state(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
 
   /// Populate internal variables
   virtual void populate_state(History & hist) const;
@@ -791,5 +796,11 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
 };
 
 static Register<KMRegimeModel> regKMRegimeModel;
+
+/// Useful helper to calculate work and energy with the trapezoid rule
+std::tuple<double,double> trapezoid_energy(
+    const Symmetric & e_np1, const Symmetric & e_n,
+    const Symmetric & ep_np1, const Symmetric & ep_n,
+    const Symmetric & s_np1, const Symmetric & s_n);
 
 } // namespace neml

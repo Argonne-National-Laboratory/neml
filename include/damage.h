@@ -27,14 +27,14 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
 
   /// The damaged stress update
   virtual void update_sd_state(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n) = 0;
+    const Symmetric & E_np1, const Symmetric & E_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n) = 0;
 
   /// Number of damage variables
   virtual size_t ndamage() const = 0;
@@ -79,14 +79,14 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
 
   /// Stress update using the scalar damage model
   virtual void update_sd_state(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+    const Symmetric & E_np1, const Symmetric & E_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n);
 
   /// Equal to 1
   virtual size_t ndamage() const;

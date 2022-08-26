@@ -83,15 +83,23 @@ std::unique_ptr<NEMLObject> NEMLScalarDamagedModel_sd::initialize(ParameterSet &
 }
 
 void NEMLScalarDamagedModel_sd::update_sd_state(
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & E_np1, const Symmetric & E_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
-    double * const A_np1,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
+  const double * e_np1 = E_np1.data();
+  const double * e_n = E_n.data();
+  double * s_np1 = S_np1.s();
+  const double * s_n = S_n.data();
+  double * h_np1 = H_np1.rawptr();
+  const double * h_n = H_n.rawptr();
+  double * A_np1 = AA_np1.s();
+
   if (ekill_ and (h_n[0] >= dkill_)) {
     ekill_update_(T_np1, e_np1, s_np1, h_np1, h_n, A_np1, u_np1, u_n, p_np1, p_n);
     return;
@@ -107,19 +115,21 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   solve(this, x, &tss, {rtol_, atol_, miter_, verbose_, linesearch_});
   
   // Do actual stress update
-  double s_prime_np1[6];
-  double s_prime_n[6];
-  double A_prime_np1[36];
-  std::copy(s_n, s_n+6, s_prime_n);
-  for (int i=0; i<6; i++) s_prime_n[i] /= (1-h_n[0]);
+  Symmetric S_prime_np1;
+  Symmetric S_prime_n = S_n / (1-h_n[0]);
+  SymSymR4 A_prime_np1;
+  
+  // Split the history
+  History base_np1 = H_np1.split({"damage"});
+  History base_n = H_n.split({"damage"});
 
-  base_->update_sd_state(e_np1, e_n, T_np1, T_n,
-                   t_np1, t_n, s_prime_np1, s_prime_n,
-                   &h_np1[1], &h_n[1],
+  base_->update_sd_state(E_np1, E_n, T_np1, T_n,
+                   t_np1, t_n, S_prime_np1, S_prime_n,
+                   base_np1, base_n,
                    A_prime_np1, u_np1, u_n, p_np1, p_n);
 
 
-  for (int i=0; i<6; i++) s_np1[i] = (1-x[6]) * s_prime_np1[i];
+  for (int i=0; i<6; i++) s_np1[i] = (1-x[6]) * S_prime_np1.data()[i];
   h_np1[0] = x[6];
 
   if (ekill_ and (h_np1[0] >= dkill_)) {
@@ -130,7 +140,7 @@ void NEMLScalarDamagedModel_sd::update_sd_state(
   // Create the tangent
   tangent_(e_np1, e_n, s_np1, s_n,
                  T_np1, T_n, t_np1, t_n, 
-                 x[6], h_n[0], A_prime_np1, A_np1);
+                 x[6], h_n[0], A_prime_np1.data(), A_np1);
 }
 
 size_t NEMLScalarDamagedModel_sd::ndamage() const
@@ -177,26 +187,24 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   double s_prime_curr[6];
   for (int i=0; i<6; i++)  s_prime_curr[i] = s_curr[i] / (1-w_curr);
 
-  double s_prime_np1[6];
-  double s_prime_n[6];
-  double A_prime_np1[36];
-  std::vector<double> h_np1_v(base_->nstate());
-  double * h_np1 = &h_np1_v[0];
+  Symmetric S_prime_np1;
+  Symmetric S_prime_n = Symmetric(tss->s_n) / (1-tss->w_n);
+  SymSymR4 A_prime_np1;
+  
+  History H_np1 = base_->gather_blank_state_();
+  History H_n = base_->gather_state_(&(tss->h_n)[0]);
   double u_np1;
   double p_np1;
   
-  std::copy(tss->s_n, tss->s_n+6, s_prime_n);
-  for (int i=0; i<6; i++) s_prime_n[i] /= (1-tss->w_n);
-
-  base_->update_sd_state(tss->e_np1, tss->e_n, tss->T_np1, tss->T_n,
-                   tss->t_np1, tss->t_n, s_prime_np1, s_prime_n,
-                   h_np1, &tss->h_n[0],
+  base_->update_sd_state(Symmetric(tss->e_np1), Symmetric(tss->e_n), tss->T_np1, tss->T_n,
+                   tss->t_np1, tss->t_n, S_prime_np1, S_prime_n,
+                   H_np1, H_n,
                    A_prime_np1, u_np1, tss->u_n, p_np1, tss->p_n);
   
-  for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * s_prime_np1[i];
+  for (int i=0; i<6; i++) R[i] = s_curr[i] - (1-w_curr) * S_prime_np1.data()[i];
 
   double w_np1;
-  dmodel_->damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  dmodel_->damage(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, S_prime_n.data(),
          tss->T_np1, tss->T_n, tss->t_np1, tss->t_n, &w_np1);
   R[6] = w_curr - w_np1;
 
@@ -205,11 +213,11 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
     J[CINDEX(i,i,7)] = 1.0; 
   }
   for (int i=0; i<6; i++) {
-    J[CINDEX(i,6,7)] = s_prime_np1[i];
+    J[CINDEX(i,6,7)] = S_prime_np1.data()[i];
   }
 
   double ws[6];
-  dmodel_->ddamage_ds(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  dmodel_->ddamage_ds(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, S_prime_n.data(),
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, ws);
   for (int i=0; i<6; i++) {
@@ -217,7 +225,7 @@ void NEMLScalarDamagedModel_sd::RJ(const double * const x, TrialState * ts,
   }
   
   double ww;
-  dmodel_->ddamage_dd(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, s_prime_n,
+  dmodel_->ddamage_dd(w_curr, tss->w_n, tss->e_np1, tss->e_n, s_prime_curr, S_prime_n.data(),
          tss->T_np1, tss->T_n,
          tss->t_np1, tss->t_n, &ww);
   
