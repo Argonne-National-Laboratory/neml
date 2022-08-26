@@ -789,10 +789,8 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
-  double activation_energy_(const double * const e_np1,
-                            const double * const e_n,
-                            double T_np1,
-                            double t_np1, double t_n);
+  double activation_energy_(const Symmetric & e_np1, const Symmetric & e_n,
+                            double T_np1, double t_np1, double t_n);
 
  private:
   std::vector<std::shared_ptr<NEMLModel_sd>> models_;

@@ -1705,7 +1705,7 @@ void KMRegimeModel::update_sd_state(
     double & p_np1, double p_n)
 {
   // Calculate activation energy
-  double g = activation_energy_(E_np1.data(), E_n.data(), T_np1, t_np1, t_n);
+  double g = activation_energy_(E_np1, E_n, T_np1, t_np1, t_n);
 
   // Note this relies on everything being sorted.  You probably want to
   // error check at some point
@@ -1734,17 +1734,13 @@ void KMRegimeModel::init_state(History & hist) const
   return models_[0]->init_hist(hist);
 }
 
-double KMRegimeModel::activation_energy_(const double * const e_np1, 
-                                         const double * const e_n,
+double KMRegimeModel::activation_energy_(const Symmetric & e_np1, 
+                                         const Symmetric & e_n,
                                          double T_np1,
                                          double t_np1, double t_n)
 {
-  double dt = t_np1 - t_n;
-
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  for (int i=0; i<6; i++) de[i] /= dt;
-  double rate = sqrt(2.0/3.0) * norm2_vec(de, 6);
+  Symmetric de = (e_np1 - e_n) / (t_np1 - t_n);
+  double rate = sqrt(2.0/3.0) * de.norm();
   double mu = elastic_->G(T_np1);
   
   return kboltz_ * T_np1 / (mu* pow(b_, 3.0)) * log(eps0_ / rate);
