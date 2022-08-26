@@ -1199,9 +1199,9 @@ std::unique_ptr<NEMLObject> SmallStrainCreepPlasticity::initialize(ParameterSet 
 
 void SmallStrainCreepPlasticity::populate_state(History & hist) const
 {
+  hist.add<Symmetric>(prefix("plastic_strain"));
   plastic_->set_variable_prefix(get_variable_prefix());
   plastic_->populate_hist(hist);
-  hist.add<Symmetric>(prefix("plastic_strain"));
 }
 
 void SmallStrainCreepPlasticity::init_state(History & hist) const
@@ -1221,8 +1221,8 @@ void SmallStrainCreepPlasticity::update_sd_state(
     double & p_np1, double p_n)
 {
   // Split out the history
-  History base_np1 = plastic_->gather_state_(&H_np1.rawptr()[6]);
-  History base_n = plastic_->gather_state_(&H_n.rawptr()[6]);
+  History base_np1 = plastic_->gather_state_(H_np1.rawptr());
+  History base_n = plastic_->gather_state_(H_n.rawptr());
   
   // Solve the system to get the update
   SSCPTrialState ts;
@@ -1245,17 +1245,14 @@ void SmallStrainCreepPlasticity::update_sd_state(
                             A, u_np1, u_n, p_np1, p_n);
 
   // Do the creep update to get a tangent component
-  double creep_old[6];
-  double creep_new[6];
-  double B[36];
-  for (int i=0; i<6; i++) {
-    creep_old[i] = E_n.data()[i] - ts.ep_strain[i];
-  }
-  creep_->update(S_np1.data(), creep_new, creep_old, T_np1, T_n,
-                 t_np1, t_n, B);
+  Symmetric creep_old = E_n - Symmetric(ts.ep_strain);
+  Symmetric creep_new;
+  SymSymR4 B;
+  creep_->update(S_np1.data(), creep_new.s(), creep_old.s(), T_np1, T_n,
+                 t_np1, t_n, B.s());
 
   // Form the relatively simple tangent
-  form_tangent_(A.s(), B, AA_np1.s());
+  AA_np1 = form_tangent_(A, B);
 
   // Energy calculation (trapezoid rule)
   auto [du, dp] = trapezoid_energy(
@@ -1345,14 +1342,14 @@ void SmallStrainCreepPlasticity::make_trial_state(
   ts.T_np1 = T_np1;
   ts.t_n = t_n;
   ts.t_np1 = t_np1;
-  std::copy(h_n + 6, h_n + 6 + nh, ts.h_n.begin());
+  std::copy(h_n, h_n + nh, ts.h_n.begin());
 
-  std::copy(h_n, h_n+6, ts.ep_strain);
+  std::copy(h_n + nh, h_n+ nh + 6, ts.ep_strain);
 
 }
 
-void SmallStrainCreepPlasticity::form_tangent_(
-    double * const A, double * const B, double * const A_np1)
+SymSymR4 SmallStrainCreepPlasticity::form_tangent_(
+    const SymSymR4 & A, const SymSymR4 & B)
 {
   // Okay, what we really want to do is
   // (A^-1 + B)^-1
@@ -1371,19 +1368,7 @@ void SmallStrainCreepPlasticity::form_tangent_(
   //
   // That said, it seems to work quite nicely.
   //
-  double C[36];
-  mat_mat(6,6,6,A,B,C);
-  for (int i=0; i<6; i++) C[CINDEX(i,i,6)] += 1.0;
-  invert_mat(C, 6);
-
-  double D[36];
-  mat_mat(6,6,6,C,A,D);
-  mat_mat(6,6,6,B,D,C);
-  mat_mat(6,6,6,A,C,D);
-
-  std::copy(A,A+36,A_np1);
-  for (int i=0; i<36; i++) A_np1[i] -= D[i];
-
+  return A - A.dot(B.dot((A.dot(B) + SymSymR4::id()).inverse().dot(A)));
 }
 
 void SmallStrainCreepPlasticity::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)

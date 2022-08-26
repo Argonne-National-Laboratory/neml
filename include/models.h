@@ -626,8 +626,7 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
-  void form_tangent_(double * const A, double * const B,
-                    double * const A_np1);
+  SymSymR4 form_tangent_(const SymSymR4 & A, const SymSymR4 & B);
 
  private:
   std::shared_ptr<NEMLModel_sd> plastic_;
