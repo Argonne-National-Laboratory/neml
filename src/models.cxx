@@ -365,14 +365,6 @@ void SubstepModel_sd::update_sd_state(
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
-  const double * e_np1 = E_np1.data();
-  const double * e_n = E_n.data();
-  double * s_np1 = S_np1.s();
-  const double * s_n = S_n.data();
-  double * h_np1 = H_np1.rawptr();
-  const double * h_n = H_n.rawptr();
-  double * A_np1 = AA_np1.s();
-
   // Setup the substep parameters
   int nd = 0;                     // Number of times we subdivided
   int tf = pow(2, max_divide_);   // Total integer step count
@@ -380,25 +372,21 @@ void SubstepModel_sd::update_sd_state(
   int cs = 0;                     // Accumulated steps
   
   // Strain, time, and temperature increments
-  double e_diff[6];
-  sub_vec(e_np1, e_n, 6, e_diff);
+  Symmetric E_diff = E_np1 - E_n;
   double T_diff = T_np1 - T_n;
   double t_diff = t_np1 - t_n;
 
   // Previous subincrement quantities
-  double e_past[6];
-  std::copy(e_n, e_n+6, e_past);
-  double s_past[6];
-  std::copy(s_n, s_n+6, s_past);
-  double * h_past = new double [nstate()];
-  std::copy(h_n, h_n+nstate(), h_past);
+  Symmetric E_past = E_n;
+  Symmetric S_past = S_n;
+  History H_past = H_n.deepcopy(); // We're not allowed to wrote to H_n, so need copy
   double T_past = T_n;
   double t_past = t_n;
   double u_past = u_n;
   double p_past = p_n;
 
   // Targets
-  double e_next[6];
+  Symmetric E_next;
   double T_next;
   double t_next;
   
@@ -414,15 +402,15 @@ void SubstepModel_sd::update_sd_state(
     // targets
     double sm = (double) (cs + cm) / (double) tf;
     double sf = (double) cm / (double) tf;
-    for (size_t i = 0; i<6; i++) e_next[i] = e_n[i] + sm * e_diff[i];
+    E_next = E_n + sm * E_diff;
     T_next = T_n + sm * T_diff;
     t_next = t_n + sm * t_diff;
     
     try {
       // Try updating
       update_step(
-          e_next, e_past, T_next, T_past, t_next, t_past, s_np1, s_past,
-          h_np1, h_past, A_inc, E_inc, u_np1, u_past, p_np1, p_past);
+          E_next.data(), E_past.data(), T_next, T_past, t_next, t_past, S_np1.s(), S_past.data(),
+          H_np1.rawptr(), H_past.rawptr(), A_inc, E_inc, u_np1, u_past, p_np1, p_past);
     }
     // Failed adapt
     catch (const NEMLError & e) {
@@ -449,9 +437,9 @@ void SubstepModel_sd::update_sd_state(
    
     // Succeeded: advance subincrement
     cs += cm;
-    std::copy(e_next, e_next+6, e_past);
-    std::copy(s_np1, s_np1+6, s_past);
-    std::copy(h_np1, h_np1+nstate(), h_past);
+    E_past = E_next;
+    S_past = S_np1;
+    H_past = H_np1;
     std::copy(A_new, A_new+(nparams()*6), A_old);
 
     T_past = T_next;
@@ -463,11 +451,10 @@ void SubstepModel_sd::update_sd_state(
   // Extract the leading 6x6 part of the A matrix
   for (size_t i = 0; i < 6; i++) {
     for (size_t j = 0; j < 6; j++) {
-      A_np1[CINDEX(i,j,6)] = A_new[CINDEX(i,j,6)];
+      AA_np1(i,j) = A_new[CINDEX(i,j,6)];
     }
   }
 
-  delete [] h_past;
   delete [] A_inc;
   delete [] A_old;
   delete [] A_new;
