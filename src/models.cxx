@@ -471,7 +471,7 @@ void SubstepModel_sd::update_step(
     double & p_np1, double p_n)
 {
   // Setup the trial state
-  std::unique_ptr<TrialState> ts = setup(e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_n.data(), h_n.rawptr());
+  std::unique_ptr<TrialState> ts = setup(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n);
 
   // Take an elastic step if the model requests it
   if (elastic_step(ts.get(), e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_n.data(), h_n.rawptr())) {
@@ -661,32 +661,17 @@ void SmallStrainPerfectPlasticity::init_state(History & h) const
 }
 
 std::unique_ptr<TrialState> SmallStrainPerfectPlasticity::setup(
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & e_np1, const Symmetric & e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
-    const double * const s_n,
-    const double * const h_n)
+    const Symmetric & s_n,
+    const History & h_n)
 {
-  std::unique_ptr<SSPPTrialState> tss = std::make_unique<SSPPTrialState>();
-
-  tss->ys = -ys_->value(T_np1);
-  tss->T = T_np1;
- 
-  std::copy(e_np1, e_np1+6, tss->e_np1);
-
-  elastic_->C(T_np1, tss->C);
-
-  double S_n[36];
-  elastic_->S(T_n, S_n);
-  mat_vec(S_n, 6, s_n, 6, tss->ep_n);
-  for (size_t i = 0; i < 6; i++) tss->ep_n[i] = e_n[i] - tss->ep_n[i];
-
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  mat_vec(tss->C, 6, de, 6, tss->s_tr);
-  for (size_t i = 0; i < 6; i++) tss->s_tr[i] = s_n[i] + tss->s_tr[i];
-
-  return tss;
+  Symmetric ep_n = e_n - elastic_->S(T_n).dot(s_n);
+  Symmetric s_tr = s_n + elastic_->C(T_np1).dot(e_np1 - e_n);
+  return std::make_unique<SSPPTrialState>(
+      e_np1, ep_n, s_tr, elastic_->C(T_np1), -ys_->value(T_np1),
+      T_np1);
 }
 
 bool SmallStrainPerfectPlasticity::elastic_step(
@@ -699,7 +684,7 @@ bool SmallStrainPerfectPlasticity::elastic_step(
 {
   const SSPPTrialState * tss = static_cast<const SSPPTrialState*>(ts);
   double fv;
-  surface_->f(tss->s_tr, &(tss->ys), T_np1, fv);
+  surface_->f(tss->s_tr.data(), &(tss->ys), T_np1, fv);
   return fv <= 0.0;
 }
 
@@ -728,7 +713,7 @@ void SmallStrainPerfectPlasticity::strain_partial(
 
   for (size_t i = 0; i < 6; i++) {
     for (size_t j = 0; j < 6; j++) {
-      de[CINDEX(i,j,6)] = tss->C[CINDEX(i,j,6)];
+      de[CINDEX(i,j,6)] = tss->C(i,j);
     }
   }
 
@@ -742,7 +727,7 @@ size_t SmallStrainPerfectPlasticity::nparams() const
 void SmallStrainPerfectPlasticity::init_x(double * const x, TrialState * ts)
 {
   SSPPTrialState * tss = static_cast<SSPPTrialState *>(ts);
-  std::copy(tss->s_tr, tss->s_tr+6, x);
+  std::copy(tss->s_tr.data(), tss->s_tr.data()+6, x);
   x[6] = 0.0;
 }
 
@@ -766,8 +751,8 @@ void SmallStrainPerfectPlasticity::RJ(
 
   // R1
   double T[6];
-  for (int i=0; i<6; i++) T[i] = tss->e_np1[i] - tss->ep_n[i] - df[i] * dg;
-  mat_vec(tss->C, 6, T, 6, R);
+  for (int i=0; i<6; i++) T[i] = tss->e_np1.data()[i] - tss->ep_n.data()[i] - df[i] * dg;
+  mat_vec(tss->C.data(), 6, T, 6, R);
   for (int i=0; i<6; i++) R[i] = s_np1[i] - R[i];
   
   // R2
@@ -775,7 +760,7 @@ void SmallStrainPerfectPlasticity::RJ(
 
   // J11
   double TT[36];
-  mat_mat(6, 6, 6, tss->C, ddf, TT);
+  mat_mat(6, 6, 6, tss->C.data(), ddf, TT);
 
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
@@ -785,7 +770,7 @@ void SmallStrainPerfectPlasticity::RJ(
   }
 
   // J12
-  mat_vec(tss->C, 6, df, 6, T);
+  mat_vec(tss->C.data(), 6, df, 6, T);
   for (int i=0; i<6; i++) J[CINDEX(i,6,7)] = T[i];
 
   // J21
@@ -856,36 +841,18 @@ void SmallStrainRateIndependentPlasticity::init_state(History & hist) const
 }
 
 std::unique_ptr<TrialState> SmallStrainRateIndependentPlasticity::setup(
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & e_np1, const Symmetric & e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
-    const double * const s_n,
-    const double * const h_n)
+    const Symmetric & s_n,
+    const History & h_n)
 {
-  std::unique_ptr<SSRIPTrialState> tss = std::make_unique<SSRIPTrialState>();
+  Symmetric ep_tr = e_n - elastic_->S(T_n).dot(s_n);
+  SymSymR4 C = elastic_->C(T_np1);
+  Symmetric s_tr = C.dot(e_np1 - ep_tr);
 
-  // Save e_np1
-  std::copy(e_np1, e_np1+6, tss->e_np1);
-  // ep_tr = ep_n
-  double S_n[36];
-  double ee_n[6];
-  elastic_->S(T_n, S_n);
-
-  mat_vec(S_n, 6, s_n, 6, ee_n);
-  sub_vec(e_n, ee_n, 6, tss->ep_tr);
-
-  tss->h_tr.resize(nstate());
-  std::copy(h_n, h_n+nstate(), tss->h_tr.begin());
-  // Calculate the trial stress
-  double ee[6];
-  sub_vec(e_np1, tss->ep_tr, 6, ee);
-  elastic_->C(T_np1, tss->C);
-
-  mat_vec(tss->C, 6, ee, 6, tss->s_tr);
-  // Store temp
-  tss->T = T_np1;
-
-  return tss;
+  return std::make_unique<SSRIPTrialState>(e_np1, ep_tr, s_tr, C,
+                                           h_n, T_np1);
 }
 
 bool SmallStrainRateIndependentPlasticity::elastic_step(
@@ -899,7 +866,7 @@ bool SmallStrainRateIndependentPlasticity::elastic_step(
   const SSRIPTrialState * tss = static_cast<const SSRIPTrialState *>(ts);
 
   double fv;
-  flow_->f(tss->s_tr, &tss->h_tr[0], T_np1, fv);
+  flow_->f(tss->s_tr.data(), tss->h_tr.rawptr(), T_np1, fv);
   return fv <= 0.0;
 }
 
@@ -929,7 +896,7 @@ void SmallStrainRateIndependentPlasticity::strain_partial(
 
   for (size_t i = 0; i < 6; i++) {
     for (size_t j = 0; j < 6; j++) {
-      de[CINDEX(i,j,6)] = tss->C[CINDEX(i,j,6)];
+      de[CINDEX(i,j,6)] = tss->C(i,j);
     }
   }
 }
@@ -943,8 +910,8 @@ size_t SmallStrainRateIndependentPlasticity::nparams() const
 void SmallStrainRateIndependentPlasticity::init_x(double * const x, TrialState * ts)
 {
   SSRIPTrialState * tss = static_cast<SSRIPTrialState *>(ts);
-  std::copy(tss->s_tr, tss->s_tr+6, x);
-  std::copy(&tss->h_tr[0], &tss->h_tr[0]+nstate(), &x[6]);
+  std::copy(tss->s_tr.data(), tss->s_tr.data()+6, x);
+  std::copy(tss->h_tr.rawptr(), tss->h_tr.rawptr()+nstate(), &x[6]);
   x[6+nstate()] = 0.0; // consistency parameter
 }
 
@@ -973,15 +940,15 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
 
   double R1[6];
   for (int i=0; i<6; i++) {
-    R1[i] = tss->e_np1[i] - tss->ep_tr[i] - g[i] * dg;
+    R1[i] = tss->e_np1.data()[i] - tss->ep_tr.data()[i] - g[i] * dg;
   }
-  mat_vec(tss->C, 6, R1, 6, R);
+  mat_vec(tss->C.data(), 6, R1, 6, R);
   for (int i=0; i<6; i++) {
     R[i] = s_np1[i] - R[i];
   }
 
   for (int i=0; i<nh; i++) {
-    R[i+6] = alpha[i] - tss->h_tr[i] - h[i] * dg;
+    R[i+6] = alpha[i] - tss->h_tr.rawptr()[i] - h[i] * dg;
   }
   R[6+nh] = f;
 
@@ -992,7 +959,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   double gs[36];
   double J11[36];
   flow_->dg_ds(s_np1, alpha, tss->T, gs);
-  mat_mat(6, 6, 6, tss->C, gs, J11);
+  mat_mat(6, 6, 6, tss->C.data(), gs, J11);
   for (int i=0; i<36; i++) J11[i] = J11[i] * dg;
   for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] += 1.0;
 
@@ -1008,7 +975,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   std::vector<double> J12v(6*nh);
   double * J12 = &J12v[0];
   flow_->dg_da(s_np1, alpha, tss->T, ga);
-  mat_mat(6, nh, 6, tss->C, ga, J12);
+  mat_mat(6, nh, 6, tss->C.data(), ga, J12);
 
   for (int i=0; i<6*nh; i++) J12[i] *= dg;
   for (int i=0; i<6; i++) {
@@ -1019,7 +986,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
 
   // J13
   double J13[6];
-  mat_vec(tss->C, 6, g, 6, J13);
+  mat_vec(tss->C.data(), 6, g, 6, J13);
   for (int i=0; i<6; i++) {
     J[CINDEX(i,(6+nh),n)] = J13[i];
   }
@@ -1326,50 +1293,30 @@ std::unique_ptr<NEMLObject> GeneralIntegrator::initialize(ParameterSet & params)
 }
 
 std::unique_ptr<TrialState> GeneralIntegrator::setup(
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & e_np1, const Symmetric & e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
-    const double * const s_n,
-    const double * const h_n)
+    const Symmetric & s_n,
+    const History & h_n)
 {
-  std::unique_ptr<GITrialState> tss = std::make_unique<GITrialState>();
-
-  // Basic
-  tss->dt = t_np1 - t_n;
-  tss->T = T_np1;
-
-  // Rates, looking out for divide-by-zero
-  if (tss->dt > 0.0) {
-    tss->Tdot = (T_np1 - T_n) / tss->dt;
-    for (int i=0; i<6; i++) {
-      tss->e_dot[i] = (e_np1[i] - e_n[i]) / tss->dt;
-    }
-  }
-  else {
-    tss->Tdot = 0.0;
-    std::fill(tss->e_dot, tss->e_dot+6, 0.0);
+  // Time increment
+  double dt = t_np1 - t_n;
+  
+  // Rates, avoiding divide by zero
+  double T_dot = 0.0;
+  Symmetric e_dot;
+  if (dt > 0.0) {
+    T_dot = (T_np1 - T_n) / dt;
+    e_dot = (e_np1 - e_n) / dt;
   }
   
-  // Last stress
-  std::copy(s_n, s_n+6, tss->s_n);
-
-  // Last history
-  tss->h_n.resize(nstate());
-  std::copy(h_n, h_n+nstate(), tss->h_n.begin());
-
-  // Elastic guess
-  double C[36];
-  elastic_->C(T_np1, C);
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  mat_vec(C, 6, de, 6, tss->s_guess);
-  add_vec(tss->s_guess, s_n, 6, tss->s_guess);
-
-  // Special logic...
-  if ((t_n == 0.0) && (skip_first_))
-    std::copy(s_n, s_n+6, tss->s_guess);
-
-  return tss;
+  // Default to elastic guess, unless the skip_first_ flag is true
+  Symmetric s_guess;
+  if ((t_n > 0.0) || (!skip_first_)) 
+    s_guess = elastic_->C(T_np1).dot(e_np1 - e_n) + s_n;
+  
+  return std::make_unique<GITrialState>(e_dot, s_n, s_guess, h_n, T_np1, 
+                                        T_dot, dt);
 }
 
 bool GeneralIntegrator::elastic_step(
@@ -1418,7 +1365,7 @@ void GeneralIntegrator::strain_partial(
   
   double * estress = new double [6*6];
 
-  rule_->ds_de(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, estress);
+  rule_->ds_de(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, estress);
   
   for (size_t i = 0; i < 6; i++) {
     for (size_t j = 0; j < 6; j++) {
@@ -1430,7 +1377,7 @@ void GeneralIntegrator::strain_partial(
 
   double * ehist = new double [6*nstate()];
 
-  rule_->da_de(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, ehist);
+  rule_->da_de(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, ehist);
   for (size_t i = 0; i < nstate(); i++) {
     for (size_t j = 0; j < 6; j++) {
       de[CINDEX((i+6),j,6)] = ehist[CINDEX(i,j,6)];
@@ -1460,11 +1407,11 @@ void GeneralIntegrator::work_and_energy(
 
   // Dissipation needs a special call
   double p_dot_np1;
-  rule_->work_rate(s_np1.data(), h_np1.rawptr(), tss->e_dot,
+  rule_->work_rate(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(),
                    T_np1, tss->Tdot, p_dot_np1);
   double p_dot_n;
   rule_->work_rate(s_n.data(), h_n.rawptr(), 
-                   tss->e_dot, T_n, tss->Tdot, p_dot_n);
+                   tss->e_dot.data(), T_n, tss->Tdot, p_dot_n);
   p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * tss->dt;
 }
 
@@ -1487,8 +1434,8 @@ size_t GeneralIntegrator::nparams() const
 void GeneralIntegrator::init_x(double * const x, TrialState * ts)
 {
   GITrialState * tss = static_cast<GITrialState*>(ts);
-  std::copy(tss->s_guess, tss->s_guess+6, x);
-  std::copy(tss->h_n.begin(), tss->h_n.end(), &x[6]);
+  std::copy(tss->s_guess.data(), tss->s_guess.data()+6, x);
+  std::copy(tss->h_n.rawptr(), tss->h_n.rawptr() + nstate(), &x[6]);
 
   rule_->override_guess(x);
 }
@@ -1509,18 +1456,18 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   int nparams = this->nparams();
 
   // Residual calculation
-  rule_->s(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, R);
+  rule_->s(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, R);
   for (int i=0; i<6; i++) {
-    R[i] = s_np1[i] - tss->s_n[i] - R[i] * tss->dt;
+    R[i] = s_np1[i] - tss->s_n.data()[i] - R[i] * tss->dt;
   }
-  rule_->a(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, &R[6]);
+  rule_->a(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, &R[6]);
   for (int i=0; i<nstate; i++) {
-    R[i+6] = h_np1[i] - tss->h_n[i] - R[i+6] * tss->dt;
+    R[i+6] = h_np1[i] - tss->h_n.rawptr()[i] - R[i+6] * tss->dt;
   }
 
   // Jacobian calculation
   double J11[36];
-  rule_->ds_ds(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J11);
+  rule_->ds_ds(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J11);
   for (int i=0; i<36; i++) J11[i] *= tss->dt;
   for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] -= 1.0;
   for (int i=0; i<6; i++) {
@@ -1531,7 +1478,7 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   
   std::vector<double> J12v(6*nstate);
   double * J12 = &J12v[0];
-  rule_->ds_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J12);
+  rule_->ds_da(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J12);
   for (int i=0; i<6; i++) {
     for (int j=0; j<nstate; j++) {
       J[CINDEX(i,(j+6),nparams)] = -J12[CINDEX(i,j,nstate)] * tss->dt;
@@ -1540,7 +1487,7 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   
   std::vector<double> J21v(nstate*6);
   double * J21 = &J21v[0];
-  rule_->da_ds(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J21);
+  rule_->da_ds(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J21);
   for (int i=0; i<nstate; i++) {
     for (int j=0; j<6; j++) {
       J[CINDEX((i+6),j,nparams)] = -J21[CINDEX(i,j,6)] * tss->dt;
@@ -1549,7 +1496,7 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   
   std::vector<double> J22v(nstate*nstate);
   double * J22 = &J22v[0];
-  rule_->da_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot, J22);
+  rule_->da_da(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J22);
 
   // More vectorization
   double dt = tss->dt;

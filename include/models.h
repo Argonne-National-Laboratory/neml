@@ -98,6 +98,7 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
    virtual void elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
                                double * const e_np1) const = 0;
+
    /// Used to find the damage value from the history
    virtual double get_damage(const double *const h_np1);
    /// Used to determine if element should be deleted
@@ -249,11 +250,11 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
 
   /// Setup the trial state
   virtual std::unique_ptr<TrialState> setup(
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n) = 0;
+      const Symmetric & s_n,
+      const History & h_n) = 0;
 
   /// Ignore update and take an elastic step
   virtual bool elastic_step(
@@ -340,24 +341,34 @@ static Register<SmallStrainElasticity> regSmallStrainElasticity;
 //  Store data the solver needs and can be passed into solution interface
 class SSPPTrialState : public TrialState {
  public:
-  virtual ~SSPPTrialState() {};
-  double ys, T;    // Yield stress, temperature
-  double e_np1[6]; // Next strain
-  double ep_n[6];  // Previous value of plastic strain
-  double s_tr[6];  // Elastic trial stress
-  double C[36];    // Stiffness
+  SSPPTrialState(const Symmetric & e_np1, const Symmetric & ep_n,
+                 const Symmetric & s_tr, const SymSymR4 & C,
+                 double ys, double T) :
+      e_np1(e_np1), ep_n(ep_n), s_tr(s_tr), C(C), ys(ys), T(T)
+  {};
+  Symmetric e_np1;    // Next strain
+  Symmetric ep_n;     // Previous plastic strain
+  Symmetric s_tr;     // Trial stress
+  SymSymR4 C;         // Elastic stiffness
+  double ys, T;       // Yield strength and temperature
 };
 
 /// Small strain rate independent plasticity trial state
 class SSRIPTrialState : public TrialState {
  public:
-  virtual ~SSRIPTrialState() {};
-  double ep_tr[6];          // Trial plastic strain
-  double s_tr[6];           // Trial stress
-  double e_np1[6];          // Next strain
-  double C[36];             // Elastic stiffness
-  double T;                 // Temperature
-  std::vector<double> h_tr; // Trial history
+  SSRIPTrialState(const Symmetric & e_np1, const Symmetric & ep_tr,
+                  const Symmetric & s_tr, const SymSymR4 & C,
+                  const History & h_tr, double T) :
+      e_np1(e_np1), ep_tr(ep_tr), s_tr(s_tr), C(C), 
+      h_tr(h_tr), T(T)
+  {};
+
+  Symmetric e_np1;        // Next strain
+  Symmetric ep_tr;        // Trial plastic strain
+  Symmetric s_tr;         // Trial stress
+  SymSymR4 C;             // Elastic stiffness
+  History h_tr;           // Trial history
+  double T;               // Temperature
 };
 
 /// Small strain creep+plasticity trial state
@@ -380,12 +391,17 @@ class SSCPTrialState : public TrialState {
 /// General inelastic integrator trial state
 class GITrialState : public TrialState {
  public:
-  virtual ~GITrialState() {};
-  double e_dot[6];                // Strain rate
-  double s_n[6];                  // Previous stress
-  double T, Tdot, dt;             // Temperature, temperature rate, time inc.
-  std::vector<double> h_n;        // Previous history
-  double s_guess[6];              // Reasonable guess at the next stress
+  GITrialState(const Symmetric & e_dot, const Symmetric & s_n, 
+               const Symmetric & s_guess, const History & h_n,
+               double T, double Tdot, double dt) :
+      e_dot(e_dot), s_n(s_n), s_guess(s_guess), h_n(h_n),
+      T(T), Tdot(Tdot), dt(dt)
+  {};
+  Symmetric e_dot;      // Strain rate
+  Symmetric s_n;        // Previous stress
+  Symmetric s_guess;    // Guess at next stress
+  History h_n;          // Previous history
+  double T, Tdot, dt;   // Temperature, temperature rate, time increment
 };
 
 /// Small strain, associative, perfect plasticity
@@ -423,11 +439,11 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
 
   /// Setup the trial state
   virtual std::unique_ptr<TrialState> setup(
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
   
   /// Take an elastic step
   virtual bool elastic_step(
@@ -493,11 +509,11 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
 
   /// Setup the trial state
   virtual std::unique_ptr<TrialState> setup(
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Ignore update and take an elastic step
   virtual bool elastic_step(
@@ -630,11 +646,11 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
 
   /// Setup the trial state
   virtual std::unique_ptr<TrialState> setup(
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
   
   /// Take an elastic step
   virtual bool elastic_step(
