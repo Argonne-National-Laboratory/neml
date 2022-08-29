@@ -26,8 +26,11 @@ PYBIND11_MODULE(creep, m) {
             auto e_np1 = alloc_vec<double>(6);
             auto A_np1 = alloc_mat<double>(6,6);
 
-            m.update(arr2ptr<double>(s_np1), arr2ptr<double>(e_np1), arr2ptr<double>(e_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(A_np1));
+            Symmetric E_np1(arr2ptr<double>(e_np1));
+            SymSymR4 AA_np1(arr2ptr<double>(A_np1));
 
+            m.update(Symmetric(arr2ptr<double>(s_np1)), E_np1, Symmetric(arr2ptr<double>(e_n)), T_np1, T_n, t_np1, t_n, AA_np1);
+            
             return std::make_tuple(e_np1, A_np1);
 
            }, "Update to the next creep strain & tangent derivative.")
@@ -76,13 +79,7 @@ PYBIND11_MODULE(creep, m) {
       .def("make_trial_state",
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::unique_ptr<CreepModelTrialState>
            {
-            std::unique_ptr<CreepModelTrialState> ts(new CreepModelTrialState);
-            m.make_trial_state(arr2ptr<double>(s_np1),
-                                         arr2ptr<double>(e_n),
-                                         T_np1, T_n, t_np1, t_n, *ts);
-
-            return ts;
-
+           return m.make_trial_state(Symmetric(arr2ptr<double>(s_np1)), Symmetric(arr2ptr<double>(e_n)), T_np1, T_n, t_np1, t_n);
            }, "Setup trial state for solve")
     ;
 

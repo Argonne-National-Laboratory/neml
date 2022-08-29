@@ -333,10 +333,12 @@ static Register<MinCreep225Cr1MoCreep> regMinCreep225Cr1MoCreep;
 /// Creep trial state
 class CreepModelTrialState : public TrialState {
  public:
-  virtual ~CreepModelTrialState() {};
+  CreepModelTrialState(const Symmetric & s_np1, const Symmetric & e_n, double T, double dt, double t) :
+      s_np1(s_np1), e_n(e_n), T(T), dt(dt), t(t)
+  {};
+  Symmetric s_np1;
+  Symmetric e_n;
   double T, dt, t;
-  double s_np1[6];
-  double e_n[6];
 };
 
 /// Interface to creep models
@@ -347,11 +349,11 @@ class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
   CreepModel(ParameterSet & params);
 
   /// Use the creep rate function to update the creep strain
-  void update(const double * const s_np1,
-             double * const e_np1, const double * const e_n,
-             double T_np1, double T_n,
-             double t_np1, double t_n,
-             double * const A_np1);
+  void update(const Symmetric & s_np1,
+              Symmetric & e_np1, const Symmetric & e_n,
+              double T_np1, double T_n,
+              double t_np1, double t_n,
+              SymSymR4 & A_np1);
 
   /// The creep rate as a function of stress, strain, time, and temperature
   virtual void f(const double * const s, const double * const e, double t, double T,
@@ -370,11 +372,10 @@ class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
                 double * const df) const;
 
   /// Setup a trial state for the solver
-  void make_trial_state(const double * const s_np1,
-                       const double * const e_n,
-                       double T_np1, double T_n,
-                       double t_np1, double t_n,
-                       CreepModelTrialState & ts) const;
+  std::unique_ptr<CreepModelTrialState> make_trial_state(const Symmetric & s_np1,
+                                               const Symmetric & e_n,
+                                               double T_np1, double T_n,
+                                               double t_np1, double t_n) const;
 
   /// Number of solver parameters
   virtual size_t nparams() const;
@@ -385,8 +386,7 @@ class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
                  double * const J);
 
  private:
-  void calc_tangent_(const double * const e_np1, CreepModelTrialState & ts,
-                    double * const A_np1);
+  SymSymR4 calc_tangent_(const Symmetric & e_np1, CreepModelTrialState & ts);
 
  protected:
   const double rtol_, atol_;

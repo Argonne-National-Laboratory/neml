@@ -642,39 +642,32 @@ void CreepModel::df_dT(const double * const s, const double * const e, double t,
 }
 
 // Implementation of creep model update
-void CreepModel::update(const double * const s_np1, 
-                       double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n,
-                       double t_np1, double t_n,
-                       double * const A_np1)
+void CreepModel::update(const Symmetric & s_np1, 
+                        Symmetric & e_np1, const Symmetric & e_n,
+                        double T_np1, double T_n,
+                        double t_np1, double t_n,
+                        SymSymR4 & A_np1)
 {
   // Setup the trial state
-  CreepModelTrialState ts;
-  make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n, ts);
+  std::unique_ptr<CreepModelTrialState> ts = make_trial_state(s_np1, e_n, T_np1, T_n, t_np1, t_n);
 
   // Solve for the new creep strain
   std::vector<double> xv(nparams());
   double * x = &xv[0];
-  solve(this, x, &ts, {rtol_, atol_, miter_, verbose_, linesearch_});
+  solve(this, x, ts.get(), {rtol_, atol_, miter_, verbose_, linesearch_});
   
   // Extract
-  std::copy(x, x+6, e_np1);
+  std::copy(x, x+6, e_np1.s());
 
   // Get the tangent
-  calc_tangent_(e_np1, ts, A_np1);
+  A_np1 = calc_tangent_(e_np1, *ts);
 }
 
-void CreepModel::make_trial_state(const double * const s_np1, 
-                                 const double * const e_n,
-                                 double T_np1, double T_n,
-                                 double t_np1, double t_n,
-                                 CreepModelTrialState & ts) const
+std::unique_ptr<CreepModelTrialState> CreepModel::make_trial_state(
+    const Symmetric & s_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n) const
 {
-  ts.T = T_np1;
-  ts.dt = t_np1 - t_n;
-  ts.t = t_np1;
-  std::copy(e_n, e_n+6, ts.e_n);
-  std::copy(s_np1, s_np1+6, ts.s_np1);
+  return std::make_unique<CreepModelTrialState>(s_np1, e_n, T_np1, t_np1 - t_n, t_np1);
 }
 
 // Implement the solve
@@ -688,7 +681,7 @@ void CreepModel::init_x(double * const x, TrialState * ts)
   CreepModelTrialState * tss = static_cast<CreepModelTrialState *>(ts);
 
   // Just make it the previous value
-  std::copy(tss->e_n, tss->e_n+6, x);
+  std::copy(tss->e_n.data(), tss->e_n.data()+6, x);
 }
 
 void CreepModel::RJ(const double * const x, TrialState * ts, 
@@ -696,32 +689,33 @@ void CreepModel::RJ(const double * const x, TrialState * ts,
 {
   CreepModelTrialState * tss = static_cast<CreepModelTrialState *>(ts);
   
+  Symmetric e_np1(x);
+  Symmetric R1(R);
+  SymSymR4 J1(J);
+
   // Residual
-  f(tss->s_np1, x, tss->t, tss->T, R);
-  for (int i=0; i<6; i++) R[i] = x[i] - tss->e_n[i] - R[i] * tss->dt;
+  Symmetric fd;
+  f(tss->s_np1.data(), e_np1.data(), tss->t, tss->T, fd.s());
+  R1 = e_np1 - tss->e_n - fd * tss->dt;
 
   // Jacobian
-  df_de(tss->s_np1, x, tss->t, tss->T, J);
-  for (int i=0; i<36; i++) J[i] = -J[i] * tss->dt;
-  for (int i=0; i<6; i++) J[CINDEX(i,i,6)] += 1.0;
+  SymSymR4 Jd;
+  df_de(tss->s_np1.data(), x, tss->t, tss->T, Jd.s());
+  J1 = SymSymR4::id() - Jd*tss->dt;
 }
 
 // Helper for tangent
-void CreepModel::calc_tangent_(const double * const e_np1, 
-                              CreepModelTrialState & ts, double * const A_np1)
+SymSymR4 CreepModel::calc_tangent_(const Symmetric & e_np1, CreepModelTrialState & ts)
 {
-  double R[6];
-  double J[36];
+  Symmetric R;
+  SymSymR4 J;
 
-  RJ(e_np1, &ts, R, J);
-  invert_mat(J, 6);
+  RJ(e_np1.data(), &ts, R.s(), J.s());
 
-  for (int i=0; i<36; i++) J[i] = J[i] * ts.dt;
+  SymSymR4 B;
+  df_ds(ts.s_np1.data(), e_np1.data(), ts.t, ts.T, B.s());
 
-  double B[36];
-  df_ds(ts.s_np1, e_np1, ts.t, ts.T, B);
-
-  mat_mat(6, 6, 6, J, B, A_np1);
+  return (J.inverse() * ts.dt).dot(B);
 }
 
 // Implementation of 2.25Cr-1Mo rule

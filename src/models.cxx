@@ -1116,8 +1116,8 @@ void SmallStrainCreepPlasticity::update_sd_state(
   Symmetric creep_old = E_n - ts->ep_strain;
   Symmetric creep_new;
   SymSymR4 B;
-  creep_->update(S_np1.data(), creep_new.s(), creep_old.s(), T_np1, T_n,
-                 t_np1, t_n, B.s());
+  creep_->update(S_np1.data(), creep_new, creep_old, T_np1, T_n,
+                 t_np1, t_n, B);
 
   // Form the relatively simple tangent
   AA_np1 = form_tangent_(A, B);
@@ -1169,8 +1169,8 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   Symmetric creep_old = tss->e_n - tss->ep_strain;
   Symmetric creep_new;
   SymSymR4 B;
-  creep_->update(S_np1.data(), creep_new.s(), creep_old.data(), tss->T_np1, tss->T_n,
-                 tss->t_np1, tss->t_n, B.s());
+  creep_->update(S_np1, creep_new, creep_old, tss->T_np1, tss->T_n,
+                 tss->t_np1, tss->t_n, B);
 
   // Form the residual
   Symmetric Rs(R);
