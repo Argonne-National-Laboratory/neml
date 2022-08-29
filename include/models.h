@@ -239,11 +239,10 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
 
   /// Single step update
   virtual void update_step(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, double t_np1, double t_n,
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n,
       double * const A, double * const E,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
@@ -287,13 +286,13 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
   /// Do the work calculation
   virtual void work_and_energy(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double & u_np1, double u_n,
-      double & p_np1, double p_n) = 0;
+      double & p_np1, double p_n);
 
  protected:
   double rtol_, atol_;
@@ -458,17 +457,6 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
       const double * const h_np1, const double * const h_n,
       double * de);
 
-  /// Do the work calculation
-  virtual void work_and_energy(
-      const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
-
   /// Helper to return the yield stress
   double ys(double T) const;
 
@@ -538,17 +526,6 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
       const double * const s_np1, const double * const s_n,
       const double * const h_np1, const double * const h_n,
       double * const de);
-
-  /// Do the work calculation
-  virtual void work_and_energy(
-      const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
 
   /// Number of solver parameters
   virtual size_t nparams() const;
@@ -686,15 +663,15 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
       const double * const s_np1, const double * const s_n,
       const double * const h_np1, const double * const h_n,
       double * de);
-
-  /// Do the work calculation
+  
+  /// Need special call for dissipation
   virtual void work_and_energy(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
 

@@ -409,8 +409,8 @@ void SubstepModel_sd::update_sd_state(
     try {
       // Try updating
       update_step(
-          E_next.data(), E_past.data(), T_next, T_past, t_next, t_past, S_np1.s(), S_past.data(),
-          H_np1.rawptr(), H_past.rawptr(), A_inc, E_inc, u_np1, u_past, p_np1, p_past);
+          E_next, E_past, T_next, T_past, t_next, t_past, S_np1, S_past,
+          H_np1, H_past, A_inc, E_inc, u_np1, u_past, p_np1, p_past);
     }
     // Failed adapt
     catch (const NEMLError & e) {
@@ -462,30 +462,29 @@ void SubstepModel_sd::update_sd_state(
 }
 
 void SubstepModel_sd::update_step(
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
+    const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    Symmetric & s_np1, const Symmetric & s_n,
+    History & h_np1, const History & h_n,
     double * const A, double * const E,
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
   // Setup the trial state
-  std::unique_ptr<TrialState> ts = setup(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n);
+  std::unique_ptr<TrialState> ts = setup(e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_n.data(), h_n.rawptr());
 
   // Take an elastic step if the model requests it
-  if (elastic_step(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n)) {
-    // Stress increment
-    double de[6];
-    sub_vec(e_np1, e_n, 6, de);
+  if (elastic_step(ts.get(), e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_n.data(), h_n.rawptr())) {
+    // Strain increment
+    Symmetric de = e_np1 - e_n;
 
-    double C[36];
-    elastic_->C(T_np1, C);
-    mat_vec(C, 6, de, 6, s_np1);
-    for (size_t i = 0; i < 6; i++) s_np1[i] += s_n[i];
+    // Stress increment
+    SymSymR4 C = elastic_->C(T_np1);
+    s_np1 = C.dot(de) + s_n;
+    
     // History
-    std::copy(h_n, h_n+nstate(), h_np1);
+    h_np1 = h_n;
+
     // Jacobian for substepping
     std::fill(A, A+(nparams()*nparams()), 0.0);
     for (size_t i = 0; i < 6; i++) A[CINDEX(i,i,nparams())] = 1.0;
@@ -493,7 +492,7 @@ void SubstepModel_sd::update_step(
     std::fill(E, E+(nparams()*6), 0.0);
     for (size_t i = 0; i < 6; i++) {
       for (size_t j = 0; j < 6; j++) {
-        E[CINDEX(i,j,6)] = C[CINDEX(i,j,6)];
+        E[CINDEX(i,j,6)] = C(i,j);
       }
     }
 
@@ -504,20 +503,21 @@ void SubstepModel_sd::update_step(
   }
   
   // Solve the system
-  double * x = new double [nparams()]; 
+  std::vector<double> x(nparams());
   try {
-    solve(this, x, ts.get(), {rtol_, atol_, miter_, verbose_, linesearch_},
+    solve(this, &x[0], ts.get(), {rtol_, atol_, miter_, verbose_, linesearch_},
                     nullptr, A); // Keep jacobian
 
     // Invert the Jacobian (or idk, could go in the tangent calc)
     invert_mat(A, nparams());
 
     // Interpret the x vector as the updated state
-    update_internal(x, e_np1, e_n, T_np1, T_n, t_np1, t_n,
-                          s_np1, s_n, h_np1, h_n);
+    update_internal(&x[0], e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n,
+                          s_np1.s(), s_n.data(), h_np1.rawptr(), h_n.rawptr());
 
     // Get the dE matrix
-    strain_partial(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n, h_np1, h_n, E);
+    strain_partial(ts.get(), e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_np1.data(), s_n.data(), 
+                   h_np1.rawptr(), h_n.rawptr(), E);
 
     // Update the work and energy
     work_and_energy(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, 
@@ -525,11 +525,28 @@ void SubstepModel_sd::update_step(
                           p_np1, p_n);
   }
   catch (const NEMLError & e) {
-    delete [] x;
     throw e;
   }
+}
 
-  delete [] x;
+void SubstepModel_sd::work_and_energy(
+    const TrialState * ts,
+    const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    const Symmetric & s_np1, const Symmetric & s_n,
+    const History & h_np1, const History & h_n,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n)
+{
+  Symmetric ep_np1 = e_np1 - elastic_->S(T_np1).dot(s_np1);
+  Symmetric ep_n = e_n - elastic_->S(T_n).dot(s_n);
+
+  auto [du, dp] = trapezoid_energy(e_np1, e_n, ep_np1, ep_n,
+                                   s_np1, s_n);
+
+  u_np1 = u_n + du;
+  p_np1 = p_n + dp;
 }
 
 // Implementation of small strain elasticity
@@ -714,39 +731,6 @@ void SmallStrainPerfectPlasticity::strain_partial(
       de[CINDEX(i,j,6)] = tss->C[CINDEX(i,j,6)];
     }
   }
-
-}
-
-void SmallStrainPerfectPlasticity::work_and_energy(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
-    double & u_np1, double u_n,
-    double & p_np1, double p_n)
-{
-  const SSPPTrialState * tss = static_cast<const SSPPTrialState*>(ts);
-
-  // Plastic work calculation
-  double ds[6];
-  add_vec(s_np1, s_n, 6, ds);
-
-  double ee_np1[6];
-  double S[36];
-  elastic_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, ee_np1);
-  
-  double dp[6];
-  for (size_t i = 0; i < 6; i++) dp[i] = e_np1[i] - ee_np1[i] - tss->ep_n[i];
-
-  p_np1 = p_n + dot_vec(ds, dp, 6) / 2.0;
-
-  // Energy calculation (trapezoid rule)
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
 
 }
 
@@ -948,39 +932,6 @@ void SmallStrainRateIndependentPlasticity::strain_partial(
       de[CINDEX(i,j,6)] = tss->C[CINDEX(i,j,6)];
     }
   }
-}
-
-void SmallStrainRateIndependentPlasticity::work_and_energy(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
-    double & u_np1, double u_n,
-    double & p_np1, double p_n)
-{
-  const SSRIPTrialState * tss = static_cast<const SSRIPTrialState *>(ts);
-
-  // Plastic work calculation
-  double ds[6];
-  add_vec(s_np1, s_n, 6, ds);
-
-  double ee_np1[6];
-  double S[36];
-  elastic_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, ee_np1);
-  
-  double  dp[6];
-  for (size_t i = 0; i < 6; i++) dp[i] = e_np1[i] - ee_np1[i] - tss->ep_tr[i];
-
-  p_np1 = p_n + dot_vec(ds, dp, 6) / 2.0;
-
-  // Energy calculation (trapezoid rule)
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  u_np1 = u_n + dot_vec(ds, de, 6) / 2.0;
-
 }
 
 size_t SmallStrainRateIndependentPlasticity::nparams() const
@@ -1492,31 +1443,29 @@ void GeneralIntegrator::strain_partial(
 
 void GeneralIntegrator::work_and_energy(
     const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
+    const Symmetric & e_np1, const Symmetric & e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n,
+    const Symmetric & s_np1, const Symmetric & s_n,
+    const History & h_np1, const History & h_n,
     double & u_np1, double u_n,
     double & p_np1, double p_n)
 {
   const GITrialState * tss = static_cast<const GITrialState *>(ts);
 
-  // Energy calculation (trapezoid rule)
-  double de[6];
-  double ds[6];
-  sub_vec(e_np1, e_n, 6, de);
-  add_vec(s_np1, s_n, 6, ds);
-  for (int i=0; i<6; i++) ds[i] /= 2.0;
-  u_np1 = u_n + dot_vec(ds, de, 6);
+  // Energy
+  Symmetric de = e_np1 - e_n;
+  Symmetric ds = s_np1 - ds;
+  u_np1 = u_n + ds.contract(de) / 2.0;
 
-  // Need a special call
+  // Dissipation needs a special call
   double p_dot_np1;
-  rule_->work_rate(s_np1, h_np1, tss->e_dot, T_np1, tss->Tdot, p_dot_np1);
+  rule_->work_rate(s_np1.data(), h_np1.rawptr(), tss->e_dot,
+                   T_np1, tss->Tdot, p_dot_np1);
   double p_dot_n;
-  rule_->work_rate(s_n, h_n, tss->e_dot, T_n, tss->Tdot, p_dot_n);
+  rule_->work_rate(s_n.data(), h_n.rawptr(), 
+                   tss->e_dot, T_n, tss->Tdot, p_dot_n);
   p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * tss->dt;
-
 }
 
 void GeneralIntegrator::populate_state(History & hist) const
