@@ -1388,8 +1388,8 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   GITrialState * tss = static_cast<GITrialState*>(ts);
 
   // Setup
-  const double * s_np1 = x;
-  const double * const h_np1 = &x[6];
+  Symmetric s_np1(x);
+  History h_np1 = gather_state_(x+6);
   
   // Helps with vectorization
   // Really as I declared both const this shouldn't be necessary but hey
@@ -1398,56 +1398,57 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   int nparams = this->nparams();
 
   // Residual calculation
-  rule_->s(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, R);
+  Symmetric fr;
+  rule_->s(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, fr.s());
+  Symmetric R1 = s_np1 - tss->s_n - fr * tss->dt;
   for (int i=0; i<6; i++) {
-    R[i] = s_np1[i] - tss->s_n.data()[i] - R[i] * tss->dt;
+    R[i] = R1(i);
   }
-  rule_->a(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, &R[6]);
+  History h_rate = gather_blank_state_();
+  rule_->a(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, h_rate.rawptr());
   for (int i=0; i<nstate; i++) {
-    R[i+6] = h_np1[i] - tss->h_n.rawptr()[i] - R[i+6] * tss->dt;
+    R[i+6] = h_np1.rawptr()[i] - tss->h_n.rawptr()[i] - h_rate.rawptr()[i] * tss->dt;
   }
 
   // Jacobian calculation
-  double J11[36];
-  rule_->ds_ds(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J11);
-  for (int i=0; i<36; i++) J11[i] *= tss->dt;
-  for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] -= 1.0;
+  SymSymR4 J11;
+  rule_->ds_ds(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J11.s());
+  J11 = J11 * tss->dt - SymSymR4::id();
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX(i,j,nparams)] = -J11[CINDEX(i,j,6)];
+      J[CINDEX(i,j,nparams)] = -J11.data()[CINDEX(i,j,6)];
     }
   }
   
-  std::vector<double> J12v(6*nstate);
-  double * J12 = &J12v[0];
-  rule_->ds_da(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J12);
+  // Transpose?
+  History J12 = gather_blank_state_().derivative<Symmetric>();
+  rule_->ds_da(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J12.rawptr());
   for (int i=0; i<6; i++) {
     for (int j=0; j<nstate; j++) {
-      J[CINDEX(i,(j+6),nparams)] = -J12[CINDEX(i,j,nstate)] * tss->dt;
+      J[CINDEX(i,(j+6),nparams)] = -J12.rawptr()[CINDEX(i,j,nstate)] * tss->dt;
     }
   }
   
-  std::vector<double> J21v(nstate*6);
-  double * J21 = &J21v[0];
-  rule_->da_ds(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J21);
+  // Transpose?
+  History J21 = gather_blank_state_().derivative<Symmetric>();
+  rule_->da_ds(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J21.rawptr());
   for (int i=0; i<nstate; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX((i+6),j,nparams)] = -J21[CINDEX(i,j,6)] * tss->dt;
+      J[CINDEX((i+6),j,nparams)] = -J21.rawptr()[CINDEX(i,j,6)] * tss->dt;
     }
   }
   
-  std::vector<double> J22v(nstate*nstate);
-  double * J22 = &J22v[0];
-  rule_->da_da(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, J22);
+  History J22 = gather_blank_state_().derivative<History>();
+  rule_->da_da(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J22.rawptr());
 
   // More vectorization
   double dt = tss->dt;
-  for (int i=0; i<nstate*nstate; i++) J22[i] *= dt;
-  for (int i=0; i<nstate; i++) J22[CINDEX(i,i,nstate)] -= 1.0;
+  for (int i=0; i<nstate*nstate; i++) J22.rawptr()[i] *= dt;
+  for (int i=0; i<nstate; i++) J22.rawptr()[CINDEX(i,i,nstate)] -= 1.0;
 
   for (int i=0; i<nstate; i++) {
     for (int j=0; j<nstate; j++) {
-      J[CINDEX((i+6),(j+6),nparams)] = -J22[CINDEX(i,j,nstate)];
+      J[CINDEX((i+6),(j+6),nparams)] = -J22.rawptr()[CINDEX(i,j,nstate)];
     }
   }
 }
