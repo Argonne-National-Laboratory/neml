@@ -2168,4 +2168,14 @@ SymSymSymR6 outer_product_k(const SymSymR4 & A, const Symmetric & B)
   return res;
 }
 
+Symmetric truesdell_update_sym(const Symmetric & D, const Skew & W, 
+                               const Symmetric & cauchy_n,
+                               const Symmetric & dS)
+{
+  Symmetric res;
+  truesdell_update_sym(D.data(), W.data(), cauchy_n.data(), dS.data(),
+                       res.s());
+  return res;
+}
+
 } // namespace neml

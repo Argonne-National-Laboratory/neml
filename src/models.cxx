@@ -220,23 +220,25 @@ void NEMLModel_sd::update_ld_inc_interface(
   Skew W = w_np1 - w_n;
   if (not truesdell_)
     D = Symmetric::zero();
-
-  double base_A_np1[36];
-  double dS[6];
-
-  update_sd(d_np1.data(), d_n.data(), 
-            T_np1, T_n, t_np1, t_n, 
-            h_np1.rawptr(), h_n.rawptr(),
-            h_np1.rawptr(), h_n.rawptr(),
-            base_A_np1, u_np1, u_n, p_np1, p_n);
   
-  sub_vec(h_np1.rawptr(), h_n.rawptr(), 6, dS);  
- 
-  truesdell_update_sym(D.data(), W.data(), s_n.data(), dS,
-                       s_np1.s());
+  SymSymR4 base_A_np1;
+  Symmetric stress_prime;
+  Symmetric stress_prime_n = h_n.get<Symmetric>(prefix("small_stress"));
 
-  calc_tangent_(D.data(), W.data(), base_A_np1, s_np1.data(),
-                A_np1.s(), B_np1.s());
+  update_sd_interface(
+      d_np1, d_n, 
+      T_np1, T_n, t_np1, t_n, 
+      stress_prime,
+      stress_prime_n,
+      h_np1, h_n,
+      base_A_np1, u_np1, u_n, p_np1, p_n);
+  
+  h_np1.get<Symmetric>(prefix("small_stress")) = stress_prime;
+  Symmetric dS = stress_prime - 
+      h_n.get<Symmetric>(prefix("small_stress"));
+
+  s_np1 = truesdell_update_sym(D, W, s_n, dS);
+  calc_tangent_(D, W, base_A_np1, s_np1, A_np1, B_np1);
 }
 
 void NEMLModel_sd::update_sd_interface(
@@ -290,20 +292,20 @@ void NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
   elastic_ = emodel;
 }
 
-void NEMLModel_sd::calc_tangent_(const double * const D, const double * const W,
-                                const double * const C, const double * const S,
-                                double * const A, double * const B)
+void NEMLModel_sd::calc_tangent_(const Symmetric & D, const Skew & W,
+                                 const SymSymR4 & C,  const Symmetric & S,
+                                 SymSymR4 & A, SymSkewR4 & B)
 {
   double J[81];
   double O[81];
 
-  truesdell_mat(D, W, J);
+  truesdell_mat(D.data(), W.data(), J);
   invert_mat(J, 9);
 
-  truesdell_tangent_outer(S, O);
+  truesdell_tangent_outer(S.data(), O);
 
   double F[81];
-  mandel2full(C, F);
+  mandel2full(C.data(), F);
   double dL[81];
   mat_mat(9,9,9, F, idsym, dL);
 
@@ -319,11 +321,11 @@ void NEMLModel_sd::calc_tangent_(const double * const D, const double * const W,
   mat_mat(9,9,9, L, idsym, Dpart);
   mat_mat(9,9,9, L, idskew, Wpart);
 
-  full2mandel(Dpart, A);
-  full2skew(Wpart, B);
+  full2mandel(Dpart, A.s());
+  full2skew(Wpart, B.s());
 
   // IMPORTANT TODO: go back and find where you dropped the factor of 2...
-  for (int i=0; i<18; i++) B[i] *= 2.0;
+  for (int i=0; i<18; i++) B.s()[i] *= 2.0;
 
 }
 

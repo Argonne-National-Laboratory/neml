@@ -212,9 +212,9 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
    virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
   private:
-   void calc_tangent_(const double * const D, const double * const W,
-                     const double * const C, const double * const S,
-                     double * const A, double * const B);
+   void calc_tangent_(const Symmetric & D, const Skew & W,
+                     const SymSymR4 & C, const Symmetric & S,
+                     SymSymR4 & A, SymSkewR4 & B);
 
   protected:
    std::shared_ptr<LinearElasticModel> elastic_;

@@ -125,7 +125,7 @@ class NEML_EXPORT History {
     error_if_wrong_type_(name, GetStorageType<T>());
     return T(&(storage_[loc_.at(name)]));
   }
-
+  
   /// Get a pointer to the raw location of an item
   double * get_data(std::string name)
   {

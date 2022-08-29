@@ -584,6 +584,11 @@ NEML_EXPORT SymSymSymR6 operator/(const SymSymSymR6 & v, double s);
 NEML_EXPORT SymSymSymR6 operator+(const SymSymSymR6 & a, const SymSymSymR6 & b);
 NEML_EXPORT SymSymSymR6 operator-(const SymSymSymR6 & a, const SymSymSymR6 & b);
 
+// Complicated objective stress update
+Symmetric truesdell_update_sym(const Symmetric & D, const Skew & W, 
+                               const Symmetric & cauchy_n,
+                               const Symmetric & dS);
+
 } // namespace neml
 
 #endif
