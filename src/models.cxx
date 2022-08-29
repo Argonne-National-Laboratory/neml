@@ -472,10 +472,10 @@ void SubstepModel_sd::update_step(
     double & p_np1, double p_n)
 {
   // Setup the trial state
-  TrialState * ts = setup(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n);
+  std::unique_ptr<TrialState> ts = setup(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n);
 
   // Take an elastic step if the model requests it
-  if (elastic_step(ts, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n)) {
+  if (elastic_step(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n)) {
     // Stress increment
     double de[6];
     sub_vec(e_np1, e_n, 6, de);
@@ -498,17 +498,15 @@ void SubstepModel_sd::update_step(
     }
 
     // Energy and work
-    work_and_energy(ts, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
+    work_and_energy(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n,
                     h_np1, h_n, u_np1, u_n, p_np1, p_n); 
-    delete ts;
-
     return;
   }
   
   // Solve the system
   double * x = new double [nparams()]; 
   try {
-    solve(this, x, ts, {rtol_, atol_, miter_, verbose_, linesearch_},
+    solve(this, x, ts.get(), {rtol_, atol_, miter_, verbose_, linesearch_},
                     nullptr, A); // Keep jacobian
 
     // Invert the Jacobian (or idk, could go in the tangent calc)
@@ -519,21 +517,19 @@ void SubstepModel_sd::update_step(
                           s_np1, s_n, h_np1, h_n);
 
     // Get the dE matrix
-    strain_partial(ts, e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n, h_np1, h_n, E);
+    strain_partial(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n, h_np1, h_n, E);
 
     // Update the work and energy
-    work_and_energy(ts, e_np1, e_n, T_np1, T_n, t_np1, t_n, 
+    work_and_energy(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, 
                           s_np1, s_n, h_np1, h_n, u_np1, u_n,
                           p_np1, p_n);
   }
   catch (const NEMLError & e) {
     delete [] x;
-    delete ts;
     throw e;
   }
 
   delete [] x;
-  delete ts;
 }
 
 // Implementation of small strain elasticity
@@ -647,16 +643,32 @@ void SmallStrainPerfectPlasticity::init_state(History & h) const
 
 }
 
-TrialState * SmallStrainPerfectPlasticity::setup(
+std::unique_ptr<TrialState> SmallStrainPerfectPlasticity::setup(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
     const double * const s_n,
     const double * const h_n)
 {
-  SSPPTrialState * tss = new SSPPTrialState();
-  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, T_n,
-                          s_n, h_n, *tss);
+  std::unique_ptr<SSPPTrialState> tss = std::make_unique<SSPPTrialState>();
+
+  tss->ys = -ys_->value(T_np1);
+  tss->T = T_np1;
+ 
+  std::copy(e_np1, e_np1+6, tss->e_np1);
+
+  elastic_->C(T_np1, tss->C);
+
+  double S_n[36];
+  elastic_->S(T_n, S_n);
+  mat_vec(S_n, 6, s_n, 6, tss->ep_n);
+  for (size_t i = 0; i < 6; i++) tss->ep_n[i] = e_n[i] - tss->ep_n[i];
+
+  double de[6];
+  sub_vec(e_np1, e_n, 6, de);
+  mat_vec(tss->C, 6, de, 6, tss->s_tr);
+  for (size_t i = 0; i < 6; i++) tss->s_tr[i] = s_n[i] + tss->s_tr[i];
+
   return tss;
 }
 
@@ -805,32 +817,6 @@ double SmallStrainPerfectPlasticity::ys(double T) const
   return ys_->value(T);
 }
 
-// Make this public for ease of testing
-void SmallStrainPerfectPlasticity::make_trial_state(
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n, double t_np1, double t_n,
-    const double * const s_n, const double * const h_n,
-    SSPPTrialState & ts)
-{
-  ts.ys = -ys_->value(T_np1);
-  ts.T = T_np1;
- 
-  std::copy(e_np1, e_np1+6, ts.e_np1);
-
-  elastic_->C(T_np1, ts.C);
-
-  double S_n[36];
-  elastic_->S(T_n, S_n);
-  mat_vec(S_n, 6, s_n, 6, ts.ep_n);
-  for (size_t i = 0; i < 6; i++) ts.ep_n[i] = e_n[i] - ts.ep_n[i];
-
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  mat_vec(ts.C, 6, de, 6, ts.s_tr);
-  for (size_t i = 0; i < 6; i++) ts.s_tr[i] = s_n[i] + ts.s_tr[i];
-
-}
-
 // Implementation of small strain rate independent plasticity
 SmallStrainRateIndependentPlasticity::SmallStrainRateIndependentPlasticity(
     ParameterSet & params) : 
@@ -885,16 +871,36 @@ void SmallStrainRateIndependentPlasticity::init_state(History & hist) const
   flow_->init_hist(hist);
 }
 
-TrialState * SmallStrainRateIndependentPlasticity::setup(
+std::unique_ptr<TrialState> SmallStrainRateIndependentPlasticity::setup(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
     const double * const s_n,
     const double * const h_n)
 {
-  SSRIPTrialState * tss = new SSRIPTrialState();
-  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, T_n,
-                          s_n, h_n, *tss);
+  std::unique_ptr<SSRIPTrialState> tss = std::make_unique<SSRIPTrialState>();
+
+  // Save e_np1
+  std::copy(e_np1, e_np1+6, tss->e_np1);
+  // ep_tr = ep_n
+  double S_n[36];
+  double ee_n[6];
+  elastic_->S(T_n, S_n);
+
+  mat_vec(S_n, 6, s_n, 6, ee_n);
+  sub_vec(e_n, ee_n, 6, tss->ep_tr);
+
+  tss->h_tr.resize(nstate());
+  std::copy(h_n, h_n+nstate(), tss->h_tr.begin());
+  // Calculate the trial stress
+  double ee[6];
+  sub_vec(e_np1, tss->ep_tr, 6, ee);
+  elastic_->C(T_np1, tss->C);
+
+  mat_vec(tss->C, 6, ee, 6, tss->s_tr);
+  // Store temp
+  tss->T = T_np1;
+
   return tss;
 }
 
@@ -1119,34 +1125,6 @@ const std::shared_ptr<const LinearElasticModel> SmallStrainRateIndependentPlasti
   return elastic_;
 }
 
-void SmallStrainRateIndependentPlasticity::make_trial_state(
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n, double t_np1, double t_n,
-    const double * const s_n, const double * const h_n,
-    SSRIPTrialState & ts)
-{
-  // Save e_np1
-  std::copy(e_np1, e_np1+6, ts.e_np1);
-  // ep_tr = ep_n
-  double S_n[36];
-  double ee_n[6];
-  elastic_->S(T_n, S_n);
-
-  mat_vec(S_n, 6, s_n, 6, ee_n);
-  sub_vec(e_n, ee_n, 6, ts.ep_tr);
-
-  ts.h_tr.resize(nstate());
-  std::copy(h_n, h_n+nstate(), ts.h_tr.begin());
-  // Calculate the trial stress
-  double ee[6];
-  sub_vec(e_np1, ts.ep_tr, 6, ee);
-  elastic_->C(T_np1, ts.C);
-
-  mat_vec(ts.C, 6, ee, 6, ts.s_tr);
-  // Store temp
-  ts.T = T_np1;
-}
-
 // Implement creep + plasticity
 // Implementation of small strain rate independent plasticity
 //
@@ -1225,7 +1203,7 @@ void SmallStrainCreepPlasticity::update_sd_state(
   History base_n = plastic_->gather_state_(H_n.rawptr());
   
   // Solve the system to get the update
-  std::shared_ptr<SSCPTrialState> ts = make_trial_state(E_np1, E_n, 
+  std::unique_ptr<SSCPTrialState> ts = make_trial_state(E_np1, E_n, 
                                        T_np1, T_n, t_np1, t_n, S_n,
                                        H_n);
 
@@ -1313,13 +1291,13 @@ void SmallStrainCreepPlasticity::RJ(const double * const x, TrialState * ts,
   Js = (B.dot(A_np1) + SymSymR4::id()) * sf_;
 }
 
-std::shared_ptr<SSCPTrialState>
+std::unique_ptr<SSCPTrialState>
 SmallStrainCreepPlasticity::make_trial_state(
     const Symmetric & e_np1, const Symmetric & e_n,
     double T_np1, double T_n, double t_np1, double t_n,
     const Symmetric & s_n, const History & h_n)
 {
-  return std::make_shared<SSCPTrialState>(
+  return std::make_unique<SSCPTrialState>(
       h_n.get<Symmetric>(prefix("plastic_strain")),
       e_n, e_np1, s_n, T_n, T_np1, t_n, t_np1,
       plastic_->gather_state_(h_n.rawptr()));
@@ -1396,16 +1374,50 @@ std::unique_ptr<NEMLObject> GeneralIntegrator::initialize(ParameterSet & params)
   return neml::make_unique<GeneralIntegrator>(params); 
 }
 
-TrialState * GeneralIntegrator::setup(
+std::unique_ptr<TrialState> GeneralIntegrator::setup(
     const double * const e_np1, const double * const e_n,
     double T_np1, double T_n,
     double t_np1, double t_n,
     const double * const s_n,
     const double * const h_n)
 {
-  GITrialState * tss = new GITrialState();
-  make_trial_state(e_np1, e_n, T_np1, T_n, t_np1, t_n, 
-                   s_n, h_n, *tss);
+  std::unique_ptr<GITrialState> tss = std::make_unique<GITrialState>();
+
+  // Basic
+  tss->dt = t_np1 - t_n;
+  tss->T = T_np1;
+
+  // Rates, looking out for divide-by-zero
+  if (tss->dt > 0.0) {
+    tss->Tdot = (T_np1 - T_n) / tss->dt;
+    for (int i=0; i<6; i++) {
+      tss->e_dot[i] = (e_np1[i] - e_n[i]) / tss->dt;
+    }
+  }
+  else {
+    tss->Tdot = 0.0;
+    std::fill(tss->e_dot, tss->e_dot+6, 0.0);
+  }
+  
+  // Last stress
+  std::copy(s_n, s_n+6, tss->s_n);
+
+  // Last history
+  tss->h_n.resize(nstate());
+  std::copy(h_n, h_n+nstate(), tss->h_n.begin());
+
+  // Elastic guess
+  double C[36];
+  elastic_->C(T_np1, C);
+  double de[6];
+  sub_vec(e_np1, e_n, 6, de);
+  mat_vec(C, 6, de, 6, tss->s_guess);
+  add_vec(tss->s_guess, s_n, 6, tss->s_guess);
+
+  // Special logic...
+  if ((t_n == 0.0) && (skip_first_))
+    std::copy(s_n, s_n+6, tss->s_guess);
+
   return tss;
 }
 
@@ -1600,50 +1612,6 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
       J[CINDEX((i+6),(j+6),nparams)] = -J22[CINDEX(i,j,nstate)];
     }
   }
-}
-
-
-void GeneralIntegrator::make_trial_state(
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n, double t_np1, double t_n,
-    const double * const s_n, const double * const h_n,
-    GITrialState & ts)
-{
-  // Basic
-  ts.dt = t_np1 - t_n;
-  ts.T = T_np1;
-
-  // Rates, looking out for divide-by-zero
-  if (ts.dt > 0.0) {
-    ts.Tdot = (T_np1 - T_n) / ts.dt;
-    for (int i=0; i<6; i++) {
-      ts.e_dot[i] = (e_np1[i] - e_n[i]) / ts.dt;
-    }
-  }
-  else {
-    ts.Tdot = 0.0;
-    std::fill(ts.e_dot, ts.e_dot+6, 0.0);
-  }
-  
-  // Last stress
-  std::copy(s_n, s_n+6, ts.s_n);
-
-  // Last history
-  ts.h_n.resize(nstate());
-  std::copy(h_n, h_n+nstate(), ts.h_n.begin());
-
-  // Elastic guess
-  double C[36];
-  elastic_->C(T_np1, C);
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  mat_vec(C, 6, de, 6, ts.s_guess);
-  add_vec(ts.s_guess, s_n, 6, ts.s_guess);
-
-  // Special logic...
-  if ((t_n == 0.0) && (skip_first_))
-    std::copy(s_n, s_n+6, ts.s_guess);
-
 }
 
 void GeneralIntegrator::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)

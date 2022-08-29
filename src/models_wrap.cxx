@@ -72,6 +72,16 @@ PYBIND11_MODULE(models, m) {
 
   py::class_<SubstepModel_sd, NEMLModel_sd, std::shared_ptr<SubstepModel_sd>>(m,
                                                                               "SubstepModel_sd")
+      .def("make_trial_state",
+           [](SubstepModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<TrialState>
+           {
+           return m.setup(arr2ptr<double>(e_np1),
+                                          arr2ptr<double>(e_n),
+                                          T_np1, T_n,
+                                          t_np1, t_n,
+                                          arr2ptr<double>(s_n),
+                                          arr2ptr<double>(h_n));
+           }, "Setup trial state for solve.")
       ;
 
   py::class_<SmallStrainElasticity, NEMLModel_sd, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity")
@@ -105,20 +115,6 @@ PYBIND11_MODULE(models, m) {
         }))
 
       .def("ys", &SmallStrainPerfectPlasticity::ys)
-
-      .def("make_trial_state",
-           [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSPPTrialState>
-           {
-              std::unique_ptr<SSPPTrialState> ts(new SSPPTrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
-           }, "Setup trial state for solve.")
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, SubstepModel_sd, Solvable, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
@@ -128,20 +124,6 @@ PYBIND11_MODULE(models, m) {
           return create_object_python<SmallStrainRateIndependentPlasticity>(args, kwargs,
                                                              {"elastic", "flow"});
         }))
-
-      .def("make_trial_state",
-           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSRIPTrialState>
-           {
-              std::unique_ptr<SSRIPTrialState> ts(new SSRIPTrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
-           }, "Setup trial state for solve.")
       ;
 
   py::class_<SmallStrainCreepPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity")
@@ -154,7 +136,7 @@ PYBIND11_MODULE(models, m) {
                                                                   "creep"});
         }))
       .def("make_trial_state",
-           [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::shared_ptr<SSCPTrialState>
+           [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSCPTrialState>
            {
               return m.make_trial_state(Symmetric(arr2ptr<double>(e_np1)),
                                         Symmetric(arr2ptr<double>(e_n)),
@@ -165,8 +147,6 @@ PYBIND11_MODULE(models, m) {
            }, "Setup trial state for solve.")
       ;
 
-
-
   py::class_<GeneralIntegrator, SubstepModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
       PICKLEABLE(GeneralIntegrator)
       .def(py::init([](py::args args, py::kwargs kwargs)
@@ -174,20 +154,6 @@ PYBIND11_MODULE(models, m) {
           return create_object_python<GeneralIntegrator>(args, kwargs, 
                                                          {"elastic", "rule"});
         }))
-
-      .def("make_trial_state",
-           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<GITrialState>
-           {
-              std::unique_ptr<GITrialState> ts(new GITrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
-           }, "Setup trial state for solve.")
       ;
 
   py::class_<KMRegimeModel, NEMLModel_sd, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel")

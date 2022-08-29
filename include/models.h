@@ -249,7 +249,7 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
       double & p_np1, double p_n);
 
   /// Setup the trial state
-  virtual TrialState * setup(
+  virtual std::unique_ptr<TrialState> setup(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -423,7 +423,7 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
                  double * const J);
 
   /// Setup the trial state
-  virtual TrialState * setup(
+  virtual std::unique_ptr<TrialState> setup(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -472,12 +472,6 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
   /// Helper to return the yield stress
   double ys(double T) const;
 
-  /// Setup a trial state for the solver from the input information
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       SSPPTrialState & ts);
-
  private:
   std::shared_ptr<YieldSurface> surface_;
   std::shared_ptr<Interpolate> ys_;
@@ -510,7 +504,7 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   virtual void init_state(History & h) const;
 
   /// Setup the trial state
-  virtual TrialState * setup(
+  virtual std::unique_ptr<TrialState> setup(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -568,12 +562,6 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   /// Return the elastic model for subobjects
   const std::shared_ptr<const LinearElasticModel> elastic() const;
 
-  /// Setup a trial state
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       SSRIPTrialState & ts);
-
  private:
   std::shared_ptr<RateIndependentFlowRule> flow_;
 };
@@ -623,7 +611,7 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
                  double * const J);
 
   /// Setup a trial state from known information
-  std::shared_ptr<SSCPTrialState> make_trial_state(
+  std::unique_ptr<SSCPTrialState> make_trial_state(
       const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n, double t_np1, double t_n,
       const Symmetric & s_n, const History & h_n);
@@ -664,7 +652,7 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Setup the trial state
-  virtual TrialState * setup(
+  virtual std::unique_ptr<TrialState> setup(
       const double * const e_np1, const double * const e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
@@ -722,12 +710,6 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   /// The residual and jacobian for the nonlinear solve
   virtual void RJ(const double * const x, TrialState * ts,
                  double * const R, double * const J);
-
-  /// Initialize a trial state
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       GITrialState & ts);
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
