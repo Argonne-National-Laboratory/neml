@@ -158,12 +158,21 @@ class NEML_EXPORT History {
 
   /// Actually increase internal storage
   void increase_store(size_t newsize);
+  
+  /// Nice form for scalar multiplication
+  History & operator*=(const double & scalar);
 
   /// Multiply everything by a scalar
-  History & scalar_multiply(double scalar);
+  History & scalar_multiply(const double & scalar);
 
   /// Add another history to this one
   History & operator+=(const History & other);
+
+  /// Negation
+  History operator-() const;
+
+  /// Subtract another history from this one
+  History & operator-=(const History & other);
 
   /// Combine another history object through a union
   History & add_union(const History & other);
@@ -269,6 +278,18 @@ inline History History::derivative<History>() const
 {
   return history_derivative(*this);
 }
+
+/// Scalar multiplication
+History operator*(const double & s, const History & v);
+
+/// Other scalar multiplication
+History operator*(const History & v, const double & s);
+
+/// History addition
+History operator+(const History & a, const History & b);
+
+/// History subtraction
+History operator-(const History & a, const History & b);
 
 /// NEMLObject that maintains some internal state variables
 class NEML_EXPORT HistoryNEMLObject: public NEMLObject {

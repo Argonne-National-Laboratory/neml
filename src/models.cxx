@@ -102,6 +102,21 @@ void NEMLModel::init_static(History & h) const
   // Nothing by default
 }
 
+void NEMLModel::elastic_strains(const double * const s_np1,
+                                double T_np1, const double * const h_np1,
+                                double * const e_np1) const
+{
+  Symmetric S_np1(s_np1);
+  History H_np1 = gather_history_(h_np1);
+  Symmetric E_np1(e_np1);
+  E_np1 = elastic_strains_interface(S_np1, T_np1, H_np1);
+}
+
+Symmetric NEMLModel::elastic_strains_interface(const Symmetric & s_np1, double T_np1, const History & h_np1) const
+{
+  return Symmetric();
+}
+
 double NEMLModel::get_damage(const double *const h_np1) 
 { 
   return 0.0; 
@@ -265,15 +280,9 @@ const std::shared_ptr<const LinearElasticModel> NEMLModel_sd::elastic() const
   return elastic_;
 }
 
-void NEMLModel_sd::elastic_strains(const double * const s_np1,
-                                           double T_np1, 
-                                           const double * const h_np1,
-                                           double * const e_np1) const
+Symmetric NEMLModel_sd::elastic_strains_interface(const Symmetric & s_np1, double T_np1, const History & h_np1) const
 {
-  double S[36];
-  elastic_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, e_np1);
-
+  return elastic_->S(T_np1).dot(s_np1);
 }
 
 void NEMLModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)
@@ -942,7 +951,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   // J12 (transpose?)
   History ga = gather_blank_state_().derivative<Symmetric>();
   flow_->dg_da(s_np1.data(), alpha.rawptr(), tss->T, ga.rawptr());
-  History J12 = ga.premultiply(tss->C).scalar_multiply(dg);
+  History J12 = ga.premultiply(tss->C) * dg;
   for (int i=0; i<6; i++) {
     for (int j=0; j < nh; j++) {
       J[CINDEX(i,(j+6),n)] = J12.rawptr()[CINDEX(i,j,nh)];
@@ -958,7 +967,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   // J21 (transpose?)
   History J21 = gather_blank_state_().derivative<Symmetric>();
   flow_->dh_ds(s_np1.data(), alpha.rawptr(), tss->T, J21.rawptr());
-  J21.scalar_multiply(dg);
+  J21 *= dg;
   for (int i=0; i<nh; i++) {
     for (int j=0; j<6; j++) {
       J[CINDEX((i+6),j,n)] = -J21.rawptr()[CINDEX(i,j,6)];
@@ -968,7 +977,7 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   // J22
   History J22 = gather_blank_state_().derivative<History>();
   flow_->dh_da(s_np1.data(), alpha.rawptr(), tss->T, J22.rawptr());
-  J22.scalar_multiply(dg);
+  J22 *= dg;
   for (int i=0; i<nh; i++) J22.rawptr()[CINDEX(i,i,nh)] -= 1.0;
   for (int i=0; i<nh; i++) {
     for (int j=0; j<nh; j++) {

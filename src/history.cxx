@@ -182,7 +182,12 @@ void History::increase_store(size_t newsize)
   storage_ = newstore;
 }
 
-History & History::scalar_multiply(double scalar)
+History & History::operator*=(const double & scalar)
+{
+  return scalar_multiply(scalar);
+}
+
+History & History::scalar_multiply(const double & scalar)
 {
   for (size_t i = 0; i < size_; i++) {
     storage_[i] *= scalar; 
@@ -200,6 +205,20 @@ History & History::operator+=(const History & other)
     storage_[i] += other.rawptr()[i];
   }
   return *this;
+}
+
+History History::operator-() const
+{
+  History cpy = deepcopy();
+  for (size_t i = 0; i < size_; i++)
+    cpy.rawptr()[i] = -cpy.rawptr()[i];
+
+  return cpy;
+}
+
+History & History::operator-=(const History & other)
+{
+  return this->operator+=(-other);
 }
 
 History History::copy_blank(std::vector<std::string> exclude) const
@@ -426,6 +445,30 @@ double * History::start_loc(std::string name)
 {
   error_if_not_exists_(name);
   return &(storage_[loc_.at(name)]);
+}
+
+History operator*(const double & s, const History & v)
+{
+  History cpy = v.deepcopy();
+  cpy *= s;
+  return cpy;
+}
+
+History operator*(const History & v, const double & s)
+{
+  return operator*(s, v);
+}
+
+History operator+(const History & a, const History & b)
+{
+  History res = a.deepcopy();
+  return res+=b;
+}
+
+History operator-(const History & a, const History & b)
+{
+  History res = a.deepcopy();
+  return res-=b;
 }
 
 HistoryNEMLObject::HistoryNEMLObject(ParameterSet & params) :

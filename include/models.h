@@ -97,7 +97,10 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
    /// Elastic strain for a given stress, temperature, and history state
    virtual void elastic_strains(const double * const s_np1,
                                double T_np1, const double * const h_np1,
-                               double * const e_np1) const = 0;
+                               double * const e_np1) const;
+   /// Nice interface for the elastic strain calculation
+   virtual Symmetric elastic_strains_interface(const Symmetric & s_np1, 
+                                               double T_np1, const History & h_np1) const;
 
    /// Used to find the damage value from the history
    virtual double get_damage(const double *const h_np1);
@@ -202,9 +205,8 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
    const std::shared_ptr<const LinearElasticModel> elastic() const;
 
    /// Return the elastic strains
-   virtual void elastic_strains(const double * const s_np1,
-                               double T_np1, const double * const h_np1,
-                               double * const e_np1) const;
+   virtual Symmetric elastic_strains_interface(const Symmetric & s_np1, 
+                                               double T_np1, const History & h_np1) const;
 
    /// Used to override the linear elastic model to match another object's
    virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
