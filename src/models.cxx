@@ -904,30 +904,25 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   int nh = nstate();
 
   // Setup from current state
-  const double * const s_np1 = &x[0];
-  const double * const alpha  = &x[6];
-  const double & dg = x[6+nh];
+  Symmetric s_np1(x);
+  History alpha = gather_state_(&x[6]);
+  double dg = x[6+nh];
 
   // Residual calculation
-  double g[6];
-  flow_->g(s_np1, alpha, tss->T, g); 
-  std::vector<double> hv(nh);
-  double * h = &hv[0];
-  flow_->h(s_np1, alpha, tss->T, h);
+  Symmetric g;
+  flow_->g(s_np1.data(), alpha.rawptr(), tss->T, g.s()); 
+  History h = gather_blank_state_();
+  flow_->h(s_np1.data(), alpha.rawptr(), tss->T, h.rawptr());
   double f;
-  flow_->f(s_np1, alpha, tss->T, f);
+  flow_->f(s_np1.data(), alpha.rawptr(), tss->T, f);
+  
+  // R1
+  Symmetric R1 = s_np1 - tss->C.dot(tss->e_np1 - tss->ep_tr - g * dg);
+  for (size_t i = 0; i<6; i++) R[i] = R1(i);
 
-  double R1[6];
-  for (int i=0; i<6; i++) {
-    R1[i] = tss->e_np1.data()[i] - tss->ep_tr.data()[i] - g[i] * dg;
-  }
-  mat_vec(tss->C.data(), 6, R1, 6, R);
-  for (int i=0; i<6; i++) {
-    R[i] = s_np1[i] - R[i];
-  }
-
+  // R2
   for (int i=0; i<nh; i++) {
-    R[i+6] = alpha[i] - tss->h_tr.rawptr()[i] - h[i] * dg;
+    R[i+6] = alpha.rawptr()[i] - tss->h_tr.rawptr()[i] - h.rawptr()[i] * dg;
   }
   R[6+nh] = f;
 
@@ -935,82 +930,69 @@ void SmallStrainRateIndependentPlasticity::RJ(const double * const x,
   int n = nparams();
   
   // J11
-  double gs[36];
-  double J11[36];
-  flow_->dg_ds(s_np1, alpha, tss->T, gs);
-  mat_mat(6, 6, 6, tss->C.data(), gs, J11);
-  for (int i=0; i<36; i++) J11[i] = J11[i] * dg;
-  for (int i=0; i<6; i++) J11[CINDEX(i,i,6)] += 1.0;
-
+  SymSymR4 gs, J11;
+  flow_->dg_ds(s_np1.data(), alpha.rawptr(), tss->T, gs.s());
+  J11 = tss->C.dot(gs) * dg + SymSymR4::id();
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX(i,j,n)] = J11[CINDEX(i,j,6)];
+      J[CINDEX(i,j,n)] = J11(i,j);
     }
   }
   
-  // J12
-  std::vector<double> gav(6*nh);
-  double * ga = &gav[0];
-  std::vector<double> J12v(6*nh);
-  double * J12 = &J12v[0];
-  flow_->dg_da(s_np1, alpha, tss->T, ga);
-  mat_mat(6, nh, 6, tss->C.data(), ga, J12);
-
-  for (int i=0; i<6*nh; i++) J12[i] *= dg;
+  // J12 (transpose?)
+  History ga = gather_blank_state_().derivative<Symmetric>();
+  flow_->dg_da(s_np1.data(), alpha.rawptr(), tss->T, ga.rawptr());
+  History J12 = ga.premultiply(tss->C).scalar_multiply(dg);
   for (int i=0; i<6; i++) {
     for (int j=0; j < nh; j++) {
-      J[CINDEX(i,(j+6),n)] = J12[CINDEX(i,j,nh)];
+      J[CINDEX(i,(j+6),n)] = J12.rawptr()[CINDEX(i,j,nh)];
     }
   }
 
   // J13
-  double J13[6];
-  mat_vec(tss->C.data(), 6, g, 6, J13);
+  Symmetric J13 = tss->C.dot(g);
   for (int i=0; i<6; i++) {
-    J[CINDEX(i,(6+nh),n)] = J13[i];
+    J[CINDEX(i,(6+nh),n)] = J13.data()[i];
   }
 
-  // J21
-  std::vector<double> J21v(nh*6);
-  double * J21 = &J21v[0];
-  flow_->dh_ds(s_np1, alpha, tss->T, J21);
-  for (int i=0; i<nh*6; i++) J21[i] = J21[i] * dg;
+  // J21 (transpose?)
+  History J21 = gather_blank_state_().derivative<Symmetric>();
+  flow_->dh_ds(s_np1.data(), alpha.rawptr(), tss->T, J21.rawptr());
+  J21.scalar_multiply(dg);
   for (int i=0; i<nh; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX((i+6),j,n)] = -J21[CINDEX(i,j,6)];
+      J[CINDEX((i+6),j,n)] = -J21.rawptr()[CINDEX(i,j,6)];
     }
   }
 
   // J22
-  std::vector<double> J22v(nh*nh);
-  double * J22 = &J22v[0];
-  flow_->dh_da(s_np1, alpha, tss->T, J22);
-  for (int i=0; i<nh*nh; i++) J22[i] *= dg;
-  for (int i=0; i<nh; i++) J22[CINDEX(i,i,nh)] -= 1.0;
+  History J22 = gather_blank_state_().derivative<History>();
+  flow_->dh_da(s_np1.data(), alpha.rawptr(), tss->T, J22.rawptr());
+  J22.scalar_multiply(dg);
+  for (int i=0; i<nh; i++) J22.rawptr()[CINDEX(i,i,nh)] -= 1.0;
   for (int i=0; i<nh; i++) {
     for (int j=0; j<nh; j++) {
-      J[CINDEX((i+6), (j+6), n)] = -J22[CINDEX(i,j,nh)];
+      J[CINDEX((i+6), (j+6), n)] = -J22.rawptr()[CINDEX(i,j,nh)];
     }
   }
 
   // J23
   for (int i=0; i<nh; i++) {
-    J[CINDEX((i+6), (6+nh), n)] = -h[i];
+    J[CINDEX((i+6), (6+nh), n)] = -h.rawptr()[i];
   }
 
   // J31
-  double J31[6];
-  flow_->df_ds(s_np1, alpha, tss->T, J31);
+  Symmetric J31;
+  flow_->df_ds(s_np1.data(), alpha.rawptr(), tss->T, J31.s());
   for (int i=0; i<6; i++) {
-    J[CINDEX((6+nh), i, n)] = J31[i];
+    J[CINDEX((6+nh), i, n)] = J31(i);
   }
 
   // J32
-  std::vector<double> J32v(nh);
-  double * J32 = &J32v[0];
-  flow_->df_da(s_np1, alpha, tss->T, J32);
+  History J32 = gather_blank_state_();
+  flow_->df_da(s_np1.data(), alpha.rawptr(), tss->T, J32.rawptr());
   for (int i=0; i<nh; i++) {
-    J[CINDEX((6+nh), (i+6), n)] = J32[i];
+    J[CINDEX((6+nh), (i+6), n)] = J32.rawptr()[i];
   }
 
   // J33

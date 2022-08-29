@@ -160,7 +160,7 @@ class NEML_EXPORT History {
   void increase_store(size_t newsize);
 
   /// Multiply everything by a scalar
-  void scalar_multiply(double scalar);
+  History & scalar_multiply(double scalar);
 
   /// Add another history to this one
   History & operator+=(const History & other);
@@ -221,6 +221,9 @@ class NEML_EXPORT History {
   /// Quick function to check to see if something is in the vector
   inline bool contains(std::string name) const { return loc_.find(name) !=
     loc_.end();};
+  
+  /// Premultiply by various objects
+  History premultiply(const SymSymR4 & T);
 
   /// Postmultiply by various objects
   History postmultiply(const SymSymR4 & T);

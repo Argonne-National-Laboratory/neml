@@ -182,11 +182,13 @@ void History::increase_store(size_t newsize)
   storage_ = newstore;
 }
 
-void History::scalar_multiply(double scalar)
+History & History::scalar_multiply(double scalar)
 {
   for (size_t i = 0; i < size_; i++) {
     storage_[i] *= scalar; 
   }
+
+  return *this;
 }
 
 History & History::operator+=(const History & other)
@@ -356,6 +358,19 @@ History & History::reorder(std::vector<std::string> vars)
   std::copy(nhist.rawptr(), nhist.rawptr() + size(), storage_);
 
   return *this;
+}
+
+History History::premultiply(const SymSymR4 & T)
+{
+  // This is a hack, really we would need to make sure each object is
+  // conformal
+  if (size_ % 6 != 0)
+    throw std::runtime_error("History object does not appear to be suitable "
+                             "for premultiplication by a SymSymR4!");
+  History nhist = this->deepcopy();
+  mat_mat(6, size_ / 6, 6, T.data(), storage_, nhist.rawptr());
+
+  return nhist;
 }
 
 History History::postmultiply(const SymSymR4 & T)
