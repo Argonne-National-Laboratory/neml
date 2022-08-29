@@ -1355,7 +1355,7 @@ void GeneralIntegrator::work_and_energy(
 
   // Energy
   Symmetric de = e_np1 - e_n;
-  Symmetric ds = s_np1 - ds;
+  Symmetric ds = s_np1 - s_n;
   u_np1 = u_n + ds.contract(de) / 2.0;
 
   // Dissipation needs a special call
