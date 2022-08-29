@@ -16,20 +16,15 @@ class NEML_EXPORT ScalarCreepRule: public NEMLObject {
    ScalarCreepRule(ParameterSet & params);
    /// Scalar creep strain rate as a function of effective stress,
    /// effective strain, time, and temperature
-   virtual void g(double seq, double eeq, double t, double T, double & g)
-       const = 0;
+   virtual double g(double seq, double eeq, double t, double T) const = 0;
    /// Derivative of scalar creep rate wrt effective stress
-   virtual void dg_ds(double seq, double eeq, double t, double T, double & dg)
-       const = 0;
+   virtual double dg_ds(double seq, double eeq, double t, double T) const = 0;
    /// Derivative of scalar creep rate wrt effective strain
-   virtual void dg_de(double seq, double eeq, double t, double T, double & dg)
-       const = 0;
+   virtual double dg_de(double seq, double eeq, double t, double T) const = 0;
    /// Derivative of scalar creep rate wrt time, defaults to zero
-   virtual void dg_dt(double seq, double eeq, double t, double T, double & dg)
-       const;
+   virtual double dg_dt(double seq, double eeq, double t, double T) const;
    /// Derivative of scalar creep rate wrt temperature, defaults to zero
-   virtual void dg_dT(double seq, double eeq, double t, double T, double & dg)
-       const;
+   virtual double dg_dT(double seq, double eeq, double t, double T) const;
 };
 
 /// Creep rate law from Blackburn 1972
@@ -45,16 +40,13 @@ class NEML_EXPORT BlackburnMinimumCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// rate = A * (sinh(beta*s/n)^n * exp(-Q/(R*T))
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective strain = 0
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt temperature
-  virtual void dg_dT(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_dT(double seq, double eeq, double t, double T) const;
 
  private:
   const std::shared_ptr<const Interpolate> A_, n_, beta_;
@@ -76,16 +68,13 @@ class NEML_EXPORT SwindemanMinimumCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// rate = C * S^n * exp(V*S) * exp(-Q/T)
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective strain = 0
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt temperature
-  virtual void dg_dT(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_dT(double seq, double eeq, double t, double T) const;
 
  private:
   const double C_, n_, V_, Q_, shift_;
@@ -107,13 +96,11 @@ class NEML_EXPORT PowerLawCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// rate = A * seq**n
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective strain = 0
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
 
   /// Getter for the prefactor
   double A(double T) const;
@@ -140,13 +127,11 @@ class NEML_EXPORT NormalizedPowerLawCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// rate = (seq/s0)**n
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective strain = 0
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
 
  private:
   const std::shared_ptr<const Interpolate> s0_, n_;
@@ -170,11 +155,11 @@ class NEML_EXPORT RegionKMCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// See documentation for details of the creep rate
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
-  /// Derivative of creep rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg) const;
-  /// Derivative of creep rate wrt effective strain
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective stress
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
 
  private:
   void select_region_(double seq, double T, double & Ai, double & Bi) const;
@@ -204,11 +189,11 @@ class NEML_EXPORT NortonBaileyCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// creep rate = m * A**(1/m) * seq**(n/m) * eeq ** ((m-1)/m)
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
-  /// Derivative of creep rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg) const;
-  /// Derivative of creep rate wrt effective strain
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective stress
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
 
   /// Getter for the prefactor
   double A(double T) const;
@@ -240,11 +225,11 @@ class NEML_EXPORT MukherjeeCreep: public ScalarCreepRule {
 
   /// scalar creep rate = A * D0 * exp(Q / (RT)) * mu * b / (k * T) *
   /// (seq / mu)**n
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
-  /// Derivative of creep rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg) const;
-  /// Derivative of creep rate wrt effective strain
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective stress
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
 
   /// Getter for A
   double A() const;
@@ -282,11 +267,11 @@ class NEML_EXPORT GenericCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// scalar creep rate = exp(f(log(sigma)))
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
-  /// Derivative of creep rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg) const;
-  /// Derivative of creep rate wrt effective strain
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective stress
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
+  /// Derivative of rate wrt effective strain = 0
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
 
  private:
   const std::shared_ptr<Interpolate> cfn_;
@@ -309,13 +294,11 @@ class NEML_EXPORT MinCreep225Cr1MoCreep: public ScalarCreepRule {
   static ParameterSet parameters();
 
   /// See documentation for the hideous formula
-  virtual void g(double seq, double eeq, double t, double T, double & g) const;
+  virtual double g(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective stress
-  virtual void dg_ds(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_ds(double seq, double eeq, double t, double T) const;
   /// Derivative of rate wrt effective strain = 0
-  virtual void dg_de(double seq, double eeq, double t, double T, double & dg)
-      const;
+  virtual double dg_de(double seq, double eeq, double t, double T) const;
 
  private:
   double e1_(double seq, double T) const;

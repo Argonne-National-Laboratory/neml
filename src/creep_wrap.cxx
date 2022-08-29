@@ -56,45 +56,11 @@ PYBIND11_MODULE(creep, m) {
     ;
 
   py::class_<ScalarCreepRule, NEMLObject, std::shared_ptr<ScalarCreepRule>>(m, "ScalarCreepRule")
-      .def("g",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.g(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate.")
-
-      .def("dg_ds",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_ds(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate derivative wrt stress.")
-
-      .def("dg_de",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_de(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate derivative wrt strain.")
-
-      .def("dg_dt",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_dt(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate wrt time.")
-
-      .def("dg_dT",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_dT(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate wrt temperature.")
+      .def("g", &ScalarCreepRule::g, "Evaluate the creep rate")
+      .def("dg_ds", &ScalarCreepRule::dg_ds, "Evaluate creep rate derivative wrt stress.")
+      .def("dg_de", &ScalarCreepRule::dg_de, "Evaluate creep rate derivative wrt strain.")
+      .def("dg_dt", &ScalarCreepRule::dg_dt, "Evaluate creep rate derivative wrt time.")
+      .def("dg_dT", &ScalarCreepRule::dg_dT, "Evaluate creep rate derivative wrt temperature.")
       ;
   
   py::class_<PowerLawCreep, ScalarCreepRule, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep")
