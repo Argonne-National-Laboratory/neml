@@ -259,30 +259,30 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
   /// Ignore update and take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n) = 0;
+      const Symmetric & s_n,
+      const History & h_n) = 0;
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n) = 0;
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n) = 0;
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
-      double * const de) = 0;
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
+      double * de) = 0;
 
   /// Do the work calculation
   virtual void work_and_energy(
@@ -448,29 +448,29 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
   /// Take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n);
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n);
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double * de);
 
   /// Helper to return the yield stress
@@ -518,30 +518,30 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   /// Ignore update and take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n);
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n);
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
-      double * const de);
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
+      double * de);
 
   /// Number of solver parameters
   virtual size_t nparams() const;
@@ -655,29 +655,29 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   /// Take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n);
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n);
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double * de);
   
   /// Need special call for dissipation

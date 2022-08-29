@@ -474,7 +474,7 @@ void SubstepModel_sd::update_step(
   std::unique_ptr<TrialState> ts = setup(e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n);
 
   // Take an elastic step if the model requests it
-  if (elastic_step(ts.get(), e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_n.data(), h_n.rawptr())) {
+  if (elastic_step(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, s_n, h_n)) {
     // Strain increment
     Symmetric de = e_np1 - e_n;
 
@@ -512,12 +512,12 @@ void SubstepModel_sd::update_step(
     invert_mat(A, nparams());
 
     // Interpret the x vector as the updated state
-    update_internal(&x[0], e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n,
-                          s_np1.s(), s_n.data(), h_np1.rawptr(), h_n.rawptr());
+    update_internal(&x[0], e_np1, e_n, T_np1, T_n, t_np1, t_n,
+                          s_np1, s_n, h_np1, h_n);
 
     // Get the dE matrix
-    strain_partial(ts.get(), e_np1.data(), e_n.data(), T_np1, T_n, t_np1, t_n, s_np1.data(), s_n.data(), 
-                   h_np1.rawptr(), h_n.rawptr(), E);
+    strain_partial(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, s_np1, s_n, 
+                   h_np1, h_n, E);
 
     // Update the work and energy
     work_and_energy(ts.get(), e_np1, e_n, T_np1, T_n, t_np1, t_n, 
@@ -675,12 +675,9 @@ std::unique_ptr<TrialState> SmallStrainPerfectPlasticity::setup(
 }
 
 bool SmallStrainPerfectPlasticity::elastic_step(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    const double * const s_n,
-    const double * const h_n)
+    const TrialState * ts, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n, const Symmetric & s_n,
+    const History & h_n)
 {
   const SSPPTrialState * tss = static_cast<const SSPPTrialState*>(ts);
   double fv;
@@ -689,24 +686,19 @@ bool SmallStrainPerfectPlasticity::elastic_step(
 }
 
 void SmallStrainPerfectPlasticity::update_internal(
-    const double * const x,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n)
+    const double * const x, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    Symmetric & s_np1, const Symmetric & s_n,
+    History & h_np1, const History & h_n)
 {
-  std::copy(x, x+6, s_np1);
+  s_np1.copy_data(x);
 }
 
 void SmallStrainPerfectPlasticity::strain_partial(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    const double * const s_np1, const double * const s_n,
-    const double * const h_np1, const double * const h_n,
-    double * const de)
+    const TrialState * ts, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    const Symmetric & s_np1, const Symmetric & s_n, 
+    const History & h_np1, const History & h_n, double * de)
 {
   const SSPPTrialState * tss = static_cast<const SSPPTrialState*>(ts);
   std::fill(de, de+(6*nparams()), 0.0);
@@ -716,7 +708,6 @@ void SmallStrainPerfectPlasticity::strain_partial(
       de[CINDEX(i,j,6)] = tss->C(i,j);
     }
   }
-
 }
 
 size_t SmallStrainPerfectPlasticity::nparams() const
@@ -856,12 +847,9 @@ std::unique_ptr<TrialState> SmallStrainRateIndependentPlasticity::setup(
 }
 
 bool SmallStrainRateIndependentPlasticity::elastic_step(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    const double * const s_n,
-    const double * const h_n)
+    const TrialState * ts, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n, const Symmetric & s_n,
+    const History & h_n)
 {
   const SSRIPTrialState * tss = static_cast<const SSRIPTrialState *>(ts);
 
@@ -871,25 +859,20 @@ bool SmallStrainRateIndependentPlasticity::elastic_step(
 }
 
 void SmallStrainRateIndependentPlasticity::update_internal(
-    const double * const x,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n)
+    const double * const x, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    Symmetric & s_np1, const Symmetric & s_n,
+    History & h_np1, const History & h_n)
 {
-  std::copy(x, x+6, s_np1);
-  std::copy(x+6, x+6+nstate(), h_np1);
+  s_np1.copy_data(x);
+  h_np1.copy_data(x+6);
 }
 
 void SmallStrainRateIndependentPlasticity::strain_partial(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    const double * const s_np1, const double * const s_n,
-    const double * const h_np1, const double * const h_n,
-    double * const de)
+    const TrialState * ts, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    const Symmetric & s_np1, const Symmetric & s_n, 
+    const History & h_np1, const History & h_n, double * de)
 {
   const SSRIPTrialState * tss = static_cast<const SSRIPTrialState *>(ts);
   std::fill(de, de+(6*nparams()), 0.0);
@@ -1320,16 +1303,10 @@ std::unique_ptr<TrialState> GeneralIntegrator::setup(
 }
 
 bool GeneralIntegrator::elastic_step(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    const double * const s_n,
-    const double * const h_n)
+    const TrialState * ts, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n, const Symmetric & s_n,
+    const History & h_n)
 {
-  double de[6];
-  sub_vec(e_np1, e_n, 6, de);
-  
   double dt = t_np1 - t_n;
 
   if (dt < std::numeric_limits<double>::epsilon()) {
@@ -1340,52 +1317,39 @@ bool GeneralIntegrator::elastic_step(
 }
 
 void GeneralIntegrator::update_internal(
-    const double * const x,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    double * const s_np1, const double * const s_n,
-    double * const h_np1, const double * const h_n)
+    const double * const x, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    Symmetric & s_np1, const Symmetric & s_n,
+    History & h_np1, const History & h_n)
 {
-  std::copy(x, x+6, s_np1);
-  std::copy(x+6, x+6+nstate(), h_np1);
-
+  s_np1.copy_data(x);
+  h_np1.copy_data(x+6);
 }
 
 void GeneralIntegrator::strain_partial(
-    const TrialState * ts,
-    const double * const e_np1, const double * const e_n,
-    double T_np1, double T_n,
-    double t_np1, double t_n,
-    const double * const s_np1, const double * const s_n,
-    const double * const h_np1, const double * const h_n,
-    double * de)
+    const TrialState * ts, const Symmetric & e_np1, const Symmetric & e_n,
+    double T_np1, double T_n, double t_np1, double t_n,
+    const Symmetric & s_np1, const Symmetric & s_n, 
+    const History & h_np1, const History & h_n, double * de)
 {
   const GITrialState * tss = static_cast<const GITrialState*>(ts);
   
-  double * estress = new double [6*6];
-
-  rule_->ds_de(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, estress);
+  SymSymR4 estress;
+  rule_->ds_de(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, estress.s());
   
   for (size_t i = 0; i < 6; i++) {
     for (size_t j = 0; j < 6; j++) {
-      de[CINDEX(i,j,6)] = estress[CINDEX(i,j,6)];
+      de[CINDEX(i,j,6)] = estress(i,j);
     }
   }
-
-  delete [] estress;
-
-  double * ehist = new double [6*nstate()];
-
-  rule_->da_de(s_np1, h_np1, tss->e_dot.data(), tss->T, tss->Tdot, ehist);
+  
+  History ehist = gather_blank_state_().derivative<Symmetric>();
+  rule_->da_de(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, ehist.rawptr());
   for (size_t i = 0; i < nstate(); i++) {
     for (size_t j = 0; j < 6; j++) {
-      de[CINDEX((i+6),j,6)] = ehist[CINDEX(i,j,6)];
+      de[CINDEX((i+6),j,6)] = ehist.rawptr()[CINDEX(i,j,6)];
     }
   }
-
-  delete [] ehist;
-
 }
 
 void GeneralIntegrator::work_and_energy(
