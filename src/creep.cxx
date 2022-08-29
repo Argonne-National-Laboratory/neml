@@ -627,18 +627,14 @@ CreepModel::CreepModel(ParameterSet & params) :
 }
 
 // Creep model default derivatives for time and temperature
-void CreepModel::df_dt(const double * const s, const double * const e, double t,
-                      double T, double * const df) const
+Symmetric CreepModel::df_dt(const Symmetric & s, const Symmetric & e, double t, double T) const
 {
-  std::fill(df, df+6, 0.0);
-
+  return Symmetric();
 }
 
-void CreepModel::df_dT(const double * const s, const double * const e, double t,
-                      double T, double * const df) const
+Symmetric CreepModel::df_dT(const Symmetric & s, const Symmetric & e, double t, double T) const
 {
-  std::fill(df, df+6, 0.0);
-
+  return Symmetric();
 }
 
 // Implementation of creep model update
@@ -694,14 +690,10 @@ void CreepModel::RJ(const double * const x, TrialState * ts,
   SymSymR4 J1(J);
 
   // Residual
-  Symmetric fd;
-  f(tss->s_np1.data(), e_np1.data(), tss->t, tss->T, fd.s());
-  R1 = e_np1 - tss->e_n - fd * tss->dt;
+  R1 = e_np1 - tss->e_n - f(tss->s_np1, e_np1, tss->t, tss->T) * tss->dt;
 
   // Jacobian
-  SymSymR4 Jd;
-  df_de(tss->s_np1.data(), x, tss->t, tss->T, Jd.s());
-  J1 = SymSymR4::id() - Jd*tss->dt;
+  J1 = SymSymR4::id() - df_de(tss->s_np1, e_np1, tss->t, tss->T) *tss->dt;
 }
 
 // Helper for tangent
@@ -712,8 +704,7 @@ SymSymR4 CreepModel::calc_tangent_(const Symmetric & e_np1, CreepModelTrialState
 
   RJ(e_np1.data(), &ts, R.s(), J.s());
 
-  SymSymR4 B;
-  df_ds(ts.s_np1.data(), e_np1.data(), ts.t, ts.T, B.s());
+  SymSymR4 B = df_ds(ts.s_np1, e_np1, ts.t, ts.T);
 
   return (J.inverse() * ts.dt).dot(B);
 }
@@ -842,37 +833,28 @@ std::unique_ptr<NEMLObject> J2CreepModel::initialize(ParameterSet & params)
   return neml::make_unique<J2CreepModel>(params); 
 }
 
-void J2CreepModel::f(const double * const s, const double * const e, double t,
-                    double T, double * const f) const
+Symmetric J2CreepModel::f(const Symmetric & s, const Symmetric & e, double t, double T) const
 {
   // Gather the effective stresses
   double se = seq(s);
   double ee = eeq(e);
 
-  // Get the direction
-  std::copy(s, s+6, f);
-  sdir(f);
-
   // Get the rate
   double rate;
   rule_->g(se, ee, t, T, rate);
 
-  // Multiply the two together
-  for (int i=0; i<6; i++) f[i] *= 3.0/2.0 * rate;
-
+  // Rate * direction
+  return 3.0/2.0 * sdir(s) * rate;
 }
 
-void J2CreepModel::df_ds(const double * const s, const double * const e, 
-                        double t, double T, double * const df) const
+SymSymR4 J2CreepModel::df_ds(const Symmetric & s, const Symmetric & e, double t, double T) const
 {
   // Gather the effective stresses
   double se = seq(s);
   double ee = eeq(e);
   
   // Get the direction
-  double dir[6];
-  std::copy(s, s+6, dir);
-  sdir(dir);
+  Symmetric dir = sdir(s);
 
   // Get the rate
   double rate;
@@ -882,19 +864,7 @@ void J2CreepModel::df_ds(const double * const s, const double * const e,
   double drate;
   rule_->dg_ds(se, ee, t, T, drate);
 
-  // Get our usual funny identity tensor
-  double ID[36];
-  std::fill(ID, ID+36, 0.0);
-  for (int i=0; i<6; i++) {
-    ID[CINDEX(i,i,6)] = 1.0;
-  }
-  for (int i=0; i<3; i++) {
-    for (int j=0; j<3; j++) {
-      ID[CINDEX(i,j,6)] -= 1.0 / 3.0; 
-    }
-  }
-  // Stick on one of our 3/2 here
-  for (int i=0; i<36; i++) ID[i] *= 3.0 / 2.0;
+  SymSymR4 ID = SymSymR4::id_dev() * 3.0 / 2.0;
 
   // Begin forming outer products
   // Hack, really should figure out limit se -> 0.0
@@ -902,120 +872,84 @@ void J2CreepModel::df_ds(const double * const s, const double * const e,
     se = std::numeric_limits<double>::epsilon(); 
   }
 
-  double A[36];
-  outer_vec(dir, 6, dir, 6, A);
-  for (int i=0; i<36; i++) A[i] *= 3.0/2.0 * (drate - rate / se);
-  for (int i=0; i<6; i++) A[CINDEX(i,i,6)] += rate / se;
+  SymSymR4 A = 3.0/2.0 * douter(dir, dir) * (drate - rate / se) + SymSymR4::id() * rate / se;
   
-  // Do the final multiplication
-  mat_mat(6, 6, 6, A, ID, df);
-
+  return A.dot(ID);
 }
 
-void J2CreepModel::df_de(const double * const s, const double * const e, double t, double T, 
-              double * const df) const
+SymSymR4 J2CreepModel::df_de(const Symmetric & s, const Symmetric & e, double t, double T) const
 {
   // Gather the effective stresses
   double se = seq(s);
   double ee = eeq(e);
-  
-  // Get the stress direction
-  double s_dir[6];
-  std::copy(s, s+6, s_dir);
-  sdir(s_dir);
-
-  // Get the strain direction
-  double e_dir[6];
-  std::copy(e, e+6, e_dir);
-  edir(e_dir);
-
+ 
   // Get the derivative
   double drate;
   rule_->dg_de(se, ee, t, T, drate);
 
-  // Tack onto the direction
-  for (int i=0; i<6; i++) e_dir[i] *= drate;
+  // Get the stress and strain direction
+  Symmetric s_dir = sdir(s);
+  Symmetric e_dir = edir(e) * drate;
 
-  // Form the final outer product
-  outer_vec(s_dir, 6, e_dir, 6, df);
-
+  return douter(s_dir, e_dir);
 }
 
-void J2CreepModel::df_dt(const double * const s, const double * const e, 
-                        double t, double T, double * const df) const 
+Symmetric J2CreepModel::df_dt(const Symmetric & s, const Symmetric & e, double t, double T) const 
 {
   // Gather the effective quantities
   double se = seq(s);
   double ee = eeq(e);
-  
-  // Get the stress direction
-  std::copy(s, s+6, df);
-  sdir(df);
-
+ 
   // Get the derivative
   double drate;
   rule_->dg_dt(se, ee, t, T, drate);
 
-  // Multiply
-  for (int i=0; i<6; i++) df[i] *= 3.0/2.0 * drate;
-  
+  return 3.0/2.0 * sdir(s) * drate;
 }
 
-void J2CreepModel::df_dT(const double * const s, const double * const e,
-                        double t, double T, double * const df) const
+Symmetric J2CreepModel::df_dT(const Symmetric & s, const Symmetric & e, double t, double T) const
 {
-  // Gather the effective quantities
+   // Gather the effective quantities
   double se = seq(s);
   double ee = eeq(e);
-  
-  // Get the stress direction
-  std::copy(s, s+6, df);
-  sdir(df);
-
+ 
   // Get the derivative
   double drate;
   rule_->dg_dT(se, ee, t, T, drate);
 
-  // Multiply
-  for (int i=0; i<6; i++) df[i] *= 3.0/2.0 * drate;
-  
+  return 3.0/2.0 * sdir(s) * drate; 
 }
 
 // Helpers for J2 plasticity
-double J2CreepModel::seq(const double * const s) const
+double J2CreepModel::seq(const Symmetric & s) const
 {
-  double sdev[6];
-  std::copy(s, s+6, sdev);
-  dev_vec(sdev);
-
-  return sqrt(3.0 / 2.0) * norm2_vec(sdev, 6);
+  return sqrt(3.0/2.0)*s.dev().norm();
 }
 
-double J2CreepModel::eeq(const double * const e) const
+double J2CreepModel::eeq(const Symmetric & e) const
 {
-  return sqrt(2.0 / 3.0) * norm2_vec(e, 6);
+  return sqrt(2.0 / 3.0) * e.norm();
 }
 
-void J2CreepModel::sdir(double * const s) const
+Symmetric J2CreepModel::sdir(const Symmetric & s) const
 {
   double se = seq(s);
   if (se < std::numeric_limits<double>::epsilon()) {
-    std::fill(s, s+6, 0.0);
+    return Symmetric();
   }
-  else {  
-    dev_vec(s);
-    for (int i=0; i<6; i++) s[i] /= se;
+  else { 
+    return s.dev() / se;
   }
 }
 
-void J2CreepModel::edir(double * const e) const
+Symmetric J2CreepModel::edir(const Symmetric & e) const
 {
   double ee = eeq(e);
   if (ee < std::numeric_limits<double>::epsilon()) {
-    std::fill(e, e+6, 0.0);
+    return Symmetric();
   }
   else {
-    for (int i=0; i<6; i++) e[i] /= ee;
+    return e / ee;
   }
 }
 

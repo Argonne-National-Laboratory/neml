@@ -356,20 +356,15 @@ class NEML_EXPORT CreepModel: public NEMLObject, public Solvable {
               SymSymR4 & A_np1);
 
   /// The creep rate as a function of stress, strain, time, and temperature
-  virtual void f(const double * const s, const double * const e, double t, double T,
-                double * const f) const = 0;
+  virtual Symmetric f(const Symmetric & s, const Symmetric & e, double t, double T) const = 0;
   /// The derivative of the creep rate wrt stress
-  virtual void df_ds(const double * const s, const double * const e, double t, double T,
-                double * const df) const = 0;
+  virtual SymSymR4 df_ds(const Symmetric & s, const Symmetric & e, double t, double T) const = 0;
   /// The derivative of the creep rate wrt strain
-  virtual void df_de(const double * const s, const double * const e, double t, double T,
-                double * const df) const = 0;
+  virtual SymSymR4 df_de(const Symmetric & s, const Symmetric & e, double t, double T) const = 0;
   /// The derivative of the creep rate wrt time, defaults to zero
-  virtual void df_dt(const double * const s, const double * const e, double t, double T,
-                double * const df) const;
+  virtual Symmetric df_dt(const Symmetric & s, const Symmetric & e, double t, double T) const;
   /// The derivative of the creep rate wrt temperature, defaults to zero
-  virtual void df_dT(const double * const s, const double * const e, double t, double T,
-                double * const df) const;
+  virtual Symmetric df_dT(const Symmetric & s, const Symmetric & e, double t, double T) const;
 
   /// Setup a trial state for the solver
   std::unique_ptr<CreepModelTrialState> make_trial_state(const Symmetric & s_np1,
@@ -409,28 +404,23 @@ class NEML_EXPORT J2CreepModel: public CreepModel {
   static ParameterSet parameters();
 
   /// creep_rate = dev(s) / ||dev(s)|| * scalar(effective_strain,
-  /// effective_stress, time, temperature)
-  virtual void f(const double * const s, const double * const e, double t, double T,
-                double * const f) const;
-  /// Derivative of creep rate wrt stress
-  virtual void df_ds(const double * const s, const double * const e, double t, double T,
-                double * const df) const;
-  /// Derivative of creep rate wrt strain
-  virtual void df_de(const double * const s, const double * const e, double t, double T,
-                double * const df) const;
-  /// Derivative of creep rate wrt time
-  virtual void df_dt(const double * const s, const double * const e, double t, double T,
-                double * const df) const;
-  /// Derivative of creep rate wrt temperature
-  virtual void df_dT(const double * const s, const double * const e, double t, double T,
-                double * const df) const;
+  /// The creep rate as a function of stress, strain, time, and temperature
+  virtual Symmetric f(const Symmetric & s, const Symmetric & e, double t, double T) const;
+  /// The derivative of the creep rate wrt stress
+  virtual SymSymR4 df_ds(const Symmetric & s, const Symmetric & e, double t, double T) const;
+  /// The derivative of the creep rate wrt strain
+  virtual SymSymR4 df_de(const Symmetric & s, const Symmetric & e, double t, double T) const;
+  /// The derivative of the creep rate wrt time, defaults to zero
+  virtual Symmetric df_dt(const Symmetric & s, const Symmetric & e, double t, double T) const;
+  /// The derivative of the creep rate wrt temperature, defaults to zero
+  virtual Symmetric df_dT(const Symmetric & s, const Symmetric & e, double t, double T) const;
 
  private:
   // Helpers for computing the above
-  double seq(const double * const s) const;
-  double eeq(const double * const e) const;
-  void sdir(double * const s) const;
-  void edir(double * const e) const;
+  double seq(const Symmetric & s) const;
+  double eeq(const Symmetric & e) const;
+  Symmetric sdir(const Symmetric & s) const;
+  Symmetric edir(const Symmetric & e) const;
 
  private:
   std::shared_ptr<ScalarCreepRule> rule_;

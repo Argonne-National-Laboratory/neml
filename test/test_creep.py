@@ -5,6 +5,7 @@ from neml import solvers, creep, elasticity, interpolate
 import unittest
 
 from common import *
+from nicediff import *
 
 import numpy as np
 import numpy.linalg as la
@@ -335,28 +336,28 @@ class CommonCreepModel(object):
     self.assertTrue(np.allclose(J, nJ, rtol = 1.0e-4))
 
   def test_df_ds(self):
-    dfn = lambda x: self.model.f(x, self.e, self.t, self.T)
-    nderiv = differentiate(dfn, self.s)
-    cderiv = self.model.df_ds(self.s, self.e, self.t, self.T)
-    self.assertTrue(np.allclose(nderiv, cderiv, rtol = 1.0e-4))
+    dfn = lambda x: self.model.f(x, self.E, self.t, self.T)
+    nderiv = diff_symmetric_symmetric(dfn, self.S)
+    cderiv = self.model.df_ds(self.S, self.E, self.t, self.T)
+    self.assertTrue(np.allclose(nderiv.data, cderiv.data, rtol = 1.0e-4))
 
   def test_df_de(self):
-    dfn = lambda x: self.model.f(self.s, x, self.t, self.T)
-    nderiv = differentiate(dfn, self.e)
-    cderiv = self.model.df_de(self.s, self.e, self.t, self.T)
-    self.assertTrue(np.allclose(nderiv, cderiv, rtol = 1.0e-4))
+    dfn = lambda x: self.model.f(self.S, x, self.t, self.T)
+    nderiv = diff_symmetric_symmetric(dfn, self.E)
+    cderiv = self.model.df_de(self.S, self.E, self.t, self.T)
+    self.assertTrue(np.allclose(nderiv.data, cderiv.data, rtol = 1.0e-4))
 
   def test_df_dt(self):
-    dfn = lambda x: self.model.f(self.s, self.e, x, self.T)
-    nderiv = differentiate(dfn, self.t)
-    cderiv = self.model.df_dt(self.s, self.e, self.t, self.T)
-    self.assertTrue(np.allclose(nderiv, cderiv))
+    dfn = lambda x: self.model.f(self.S, self.E, x, self.T)
+    nderiv = diff_symmetric_scalar(dfn, self.t)
+    cderiv = self.model.df_dt(self.S, self.E, self.t, self.T)
+    self.assertTrue(np.allclose(nderiv.data, cderiv.data))
 
   def test_df_dT(self):
-    dfn = lambda x: self.model.f(self.s, self.e, self.t, x)
-    nderiv = differentiate(dfn, self.T)
-    cderiv = self.model.df_dT(self.s, self.e, self.t, self.T)
-    self.assertTrue(np.allclose(nderiv, cderiv))
+    dfn = lambda x: self.model.f(self.S, self.E, self.t, x)
+    nderiv = diff_symmetric_scalar(dfn, self.T)
+    cderiv = self.model.df_dT(self.S, self.E, self.t, self.T)
+    self.assertTrue(np.allclose(nderiv.data, cderiv.data))
 
 class TestJ2Creep(unittest.TestCase, CommonCreepModel):
   def setUp(self):
@@ -369,7 +370,9 @@ class TestJ2Creep(unittest.TestCase, CommonCreepModel):
     self.model = creep.J2CreepModel(self.smodel)
 
     self.s = np.array([100.0,-25.0,-5.0, 20.0,15.0,3.0])
+    self.S = tensors.Symmetric(usym(self.s))
     self.e = np.array([0.05, -0.01, -0.01, 0.025, 0.03, -0.01])
+    self.E = tensors.Symmetric(usym(self.e))
     self.x = np.array([0.06, 0.01, 0.02, 0.01, 0.02, -0.05])
     self.T = 300.0
     self.t = 10.0
@@ -381,19 +384,21 @@ class TestJ2Creep(unittest.TestCase, CommonCreepModel):
     self.ee = np.sqrt(2.0/3.0) * la.norm(self.e)
 
   def test_f(self):
-    f_direct = self.model.f(self.s, self.e, self.t, self.T)
+    f_direct = self.model.f(self.S, self.E, self.t, self.T)
     g_direct = self.smodel.g(self.se, self.ee, self.t, self.T)
     f_calc = g_direct * 3.0 / 2.0 * self.sdev / self.se
 
-    self.assertTrue(np.allclose(f_direct, f_calc))
+    self.assertTrue(np.allclose(f_direct.data, f_calc.data))
 
   def test_f_uni(self):
     """
       Make sure all our "effectives" work out correctly
     """
     s = np.array([100.0, 0, 0, 0, 0, 0])
+    S = tensors.Symmetric(usym(s))
     e = np.array([0.1, -0.05, -0.05, 0, 0, 0])
-    f_direct = self.model.f(s, e, self.t, self.T)
+    E = tensors.Symmetric(usym(e))
+    f_direct = self.model.f(S, E, self.t, self.T)
     
     sdev = s - np.array([1,1,1,0,0,0]) * np.sum(s[:3]) / 3.0
     se = np.sqrt(3.0/2.0) * la.norm(sdev)
@@ -401,11 +406,11 @@ class TestJ2Creep(unittest.TestCase, CommonCreepModel):
 
     g_direct = self.smodel.g(se, ee, self.t, self.T)
     
-    self.assertTrue(np.isclose(g_direct, f_direct[0]))
+    self.assertTrue(np.isclose(g_direct, f_direct.data[0]))
 
-    self.assertTrue(np.isclose(-g_direct/2.0, f_direct[1]))
-    self.assertTrue(np.isclose(-g_direct/2.0, f_direct[2]))
+    self.assertTrue(np.isclose(-g_direct/2.0, f_direct.data[1]))
+    self.assertTrue(np.isclose(-g_direct/2.0, f_direct.data[2]))
 
-    self.assertTrue(np.allclose([0,0,0], f_direct[3:]))
+    self.assertTrue(np.allclose([0,0,0], f_direct.data[3:]))
 
 
