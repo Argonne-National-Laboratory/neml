@@ -727,45 +727,41 @@ void SmallStrainPerfectPlasticity::RJ(
     double * const J)
 {
   SSPPTrialState * tss = static_cast<SSPPTrialState *>(ts);
-  const double * const s_np1 = x;
+  Symmetric s_np1(x);
   double dg = x[6];
 
   // Common things
   double fv;
-  surface_->f(s_np1, &tss->ys, tss->T, fv);
+  surface_->f(s_np1.data(), &tss->ys, tss->T, fv);
+  
+  Symmetric df;
+  surface_->df_ds(s_np1.data(), &tss->ys, tss->T, df.s());
 
-  double df[6];
-  surface_->df_ds(s_np1, &tss->ys, tss->T, df);
-
-  double ddf[36];
-  surface_->df_dsds(s_np1, &tss->ys, tss->T, ddf);
+  SymSymR4 ddf;
+  surface_->df_dsds(s_np1.data(), &tss->ys, tss->T, ddf.s());
 
   // R1
-  double T[6];
-  for (int i=0; i<6; i++) T[i] = tss->e_np1.data()[i] - tss->ep_n.data()[i] - df[i] * dg;
-  mat_vec(tss->C.data(), 6, T, 6, R);
-  for (int i=0; i<6; i++) R[i] = s_np1[i] - R[i];
+  Symmetric R1 = s_np1 - tss->C.dot(tss->e_np1 - tss->ep_n - df * dg);
+  for (size_t i = 0; i < 6; i++) R[i] = R1(i);
   
   // R2
   R[6] = fv;
 
   // J11
-  double TT[36];
-  mat_mat(6, 6, 6, tss->C.data(), ddf, TT);
+  SymSymR4 J11 = tss->C.dot(ddf)*dg + SymSymR4::id();
 
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
-      J[CINDEX(i,j,7)] = TT[CINDEX(i,j,6)] * dg;
+      J[CINDEX(i,j,7)] = J11(i,j);
     }
-    J[CINDEX(i,i,7)] += 1.0;
   }
 
   // J12
-  mat_vec(tss->C.data(), 6, df, 6, T);
-  for (int i=0; i<6; i++) J[CINDEX(i,6,7)] = T[i];
+  Symmetric J12 = tss->C.dot(df);
+  for (int i=0; i<6; i++) J[CINDEX(i,6,7)] = J12(i);
 
   // J21
-  for (int i=0; i<6; i++) J[CINDEX(6,i,7)] = df[i];
+  for (int i=0; i<6; i++) J[CINDEX(6,i,7)] = df(i);
 
   // J22
   J[CINDEX(6,6,7)] = 0.0;
