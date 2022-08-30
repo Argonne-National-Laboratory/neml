@@ -17,13 +17,13 @@ void NEMLDamagedModel_sd::populate_state(History & hist) const
 {
   populate_damage(hist);
   base_->set_variable_prefix(get_variable_prefix());
-  base_->populate_hist(hist);
+  base_->populate_state(hist);
 }
 
 void NEMLDamagedModel_sd::init_state(History & hist) const
 {
   init_damage(hist);
-  base_->init_hist(hist);
+  base_->init_state(hist);
 }
 
 void NEMLDamagedModel_sd::set_elastic_model(std::shared_ptr<LinearElasticModel>
