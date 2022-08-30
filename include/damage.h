@@ -20,27 +20,28 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
   /// Input is an elastic model, an undamaged base material, and the CTE
   NEMLDamagedModel_sd(ParameterSet & params);
 
-  /// How many history variables?  Equal to base_history + ndamage
-  virtual size_t nhist() const;
+  /// Populate the internal variables
+  virtual void populate_state(History & hist) const;
   /// Initialize base according to the base model and damage according to
-  /// init_damage
-  virtual void init_hist(double * const hist) const;
+  virtual void init_state(History & hist) const;
 
   /// The damaged stress update
-  virtual void update_sd(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n) = 0;
+  virtual void update_sd_state(
+    const Symmetric & E_np1, const Symmetric & E_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n) = 0;
 
   /// Number of damage variables
   virtual size_t ndamage() const = 0;
+  /// Populate the damage variables
+  virtual void populate_damage(History & hist) const = 0;
   /// Setup the damage variables
-  virtual void init_damage(double * const damage) const = 0;
+  virtual void init_damage(History & hist) const = 0;
 
   /// Override the elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
@@ -52,13 +53,20 @@ class NEML_EXPORT NEMLDamagedModel_sd: public NEMLModel_sd {
 /// Scalar damage trial state
 class SDTrialState: public TrialState {
  public:
-  virtual ~SDTrialState() {};
-  double e_np1[6];
-  double e_n[6];
-  double T_np1, T_n, t_np1, t_n, u_n, p_n;
-  double s_n[6];
-  double w_n;
-  std::vector<double> h_n;
+  SDTrialState(const Symmetric & e_np1, const Symmetric & e_n, 
+               const Symmetric & s_n,
+               double T_np1, double T_n, double t_np1, 
+               double t_n, double u_n, double p_n, double w_n,
+               const History & h_n) :
+      e_np1(e_np1), e_n(e_n), s_n(s_n), T_np1(T_np1), T_n(t_n),
+      t_np1(t_np1), t_n(t_n), u_n(u_n), p_n(p_n), w_n(w_n),
+      h_n(h_n)
+  {};
+  Symmetric e_np1;
+  Symmetric e_n;
+  Symmetric s_n;
+  double T_np1, T_n, t_np1, t_n, u_n, p_n, w_n;
+  History h_n;
 };
 
 /// Special case where the damage variable is a scalar
@@ -77,20 +85,22 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Stress update using the scalar damage model
-  virtual void update_sd(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+  virtual void update_sd_state(
+    const Symmetric & E_np1, const Symmetric & E_n,
+    double T_np1, double T_n,
+    double t_np1, double t_n,
+    Symmetric & S_np1, const Symmetric & S_n,
+    History & H_np1, const History & H_n,
+    SymSymR4 & AA_np1,
+    double & u_np1, double u_n,
+    double & p_np1, double p_n);
 
   /// Equal to 1
   virtual size_t ndamage() const;
+  /// Populate damage
+  virtual void populate_damage(History & hist) const;
   /// Initialize to zero
-  virtual void init_damage(double * const damage) const;
+  virtual void init_damage(History & hist) const;
 
   /// Number of parameters for the solver
   virtual size_t nparams() const;
@@ -100,11 +110,10 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   virtual void RJ(const double * const x, TrialState * ts,double * const R,
                  double * const J);
   /// Setup a trial state from known information
-  void make_trial_state(const double * const e_np1, const double * const e_n,
+  SDTrialState make_trial_state(const Symmetric & e_np1, const Symmetric & e_n,
                        double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       double u_n, double p_n,
-                       SDTrialState & tss);
+                       const Symmetric & s_n, const History & h_n,
+                       double u_n, double p_n);
   /// Used to find the damage value from the history
   virtual double get_damage(const double *const h_np1);
   /// Used to determine if element should be deleted
@@ -113,15 +122,14 @@ class NEML_EXPORT NEMLScalarDamagedModel_sd: public NEMLDamagedModel_sd, public 
   virtual bool is_damage_model() const;
 
  protected:
-  void tangent_(const double * const e_np1, const double * const e_n,
-               const double * const s_np1, const double * const s_n,
-               double T_np1, double T_n, double t_np1, double t_n,
-               double w_np1, double w_n, const double * const A_prime,
-               double * const A);
-  void ekill_update_(double T_np1, const double * const e_np1, 
-                    double * const s_np1, 
-                    double * const h_np1, const double * const h_n,
-                    double * A_np1, 
+  SymSymR4 tangent_(const Symmetric & e_np1, const Symmetric & e_n,
+                    const Symmetric & s_np1, const Symmetric & s_n,
+                    double T_np1, double T_n, double t_np1, double t_n,
+                    double w_np1, double w_n, const SymSymR4 & A_prime);
+  void ekill_update_(double T_np1, const Symmetric & e_np1, 
+                    Symmetric & s_np1, 
+                    History & h_np1, const History & h_n,
+                    SymSymR4 & A_np1, 
                     double & u_np1, double u_n, 
                     double & p_np1, double p_n);
 

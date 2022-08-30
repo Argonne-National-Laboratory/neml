@@ -39,7 +39,7 @@ class TestSimpleMaterials(unittest.TestCase):
     self.are_equal(self.elastic2, model.elastic)
 
   def test_ri_plasticity(self):
-    surface = surfaces.IsoJ2()
+    surface = surfaces.IsoKinJ2()
     sy = 100.0
     K = 1000.0
     H = 500.0

@@ -19,7 +19,8 @@ enum StorageType {
   TYPE_SYMMETRIC = 3,
   TYPE_SKEW      = 4,
   TYPE_ROT       = 5,
-  TYPE_SYMSYM    = 6
+  TYPE_SYMSYM    = 6,
+  TYPE_BLANK     = 7
 };
 
 // Black magic to map a type to the enum
@@ -124,6 +125,13 @@ class NEML_EXPORT History {
     error_if_wrong_type_(name, GetStorageType<T>());
     return T(&(storage_[loc_.at(name)]));
   }
+  
+  /// Get a pointer to the raw location of an item
+  double * get_data(std::string name)
+  {
+    error_if_not_exists_(name);
+    return &(storage_[loc_.at(name)]);
+  }
 
   /// Get the location map
   const std::unordered_map<std::string,size_t> & get_loc() const {return loc_;};
@@ -150,12 +158,21 @@ class NEML_EXPORT History {
 
   /// Actually increase internal storage
   void increase_store(size_t newsize);
+  
+  /// Nice form for scalar multiplication
+  History & operator*=(const double & scalar);
 
   /// Multiply everything by a scalar
-  void scalar_multiply(double scalar);
+  History & scalar_multiply(const double & scalar);
 
   /// Add another history to this one
   History & operator+=(const History & other);
+
+  /// Negation
+  History operator-() const;
+
+  /// Subtract another history from this one
+  History & operator-=(const History & other);
 
   /// Combine another history object through a union
   History & add_union(const History & other);
@@ -213,6 +230,9 @@ class NEML_EXPORT History {
   /// Quick function to check to see if something is in the vector
   inline bool contains(std::string name) const { return loc_.find(name) !=
     loc_.end();};
+  
+  /// Premultiply by various objects
+  History premultiply(const SymSymR4 & T);
 
   /// Postmultiply by various objects
   History postmultiply(const SymSymR4 & T);
@@ -258,6 +278,58 @@ inline History History::derivative<History>() const
 {
   return history_derivative(*this);
 }
+
+/// Scalar multiplication
+History operator*(const double & s, const History & v);
+
+/// Other scalar multiplication
+History operator*(const History & v, const double & s);
+
+/// History addition
+History operator+(const History & a, const History & b);
+
+/// History subtraction
+History operator-(const History & a, const History & b);
+
+/// NEMLObject that maintains some internal state variables
+class NEML_EXPORT HistoryNEMLObject: public NEMLObject {
+ public:
+  HistoryNEMLObject(ParameterSet & params);
+  virtual ~HistoryNEMLObject() {};
+
+  /// Setup the internal state
+  virtual void populate_hist(History & h) const = 0;
+  /// Initialize the history
+  virtual void init_hist(History & h) const = 0;
+  /// This should be replaced at some point
+  virtual size_t nhist() const;
+
+  /// Setup a flat vector history
+  virtual void init_store(double * const h) const;
+  /// Now just = nhist
+  virtual size_t nstore() const;
+
+  /// Set the object prefix
+  void set_variable_prefix(std::string prefix);
+  /// Get the prefix
+  std::string get_variable_prefix() const;
+  /// Assemble a complete variable name
+  std::string prefix(std::string basename) const;
+  /// Assemble a complete derivative name
+  std::string dprefix(std::string a, std::string b) const;
+  
+   /// Quickly setup history
+   virtual History gather_history_(double * data) const;
+   virtual History gather_history_(const double * data) const;
+   virtual History gather_blank_history_() const;
+
+ protected:
+   virtual void cache_history_();
+
+ protected:
+  std::string prefix_;
+  History stored_hist_;
+};
 
 } // namespace neml
 

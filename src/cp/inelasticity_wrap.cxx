@@ -11,10 +11,8 @@ namespace neml {
 PYBIND11_MODULE(inelasticity, m) {
   m.doc() = "Inelastic models for crystal plasticity";
 
-  py::class_<InelasticModel, NEMLObject, std::shared_ptr<InelasticModel>>(m,
+  py::class_<InelasticModel, HistoryNEMLObject, std::shared_ptr<InelasticModel>>(m,
                                                               "InelasticModel")
-      .def("populate_history", &InelasticModel::populate_history)
-      .def("init_history", &InelasticModel::init_history)
       .def("strength", &InelasticModel::strength)
       .def("d_p", &InelasticModel::d_p)
       .def("d_d_p_d_stress", &InelasticModel::d_d_p_d_stress)

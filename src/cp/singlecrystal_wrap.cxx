@@ -27,8 +27,6 @@ PYBIND11_MODULE(singlecrystal, m) {
                                                                       kwargs,
                                                                       {"kinematics", "lattice"});
                     }))
-      .def("populate_history", &SingleCrystalModel::populate_history)
-      .def("init_history", &SingleCrystalModel::init_history)
       .def("strength",
            [](SingleCrystalModel & m, py::array_t<double, py::array::c_style> h, double T) -> double
            {

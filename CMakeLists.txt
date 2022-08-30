@@ -7,8 +7,8 @@ set(NEML_version 1.4.1)
 ### Setup modules ###
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-### Need c++ 11 ###
-set(CMAKE_CXX_STANDARD 11)
+### Need c++ 17 ###
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### Default to shared libs ###

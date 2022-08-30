@@ -17,25 +17,8 @@ PYBIND11_MODULE(models, m) {
 
   m.doc() = "Base class for all material models.";
   
-  py::class_<NEMLModel, NEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
+  py::class_<NEMLModel, HistoryNEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def("save", &NEMLModel::save)
-      .def_property_readonly("nstore", &NEMLModel::nstore, "Number of variables the program needs to store.")
-      .def("init_store",
-           [](NEMLModel & m) -> py::array_t<double>
-           {
-            auto h = alloc_vec<double>(m.nstore());
-            m.init_store(arr2ptr<double>(h));
-            return h;
-           }, "Initialize stored variables.")
-
-      .def_property_readonly("nhist", &NEMLModel::nhist, "Number of actual history variables.")
-      .def("init_hist",
-           [](NEMLModel & m) -> py::array_t<double>
-           {
-            auto h = alloc_vec<double>(m.nhist());
-            m.init_hist(arr2ptr<double>(h));
-            return h;
-           }, "Initialize history variables.")
       .def("update_sd",
            [](NEMLModel & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, double, double>
            {
@@ -89,6 +72,16 @@ PYBIND11_MODULE(models, m) {
 
   py::class_<SubstepModel_sd, NEMLModel_sd, std::shared_ptr<SubstepModel_sd>>(m,
                                                                               "SubstepModel_sd")
+      .def("make_trial_state",
+           [](SubstepModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<TrialState>
+           {
+           return m.setup(arr2ptr<double>(e_np1),
+                                          arr2ptr<double>(e_n),
+                                          T_np1, T_n,
+                                          t_np1, t_n,
+                                          arr2ptr<double>(s_n),
+                                          arr2ptr<double>(h_n));
+           }, "Setup trial state for solve.")
       ;
 
   py::class_<SmallStrainElasticity, NEMLModel_sd, std::shared_ptr<SmallStrainElasticity>>(m, "SmallStrainElasticity")
@@ -122,20 +115,6 @@ PYBIND11_MODULE(models, m) {
         }))
 
       .def("ys", &SmallStrainPerfectPlasticity::ys)
-
-      .def("make_trial_state",
-           [](SmallStrainPerfectPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSPPTrialState>
-           {
-              std::unique_ptr<SSPPTrialState> ts(new SSPPTrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
-           }, "Setup trial state for solve.")
       ;
 
   py::class_<SmallStrainRateIndependentPlasticity, SubstepModel_sd, Solvable, std::shared_ptr<SmallStrainRateIndependentPlasticity>>(m, "SmallStrainRateIndependentPlasticity")
@@ -145,20 +124,6 @@ PYBIND11_MODULE(models, m) {
           return create_object_python<SmallStrainRateIndependentPlasticity>(args, kwargs,
                                                              {"elastic", "flow"});
         }))
-
-      .def("make_trial_state",
-           [](SmallStrainRateIndependentPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSRIPTrialState>
-           {
-              std::unique_ptr<SSRIPTrialState> ts(new SSRIPTrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
-           }, "Setup trial state for solve.")
       ;
 
   py::class_<SmallStrainCreepPlasticity, NEMLModel_sd, Solvable, std::shared_ptr<SmallStrainCreepPlasticity>>(m, "SmallStrainCreepPlasticity")
@@ -173,19 +138,14 @@ PYBIND11_MODULE(models, m) {
       .def("make_trial_state",
            [](SmallStrainCreepPlasticity & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<SSCPTrialState>
            {
-              std::unique_ptr<SSCPTrialState> ts(new SSCPTrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
+              return m.make_trial_state(Symmetric(arr2ptr<double>(e_np1)),
+                                        Symmetric(arr2ptr<double>(e_n)),
+                                        T_np1, T_n,
+                                        t_np1, t_n,
+                                        Symmetric(arr2ptr<double>(s_n)),
+                                        m.gather_state_(arr2ptr<double>(h_n)));
            }, "Setup trial state for solve.")
       ;
-
-
 
   py::class_<GeneralIntegrator, SubstepModel_sd, Solvable, std::shared_ptr<GeneralIntegrator>>(m, "GeneralIntegrator")
       PICKLEABLE(GeneralIntegrator)
@@ -194,20 +154,6 @@ PYBIND11_MODULE(models, m) {
           return create_object_python<GeneralIntegrator>(args, kwargs, 
                                                          {"elastic", "rule"});
         }))
-
-      .def("make_trial_state",
-           [](GeneralIntegrator & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n) -> std::unique_ptr<GITrialState>
-           {
-              std::unique_ptr<GITrialState> ts(new GITrialState);
-              m.make_trial_state(arr2ptr<double>(e_np1),
-                                          arr2ptr<double>(e_n),
-                                          T_np1, T_n,
-                                          t_np1, t_n,
-                                          arr2ptr<double>(s_n),
-                                          arr2ptr<double>(h_n),
-                                          *ts);
-              return ts;
-           }, "Setup trial state for solve.")
       ;
 
   py::class_<KMRegimeModel, NEMLModel_sd, std::shared_ptr<KMRegimeModel>>(m, "KMRegimeModel")

@@ -11,13 +11,11 @@ namespace neml {
 PYBIND11_MODULE(crystaldamage, m) {
   m.doc() = "Crystal plasticity damage models";
 
-  py::class_<CrystalDamageModel, NEMLObject,
+  py::class_<CrystalDamageModel, HistoryNEMLObject,
       std::shared_ptr<CrystalDamageModel>>(m, "CrystalDamageModel")
     .def_property_readonly("nvars", &CrystalDamageModel::nvars)
     .def_property_readonly("varnames", &CrystalDamageModel::varnames)
     .def("set_varnames", &CrystalDamageModel::set_varnames)
-    .def("populate_history", &CrystalDamageModel::populate_history)
-    .def("init_history", &CrystalDamageModel::init_history)
     .def("projection", &CrystalDamageModel::projection)
     .def("d_projection_d_stress", &CrystalDamageModel::d_projection_d_stress)
     .def("d_projection_d_history", &CrystalDamageModel::d_projection_d_history)

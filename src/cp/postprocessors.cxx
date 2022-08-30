@@ -37,7 +37,7 @@ std::unique_ptr<NEMLObject> PTRTwinReorientation::initialize(
   return neml::make_unique<PTRTwinReorientation>(params);
 }
 
-void PTRTwinReorientation::populate_history(const Lattice & L, 
+void PTRTwinReorientation::populate_hist(const Lattice & L, 
                                             History & history) const
 {
   size_t j = 0;
@@ -51,7 +51,7 @@ void PTRTwinReorientation::populate_history(const Lattice & L,
   history.add<double>("twinned");
 }
 
-void PTRTwinReorientation::init_history(const Lattice & L,
+void PTRTwinReorientation::init_hist(const Lattice & L,
                                         History & history) const
 {
   size_t j = 0;

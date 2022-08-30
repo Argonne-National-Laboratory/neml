@@ -11,6 +11,8 @@ namespace neml {
 PYBIND11_MODULE(history, m) {
   m.doc() = "Internal variable tracking system.";
 
+  py::module::import("neml.objects");
+
   py::class_<History, std::shared_ptr<History>>(m, "History",
                                                 py::buffer_protocol())
       .def(py::init<>())
@@ -155,6 +157,34 @@ PYBIND11_MODULE(history, m) {
               m.unravel_hh(base, arr2ptr<double>(mat));
               return mat;
              }, "Unravel to c-style array")
+      ;
+      py::class_<HistoryNEMLObject, NEMLObject,
+          std::shared_ptr<HistoryNEMLObject>>(m, "HistoryNEMLObject")
+        .def("populate_hist", &HistoryNEMLObject::populate_hist,
+             "Populate a blank history object with the names/types")
+        .def("init_hist", &HistoryNEMLObject::init_hist,
+             "Initialize the history with the initial conditions")
+        .def_property_readonly("nstore", &HistoryNEMLObject::nstore, 
+                               "Number of variables the program needs to store.")
+        .def("init_store",
+             [](HistoryNEMLObject & m) -> py::array_t<double>
+             {
+              auto h = alloc_vec<double>(m.nstore());
+              m.init_store(arr2ptr<double>(h));
+              return h;
+             }, "Initialize stored variables.")
+        .def("initial_history", [](HistoryNEMLObject & m) -> History
+             {
+              History h;
+              m.populate_hist(h);
+              m.init_hist(h);
+              return h;
+             }, "Return a fully initialized history object")
+        .def_property_readonly("nhist", &HistoryNEMLObject::nhist, 
+                               "Number of internal variables")
+        .def_property("variable_prefix", &HistoryNEMLObject::get_variable_prefix,
+                      &HistoryNEMLObject::set_variable_prefix)
+        .def("prefix", &HistoryNEMLObject::prefix)
       ;
 }
 

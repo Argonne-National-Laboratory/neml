@@ -247,6 +247,9 @@ class NEML_EXPORT Skew: public Tensor {
   /// Skew a general tensor
   Skew(const RankTwo & other);
 
+  static Skew zero() { return
+    Skew(std::vector<double>({0,0,0}));};
+
   RankTwo to_full() const;
 
   Skew opposite() const;
@@ -580,6 +583,11 @@ NEML_EXPORT SymSymSymR6 operator/(const SymSymSymR6 & v, double s);
 // Various forms of addition
 NEML_EXPORT SymSymSymR6 operator+(const SymSymSymR6 & a, const SymSymSymR6 & b);
 NEML_EXPORT SymSymSymR6 operator-(const SymSymSymR6 & a, const SymSymSymR6 & b);
+
+// Complicated objective stress update
+Symmetric truesdell_update_sym(const Symmetric & D, const Skew & W, 
+                               const Symmetric & cauchy_n,
+                               const Symmetric & dS);
 
 } // namespace neml
 

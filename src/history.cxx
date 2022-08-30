@@ -182,11 +182,18 @@ void History::increase_store(size_t newsize)
   storage_ = newstore;
 }
 
-void History::scalar_multiply(double scalar)
+History & History::operator*=(const double & scalar)
+{
+  return scalar_multiply(scalar);
+}
+
+History & History::scalar_multiply(const double & scalar)
 {
   for (size_t i = 0; i < size_; i++) {
     storage_[i] *= scalar; 
   }
+
+  return *this;
 }
 
 History & History::operator+=(const History & other)
@@ -198,6 +205,20 @@ History & History::operator+=(const History & other)
     storage_[i] += other.rawptr()[i];
   }
   return *this;
+}
+
+History History::operator-() const
+{
+  History cpy = deepcopy();
+  for (size_t i = 0; i < size_; i++)
+    cpy.rawptr()[i] = -cpy.rawptr()[i];
+
+  return cpy;
+}
+
+History & History::operator-=(const History & other)
+{
+  return this->operator+=(-other);
 }
 
 History History::copy_blank(std::vector<std::string> exclude) const
@@ -358,6 +379,19 @@ History & History::reorder(std::vector<std::string> vars)
   return *this;
 }
 
+History History::premultiply(const SymSymR4 & T)
+{
+  // This is a hack, really we would need to make sure each object is
+  // conformal
+  if (size_ % 6 != 0)
+    throw std::runtime_error("History object does not appear to be suitable "
+                             "for premultiplication by a SymSymR4!");
+  History nhist = this->deepcopy();
+  mat_mat(6, size_ / 6, 6, T.data(), storage_, nhist.rawptr());
+
+  return nhist;
+}
+
 History History::postmultiply(const SymSymR4 & T)
 {
   // This is not a guarantee that this object has the right form,
@@ -411,6 +445,99 @@ double * History::start_loc(std::string name)
 {
   error_if_not_exists_(name);
   return &(storage_[loc_.at(name)]);
+}
+
+History operator*(const double & s, const History & v)
+{
+  History cpy = v.deepcopy();
+  cpy *= s;
+  return cpy;
+}
+
+History operator*(const History & v, const double & s)
+{
+  return operator*(s, v);
+}
+
+History operator+(const History & a, const History & b)
+{
+  History res = a.deepcopy();
+  return res+=b;
+}
+
+History operator-(const History & a, const History & b)
+{
+  History res = a.deepcopy();
+  return res-=b;
+}
+
+HistoryNEMLObject::HistoryNEMLObject(ParameterSet & params) :
+    NEMLObject(params), prefix_("")
+{
+
+}
+
+size_t HistoryNEMLObject::nhist() const
+{
+  History h;
+  populate_hist(h);
+  return h.size();
+}
+
+void HistoryNEMLObject::init_store(double * const h) const
+{
+  History hist(h);
+  populate_hist(hist);
+  init_hist(hist);
+}
+
+size_t HistoryNEMLObject::nstore() const
+{
+  return nhist();
+}
+
+void HistoryNEMLObject::set_variable_prefix(std::string prefix)
+{
+  prefix_ = prefix;
+}
+
+std::string HistoryNEMLObject::get_variable_prefix() const
+{
+  return prefix_;
+}
+
+std::string HistoryNEMLObject::prefix(std::string basename) const
+{
+  return prefix_ + basename;
+}
+
+std::string HistoryNEMLObject::dprefix(std::string a, std::string b) const
+{
+  return prefix(a) + "_" + prefix(b);
+}
+
+void HistoryNEMLObject::cache_history_()
+{
+  populate_hist(stored_hist_);
+}
+
+History HistoryNEMLObject::gather_history_(double * data) const
+{
+  History h = gather_blank_history_();
+  h.set_data(data);
+  return h;
+}
+
+History HistoryNEMLObject::gather_history_(const double * data) const
+{
+  History h = gather_blank_history_();
+  h.set_data(const_cast<double*>(data));
+  return h;
+}
+
+History HistoryNEMLObject::gather_blank_history_() const
+{
+  return stored_hist_;
 }
 
 } // namespace neml

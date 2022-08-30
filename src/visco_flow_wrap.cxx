@@ -14,16 +14,7 @@ PYBIND11_MODULE(visco_flow, m) {
 
   m.doc() = "Viscoplastic flow models.";
 
-  py::class_<ViscoPlasticFlowRule, NEMLObject, std::shared_ptr<ViscoPlasticFlowRule>>(m, "ViscoPlasticFlowRule")
-      .def_property_readonly("nhist", &ViscoPlasticFlowRule::nhist, "Number of history variables.")
-      .def("init_hist",
-           [](ViscoPlasticFlowRule & m) -> py::array_t<double>
-           {
-            auto h = alloc_vec<double>(m.nhist());
-            m.init_hist(arr2ptr<double>(h));
-            return h;
-           }, "Initialize history variables.")
-
+  py::class_<ViscoPlasticFlowRule, HistoryNEMLObject, std::shared_ptr<ViscoPlasticFlowRule>>(m, "ViscoPlasticFlowRule")
       .def("y",
            [](ViscoPlasticFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, double T) -> double
            {

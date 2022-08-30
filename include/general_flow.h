@@ -12,66 +12,39 @@
 namespace neml {
 
 /// ABC for a completely general flow rule...
-class NEML_EXPORT GeneralFlowRule: public NEMLObject {
+class NEML_EXPORT GeneralFlowRule: public HistoryNEMLObject {
  public:
   GeneralFlowRule(ParameterSet & params);
 
-  /// Number of history variables
-  virtual size_t nhist() const = 0;
-  /// Initialize the history at time zero
-  virtual void init_hist(double * const h) = 0;
-
   /// Stress rate
-  virtual void s(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const sdot) = 0;
+  virtual Symmetric s(const Symmetric & s, const History & alpha, 
+                      const Symmetric & edot, double T, double Tdot) = 0;
   /// Partial of stress rate wrt stress
-  virtual void ds_ds(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot) = 0;
+  virtual SymSymR4 ds_ds(const Symmetric & s, const History & alpha, 
+                         const Symmetric & edot, double T, double Tdot) = 0;
   /// Partial of stress rate wrt history
-  virtual void ds_da(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot) = 0;
+  virtual History ds_da(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot) = 0;
   /// Partial of stress rate wrt strain rate
-  virtual void ds_de(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot) = 0;
+  virtual SymSymR4 ds_de(const Symmetric & s, const History & alpha, 
+                         const Symmetric & edot, double T, double Tdot) = 0;
 
   /// History rate
-  virtual void a(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const adot) = 0;
+  virtual History a(const Symmetric & s, const History & alpha, 
+                    const Symmetric & edot, double T, double Tdot) = 0;
   /// Partial of history rate wrt stress
-  virtual void da_ds(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot) = 0;
+  virtual History da_ds(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot) = 0;
   /// Partial of history rate wrt history
-  virtual void da_da(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot) = 0;
+  virtual History da_da(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot) = 0;
   /// Partial of history rate wrt strain rate
-  virtual void da_de(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot) = 0;
+  virtual History da_de(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot) = 0;
 
   /// The implementation needs to define inelastic dissipation
-  virtual void work_rate(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double & p_rate);
-
-  /// The implementation needs to define elastic strain
-  virtual void elastic_strains(const double * const s_np1, double T_np1,
-                              double * const e_np1) const = 0;
+  virtual double work_rate(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot);
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
@@ -94,62 +67,40 @@ class NEML_EXPORT TVPFlowRule : public GeneralFlowRule {
   /// Initialize from parameter set
   static ParameterSet parameters();
 
-  /// Number of history variables
-  virtual size_t nhist() const;
+  // Setup internal state
+  virtual void populate_hist(History & h) const;
   /// Initialize history
-  virtual void init_hist(double * const h);
+  virtual void init_hist(History & h) const;
 
   /// Stress rate
-  virtual void s(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const sdot);
+  virtual Symmetric s(const Symmetric & s, const History & alpha, 
+                      const Symmetric & edot, double T, double Tdot);
   /// Partial of stress rate wrt stress
-  virtual void ds_ds(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot);
+  virtual SymSymR4 ds_ds(const Symmetric & s, const History & alpha, 
+                         const Symmetric & edot, double T, double Tdot);
   /// Partial of stress rate wrt history
-  virtual void ds_da(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot);
+  virtual History ds_da(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
   /// Partial of stress rate wrt strain rate
-  virtual void ds_de(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot);
+  virtual SymSymR4 ds_de(const Symmetric & s, const History & alpha, 
+                         const Symmetric & edot, double T, double Tdot);
 
   /// History rate
-  virtual void a(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const adot);
+  virtual History a(const Symmetric & s, const History & alpha, 
+                    const Symmetric & edot, double T, double Tdot);
   /// Partial of history rate wrt stress
-  virtual void da_ds(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot);
+  virtual History da_ds(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
   /// Partial of history rate wrt history
-  virtual void da_da(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot);
+  virtual History da_da(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
   /// Partial of history rate wrt strain rate
-  virtual void da_de(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot);
+  virtual History da_de(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
 
   /// The implementation needs to define inelastic dissipation
-  virtual void work_rate(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double & p_rate);
-
-  /// The implementation needs to define elastic strain
-  virtual void elastic_strains(const double * const s_np1, double T_np1,
-                              double * const e_np1) const;
+  virtual double work_rate(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot);
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);

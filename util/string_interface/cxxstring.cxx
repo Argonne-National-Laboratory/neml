@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   double * h_n = new double [model->nstore()];
   double * h_np1 = new double [model->nstore()];
 
-  model->init_hist(h_n);
+  model->init_store(h_n);
 
   double e_n[6], e_np1[6], s_n[6], s_np1[6], A_np1[36];
   std::fill(e_n, e_n+6, 0.0);

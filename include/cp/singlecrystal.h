@@ -57,10 +57,14 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Setup blank history
-  void populate_history(History & history) const;
-
+  void populate_state(History & history) const;
   /// Actually initialize history
-  void init_history(History & history) const;
+  void init_state(History & history) const;
+  
+  /// Not changing state
+  void populate_static(History & history) const;
+  /// Static stat
+  void init_static(History & history) const;
 
   /// Useful methods for external models that want an idea of an average
   /// strength
@@ -71,21 +75,16 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
           double * Fe) const;
   
   /// Large deformation incremental update
-  virtual void update_ld_inc(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n);
-
-  /// Number of stored history variables
-  virtual size_t nhist() const;
-  /// Initialize history raw pointer array
-  virtual void init_hist(double * const hist) const;
+  virtual void update_ld_inc_interface(
+      const Symmetric & d_np1, const Symmetric & d_n,
+      const Skew & w_np1, const Skew & w_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n,
+      SymSymR4 & A_np1, SymSkewR4 & B_np1,
+      double & u_np1, double u_n, 
+      double & p_np1, double p_n);
 
   /// Instantaneous CTE
   virtual double alpha(double T) const;
@@ -129,19 +128,15 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
  private:
   void attempt_update_ld_inc_(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n, int trial_type);
-
-  History gather_history_(double * data) const;
-  History gather_history_(const double * data) const;
-  History gather_blank_history_() const;
+      const Symmetric & d_np1, const Symmetric & d_n,
+      const Skew & w_np1, const Skew & w_n,
+      double T_np1, double T_n,
+      double t_np1, double t_n,
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n,
+      SymSymR4 & A_np1, SymSkewR4 & B_np1,
+      double & u_np1, double u_n, 
+      double & p_np1, double p_n, int trial_type);
 
   void calc_tangents_(Symmetric & S, History & H,
                       SCTrialState * ts, double * const A, double * const B);
@@ -156,10 +151,6 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
 
   void solve_substep_(SCTrialState * ts, Symmetric & stress, History & hist);
 
-  std::vector<std::string> not_updated_() const;
-
-  void populate_static_(History & history) const;
-
  private:
   std::shared_ptr<KinematicModel> kinematics_;
   std::shared_ptr<Lattice> lattice_;
@@ -171,11 +162,7 @@ class NEML_EXPORT SingleCrystalModel: public NEMLModel_ldi, public Solvable
   bool verbose_, linesearch_;
   int max_divide_;
 
-  History stored_hist_;
-
   std::vector<std::shared_ptr<CrystalPostprocessor>> postprocessors_;
-  std::vector<std::string> static_names_;
-  size_t static_size_;
 
   bool elastic_predictor_, fallback_elastic_predictor_;
   int force_divide_;

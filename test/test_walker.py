@@ -35,35 +35,39 @@ class TestRateSwitch(unittest.TestCase, CommonGeneralFlow):
         self.lv, self.eps0)
 
     self.T_n = 300.0
-    self.e_n = np.zeros((6,))
+    self.e_n = tensors.Symmetric(usym(np.zeros((6,))))
     self.t_n = 0.0
-    self.h_n = np.zeros((2,))
+    self.h_n = history.History()
+    self.model.populate_hist(self.h_n)
+    self.h_n.copy_data(np.zeros((2,)))
 
     self.eps = 1.0e-6
 
   def test_kappa(self):
     exact = self.model.kappa(self.gen_edot(self.gen_e(), self.gen_t()), self.gen_T())
-    edev = make_dev(self.gen_edot(self.gen_e(), self.gen_t()))
+    edev = make_dev(self.gen_edot(self.gen_e(), self.gen_t()).data)
     en = la.norm(edev)
     should = 1.0 - self.lv + self.lv * np.sqrt(2.0/3.0) * en / self.eps0
     self.assertAlmostEqual(should, exact)
 
   def test_dkappa(self):
     exact = self.model.dkappa(self.gen_edot(self.gen_e(), self.gen_t()), self.gen_T())
-    should = differentiate(lambda e: self.model.kappa(e, self.gen_T()), 
+    should = diff_scalar_symmetric(lambda e: self.model.kappa(e, self.gen_T()), 
         self.gen_edot(self.gen_e(), self.gen_t()))
 
-    self.assertTrue(np.allclose(exact.flatten(),should.flatten(), rtol = 1e-4))
+    self.assertTrue(np.allclose(exact.data,should.data, rtol = 1e-4))
 
   def gen_hist(self):
-    h = np.array([0.1,175.0])
-    return h
+    H = history.History()
+    self.model.populate_hist(H)
+    H.copy_data(np.array([0.1,175.0]))
+    return H
 
   def gen_stress(self):
-    return np.array([200.0,-200.0,100.0,50.0,25.0,-50.0])
+    return tensors.Symmetric(usym(np.array([200.0,-200.0,100.0,50.0,25.0,-50.0])))
 
   def gen_e(self):
-    return np.array([0.025,-0.01,-0.02,0.01,0.02,-0.03])
+    return tensors.Symmetric(usym(np.array([0.025,-0.01,-0.02,0.01,0.02,-0.03])))
 
   def gen_T(self):
     return 350
@@ -938,7 +942,8 @@ class TestTestFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
       [300.0,50.0,25.0],
       [50.0,150.0,-20.0],
       [25.0,-20.0,-100.0]])
-    self.h = self.model.populate_hist()
+    self.h = history.History()
+    self.model.populate_hist(self.h)
     self.h.set_scalar("alpha", 0.1)
     self.h.set_scalar("iso", 200.0)
     self.T = 300.0
@@ -957,12 +962,12 @@ class TestTestFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
     self.assertEqual(self.model.nhist, 2)
 
   def test_setup_hist(self):
-    hobj = self.model.populate_hist()
+    hobj = self.model.initial_history()
     self.assertEqual(hobj.size, 2)
     self.assertTrue(hobj.items, ["alpha", "iso"])
 
   def test_initialize_hist(self):
-    h = self.model.initialize_hist()
+    h = self.model.initial_history()
     self.assertAlmostEqual(h.get_scalar("alpha"), 0.0)
     self.assertAlmostEqual(h.get_scalar("iso"), self.s0)
 
@@ -979,7 +984,8 @@ class TestTestFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
     self.assertEqual(should, actual)
 
   def test_h(self):
-    should = self.model.populate_hist()
+    should = history.History()
+    self.model.populate_hist(should)
 
     should.set_scalar("alpha", 1.0)
     should.set_scalar("iso", self.K)
@@ -1110,8 +1116,9 @@ class TestWalkerFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
       [12.0, 18.0,50.0]]).dev()
 
     self.X = self.X1 + self.X2
-
-    self.h = self.model.populate_hist()
+    
+    self.h = history.History()
+    self.model.populate_hist(self.h)
     self.h.set_scalar("alpha", self.a)
     self.h.set_scalar("R", self.R)
     self.h.set_scalar("D", self.D)
@@ -1141,12 +1148,13 @@ class TestWalkerFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
     self.assertEqual(self.model.nhist, self.nhist)
 
   def test_setup_hist(self):
-    hobj = self.model.populate_hist()
+    hobj = history.History()
+    self.model.populate_hist(hobj)
     self.assertEqual(hobj.size, self.nhist)
     self.assertTrue(hobj.items, ["alpha", "R", "D", "X0", "X1"])
 
   def test_initialize_hist(self):
-    h = self.model.initialize_hist()
+    h = self.model.initial_history()
     self.assertAlmostEqual(h.get_scalar("alpha"), 0.0)
     self.assertAlmostEqual(h.get_scalar("R"), 0.0)
     self.assertAlmostEqual(h.get_scalar("D"), self.D_0)
@@ -1179,7 +1187,8 @@ class TestWalkerFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
 
   def test_h(self):
     mval = self.model.h_wrap(self.state)
-    sval = self.model.populate_hist()
+    sval = history.History()
+    self.model.populate_hist(sval)
     
     # All this for alpha...
     xi = (self.D - self.D_0) / self.D_xi
@@ -1220,7 +1229,8 @@ class TestWalkerFlowRule(unittest.TestCase, CommonWrappedFlow, CommonFlowRule):
 
   def test_h_time(self):
     mval = self.model.h_time_wrap(self.state)
-    sval = self.model.populate_hist()
+    sval = history.History()
+    self.model.populate_hist(sval)
     
     # All this for alpha...
     xi = (self.D - self.D_0) / self.D_xi

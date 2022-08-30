@@ -10,7 +10,7 @@
 namespace neml {
 
 HardeningRule::HardeningRule(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
 }
@@ -21,15 +21,14 @@ IsotropicHardeningRule::IsotropicHardeningRule(ParameterSet & params) :
 
 }
 
-size_t IsotropicHardeningRule::nhist() const
+void IsotropicHardeningRule::populate_hist(History & h) const
 {
-  return 1;
+  h.add<double>(prefix("alpha"));
 }
 
-void IsotropicHardeningRule::init_hist(double * const alpha) const
+void IsotropicHardeningRule::init_hist(History & h) const
 {
-  alpha[0] = 0.0;
-
+  h.get<double>(prefix("alpha")) = 0.0;
 }
 
 // Implementation of linear hardening
@@ -303,15 +302,14 @@ KinematicHardeningRule::KinematicHardeningRule(ParameterSet & params) :
 }
 
 // Implementation of kinematic base class
-size_t KinematicHardeningRule::nhist() const
+void KinematicHardeningRule::populate_hist(History & hist) const
 {
-  return 6;
+  hist.add<Symmetric>(prefix("backstress"));
 }
 
-void KinematicHardeningRule::init_hist(double * const alpha) const
+void KinematicHardeningRule::init_hist(History & hist) const
 {
-  for (int i=0; i<6; i++) alpha[i] = 0.0;
-
+  hist.get<Symmetric>(prefix("backstress")) = Symmetric::zero();
 }
 
 // Implementation of linear kinematic hardening
@@ -344,7 +342,7 @@ std::unique_ptr<NEMLObject> LinearKinematicHardeningRule::initialize(ParameterSe
 void LinearKinematicHardeningRule::q(const double * const alpha, 
                                     double T, double * const qv) const
 {
-  for (int i=0; i<6; i++) {
+  for (size_t i=0; i<6; i++) {
     qv[i] = -H_->value(T) * alpha[i];
   }
 
@@ -354,7 +352,7 @@ void LinearKinematicHardeningRule::dq_da(const double * const alpha,
                                     double T, double * const dqv) const
 {
   std::fill(dqv, dqv+36, 0.0);
-  for (int i=0; i<6; i++) {
+  for (size_t i=0; i<6; i++) {
     dqv[CINDEX(i,i,6)] = -H_->value(T);
   }
 
@@ -393,15 +391,16 @@ std::unique_ptr<NEMLObject> CombinedHardeningRule::initialize(ParameterSet & par
   return neml::make_unique<CombinedHardeningRule>(params); 
 }
 
-size_t CombinedHardeningRule::nhist() const
+void CombinedHardeningRule::populate_hist(History & hist) const
 {
-  return iso_->nhist() + kin_->nhist();
+  iso_->populate_hist(hist);
+  kin_->populate_hist(hist);
 }
 
-void CombinedHardeningRule::init_hist(double * const alpha) const
+void CombinedHardeningRule::init_hist(History & hist) const
 {
-  iso_->init_hist(alpha);
-  return kin_->init_hist(&alpha[iso_->nhist()]);
+  iso_->init_hist(hist);
+  kin_->init_hist(hist);
 }
 
 void CombinedHardeningRule::q(const double * const alpha, double T, 
@@ -441,7 +440,7 @@ void CombinedHardeningRule::dq_da(const double * const alpha, double T,
 }
 
 NonAssociativeHardening::NonAssociativeHardening(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
 }
@@ -641,14 +640,18 @@ size_t Chaboche::ninter() const
   return 1 + 6;
 }
 
-size_t Chaboche::nhist() const
+void Chaboche::populate_hist(History & h) const
 {
-  return 1 + 6 * n_;
+  h.add<double>(prefix("alpha"));
+  for (size_t i = 0; i < n_; i++)
+    h.add<Symmetric>(prefix("backstress_"+std::to_string(i)));
 }
 
-void Chaboche::init_hist(double * const alpha) const
+void Chaboche::init_hist(History & h) const
 {
-  std::fill(alpha, alpha+nhist(), 0.0);
+  h.get<double>(prefix("alpha")) = 0.0;
+  for (size_t i = 0; i < n_; i++)
+    h.get<Symmetric>(prefix("backstress_"+std::to_string(i))) = Symmetric::zero();
 }
 
 void Chaboche::q(const double * const alpha, double T, double * const qv) const
@@ -657,10 +660,10 @@ void Chaboche::q(const double * const alpha, double T, double * const qv) const
   std::fill(qv+1, qv+7, 0.0);
   
   // Helps with unrolling
-  int n = n_;
+  size_t n = n_;
 
-  for (int i=0; i<n; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n; i++) {
+    for (size_t j=0; j<6; j++) {
       qv[j+1] += alpha[1+i*6+j];
     }
   }
@@ -672,10 +675,10 @@ void Chaboche::dq_da(const double * const alpha, double T, double * const qv) co
   iso_->dq_da(alpha, T, qv); // fills in (0,0)
   
   // Help unroll
-  int n = n_;
+  size_t n = n_;
 
-  for (int i=0; i<n; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n; i++) {
+    for (size_t j=0; j<6; j++) {
       qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
     }
   }
@@ -698,8 +701,8 @@ void Chaboche::h(const double * const s, const double * const alpha, double T,
   
   std::vector<double> c = eval_vector(c_, T);
 
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       hv[1+i*6+j] = - 2.0 / 3.0 * c[i] * nv[j] - sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T) * alpha[1+i*6+j];
     }
   }
@@ -726,13 +729,13 @@ void Chaboche::dh_ds(const double * const s, const double * const alpha, double 
   double nn[36];
 
   std::fill(nn, nn+36, 0.0);
-  for (int i=0; i<6; i++) {
+  for (size_t i=0; i<6; i++) {
     nn[CINDEX(i,i,6)] += 1.0;
   }
   
   double iv[6];
   double jv[6];
-  for (int i=0; i<3; i++) {
+  for (size_t i=0; i<3; i++) {
     iv[i] = 1.0 / 3.0;
     jv[i] = 1.0;
   }
@@ -745,14 +748,14 @@ void Chaboche::dh_ds(const double * const s, const double * const alpha, double 
 
   outer_update_minus(n, 6, n, 6, nn);
   if (nv != 0.0) {
-    for (int i=0; i<36; i++) {
+    for (size_t i=0; i<36; i++) {
       nn[i] /= nv;
     }
   }
   
   // Fill in...
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       for (int k=0; k<6; k++) {
         dhv[CINDEX((1+i*6+j),(k),6)] = -2.0 / 3.0 * c[i] * nn[CINDEX(j,k,6)];
       }
@@ -765,7 +768,7 @@ void Chaboche::dh_da(const double * const s, const double * const alpha, double 
               double * const dhv) const
 {
   // Again, there should be no earthly reason the compiler can't do this
-  int nh = nhist();
+  size_t nh = nhist();
 
   std::fill(dhv, dhv + nh*nh, 0.0);
 
@@ -783,29 +786,29 @@ void Chaboche::dh_da(const double * const s, const double * const alpha, double 
   normalize_vec(n, 6);
   
   std::fill(ss, ss+36, 0.0);
-  for (int i=0; i<6; i++) {
+  for (size_t i=0; i<6; i++) {
     ss[CINDEX(i,i,6)] += 1.0;
   }
   
   outer_update_minus(n, 6, n, 6, ss);
   if (nv != 0.0) {
-    for (int i=0; i<36; i++) {
+    for (size_t i=0; i<36; i++) {
       ss[i] /= nv;
     }
   }
   
   // Fill in the gamma part
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       dhv[CINDEX((1+i*6+j),(1+i*6+j),nh)] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
     }
   }
 
   // Fill in the ss part
-  for (int bi=0; bi<n_; bi++) {
-    for (int i=0; i<6; i++) {
-      for (int bj=0; bj<n_; bj++) {
-        for (int j=0; j<6; j++) {
+  for (size_t bi=0; bi<n_; bi++) {
+    for (size_t i=0; i<6; i++) {
+      for (size_t bj=0; bj<n_; bj++) {
+        for (size_t j=0; j<6; j++) {
           dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nh)] -= 2.0 / 3.0 * c[bi]  * 
               ss[CINDEX(i,j,6)];
         }
@@ -814,8 +817,8 @@ void Chaboche::dh_da(const double * const s, const double * const alpha, double 
   }
 
   // Fill in the alpha part
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * 
           gmodels_[i]->dgamma(alpha[0], T) * alpha[1+i*6+j];
     }
@@ -833,10 +836,10 @@ void Chaboche::h_time(const double * const s, const double * const alpha,
 
   double Xi[6];
   double nXi;
-  for (int i=0; i<n_; i++) {
+  for (size_t i=0; i<n_; i++) {
     std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
     nXi = norm2_vec(Xi, 6);
-    for (int j=0; j<6; j++) {
+    for (size_t j=0; j<6; j++) {
       hv[1+i*6+j] = -A[i] * sqrt(3.0/2.0) * pow(nXi, a[i] - 1.0) *
           alpha[1+i*6+j];
     }
@@ -861,22 +864,22 @@ void Chaboche::dh_da_time(const double * const s, const double * const alpha,
   std::vector<double> A = eval_vector(A_, T);
   std::vector<double> a = eval_vector(a_, T);
 
-  int nh = nhist();
-  int n = n_;
+  size_t nh = nhist();
+  size_t n = n_;
   
   double XX[36];
   double Xi[6];
   double nXi;
   int ia,ib;
   double d;
-  for (int i=0; i<n; i++) {
+  for (size_t i=0; i<n; i++) {
     std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
     nXi = norm2_vec(Xi, 6);
     normalize_vec(Xi, 6);
     outer_vec(Xi, 6, Xi, 6, XX);
-    for (int j=0; j<6; j++) {
+    for (size_t j=0; j<6; j++) {
       ia = 1 + i*6 + j;
-      for (int k=0; k<6; k++) {
+      for (size_t k=0; k<6; k++) {
         ib = 1 + i*6 + k;
         if (j == k) {
           d = 1.0;
@@ -900,9 +903,9 @@ void Chaboche::h_temp(const double * const s, const double * const alpha, double
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
 
-  for (int i=0; i<n_; i++) {
+  for (size_t i=0; i<n_; i++) {
     if (c[i] == 0.0) continue;
-    for (int j=0; j<6; j++) {
+    for (size_t j=0; j<6; j++) {
       hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
     }
   }
@@ -922,9 +925,9 @@ void Chaboche::dh_da_temp(const double * const s, const double * const alpha, do
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
 
-  for (int i=0; i<n_; i++) {
+  for (size_t i=0; i<n_; i++) {
     if (c[i] == 0.0) continue;
-    for (int j=0; j<6; j++) {
+    for (size_t j=0; j<6; j++) {
       int ci = 1 + i*6 + j;
       dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
     }
@@ -945,8 +948,8 @@ std::vector<double> Chaboche::c(double T) const
 void Chaboche::backstress_(const double * const alpha, double * const X) const
 {
   std::fill(X, X+6, 0.0);
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       X[j] += alpha[1+i*6+j];
     }
   }
@@ -1009,14 +1012,18 @@ size_t ChabocheVoceRecovery::ninter() const
   return 1 + 6;
 }
 
-size_t ChabocheVoceRecovery::nhist() const
+void ChabocheVoceRecovery::populate_hist(History & h) const
 {
-  return 1 + 6 * n_;
+  h.add<double>(prefix("alpha"));
+  for (size_t i = 0; i < n_; i++)
+    h.add<Symmetric>(prefix("backstress_"+std::to_string(i)));
 }
 
-void ChabocheVoceRecovery::init_hist(double * const alpha) const
+void ChabocheVoceRecovery::init_hist(History & h) const
 {
-  std::fill(alpha, alpha+nhist(), 0.0);
+  h.get<double>(prefix("alpha")) = 0.0;
+  for (size_t i = 0; i < n_; i++)
+    h.get<Symmetric>(prefix("backstress_"+std::to_string(i))) = Symmetric::zero();
 }
 
 void ChabocheVoceRecovery::q(const double * const alpha, double T, double * const qv) const
@@ -1027,10 +1034,10 @@ void ChabocheVoceRecovery::q(const double * const alpha, double T, double * cons
   std::fill(qv+1, qv+7, 0.0);
   
   // Helps with unrolling
-  int n = n_;
+  size_t n = n_;
 
-  for (int i=0; i<n; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n; i++) {
+    for (size_t j=0; j<6; j++) {
       qv[j+1] += alpha[1+i*6+j];
     }
   }
@@ -1044,10 +1051,10 @@ void ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * 
   qv[0] = -1.0;
   
   // Help unroll
-  int n = n_;
+  size_t n = n_;
 
-  for (int i=0; i<n; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n; i++) {
+    for (size_t j=0; j<6; j++) {
       qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
     }
   }
@@ -1072,8 +1079,8 @@ void ChabocheVoceRecovery::h(const double * const s, const double * const alpha,
   
   std::vector<double> c = eval_vector(c_, T);
 
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       hv[1+i*6+j] = - 2.0 / 3.0 * c[i] * nv[j] - sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T) * alpha[1+i*6+j];
     }
   }
@@ -1100,13 +1107,13 @@ void ChabocheVoceRecovery::dh_ds(const double * const s, const double * const al
   double nn[36];
 
   std::fill(nn, nn+36, 0.0);
-  for (int i=0; i<6; i++) {
+  for (size_t i=0; i<6; i++) {
     nn[CINDEX(i,i,6)] += 1.0;
   }
   
   double iv[6];
   double jv[6];
-  for (int i=0; i<3; i++) {
+  for (size_t i=0; i<3; i++) {
     iv[i] = 1.0 / 3.0;
     jv[i] = 1.0;
   }
@@ -1119,14 +1126,14 @@ void ChabocheVoceRecovery::dh_ds(const double * const s, const double * const al
 
   outer_update_minus(n, 6, n, 6, nn);
   if (nv != 0.0) {
-    for (int i=0; i<36; i++) {
+    for (size_t i=0; i<36; i++) {
       nn[i] /= nv;
     }
   }
   
   // Fill in...
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       for (int k=0; k<6; k++) {
         dhv[CINDEX((1+i*6+j),(k),6)] = -2.0 / 3.0 * c[i] * nn[CINDEX(j,k,6)];
       }
@@ -1139,7 +1146,7 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
               double * const dhv) const
 {
   // Again, there should be no earthly reason the compiler can't do this
-  int nh = nhist();
+  size_t nh = nhist();
 
   std::fill(dhv, dhv + nh*nh, 0.0);
 
@@ -1159,29 +1166,29 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
   normalize_vec(n, 6);
   
   std::fill(ss, ss+36, 0.0);
-  for (int i=0; i<6; i++) {
+  for (size_t i=0; i<6; i++) {
     ss[CINDEX(i,i,6)] += 1.0;
   }
   
   outer_update_minus(n, 6, n, 6, ss);
   if (nv != 0.0) {
-    for (int i=0; i<36; i++) {
+    for (size_t i=0; i<36; i++) {
       ss[i] /= nv;
     }
   }
   
   // Fill in the gamma part
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       dhv[CINDEX((1+i*6+j),(1+i*6+j),nh)] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
     }
   }
 
   // Fill in the ss part
-  for (int bi=0; bi<n_; bi++) {
-    for (int i=0; i<6; i++) {
-      for (int bj=0; bj<n_; bj++) {
-        for (int j=0; j<6; j++) {
+  for (size_t bi=0; bi<n_; bi++) {
+    for (size_t i=0; i<6; i++) {
+      for (size_t bj=0; bj<n_; bj++) {
+        for (size_t j=0; j<6; j++) {
           dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nh)] -= 2.0 / 3.0 * c[bi]  * 
               ss[CINDEX(i,j,6)];
         }
@@ -1190,8 +1197,8 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
   }
 
   // Fill in the alpha part
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * 
           gmodels_[i]->dgamma(alpha[0], T) * alpha[1+i*6+j];
     }
@@ -1214,10 +1221,10 @@ void ChabocheVoceRecovery::h_time(const double * const s, const double * const a
 
   double Xi[6];
   double nXi;
-  for (int i=0; i<n_; i++) {
+  for (size_t i=0; i<n_; i++) {
     std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
     nXi = norm2_vec(Xi, 6);
-    for (int j=0; j<6; j++) {
+    for (size_t j=0; j<6; j++) {
       hv[1+i*6+j] = -A[i] * pow(sqrt(3.0/2.0) * nXi, a[i] - 1.0) *
           alpha[1+i*6+j];
     }
@@ -1246,22 +1253,22 @@ void ChabocheVoceRecovery::dh_da_time(const double * const s, const double * con
   std::vector<double> A = eval_vector(A_, T);
   std::vector<double> a = eval_vector(a_, T);
 
-  int nh = nhist();
-  int n = n_;
+  size_t nh = nhist();
+  size_t n = n_;
   
   double XX[36];
   double Xi[6];
   double nXi;
   int ia,ib;
   double d;
-  for (int i=0; i<n; i++) {
+  for (size_t i=0; i<n; i++) {
     std::copy(&alpha[1+i*6], &alpha[1+(i+1)*6], Xi);
     nXi = norm2_vec(Xi, 6);
     normalize_vec(Xi, 6);
     outer_vec(Xi, 6, Xi, 6, XX);
-    for (int j=0; j<6; j++) {
+    for (size_t j=0; j<6; j++) {
       ia = 1 + i*6 + j;
-      for (int k=0; k<6; k++) {
+      for (size_t k=0; k<6; k++) {
         ib = 1 + i*6 + k;
         if (j == k) {
           d = 1.0;
@@ -1285,9 +1292,9 @@ void ChabocheVoceRecovery::h_temp(const double * const s, const double * const a
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
 
-  for (int i=0; i<n_; i++) {
+  for (size_t i=0; i<n_; i++) {
     if (c[i] == 0.0) continue;
-    for (int j=0; j<6; j++) {
+    for (size_t j=0; j<6; j++) {
       hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
     }
   }
@@ -1307,10 +1314,10 @@ void ChabocheVoceRecovery::dh_da_temp(const double * const s, const double * con
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
 
-  for (int i=0; i<n_; i++) {
+  for (size_t i=0; i<n_; i++) {
     if (c[i] == 0.0) continue;
-    for (int j=0; j<6; j++) {
-      int ci = 1 + i*6 + j;
+    for (size_t j=0; j<6; j++) {
+      size_t ci = 1 + i*6 + j;
       dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
     }
   }
@@ -1324,8 +1331,8 @@ int ChabocheVoceRecovery::n() const
 void ChabocheVoceRecovery::backstress_(const double * const alpha, double * const X) const
 {
   std::fill(X, X+6, 0.0);
-  for (int i=0; i<n_; i++) {
-    for (int j=0; j<6; j++) {
+  for (size_t i=0; i<n_; i++) {
+    for (size_t j=0; j<6; j++) {
       X[j] += alpha[1+i*6+j];
     }
   }

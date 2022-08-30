@@ -21,13 +21,8 @@ PYBIND11_MODULE(damage, m) {
 
   py::class_<NEMLDamagedModel_sd, NEMLModel_sd, std::shared_ptr<NEMLDamagedModel_sd>>(m, "NEMLDamagedModel_sd")
       .def_property_readonly("ndamage", &NEMLDamagedModel_sd::ndamage, "Number of damage variables.")
-      .def("init_damage",
-           [](NEMLDamagedModel_sd & m) -> py::array_t<double>
-           {
-            auto h = alloc_vec<double>(m.ndamage());
-            m.init_damage(arr2ptr<double>(h));
-            return h;
-           }, "Initialize damage variables.")
+      .def("init_damage", &NEMLDamagedModel_sd::init_damage)
+      .def("populate_damage", &NEMLDamagedModel_sd::populate_damage)
       ;
 
   py::class_<SDTrialState, TrialState>(m, "SDTrialState")
@@ -42,17 +37,15 @@ PYBIND11_MODULE(damage, m) {
                                                               "damage"});
         }))
       .def("make_trial_state",
-           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::unique_ptr<SDTrialState>
+           [](NEMLScalarDamagedModel_sd & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> SDTrialState
            {
-            std::unique_ptr<SDTrialState> ts(new SDTrialState);
-            m.make_trial_state(arr2ptr<double>(e_np1),
-                                         arr2ptr<double>(e_n),
+            History test = m.gather_state_(arr2ptr<double>(h_n));
+            return m.make_trial_state(Symmetric(arr2ptr<double>(e_np1)),
+                                         Symmetric(arr2ptr<double>(e_n)),
                                          T_np1, T_n, t_np1, t_n,
-                                         arr2ptr<double>(s_n),
-                                         arr2ptr<double>(h_n),
-                                         u_n, p_n, *ts);
-
-            return ts;
+                                         Symmetric(arr2ptr<double>(s_n)),
+                                         m.gather_state_(arr2ptr<double>(h_n)),
+                                         u_n, p_n);
            }, "Make a trial state, mostly for testing.")
       ;
 

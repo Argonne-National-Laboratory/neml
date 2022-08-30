@@ -11,10 +11,8 @@ namespace neml {
 PYBIND11_MODULE(kinematics, m) {
   m.doc() = "Kinematic models for crystal plasticity";
   
-  py::class_<KinematicModel, NEMLObject, std::shared_ptr<KinematicModel>>(m,
+  py::class_<KinematicModel, HistoryNEMLObject, std::shared_ptr<KinematicModel>>(m,
                                                               "KinematicModel")
-      .def("populate_history", &KinematicModel::populate_history)
-      .def("init_history", &KinematicModel::init_history)
 
       .def("strength", &KinematicModel::strength)
 

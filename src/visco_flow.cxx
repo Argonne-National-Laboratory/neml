@@ -8,7 +8,7 @@
 namespace neml {
 
 ViscoPlasticFlowRule::ViscoPlasticFlowRule(ParameterSet & params) :
-    NEMLObject(params)
+    HistoryNEMLObject(params)
 {
 
 }
@@ -115,6 +115,9 @@ SuperimposedViscoPlasticFlowRule::SuperimposedViscoPlasticFlowRule(ParameterSet 
   for (size_t i = 1; i <= rules_.size(); i++) {
     offsets_[i] = offsets_[i-1] + rules_[i-1]->nhist();
   }
+
+  for (size_t i = 0; i < nmodels(); i++)
+    rules_[i]->set_variable_prefix("model"+std::to_string(i)+"_");
 }
 
 std::string SuperimposedViscoPlasticFlowRule::type()
@@ -142,15 +145,16 @@ size_t SuperimposedViscoPlasticFlowRule::nmodels() const
   return rules_.size();
 }
 
-size_t SuperimposedViscoPlasticFlowRule::nhist() const
-{
-  return offsets_[nmodels()];
-}
-
-void SuperimposedViscoPlasticFlowRule::init_hist(double * const h) const
+void SuperimposedViscoPlasticFlowRule::populate_hist(History & hist) const
 {
   for (size_t i = 0; i < nmodels(); i++)
-    rules_[i]->init_hist(model_history_(h, i));
+    rules_[i]->populate_hist(hist);
+}
+
+void SuperimposedViscoPlasticFlowRule::init_hist(History & hist) const
+{
+  for (size_t i = 0; i < nmodels(); i++)
+    rules_[i]->init_hist(hist);
 }
 
 void SuperimposedViscoPlasticFlowRule::y(const double* const s, 
@@ -699,18 +703,21 @@ std::unique_ptr<NEMLObject> PerzynaFlowRule::initialize(ParameterSet & params)
   return neml::make_unique<PerzynaFlowRule>(params); 
 }
 
-size_t PerzynaFlowRule::nhist() const
-{
-  return hardening_->nhist();
-}
-
-void PerzynaFlowRule::init_hist(double * const h) const
+void PerzynaFlowRule::populate_hist(History & hist) const
 {
   if (surface_->nhist() != hardening_->nhist()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
-  hardening_->init_hist(h);
+  
+  // We want to make sure the variable prefix remains the same
+  hardening_->set_variable_prefix(get_variable_prefix());
 
+  hardening_->populate_hist(hist);
+}
+
+void PerzynaFlowRule::init_hist(History & hist) const
+{
+  hardening_->init_hist(hist);
 }
 
 // Rate rule
@@ -894,12 +901,12 @@ std::unique_ptr<NEMLObject> LinearViscousFlow::initialize(ParameterSet & params)
   return neml::make_unique<LinearViscousFlow>(params); 
 }
 
-size_t LinearViscousFlow::nhist() const
+void LinearViscousFlow::init_hist(History & h) const
 {
-  return 0;
+  return;
 }
 
-void LinearViscousFlow::init_hist(double * const h) const
+void LinearViscousFlow::populate_hist(History & h) const
 {
   return;
 }
@@ -1106,17 +1113,21 @@ std::unique_ptr<NEMLObject> ChabocheFlowRule::initialize(ParameterSet & params) 
   return neml::make_unique<ChabocheFlowRule>(params);
 }
 
-size_t ChabocheFlowRule::nhist() const
-{
-  return hardening_->nhist();
-}
-
-void ChabocheFlowRule::init_hist(double * const h) const
+void ChabocheFlowRule::populate_hist(History & hist) const
 {
   if (surface_->nhist() != hardening_->ninter()) {
     throw NEMLError("Hardening model and flow surface are not compatible");
   }
-  hardening_->init_hist(h);
+  
+  // Make sure the variable prefix stays the same
+  hardening_->set_variable_prefix(get_variable_prefix());
+
+  hardening_->populate_hist(hist);
+}
+
+void ChabocheFlowRule::init_hist(History & hist) const
+{
+  hardening_->init_hist(hist);
 }
 
 // Rate rule
@@ -1321,30 +1332,25 @@ std::unique_ptr<NEMLObject> YaguchiGr91FlowRule::initialize(ParameterSet & param
 }
 
 
-size_t YaguchiGr91FlowRule::nhist() const
+void YaguchiGr91FlowRule::populate_hist(History & hist) const
 {
   // Order:
   // 0-5  X1
   // 6-11 X2
   // 12   Q
   // 13   sa
-  return 14;
+  hist.add<Symmetric>(prefix("X1"));
+  hist.add<Symmetric>(prefix("X2"));
+  hist.add<double>(prefix("Q"));
+  hist.add<double>(prefix("sa"));
 }
 
-void YaguchiGr91FlowRule::init_hist(double * const h) const
+void YaguchiGr91FlowRule::init_hist(History & hist) const
 {
-  // This also hardcoded from the paper
-  
-  // Xs
-  std::fill(h, h+12, 0.0);
-
-  // Q
-  h[12] = 0.0;
-
-  // sa
-  h[13] = 0.0;
-
-
+  hist.get<Symmetric>(prefix("X1")) = Symmetric::zero();
+  hist.get<Symmetric>(prefix("X2")) = Symmetric::zero();
+  hist.get<double>(prefix("Q")) = 0.0;
+  hist.get<double>(prefix("sa")) = 0.0;
 }
 
 // Rate rule
@@ -1368,7 +1374,6 @@ void YaguchiGr91FlowRule::y(const double* const s, const double* const alpha, do
   else {
     yv = 0.0;
   }
-
 }
 
 void YaguchiGr91FlowRule::dy_ds(const double* const s, const double* const alpha, double T,

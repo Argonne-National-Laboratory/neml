@@ -8,6 +8,7 @@
 #include "general_flow.h"
 #include "interpolate.h"
 #include "creep.h"
+#include "history.h"
 
 #include "windows.h"
 
@@ -22,67 +23,30 @@ namespace neml {
 /// NEML material model interface definitions
 //  All material models inherit from this base class.  It defines interfaces
 //  and provides the methods for reading in material parameters.
-class NEML_EXPORT NEMLModel: public NEMLObject {
+class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
   public:
    NEMLModel(ParameterSet & params);
    virtual ~NEMLModel() {};
 
    /// Store model to an XML file
    virtual void save(std::string file_name, std::string model_name);
+  
+   /// Setup the history
+   virtual void populate_hist(History & history) const;
+   /// Initialize the history
+   virtual void init_hist(History & history) const;
 
-   /// Total number of stored internal variables
-   virtual size_t nstore() const = 0;
-   /// Initialize the internal variables
-   virtual void init_store(double * const store) const = 0;
+   /// Setup the actual evolving state
+   virtual void populate_state(History & history) const = 0;
+   /// Initialize the actual evolving state
+   virtual void init_state(History & history) const = 0;
 
-   /// Small strain update interface
-   virtual void update_sd(
-       const double * const e_np1, const double * const e_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n) = 0;
+   /// Setup any static state
+   virtual void populate_static(History & history) const;
+   /// Initialize any static state
+   virtual void init_static(History & history) const;
 
-   /// Large strain incremental update
-   virtual void update_ld_inc(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
-       double T_np1, double T_n,
-       double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
-       double & u_np1, double u_n,
-       double & p_np1, double p_n) = 0;
-
-   /// Number of internal variables that are true material history
-   virtual size_t nhist() const = 0;
-   /// Initialize the history variables
-   virtual void init_hist(double * const hist) const = 0;
-
-   /// Instantaneous thermal expansion coefficient as a function of temperature
-   virtual double alpha(double T) const = 0;
-   /// Elastic strain for a given stress, temperature, and history state
-   virtual void elastic_strains(const double * const s_np1,
-                               double T_np1, const double * const h_np1,
-                               double * const e_np1) const = 0;
-   /// Used to find the damage value from the history
-   virtual double get_damage(const double *const h_np1);
-   /// Used to determine if element should be deleted
-   virtual bool should_del_element(const double *const h_np1);
-   /// Used to determine if this is a damage model
-   virtual bool is_damage_model() const;
-};
-
-/// Large deformation incremental update model
-class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
-  public:
-    NEMLModel_ldi(ParameterSet & params);
-
-   /// The small strain stress update interface
+   /// Raw data small strain update interface
    virtual void update_sd(
        const double * const e_np1, const double * const e_n,
        double T_np1, double T_n,
@@ -93,7 +57,18 @@ class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
        double & u_np1, double u_n,
        double & p_np1, double p_n);
 
-   /// Large strain incremental update
+   /// Small strain update, wrapped objects
+   virtual void update_sd_interface(
+       const Symmetric & e_np1, const Symmetric & e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & s_np1, Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n) {}; // Fix after all updated
+
+   /// Raw data large strain incremental update
    virtual void update_ld_inc(
        const double * const d_np1, const double * const d_n,
        const double * const w_np1, const double * const w_n,
@@ -103,17 +78,72 @@ class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
        double * const h_np1, const double * const h_n,
        double * const A_np1, double * const B_np1,
        double & u_np1, double u_n,
-       double & p_np1, double p_n) = 0;
+       double & p_np1, double p_n);
 
-   /// Number of stored variables
-   virtual size_t nstore() const;
-   /// Initialize stored variables
-   virtual void init_store(double * const store) const;
+   /// Large strain incremental update, wrapped objects
+   virtual void update_ld_inc_interface(
+       const Symmetric & d_np1, const Symmetric & d_n,
+       const Skew & w_np1, const Skew & w_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & s_np1, const Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1, SymSkewR4 & B_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n) {}; // Fix after all updated
+  
+   /// Instantaneous thermal expansion coefficient as a function of temperature
+   virtual double alpha(double T) const = 0;
+   /// Elastic strain for a given stress, temperature, and history state
+   virtual void elastic_strains(const double * const s_np1,
+                               double T_np1, const double * const h_np1,
+                               double * const e_np1) const;
+   /// Nice interface for the elastic strain calculation
+   virtual Symmetric elastic_strains_interface(const Symmetric & s_np1, 
+                                               double T_np1, const History & h_np1) const;
 
-   /// Number of stored variables that are true material history
-   virtual size_t nhist() const = 0;
-   /// Initialize the stored history
-   virtual void init_hist(double * const hist) const = 0;
+   /// Used to find the damage value from the history
+   virtual double get_damage(const double *const h_np1);
+   /// Used to determine if element should be deleted
+   virtual bool should_del_element(const double *const h_np1);
+   /// Used to determine if this is a damage model
+   virtual bool is_damage_model() const;
+
+   /// Number of actual internal variables
+   size_t nstate() const;
+   /// Number of static variables
+   size_t nstatic() const;
+
+   /// Quickly setup state
+   History gather_state_(double * data) const;
+   History gather_state_(const double * data) const;
+   History gather_blank_state_() const;
+
+  protected:
+   virtual void cache_history_();
+   /// Split internal variables into static and actual parts
+   std::tuple<History,History> split_state(const History & h) const;
+
+  protected:
+   History stored_state_;
+   History stored_static_;
+};
+
+/// Large deformation incremental update model
+class NEML_EXPORT NEMLModel_ldi: public NEMLModel {
+  public:
+    NEMLModel_ldi(ParameterSet & params);
+
+   /// Small strain update, wrapped objects
+   virtual void update_sd_interface(
+       const Symmetric & e_np1, const Symmetric & e_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & s_np1, Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
 };
 
 /// Small deformation stress update
@@ -122,38 +152,44 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
     /// All small strain models use small strain elasticity and CTE
     NEMLModel_sd(ParameterSet & params);
 
-   /// The small strain stress update interface
-   virtual void update_sd(
-       const double * const e_np1, const double * const e_n,
+   /// Small strain update, wrapped objects
+   virtual void update_sd_interface(
+       const Symmetric & e_np1, const Symmetric & e_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1,
+       Symmetric & s_np1, Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n); 
+
+   /// The small strain stress update interface with just the state variables
+   virtual void update_sd_state(
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n) = 0;
 
    /// Large strain incremental update
-   virtual void update_ld_inc(
-       const double * const d_np1, const double * const d_n,
-       const double * const w_np1, const double * const w_n,
+   virtual void update_ld_inc_interface(
+       const Symmetric & d_np1, const Symmetric & d_n,
+       const Skew & w_np1, const Skew & w_n,
        double T_np1, double T_n,
        double t_np1, double t_n,
-       double * const s_np1, const double * const s_n,
-       double * const h_np1, const double * const h_n,
-       double * const A_np1, double * const B_np1,
+       Symmetric & s_np1, const Symmetric & s_n,
+       History & h_np1, const History & h_n,
+       SymSymR4 & A_np1, SymSkewR4 & B_np1,
        double & u_np1, double u_n,
        double & p_np1, double p_n);
 
-   /// Number of stored variables
-   virtual size_t nstore() const;
-   /// Initialize stored variables
-   virtual void init_store(double * const store) const;
-
-   /// Number of stored variables that are true material history
-   virtual size_t nhist() const = 0;
-   /// Initialize the stored history
-   virtual void init_hist(double * const hist) const = 0;
+   /// Setup any static state
+   virtual void populate_static(History & history) const;
+   /// Initialize any static state
+   virtual void init_static(History & history) const;
 
    /// Provide the instantaneous CTE
    virtual double alpha(double T) const;
@@ -161,17 +197,16 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
    const std::shared_ptr<const LinearElasticModel> elastic() const;
 
    /// Return the elastic strains
-   virtual void elastic_strains(const double * const s_np1,
-                               double T_np1, const double * const h_np1,
-                               double * const e_np1) const;
+   virtual Symmetric elastic_strains_interface(const Symmetric & s_np1, 
+                                               double T_np1, const History & h_np1) const;
 
    /// Used to override the linear elastic model to match another object's
    virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
   private:
-   void calc_tangent_(const double * const D, const double * const W,
-                     const double * const C, const double * const S,
-                     double * const A, double * const B);
+   void calc_tangent_(const Symmetric & D, const Skew & W,
+                     const SymSymR4 & C, const Symmetric & S,
+                     SymSymR4 & A, SymSkewR4 & B);
 
   protected:
    std::shared_ptr<LinearElasticModel> elastic_;
@@ -179,7 +214,6 @@ class NEML_EXPORT NEMLModel_sd: public NEMLModel {
   private:
    std::shared_ptr<Interpolate> alpha_;
    bool truesdell_;
-
 };
 
 /// Adaptive integration, tangent using the usual trick
@@ -188,73 +222,72 @@ class SubstepModel_sd: public NEMLModel_sd, public Solvable {
   SubstepModel_sd(ParameterSet & params);
 
   /// Complete substep update
-  virtual void update_sd(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+  virtual void update_sd_state(
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
 
   /// Single step update
   virtual void update_step(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, double t_np1, double t_n,
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n,
       double * const A, double * const E,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
 
   /// Setup the trial state
-  virtual TrialState * setup(
-      const double * const e_np1, const double * const e_n,
+  virtual std::unique_ptr<TrialState> setup(
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n) = 0;
+      const Symmetric & s_n,
+      const History & h_n) = 0;
 
   /// Ignore update and take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n) = 0;
+      const Symmetric & s_n,
+      const History & h_n) = 0;
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n) = 0;
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n) = 0;
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
-      double * const de) = 0;
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
+      double * de) = 0;
 
   /// Do the work calculation
   virtual void work_and_energy(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double & u_np1, double u_n,
-      double & p_np1, double p_n) = 0;
+      double & p_np1, double p_n);
 
  protected:
   double rtol_, atol_;
@@ -279,19 +312,21 @@ class NEML_EXPORT SmallStrainElasticity: public NEMLModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Small strain stress update
-  virtual void update_sd(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
-  /// Number of history variables (=0)
-  virtual size_t nhist() const;
+  virtual void update_sd_state(
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
+  
+  /// Populate internal variables (none)
+  virtual void populate_state(History & h) const;
+
   /// Initialize history (none to setup)
-  virtual void init_hist(double * const hist) const;
+  virtual void init_state(History & h) const;
 };
 
 static Register<SmallStrainElasticity> regSmallStrainElasticity;
@@ -300,46 +335,67 @@ static Register<SmallStrainElasticity> regSmallStrainElasticity;
 //  Store data the solver needs and can be passed into solution interface
 class SSPPTrialState : public TrialState {
  public:
-  virtual ~SSPPTrialState() {};
-  double ys, T;    // Yield stress, temperature
-  double e_np1[6]; // Next strain
-  double ep_n[6];  // Previous value of plastic strain
-  double s_tr[6];  // Elastic trial stress
-  double C[36];    // Stiffness
+  SSPPTrialState(const Symmetric & e_np1, const Symmetric & ep_n,
+                 const Symmetric & s_tr, const SymSymR4 & C,
+                 double ys, double T) :
+      e_np1(e_np1), ep_n(ep_n), s_tr(s_tr), C(C), ys(ys), T(T)
+  {};
+  Symmetric e_np1;    // Next strain
+  Symmetric ep_n;     // Previous plastic strain
+  Symmetric s_tr;     // Trial stress
+  SymSymR4 C;         // Elastic stiffness
+  double ys, T;       // Yield strength and temperature
 };
 
 /// Small strain rate independent plasticity trial state
 class SSRIPTrialState : public TrialState {
  public:
-  virtual ~SSRIPTrialState() {};
-  double ep_tr[6];          // Trial plastic strain
-  double s_tr[6];           // Trial stress
-  double e_np1[6];          // Next strain
-  double C[36];             // Elastic stiffness
-  double T;                 // Temperature
-  std::vector<double> h_tr; // Trial history
+  SSRIPTrialState(const Symmetric & e_np1, const Symmetric & ep_tr,
+                  const Symmetric & s_tr, const SymSymR4 & C,
+                  const History & h_tr, double T) :
+      e_np1(e_np1), ep_tr(ep_tr), s_tr(s_tr), C(C), 
+      h_tr(h_tr), T(T)
+  {};
+
+  Symmetric e_np1;        // Next strain
+  Symmetric ep_tr;        // Trial plastic strain
+  Symmetric s_tr;         // Trial stress
+  SymSymR4 C;             // Elastic stiffness
+  History h_tr;           // Trial history
+  double T;               // Temperature
 };
 
 /// Small strain creep+plasticity trial state
 class SSCPTrialState : public TrialState {
  public:
-  virtual ~SSCPTrialState() {};
-  double ep_strain[6];            // Current plastic strain
-  double e_n[6], e_np1[6];        // Previous and next total strain
-  double s_n[6];                  // Previous stress
+  SSCPTrialState(const Symmetric & ep_strain, const Symmetric & e_n,
+                 const Symmetric & e_np1, const Symmetric & s_n,
+                 double T_n, double T_np1, double t_n, double t_np1,
+                 const History & h_n) :
+      ep_strain(ep_strain), e_n(e_n), e_np1(e_np1), s_n(s_n), 
+      T_n(T_n), T_np1(T_np1), t_n(t_n), t_np1(t_np1), h_n(h_n)
+  {};
+  Symmetric ep_strain;            // Current plastic strain
+  Symmetric e_n, e_np1;           // Previous and next total strain
+  Symmetric s_n;                  // Previous stress
   double T_n, T_np1, t_n, t_np1;  // Next and previous time and temperature
-  std::vector<double> h_n;        // Previous history vector
+  History h_n;                    // Previous history vector
 };
 
 /// General inelastic integrator trial state
 class GITrialState : public TrialState {
  public:
-  virtual ~GITrialState() {};
-  double e_dot[6];                // Strain rate
-  double s_n[6];                  // Previous stress
-  double T, Tdot, dt;             // Temperature, temperature rate, time inc.
-  std::vector<double> h_n;        // Previous history
-  double s_guess[6];              // Reasonable guess at the next stress
+  GITrialState(const Symmetric & e_dot, const Symmetric & s_n, 
+               const Symmetric & s_guess, const History & h_n,
+               double T, double Tdot, double dt) :
+      e_dot(e_dot), s_n(s_n), s_guess(s_guess), h_n(h_n),
+      T(T), Tdot(Tdot), dt(dt)
+  {};
+  Symmetric e_dot;      // Strain rate
+  Symmetric s_n;        // Previous stress
+  Symmetric s_guess;    // Guess at next stress
+  History h_n;          // Previous history
+  double T, Tdot, dt;   // Temperature, temperature rate, time increment
 };
 
 /// Small strain, associative, perfect plasticity
@@ -361,11 +417,11 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
   static ParameterSet parameters();
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
-  /// Number of history variables (=0)
-  virtual size_t nhist() const;
+  
+  /// Populate the internal variables (nothing)
+  virtual void populate_state(History & h) const;
   /// Initialize history (nothing to do)
-  virtual void init_hist(double * const hist) const;
+  virtual void init_state(History & h) const;
   
   /// Number of nonlinear equations to solve in the integration
   virtual size_t nparams() const;
@@ -376,60 +432,43 @@ class NEML_EXPORT SmallStrainPerfectPlasticity: public SubstepModel_sd {
                  double * const J);
 
   /// Setup the trial state
-  virtual TrialState * setup(
-      const double * const e_np1, const double * const e_n,
+  virtual std::unique_ptr<TrialState> setup(
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
   
   /// Take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n);
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n);
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double * de);
-
-  /// Do the work calculation
-  virtual void work_and_energy(
-      const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
 
   /// Helper to return the yield stress
   double ys(double T) const;
-
-  /// Setup a trial state for the solver from the input information
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       SSPPTrialState & ts);
 
  private:
   std::shared_ptr<YieldSurface> surface_;
@@ -456,58 +495,47 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
   static ParameterSet parameters();
   /// Setup from a ParameterSet
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
-
-  /// Number of history variables
-  virtual size_t nhist() const;
+  
+  /// Populate internal variables
+  virtual void populate_state(History & h) const;
   /// Initialize history at time zero
-  virtual void init_hist(double * const hist) const;
+  virtual void init_state(History & h) const;
 
   /// Setup the trial state
-  virtual TrialState * setup(
-      const double * const e_np1, const double * const e_n,
+  virtual std::unique_ptr<TrialState> setup(
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Ignore update and take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n);
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n);
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
-      double * const de);
-
-  /// Do the work calculation
-  virtual void work_and_energy(
-      const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
+      double * de);
 
   /// Number of solver parameters
   virtual size_t nparams() const;
@@ -520,12 +548,6 @@ class NEML_EXPORT SmallStrainRateIndependentPlasticity: public SubstepModel_sd {
 
   /// Return the elastic model for subobjects
   const std::shared_ptr<const LinearElasticModel> elastic() const;
-
-  /// Setup a trial state
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       SSRIPTrialState & ts);
 
  private:
   std::shared_ptr<RateIndependentFlowRule> flow_;
@@ -552,20 +574,20 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Small strain stress update
-  virtual void update_sd(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
-
-  /// Number of history variables matches the base model
-  virtual size_t nhist() const;
+  virtual void update_sd_state(
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
+  
+  /// Populate list of internal variables
+  virtual void populate_state(History & hist) const;
   /// Passes call for initial history to base model
-  virtual void init_hist(double * const hist) const;
+  virtual void init_state(History & hist) const;
 
   /// The number of parameters in the nonlinear equation
   virtual size_t nparams() const;
@@ -576,17 +598,16 @@ class NEML_EXPORT SmallStrainCreepPlasticity: public NEMLModel_sd, public Solvab
                  double * const J);
 
   /// Setup a trial state from known information
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       SSCPTrialState & ts);
+  std::unique_ptr<SSCPTrialState> make_trial_state(
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, double t_np1, double t_n,
+      const Symmetric & s_n, const History & h_n);
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
-  void form_tangent_(double * const A, double * const B,
-                    double * const A_np1);
+  SymSymR4 form_tangent_(const SymSymR4 & A, const SymSymR4 & B);
 
  private:
   std::shared_ptr<NEMLModel_sd> plastic_;
@@ -618,56 +639,56 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// Setup the trial state
-  virtual TrialState * setup(
-      const double * const e_np1, const double * const e_n,
+  virtual std::unique_ptr<TrialState> setup(
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
   
   /// Take an elastic step
   virtual bool elastic_step(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_n,
-      const double * const h_n);
+      const Symmetric & s_n,
+      const History & h_n);
 
   /// Interpret the x vector
   virtual void update_internal(
       const double * const x,
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
+      double T_np1, double T_n, 
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n);
+      Symmetric & s_np1, const Symmetric & s_n,
+      History & h_np1, const History & h_n);
 
   /// Minus the partial derivative of the residual with respect to the strain
   virtual void strain_partial(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      const double * const s_np1, const double * const s_n,
-      const double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double * de);
-
-  /// Do the work calculation
+  
+  /// Need special call for dissipation
   virtual void work_and_energy(
       const TrialState * ts,
-      const double * const e_np1, const double * const e_n,
+      const Symmetric & e_np1, const Symmetric & e_n,
       double T_np1, double T_n,
       double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
+      const Symmetric & s_np1, const Symmetric & s_n,
+      const History & h_np1, const History & h_n,
       double & u_np1, double u_n,
       double & p_np1, double p_n);
 
-  /// Number of history variables
-  virtual size_t nhist() const;
+  /// Populate internal variables
+  virtual void populate_state(History & hist) const;
   /// Initialize the history at time zero
-  virtual void init_hist(double * const hist) const;
+  virtual void init_state(History & hist) const;
 
   /// Number of nonlinear equations
   virtual size_t nparams() const;
@@ -676,12 +697,6 @@ class NEML_EXPORT GeneralIntegrator: public SubstepModel_sd {
   /// The residual and jacobian for the nonlinear solve
   virtual void RJ(const double * const x, TrialState * ts,
                  double * const R, double * const J);
-
-  /// Initialize a trial state
-  void make_trial_state(const double * const e_np1, const double * const e_n,
-                       double T_np1, double T_n, double t_np1, double t_n,
-                       const double * const s_n, const double * const h_n,
-                       GITrialState & ts);
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
@@ -724,29 +739,27 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
   static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
 
   /// The small strain stress update
-  virtual void update_sd(
-      const double * const e_np1, const double * const e_n,
-      double T_np1, double T_n,
-      double t_np1, double t_n,
-      double * const s_np1, const double * const s_n,
-      double * const h_np1, const double * const h_n,
-      double * const A_np1,
-      double & u_np1, double u_n,
-      double & p_np1, double p_n);
+  virtual void update_sd_state(
+       const Symmetric & E_np1, const Symmetric & E_n,
+       double T_np1, double T_n,
+       double t_np1, double t_n,
+       Symmetric & S_np1, const Symmetric & S_n,
+       History & H_np1, const History & H_n,
+       SymSymR4 & AA_np1,
+       double & u_np1, double u_n,
+       double & p_np1, double p_n);
 
-  /// The number of model history variables
-  virtual size_t nhist() const;
+  /// Populate internal variables
+  virtual void populate_state(History & hist) const;
   /// Initialize history at time zero
-  virtual void init_hist(double * const hist) const;
+  virtual void init_state(History & hist) const;
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
 
  private:
-  double activation_energy_(const double * const e_np1,
-                            const double * const e_n,
-                            double T_np1,
-                            double t_np1, double t_n);
+  double activation_energy_(const Symmetric & e_np1, const Symmetric & e_n,
+                            double T_np1, double t_np1, double t_n);
 
  private:
   std::vector<std::shared_ptr<NEMLModel_sd>> models_;
@@ -755,5 +768,11 @@ class NEML_EXPORT KMRegimeModel: public NEMLModel_sd {
 };
 
 static Register<KMRegimeModel> regKMRegimeModel;
+
+/// Useful helper to calculate work and energy with the trapezoid rule
+std::tuple<double,double> trapezoid_energy(
+    const Symmetric & e_np1, const Symmetric & e_n,
+    const Symmetric & ep_np1, const Symmetric & ep_n,
+    const Symmetric & s_np1, const Symmetric & s_n);
 
 } // namespace neml

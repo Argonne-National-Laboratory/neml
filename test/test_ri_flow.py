@@ -18,7 +18,7 @@ class CommonFlowRule(object):
 
   def test_history(self):
     self.assertEqual(self.model.nhist, len(self.hist0))
-    self.assertTrue(np.allclose(self.model.init_hist(), self.hist0))
+    self.assertTrue(np.allclose(self.model.initial_history(), self.hist0))
 
   def test_df_ds(self):
     stress = self.gen_stress()

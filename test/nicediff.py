@@ -27,10 +27,10 @@ def diff_skew_history(fn, h0):
 
   return differentiate_new(dfn, vec)
 
-def diff_symmetric_symmetric(fn, s0):
+def diff_symmetric_symmetric(fn, s0, eps = 1e-6):
   dfn = lambda s: fn(tensors.Symmetric(usym(s))).data
 
-  return tensors.SymSymR4(differentiate_new(dfn, s0.data))
+  return tensors.SymSymR4(differentiate_new(dfn, s0.data, eps = eps))
 
 def diff_symmetric_skew(fn, w0):
   dfn = lambda w: fn(tensors.Skew(uskew(w))).data

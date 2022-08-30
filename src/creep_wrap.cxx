@@ -26,63 +26,25 @@ PYBIND11_MODULE(creep, m) {
             auto e_np1 = alloc_vec<double>(6);
             auto A_np1 = alloc_mat<double>(6,6);
 
-            m.update(arr2ptr<double>(s_np1), arr2ptr<double>(e_np1), arr2ptr<double>(e_n), T_np1, T_n, t_np1, t_n, arr2ptr<double>(A_np1));
+            Symmetric E_np1(arr2ptr<double>(e_np1));
+            SymSymR4 AA_np1(arr2ptr<double>(A_np1));
 
+            m.update(Symmetric(arr2ptr<double>(s_np1)), E_np1, Symmetric(arr2ptr<double>(e_n)), T_np1, T_n, t_np1, t_n, AA_np1);
+            
             return std::make_tuple(e_np1, A_np1);
 
            }, "Update to the next creep strain & tangent derivative.")
 
-      .def("f",
-           [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
-           {
-            auto fv = alloc_vec<double>(6);
-            m.f(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(fv));
-            return fv;
-           }, "Evaluate creep rate.")
-
-      .def("df_ds",
-           [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
-           {
-            auto dfv = alloc_mat<double>(6,6);
-            m.df_ds(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            return dfv;
-           }, "Evaluate creep rate derivative wrt stress.")
-
-      .def("df_de",
-           [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
-           {
-            auto dfv = alloc_mat<double>(6,6);
-            m.df_de(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            return dfv;
-           }, "Evaluate creep rate derivative wrt strain.")
-
-      .def("df_dt",
-           [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
-           {
-            auto dfv = alloc_vec<double>(6);
-            m.df_dt(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            return dfv;
-           }, "Evaluate creep rate derivative wrt time.")
-
-      .def("df_dT",
-           [](const CreepModel & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> e, double t, double T) -> py::array_t<double>
-           {
-            auto dfv = alloc_vec<double>(6);
-            m.df_dT(arr2ptr<double>(s), arr2ptr<double>(e), t, T, arr2ptr<double>(dfv));
-            return dfv;
-           }, "Evaluate creep rate derivative wrt temperature.")
-
+      .def("f", &CreepModel::f, "Evaluate creep rate.")
+      .def("df_ds", &CreepModel::df_ds, "Evaluate creep rate derivative wrt stress.")
+      .def("df_de", &CreepModel::df_de, "Evaluate creep rate derivative wrt strain.")
+      .def("df_dt", &CreepModel::df_dt, "Evaluate creep rate derivative wrt time.")
+      .def("df_dT", &CreepModel::df_dT, "Evaluate creep rate derivative wrt temperature.")
       
       .def("make_trial_state",
            [](CreepModel & m, py::array_t<double, py::array::c_style> s_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n) -> std::unique_ptr<CreepModelTrialState>
            {
-            std::unique_ptr<CreepModelTrialState> ts(new CreepModelTrialState);
-            m.make_trial_state(arr2ptr<double>(s_np1),
-                                         arr2ptr<double>(e_n),
-                                         T_np1, T_n, t_np1, t_n, *ts);
-
-            return ts;
-
+           return m.make_trial_state(Symmetric(arr2ptr<double>(s_np1)), Symmetric(arr2ptr<double>(e_n)), T_np1, T_n, t_np1, t_n);
            }, "Setup trial state for solve")
     ;
 
@@ -94,45 +56,11 @@ PYBIND11_MODULE(creep, m) {
     ;
 
   py::class_<ScalarCreepRule, NEMLObject, std::shared_ptr<ScalarCreepRule>>(m, "ScalarCreepRule")
-      .def("g",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.g(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate.")
-
-      .def("dg_ds",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_ds(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate derivative wrt stress.")
-
-      .def("dg_de",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_de(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate derivative wrt strain.")
-
-      .def("dg_dt",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_dt(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate wrt time.")
-
-      .def("dg_dT",
-           [](const ScalarCreepRule & m, double seq, double eeq, double t, double T) -> double
-           {
-            double gv;
-            m.dg_dT(seq, eeq, t, T, gv);
-            return gv;
-           }, "Evaluate creep rate wrt temperature.")
+      .def("g", &ScalarCreepRule::g, "Evaluate the creep rate")
+      .def("dg_ds", &ScalarCreepRule::dg_ds, "Evaluate creep rate derivative wrt stress.")
+      .def("dg_de", &ScalarCreepRule::dg_de, "Evaluate creep rate derivative wrt strain.")
+      .def("dg_dt", &ScalarCreepRule::dg_dt, "Evaluate creep rate derivative wrt time.")
+      .def("dg_dT", &ScalarCreepRule::dg_dT, "Evaluate creep rate derivative wrt temperature.")
       ;
   
   py::class_<PowerLawCreep, ScalarCreepRule, std::shared_ptr<PowerLawCreep>>(m, "PowerLawCreep")
