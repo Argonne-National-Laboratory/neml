@@ -1,8 +1,10 @@
 import sys
 sys.path.append('..')
 
-from neml import general_flow, visco_flow, elasticity, surfaces, hardening
+from neml import general_flow, visco_flow, elasticity, surfaces, hardening, history
+from neml.math import tensors
 from common import *
+from nicediff import *
 
 import unittest
 import numpy as np
@@ -19,10 +21,10 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.s(x, h_np1, e_dot, T_np1, T_dot)
-    num = differentiate(dfn, s_np1)
+    num = diff_symmetric_symmetric(dfn, s_np1)
     should = self.model.ds_ds(s_np1, h_np1, e_dot, T_np1, T_dot)
     
-    self.assertTrue(np.allclose(num, should))
+    self.assertTrue(np.allclose(num.data, should.data))
 
   def test_ds_da(self):
     t_np1 = self.gen_t()
@@ -34,10 +36,10 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.s(s_np1, x, e_dot, T_np1, T_dot)
-    num = differentiate(dfn, h_np1)
+    num = diff_symmetric_history(dfn, h_np1)
     should = self.model.ds_da(s_np1, h_np1, e_dot, T_np1, T_dot)
     
-    self.assertTrue(np.allclose(num, should, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(num, np.array(should).reshape(num.shape), rtol = 1.0e-3))
 
   def test_ds_de(self):
     t_np1 = self.gen_t()
@@ -49,10 +51,10 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.s(s_np1, h_np1, x, T_np1, T_dot)
-    num = differentiate(dfn, e_dot, eps = self.eps)
+    num = diff_symmetric_symmetric(dfn, e_dot, eps = self.eps)
     should = self.model.ds_de(s_np1, h_np1, e_dot, T_np1, T_dot)
 
-    self.assertTrue(np.allclose(num, should, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(num.data, should.data, rtol = 1.0e-2))
 
   def test_da_ds(self):
     t_np1 = self.gen_t()
@@ -64,10 +66,10 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.a(x, h_np1, e_dot, T_np1, T_dot)
-    num = differentiate(dfn, s_np1)
+    num = diff_history_symmetric(dfn, s_np1)
     should = self.model.da_ds(s_np1, h_np1, e_dot, T_np1, T_dot)
     
-    self.assertTrue(np.allclose(num, should, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(num, np.array(should).reshape(num.shape), rtol = 1.0e-3))
 
   def test_da_da(self):
     t_np1 = self.gen_t()
@@ -79,10 +81,10 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.a(s_np1, x, e_dot, T_np1, T_dot)
-    num = differentiate(dfn, h_np1)
+    num = diff_history_history(dfn, h_np1)
     should = self.model.da_da(s_np1, h_np1, e_dot, T_np1, T_dot)
-
-    self.assertTrue(np.allclose(num, should, rtol = 1.0e-3))
+    
+    self.assertTrue(np.allclose(num, np.array(should).reshape(num.shape), rtol = 1.0e-3))
 
   def test_da_de(self):
     t_np1 = self.gen_t()
@@ -94,15 +96,15 @@ class CommonGeneralFlow(object):
     h_np1 = self.gen_hist()
 
     dfn = lambda x: self.model.a(s_np1, h_np1, x, T_np1, T_dot)
-    num = differentiate(dfn, e_dot, eps = self.eps)
+    num = diff_history_symmetric(dfn, e_dot)
     should = self.model.da_de(s_np1, h_np1, e_dot, T_np1, T_dot)
 
-    self.assertTrue(np.allclose(num, should, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(num, np.array(should).reshape(num.shape), rtol = 1.0e-3))
 
 
 class CommonTVPFlow(object):
   def test_history(self):
-    self.assertEqual(len(self.h_n), self.model.nhist)
+    self.assertEqual(self.h_n.size, self.model.nhist)
     self.assertTrue(np.allclose(self.h_n, self.model.initial_history()))
 
   def test_srate(self):
@@ -115,14 +117,14 @@ class CommonTVPFlow(object):
     h_np1 = self.gen_hist()
 
     should = np.dot(self.emodel.C(T_np1), 
-        e_dot - self.vmodel.g(s_np1, h_np1, T_np1) * 
-        self.vmodel.y(s_np1, h_np1, T_np1) - 
-        self.vmodel.g_temp(s_np1, h_np1, T_np1) * T_dot -
-        self.vmodel.g_time(s_np1, h_np1, T_np1))
+        e_dot.data - self.vmodel.g(s_np1.data, h_np1, T_np1) * 
+        self.vmodel.y(s_np1.data, h_np1, T_np1) - 
+        self.vmodel.g_temp(s_np1.data, h_np1, T_np1) * T_dot -
+        self.vmodel.g_time(s_np1.data, h_np1, T_np1))
 
     actual = self.model.s(s_np1, h_np1, e_dot, T_np1, T_dot)
 
-    self.assertTrue(np.allclose(should, actual))
+    self.assertTrue(np.allclose(should, actual.data))
 
   def test_hrate(self):
     t_np1 = self.gen_t()
@@ -133,17 +135,17 @@ class CommonTVPFlow(object):
     s_np1 = self.gen_stress()
     h_np1 = self.gen_hist()
 
-    should = (self.vmodel.h(s_np1, h_np1, T_np1) * 
-      self.vmodel.y(s_np1, h_np1, T_np1) + 
-      self.vmodel.h_temp(s_np1, h_np1, T_np1) * T_dot +
-      self.vmodel.h_time(s_np1, h_np1, T_np1))
+    should = (self.vmodel.h(s_np1.data, np.array(h_np1), T_np1) * 
+      self.vmodel.y(s_np1.data, np.array(h_np1), T_np1) + 
+      self.vmodel.h_temp(s_np1.data, np.array(h_np1), T_np1) * T_dot +
+      self.vmodel.h_time(s_np1.data, np.array(h_np1), T_np1))
 
     actual = self.model.a(s_np1, h_np1, e_dot, T_np1, T_dot)
 
     self.assertTrue(np.allclose(should, actual))
 
 
-class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
+class TestTVPChaboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
   def setUp(self):
     n = 20.0
     eta = 108.0
@@ -188,11 +190,13 @@ class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     self.model = general_flow.TVPFlowRule(self.emodel, self.vmodel)
 
     self.T_n = 300.0
-    self.e_n = np.zeros((6,))
+    self.e_n = tensors.Symmetric(usym(np.zeros((6,))))
     self.t_n = 0.0
-    self.h_n = np.zeros((1+6*self.m,))
+    self.h_n = history.History()
+    self.model.populate_hist(self.h_n)
+    self.h_n.copy_data(np.zeros((1+6*self.m,)))
 
-    self.eps = 1.0e-3
+    self.eps = 1.0e-2
 
   def gen_hist(self):
     h = np.array([0.1,50,-30,40,60,-80,-30,-100,-15,-30,-50,100,50,60,-60,50,
@@ -200,13 +204,17 @@ class TestTVPCheboche(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     for i in range(self.m):
       h[1+i*6:1+(i+1)*6] = make_dev(h[1+i*6:1+(i+1)*6])
     
-    return h
+    H = history.History()
+    self.model.populate_hist(H)
+    H.copy_data(h)
+    
+    return H
 
   def gen_stress(self):
-    return np.array([200.0,-200.0,100.0,50.0,25.0,-50.0])
+    return tensors.Symmetric(usym(np.array([200.0,-200.0,100.0,50.0,25.0,-50.0])))
 
   def gen_e(self):
-    return np.array([0.025,-0.01,-0.02,0.01,0.02,-0.03])
+    return tensors.Symmetric(usym(np.array([0.025,-0.01,-0.02,0.01,0.02,-0.03])))
 
   def gen_T(self):
     return 350
@@ -240,9 +248,11 @@ class TestTVPYaguchi(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     self.model = general_flow.TVPFlowRule(self.emodel, self.vmodel)
 
     self.T_n = 300.0
-    self.e_n = np.zeros((6,))
+    self.e_n = tensors.Symmetric(usym(np.zeros((6,))))
     self.t_n = 0.0
-    self.h_n = np.zeros((2+12,))
+    self.h_n = history.History()
+    self.model.populate_hist(self.h_n)
+    self.h_n.copy_data(np.zeros((2+12,)))
 
     self.eps = 1.0e-3
 
@@ -251,13 +261,17 @@ class TestTVPYaguchi(unittest.TestCase, CommonGeneralFlow, CommonTVPFlow):
     for i in range(2):
       h[1+i*6:1+(i+1)*6] = make_dev(h[1+i*6:1+(i+1)*6])
     
-    return h
+    H = history.History()
+    self.model.populate_hist(H)
+    H.copy_data(h)
+    
+    return H
 
   def gen_stress(self):
-    return np.array([200.0,-200.0,100.0,50.0,25.0,-50.0])
+    return tensors.Symmetric(usym(np.array([200.0,-200.0,100.0,50.0,25.0,-50.0])))
 
   def gen_e(self):
-    return np.array([0.025,-0.01,-0.02,0.01,0.02,-0.03])
+    return tensors.Symmetric(usym(np.array([0.025,-0.01,-0.02,0.01,0.02,-0.03])))
 
   def gen_T(self):
     return 350

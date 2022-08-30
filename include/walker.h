@@ -34,66 +34,44 @@ class NEML_EXPORT WalkerKremplSwitchRule : public GeneralFlowRule {
   /// Initialize history
   virtual void init_hist(History & hist) const;
 
-  /// Stress rate
-  virtual void s(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const sdot);
+ /// Stress rate
+  virtual Symmetric s(const Symmetric & s, const History & alpha, 
+                      const Symmetric & edot, double T, double Tdot);
   /// Partial of stress rate wrt stress
-  virtual void ds_ds(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot);
+  virtual SymSymR4 ds_ds(const Symmetric & s, const History & alpha, 
+                         const Symmetric & edot, double T, double Tdot);
   /// Partial of stress rate wrt history
-  virtual void ds_da(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot);
+  virtual History ds_da(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
   /// Partial of stress rate wrt strain rate
-  virtual void ds_de(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_sdot);
+  virtual SymSymR4 ds_de(const Symmetric & s, const History & alpha, 
+                         const Symmetric & edot, double T, double Tdot);
 
   /// History rate
-  virtual void a(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const adot);
+  virtual History a(const Symmetric & s, const History & alpha, 
+                    const Symmetric & edot, double T, double Tdot);
   /// Partial of history rate wrt stress
-  virtual void da_ds(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot);
+  virtual History da_ds(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
   /// Partial of history rate wrt history
-  virtual void da_da(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot);
+  virtual History da_da(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
   /// Partial of history rate wrt strain rate
-  virtual void da_de(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double * const d_adot);
+  virtual History da_de(const Symmetric & s, const History & alpha, 
+                        const Symmetric & edot, double T, double Tdot);
 
   /// The implementation needs to define inelastic dissipation
-  virtual void work_rate(const double * const s, const double * const alpha,
-                const double * const edot, double T,
-                double Tdot,
-                double & p_rate);
-
-  /// The implementation needs to define elastic strain
-  virtual void elastic_strains(const double * const s_np1, double T_np1,
-                              double * const e_np1) const;
+  virtual double work_rate(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot);
 
   /// Set a new elastic model
   virtual void set_elastic_model(std::shared_ptr<LinearElasticModel> emodel);
   
   /// The kappa function controlling rate sensitivity (public for testing)
-  void kappa(const double * const edot, double T, double & kap);
+  double kappa(const Symmetric & edot, double T);
 
   /// Derivative of kappa wrt the strain rate (public for testing)
-  void dkappa(const double * const edot, double T, double * const dkap);
+  Symmetric dkappa(const Symmetric & edot, double T);
 
   /// Override initial guess
   virtual void override_guess(double * const x);

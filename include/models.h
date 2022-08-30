@@ -114,25 +114,17 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
    /// Number of static variables
    size_t nstatic() const;
 
-   /// Quickly setup history
-   History gather_history_(double * data) const;
-   History gather_history_(const double * data) const;
-   History gather_blank_history_() const;
-
    /// Quickly setup state
    History gather_state_(double * data) const;
    History gather_state_(const double * data) const;
    History gather_blank_state_() const;
 
   protected:
+   virtual void cache_history_();
    /// Split internal variables into static and actual parts
    std::tuple<History,History> split_state(const History & h) const;
 
-   /// Cache history objects with a view to increasing performance
-   void cache_history_();
-
   protected:
-   History stored_hist_;
    History stored_state_;
    History stored_static_;
 };

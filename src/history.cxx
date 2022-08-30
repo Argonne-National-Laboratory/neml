@@ -516,4 +516,28 @@ std::string HistoryNEMLObject::dprefix(std::string a, std::string b) const
   return prefix(a) + "_" + prefix(b);
 }
 
+void HistoryNEMLObject::cache_history_()
+{
+  populate_hist(stored_hist_);
+}
+
+History HistoryNEMLObject::gather_history_(double * data) const
+{
+  History h = gather_blank_history_();
+  h.set_data(data);
+  return h;
+}
+
+History HistoryNEMLObject::gather_history_(const double * data) const
+{
+  History h = gather_blank_history_();
+  h.set_data(const_cast<double*>(data));
+  return h;
+}
+
+History HistoryNEMLObject::gather_blank_history_() const
+{
+  return stored_hist_;
+}
+
 } // namespace neml

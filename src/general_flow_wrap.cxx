@@ -15,92 +15,21 @@ PYBIND11_MODULE(general_flow, m) {
   m.doc() = "General flow models where subclass functions define everything.";
 
   py::class_<GeneralFlowRule, HistoryNEMLObject, std::shared_ptr<GeneralFlowRule>>(m, "GeneralFlowRule")
-      .def("s",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_vec<double>(6);
-            m.s(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot, 
-                          arr2ptr<double>(f));
-            return f;
-           }, "Stress rate.")
-      .def("ds_ds",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_mat<double>(6,6);
-            m.ds_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot, arr2ptr<double>(f));
-            return f;
-           }, "Stress rate derivative with respect to stress.")
-      .def("ds_da",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_mat<double>(6,m.nhist());
-            m.ds_da(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot,  arr2ptr<double>(f));
-            return f;
-           }, "Stress rate derivative with respect to history.")
-      .def("ds_de",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_mat<double>(6,6);
-            m.ds_de(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot,  arr2ptr<double>(f));
-            return f;
-           }, "Stress rate derivative with respect to strain.")
-
-
-      .def("a",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_vec<double>(m.nhist());
-            m.a(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot, 
-                          arr2ptr<double>(f));
-            return f;
-           }, "History rate.")
-      .def("da_ds",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_mat<double>(m.nhist(),6);
-            m.da_ds(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot, arr2ptr<double>(f));
-            return f;
-           }, "History rate derivative with respect to stress.")
-      .def("da_da",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_mat<double>(m.nhist(),m.nhist());
-            m.da_da(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot,  arr2ptr<double>(f));
-            return f;
-           }, "History rate derivative with respect to history.")
-      .def("da_de",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> py::array_t<double>
-           {
-            auto f = alloc_mat<double>(m.nhist(),6);
-            m.da_de(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot,  arr2ptr<double>(f));
-            return f;
-           }, "History rate derivative with respect to strain.")
-      
-      .def("work_rate",
-           [](GeneralFlowRule & m, py::array_t<double, py::array::c_style> s, py::array_t<double, py::array::c_style> alpha, py::array_t<double, py::array::c_style> edot, double T, double Tdot) -> double
-           {
-            double pi;
-            m.work_rate(arr2ptr<double>(s), arr2ptr<double>(alpha), 
-                          arr2ptr<double>(edot), T,
-                          Tdot,  pi);
-            return pi;
-           }, "Plastic work rate.")
+      .def("s", &GeneralFlowRule::s, "Stress rate")
+      .def("ds_ds", &GeneralFlowRule::ds_ds, "Stress rate derivative with respect "
+           "to stress.")
+      .def("ds_da", &GeneralFlowRule::ds_da, "Stress rate derivative with respect "
+           "to history.")
+      .def("ds_de", &GeneralFlowRule::ds_de, "Stress rate derivative with respect "
+           "to strain rate.")
+      .def("a", &GeneralFlowRule::a, "History rate.")
+      .def("da_ds", &GeneralFlowRule::da_ds, "History rate derivative with respect "
+           "to stress.")
+      .def("da_da", &GeneralFlowRule::da_da, "History rate derivative with respect "
+           "to history.")
+      .def("da_de", &GeneralFlowRule::da_de, "History rate derivative with respect "
+           "to strain rate.") 
+      .def("work_rate", &GeneralFlowRule::work_rate, "Inelastic work rate.")
       .def("set_elastic_model", &GeneralFlowRule::set_elastic_model)
   ;
 

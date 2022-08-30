@@ -14,13 +14,11 @@ GeneralFlowRule::GeneralFlowRule(ParameterSet & params) :
 {
 }
 
-void GeneralFlowRule::work_rate(const double * const s,
-                                            const double * const alpha,
-                                            const double * const edot, double T,
-                                            double Tdot, double & p_dot)
+double GeneralFlowRule::work_rate(const Symmetric & s, const History & alpha, 
+                                  const Symmetric & edot, double T, double Tdot)
 {
   // By default don't calculate plastic work
-  p_dot = 0.0;
+  return 0.0;
 }
 
 void GeneralFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel>
@@ -38,7 +36,7 @@ TVPFlowRule::TVPFlowRule(ParameterSet & params) :
     elastic_(params.get_object_parameter<LinearElasticModel>("elastic")),
     flow_(params.get_object_parameter<ViscoPlasticFlowRule>("flow"))
 {
-
+  cache_history_();
 }
 
 std::string TVPFlowRule::type()
@@ -73,268 +71,182 @@ void TVPFlowRule::init_hist(History & h) const
   flow_->init_hist(h);
 }
 
-void TVPFlowRule::s(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const sdot)
+Symmetric TVPFlowRule::s(const Symmetric & s, const History & alpha, 
+                         const Symmetric & edot, double T, double Tdot)
 {
-  double erate[6];
-  std::copy(edot, edot+6, erate);
-
-  double temp[6];
+  Symmetric temp;
   double yv;
-  flow_->g(s, alpha, T, temp);
-  flow_->y(s, alpha, T, yv);
+  flow_->g(s.data(), alpha.rawptr(), T, temp.s());
+  flow_->y(s.data(), alpha.rawptr(), T, yv);
   if (yv > NEML_STRAIN_RATE_LIMIT) 
     throw NEMLError("Strain rate exceeds rate limit");
   
-  for (int i=0; i<6; i++) {
-    erate[i] -= yv * temp[i];
-  }
+  Symmetric erate = edot - yv * temp;
 
-  flow_->g_temp(s, alpha, T, temp);
-  for (int i=0; i<6; i++) {
-    erate[i] -= Tdot * temp[i];
-  }
+  flow_->g_temp(s.data(), alpha.rawptr(), T, temp.s());
+  erate -= Tdot * temp;
 
-  flow_->g_time(s, alpha, T, temp);
-  for (int i=0; i<6; i++) {
-    erate[i] -= temp[i];
-  }
-  
-  double C[36];
-  elastic_->C(T, C);
+  flow_->g_time(s.data(), alpha.rawptr(), T, temp.s());
+  erate -= temp;
 
-  mat_vec(C, 6, erate, 6, sdot);
-
-
+  return elastic_->C(T).dot(erate);
 }
 
-void TVPFlowRule::ds_ds(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const d_sdot)
+SymSymR4 TVPFlowRule::ds_ds(const Symmetric & s, const History & alpha, 
+                            const Symmetric & edot, double T, double Tdot)
 {
   double yv;
-  flow_->y(s, alpha, T, yv);
+  flow_->y(s.data(), alpha.rawptr(), T, yv);
 
-  double work[36];
-  flow_->dg_ds(s, alpha, T, work);
-  for (int i=0; i<36; i++) {
-    work[i] *= -yv;
-  }
+  SymSymR4 work;
+  flow_->dg_ds(s.data(), alpha.rawptr(), T, work.s());
+  work *= -yv;
 
-  double t1[6];
-  flow_->g(s, alpha, T, t1);
-  double t2[6];
-  flow_->dy_ds(s, alpha, T, t2);
-  outer_update_minus(t1, 6, t2, 6, work);
+  Symmetric t1, t2;
+  flow_->g(s.data(), alpha.rawptr(), T, t1.s());
+  flow_->dy_ds(s.data(), alpha.rawptr(), T, t2.s());
+  work -= douter(t1, t2);
+
+  SymSymR4 t3;
+  flow_->dg_ds_temp(s.data(), alpha.rawptr(), T, t3.s());
+  work -= t3 * Tdot;
   
-  double t3[36];
-  flow_->dg_ds_temp(s, alpha, T, t3);
-  for (int i=0; i<36; i++) {
-    work[i] -= t3[i] * Tdot;
-  }
+  flow_->dg_ds_time(s.data(), alpha.rawptr(), T, t3.s());
+  work -= t3;
 
-  flow_->dg_ds_time(s, alpha, T, t3);
-  for (int i=0; i<36; i++) {
-    work[i] -= t3[i];
-  }
-
-  elastic_->C(T, t3);
-
-  mat_mat(6,6,6, t3, work, d_sdot);
-
-
+  return elastic_->C(T).dot(work);
 }
 
-void TVPFlowRule::ds_da(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const d_sdot)
+History TVPFlowRule::ds_da(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot)
 {
   double yv;
-  flow_->y(s, alpha, T, yv);
+  flow_->y(s.data(), alpha.rawptr(), T, yv);
   
-  int sz = 6 * nhist();
+  History work = gather_blank_history_().derivative<Symmetric>();
+  flow_->dg_da(s.data(), alpha.rawptr(), T, work.rawptr());
+  work *= -yv;
   
-  std::vector<double> workv(sz);
-  double * work = &workv[0];
-  flow_->dg_da(s, alpha, T, work);
-  for (int i=0; i<sz; i++) {
-    work[i] *= -yv;
-  }
-
-  double t1[6];
-  flow_->g(s, alpha, T, t1);
-  std::vector<double> t2v(nhist());
-  double * t2 = &t2v[0];
-  flow_->dy_da(s, alpha, T, t2);
-  outer_update_minus(t1, 6, t2, nhist(), work);
+  // Ugh, we need to make these matrices...
+  Symmetric t1;
+  flow_->g(s.data(), alpha.rawptr(), T, t1.s());
+  History t2 = gather_blank_history_();
+  flow_->dy_da(s.data(), alpha.rawptr(), T, t2.rawptr());
+  outer_update_minus(t1.data(), 6, t2.rawptr(), nhist(), work.rawptr());
   
-  std::vector<double> t3v(sz);
-  double * t3 = &t3v[0];
-  flow_->dg_da_temp(s, alpha, T, t3);
-  for (int i=0; i<sz; i++) {
-    work[i] -= t3[i] * Tdot;
-  }
+  History t3 = gather_blank_history_().derivative<Symmetric>();
+  flow_->dg_da_temp(s.data(), alpha.rawptr(), T, t3.rawptr());
+  work -= t3 * Tdot;
 
-  flow_->dg_da_time(s, alpha, T, t3);
-  for (int i=0; i<sz; i++) {
-    work[i] -= t3[i];
-  }
+  flow_->dg_da_time(s.data(), alpha.rawptr(), T, t3.rawptr());
+  work -= t3;
+  
+  SymSymR4 C = elastic_->C(T);
 
-  double C[36];
-  elastic_->C(T, C);
-
-  mat_mat(6, nhist(), 6, C, work, d_sdot);
-
-
+  return work.premultiply(C);
 }
 
-void TVPFlowRule::ds_de(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const d_sdot)
+SymSymR4 TVPFlowRule::ds_de(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot)
 {
-  elastic_->C(T, d_sdot);
+  return elastic_->C(T);
 }
 
-void TVPFlowRule::a(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const adot)
+History TVPFlowRule::a(const Symmetric & s, const History & alpha, 
+                       const Symmetric & edot, double T, double Tdot)
 {
   double dg;
-  flow_->y(s, alpha, T, dg);
-
-  flow_->h(s, alpha, T, adot);
-  for (size_t i=0; i<nhist(); i++) adot[i] *= dg;
+  flow_->y(s.data(), alpha.rawptr(), T, dg);
   
-  std::vector<double> tempv(nhist());
-  double * temp = &tempv[0];
-  flow_->h_temp(s, alpha, T, temp);
-  for (size_t i=0; i<nhist(); i++) adot[i] += temp[i] * Tdot;
+  History adot = gather_blank_history_();
+  flow_->h(s.data(), alpha.rawptr(), T, adot.rawptr());
+  adot *= dg;
+  
+  History temp = gather_blank_history_();
+  flow_->h_temp(s.data(), alpha.rawptr(), T, temp.rawptr());
+  adot += temp * Tdot;
 
-  flow_->h_time(s, alpha, T, temp);
-  for (size_t i=0; i<nhist(); i++) adot[i] += temp[i];
+  flow_->h_time(s.data(), alpha.rawptr(), T, temp.rawptr());
+  adot += temp;
 
-
+  return adot;
 }
 
-void TVPFlowRule::da_ds(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const d_adot)
+History TVPFlowRule::da_ds(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot)
 {
   double dg;
-  flow_->y(s, alpha, T, dg);
+  flow_->y(s.data(), alpha.rawptr(), T, dg);
 
-  int sz = nhist() * 6;
-
-  flow_->dh_ds(s, alpha, T, d_adot);
-  for (int i=0; i<sz; i++) d_adot[i] *= dg;
-
-  std::vector<double> t1v(nhist());
-  double * t1 = &t1v[0];
-  flow_->h(s, alpha, T, t1);
-
-  double t2[6];
-  flow_->dy_ds(s, alpha, T, t2);
-
-  outer_update(t1, nhist(), t2, 6, d_adot);
+  History d_adot = gather_blank_history_().derivative<Symmetric>();
+  flow_->dh_ds(s.data(), alpha.rawptr(), T, d_adot.rawptr());
+  d_adot *= dg;
   
-  std::vector<double> t3v(sz);
-  double * t3 = &t3v[0];
-  flow_->dh_ds_temp(s, alpha, T, t3);
-  for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
-
-  flow_->dh_ds_time(s, alpha, T, t3);
-  for (int i=0; i<sz; i++) d_adot[i] += t3[i];
-
+  // Ugh, history should be a matrix
+  History t1 = gather_blank_history_();
+  flow_->h(s.data(), alpha.rawptr(), T, t1.rawptr());
+  Symmetric t2;
+  flow_->dy_ds(s.data(), alpha.rawptr(), T, t2.s());
+  outer_update(t1.rawptr(), nhist(), t2.data(), 6, d_adot.rawptr());
   
+  History t3 = gather_blank_history_().derivative<Symmetric>();
+  flow_->dh_ds_temp(s.data(), alpha.rawptr(), T, t3.rawptr());
+  d_adot += t3 * Tdot;
+
+  flow_->dh_ds_time(s.data(), alpha.rawptr(), T, t3.rawptr());
+  return d_adot + t3;
 }
 
-void TVPFlowRule::da_da(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const d_adot)
+History TVPFlowRule::da_da(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot)
 {
   double dg;
-  flow_->y(s, alpha, T, dg);
+  flow_->y(s.data(), alpha.rawptr(), T, dg);
 
   int nh = nhist();
-  int sz = nh * nh;
-
-  flow_->dh_da(s, alpha, T, d_adot);
-  for (int i=0; i<sz; i++) d_adot[i] *= dg;
   
-  std::vector<double> t1v(nh);
-  double * t1 = &t1v[0];
-  flow_->h(s, alpha, T, t1);
+  History d_adot = gather_blank_history_().derivative<History>();
+  flow_->dh_da(s.data(), alpha.rawptr(), T, d_adot.rawptr());
+  d_adot *= dg;
   
-  std::vector<double> t2v(nh);
-  double * t2 = &t2v[0];
-  flow_->dy_da(s, alpha, T, t2);
-
-  outer_update(t1, nh, t2, nh, d_adot);
+  // Ugh
+  History t1 = gather_blank_history_();
+  flow_->h(s.data(), alpha.rawptr(), T, t1.rawptr());
+  History t2 = gather_blank_history_();
+  flow_->dy_da(s.data(), alpha.rawptr(), T, t2.rawptr());
+  outer_update(t1.rawptr(), nh, t2.rawptr(), nh, d_adot.rawptr());
   
-  std::vector<double> t3v(sz);
-  double * t3 = &t3v[0];
-  flow_->dh_da_temp(s, alpha, T, t3);
-  for (int i=0; i<sz; i++) d_adot[i] += t3[i] * Tdot;
-
-  flow_->dh_da_time(s, alpha, T, t3);
-  for (int i=0; i<sz; i++) d_adot[i] += t3[i];
-
+  History t3 = gather_blank_history_().derivative<History>();
+  flow_->dh_da_temp(s.data(), alpha.rawptr(), T, t3.rawptr());
+  d_adot += t3 * Tdot;
+  
+  flow_->dh_da_time(s.data(), alpha.rawptr(), T, t3.rawptr());
+  return d_adot + t3;
 }
 
-void TVPFlowRule::da_de(const double * const s, const double * const alpha,
-              const double * const edot, double T,
-              double Tdot,
-              double * const d_adot)
+History TVPFlowRule::da_de(const Symmetric & s, const History & alpha, 
+                           const Symmetric & edot, double T, double Tdot)
 {
-  std::fill(d_adot, d_adot+(nhist()*6), 0.0);
-
+  return gather_blank_history_().derivative<Symmetric>();
 }
 
-void TVPFlowRule::work_rate(const double * const s,
-                                    const double * const alpha,
-                                    const double * const edot, double T,
-                                    double Tdot, double & p_dot)
+double TVPFlowRule::work_rate(const Symmetric & s, const History & alpha, 
+                              const Symmetric & edot, double T, double Tdot)
 {
-  double erate[6];
-  std::fill(erate, erate+6, 0.0);
-
-  double temp[6];
+  Symmetric dir;
   double yv;
-  flow_->g(s, alpha, T, temp);
-  flow_->y(s, alpha, T, yv);
+  flow_->g(s.data(), alpha.rawptr(), T, dir.s());
+  flow_->y(s.data(), alpha.rawptr(), T, yv);
 
-  for (int i=0; i<6; i++) {
-    erate[i] += yv * temp[i];
-  }
+  Symmetric erate = yv * dir;
 
-  flow_->g_temp(s, alpha, T, temp);
-  for (int i=0; i<6; i++) {
-    erate[i] += Tdot * temp[i];
-  }
+  flow_->g_temp(s.data(), alpha.rawptr(), T, dir.s());
+  erate += Tdot * dir;
 
-  flow_->g_time(s, alpha, T, temp);
-  for (int i=0; i<6; i++) {
-    erate[i] += temp[i];
-  }
-
-  p_dot = dot_vec(s, erate, 6);
-}
-
-void TVPFlowRule::elastic_strains(const double * const s_np1, double T_np1,
-                                 double * const e_np1) const
-{
-  double S[36];
-  elastic_->S(T_np1, S);
-  mat_vec(S, 6, s_np1, 6, e_np1);
-
+  flow_->g_time(s.data(), alpha.rawptr(), T, dir.s());
+  erate += dir;
+  
+  return s.contract(erate);
 }
 
 void TVPFlowRule::set_elastic_model(std::shared_ptr<LinearElasticModel> emodel)

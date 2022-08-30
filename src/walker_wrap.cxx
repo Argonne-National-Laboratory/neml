@@ -26,22 +26,9 @@ PYBIND11_MODULE(walker, m) {
                                                               "flow", "lambda",
                                                               "eps_ref"});
         }))
-      .def("kappa",
-           [](WalkerKremplSwitchRule & m, py::array_t<double,
-              py::array::c_style> eps, double T) -> double
-           {
-             double res;
-             m.kappa(arr2ptr<double>(eps), T, res);
-             return res;
-           }, "Rate sliding function")
-      .def("dkappa",
-           [](WalkerKremplSwitchRule & m, py::array_t<double,
-              py::array::c_style> eps, double T) -> py::array_t<double>
-           {
-            auto f = alloc_vec<double>(6);
-            m.dkappa(arr2ptr<double>(eps), T, arr2ptr<double>(f));
-            return f;
-           }, "Derivative of the kappa function wrt strain rate.")
+      .def("kappa", &WalkerKremplSwitchRule::kappa, "Rate scaling function")
+      .def("dkappa", &WalkerKremplSwitchRule::dkappa, 
+           "Derivative of the kappa function wrt strain rate.")
       ;
 
   py::class_<SofteningModel, NEMLObject, std::shared_ptr<SofteningModel>>(m,

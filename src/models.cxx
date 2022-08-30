@@ -152,28 +152,9 @@ size_t NEMLModel::nstatic() const
 
 void NEMLModel::cache_history_()
 {
-  populate_hist(stored_hist_);
+  HistoryNEMLObject::cache_history_();
   populate_state(stored_state_);
   populate_static(stored_static_);
-}
-
-History NEMLModel::gather_history_(double * data) const
-{
-  History h = gather_blank_history_();
-  h.set_data(data);
-  return h;
-}
-
-History NEMLModel::gather_history_(const double * data) const
-{
-  History h = gather_blank_history_();
-  h.set_data(const_cast<double*>(data));
-  return h;
-}
-
-History NEMLModel::gather_blank_history_() const
-{
-  return stored_hist_;
 }
 
 History NEMLModel::gather_state_(double * data) const
@@ -1323,8 +1304,7 @@ void GeneralIntegrator::strain_partial(
 {
   const GITrialState * tss = static_cast<const GITrialState*>(ts);
   
-  SymSymR4 estress;
-  rule_->ds_de(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, estress.s());
+  SymSymR4 estress = rule_->ds_de(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
   
   for (size_t i = 0; i < 6; i++) {
     for (size_t j = 0; j < 6; j++) {
@@ -1332,8 +1312,7 @@ void GeneralIntegrator::strain_partial(
     }
   }
   
-  History ehist = gather_blank_state_().derivative<Symmetric>();
-  rule_->da_de(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, ehist.rawptr());
+  History ehist = rule_->da_de(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
   for (size_t i = 0; i < nstate(); i++) {
     for (size_t j = 0; j < 6; j++) {
       de[CINDEX((i+6),j,6)] = ehist.rawptr()[CINDEX(i,j,6)];
@@ -1359,12 +1338,10 @@ void GeneralIntegrator::work_and_energy(
   u_np1 = u_n + ds.contract(de) / 2.0;
 
   // Dissipation needs a special call
-  double p_dot_np1;
-  rule_->work_rate(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(),
-                   T_np1, tss->Tdot, p_dot_np1);
-  double p_dot_n;
-  rule_->work_rate(s_n.data(), h_n.rawptr(), 
-                   tss->e_dot.data(), T_n, tss->Tdot, p_dot_n);
+  double p_dot_np1 = rule_->work_rate(s_np1, h_np1, tss->e_dot,
+                                      T_np1, tss->Tdot);
+  double p_dot_n = rule_->work_rate(s_n, h_n, tss->e_dot,
+                                    T_n, tss->Tdot);
   p_np1 = p_n + (p_dot_np1 + p_dot_n)/2.0 * tss->dt;
 }
 
@@ -1409,21 +1386,18 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   int nparams = this->nparams();
 
   // Residual calculation
-  Symmetric fr;
-  rule_->s(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, fr.s());
+  Symmetric fr = rule_->s(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
   Symmetric R1 = s_np1 - tss->s_n - fr * tss->dt;
   for (int i=0; i<6; i++) {
     R[i] = R1(i);
   }
-  History h_rate = gather_blank_state_();
-  rule_->a(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, h_rate.rawptr());
+  History h_rate = rule_->a(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
   for (int i=0; i<nstate; i++) {
     R[i+6] = h_np1.rawptr()[i] - tss->h_n.rawptr()[i] - h_rate.rawptr()[i] * tss->dt;
   }
 
   // Jacobian calculation
-  SymSymR4 J11;
-  rule_->ds_ds(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J11.s());
+  SymSymR4 J11 = rule_->ds_ds(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
   J11 = J11 * tss->dt - SymSymR4::id();
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
@@ -1432,8 +1406,7 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   }
   
   // Transpose?
-  History J12 = gather_blank_state_().derivative<Symmetric>();
-  rule_->ds_da(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J12.rawptr());
+  History J12 = rule_->ds_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
   for (int i=0; i<6; i++) {
     for (int j=0; j<nstate; j++) {
       J[CINDEX(i,(j+6),nparams)] = -J12.rawptr()[CINDEX(i,j,nstate)] * tss->dt;
@@ -1441,16 +1414,14 @@ void GeneralIntegrator::RJ(const double * const x, TrialState * ts,
   }
   
   // Transpose?
-  History J21 = gather_blank_state_().derivative<Symmetric>();
-  rule_->da_ds(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J21.rawptr());
+  History J21 = rule_->da_ds(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
   for (int i=0; i<nstate; i++) {
     for (int j=0; j<6; j++) {
       J[CINDEX((i+6),j,nparams)] = -J21.rawptr()[CINDEX(i,j,6)] * tss->dt;
     }
   }
   
-  History J22 = gather_blank_state_().derivative<History>();
-  rule_->da_da(s_np1.data(), h_np1.rawptr(), tss->e_dot.data(), tss->T, tss->Tdot, J22.rawptr());
+  History J22 = rule_->da_da(s_np1, h_np1, tss->e_dot, tss->T, tss->Tdot);
 
   // More vectorization
   double dt = tss->dt;
