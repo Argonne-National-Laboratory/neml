@@ -230,7 +230,9 @@ class NEML_EXPORT History {
   
   /// Starting location of an entry
   double * start_loc(std::string name);
-
+  
+  /// Nicely formatted names for the flat storage
+  std::vector<std::string> formatted_names() const;
 
  private:
   void error_if_exists_(std::string name) const;

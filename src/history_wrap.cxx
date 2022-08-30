@@ -157,6 +157,7 @@ PYBIND11_MODULE(history, m) {
               m.unravel_hh(base, arr2ptr<double>(mat));
               return mat;
              }, "Unravel to c-style array")
+        .def("formatted_names", &History::formatted_names)
       ;
       py::class_<HistoryNEMLObject, NEMLObject,
           std::shared_ptr<HistoryNEMLObject>>(m, "HistoryNEMLObject")

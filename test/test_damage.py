@@ -670,6 +670,16 @@ class TestLMDamage(unittest.TestCase, CommonScalarDamageModel,
         self.T_np1, self.T_n, self.t_np1, self.t_n)
     self.assertTrue(np.isclose(exact, model))
 
+  def test_is_damage(self):
+    self.assertTrue(self.model.is_damage_model())
+
+  def test_current_damage(self):
+    print(self.model.report_internal_variable_names())
+    self.assertEqual(self.model.get_damage(self.hist_n), self.d_n)
+
+  def test_kill(self):
+    self.assertFalse(self.model.should_del_element(self.hist_n))
+
 class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel, 
     CommonScalarDamageModel, CommonDamagedModel):
   def setUp(self):
