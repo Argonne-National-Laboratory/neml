@@ -106,6 +106,11 @@ History NEMLModel::gather_blank_history_() const
   return stored_hist_;
 }
 
+std::vector<std::string> NEMLModel::report_internal_variable_names() const
+{
+  return gather_blank_history_().formatted_names();
+}
+
 // NEMLModel_sd implementation
 NEMLModel_sd::NEMLModel_sd(ParameterSet & params) :
       NEMLModel(params), 

@@ -45,6 +45,7 @@ NEMLScalarDamagedModel_sd::NEMLScalarDamagedModel_sd(ParameterSet & params) :
       dkill_(params.get_parameter<double>("dkill")), 
       sfact_(params.get_parameter<double>("sfact"))
 {
+  cache_history_();
 }
 
 std::string NEMLScalarDamagedModel_sd::type()
@@ -305,13 +306,22 @@ void NEMLScalarDamagedModel_sd::ekill_update_(double T_np1,
     u_np1 = u_n;
   }
 }
-double NEMLScalarDamagedModel_sd::get_damage(const double *const h_np1) {
-  return h_np1[0];
+
+double NEMLScalarDamagedModel_sd::get_damage(const double *const h_np1) 
+{
+  History h = gather_history_(h_np1);
+  return h.get<double>(prefix("damage"));
 }
-bool NEMLScalarDamagedModel_sd::should_del_element(const double *const h_np1) {
+
+bool NEMLScalarDamagedModel_sd::should_del_element(const double *const h_np1) 
+{
   return get_damage(h_np1) > dkill_;
 }
-bool NEMLScalarDamagedModel_sd::is_damage_model() const { return true; }
+
+bool NEMLScalarDamagedModel_sd::is_damage_model() const 
+{
+  return true; 
+}
 
 ScalarDamage::ScalarDamage(ParameterSet & params) :
     NEMLObject(params),

@@ -413,6 +413,17 @@ double * History::start_loc(std::string name)
   return &(storage_[loc_.at(name)]);
 }
 
+std::vector<std::string> History::formatted_names() const
+{
+  std::vector<std::string> names;
+  
+  for (auto name : order_)
+    for (size_t i = 0; i < size_of_entry(name); i++)
+      names.push_back(name + "_" + std::to_string(i));
+
+  return names;
+}
+
 HistoryNEMLObject::HistoryNEMLObject(ParameterSet & params) :
     NEMLObject(params), prefix_("")
 {

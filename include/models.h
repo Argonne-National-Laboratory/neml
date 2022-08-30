@@ -87,6 +87,9 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
    /// Number of static variables
    size_t nstatic() const;
 
+   /// Report nice names for the internal variables
+   virtual std::vector<std::string> report_internal_variable_names() const; 
+
   protected:
    /// Split internal variables into static and actual parts
    std::tuple<History,History> split_state(const History & h) const;

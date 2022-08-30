@@ -19,6 +19,7 @@ PYBIND11_MODULE(models, m) {
   
   py::class_<NEMLModel, HistoryNEMLObject, std::shared_ptr<NEMLModel>>(m, "NEMLModel")
       .def("save", &NEMLModel::save)
+      .def("report_internal_variable_names", &NEMLModel::report_internal_variable_names)
       .def("update_sd",
            [](NEMLModel & m, py::array_t<double, py::array::c_style> e_np1, py::array_t<double, py::array::c_style> e_n, double T_np1, double T_n, double t_np1, double t_n, py::array_t<double, py::array::c_style> s_n, py::array_t<double, py::array::c_style> h_n, double u_n, double p_n) -> std::tuple<py::array_t<double>, py::array_t<double>, py::array_t<double>, double, double>
            {
@@ -60,6 +61,17 @@ PYBIND11_MODULE(models, m) {
             return e_np1;
 
            }, "Calculate the elastic strains.")
+      .def("get_damage",
+           [](NEMLModel & m, py::array_t<double, py::array::c_style> h_np1) -> double
+           {
+            return m.get_damage(arr2ptr<double>(h_np1));
+           }, "Provide the current value of damage, for models with damage")
+      .def("should_del_element",
+           [](NEMLModel & m, py::array_t<double, py::array::c_style> h_np1) -> bool
+           {
+            return m.should_del_element(arr2ptr<double>(h_np1));
+           }, "Report if element death should occur")
+      .def("is_damage_model", &NEMLModel::is_damage_model, "Report if this model is a damage model")
       ;
 
   py::class_<NEMLModel_sd, NEMLModel, std::shared_ptr<NEMLModel_sd>>(m, "NEMLModel_sd")
