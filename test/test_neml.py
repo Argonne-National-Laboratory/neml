@@ -285,7 +285,7 @@ class TestRIAPlasticityJ2Voce(unittest.TestCase, CommonMatModel, CommonJacobian)
 
   def test_internal_variable_names(self):
     should = self.model.report_internal_variable_names()
-    correct = ['small_stress_0', 'small_stress_1', 'small_stress_2', 'small_stress_3', 'small_stress_4', 'small_stress_5', 'alpha_0']
+    correct = ['small_stress_0', 'small_stress_1', 'small_stress_2', 'small_stress_3', 'small_stress_4', 'small_stress_5', 'alpha']
     self.assertEqual(should, correct)
 
   def gen_hist(self):
@@ -498,7 +498,7 @@ class TestDirectIntegrateChaboche(unittest.TestCase, CommonMatModel, CommonJacob
 
   def test_internal_variable_names(self):
     should = self.model.report_internal_variable_names()
-    correct = ['small_stress_0', 'small_stress_1', 'small_stress_2', 'small_stress_3', 'small_stress_4', 'small_stress_5', 'alpha_0', 'backstress_0_0', 'backstress_0_1', 'backstress_0_2', 'backstress_0_3', 'backstress_0_4', 'backstress_0_5', 'backstress_1_0', 'backstress_1_1', 'backstress_1_2', 'backstress_1_3', 'backstress_1_4', 'backstress_1_5', 'backstress_2_0', 'backstress_2_1', 'backstress_2_2', 'backstress_2_3', 'backstress_2_4', 'backstress_2_5']
+    correct = ['small_stress_0', 'small_stress_1', 'small_stress_2', 'small_stress_3', 'small_stress_4', 'small_stress_5', 'alpha', 'backstress_0_0', 'backstress_0_1', 'backstress_0_2', 'backstress_0_3', 'backstress_0_4', 'backstress_0_5', 'backstress_1_0', 'backstress_1_1', 'backstress_1_2', 'backstress_1_3', 'backstress_1_4', 'backstress_1_5', 'backstress_2_0', 'backstress_2_1', 'backstress_2_2', 'backstress_2_3', 'backstress_2_4', 'backstress_2_5']
     self.assertEqual(should, correct)
 
   def gen_hist(self):
