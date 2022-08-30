@@ -674,8 +674,9 @@ class TestLMDamage(unittest.TestCase, CommonScalarDamageModel,
     self.assertTrue(self.model.is_damage_model())
 
   def test_current_damage(self):
-    print(self.model.report_internal_variable_names())
-    self.assertEqual(self.model.get_damage(self.hist_n), self.d_n)
+    hist = self.model.init_store()
+    hist[6] = self.d_n
+    self.assertEqual(self.model.get_damage(hist), self.d_n)
 
   def test_kill(self):
     self.assertFalse(self.model.should_del_element(self.hist_n))
@@ -745,6 +746,17 @@ class TestPowerLawDamage(unittest.TestCase, CommonStandardDamageModel,
     f_model = self.dmodel.f(self.stress, self.d_np1, self.T)
     f_calcd = self.A * self.effective(self.stress) ** self.a
     self.assertTrue(np.isclose(f_model, f_calcd))
+
+  def test_is_damage(self):
+    self.assertTrue(self.model.is_damage_model())
+
+  def test_current_damage(self):
+    hist = self.model.init_store()
+    hist[6] = self.d_n
+    self.assertEqual(self.model.get_damage(hist), self.d_n)
+
+  def test_kill(self):
+    self.assertFalse(self.model.should_del_element(self.hist_n))
 
 class TestExponentialDamage(unittest.TestCase, CommonStandardDamageModel, 
     CommonScalarDamageModel, CommonDamagedModel):

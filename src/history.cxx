@@ -418,8 +418,13 @@ std::vector<std::string> History::formatted_names() const
   std::vector<std::string> names;
   
   for (auto name : order_)
-    for (size_t i = 0; i < size_of_entry(name); i++)
-      names.push_back(name + "_" + std::to_string(i));
+    if (size_of_entry(name) == 1) {
+      names.push_back(name);
+    }
+    else {
+      for (size_t i = 0; i < size_of_entry(name); i++)
+        names.push_back(name + "_" + std::to_string(i));
+    }
 
   return names;
 }

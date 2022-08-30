@@ -33,6 +33,7 @@ void NEMLModel::populate_hist(History & h) const
 
 void NEMLModel::init_hist(History & h) const
 {
+  h.zero(); // This shuts up valgrind errors.
   init_static(h);
   init_state(h);
 }
