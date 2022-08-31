@@ -293,7 +293,7 @@ PYBIND11_MODULE(walker, m) {
     .def("dy_da_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History h = m.create_blank_hist_();
+          History h = m.gather_blank_history_();
           m.dy_da(state, h);
           return h;
          }, "The derivative of the scalar inelastic strain rate wrt history")
@@ -315,7 +315,7 @@ PYBIND11_MODULE(walker, m) {
     .def("dg_da_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_().derivative<Symmetric>();
+          History res = m.gather_blank_history_().derivative<Symmetric>();
           m.dg_da(state, res);
           return res;
          }, "The derivative of the flow direction wrt history")
@@ -323,21 +323,21 @@ PYBIND11_MODULE(walker, m) {
     .def("h_wrap",
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_();
+          History res = m.gather_blank_history_();
           m.h(state, res);
           return res;
          }, "The history proportional to the scalar inelastic strain rate")
     .def("dh_ds_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_().derivative<Symmetric>();
+          History res = m.gather_blank_history_().derivative<Symmetric>();
           m.dh_ds(state, res);
           return res;
          }, "The derivative of the history ptt inelastic strain rate wrt stress")
     .def("dh_da_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_().history_derivative(m.create_blank_hist_());
+          History res = m.gather_blank_history_().history_derivative(m.gather_blank_history_());
           m.dh_da(state, res);
           return res;
          }, "The derivative of the history ptt inelastic strain rate wrt history")
@@ -345,21 +345,21 @@ PYBIND11_MODULE(walker, m) {
     .def("h_time_wrap",
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_();
+          History res = m.gather_blank_history_();
           m.h_time(state, res);
           return res;
          }, "The history proportional to the time rate")
     .def("dh_ds_time_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_().derivative<Symmetric>();
+          History res = m.gather_blank_history_().derivative<Symmetric>();
           m.dh_ds_time(state, res);
           return res;
          }, "The derivative of the history ptt time rate wrt stress")
     .def("dh_da_time_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_().history_derivative(m.create_blank_hist_());
+          History res = m.gather_blank_history_().history_derivative(m.gather_blank_history_());
           m.dh_da_time(state, res);
           return res;
          }, "The derivative of the history ptt time rate wrt history")
@@ -367,21 +367,21 @@ PYBIND11_MODULE(walker, m) {
     .def("h_temp_wrap",
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_();
+          History res = m.gather_blank_history_();
           m.h_temp(state, res);
           return res;
          }, "The history proportional to the temperature rate")
     .def("dh_ds_temp_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_().derivative<Symmetric>();
+          History res = m.gather_blank_history_().derivative<Symmetric>();
           m.dh_ds_temp(state, res);
           return res;
          }, "The derivative of the history ptt temperature rate wrt stress")
     .def("dh_da_temp_wrap", 
          [](WrappedViscoPlasticFlowRule & m, State & state) -> History
          {
-          History res = m.create_blank_hist_().history_derivative(m.create_blank_hist_());
+          History res = m.gather_blank_history_().history_derivative(m.gather_blank_history_());
           m.dh_da_temp(state, res);
           return res;
          }, "The derivative of the history ptt temperature rate wrt history")

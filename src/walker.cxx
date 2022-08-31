@@ -1492,42 +1492,15 @@ SymSymR4 WalkerKinematicHardening::dN_(VariableState & state)
 }
 
 WrappedViscoPlasticFlowRule::WrappedViscoPlasticFlowRule(ParameterSet & params) :
-    ViscoPlasticFlowRule(params),
-    stored_hist_(false)
+    ViscoPlasticFlowRule(params)
 {
 
-}
-
-History WrappedViscoPlasticFlowRule::blank_hist_() const
-{
-  return stored_hist_;
-}
-
-History WrappedViscoPlasticFlowRule::create_blank_hist_() const
-{
-  History h;
-  populate_hist(h);
-  return h;
-}
-
-History WrappedViscoPlasticFlowRule::gather_hist_(double * const h) const
-{
-  History hv = blank_hist_();
-  hv.set_data(h);
-  return hv;
-}
-
-History WrappedViscoPlasticFlowRule::gather_hist_(const double * const h) const
-{
-  History hv = blank_hist_();
-  hv.set_data(const_cast<double*>(h));
-  return hv;
 }
 
 State WrappedViscoPlasticFlowRule::make_state_(const double * const s, const double *
                                                const alpha, double T) const
 {
-  return State(Symmetric(s), gather_hist_(alpha), T);
+  return State(Symmetric(s), gather_history_(alpha), T);
 }
 
 // Rate rule
@@ -1585,7 +1558,7 @@ void WrappedViscoPlasticFlowRule::dg_da(const double * const s, const double * c
 void WrappedViscoPlasticFlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  History res = gather_hist_(hv);
+  History res = gather_history_(hv);
   h(make_state_(s, alpha, T), res);
 }
 
@@ -1605,7 +1578,7 @@ void WrappedViscoPlasticFlowRule::dh_da(const double * const s, const double * c
 
   dh_da(make_state_(s, alpha, T), res);
 
-  res.unravel_hh(blank_hist_(), dhv);
+  res.unravel_hh(gather_blank_history_(), dhv);
 
   delete [] temp;
 }
@@ -1614,7 +1587,7 @@ void WrappedViscoPlasticFlowRule::dh_da(const double * const s, const double * c
 void WrappedViscoPlasticFlowRule::h_time(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  History res = gather_hist_(hv);
+  History res = gather_history_(hv);
   h_time(make_state_(s, alpha, T), res);
 }
 
@@ -1644,7 +1617,7 @@ void WrappedViscoPlasticFlowRule::dh_da_time(const double * const s, const doubl
 
   dh_da_time(make_state_(s, alpha, T), res);
 
-  res.unravel_hh(blank_hist_(), dhv);
+  res.unravel_hh(gather_blank_history_(), dhv);
 
   delete [] temp;
 }
@@ -1658,7 +1631,7 @@ void WrappedViscoPlasticFlowRule::dh_da_time(const State & state, History & res)
 void WrappedViscoPlasticFlowRule::h_temp(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  History res = gather_hist_(hv);
+  History res = gather_history_(hv);
   h_temp(make_state_(s, alpha, T), res);
 }
 
@@ -1699,7 +1672,7 @@ TestFlowRule::TestFlowRule(ParameterSet & params)
     s0_(params.get_parameter<double>("s0")), 
     K_(params.get_parameter<double>("K"))
 {
-  populate_hist(stored_hist_);
+  cache_history_();
 }
 
 std::string TestFlowRule::type()
@@ -1838,7 +1811,7 @@ WalkerFlowRule::WalkerFlowRule(ParameterSet & params) :
     X->set_scaling(scaling_);
   }
 
-  populate_hist(stored_hist_);
+  cache_history_();
 }
 
 std::string WalkerFlowRule::type()

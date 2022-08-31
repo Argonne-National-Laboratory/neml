@@ -83,28 +83,9 @@ size_t NEMLModel::nstatic() const
 
 void NEMLModel::cache_history_()
 {
-  populate_hist(stored_hist_);
+  HistoryNEMLObject::cache_history_();
   populate_state(stored_state_);
   populate_static(stored_static_);
-}
-
-History NEMLModel::gather_history_(double * data) const
-{
-  History h = gather_blank_history_();
-  h.set_data(data);
-  return h;
-}
-
-History NEMLModel::gather_history_(const double * data) const
-{
-  History h = gather_blank_history_();
-  h.set_data(const_cast<double*>(data));
-  return h;
-}
-
-History NEMLModel::gather_blank_history_() const
-{
-  return stored_hist_;
 }
 
 std::vector<std::string> NEMLModel::report_internal_variable_names() const

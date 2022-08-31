@@ -296,8 +296,20 @@ class NEML_EXPORT HistoryNEMLObject: public NEMLObject {
   /// Assemble a complete derivative name
   std::string dprefix(std::string a, std::string b) const;
 
+  /// Cache the history to avoid recreating it every time
+  void cache_history_();
+
+   /// Quickly setup history
+   History gather_history_(double * data) const;
+   History gather_history_(const double * data) const;
+   History gather_blank_history_() const;
+
  protected:
   std::string prefix_;
+  History stored_hist_;
+  
+ private:
+  bool cached_;
 };
 
 } // namespace neml

@@ -590,17 +590,11 @@ class NEML_EXPORT WrappedViscoPlasticFlowRule : public ViscoPlasticFlowRule {
   /// Wrapped derivative of h_temp wrt history
   virtual void dh_da_temp(const State & state, History & res) const;
   
-  /// Blank history
-  History blank_hist_() const;
-
-  /// Special function for wrappers...
-  History create_blank_hist_() const;
-  
   /// Blank derivative of a history
   template <class T>
   History blank_derivative_() const
   {
-    return blank_hist_().derivative<T>(); 
+    return gather_blank_history_().derivative<T>(); 
   }
 
  protected:
@@ -609,10 +603,6 @@ class NEML_EXPORT WrappedViscoPlasticFlowRule : public ViscoPlasticFlowRule {
                    T) const;
 
  private:
-  /// Make a history object
-  History gather_hist_(double * const h) const;
-  History gather_hist_(const double * const h) const;
-
   /// Initialized derivative
   template <class T>
   History gather_derivative_(double * const h) const
@@ -621,16 +611,13 @@ class NEML_EXPORT WrappedViscoPlasticFlowRule : public ViscoPlasticFlowRule {
     hv.set_data(h);
     return hv;
   }
-
- protected:
-  History stored_hist_;
 };
 
 /// Initialized derivative wrt history
 template <>
 History WrappedViscoPlasticFlowRule::gather_derivative_<History>(double * const h) const
 {
-  History hv = blank_hist_().history_derivative(blank_hist_());
+  History hv = gather_blank_history_().history_derivative(gather_blank_history_());
   hv.set_data(h);
   return hv;
 }
