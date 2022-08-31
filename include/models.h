@@ -97,13 +97,7 @@ class NEML_EXPORT NEMLModel: public HistoryNEMLObject {
    /// Cache history objects with a view to increasing performance
    void cache_history_();
 
-   /// Quickly setup history
-   History gather_history_(double * data) const;
-   History gather_history_(const double * data) const;
-   History gather_blank_history_() const;
-
   protected:
-   History stored_hist_;
    History stored_state_;
    History stored_static_;
 };
