@@ -80,6 +80,14 @@ PYBIND11_MODULE(crystallography, m) {
       .def("plane_index", &Lattice::plane_index)
       ;
 
+  py::class_<GeneralLattice, Lattice, NEMLObject, std::shared_ptr<GeneralLattice>>(m, "GeneralLattice")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+                    {
+                      return create_object_python<GeneralLattice>(
+                          args, kwargs, {"a1", "a2", "a3", "symmetry_group"});
+                    }))
+      ;
+
   py::class_<CubicLattice, Lattice, NEMLObject, std::shared_ptr<CubicLattice>>(m, "CubicLattice")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {

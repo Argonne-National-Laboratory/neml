@@ -609,6 +609,52 @@ void Lattice::update_normals_(const std::vector<Vector> & new_planes)
   normal_map_.push_back(new_indices);
 }
 
+GeneralLattice::GeneralLattice(ParameterSet & params) :
+    NEMLObject(params),
+    Lattice(
+        Vector(params.get_parameter<std::vector<double>>("a1")),
+        Vector(params.get_parameter<std::vector<double>>("a2")),
+        Vector(params.get_parameter<std::vector<double>>("a3")),
+        params.get_object_parameter<SymmetryGroup>("symmetry_group"),
+        params.get_parameter<list_systems>("slip_systems"), 
+        params.get_parameter<twin_systems>("twin_systems"))
+{
+
+}
+
+std::string GeneralLattice::type()
+{
+  return "GeneralLattice";
+}
+
+ParameterSet GeneralLattice::parameters()
+{
+  ParameterSet pset(GeneralLattice::type());
+
+  pset.add_parameter<std::vector<double>>("a1");
+  pset.add_parameter<std::vector<double>>("a2");
+  pset.add_parameter<std::vector<double>>("a3");
+  pset.add_parameter<NEMLObject>("symmetry_group");
+  pset.add_optional_parameter<list_systems>("slip_systems",
+                                            list_systems());
+  pset.add_optional_parameter<list_systems>("twin_systems",
+                                            twin_systems());
+
+  return pset;
+}
+
+ParameterSet & GeneralLattice::current_parameters()
+{
+  current_params_.assign_parameter("slip_systems", current_slip_);
+  current_params_.assign_parameter("twin_systems", current_twin_);
+  return current_params_;
+}
+
+std::unique_ptr<NEMLObject> GeneralLattice::initialize(ParameterSet & params)
+{
+  return neml::make_unique<GeneralLattice>(params);
+}
+
 CubicLattice::CubicLattice(ParameterSet & params) :
     NEMLObject(params),
     Lattice(
