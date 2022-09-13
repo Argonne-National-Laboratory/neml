@@ -301,6 +301,31 @@ class SlipTest:
         self.assertAlmostEqual(n.norm(), 1.0)
         self.assertAlmostEqual(d.dot(n), 0.0)
 
+class TestGeneralLattice(unittest.TestCase, LTests, ShearTests, SlipTest):
+  def setUp(self):
+    self.a = 1.3
+    self.lattice = crystallography.GeneralLattice(
+            [self.a,0,0],
+            [0,self.a,0],
+            [0,0,self.a],
+            crystallography.SymmetryGroup("432"))
+
+    self.S = np.array([[20.0,-15.0,12.0],[-15.0,-40.0,5.0],[12.0,5.0,60.0]])
+    self.ST = tensors.Symmetric(self.S)
+    self.Q = rotations.Orientation(30.0,43.0,10.0, angle_type = "degrees")
+    self.QM = self.Q.to_matrix()
+
+    self.lattice.add_slip_system([1,1,0],[1,1,1])
+
+    self.correct_numbers = [12,]
+
+  def test_planes(self):
+    self.assertEqual(self.lattice.nplanes, 4)
+    for i in range(12):
+      from_normals = self.lattice.unique_planes[self.lattice.plane_index(0, i)]
+      from_direct = self.lattice.slip_planes[0][i]
+      self.assertAlmostEqual(np.abs(from_normals.dot(from_direct)), 1.0)
+
 class TestCubicFCC(unittest.TestCase, LTests, ShearTests, SlipTest):
   def setUp(self):
     self.a = 1.3

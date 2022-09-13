@@ -182,6 +182,24 @@ class NEML_EXPORT Lattice {
   std::vector<std::vector<size_t>> normal_map_;
 };
 
+/// General lattice with no specialization
+class NEML_EXPORT GeneralLattice: public NEMLObject, public Lattice {
+ public:
+  GeneralLattice(ParameterSet & params);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// Override serialization to account for dynamic changes
+  virtual ParameterSet & current_parameters();
+};
+
+static Register<GeneralLattice> regGeneralLattice;
+
 class NEML_EXPORT CubicLattice: public NEMLObject, public Lattice {
  public:
   /// Specialized Lattice for cubic systems, initialize with the lattice

@@ -24,7 +24,8 @@ the lattice vectors and symmetry group.
 
 .. toctree::
    :maxdepth: 1
-
+   
+   GeneralLattice
    CubicLattice
    HCPLattice
 
