@@ -101,7 +101,7 @@ def pole_figure_discrete(orientations, pole, lattice,
   pts = [srot.apply(o.inverse().apply(pp)) for pp in eq_poles for o in orientations]
 
   # Get rid of those that are in the lower hemisphere
-  pts = [p for p in pts if p[2] > 0.0]
+  pts = [p for p in pts if p[2] >= 0.0]
 
   # Project
   if projection == "stereographic":
