@@ -2,15 +2,32 @@
 
 #include "cp/batch.h"
 
+#include <numeric>
+
 namespace neml {
 
 PolycrystalModel::PolycrystalModel(ParameterSet & params) :
     NEMLModel_ldi(params),
     model_(params.get_object_parameter<SingleCrystalModel>("model")),
     q0s_(params.get_object_parameter_vector<Orientation>("qs")),
-    nthreads_(params.get_parameter<int>("nthreads"))
+    nthreads_(params.get_parameter<int>("nthreads")),
+    weights_(params.get_parameter<std::vector<double>>("weights"))
 {
+  // This could be improved
+  if (weights_.size() == 0) {
+    weights_ = std::vector<double>(q0s_.size(), 1.0);
+  }
+  else if (weights_.size() != q0s_.size()) {
+    throw std::runtime_error("Size of weights needs to match the size of "
+                             "list of orientations");
+  }
 
+  // Normalize the weights
+  double sum = std::accumulate(weights_.begin(), weights_.end(), 0.0);
+  if (sum == 0.0)
+    throw std::runtime_error("Sum of weights cannot be zero");
+  for (size_t i = 0; i < weights_.size(); i++)
+    weights_[i] /= sum;
 }
 
 size_t PolycrystalModel::n() const
@@ -111,6 +128,8 @@ ParameterSet TaylorModel::parameters()
   pset.add_parameter<NEMLObject>("model");
   pset.add_parameter<std::vector<NEMLObject>>("qs");
   pset.add_optional_parameter<int>("nthreads", 1);
+  pset.add_optional_parameter<std::vector<double>>("weights",
+                                                   {});
 
   return pset;
 }
@@ -171,24 +190,17 @@ void TaylorModel::update_ld_inc(
   delete [] Ts_n;
                          
   for (size_t i = 0; i < n(); i++) {
-    for (size_t j = 0; j < 6; j++) s_np1[j] += stress(h_np1, i)[j];
-    for (size_t j = 0; j < 36; j++) A_np1[j] += A_local[i*36+j];
-    for (size_t j = 0; j < 18; j++) B_np1[j] += B_local[i*18+j];
-    u_np1 += u_local[i];
-    p_np1 += p_local[i];
+    for (size_t j = 0; j < 6; j++) s_np1[j] += weights_[i] * stress(h_np1, i)[j];
+    for (size_t j = 0; j < 36; j++) A_np1[j] += weights_[i] * A_local[i*36+j];
+    for (size_t j = 0; j < 18; j++) B_np1[j] += weights_[i] * B_local[i*18+j];
+    u_np1 += weights_[i] * u_local[i];
+    p_np1 += weights_[i] * p_local[i];
   }
 
   delete [] A_local;
   delete [] B_local;
   delete [] u_local;
   delete [] p_local;
-
-  for (size_t j = 0; j < 6; j++) s_np1[j] /= n();
-  for (size_t j = 0; j < 36; j++) A_np1[j] /= n();
-  for (size_t j = 0; j < 18; j++) B_np1[j] /= n();
-
-  u_np1 /= n();
-  p_np1 /= n();
 
   u_np1 += u_n;
   p_np1 += p_n;
@@ -209,10 +221,8 @@ void TaylorModel::elastic_strains(const double * const s_np1,
   for (size_t i = 0; i < n(); i++) {
     model_->elastic_strains(stress(h_np1, i), T_np1, history(h_np1, i),
                             e_local);
-    for (size_t j = 0; j < n(); j++) e_np1[j] += e_local[j];
+    for (size_t j = 0; j < n(); j++) e_np1[j] += weights_[i] * e_local[j];
   }
-
-  for (size_t j = 0; j < n(); j++) e_np1[j] /= n();
 }
 
 }
