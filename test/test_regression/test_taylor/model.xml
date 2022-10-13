@@ -1,0 +1,98 @@
+<materials>
+	<model type="TaylorModel">
+		<model type="SingleCrystalModel">
+			<kinematics type="StandardKinematicModel">
+				<emodel type="IsotropicLinearElasticModel">
+					<m1 type="ConstantInterpolate">
+						<v>100000</v>
+					</m1>
+					<m1_type>youngs</m1_type>
+					<m2 type="ConstantInterpolate">
+						<v>0.3</v>
+					</m2>
+					<m2_type>poissons</m2_type>
+				</emodel>
+				<imodel type="AsaroInelasticity">
+					<rule type="PowerLawSlipRule">
+						<resistance type="VoceSlipHardening">
+							<tau_sat type="ConstantInterpolate">
+								<v>10</v>
+							</tau_sat>
+							<b type="ConstantInterpolate">
+								<v>1</v>
+							</b>
+							<tau_0 type="ConstantInterpolate">
+								<v>30</v>
+							</tau_0>
+							<k type="ConstantInterpolate">
+								<v>0</v>
+							</k>
+							<var_name>strength</var_name>
+						</resistance>
+						<gamma0 type="ConstantInterpolate">
+							<v>1</v>
+						</gamma0>
+						<n type="ConstantInterpolate">
+							<v>12</v>
+						</n>
+					</rule>
+				</imodel>
+			</kinematics>
+			<lattice type="CubicLattice">
+				<a>1</a>
+				<slip_systems>1 1 0 ; 1 1 1 ,</slip_systems>
+				<twin_systems/>
+			</lattice>
+			<initial_rotation type="CrystalOrientation">
+				<angles>0 0 0 </angles>
+				<angle_type>radians</angle_type>
+				<angle_convention>kocks</angle_convention>
+			</initial_rotation>
+			<alpha type="ConstantInterpolate">
+				<v>0</v>
+			</alpha>
+			<update_rotation>true</update_rotation>
+			<rtol>1e-08</rtol>
+			<atol>1e-06</atol>
+			<miter>30</miter>
+			<verbose>false</verbose>
+			<linesearch>false</linesearch>
+			<max_divide>6</max_divide>
+			<postprocessors/>
+			<elastic_predictor>false</elastic_predictor>
+			<fallback_elastic_predictor>true</fallback_elastic_predictor>
+			<force_divide>0</force_divide>
+			<elastic_predictor_first_step>false</elastic_predictor_first_step>
+		</model>
+		<qs>
+			<qs0 type="CrystalOrientation">
+				<angles>4.41779 1.67697 -0.926053 </angles>
+				<angle_type>radians</angle_type>
+				<angle_convention>kocks</angle_convention>
+			</qs0>
+			<qs1 type="CrystalOrientation">
+				<angles>0.85308 2.90522 1.2322 </angles>
+				<angle_type>radians</angle_type>
+				<angle_convention>kocks</angle_convention>
+			</qs1>
+			<qs2 type="CrystalOrientation">
+				<angles>-0.402128 0.991704 2.31658 </angles>
+				<angle_type>radians</angle_type>
+				<angle_convention>kocks</angle_convention>
+			</qs2>
+			<qs3 type="CrystalOrientation">
+				<angles>2.43114 1.77143 1.08778 </angles>
+				<angle_type>radians</angle_type>
+				<angle_convention>kocks</angle_convention>
+			</qs3>
+			<qs4 type="CrystalOrientation">
+				<angles>-0.236245 0.519848 -0.471406 </angles>
+				<angle_type>radians</angle_type>
+				<angle_convention>kocks</angle_convention>
+			</qs4>
+		</qs>
+		<nthreads>1</nthreads>
+		<weights/>
+	</model>
+</materials>
+

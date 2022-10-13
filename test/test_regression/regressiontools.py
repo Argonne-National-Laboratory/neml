@@ -12,7 +12,7 @@ import pickle
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from neml import models, parse, drivers, damage
-from neml.cp import singlecrystal
+from neml.cp import singlecrystal, polycrystal
 
 default_xml_file = "model.xml"
 default_model_name = "model"

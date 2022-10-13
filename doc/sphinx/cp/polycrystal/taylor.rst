@@ -30,6 +30,7 @@ Parameters
    ``model``, :cpp:class:`neml::SingleCrystalModel`, Single crystal update, N
    ``qs``, :code:`std::vector<`:cpp:class:`neml::Orientation`:code:`>`, Vector of orientations, N
    ``nthreads``, :code:`int`, Number of threads to use, 1
+   ``weights``, :code:`std::vector<double>`, Weights, 1.0
 
 Class description
 -----------------
