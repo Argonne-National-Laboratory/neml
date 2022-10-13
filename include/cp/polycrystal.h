@@ -15,7 +15,7 @@ class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
   PolycrystalModel(ParameterSet & params);
 
   size_t n() const;
-  
+
   virtual void populate_hist(History & hist) const;
   virtual void init_hist(History & hist) const;
 

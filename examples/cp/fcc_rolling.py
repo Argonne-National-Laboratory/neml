@@ -15,12 +15,12 @@ if __name__ == "__main__":
   # Everyone's favorite FCC rolling example!
   N = 200
   
-  nthreads = 20
+  nthreads = 4
 
   L = np.array([[0,0,0],[0,1.0,0],[0,0,-1.0]])
   erate = 1.0e-4
-  steps = 200
-  emax = 2.0
+  steps = 100
+  emax = 1.0
 
   T = 0
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
   emodel = elasticity.IsotropicLinearElasticModel(E, "youngs", nu, "poissons")
   kmodel = kinematics.StandardKinematicModel(emodel, imodel)
 
-  model = singlecrystal.SingleCrystalModel(kmodel, lattice, linesearch = True)
+  model = singlecrystal.SingleCrystalModel(kmodel, lattice)
 
   pmodel = polycrystal.TaylorModel(model, orientations, nthreads = nthreads)
 
