@@ -37,13 +37,14 @@ size_t PolycrystalModel::n() const
 
 void PolycrystalModel::populate_hist(History & hist) const
 {
-  for (size_t i = 0; i < n(); i++) {
-    // TODO: fix this somehow
+  for (size_t i = 0; i < n(); i++)
     hist.add("history_"+std::to_string(i), TYPE_BLANK, model_->nstore());
+  for (size_t i = 0; i < n(); i++)
     hist.add<Symmetric>("stress_"+std::to_string(i));
+  for (size_t i = 0; i < n(); i++)
     hist.add<Symmetric>("deformation_rate_"+std::to_string(i));
+  for (size_t i = 0; i < n(); i++)
     hist.add<Skew>("vorticity_"+std::to_string(i));
-  }
 }
 
 void PolycrystalModel::init_hist(History & hist) const
