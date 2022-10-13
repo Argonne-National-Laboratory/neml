@@ -38,6 +38,7 @@ class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
   std::shared_ptr<SingleCrystalModel> model_;
   const std::vector<std::shared_ptr<Orientation>> q0s_;
   int nthreads_;
+  std::vector<double> weights_;
 };
 
 class NEML_EXPORT TaylorModel: public PolycrystalModel
