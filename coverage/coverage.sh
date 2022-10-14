@@ -2,7 +2,7 @@ mkdir -p coverage
 export ROOT=$(pwd)
 export SRC_DIR=$ROOT/src
 export INCLUDE_DIR=$ROOT/include
-export COVERAGE_DIR=$ROOT/coverage
+export COVERAGE_DIR=$ROOT/coverage/coverage
 lcov --gcov-tool gcov --capture --initial --directory $SRC_DIR --output-file $COVERAGE_DIR/initialize.info
 nose2 --output-buffer || true
 lcov --gcov-tool gcov --capture --ignore-errors gcov,source --directory $SRC_DIR --output-file $COVERAGE_DIR/covered.info
