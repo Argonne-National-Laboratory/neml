@@ -219,6 +219,73 @@ def inverse_pole_figure_discrete(orientations, direction, lattice,
     ax.get_yaxis().set_visible(False)
     ax.xaxis.set_minor_locator(plt.NullLocator())
 
+def inverse_pole_figure_trajectory(orientations, direction, lattice,  
+    reduce_figure = "cubic",
+    sample_symmetry = crystallography.symmetry_rotations("222"),
+    x = [1,0,0], y = [0,1,0], axis_labels = None, nline = 100,
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']):
+  """
+    Plot trajectories through orientation space on an inverse pole figure
+
+    Parameters:
+      orientations:      list of list of list of orientations
+      direction:         sample direction
+      lattice:           crystal lattice class, including crystal symmetry
+
+    Keyword Args:
+      reduce_figure:     reduce to some fundamental region.
+                         Options include
+                         "cubic" -- cubic convention
+                         [v1,v2,v3] -- list of crystallographic points defining the triangle
+      sample_symmetry:   what sample symmetry to apply to the pole figure,
+                         defaults to orthorhombic
+      x:                 crystallographic x direction for plot, defaults to [1,0,0]
+      y:                 crystallographic y direction for plot, defaults to [0,1,0]
+      axis_labels:       axis labels to include on the figure
+      nline:             number of discrete points to use in plotting lines on the triangle
+  """
+  if reduce_figure == "cubic":
+    vs = (np.array([0,0,1.0]), np.array([1.0,0,1]), np.array([1.0,1,1]))
+  elif len(reduce_figure) == 3:
+    vs = reduce_figure
+  else:
+    raise ValueError("Unknown reduction type %s!" % reduce_figure)
+    
+  ax = plt.subplot(111)
+  ax.axis('off')
+
+  pop = project_stereographic
+  lim = limit_stereographic
+
+  for trajectory, color in zip(orientations, colors):
+    pts = np.array([
+        list(map(pop, reduce_points_triangle(np.vstack(tuple(project_ipf(q, lattice, direction, 
+                                                sample_symmetry = sample_symmetry,
+                                                x = x, y = y) for q in orientations)),
+                                           v0 = vs[0], v1 = vs[1], v2 = vs[2])))
+                    for orientations in trajectory])
+
+    # Scatter the first and last points
+    ax.plot(pts[0,:,0], pts[0,:,1], ls = 'none', marker = 'o', color = color, alpha = 0.5)
+    ax.plot(pts[-1,:,0], pts[-1,:,1], ls = 'none', marker = 'o', color = color)
+
+    # Draw a line through the rest
+    ax.plot(pts[:,:,0], pts[:,:,1], ls = '-', color = color)
+
+
+  # Make the graph nice
+  if axis_labels:
+    plt.text(0.1,0.11,axis_labels[0], transform = plt.gcf().transFigure)
+    plt.text(0.86,0.11,axis_labels[1], transform = plt.gcf().transFigure)
+    plt.text(0.74,0.88,axis_labels[2], transform = plt.gcf().transFigure)
+
+  for i,j in ((0,1),(1,2),(2,0)):
+    v1 = vs[i]
+    v2 = vs[j]
+    fs = np.linspace(0,1,nline)
+    pts = np.array([pop((f*v1+(1-f)*v2)/la.norm(f*v1+(1-f)*v2)) for f in fs])
+    plt.plot(pts[:,0], pts[:,1], color = 'k')
+
 def project_ipf(q, lattice, direction, 
     sample_symmetry = crystallography.symmetry_rotations("222"), 
     x = [1,0,0], y = [0,1,0]):
