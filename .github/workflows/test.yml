@@ -41,9 +41,9 @@ jobs:
             - run: brew update
             - run: brew install cmake openblas superlu python 1>/dev/null || true
             - run: pip3 install --user networkx numpy scipy matplotlib nose2
-            - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python3-config --prefix)/bin/python3.10 -D PYTHON_LIBRARY=$(python3-config --prefix)/lib/libpython3.10.dylib -D PYTHON_INCLUDE_DIR=$(python3-config --prefix)/include/python3.10 -D USE_OPENMP=OFF .
+            - run: cmake -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D WRAP_PYTHON=ON -D PYTHON_EXECUTABLE=$(python3-config --prefix)/bin/python3.11 -D PYTHON_LIBRARY=$(python3-config --prefix)/lib/libpython3.11.dylib -D PYTHON_INCLUDE_DIR=$(python3-config --prefix)/include/python3.11 -D USE_OPENMP=OFF .
             - run: make -j 2
-            - run: ~/Library/Python/3.10/bin/nose2 --output-buffer
+            - run: ~/Library/Python/3.11/bin/nose2 --output-buffer
       test-base-mac:
             runs-on: macos-latest
             strategy:
