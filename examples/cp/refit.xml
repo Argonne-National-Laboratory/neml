@@ -1,0 +1,370 @@
+<materials>
+	<ti_cp type="SingleCrystalModel">
+		<kinematics type="StandardKinematicModel">
+			<emodel type="TransverseIsotropicLinearElasticModel">
+				<m1 type="PiecewiseLinearInterpolate">
+					<points>298 423 523 623 773 873 973 1073 1173 </points>
+					<values>162400 155100 149500 144200 136800 132200 127600 123100 119600 </values>
+				</m1>
+				<m2 type="PiecewiseLinearInterpolate">
+					<points>298 423 523 623 773 873 973 1073 1173 </points>
+					<values>180700 175300 171500 167800 162700 159300 156000 152900 150400 </values>
+				</m2>
+				<m3 type="PiecewiseLinearInterpolate">
+					<points>298 423 523 623 773 873 973 1073 1173 </points>
+					<values>92000 94300 96100 97300 98500 99100 99300 99600 99600 </values>
+				</m3>
+				<m4 type="PiecewiseLinearInterpolate">
+					<points>298 423 523 623 773 873 973 1073 1173 </points>
+					<values>69000 69500 69200 69100 68800 68800 68800 68800 68800 </values>
+				</m4>
+				<m5 type="PiecewiseLinearInterpolate">
+					<points>298 423 523 623 773 873 973 1073 1173 </points>
+					<values>46700 44400 42400 40300 37000 34800 32600 30700 29100 </values>
+				</m5>
+				<method>components</method>
+			</emodel>
+			<imodel type="AsaroInelasticity">
+				<rule type="PowerLawSlipRule">
+					<resistance type="LANLTiModel">
+						<tau_0>
+							<tau_00 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>193 145 95 70 53 45 18 16 9 </values>
+							</tau_00>
+							<tau_01 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>193 145 95 70 53 45 18 16 9 </values>
+							</tau_01>
+							<tau_02 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>193 145 95 70 53 45 18 16 9 </values>
+							</tau_02>
+							<tau_03 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>118 85 80 65 48 38 17 13 4 </values>
+							</tau_03>
+							<tau_04 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>118 85 80 65 48 38 17 13 4 </values>
+							</tau_04>
+							<tau_05 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>118 85 80 65 48 38 17 13 4 </values>
+							</tau_05>
+							<tau_06 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>225 205 115 90 82 57 35 20 13 </values>
+							</tau_06>
+							<tau_07 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>225 205 115 90 82 57 35 20 13 </values>
+							</tau_07>
+							<tau_08 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>225 205 115 90 82 57 35 20 13 </values>
+							</tau_08>
+							<tau_09 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>225 205 115 90 82 57 35 20 13 </values>
+							</tau_09>
+							<tau_010 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>225 205 115 90 82 57 35 20 13 </values>
+							</tau_010>
+							<tau_011 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>225 205 115 90 82 57 35 20 13 </values>
+							</tau_011>
+							<tau_012 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>156 110 82 65 48 38 35 32 30 </values>
+							</tau_012>
+							<tau_013 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>156 110 82 65 48 38 35 32 30 </values>
+							</tau_013>
+							<tau_014 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>156 110 82 65 48 38 35 32 30 </values>
+							</tau_014>
+							<tau_015 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>156 110 82 65 48 38 35 32 30 </values>
+							</tau_015>
+							<tau_016 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>156 110 82 65 48 38 35 32 30 </values>
+							</tau_016>
+							<tau_017 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>156 110 82 65 48 38 35 32 30 </values>
+							</tau_017>
+							<tau_018 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>203 170 100 100 80 60 50 42 40 </values>
+							</tau_018>
+							<tau_019 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>203 170 100 100 80 60 50 42 40 </values>
+							</tau_019>
+							<tau_020 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>203 170 100 100 80 60 50 42 40 </values>
+							</tau_020>
+							<tau_021 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>203 170 100 100 80 60 50 42 40 </values>
+							</tau_021>
+							<tau_022 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>203 170 100 100 80 60 50 42 40 </values>
+							</tau_022>
+							<tau_023 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>203 170 100 100 80 60 50 42 40 </values>
+							</tau_023>
+						</tau_0>
+						<C_st type="SquareMatrix">
+							<m>12</m>
+							<type>dense</type>
+							<data>50 50 50 100 100 100 250 250 250 250 250 250 50 50 50 100 100 100 250 250 250 250 250 250 50 50 50 100 100 100 250 250 250 250 250 250 50 50 50 100 100 100 250 250 250 250 250 250 50 50 50 100 100 100 250 250 250 250 250 250 50 50 50 100 100 100 250 250 250 250 250 250 50 50 50 1000 1000 1000 170 170 170 170 170 170 50 50 50 1000 1000 1000 170 170 170 170 170 170 50 50 50 1000 1000 1000 170 170 170 170 170 170 50 50 50 1000 1000 1000 170 170 170 170 170 170 50 50 50 1000 1000 1000 170 170 170 170 170 170 50 50 50 1000 1000 1000 170 170 170 170 170 170 </data>
+							<blocks/>
+						</C_st>
+						<mu>
+							<mu0 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu0>
+							<mu1 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu1>
+							<mu2 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu2>
+							<mu3 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu3>
+							<mu4 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu4>
+							<mu5 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu5>
+							<mu6 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu6>
+							<mu7 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu7>
+							<mu8 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu8>
+							<mu9 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu9>
+							<mu10 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu10>
+							<mu11 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>35200 30400 26700 23400 19100 16600 14200 11800 10000 </values>
+							</mu11>
+							<mu12 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu12>
+							<mu13 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu13>
+							<mu14 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu14>
+							<mu15 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu15>
+							<mu16 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu16>
+							<mu17 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu17>
+							<mu18 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu18>
+							<mu19 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu19>
+							<mu20 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu20>
+							<mu21 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu21>
+							<mu22 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu22>
+							<mu23 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>25000.5 21591.3 18963.4 16619.6 13565.6 11790 10085.4 8381.28 7102.78 </values>
+							</mu23>
+						</mu>
+						<k1>
+							<k10 type="ConstantInterpolate">
+								<v>1000</v>
+							</k10>
+							<k11 type="ConstantInterpolate">
+								<v>1000</v>
+							</k11>
+							<k12 type="ConstantInterpolate">
+								<v>1000</v>
+							</k12>
+							<k13 type="ConstantInterpolate">
+								<v>250</v>
+							</k13>
+							<k14 type="ConstantInterpolate">
+								<v>250</v>
+							</k14>
+							<k15 type="ConstantInterpolate">
+								<v>250</v>
+							</k15>
+							<k16 type="ConstantInterpolate">
+								<v>5000</v>
+							</k16>
+							<k17 type="ConstantInterpolate">
+								<v>5000</v>
+							</k17>
+							<k18 type="ConstantInterpolate">
+								<v>5000</v>
+							</k18>
+							<k19 type="ConstantInterpolate">
+								<v>5000</v>
+							</k19>
+							<k110 type="ConstantInterpolate">
+								<v>5000</v>
+							</k110>
+							<k111 type="ConstantInterpolate">
+								<v>5000</v>
+							</k111>
+						</k1>
+						<k2>
+							<k20 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k20>
+							<k21 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k21>
+							<k22 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k22>
+							<k23 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k23>
+							<k24 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k24>
+							<k25 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k25>
+							<k26 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k26>
+							<k27 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k27>
+							<k28 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k28>
+							<k29 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k29>
+							<k210 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k210>
+							<k211 type="PiecewiseLinearInterpolate">
+								<points>298 423 523 623 773 873 973 1073 1173 </points>
+								<values>250 280 330 450 500 600 1020 1200 1400 </values>
+							</k211>
+						</k2>
+						<X_s>0.9</X_s>
+						<inivalue>1</inivalue>
+						<varprefix>rho</varprefix>
+						<twinprefix>slip</twinprefix>
+						<slipprefix>pslip</slipprefix>
+					</resistance>
+					<gamma0 type="ConstantInterpolate">
+						<v>1</v>
+					</gamma0>
+					<n type="ConstantInterpolate">
+						<v>12</v>
+					</n>
+				</rule>
+			</imodel>
+		</kinematics>
+		<lattice type="HCPLattice">
+			<a>0.00029511</a>
+			<c>0.000468433</c>
+			<slip_systems>1 1 -2 0 ; 0 0 0 1 ,1 1 -2 0 ; 1 0 -1 0 ,1 1 -2 -3 ; 1 1 -2 2 ,</slip_systems>
+			<twin_systems>-1 0 1 1 ;1 0 -1 2 ;1 0 -1 1 ;1 0 -1 -2 ,1 1 -2 -3 ;1 1 -2 2 ;2 2 -4 3 ;1 1 -2 -4 ,</twin_systems>
+		</lattice>
+		<initial_rotation type="CrystalOrientation">
+			<angles>0 0 0 </angles>
+			<angle_type>degrees</angle_type>
+			<angle_convention>kocks</angle_convention>
+		</initial_rotation>
+		<alpha type="ConstantInterpolate">
+			<v>0</v>
+		</alpha>
+		<update_rotation>true</update_rotation>
+		<rtol>1e-08</rtol>
+		<atol>1e-06</atol>
+		<miter>100</miter>
+		<verbose>false</verbose>
+		<linesearch>true</linesearch>
+		<max_divide>10</max_divide>
+		<postprocessors>
+			<postprocessors0 type="PTRTwinReorientation">
+				<threshold type="ConstantInterpolate">
+					<v>0.75</v>
+				</threshold>
+				<prefix>slip</prefix>
+			</postprocessors0>
+		</postprocessors>
+		<elastic_predictor>false</elastic_predictor>
+		<fallback_elastic_predictor>true</fallback_elastic_predictor>
+		<force_divide>0</force_divide>
+		<elastic_predictor_first_step>false</elastic_predictor_first_step>
+	</ti_cp>
+</materials>
+

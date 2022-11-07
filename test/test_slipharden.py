@@ -394,6 +394,10 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
       self.H.add_scalar("slip"+str(i))
       self.H.set_scalar("slip"+str(i), self.current_slip)
 
+    for i in range(24,36):
+      self.H.add_scalar("slip"+str(i))
+      self.H.set_scalar("slip"+str(i), self.current_slip)
+
     self.T = 300.0
     
     num_basal, num_prism, num_pyram = 3, 3, 6
@@ -467,6 +471,7 @@ class TestLANLTiModel(unittest.TestCase, CommonSlipHardening):
     srates = np.array([self.sliprule.slip(g, i, self.S, self.Q, self.H, self.L, self.T, 
       self.fixed) for g in range(self.L.ngroup) for i in range(self.L.nslip(g))])
     
+    srates = np.concatenate((srates, srates[:12]))
     act = np.abs(srates)
     act[:12] *= 0.5*(self.k1 - self.k2*self.rhos)
     
