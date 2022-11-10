@@ -70,4 +70,16 @@ void get_orientation_passive_batch(SingleCrystalModel & model, size_t n,
   }
 }
 
+void get_orientation_active_batch(SingleCrystalModel & model, size_t n,
+                                  double * const hist,
+                                  std::vector<Orientation> & orientations)
+{
+  orientations.resize(n);
+  size_t nh = model.nstore();
+
+  for (size_t i=0; i<n; i++) {
+    orientations[i] = model.get_active_orientation(&hist[i*nh]);
+  }
+}
+
 } // namespace neml

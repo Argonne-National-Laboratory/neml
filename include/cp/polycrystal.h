@@ -33,6 +33,7 @@ class NEML_EXPORT PolycrystalModel: public NEMLModel_ldi
   const double * w(const double * const store, size_t i) const;
 
   virtual std::vector<Orientation> orientations(double * const store) const;
+  virtual std::vector<Orientation> orientations_active(double * const store) const;
 
  protected:
   std::shared_ptr<SingleCrystalModel> model_;
