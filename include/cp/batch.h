@@ -27,6 +27,9 @@ NEML_EXPORT void set_orientation_passive_batch(SingleCrystalModel & model, size_
 NEML_EXPORT void get_orientation_passive_batch(SingleCrystalModel & model, size_t n,
                                   double * const hist,
                                   std::vector<Orientation> & orientations);
+NEML_EXPORT void get_orientation_active_batch(SingleCrystalModel & model, size_t n,
+                                  double * const hist,
+                                  std::vector<Orientation> & orientations);
 
 } // namespace neml
 

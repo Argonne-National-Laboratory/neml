@@ -21,7 +21,12 @@ PYBIND11_MODULE(polycrystal, m) {
            [](PolycrystalModel & m, py::array_t<double, py::array::c_style> h) -> std::vector<Orientation>
            {
             return m.orientations(arr2ptr<double>(h));
-           }, "Return the current vector of orientations")
+           }, "Return the current vector of orientations in the passive convention")
+      .def("orientations_active", 
+           [](PolycrystalModel & m, py::array_t<double, py::array::c_style> h) -> std::vector<Orientation>
+           {
+            return m.orientations_active(arr2ptr<double>(h));
+           }, "Return the current vector of orientations in the active convention")
     ;
 
   py::class_<TaylorModel, PolycrystalModel, std::shared_ptr<TaylorModel>>(m, "TaylorModel")

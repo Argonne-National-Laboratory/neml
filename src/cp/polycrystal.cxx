@@ -111,6 +111,15 @@ std::vector<Orientation> PolycrystalModel::orientations(double * const store) co
   return res;
 }
 
+std::vector<Orientation> PolycrystalModel::orientations_active(double * const store) const
+{
+  std::vector<Orientation> res;
+  
+  get_orientation_active_batch(*model_, n(), 
+                                history(store, 0), res);
+  return res;
+}
+
 TaylorModel::TaylorModel(ParameterSet & params) :
     PolycrystalModel(params)
 {
