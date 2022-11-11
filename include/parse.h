@@ -80,8 +80,11 @@ const rapidxml::xml_node<> * get_child(const rapidxml::xml_node<> * node, std::s
 /// Return the type of a node
 std::string get_type_of_node(const rapidxml::xml_node<> * node);
 
-/// Helper to split strings
-std::vector<double> split_string(std::string sval);
+/// Helper to split a list of space-delimited strings
+std::vector<std::string> split_string(std::string sval);
+
+/// Helper to split a list of doubles
+std::vector<double> split_string_double(std::string sval);
 
 /// Helper to split lists of size_ts
 std::vector<size_t> split_string_size_type(std::string sval);
@@ -112,7 +115,7 @@ class InvalidType: public XMLParseError {
  public:
   InvalidType(std::string name, std::string type, std::string ctype) :
       XMLParseError("Node with name " + name + " and type " + type +
-                    "cannot be converted to the correct type " + ctype)
+                    " cannot be converted to the correct type " + ctype)
   {
   };
 };
