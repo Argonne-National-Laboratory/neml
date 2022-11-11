@@ -53,3 +53,4 @@ examples/**/*.png
 neml/*.cmake
 *.lo*
 *.la
+.vscode
