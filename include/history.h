@@ -281,6 +281,8 @@ class NEML_EXPORT HistoryNEMLObject: public NEMLObject {
   virtual void init_hist(History & h) const = 0;
   /// This should be replaced at some point
   virtual size_t nhist() const;
+  /// Dangerous nhist which assumes you cached 
+  virtual size_t nh() const;
 
   /// Setup a flat vector history
   virtual void init_store(double * const h) const;
@@ -299,10 +301,10 @@ class NEML_EXPORT HistoryNEMLObject: public NEMLObject {
   /// Cache the history to avoid recreating it every time
   void cache_history_();
 
-   /// Quickly setup history
-   History gather_history_(double * data) const;
-   History gather_history_(const double * data) const;
-   History gather_blank_history_() const;
+  /// Quickly setup history
+  History gather_history_(double * data) const;
+  History gather_history_(const double * data) const;
+  History gather_blank_history_() const;
 
  protected:
   std::string prefix_;
@@ -310,6 +312,7 @@ class NEML_EXPORT HistoryNEMLObject: public NEMLObject {
   
  private:
   bool cached_;
+  size_t ncache_;
 };
 
 } // namespace neml

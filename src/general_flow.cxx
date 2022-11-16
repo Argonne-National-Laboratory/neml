@@ -38,7 +38,7 @@ TVPFlowRule::TVPFlowRule(ParameterSet & params) :
     elastic_(params.get_object_parameter<LinearElasticModel>("elastic")),
     flow_(params.get_object_parameter<ViscoPlasticFlowRule>("flow"))
 {
-
+  cache_history_();
 }
 
 std::string TVPFlowRule::type()
@@ -156,7 +156,7 @@ void TVPFlowRule::ds_da(const double * const s, const double * const alpha,
   double yv;
   flow_->y(s, alpha, T, yv);
   
-  int sz = 6 * nhist();
+  int sz = 6 * nh();
   
   std::vector<double> workv(sz);
   double * work = &workv[0];
@@ -167,10 +167,10 @@ void TVPFlowRule::ds_da(const double * const s, const double * const alpha,
 
   double t1[6];
   flow_->g(s, alpha, T, t1);
-  std::vector<double> t2v(nhist());
+  std::vector<double> t2v(nh());
   double * t2 = &t2v[0];
   flow_->dy_da(s, alpha, T, t2);
-  outer_update_minus(t1, 6, t2, nhist(), work);
+  outer_update_minus(t1, 6, t2, nh(), work);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
@@ -187,9 +187,7 @@ void TVPFlowRule::ds_da(const double * const s, const double * const alpha,
   double C[36];
   elastic_->C(T, C);
 
-  mat_mat(6, nhist(), 6, C, work, d_sdot);
-
-
+  mat_mat(6, nh(), 6, C, work, d_sdot);
 }
 
 void TVPFlowRule::ds_de(const double * const s, const double * const alpha,
@@ -209,15 +207,15 @@ void TVPFlowRule::a(const double * const s, const double * const alpha,
   flow_->y(s, alpha, T, dg);
 
   flow_->h(s, alpha, T, adot);
-  for (size_t i=0; i<nhist(); i++) adot[i] *= dg;
+  for (size_t i=0; i<nh(); i++) adot[i] *= dg;
   
-  std::vector<double> tempv(nhist());
+  std::vector<double> tempv(nh());
   double * temp = &tempv[0];
   flow_->h_temp(s, alpha, T, temp);
-  for (size_t i=0; i<nhist(); i++) adot[i] += temp[i] * Tdot;
+  for (size_t i=0; i<nh(); i++) adot[i] += temp[i] * Tdot;
 
   flow_->h_time(s, alpha, T, temp);
-  for (size_t i=0; i<nhist(); i++) adot[i] += temp[i];
+  for (size_t i=0; i<nh(); i++) adot[i] += temp[i];
 
 
 }
@@ -230,19 +228,19 @@ void TVPFlowRule::da_ds(const double * const s, const double * const alpha,
   double dg;
   flow_->y(s, alpha, T, dg);
 
-  int sz = nhist() * 6;
+  int sz = nh() * 6;
 
   flow_->dh_ds(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= dg;
 
-  std::vector<double> t1v(nhist());
+  std::vector<double> t1v(nh());
   double * t1 = &t1v[0];
   flow_->h(s, alpha, T, t1);
 
   double t2[6];
   flow_->dy_ds(s, alpha, T, t2);
 
-  outer_update(t1, nhist(), t2, 6, d_adot);
+  outer_update(t1, nh(), t2, 6, d_adot);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
@@ -263,21 +261,21 @@ void TVPFlowRule::da_da(const double * const s, const double * const alpha,
   double dg;
   flow_->y(s, alpha, T, dg);
 
-  int nh = nhist();
-  int sz = nh * nh;
+  int nhi = nh();
+  int sz = nhi * nhi;
 
   flow_->dh_da(s, alpha, T, d_adot);
   for (int i=0; i<sz; i++) d_adot[i] *= dg;
   
-  std::vector<double> t1v(nh);
+  std::vector<double> t1v(nhi);
   double * t1 = &t1v[0];
   flow_->h(s, alpha, T, t1);
   
-  std::vector<double> t2v(nh);
+  std::vector<double> t2v(nhi);
   double * t2 = &t2v[0];
   flow_->dy_da(s, alpha, T, t2);
 
-  outer_update(t1, nh, t2, nh, d_adot);
+  outer_update(t1, nhi, t2, nhi, d_adot);
   
   std::vector<double> t3v(sz);
   double * t3 = &t3v[0];
@@ -294,7 +292,7 @@ void TVPFlowRule::da_de(const double * const s, const double * const alpha,
               double Tdot,
               double * const d_adot)
 {
-  std::fill(d_adot, d_adot+(nhist()*6), 0.0);
+  std::fill(d_adot, d_adot+(nh()*6), 0.0);
 
 }
 

@@ -32,7 +32,7 @@ void ViscoPlasticFlowRule::dg_da_time(const double * const s,
                                      const double * const alpha, double T,
                                      double * const dgv) const
 {
-  std::fill(dgv, dgv+6*nhist(), 0.0);
+  std::fill(dgv, dgv+6*nh(), 0.0);
 }
 
 // Default implementation of flow rule wrt temperature
@@ -54,7 +54,7 @@ void ViscoPlasticFlowRule::dg_da_temp(const double * const s,
                                      const double * const alpha, double T,
                                      double * const dgv) const
 {
-  std::fill(dgv, dgv+6*nhist(), 0.0);
+  std::fill(dgv, dgv+6*nh(), 0.0);
 }
 
 // Default implementation of hardening rule wrt time
@@ -62,21 +62,21 @@ void ViscoPlasticFlowRule::h_time(const double * const s,
                                  const double * const alpha, double T, 
                                  double * const hv) const
 {
-  std::fill(hv, hv+nhist(), 0.0);
+  std::fill(hv, hv+nh(), 0.0);
 }
 
 void ViscoPlasticFlowRule::dh_ds_time(const double * const s, 
                                      const double * const alpha, double T,
                                      double * const dhv) const
 {
-  std::fill(dhv, dhv+6*nhist(), 0.0);
+  std::fill(dhv, dhv+6*nh(), 0.0);
 }
 
 void ViscoPlasticFlowRule::dh_da_time(const double * const s, 
                                      const double * const alpha, double T,
                                      double * const dhv) const
 {
-  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  std::fill(dhv, dhv+nh()*nh(), 0.0);
 }
 
 // Default implementation of hardening rule wrt temperature
@@ -84,21 +84,21 @@ void ViscoPlasticFlowRule::h_temp(const double * const s,
                                  const double * const alpha, double T, 
                                  double * const hv) const
 {
-  std::fill(hv, hv+nhist(), 0.0);
+  std::fill(hv, hv+nh(), 0.0);
 }
 
 void ViscoPlasticFlowRule::dh_ds_temp(const double * const s, 
                                      const double * const alpha, double T,
                                      double * const dhv) const
 {
-  std::fill(dhv, dhv+6*nhist(), 0.0);
+  std::fill(dhv, dhv+6*nh(), 0.0);
 }
 
 void ViscoPlasticFlowRule::dh_da_temp(const double * const s, 
                                      const double * const alpha, double T,
                                      double * const dhv) const
 {
-  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  std::fill(dhv, dhv+nh()*nh(), 0.0);
 }
 
 void ViscoPlasticFlowRule::override_guess(double * const guess)
@@ -113,11 +113,13 @@ SuperimposedViscoPlasticFlowRule::SuperimposedViscoPlasticFlowRule(ParameterSet 
 {
   offsets_[0] = 0;
   for (size_t i = 1; i <= rules_.size(); i++) {
-    offsets_[i] = offsets_[i-1] + rules_[i-1]->nhist();
+    offsets_[i] = offsets_[i-1] + rules_[i-1]->nh();
   }
 
   for (size_t i = 0; i < nmodels(); i++)
     rules_[i]->set_variable_prefix("model"+std::to_string(i)+"_");
+
+  cache_history_();
 }
 
 std::string SuperimposedViscoPlasticFlowRule::type()
@@ -249,7 +251,7 @@ void SuperimposedViscoPlasticFlowRule::dg_da(const double * const s,
                                              double T,
                                              double * const dgv) const
 {
-  std::fill(dgv, dgv+6*nhist(), 0.0);
+  std::fill(dgv, dgv+6*nh(), 0.0);
   
   double yv;
   y(s, alpha, T, yv);
@@ -258,17 +260,17 @@ void SuperimposedViscoPlasticFlowRule::dg_da(const double * const s,
   double gi[6];
 
   for (size_t i = 0; i < nmodels(); i++) {
-    double * dgvi = new double [6*rules_[i]->nhist()];
-    double * dyi = new double [rules_[i]->nhist()]; 
+    double * dgvi = new double [6*rules_[i]->nh()];
+    double * dyi = new double [rules_[i]->nh()]; 
     rules_[i]->y(s, model_history_(alpha, i), T, yi);
     rules_[i]->g(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_da(s, model_history_(alpha,i), T, dgvi);
     rules_[i]->dy_da(s, model_history_(alpha, i), T, dyi);
 
     for (size_t a = 0; a < 6; a++) {
-      for (size_t b = 0; b < rules_[i]->nhist(); b++) {
-        dgv[CINDEX(a,b+offsets_[i],nhist())] =
-            yi*dgvi[CINDEX(a,b,rules_[i]->nhist())] + 
+      for (size_t b = 0; b < rules_[i]->nh(); b++) {
+        dgv[CINDEX(a,b+offsets_[i],nh())] =
+            yi*dgvi[CINDEX(a,b,rules_[i]->nh())] + 
             gi[a] * dyi[b];
       }
     }
@@ -278,9 +280,9 @@ void SuperimposedViscoPlasticFlowRule::dg_da(const double * const s,
   }
   
   if (yv > 0)
-    for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+    for (size_t i = 0; i < 6*nh(); i++) dgv[i] /= yv;
 
-  double * dy = new double [nhist()];
+  double * dy = new double [nh()];
   double gv[6];
   dy_da(s, alpha, T, dy);
   g(s, alpha, T, gv);
@@ -288,7 +290,7 @@ void SuperimposedViscoPlasticFlowRule::dg_da(const double * const s,
   if (yv > 0)
     for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
-  outer_update_minus(gv, 6, dy, nhist(), dgv);
+  outer_update_minus(gv, 6, dy, nh(), dgv);
 
   delete [] dy;
 }
@@ -354,7 +356,7 @@ void SuperimposedViscoPlasticFlowRule::dg_da_time(const double * const s,
                                              double T,
                                              double * const dgv) const
 {
-  std::fill(dgv, dgv+6*nhist(), 0.0);
+  std::fill(dgv, dgv+6*nh(), 0.0);
   
   double yv;
   y(s, alpha, T, yv);
@@ -363,17 +365,17 @@ void SuperimposedViscoPlasticFlowRule::dg_da_time(const double * const s,
   double gi[6];
 
   for (size_t i = 0; i < nmodels(); i++) {
-    double * dgvi = new double [6*rules_[i]->nhist()];
-    double * dyi = new double [rules_[i]->nhist()]; 
+    double * dgvi = new double [6*rules_[i]->nh()];
+    double * dyi = new double [rules_[i]->nh()]; 
     rules_[i]->y(s, model_history_(alpha, i), T, yi);
     rules_[i]->g_time(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_da_time(s, model_history_(alpha,i), T, dgvi);
     rules_[i]->dy_da(s, model_history_(alpha, i), T, dyi);
 
     for (size_t a = 0; a < 6; a++) {
-      for (size_t b = 0; b < rules_[i]->nhist(); b++) {
-        dgv[CINDEX(a,b+offsets_[i],nhist())] =
-            yi*dgvi[CINDEX(a,b,rules_[i]->nhist())] + 
+      for (size_t b = 0; b < rules_[i]->nh(); b++) {
+        dgv[CINDEX(a,b+offsets_[i],nh())] =
+            yi*dgvi[CINDEX(a,b,rules_[i]->nh())] + 
             gi[a] * dyi[b];
       }
     }
@@ -383,9 +385,9 @@ void SuperimposedViscoPlasticFlowRule::dg_da_time(const double * const s,
   }
   
   if (yv > 0)
-    for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+    for (size_t i = 0; i < 6*nh(); i++) dgv[i] /= yv;
 
-  double * dy = new double [nhist()];
+  double * dy = new double [nh()];
   double gv[6];
   dy_da(s, alpha, T, dy);
   g_time(s, alpha, T, gv);
@@ -393,7 +395,7 @@ void SuperimposedViscoPlasticFlowRule::dg_da_time(const double * const s,
   if (yv > 0)
     for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
-  outer_update_minus(gv, 6, dy, nhist(), dgv);
+  outer_update_minus(gv, 6, dy, nh(), dgv);
 
   delete [] dy;
 }
@@ -458,7 +460,7 @@ void SuperimposedViscoPlasticFlowRule::dg_da_temp(const double * const s,
                                              double T,
                                              double * const dgv) const
 {
-  std::fill(dgv, dgv+6*nhist(), 0.0);
+  std::fill(dgv, dgv+6*nh(), 0.0);
   
   double yv;
   y(s, alpha, T, yv);
@@ -467,17 +469,17 @@ void SuperimposedViscoPlasticFlowRule::dg_da_temp(const double * const s,
   double gi[6];
 
   for (size_t i = 0; i < nmodels(); i++) {
-    double * dgvi = new double [6*rules_[i]->nhist()];
-    double * dyi = new double [rules_[i]->nhist()]; 
+    double * dgvi = new double [6*rules_[i]->nh()];
+    double * dyi = new double [rules_[i]->nh()]; 
     rules_[i]->y(s, model_history_(alpha, i), T, yi);
     rules_[i]->g_temp(s, model_history_(alpha, i), T, gi);
     rules_[i]->dg_da_temp(s, model_history_(alpha,i), T, dgvi);
     rules_[i]->dy_da(s, model_history_(alpha, i), T, dyi);
 
     for (size_t a = 0; a < 6; a++) {
-      for (size_t b = 0; b < rules_[i]->nhist(); b++) {
-        dgv[CINDEX(a,b+offsets_[i],nhist())] =
-            yi*dgvi[CINDEX(a,b,rules_[i]->nhist())] + 
+      for (size_t b = 0; b < rules_[i]->nh(); b++) {
+        dgv[CINDEX(a,b+offsets_[i],nh())] =
+            yi*dgvi[CINDEX(a,b,rules_[i]->nh())] + 
             gi[a] * dyi[b];
       }
     }
@@ -487,9 +489,9 @@ void SuperimposedViscoPlasticFlowRule::dg_da_temp(const double * const s,
   }
   
   if (yv > 0)
-    for (size_t i = 0; i < 6*nhist(); i++) dgv[i] /= yv;
+    for (size_t i = 0; i < 6*nh(); i++) dgv[i] /= yv;
 
-  double * dy = new double [nhist()];
+  double * dy = new double [nh()];
   double gv[6];
   dy_da(s, alpha, T, dy);
   g_temp(s, alpha, T, gv);
@@ -497,7 +499,7 @@ void SuperimposedViscoPlasticFlowRule::dg_da_temp(const double * const s,
   if (yv > 0)
     for (size_t i = 0; i < 6; i++) gv[i] /= yv;
 
-  outer_update_minus(gv, 6, dy, nhist(), dgv);
+  outer_update_minus(gv, 6, dy, nh(), dgv);
 
   delete [] dy;
 }
@@ -525,12 +527,12 @@ void SuperimposedViscoPlasticFlowRule::dh_da(const double * const s,
                                              double * const dhv) const
 {
   for (size_t i = 0; i < nmodels(); i++) {
-    size_t nhi = rules_[i]->nhist();
+    size_t nhi = rules_[i]->nh();
     double * dhvi = new double [nhi*nhi];
     rules_[i]->dh_da(s, model_history_(alpha,i), T, dhvi);
     for (size_t a = 0; a < nhi; a++)
       for (size_t b = 0; b < nhi; b++)
-        dhv[CINDEX(a+offsets_[i],b+offsets_[i],nhist())] = dhvi[CINDEX(a,b,nhi)];
+        dhv[CINDEX(a+offsets_[i],b+offsets_[i],nh())] = dhvi[CINDEX(a,b,nhi)];
 
     delete [] dhvi;
   }
@@ -560,12 +562,12 @@ void SuperimposedViscoPlasticFlowRule::dh_da_time(const double * const s,
                                                   double * const dhv) const
 {
   for (size_t i = 0; i < nmodels(); i++) {
-    size_t nhi = rules_[i]->nhist();
+    size_t nhi = rules_[i]->nh();
     double * dhvi = new double [nhi*nhi];
     rules_[i]->dh_da_time(s, model_history_(alpha,i), T, dhvi);
     for (size_t a = 0; a < nhi; a++)
       for (size_t b = 0; b < nhi; b++)
-        dhv[CINDEX(a+offsets_[i],b+offsets_[i],nhist())] = dhvi[CINDEX(a,b,nhi)];
+        dhv[CINDEX(a+offsets_[i],b+offsets_[i],nh())] = dhvi[CINDEX(a,b,nhi)];
 
     delete [] dhvi;
   }
@@ -594,12 +596,12 @@ void SuperimposedViscoPlasticFlowRule::dh_da_temp(const double * const s,
                                                   double * const dhv) const
 {
   for (size_t i = 0; i < nmodels(); i++) {
-    size_t nhi = rules_[i]->nhist();
+    size_t nhi = rules_[i]->nh();
     double * dhvi = new double [nhi*nhi];
     rules_[i]->dh_da_temp(s, model_history_(alpha,i), T, dhvi);
     for (size_t a = 0; a < nhi; a++)
       for (size_t b = 0; b < nhi; b++)
-        dhv[CINDEX(a+offsets_[i],b+offsets_[i],nhist())] = dhvi[CINDEX(a,b,nhi)];
+        dhv[CINDEX(a+offsets_[i],b+offsets_[i],nh())] = dhvi[CINDEX(a,b,nhi)];
 
     delete [] dhvi;
   }
@@ -679,7 +681,7 @@ PerzynaFlowRule::PerzynaFlowRule(ParameterSet & params) :
     hardening_(params.get_object_parameter<HardeningRule>("hardening")), 
     g_(params.get_object_parameter<GFlow>("g"))
 {
-  
+  cache_history_(); 
 }
 
 std::string PerzynaFlowRule::type()
@@ -724,7 +726,7 @@ void PerzynaFlowRule::init_hist(History & hist) const
 void PerzynaFlowRule::y(const double* const s, const double* const alpha, double T,
               double & yv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
@@ -743,7 +745,7 @@ void PerzynaFlowRule::y(const double* const s, const double* const alpha, double
 void PerzynaFlowRule::dy_ds(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
@@ -765,29 +767,29 @@ void PerzynaFlowRule::dy_ds(const double* const s, const double* const alpha, do
 void PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
   double fv;
   surface_->f(s, q, T, fv);
 
-  std::fill(dyv, dyv + nhist(), 0.0);
+  std::fill(dyv, dyv + nh(), 0.0);
 
   if (fv > 0.0) {
     double dgv = g_->dg(fabs(fv), T);
     
-    std::vector<double> jacv(nhist()*nhist());
+    std::vector<double> jacv(nh()*nh());
     double * jac = &jacv[0];
     hardening_->dq_da(alpha, T, jac);
     
-    std::vector<double> rdv(nhist());
+    std::vector<double> rdv(nh());
     double * rd = &rdv[0];
     surface_->df_dq(s, q, T, rd);
 
-    mat_vec_trans(jac, nhist(), rd, nhist(), dyv);
+    mat_vec_trans(jac, nh(), rd, nh(), dyv);
 
-    for (size_t i=0; i<nhist(); i++) {
+    for (size_t i=0; i<nh(); i++) {
       dyv[i] *= dgv;
     }
   }
@@ -799,7 +801,7 @@ void PerzynaFlowRule::dy_da(const double* const s, const double* const alpha, do
 void PerzynaFlowRule::g(const double * const s, const double * const alpha, double T,
               double * const gv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
@@ -809,7 +811,7 @@ void PerzynaFlowRule::g(const double * const s, const double * const alpha, doub
 void PerzynaFlowRule::dg_ds(const double * const s, const double * const alpha, double T,
               double * const dgv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
@@ -819,26 +821,26 @@ void PerzynaFlowRule::dg_ds(const double * const s, const double * const alpha, 
 void PerzynaFlowRule::dg_da(const double * const s, const double * const alpha, double T,
              double * const dgv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
   
-  std::vector<double> jacv(nhist() * nhist());
+  std::vector<double> jacv(nh() * nh());
   double * jac = &jacv[0];
   hardening_->dq_da(alpha, T, jac);
   
-  std::vector<double> ddv(6*nhist());
+  std::vector<double> ddv(6*nh());
   double * dd = &ddv[0];
   surface_->df_dsdq(s, q, T, dd);
 
-  mat_mat(6, nhist(), nhist(), dd, jac, dgv);
+  mat_mat(6, nh(), nh(), dd, jac, dgv);
 }
 
 // Hardening rule
 void PerzynaFlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
@@ -848,7 +850,7 @@ void PerzynaFlowRule::h(const double * const s, const double * const alpha, doub
 void PerzynaFlowRule::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
 
@@ -858,19 +860,19 @@ void PerzynaFlowRule::dh_ds(const double * const s, const double * const alpha, 
 void PerzynaFlowRule::dh_da(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  std::vector<double> qv(nhist());
+  std::vector<double> qv(nh());
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
   
-  std::vector<double> jacv(nhist() * nhist());
+  std::vector<double> jacv(nh() * nh());
   double * jac = &jacv[0];
   hardening_->dq_da(alpha, T, jac);
   
-  std::vector<double> ddv(nhist() * nhist());
+  std::vector<double> ddv(nh() * nh());
   double * dd = &ddv[0];
   surface_->df_dqdq(s, q, T, dd);
 
-  mat_mat(nhist(), nhist(), nhist(), dd, jac, dhv);
+  mat_mat(nh(), nh(), nh(), dd, jac, dhv);
 }
 
 LinearViscousFlow::LinearViscousFlow(ParameterSet & params) :
@@ -878,7 +880,7 @@ LinearViscousFlow::LinearViscousFlow(ParameterSet & params) :
     surface_(params.get_object_parameter<YieldSurface>("surface")),
     eta_(params.get_object_parameter<Interpolate>("eta"))
 {
-  
+  cache_history_(); 
 }
 
 std::string LinearViscousFlow::type()
@@ -1088,7 +1090,7 @@ ChabocheFlowRule::ChabocheFlowRule(ParameterSet & params) :
     prefactor_(params.get_object_parameter<Interpolate>("prefactor")), 
     recovery_(false)
 {
-
+  cache_history_();
 }
 
 std::string ChabocheFlowRule::type()
@@ -1183,10 +1185,10 @@ void ChabocheFlowRule::dy_da(const double* const s, const double* const alpha, d
   double fv;
   surface_->f(s, q, T, fv);
 
-  std::fill(dyv, dyv + nhist(), 0.0);
+  std::fill(dyv, dyv + nh(), 0.0);
 
   if (fv > 0.0) {
-    std::vector<double> jacv(hardening_->ninter() * nhist());
+    std::vector<double> jacv(hardening_->ninter() * nh());
     double * jac = &jacv[0];
     hardening_->dq_da(alpha, T, jac);
     
@@ -1194,12 +1196,12 @@ void ChabocheFlowRule::dy_da(const double* const s, const double* const alpha, d
     double * dq = &dqv[0];
     surface_->df_dq(s, q, T, dq);
 
-    mat_vec_trans(jac, nhist(), dq, hardening_->ninter(), dyv);
+    mat_vec_trans(jac, nh(), dq, hardening_->ninter(), dyv);
 
     double eta = sqrt(2.0/3.0) * fluidity_->eta(alpha[0], T);
     double mv = sqrt(3.0 / 2.0) * pow(fv / eta, n_->value(T) - 1.0) *
                 n_->value(T) / eta * prefactor_->value(T);
-    for (size_t i = 0; i < nhist(); i++)
+    for (size_t i = 0; i < nh(); i++)
       dyv[i] *= mv;
 
     double mv2 = -sqrt(3.0 / 2.0) * fv * pow(fv / eta, n_->value(T) - 1.0) *
@@ -1240,7 +1242,7 @@ void ChabocheFlowRule::dg_da(const double * const s, const double * const alpha,
   double * q = &qv[0];
   hardening_->q(alpha, T, q);
   
-  std::vector<double> jacv(hardening_->ninter() * nhist());
+  std::vector<double> jacv(hardening_->ninter() * nh());
   double * jac = &jacv[0];
   hardening_->dq_da(alpha, T, jac);
   
@@ -1248,7 +1250,7 @@ void ChabocheFlowRule::dg_da(const double * const s, const double * const alpha,
   double * dd = &ddv[0];
   surface_->df_dsdq(s, q, T, dd);
 
-  mat_mat(6, nhist(), hardening_->ninter(), dd, jac, dgv);
+  mat_mat(6, nh(), hardening_->ninter(), dd, jac, dgv);
 }
 
 // Hardening rule
@@ -1311,7 +1313,7 @@ void ChabocheFlowRule::dh_da_temp(const double * const s, const double * const a
 YaguchiGr91FlowRule::YaguchiGr91FlowRule(ParameterSet & params) : 
     ViscoPlasticFlowRule(params)
 {
-
+  cache_history_();
 }
 
 std::string YaguchiGr91FlowRule::type()
@@ -1411,7 +1413,7 @@ void YaguchiGr91FlowRule::dy_ds(const double* const s, const double* const alpha
 void YaguchiGr91FlowRule::dy_da(const double* const s, const double* const alpha, double T,
               double * const dyv) const
 {
-  std::fill(dyv, dyv+nhist(), 0.0);
+  std::fill(dyv, dyv+nh(), 0.0);
 
   // General
   double yi;
@@ -1453,7 +1455,7 @@ void YaguchiGr91FlowRule::dy_da(const double* const s, const double* const alpha
     dyv[13] = -nT * pow(fabs(q), nT - 1.0) * copysign(1.0, q) / DT;
   }
   else {
-    std::fill(dyv, dyv+nhist(), 0.0);
+    std::fill(dyv, dyv+nh(), 0.0);
   }
   
 
@@ -1529,9 +1531,9 @@ void YaguchiGr91FlowRule::dg_da(const double * const s, const double * const alp
              double * const dgv) const
 {
   // Only the X terms have derivatives
-  std::fill(dgv, dgv+(6*nhist()), 0.0);
+  std::fill(dgv, dgv+(6*nh()), 0.0);
 
-  int nc = nhist();
+  int nc = nh();
 
   // Bizarrely this is the easiest way to do this
   double deriv[36];
@@ -1550,7 +1552,7 @@ void YaguchiGr91FlowRule::dg_da(const double * const s, const double * const alp
 void YaguchiGr91FlowRule::h(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  std::fill(hv, hv+nhist(), 0.0);
+  std::fill(hv, hv+nh(), 0.0);
 
   double X[6];
   std::fill(X, X+6, 0.0);
@@ -1620,7 +1622,7 @@ void YaguchiGr91FlowRule::dh_ds(const double * const s, const double * const alp
               double * const dhv) const
 {
   // Only the X terms have derivatives
-  std::fill(dhv, dhv + nhist()*6, 0.0);
+  std::fill(dhv, dhv + nh()*6, 0.0);
 
   double C1i = C1(T);
   double a1i = a10(T) - alpha[12];
@@ -1669,11 +1671,11 @@ void YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alp
               double * const dhv) const
 {
   // Fair number of cross-terms are zero
-  int nh = nhist();
-  std::fill(dhv, dhv+(nh*nh), 0.0);
+  int nhi = nh();
+  std::fill(dhv, dhv+(nhi*nhi), 0.0);
 
   // Generic X terms
-  std::vector<double> derivv(6*nh);
+  std::vector<double> derivv(6*nhi);
   double * deriv = &derivv[0];
   dg_da(s, alpha, T, deriv);
   double C1i = C1(T);
@@ -1683,22 +1685,22 @@ void YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alp
   double a2i = a2(T);
 
   for (int i=0; i<6; i++) {
-    for (int j=0; j<nh; j++) {
-      dhv[CINDEX((i+0),j,nh)] = 2.0/3.0 * a1i * deriv[CINDEX(i,j,nh)];
-      dhv[CINDEX((i+6),j,nh)] = 2.0/3.0 * a2i * deriv[CINDEX(i,j,nh)];
+    for (int j=0; j<nhi; j++) {
+      dhv[CINDEX((i+0),j,nhi)] = 2.0/3.0 * a1i * deriv[CINDEX(i,j,nhi)];
+      dhv[CINDEX((i+6),j,nhi)] = 2.0/3.0 * a2i * deriv[CINDEX(i,j,nhi)];
     }
   }
 
   for (int i=0; i<6; i++) {
-    dhv[CINDEX((i+0),(i+0),nh)] -= 1.0;
-    dhv[CINDEX((i+6),(i+6),nh)] -= 1.0;
+    dhv[CINDEX((i+0),(i+0),nhi)] -= 1.0;
+    dhv[CINDEX((i+6),(i+6),nhi)] -= 1.0;
   }
 
 
   for (int i=0; i<6; i++) {
-    for (int j=0; j<nh; j++) {
-      dhv[CINDEX((i+0),j,nh)] *= C1i;
-      dhv[CINDEX((i+6),j,nh)] *= C2i;
+    for (int j=0; j<nhi; j++) {
+      dhv[CINDEX((i+0),j,nhi)] *= C1i;
+      dhv[CINDEX((i+6),j,nhi)] *= C2i;
     }
   }
 
@@ -1718,12 +1720,12 @@ void YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alp
   }
 
   for (int i=0; i<6; i++) {
-    dhv[CINDEX(i,12,nh)] -= C1i*2.0/3.0*n[i];
+    dhv[CINDEX(i,12,nhi)] -= C1i*2.0/3.0*n[i];
   }
 
   // Q is nice and easy
   double di = d(T);
-  dhv[CINDEX(12,12,nh)] = -di;
+  dhv[CINDEX(12,12,nhi)] = -di;
 
   // There are two components to sa: the derivative of the rate wrt the history
   // and the derivative of the actual history term itself
@@ -1744,12 +1746,12 @@ void YaguchiGr91FlowRule::dh_da(const double * const s, const double * const alp
       bi = bri;
     }
     if (sas > 0.0) {
-      dy_da(s, alpha, T, &dhv[CINDEX(13,0,nh)]);
-      for (int i=0; i<nh; i++) {
-        dhv[CINDEX(13,i,nh)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,nh)];
+      dy_da(s, alpha, T, &dhv[CINDEX(13,0,nhi)]);
+      for (int i=0; i<nhi; i++) {
+        dhv[CINDEX(13,i,nhi)] = bi * Bi / (yi * log(10.0)) * dhv[CINDEX(13,i,nhi)];
       }
     }
-    dhv[CINDEX(13,13,nh)] += -bi;
+    dhv[CINDEX(13,13,nhi)] += -bi;
   }
 
 }
@@ -1759,7 +1761,7 @@ void YaguchiGr91FlowRule::h_time(const double * const s,
                                 const double * const alpha, double T,
                                 double * const hv) const
 {
-  std::fill(hv, hv+nhist(), 0.0);
+  std::fill(hv, hv+nh(), 0.0);
   
   double mi = m(T);
 
@@ -1784,15 +1786,15 @@ void YaguchiGr91FlowRule::dh_ds_time(const double * const s,
                                     double * const dhv) const
 {
   // This is actually still zero
-  std::fill(dhv, dhv+(nhist()*6), 0.0);
+  std::fill(dhv, dhv+(nh()*6), 0.0);
 }
 
 void YaguchiGr91FlowRule::dh_da_time(const double * const s, 
                                     const double * const alpha, double T,
                                     double * const dhv) const
 {
-  int nh = nhist();
-  std::fill(dhv, dhv+(nh*nh), 0.0);
+  int nhi = nh();
+  std::fill(dhv, dhv+(nhi*nhi), 0.0);
 
   // This is non-zero
   double mi = m(T);
@@ -1817,7 +1819,7 @@ void YaguchiGr91FlowRule::dh_da_time(const double * const s,
   outer_update(X1, 6, X1d, 6, dX1);
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((i+0),(j+0),nh)] = -g1i * dX1[CINDEX(i,j,6)];
+      dhv[CINDEX((i+0),(j+0),nhi)] = -g1i * dX1[CINDEX(i,j,6)];
     }
   }
   
@@ -1841,7 +1843,7 @@ void YaguchiGr91FlowRule::dh_da_time(const double * const s,
   outer_update(X2, 6, X2d, 6, dX2);
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
-      dhv[CINDEX((i+6),(j+6),nh)] = -g2i * dX2[CINDEX(i,j,6)];
+      dhv[CINDEX((i+6),(j+6),nhi)] = -g2i * dX2[CINDEX(i,j,6)];
     }
   }
 }

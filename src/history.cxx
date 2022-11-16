@@ -432,17 +432,21 @@ std::vector<std::string> History::formatted_names() const
 HistoryNEMLObject::HistoryNEMLObject(ParameterSet & params) :
     NEMLObject(params), prefix_(""), cached_(false)
 {
-
 }
 
 size_t HistoryNEMLObject::nhist() const
 {
   if (cached_)
-    return stored_hist_.size();
+    return ncache_;
 
   History h;
   populate_hist(h);
   return h.size();
+}
+
+size_t HistoryNEMLObject::nh() const
+{
+  return ncache_;
 }
 
 void HistoryNEMLObject::init_store(double * const h) const
@@ -480,6 +484,7 @@ std::string HistoryNEMLObject::dprefix(std::string a, std::string b) const
 void HistoryNEMLObject::cache_history_()
 {
   populate_hist(stored_hist_);
+  ncache_ = nhist();
   cached_ = true;
 }
 

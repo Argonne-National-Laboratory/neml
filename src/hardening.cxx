@@ -973,7 +973,7 @@ ChabocheVoceRecovery::ChabocheVoceRecovery(ParameterSet & params) :
     a_( params.get_object_parameter_vector<Interpolate>("a")), 
     noniso_(params.get_parameter<bool>("noniso"))
 {
-
+  cache_history_();
 }
 
 std::string ChabocheVoceRecovery::type()
@@ -1045,7 +1045,7 @@ void ChabocheVoceRecovery::q(const double * const alpha, double T, double * cons
 
 void ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * const qv) const
 {
-  std::fill(qv, qv+(ninter()*nhist()), 0.0);
+  std::fill(qv, qv+(ninter()*nh()), 0.0);
 
   // Isotropic part
   qv[0] = -1.0;
@@ -1055,7 +1055,7 @@ void ChabocheVoceRecovery::dq_da(const double * const alpha, double T, double * 
 
   for (size_t i=0; i<n; i++) {
     for (size_t j=0; j<6; j++) {
-      qv[CINDEX((j+1),(1+i*6+j), nhist())] = 1.0;
+      qv[CINDEX((j+1),(1+i*6+j), nh())] = 1.0;
     }
   }
 }
@@ -1090,7 +1090,7 @@ void ChabocheVoceRecovery::h(const double * const s, const double * const alpha,
 void ChabocheVoceRecovery::dh_ds(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  std::fill(dhv, dhv + nhist()*6, 0.0);
+  std::fill(dhv, dhv + nh()*6, 0.0);
 
   std::vector<double> c = eval_vector(c_, T);
 
@@ -1146,9 +1146,9 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
               double * const dhv) const
 {
   // Again, there should be no earthly reason the compiler can't do this
-  size_t nh = nhist();
+  size_t nhi = nh();
 
-  std::fill(dhv, dhv + nh*nh, 0.0);
+  std::fill(dhv, dhv + nhi*nhi, 0.0);
 
   // Isotropic contribution
   dhv[0] = -theta0_->value(T) / Rmax_->value(T) * std::sqrt(2.0/3.0);
@@ -1180,7 +1180,7 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
   // Fill in the gamma part
   for (size_t i=0; i<n_; i++) {
     for (size_t j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),(1+i*6+j),nh)] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
+      dhv[CINDEX((1+i*6+j),(1+i*6+j),nhi)] -= sqrt(2.0/3.0) * gmodels_[i]->gamma(alpha[0], T);
     }
   }
 
@@ -1189,7 +1189,7 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
     for (size_t i=0; i<6; i++) {
       for (size_t bj=0; bj<n_; bj++) {
         for (size_t j=0; j<6; j++) {
-          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nh)] -= 2.0 / 3.0 * c[bi]  * 
+          dhv[CINDEX((1+bi*6+i),(1+bj*6+j),nhi)] -= 2.0 / 3.0 * c[bi]  * 
               ss[CINDEX(i,j,6)];
         }
       }
@@ -1199,7 +1199,7 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
   // Fill in the alpha part
   for (size_t i=0; i<n_; i++) {
     for (size_t j=0; j<6; j++) {
-      dhv[CINDEX((1+i*6+j),0,nhist())] = -sqrt(2.0/3.0) * 
+      dhv[CINDEX((1+i*6+j),0,nhi)] = -sqrt(2.0/3.0) * 
           gmodels_[i]->dgamma(alpha[0], T) * alpha[1+i*6+j];
     }
   }
@@ -1209,7 +1209,7 @@ void ChabocheVoceRecovery::dh_da(const double * const s, const double * const al
 void ChabocheVoceRecovery::h_time(const double * const s, const double * const alpha, 
                      double T, double * const hv) const
 {
-  std::fill(hv, hv+nhist(), 0.0);
+  std::fill(hv, hv+nh(), 0.0);
 
   // Isotropic recovery term 
   hv[0] = r1_->value(T) * (Rmin_->value(T) - alpha[0]
@@ -1235,7 +1235,7 @@ void ChabocheVoceRecovery::h_time(const double * const s, const double * const a
 void ChabocheVoceRecovery::dh_ds_time(const double * const s, const double * const alpha, 
                          double T, double * const dhv) const
 {
-  std::fill(dhv, dhv+nhist()*6, 0.0);
+  std::fill(dhv, dhv+nh()*6, 0.0);
 
   // Also return if relax
 
@@ -1244,7 +1244,7 @@ void ChabocheVoceRecovery::dh_ds_time(const double * const s, const double * con
 void ChabocheVoceRecovery::dh_da_time(const double * const s, const double * const alpha,
                          double T, double * const dhv) const
 {
-  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  std::fill(dhv, dhv+nh()*nh(), 0.0);
 
   dhv[0] = std::copysign(r1_->value(T) * r2_->value(T) *
                          std::pow(std::fabs(Rmin_->value(T) - alpha[0]), r2_->value(T) -
@@ -1253,7 +1253,7 @@ void ChabocheVoceRecovery::dh_da_time(const double * const s, const double * con
   std::vector<double> A = eval_vector(A_, T);
   std::vector<double> a = eval_vector(a_, T);
 
-  size_t nh = nhist();
+  size_t nhi = nh();
   size_t n = n_;
   
   double XX[36];
@@ -1276,7 +1276,7 @@ void ChabocheVoceRecovery::dh_da_time(const double * const s, const double * con
         else {
           d = 0.0;
         }
-        dhv[CINDEX(ia,ib,nh)] = -A[i] * pow( sqrt(3.0/2.0) * nXi, a[i]-1.0) * (
+        dhv[CINDEX(ia,ib,nhi)] = -A[i] * pow( sqrt(3.0/2.0) * nXi, a[i]-1.0) * (
             d + (a[i] - 1.0) * XX[CINDEX(j,k,6)]);
       }
     }
@@ -1287,7 +1287,7 @@ void ChabocheVoceRecovery::dh_da_time(const double * const s, const double * con
 void ChabocheVoceRecovery::h_temp(const double * const s, const double * const alpha, double T,
               double * const hv) const
 {
-  std::fill(hv, hv+nhist(), 0.0);
+  std::fill(hv, hv+nh(), 0.0);
 
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
@@ -1303,13 +1303,13 @@ void ChabocheVoceRecovery::h_temp(const double * const s, const double * const a
 void ChabocheVoceRecovery::dh_ds_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  std::fill(dhv, dhv+nhist()*6, 0.0);
+  std::fill(dhv, dhv+nh()*6, 0.0);
 }
 
 void ChabocheVoceRecovery::dh_da_temp(const double * const s, const double * const alpha, double T,
               double * const dhv) const
 {
-  std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  std::fill(dhv, dhv+nh()*nh(), 0.0);
 
   std::vector<double> c = eval_vector(c_, T);
   std::vector<double> dc = eval_deriv_vector(c_, T);
@@ -1318,7 +1318,7 @@ void ChabocheVoceRecovery::dh_da_temp(const double * const s, const double * con
     if (c[i] == 0.0) continue;
     for (size_t j=0; j<6; j++) {
       size_t ci = 1 + i*6 + j;
-      dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
+      dhv[CINDEX(ci,ci,nh())] = - sqrt(2.0/3.0) * dc[i] / c[i];
     }
   }
 }
