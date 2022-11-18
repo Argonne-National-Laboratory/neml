@@ -1120,14 +1120,14 @@ std::unique_ptr<NEMLObject> SmallStrainCreepPlasticity::initialize(ParameterSet 
 void SmallStrainCreepPlasticity::populate_state(History & hist) const
 {
   plastic_->set_variable_prefix(get_variable_prefix());
-  plastic_->populate_hist(hist);
+  plastic_->populate_state(hist);
   hist.add<Symmetric>(prefix("plastic_strain"));
 }
 
 void SmallStrainCreepPlasticity::init_state(History & hist) const
 {
   hist.get<Symmetric>(prefix("plastic_strain")) = Symmetric::zero();
-  plastic_->init_hist(hist);
+  plastic_->init_state(hist);
 }
 
 void SmallStrainCreepPlasticity::update_sd_actual(
