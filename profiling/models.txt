@@ -1,3 +1,6 @@
+complexcreepdamage
+powerdamage
+substep
 lanl_ti
 cpdmg
 walker
@@ -8,6 +11,5 @@ nonassociative
 creep_plasticity
 chaboche
 chaboche_substep
-powerdamage
 cp
 linearcp
