@@ -3,10 +3,33 @@
 from neml import models, parse, drivers
 
 import numpy as np
+import numpy.linalg as la
 
 import shutil
 import argparse
 import os.path
+
+def drive_all_strain(model, emax, erate, nsteps, T):
+    """
+        Strain controlled driver where the user gives a full 
+        Mandel strain vector
+    """
+    effective_strain = np.sqrt(2.0/3.0) * la.norm(emax)
+    tmax = effective_strain / erate
+    
+    times = np.linspace(0, tmax, nsteps)
+    strains = np.linspace(np.zeros((6,)), emax, nsteps)
+
+    driver = drivers.Driver_sd(model, T_init = T, no_thermal_strain = True)
+
+    for t,e in zip(times[1:], strains[1:]):
+        driver.strain_step(e, t, T)
+
+    return (np.array(driver.t_int),
+            np.array(driver.strain_int), 
+            np.array(driver.stress_int),
+            np.array(driver.T_int))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -50,7 +73,9 @@ if __name__ == "__main__":
         stress = np.array(res['stress'])
         temperature = np.array(res['temperature'])
     elif len(args.max_strain) == 6:
-        pass
+        time, strain, stress, temperature = drive_all_strain(
+                model, np.array(args.max_strain), args.strain_rate, 
+                args.nsteps, T)
     else:
         raise ValueError("max_strain should either be a single value, "
                 "indicating a uniaxial strain-controlled test, " 
