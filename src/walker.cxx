@@ -1758,8 +1758,13 @@ void TestFlowRule::dg_ds(const State & state, SymSymR4 & res) const
 {
   Symmetric s = state.S.dev();
   double ns = s.norm();
-  Symmetric sn = s / ns;
-  res = std::sqrt(3.0 / 2.0) / ns * (SymSymR4::id_dev() - douter(sn, sn));
+  if (ns > 0.0) {
+    Symmetric sn = s / ns;
+    res = std::sqrt(3.0 / 2.0) / ns * (SymSymR4::id_dev() - douter(sn, sn));
+  }
+  else {
+    res = SymSymR4::zero();
+  }
 }
 
 void TestFlowRule::dg_da(const State & state, History & res) const
