@@ -458,11 +458,6 @@ double HuCocksPrecipitationModel::dG_df(double f, double T) const
     dc_eff += a;
   }
   
-  // Get the effective equilibrium concentration
-  double ceq_eff = 1;
-  for (auto ci : ceq_)
-    ceq_eff *= ci->value(T);
-
   return -kboltz_ * T / vm_ * dc_eff / c_eff;
 }
 
