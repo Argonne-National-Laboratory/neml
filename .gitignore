@@ -53,3 +53,5 @@ examples/**/*.png
 neml/*.cmake
 *.lo*
 *.la
+*.gcno
+coverage/coverage
