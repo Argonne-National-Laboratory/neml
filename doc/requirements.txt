@@ -2,3 +2,4 @@
 ##### pip requirements ######
 #
 breathe
+sphinx-rtd-theme
