@@ -2,6 +2,7 @@
 #include "elasticity.h"
 
 #include <cmath>
+#include <stdexcept>
 #include <limits>
 
 namespace neml {
