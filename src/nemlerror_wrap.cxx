@@ -8,7 +8,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>)
 
 namespace neml {
 
-PYBIND11_MODULE(parse, m) {
+PYBIND11_MODULE(nemlerror, m) {
   m.doc() = "NEML-specific errors and exceptions";
   
   py::register_exception<NEMLError>(m, "NEMLError");
