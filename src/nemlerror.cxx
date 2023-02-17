@@ -27,5 +27,19 @@ NonlinearSolverError::NonlinearSolverError(std::string msg) :
 
 }
 
+void throw_exception(ExceptionType type)
+{
+  switch (type) {
+    case ExceptionType::NEMLError:
+      throw NEMLError("This is an error");
+      break;
+    case ExceptionType::LinalgError:
+      throw LinalgError("This is another error");
+      break;
+    case ExceptionType::NonlinearSolverError:
+      throw NonlinearSolverError("This is still another error");
+      break;
+  }
+}
 
 } // namespace neml
