@@ -214,7 +214,7 @@ GeneralizedHuCocksPrecipitationModel::concentration(
         f_total -= p->f(history);
       }
   double c = c_total / f_total;
-  return c > 1e-12 ? c : 1e-12;
+  return c > std::numeric_limits<double>::epsilon() ? c : std::numeric_limits<double>::epsilon();
 }
 
 double
@@ -241,7 +241,9 @@ GeneralizedHuCocksPrecipitationModel::d_concentration_d_f(
       }
 
   double c = c_total / f_total;
-  double d_c_d_f = c > 1e-12 ? d_c_total / f_total - c_total / f_total / f_total * d_f_total : 0;
+  double d_c_d_f = c > std::numeric_limits<double>::epsilon()
+                       ? d_c_total / f_total - c_total / f_total / f_total * d_f_total
+                       : 0;
   return d_c_d_f;
 }
 
