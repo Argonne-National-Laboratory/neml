@@ -65,6 +65,12 @@ if(APPLE)
 endif(APPLE)
 ######
 
+### Production build flag turns on dangerous optimizations
+option(PRODUCTION_BUILD "Production build -- enable dangerous optimizations" OFF)
+if (PRODUCTION_BUILD)
+    add_definitions(-DPRODUCTION)
+endif()
+
 ### Offer to use OMP for crystal system ###
 option(USE_OPENMP "Compile with OpenMP" ON)
 if (USE_OPENMP)
