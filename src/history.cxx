@@ -226,31 +226,37 @@ void History::copy_maps(const History & other)
 
 void History::error_if_exists_(std::string name) const
 {
+#ifndef PRODUCTION
   if (contains(name)) {
     std::stringstream ss;
     ss << "History variable name " << name << " already stored." << std::endl;
     throw std::runtime_error(ss.str());
   }
+#endif
 }
 
 void History::error_if_not_exists_(std::string name) const
 {
+#ifndef PRODUCTION
   // This is a huge time drain
   if (not contains(name)) {
     std::stringstream ss;
     ss << "No history variable named " << name << " is stored." << std::endl;
     throw std::runtime_error(ss.str());
   }
+#endif
 }
 
 void History::error_if_wrong_type_(std::string name, StorageType type) const
 {
+#ifndef PRODUCTION
   // This is a huge time drain
   if (type != type_.at(name)) {
     std::stringstream ss;
     ss << name << " is not of the type requested." << std::endl;
     throw std::runtime_error(ss.str());
   }
+#endif
 }
 
 History & History::zero()

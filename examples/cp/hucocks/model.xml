@@ -1,131 +1,178 @@
 <materials>
-  <hucocks type="SingleCrystalModel">
-    <initial_rotation type="Orientation">
-      <angles>0 0 0</angles>
-      <angle_type>degrees</angle_type>
-    </initial_rotation>
-    <kinematics type="StandardKinematicModel">
-      <emodel type="IsotropicLinearElasticModel">
-        <m1_type>youngs</m1_type>
-        <m1 type="PiecewiseLinearInterpolate">
-          <points>773.15 823.15 873.15 923.15</points>
-          <values>160000 156000 151000 140000</values>
-        </m1>
-        <m2_type>poissons</m2_type>
-        <m2>0.31</m2>
-      </emodel>
-      <imodel type="AsaroInelasticity">
-        <rule type="ArrheniusSlipRule">
-          <resistance type="HuCocksHardening">
-            <dmodel type = "DislocationSpacingHardening">
-              <J1>0.0002</J1>
-              <J2>0.00033</J2>
-              <K>2560000</K>
-              <L0>316.23</L0>
-              <a>0.35</a>
-              <b>0.25</b>
-              <G type="PiecewiseLinearInterpolate">
-                <points>773.15 823.15 873.15 923.15</points>
-                <values>61068 59541 57633.6 55725.2</values>
-              </G> 
-              <L type="CubicLattice">
-                <a>1.0</a>
-                <slip_systems>
-                  1 1 0 ; 1 1 1
-                </slip_systems>
-              </L>
-            </dmodel>
-            <pmodels>
-              <carbide type="HuCocksPrecipitationModel">
-                <c0>
-                  <Cr>
-                    0.1625
-                  </Cr>
-                  <C>
-                    0.000375
-                  </C>
-                </c0>
-                <cp>
-                  <Cr type="PiecewiseLinearInterpolate">
-                    <points>773.15 823.15 873.15 923.15</points>
-                    <values>0.69845 0.6905 0.6832 0.6752</values> 
-                  </Cr>
-                  <C type="PiecewiseLinearInterpolate">
-                    <points>773.15 823.15 873.15 923.15</points>
-                    <values>0.0513 0.0513 0.0513 0.0513</values> 
-                  </C>
-                </cp>
-                <ceq>
-                  <Cr type="PiecewiseLinearInterpolate">
-                    <points>773.15 823.15 873.15 923.15</points>
-                    <values>0.1564 0.1569 0.1575 0.1583</values> 
-                  </Cr>
-                  <C type="PiecewiseLinearInterpolate">
-                    <points>773.15 823.15 873.15 923.15</points>
-                    <values>7.25e-8 2.92e-7 9.48e-7 2.97e-6</values> 
-                  </C>
-                </ceq>
-                <am>3.6e-10</am>
-                <N0>1.0e13</N0>
-                <Vm>6e-6</Vm>
-                <chi>0.3</chi>
-                <D0>1.5e-4</D0>
-                <Q0>240e3</Q0>
-                <Cf type="PiecewiseLinearInterpolate">
-                  <points>773.15 823.15 873.15 923.15</points>
-                  <values>1.0 1.0 0.3 0.03</values> 
-                </Cf>
-                <w>1.0</w>
-              </carbide>
-              <laves type="HuCocksPrecipitationModel">
-                <c0>
-                  <Mo>
-                    0.0233
-                  </Mo>
-                </c0>
-                <cp>
-                  <Mo>
-                    0.5
-                  </Mo>
-                </cp>
-                <ceq>
-                  <Mo type="PiecewiseLinearInterpolate">
-                    <points>773.15 823.15 873.15 923.15</points>
-                    <values>0.0025 0.0046 0.0076 0.0116</values> 
-                  </Mo>
-                </ceq>
-                <am>3.6e-10</am>
-                <N0>5e14</N0>
-                <Vm>2e-6</Vm>
-                <chi>0.25</chi>
-                <D0>7.4e-4</D0>
-                <Q0>283e3</Q0>
-                <Cf>1.0</Cf>
-                <w>1.0</w>
-              </laves>
-            </pmodels>
-            <ap>0.84</ap>
-            <ac>0.000457</ac>
-            <b>2.5e-10</b>
-            <G type="PiecewiseLinearInterpolate">
-              <points>773.15 823.15 873.15 923.15</points>
-              <values>61068 59541 57633.6 55725.2</values>
-            </G>
-          </resistance>
-          <g0>1.0</g0>
-          <A>0.75</A>
-          <B>1.333333</B>
-          <b>2.5e-10</b>
-          <a0>0.5</a0>
-          <G0>77000e6</G0>
-        </rule>
-      </imodel>
-    </kinematics>
-    <lattice type="CubicLattice">
-      <a>1.0</a>
-      <slip_systems>
-        1 1 0 ; 1 1 1
-      </slip_systems>
-    </lattice>
-  </hucocks>
+	<hucocks type="SingleCrystalModel">
+		<kinematics type="StandardKinematicModel">
+			<emodel type="IsotropicLinearElasticModel">
+				<m1 type="PiecewiseLinearInterpolate">
+					<points>773.15 823.15 873.15 923.15 </points>
+					<values>160000 156000 151000 140000 </values>
+				</m1>
+				<m1_type>youngs</m1_type>
+				<m2 type="ConstantInterpolate">
+					<v>0.31</v>
+				</m2>
+				<m2_type>poissons</m2_type>
+			</emodel>
+			<imodel type="AsaroInelasticity">
+				<rule type="ArrheniusSlipRule">
+					<resistance type="HuCocksHardening">
+						<dmodel type="DislocationSpacingHardening">
+							<J1 type="ConstantInterpolate">
+								<v>0.0002</v>
+							</J1>
+							<J2 type="ConstantInterpolate">
+								<v>0.00033</v>
+							</J2>
+							<K type="ConstantInterpolate">
+								<v>2.56e+06</v>
+							</K>
+							<L0>316.23</L0>
+							<a>0.35</a>
+							<b>0.25</b>
+							<G type="PiecewiseLinearInterpolate">
+								<points>773.15 823.15 873.15 923.15 </points>
+								<values>61068 59541 57633.6 55725.2 </values>
+							</G>
+							<L type="CubicLattice">
+								<a>1</a>
+								<slip_systems>1 1 0 ; 1 1 1 ,</slip_systems>
+								<twin_systems/>
+							</L>
+							<varprefix>spacing</varprefix>
+						</dmodel>
+						<pmodels>
+							<pmodels0 type="HuCocksPrecipitationModel">
+								<c0>
+									<c00 type="ConstantInterpolate">
+										<v>0.1625</v>
+									</c00>
+									<c01 type="ConstantInterpolate">
+										<v>0.000375</v>
+									</c01>
+								</c0>
+								<cp>
+									<cp0 type="PiecewiseLinearInterpolate">
+										<points>773.15 823.15 873.15 923.15 </points>
+										<values>0.6985 0.6905 0.6832 0.6752 </values>
+									</cp0>
+									<cp1 type="PiecewiseLinearInterpolate">
+										<points>773.15 823.15 873.15 923.15 </points>
+										<values>0.0513 0.0513 0.0513 0.0513 </values>
+									</cp1>
+								</cp>
+								<ceq>
+									<ceq0 type="PiecewiseLinearInterpolate">
+										<points>773.15 823.15 873.15 923.15 </points>
+										<values>0.1564 0.1569 0.1575 0.1583 </values>
+									</ceq0>
+									<ceq1 type="PiecewiseLinearInterpolate">
+										<points>773.15 823.15 873.15 923.15 </points>
+										<values>7.25e-08 2.92e-07 9.48e-07 2.97e-06 </values>
+									</ceq1>
+								</ceq>
+								<am>3.6e-10</am>
+								<N0>1e+13</N0>
+								<Vm>6e-06</Vm>
+								<chi>0.3</chi>
+								<D0>0.00015</D0>
+								<Q0>240000</Q0>
+								<Cf type="PiecewiseLinearInterpolate">
+									<points>773.15 823.15 873.15 923.15 </points>
+									<values>1 1 0.3 0.03 </values>
+								</Cf>
+								<kboltz>1.38065e-23</kboltz>
+								<R>8.31462</R>
+								<Na>6.02e+23</Na>
+								<rate>0</rate>
+								<f_init>4.18879e-16</f_init>
+								<r_init>1e-09</r_init>
+								<N_init>1e+11</N_init>
+								<fs>0.1</fs>
+								<rs>1e-09</rs>
+								<Ns>1e+12</Ns>
+								<w>1</w>
+							</pmodels0>
+							<pmodels1 type="HuCocksPrecipitationModel">
+								<c0>
+									<c00 type="ConstantInterpolate">
+										<v>0.0233</v>
+									</c00>
+								</c0>
+								<cp>
+									<cp0 type="ConstantInterpolate">
+										<v>0.5</v>
+									</cp0>
+								</cp>
+								<ceq>
+									<ceq0 type="PiecewiseLinearInterpolate">
+										<points>773.15 823.15 873.15 923.15 </points>
+										<values>0.0025 0.0046 0.0076 0.0116 </values>
+									</ceq0>
+								</ceq>
+								<am>3.6e-10</am>
+								<N0>5e+14</N0>
+								<Vm>2e-06</Vm>
+								<chi>0.25</chi>
+								<D0>0.00074</D0>
+								<Q0>283000</Q0>
+								<Cf type="ConstantInterpolate">
+									<v>1</v>
+								</Cf>
+								<kboltz>1.38065e-23</kboltz>
+								<R>8.31462</R>
+								<Na>6.02e+23</Na>
+								<rate>0</rate>
+								<f_init>4.18879e-16</f_init>
+								<r_init>1e-09</r_init>
+								<N_init>1e+11</N_init>
+								<fs>0.1</fs>
+								<rs>1e-09</rs>
+								<Ns>1e+12</Ns>
+								<w>1</w>
+							</pmodels1>
+						</pmodels>
+						<ap>0.84</ap>
+						<ac>0.000457</ac>
+						<b>2.5e-10</b>
+						<G type="PiecewiseLinearInterpolate">
+							<points>773.15 823.15 873.15 923.15 </points>
+							<values>61068 59541 57633.6 55725.2 </values>
+						</G>
+					</resistance>
+					<g0>1</g0>
+					<A>0.75</A>
+					<B>1.33333</B>
+					<b>2.5e-10</b>
+					<a0>0.5</a0>
+					<G0>7.7e+10</G0>
+					<k>1.38065e-23</k>
+				</rule>
+			</imodel>
+		</kinematics>
+		<lattice type="CubicLattice">
+			<a>1</a>
+			<slip_systems>1 1 0 ; 1 1 1 ,</slip_systems>
+			<twin_systems/>
+		</lattice>
+		<initial_rotation type="CrystalOrientation">
+			<angles>0 0 0 </angles>
+			<angle_type>degrees</angle_type>
+			<angle_convention>kocks</angle_convention>
+		</initial_rotation>
+		<alpha type="ConstantInterpolate">
+			<v>0</v>
+		</alpha>
+		<update_rotation>true</update_rotation>
+		<rtol>1e-08</rtol>
+		<atol>1e-06</atol>
+		<miter>30</miter>
+		<verbose>false</verbose>
+		<linesearch>true</linesearch>
+		<max_divide>6</max_divide>
+		<postprocessors/>
+		<elastic_predictor>false</elastic_predictor>
+		<fallback_elastic_predictor>true</fallback_elastic_predictor>
+		<force_divide>0</force_divide>
+		<elastic_predictor_first_step>false</elastic_predictor_first_step>
+	</hucocks>
 </materials>
+

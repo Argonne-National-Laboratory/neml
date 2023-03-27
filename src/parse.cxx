@@ -271,7 +271,7 @@ std::vector<double> get_vector_double(const rapidxml::xml_node<> * node)
 
   try {
     std::string text = get_string(node);
-    return split_string(text);
+    return split_string_double(text);
   }
   catch (std::exception & e) {
     throw InvalidType(node->name(), get_type_of_node(node), "vector<double>");
@@ -426,7 +426,7 @@ std::string get_type_of_node(const rapidxml::xml_node<> * node)
   return "none";
 }
 
-std::vector<double> split_string(std::string sval)
+std::vector<std::string> split_string(std::string sval)
 {
   std::vector<std::string> splits;
   std::stringstream ss(sval);
@@ -434,6 +434,12 @@ std::vector<double> split_string(std::string sval)
   while (ss >> temp) {
     splits.push_back(temp);
   }
+  return splits;
+}
+
+std::vector<double> split_string_double(std::string sval)
+{
+  auto splits = split_string(sval);
   std::vector<double> value;
   for (auto it = splits.begin(); it != splits.end(); ++it) {
     value.push_back(std::stod(*it));
@@ -443,12 +449,7 @@ std::vector<double> split_string(std::string sval)
 
 std::vector<size_t> split_string_size_type(std::string sval)
 {
-  std::vector<std::string> splits;
-  std::stringstream ss(sval);
-  std::string temp;
-  while (ss >> temp) {
-    splits.push_back(temp);
-  }
+  auto splits = split_string(sval);
   std::vector<size_t> value;
   for (auto it = splits.begin(); it != splits.end(); ++it) {
     value.push_back(size_t(std::stoul(*it)));
@@ -458,12 +459,7 @@ std::vector<size_t> split_string_size_type(std::string sval)
 
 std::vector<int> split_string_int(std::string sval)
 {
-  std::vector<std::string> splits;
-  std::stringstream ss(sval);
-  std::string temp;
-  while (ss >> temp) {
-    splits.push_back(temp);
-  }
+  auto splits = split_string(sval);
   std::vector<int> value;
   for (auto it = splits.begin(); it != splits.end(); ++it) {
     value.push_back(std::stoi(*it));

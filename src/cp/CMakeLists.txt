@@ -1,6 +1,6 @@
 include(../macros.cmake)
 
-target_sources(neml PRIVATE 
+target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/crystallography.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/inelasticity.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/sliprules.cxx
@@ -11,10 +11,11 @@ target_sources(neml PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/polycrystal.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/crystaldamage.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/hucocks.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/generalizedhucocks.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/postprocessors.cxx
-      )
+)
 
-if (WRAP_PYTHON)
+if(WRAP_PYTHON)
       # Make sure we install all the python files in neml/
       file(GLOB python_files ${CMAKE_SOURCE_DIR}/neml/cp/*.py)
       install(FILES ${python_files} DESTINATION neml/cp)
@@ -29,5 +30,6 @@ if (WRAP_PYTHON)
       pybind(polycrystal cp)
       pybind(crystaldamage cp)
       pybind(hucocks cp)
+      pybind(generalizedhucocks cp)
       pybind(postprocessors cp)
 endif()

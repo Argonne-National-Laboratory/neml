@@ -28,13 +28,13 @@ if on_rtd:
 # -- Project information -----------------------------------------------------
 
 project = u'NEML'
-copyright = u'2022, UChicago Argonne, LLC'
+copyright = u'2023, UChicago Argonne, LLC'
 author = u'Argonne National Laboratory'
 
 # The short X.Y version
-version = u'1.4.1'
+version = u'1.5.2'
 # The full version, including alpha/beta/rc tags
-release = u'1.4.1'
+release = u'1.5.2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -50,7 +50,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'breathe',
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -86,7 +86,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
