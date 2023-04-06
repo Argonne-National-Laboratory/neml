@@ -264,6 +264,9 @@ std::shared_ptr<CrystalOrientation> zero_orientation();
 //    from Shoemake, 1992
 NEML_EXPORT std::vector<CrystalOrientation> random_orientations(int n);
 
+/// An alternative of `random_orientation(int n)` with consistent seeding
+NEML_EXPORT std::vector<CrystalOrientation> random_orientations(int n, unsigned long seed);
+
 /// Exponential map of a skew tensor in my convention
 NEML_EXPORT Orientation wexp(const Skew & w);
 

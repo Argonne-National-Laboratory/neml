@@ -251,7 +251,8 @@ PYBIND11_MODULE(rotations, m) {
            py::arg("a"), py::arg("b"), py::arg("c"), py::arg("angle_type") = "radians", py::arg("convention") = "kocks")
   ;
   
-  m.def("random_orientations", &random_orientations);
+  m.def("random_orientations", py::overload_cast<int>(&random_orientations));
+  m.def("random_orientations", py::overload_cast<int, unsigned long>(&random_orientations));
   m.def("wexp", &wexp);
   m.def("wlog", &wlog);
   m.def("distance", &distance);

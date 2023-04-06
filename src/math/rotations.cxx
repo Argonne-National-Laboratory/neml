@@ -996,6 +996,34 @@ std::vector<CrystalOrientation> random_orientations(int n)
   return result;
 }
 
+std::vector<CrystalOrientation> random_orientations(int n, unsigned long seed)
+{
+  double u[3];
+  double w, x, y, z;
+  std::vector<CrystalOrientation> result;
+
+  std::random_device rdev{};
+  std::default_random_engine generator{rdev()};
+  std::uniform_real_distribution<double> distribution(0.0,1.0);
+
+  generator.seed(seed);
+
+  for (int i=0; i<n; i++) {
+    for (int j=0; j<3; j++) {
+      u[j] = distribution(generator);
+    }
+
+    w = sqrt(1.0-u[0]) * sin(2.0 * M_PI * u[1]);
+    x = sqrt(1.0-u[0]) * cos(2.0 * M_PI * u[1]);
+    y = sqrt(u[0]) * sin(2.0 * M_PI * u[2]);
+    z = sqrt(u[0]) * cos(2.0 * M_PI * u[2]);
+
+    result.emplace_back(make_crystal_orientation(Orientation({w,x,y,z})));
+  }
+
+  return result;
+}
+
 Orientation wexp(const Skew & w)
 {
   const double * wv = w.data();
