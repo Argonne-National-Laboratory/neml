@@ -492,7 +492,8 @@ class NEML_EXPORT LANLTiModel: public SlipHardening
                      std::vector<std::string> ext) const;
 
  protected:
-  size_t size() const {return tau_0_.size();};
+  size_t size() const {return tau_0_.size()+k1_.size();};
+  size_t nrho_() const {return k1_.size();};
   size_t nslip_() const {return k1_.size();};
   size_t ntwin_() const {return tau_0_.size()-k1_.size();};
   void consistency(Lattice & L) const;
@@ -503,7 +504,7 @@ class NEML_EXPORT LANLTiModel: public SlipHardening
   std::vector<std::shared_ptr<Interpolate>> mu_, k1_, k2_;
   double X_s_;
   double inivalue_;
-  std::string varprefix_, twinprefix_;
+  std::string varprefix_, twinprefix_, slipprefix_;
   std::vector<std::string> varnames_;
 };
 
