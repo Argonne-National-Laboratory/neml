@@ -670,6 +670,7 @@ class NEML_EXPORT WorkDamage: public ScalarDamage {
   std::shared_ptr<Interpolate> Wcrit_;
   double n_;
   double eps_;
+  double work_scale_;
   bool log_;
 };
 

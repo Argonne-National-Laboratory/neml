@@ -1293,6 +1293,7 @@ WorkDamage::WorkDamage(ParameterSet & params) :
       Wcrit_(params.get_object_parameter<Interpolate>("Wcrit")),
       n_(params.get_parameter<double>("n")),
       eps_(params.get_parameter<double>("eps")),
+      work_scale_(params.get_parameter<double>("work_scale")),
       log_(params.get_parameter<bool>("log"))
 {
 }
@@ -1310,6 +1311,7 @@ ParameterSet WorkDamage::parameters()
   pset.add_parameter<NEMLObject>("Wcrit");
   pset.add_parameter<double>("n");
   pset.add_optional_parameter<double>("eps", 1e-30);
+  pset.add_optional_parameter<double>("work_scale", 1.0);
   pset.add_optional_parameter<bool>("log", false);
 
   return pset;
@@ -1341,10 +1343,10 @@ void WorkDamage::damage(double d_np1, double d_n,
 
   double dt = t_np1 - t_n;
 
-  double val = Wcrit(wrate);
+  double val = Wcrit(wrate / work_scale_);
 
-  *dd = d_n + n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) * 
-      wrate * dt / val;
+  *dd = d_n + n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) *
+        wrate * dt / val / work_scale_;
 }
 
 void WorkDamage::ddamage_dd(double d_np1, double d_n,
@@ -1366,8 +1368,8 @@ void WorkDamage::ddamage_dd(double d_np1, double d_n,
     return;
   }
 
-  double val = Wcrit(wrate);
-  double deriv = dWcrit(wrate);
+  double val = Wcrit(wrate / work_scale_);
+  double deriv = dWcrit(wrate / work_scale_);
   double dt = t_np1 - t_n;
 
   double S[36];
@@ -1375,13 +1377,13 @@ void WorkDamage::ddamage_dd(double d_np1, double d_n,
   double e[6];
   mat_vec(S, 6, s_np1, 6, e);
   double f = dot_vec(s_np1, e, 6);
-  double x = -wrate / (1.0 - std::fabs(d_np1)) + 
+  double x = -wrate / (1.0 - std::fabs(d_np1)) / work_scale_ + 
       (1.0 - std::fabs(d_np1)) * f / dt;
 
   double other = n_*std::pow(fabs(d_np1), (n_-1.0)/n_) * 
-      dt / val * (1.0 - wrate / val *deriv) * x;
+      dt / val * (1.0 - wrate / val * deriv / work_scale_) * x;
   *dd = (n_-1.0)*std::pow(std::fabs(d_np1), -1.0/n_) *
-      wrate * dt / val + other;
+      wrate * dt / val / work_scale_ + other;
 }
 
 void WorkDamage::ddamage_de(double d_np1, double d_n,
@@ -1401,11 +1403,11 @@ void WorkDamage::ddamage_de(double d_np1, double d_n,
     return;
   }
 
-  double val = Wcrit(wrate);
-  double dval = dWcrit(wrate);
+  double val = Wcrit(wrate / work_scale_);
+  double dval = dWcrit(wrate / work_scale_);
 
   double fact = n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) / val * 
-      (1.0 - wrate / val * dval) * (1.0 - std::fabs(d_np1));
+      (1.0 - wrate / val * dval / work_scale_) * (1.0 - std::fabs(d_np1));
 
   for (size_t i = 0; i < 6; i++) {
     dd[i] = fact * s_np1[i];
@@ -1427,8 +1429,8 @@ void WorkDamage::ddamage_ds(double d_np1, double d_n,
     return;
   }
 
-  double val = Wcrit(wrate);
-  double dval = dWcrit(wrate);
+  double val = Wcrit(wrate / work_scale_);
+  double dval = dWcrit(wrate / work_scale_);
 
   double S[36];
   elastic_->S(T_np1, S);
@@ -1447,7 +1449,7 @@ void WorkDamage::ddamage_ds(double d_np1, double d_n,
   mat_vec(S, 6, s_np1, 6, e);
 
   double fact = n_ * std::pow(fabs(d_np1), (n_-1.0)/n_) / val * 
-      (1.0 - wrate / val * dval)*(1.0-std::fabs(d_np1));
+      (1.0 - wrate / val * dval / work_scale_)*(1.0-std::fabs(d_np1));
 
   for (size_t i = 0; i < 6; i++) {
     dd[i] = fact * (de[i] - dee[i] - (1.0-std::fabs(d_np1))*e[i]);
@@ -1471,7 +1473,7 @@ double WorkDamage::workrate(
   double ds[6];
   double de[6];
   for (int i=0; i<6; i++) {
-    ds[i] = stress_np1[i] *(1.0-d_np1) - stress_n[i]*(1.0-d_n);
+    ds[i] = stress_np1[i]*(1.0-d_np1) - stress_n[i]*(1.0-d_n);
     de[i] = strain_np1[i] - strain_n[i];
   }
 
@@ -1483,7 +1485,7 @@ double WorkDamage::workrate(
     dp[i] = de[i] - dee[i];
   }
 
-  return fabs(dot_vec(stress_np1, dp, 6) / dt * (1.0 - d_np1));
+  return fabs(dot_vec(stress_np1, dp, 6) / dt * (1.0 - d_np1)) * work_scale_;
 }
 
 double WorkDamage::Wcrit(double Wdot) const
