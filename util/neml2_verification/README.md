@@ -19,7 +19,7 @@ viscoplastic.xml viscoplastic_linear_isotropic xx xx no_temperature 1e-5 1e-8
 Compare Perzyna viscoplasticity with linear isotropic hardening
 # Test input as a space-separated list of time strain stress and 
 # (optionally) temperature values
-# time strain_xx strain_yy strain_zz strain_yz strain_xz strain_xy stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy (temperature)
+time strain_xx strain_yy strain_zz strain_yz strain_xz strain_xy stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy (temperature)
 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
 1.0 0.001 -0.0005 -0.0005 0.0 0.0 0.0 100 0 0 0 0 0 0
 ...
