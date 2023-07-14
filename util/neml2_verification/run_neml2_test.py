@@ -94,7 +94,7 @@ if __name__ == "__main__":
         f.write("# Comment line\n")
         f.write("\n")
         f.write("# The following uses the Mandel convention to store the strain and stress\n")
-        data_header = "# time strain_xx strain_yy strain_zz strain_yz strain_xz strain_xy stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy"
+        data_header = "time strain_xx strain_yy strain_zz strain_yz strain_xz strain_xy stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy"
         if use_T:
             data_header += " temperature"
         f.write(data_header + "\n")
