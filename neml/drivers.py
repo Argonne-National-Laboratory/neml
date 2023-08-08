@@ -414,7 +414,8 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
             einc_guess = einc, ainc_guess = ainc)
     except:
       break
-    if driver.stored_int[-1][-2] > dtol:
+    damage = model.get_damage(driver.stored_int[-1])
+    if damage > dtol:
       if check_dmg:
         raise Exception("Damage check exceeded")
       break
@@ -1329,7 +1330,8 @@ def creep(model, smax, srate, hold, T = 300.0, nsteps = 250,
       break
 
     if check_dmg:
-      if driver.stored_int[-1][0] > dtol:
+      damage = model.get_damage(driver.stored_int[-1])
+      if damage > dtol:
         print("Damage exceeded limit...")
         failed = True
         break
