@@ -39,8 +39,6 @@ void evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
                                    u_np1[i], u_n[i], p_np1[i], p_n[i]);
     }
     catch (NEMLError & e) {
-      std::cerr << "Exception in OpenMP block:" << std::endl;
-      std::cerr << e.message() << std::endl;
       ++error_count;
     }
   }
