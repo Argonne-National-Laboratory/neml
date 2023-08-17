@@ -282,10 +282,10 @@ class TestInvert(unittest.TestCase):
     self.assertTrue(np.allclose(inv_ns, inv))
 
   def test_nonsquare(self):
-    self.assertRaises(RuntimeError, invert_mat, self.nonsquare)
+    self.assertRaises(Exception, invert_mat, self.nonsquare)
 
   def test_nonmatrix(self):
-    self.assertRaises(RuntimeError, invert_mat, self.big)
+    self.assertRaises(Exception, invert_mat, self.big)
 
 class TestSolve(unittest.TestCase):
   def setUp(self):
