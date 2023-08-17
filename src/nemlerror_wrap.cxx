@@ -19,8 +19,6 @@ PYBIND11_MODULE(nemlerror, m) {
       .value("NEMLError", ExceptionType::NEMLError)
       .value("LinalgError", ExceptionType::LinalgError)
       .value("NonlinearSolverError", ExceptionType::NonlinearSolverError);
-
-  m.def("throw_exception", &throw_exception);
 }
 
 } // namespace neml
