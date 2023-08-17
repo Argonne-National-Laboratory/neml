@@ -32,9 +32,6 @@ class NEML_EXPORT NonlinearSolverError: public NEMLError {
 
 enum class ExceptionType { NEMLError, LinalgError, NonlinearSolverError };
 
-/// Simple test function that throws an exception
-void throw_exception(ExceptionType type);
-
 } // namespace neml
 
 #endif // NEMLERROR
