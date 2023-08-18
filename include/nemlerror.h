@@ -30,6 +30,8 @@ class NEML_EXPORT NonlinearSolverError: public NEMLError {
   NonlinearSolverError(std::string msg);
 };
 
+enum class ExceptionType { NEMLError, LinalgError, NonlinearSolverError };
+
 } // namespace neml
 
 #endif // NEMLERROR

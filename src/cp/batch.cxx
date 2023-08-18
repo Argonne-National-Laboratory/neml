@@ -1,5 +1,7 @@
 #include "cp/batch.h"
 
+#include <cstdio>
+
 #ifdef USE_OMP
 #include <omp.h>
 #endif
@@ -24,16 +26,24 @@ void evaluate_crystal_batch(SingleCrystalModel & model, size_t n,
   omp_set_num_threads(nthreads);
   #endif
 
+  size_t error_count = 0;
 #ifdef USE_OMP
-#pragma omp parallel for
+#pragma omp parallel for reduction(+: error_count)
 #endif
   for (size_t i=0; i<n; i++) {
-    model.update_ld_inc(&d_np1[i*6], &d_n[i*6], &w_np1[i*3], &w_n[i*3],
-                                 T_np1[i], T_n[i], t_np1, t_n, &s_np1[i*6],
-                                 &s_n[i*6], &h_np1[i*nh], &h_n[i*nh],
-                                 &A_np1[i*36], &B_np1[i*18], 
-                                 u_np1[i], u_n[i], p_np1[i], p_n[i]);
+    try {
+      model.update_ld_inc(&d_np1[i*6], &d_n[i*6], &w_np1[i*3], &w_n[i*3],
+                                   T_np1[i], T_n[i], t_np1, t_n, &s_np1[i*6],
+                                   &s_n[i*6], &h_np1[i*nh], &h_n[i*nh],
+                                   &A_np1[i*36], &B_np1[i*18], 
+                                   u_np1[i], u_n[i], p_np1[i], p_n[i]);
+    }
+    catch (NEMLError & e) {
+      ++error_count;
+    }
   }
+  if (error_count > 0)
+    throw NEMLError("Errors occurred in a parallel OpenMP region");
 }
 
 void init_history_batch(SingleCrystalModel & model, size_t n, double * const hist)

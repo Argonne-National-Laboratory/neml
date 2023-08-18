@@ -27,5 +27,4 @@ NonlinearSolverError::NonlinearSolverError(std::string msg) :
 
 }
 
-
 } // namespace neml

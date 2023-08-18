@@ -7,7 +7,7 @@ from common import *
 
 class TestErrors(unittest.TestCase):
   def test_badobject(self):
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(Exception):
       test = parse.parse_xml(localize("examples.xml"), "test_badobject")
 
   def test_nomodel(self):

@@ -14,6 +14,11 @@ PYBIND11_MODULE(nemlerror, m) {
   py::register_exception<NEMLError>(m, "NEMLError");
   py::register_exception<LinalgError>(m, "LinalgError");
   py::register_exception<NonlinearSolverError>(m, "NonlinearSolverError");
+  
+  py::enum_<ExceptionType>(m, "ExceptionType")
+      .value("NEMLError", ExceptionType::NEMLError)
+      .value("LinalgError", ExceptionType::LinalgError)
+      .value("NonlinearSolverError", ExceptionType::NonlinearSolverError);
 }
 
 } // namespace neml
