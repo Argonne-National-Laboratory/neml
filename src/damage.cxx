@@ -1291,7 +1291,7 @@ double StandardScalarDamage::dep(
 WorkDamage::WorkDamage(ParameterSet & params) :
       ScalarDamage(params), 
       Wcrit_(params.get_object_parameter<Interpolate>("Wcrit")),
-      n_(params.get_parameter<double>("n")),
+      n_(params.get_object_parameter<Interpolate>("n")),
       eps_(params.get_parameter<double>("eps")),
       work_scale_(params.get_parameter<double>("work_scale")),
       log_(params.get_parameter<bool>("log"))
@@ -1309,7 +1309,7 @@ ParameterSet WorkDamage::parameters()
 
   pset.add_parameter<NEMLObject>("elastic");
   pset.add_parameter<NEMLObject>("Wcrit");
-  pset.add_parameter<double>("n");
+  pset.add_parameter<NEMLObject>("n");
   pset.add_optional_parameter<double>("eps", 1e-30);
   pset.add_optional_parameter<double>("work_scale", 1.0);
   pset.add_optional_parameter<bool>("log", false);
@@ -1343,10 +1343,11 @@ void WorkDamage::damage(double d_np1, double d_n,
 
   double dt = t_np1 - t_n;
 
-  double val = Wcrit(wrate / work_scale_);
+  double val_Wc = Wcrit(wrate / work_scale_);
+  double val_n = get_n(wrate / work_scale_);
 
-  *dd = d_n + n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) *
-        wrate * dt / val / work_scale_;
+  *dd = d_n + val_n * std::pow(std::fabs(d_np1), (val_n-1.0)/val_n) *
+        wrate * dt / val_Wc / work_scale_;
 }
 
 void WorkDamage::ddamage_dd(double d_np1, double d_n,
@@ -1380,9 +1381,10 @@ void WorkDamage::ddamage_dd(double d_np1, double d_n,
   double x = -wrate / (1.0 - std::fabs(d_np1)) / work_scale_ + 
       (1.0 - std::fabs(d_np1)) * f / dt;
 
-  double other = n_*std::pow(fabs(d_np1), (n_-1.0)/n_) * 
+  double val_n = get_n(wrate / work_scale_);
+  double other = val_n*std::pow(fabs(d_np1), (val_n-1.0)/val_n) * 
       dt / val * (1.0 - wrate / val * deriv / work_scale_) * x;
-  *dd = (n_-1.0)*std::pow(std::fabs(d_np1), -1.0/n_) *
+  *dd = (val_n-1.0)*std::pow(std::fabs(d_np1), -1.0/val_n) *
       wrate * dt / val / work_scale_ + other;
 }
 
@@ -1393,6 +1395,8 @@ void WorkDamage::ddamage_de(double d_np1, double d_n,
                    double t_np1, double t_n,
                    double * const dd) const
 {
+
+  // Get work rate
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
                           std::fabs(d_np1), d_n);
 
@@ -1403,14 +1407,26 @@ void WorkDamage::ddamage_de(double d_np1, double d_n,
     return;
   }
 
-  double val = Wcrit(wrate / work_scale_);
-  double dval = dWcrit(wrate / work_scale_);
+  // Initialise interpolation variables
+  double val_Wc  = Wcrit(wrate / work_scale_);
+  double val_dWc = dWcrit(wrate / work_scale_);
+  double val_n   = get_n(wrate / work_scale_);
+  double val_dn  = get_dn(wrate / work_scale_);
 
-  double fact = n_ * std::pow(std::fabs(d_np1), (n_-1.0)/n_) / val * 
-      (1.0 - wrate / val * dval / work_scale_) * (1.0 - std::fabs(d_np1));
+  // Calculate partial derivative
+  //   dR/de = (dwrate/ds) * ( (dR/dwrate) + (dR/dWc)*(dWc/dwrate)
+  //   ... (dR/dn)*(dn/dwrate) )
+  double d_np1_pow = std::pow(fabs(d_np1), (val_n-1.0)/val_n);
+  double dR_dwrate = val_n * d_np1_pow / val_Wc;
+  double dR_dWcrit = -val_n * d_np1_pow * (wrate / work_scale_) /
+    std::pow(val_Wc, 2);
+  double dR_dn     = (wrate / work_scale_) / val_Wc * d_np1_pow *
+    (val_n + std::log(fabs(d_np1))) / val_n;
+  double factor    = dR_dwrate + dR_dWcrit*val_dWc + dR_dn*val_dn;
 
+  // Multiply everything by dwrate/ds
   for (size_t i = 0; i < 6; i++) {
-    dd[i] = fact * s_np1[i];
+    dd[i] = factor * s_np1[i] * (1.0 - std::fabs(d_np1));
   }
 }
 
@@ -1421,38 +1437,45 @@ void WorkDamage::ddamage_ds(double d_np1, double d_n,
                    double t_np1, double t_n,
                    double * const dd) const
 {
+  // Get work rate and check
   double wrate = workrate(e_np1, e_n, s_np1, s_n, T_np1, T_n, t_np1, t_n,
-                          std::fabs(d_np1), d_n);
-
+    std::fabs(d_np1), d_n);
   if ((d_np1 <= 0.0) || (wrate == 0.0)) {
     std::fill(dd, dd+6, 0.0);
     return;
   }
 
-  double val = Wcrit(wrate / work_scale_);
-  double dval = dWcrit(wrate / work_scale_);
+  // Initialise interpolation variables
+  double val_Wc  = Wcrit(wrate / work_scale_);
+  double val_dWc = dWcrit(wrate / work_scale_);
+  double val_n   = get_n(wrate / work_scale_);
+  double val_dn  = get_dn(wrate / work_scale_);
 
+  // Calculate partial derivative
+  //   dR/de = (dwrate/ds) * ( (dR/dwrate) + (dR/dWc)*(dWc/dwrate) +
+  //   ... (dR/dn)*(dn/dwrate) )
+  double d_np1_pow = std::pow(fabs(d_np1), (val_n-1.0)/val_n);
+  double dR_dwrate = val_n * d_np1_pow / val_Wc;
+  double dR_dWcrit = -val_n * d_np1_pow * (wrate / work_scale_) /
+    std::pow(val_Wc, 2);
+  double dR_dn     = (wrate / work_scale_) / val_Wc * d_np1_pow *
+    (val_n + std::log(fabs(d_np1))) / val_n;
+  double factor    = dR_dwrate + dR_dWcrit*val_dWc + dR_dn*val_dn;
+
+  // Get inverse elastic tensor
   double S[36];
   elastic_->S(T_np1, S);
-  
-  double ds[6];
-  double de[6];
-  for (int i=0; i<6; i++) {
-    ds[i] = s_np1[i] * (1.0-d_np1) - s_n[i] * (1.0-d_n);
-    de[i] = e_np1[i] - e_n[i];
-  }
 
-  double dee[6];
-  mat_vec(S, 6, ds, 6, dee);
+  // Calculate S:s_n and S:s_np1
+  double S_s_n[6];
+  mat_vec(S, 6, s_n, 6, S_s_n);
+  double S_s_np1[6];
+  mat_vec(S, 6, s_np1, 6, S_s_np1);
 
-  double e[6];
-  mat_vec(S, 6, s_np1, 6, e);
-
-  double fact = n_ * std::pow(fabs(d_np1), (n_-1.0)/n_) / val * 
-      (1.0 - wrate / val * dval / work_scale_)*(1.0-std::fabs(d_np1));
-
+  // Multiply everything by dwrate/de
   for (size_t i = 0; i < 6; i++) {
-    dd[i] = fact * (de[i] - dee[i] - (1.0-std::fabs(d_np1))*e[i]);
+    dd[i] = factor * (e_np1[i] - e_n[i] + (S_s_n[i] - 2*S_s_np1[i]) *
+      (1.0 - std::fabs(d_np1))) * (1.0 - std::fabs(d_np1));
   }
 }
 
@@ -1492,7 +1515,6 @@ double WorkDamage::Wcrit(double Wdot) const
 {
   if (log_)
     return std::pow(10.0, Wcrit_->value(std::log10(Wdot)));
-
   return Wcrit_->value(Wdot);
 }
 
@@ -1501,8 +1523,21 @@ double WorkDamage::dWcrit(double Wdot) const
   if (log_)
     return std::pow(10.0, Wcrit_->value(std::log10(Wdot))) * 
         Wcrit_->derivative(std::log10(Wdot)) / Wdot;
-
   return Wcrit_->derivative(Wdot);
+}
+
+double WorkDamage::get_n(double Wdot) const
+{
+  if (log_)
+    return n_->value(std::log10(Wdot));
+  return n_->value(Wdot);
+}
+
+double WorkDamage::get_dn(double Wdot) const
+{
+  if (log_)
+    return n_->derivative(std::log10(Wdot)) / std::log(10) / Wdot;
+  return n_->derivative(Wdot);
 }
 
 PowerLawDamage::PowerLawDamage(ParameterSet & params) :
@@ -1575,8 +1610,7 @@ double PowerLawDamage::se(const double * const s) const
                                               pow(s[5], 2.0))) / 2.0);
 }
 
-ExponentialWorkDamage::ExponentialWorkDamage(ParameterSet
-                                                                       & params) :
+ExponentialWorkDamage::ExponentialWorkDamage(ParameterSet & params) :
       StandardScalarDamage(params), 
       W0_(params.get_object_parameter<Interpolate>("W0")),
       k0_(params.get_object_parameter<Interpolate>("k0")),

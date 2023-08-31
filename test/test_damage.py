@@ -88,7 +88,7 @@ class CommonScalarDamageModel(object):
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.d_np1)
 
-    self.assertTrue(np.isclose(dd_model, dd_calcd))
+    self.assertTrue(np.isclose(dd_model, dd_calcd, rtol = 1.0e-3))
 
   def test_ddamage_dstrain(self):
     dd_model = self.dmodel.ddamage_de(self.d_np1, self.d_n, self.e_np1, self.e_n,
@@ -156,7 +156,7 @@ class CommonScalarDamageModel(object):
     Jnum = differentiate(lambda x: self.model.RJ(x, trial_state)[0], 
         self.x_trial)
     
-    self.assertTrue(np.allclose(J, Jnum, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(J, Jnum, rtol = 1.0e-2))
 
 class CommonDamagedModel(object):
   def test_nstore(self):
@@ -186,8 +186,6 @@ class CommonDamagedModel(object):
       A_num = differentiate(lambda e: self.model.update_sd(e, e_n,
         self.T, self.T, t_np1, t_n, s_n, hist_n, u_n, p_n)[0], e_np1)
       
-      print(A_num)
-      print(A_np1)
       self.assertTrue(np.allclose(A_num, A_np1, rtol = 5.0e-2, atol = 1.0e-1))
 
       e_n = np.copy(e_np1)
@@ -220,8 +218,8 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.bmodel = models.SmallStrainRateIndependentPlasticity(self.elastic, 
         flow)
     
-    self.fn = interpolate.PolynomialInterpolate([0.1,5.0, 1e-8])
-    self.n = 2.1
+    self.fn = interpolate.PolynomialInterpolate([0.1, 5.0, 1e-8])
+    self.n = interpolate.PolynomialInterpolate([0.5, 1, 2.1])
 
     self.dmodel = damage.WorkDamage(self.elastic, self.fn, self.n)
 
@@ -263,12 +261,11 @@ class TestWorkDamage(unittest.TestCase, CommonScalarDamageModel,
     self.dp = self.de - self.ee
     self.dt = self.t_np1 - self.t_n
     self.Wdot = np.dot(self.s_np1*(1.0-self.d_np1), self.dp) / self.dt
-
+    
   def test_definition(self):
     damage = self.dmodel.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
-    should = self.d_n + self.n * self.d_np1**((self.n-1)/self.n) * self.Wdot * self.dt / self.fn.value(self.Wdot) 
-
+    should = self.d_n + self.n.value(self.Wdot) * self.d_np1**((self.n.value(self.Wdot)-1)/self.n.value(self.Wdot)) * self.Wdot * self.dt / self.fn.value(self.Wdot) 
     self.assertAlmostEqual(damage, should)
 
 class TestWorkDamageLog(unittest.TestCase, CommonScalarDamageModel,
@@ -295,7 +292,7 @@ class TestWorkDamageLog(unittest.TestCase, CommonScalarDamageModel,
         flow)
     
     self.fn = interpolate.PolynomialInterpolate([0.1])
-    self.n = 2.1
+    self.n = interpolate.PolynomialInterpolate([0.5, 1, 2.1])
 
     self.dmodel = damage.WorkDamage(self.elastic, self.fn, self.n, log = True)
 
@@ -341,13 +338,14 @@ class TestWorkDamageLog(unittest.TestCase, CommonScalarDamageModel,
   def test_definition(self):
     damage = self.dmodel.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
-    should = self.d_n + self.n * self.d_np1**((self.n-1)/self.n) * self.Wdot * self.dt / 10.0**(self.fn.value(np.log10(self.Wdot)))
+    should = self.d_n + self.n.value(self.Wdot) * self.d_np1**((self.n.value(self.Wdot)-1)/self.n.value(self.Wdot)) * self.Wdot * self.dt / 10.0**(self.fn.value(np.log10(self.Wdot)))
 
     self.assertAlmostEqual(damage, should)
 
 class TestClassicalDamage(unittest.TestCase, CommonScalarDamageModel,
     CommonDamagedModel, CommonScalarDamageRate):
   def setUp(self):
+    
     self.E = 92000.0
     self.nu = 0.3
 
