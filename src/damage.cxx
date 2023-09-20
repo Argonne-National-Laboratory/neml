@@ -1378,14 +1378,21 @@ void WorkDamage::ddamage_dd(double d_np1, double d_n,
   double e[6];
   mat_vec(S, 6, s_np1, 6, e);
   double f = dot_vec(s_np1, e, 6);
-  double x = -wrate / (1.0 - std::fabs(d_np1)) / work_scale_ + 
-      (1.0 - std::fabs(d_np1)) * f / dt;
+  double ddf = -wrate / (1.0 - std::fabs(d_np1)) / work_scale_;
+  double x = ddf + (1.0 - std::fabs(d_np1)) * f / dt;
 
   double val_n = get_n(wrate / work_scale_);
+  double dval_n = get_dn(wrate / work_scale_);
+  double val_Wc = Wcrit(wrate / work_scale_);
+
   double other = val_n*std::pow(fabs(d_np1), (val_n-1.0)/val_n) * 
       dt / val * (1.0 - wrate / val * deriv / work_scale_) * x;
+
+  double n_partial = (dt * wrate * std::pow(std::fabs(d_np1), (val_n - 1.0) / val_n) * (val_n + std::log(fabs(d_np1)))) 
+      / (val_n * work_scale_ * val_Wc) * dval_n * ddf;
+
   *dd = (val_n-1.0)*std::pow(std::fabs(d_np1), -1.0/val_n) *
-      wrate * dt / val / work_scale_ + other;
+      wrate * dt / val / work_scale_ + other + n_partial;
 }
 
 void WorkDamage::ddamage_de(double d_np1, double d_n,

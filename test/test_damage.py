@@ -88,7 +88,7 @@ class CommonScalarDamageModel(object):
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.d_np1)
 
-    self.assertTrue(np.isclose(dd_model, dd_calcd, rtol = 1.0e-3))
+    self.assertTrue(np.isclose(dd_model, dd_calcd, rtol = 1.0e-4))
 
   def test_ddamage_dstrain(self):
     dd_model = self.dmodel.ddamage_de(self.d_np1, self.d_n, self.e_np1, self.e_n,
@@ -97,7 +97,7 @@ class CommonScalarDamageModel(object):
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.e_np1)[0]
 
-    self.assertTrue(np.allclose(dd_model, dd_calcd, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(dd_model, dd_calcd, rtol = 1.0e-4))
 
   def test_ddamage_dstress(self):
     dd_model = self.dmodel.ddamage_ds(self.d_np1, self.d_n, self.e_np1, self.e_n,
@@ -106,7 +106,7 @@ class CommonScalarDamageModel(object):
         s, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
     dd_calcd = differentiate(dfn, self.s_np1)[0]
 
-    self.assertTrue(np.allclose(dd_model, dd_calcd, rtol = 1.0e-3))
+    self.assertTrue(np.allclose(dd_model, dd_calcd, rtol = 1.0e-4))
 
   def test_nparams(self):
     self.assertEqual(self.model.nparams, 7)
@@ -155,7 +155,7 @@ class CommonScalarDamageModel(object):
     R, J = self.model.RJ(self.x_trial, trial_state)
     Jnum = differentiate(lambda x: self.model.RJ(x, trial_state)[0], 
         self.x_trial)
-    
+
     self.assertTrue(np.allclose(J, Jnum, rtol = 1.0e-2))
 
 class CommonDamagedModel(object):
@@ -292,7 +292,7 @@ class TestWorkDamageLog(unittest.TestCase, CommonScalarDamageModel,
         flow)
     
     self.fn = interpolate.PolynomialInterpolate([0.1])
-    self.n = interpolate.PolynomialInterpolate([0.5, 1, 2.1])
+    self.n = interpolate.PolynomialInterpolate([0.1, 2.1])
 
     self.dmodel = damage.WorkDamage(self.elastic, self.fn, self.n, log = True)
 
@@ -338,7 +338,7 @@ class TestWorkDamageLog(unittest.TestCase, CommonScalarDamageModel,
   def test_definition(self):
     damage = self.dmodel.damage(self.d_np1, self.d_n, self.e_np1, self.e_n,
         self.s_np1, self.s_n, self.T_np1, self.T_n, self.t_np1, self.t_n)
-    should = self.d_n + self.n.value(self.Wdot) * self.d_np1**((self.n.value(self.Wdot)-1)/self.n.value(self.Wdot)) * self.Wdot * self.dt / 10.0**(self.fn.value(np.log10(self.Wdot)))
+    should = self.d_n + self.n.value(np.log10(self.Wdot)) * self.d_np1**((self.n.value(np.log10(self.Wdot))-1)/self.n.value(np.log10(self.Wdot))) * self.Wdot * self.dt / 10.0**(self.fn.value(np.log10(self.Wdot)))
 
     self.assertAlmostEqual(damage, should)
 
