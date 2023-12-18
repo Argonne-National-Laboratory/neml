@@ -1,8 +1,10 @@
-This utility runs a model for comparison to NEML2.  A complete 
+These utilities runs a model for comparison to NEML2.  A complete 
 test case includes:
 
 1. A NEML XML file defining the model.
 2. A plaintext test file with the following format:
+
+*For small deformations*
 
 ```
 # These are comment lines
@@ -25,9 +27,33 @@ time strain_xx strain_yy strain_zz strain_yz strain_xz strain_xy stress_xx stres
 ...
 ```
 
+*For large deformations with an incremental interface*
+```
+# These are comment lines
+# Header: with the following space-separated entries
+# 1. NEML XML file name
+# 2. NEML model name
+# 3. NEML2 serialization file name
+# 4. NEML2 model name
+# 5. Either "with_temperature" or "no_temperature"
+# 6. rtol for comparison
+# 7. atol for comparison
+viscoplastic.xml viscoplastic_linear_isotropic xx xx no_temperature 1e-5 1e-8
+# A line with a test description that could be read by a test harness
+Compare Perzyna viscoplasticity with linear isotropic hardening
+# Test input as a space-separated list of time strain stress and 
+# (optionally) temperature values
+time deformation_rate_xx deformation_rate_yy deformation_rate_zz deformation_rate_yz deformation_rate_xz deformation_rate_xy vorticity_zy vorticity_xz vorticity_yx stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy (temperature)
+
+...
+```
+
 3. Eventually, a serialized NEML2 model file.
 
-This utility takes the path to a NEML XML file, the name of the model, 
+The small deformation utility takes the path to a NEML XML file, the name of the model, 
 the strain rate, the maximum strain, the number of steps, and (optionally)
 an isothermal temperature, runs the model, and writes the test file
 in the same directory as the XML file.
+
+The large deformation utility is similar, expect it takes a spatial velocity gradient
+tensor, unrolled in row major order, and a maximum time.
