@@ -3,6 +3,7 @@
 
 #include "nemlerror.h"
 #include "models.h"
+#include "math/tensors.h"
 
 namespace neml {
 std::unique_ptr<NEMLModel> parse_xml_unique(std::string fname, std::string mname);
