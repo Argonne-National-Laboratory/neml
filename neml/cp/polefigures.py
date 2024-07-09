@@ -192,17 +192,16 @@ def inverse_pole_figure_discrete(orientations, direction, lattice,
   # Make the graph nice
   if reduce_figure:
     ax = plt.subplot(111)
-    if color == "rgb":
-      rgb = ipf_color(pts, v0 = vs[0], v1 = vs[1], v2=vs[2]) 
-      ax.scatter(cpoints[:,0], cpoints[:,1], c=rgb, s = 10.0)
-    elif hasattr(color, '__len__'):
+    if hasattr(color, '__len__'):
       # HACK
       full_color = np.zeros((len(cpoints),))
       full_color[::2] = color
       full_color[1::2] = color
       sc = ax.scatter(cpoints[:,0], cpoints[:,1], c=full_color, s = 10.0)
       plt.colorbar(sc)
-
+    elif color == "rgb":
+      rgb = ipf_color(pts, v0 = vs[0], v1 = vs[1], v2=vs[2]) 
+      ax.scatter(cpoints[:,0], cpoints[:,1], c=rgb, s = 10.0)
     else:
       ax.scatter(cpoints[:,0], cpoints[:,1], c='k', s = 10.0) 
     ax.axis('off')
