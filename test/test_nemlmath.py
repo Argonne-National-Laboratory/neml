@@ -1,6 +1,8 @@
 import sys
 sys.path.append('..')
 
+import math
+
 from neml.math.nemlmath import *
 from common import *
 
@@ -396,7 +398,7 @@ class TestMisc(unittest.TestCase):
 class TestVariousFactorial(unittest.TestCase):
   def test_factorial(self):
     for i in range(10):
-      self.assertTrue(np.isclose(np.math.factorial(i), factorial(i)))
+      self.assertTrue(np.isclose(math.factorial(i), factorial(i)))
 
 class TestEigenstuff(unittest.TestCase):
   def setUp(self):

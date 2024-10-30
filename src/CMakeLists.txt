@@ -40,8 +40,7 @@ target_include_directories(neml PRIVATE "../include")
 target_link_libraries(neml ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${SOLVER_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
 generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_SOURCE_DIR}/include/neml_export.h)
 generate_export_header(neml EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/neml_export.h)
-set_target_properties(neml PROPERTIES PUBLIC_HEADER 
-      "${PROJECT_BINARY_DIR}/include/neml_export.h;../include/neml_interface.h;../include/nemlerror.h;../include/windows.h")
+
 
 # An annoyance for building the python package
 if (PYTHON_PACKAGE)
@@ -49,6 +48,9 @@ if (PYTHON_PACKAGE)
       install(TARGETS neml 
             LIBRARY DESTINATION neml)
 else()
+      set_target_properties(neml PROPERTIES PUBLIC_HEADER 
+            "${PROJECT_BINARY_DIR}/include/neml_export.h;../include/neml_interface.h;../include/nemlerror.h;../include/windows.h"
+            )
       install(TARGETS neml 
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include)
