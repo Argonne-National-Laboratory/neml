@@ -62,7 +62,7 @@ jobs:
               with:
                     submodules: recursive
             - run: brew update
-            - run: brew install cmake openblas superlu gfortran valgrind
+            - run: brew install cmake openblas superlu gfortran
             - run: brew reinstall gcc
             - run: echo `which gfortran`
             - run: cmake -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_Fortran_COMPILER=/usr/local/bin/gfortran -D CMAKE_BUILD_TYPE=${{ matrix.btype }} -D USE_OPENMP=OFF -D BUILD_UTILS=ON .
