@@ -30,7 +30,7 @@ jobs:
                     run: python -m pip install cibuildwheel
                   - name: Build wheels
                     run: python -m cibuildwheel --output-dir wheelhouse
-                  - uses: actions/upload-artifact@v2 
+                  - uses: actions/upload-artifact@v4 
                     with:
                           path: ./wheelhouse/*.whl
                           name: packages
@@ -48,7 +48,7 @@ jobs:
                           python-version: '3.8'
                   - name: Build source distribution
                     run: python setup.py sdist
-                  - uses: actions/upload-artifact@v2
+                  - uses: actions/upload-artifact@v4
                     with:
                           path: dist/*.tar.gz
                           name: packages
