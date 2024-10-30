@@ -84,7 +84,7 @@ jobs:
              with:
                msystem: MINGW64
                update: true
-               install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake mingw-w64-x86_64-python-pip mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-scipy mingw-w64-x86_64-python-networkx mingw-w64-x86_64-python-matplotlib
+               install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake mingw-w64-x86_64-python-pip mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-scipy mingw-w64-x86_64-python-networkx mingw-w64-x86_64-python-matplotlib mingw-w64-x86_64-gcc-fortran
            - run: pip install nose2
            - run: cmake . -G"MSYS Makefiles" -D"WRAP_PYTHON=ON" -D"CMAKE_BUILD_TYPE=${{ matrix.btype }}"
            - run: make -j 2
@@ -105,7 +105,7 @@ jobs:
              with:
                msystem: MINGW64
                update: true
-               install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake
+               install: git mingw-w64-x86_64-toolchain base-devel mingw-w64-x86_64-openblas mingw-w64-x86_64-cmake mingw-w64-x86_64-gcc-fortran
            - run: cmake . -G"MSYS Makefiles" -D"BUILD_UTILS=ON" -D"CMAKE_BUILD_TYPE=${{ matrix.btype }}"
            - run: make -j 2
            - run: PATH=$PATH:$PWD/lib ./test/drivers/test_drivers.sh
