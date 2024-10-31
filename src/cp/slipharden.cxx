@@ -392,10 +392,8 @@ void FASlipHardening::populate_hist(History & history) const
 
 void FASlipHardening::init_hist(History & history) const
 {
-  size_t i = 0;
   for (auto vn : varnames_) {
     history.get<double>(vn) = 0.0;
-    i++;
   }
 }
 
@@ -799,10 +797,8 @@ void SimpleLinearHardening::populate_hist(History & history) const
 
 void SimpleLinearHardening::init_hist(History & history) const
 {
-  size_t i = 0;
   for (auto vn : varnames_) {
     history.get<double>(vn) = 0;
-    i++;
   }
 }
 
