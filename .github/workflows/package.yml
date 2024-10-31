@@ -35,7 +35,7 @@ jobs:
                   - uses: actions/upload-artifact@v4
                     with:
                           path: ./wheelhouse/*.whl
-                          name: packages
+                          name: packages-${{matrix.os}}
 
       build_sdist:
             name: Build source distribution
@@ -53,16 +53,33 @@ jobs:
                   - uses: actions/upload-artifact@v4
                     with:
                           path: dist/*.tar.gz
-                          name: packages
+                          name: packages-source
 
-      upload_pypi:
+      upload_pypi_wheel:
+            needs: [build_wheels_linux_mac, build_sdist]
+            runs-on: ubuntu-latest
+            name: Upload packages to pypi
+            strategy:
+                  matrix:
+                        os: [ubuntu-latest, macos-latest]
+            steps:
+                  - uses: actions/download-artifact@v4.1.7
+                    with:
+                          name: packages-${{matrix.os}}
+                          path: dist
+                  - uses: pypa/gh-action-pypi-publish@master
+                    with:
+                          user: __token__
+                          password: ${{ secrets.PIPY_PASSWORD }}
+
+      upload_pypi_source:
             needs: [build_wheels_linux_mac, build_sdist]
             runs-on: ubuntu-latest
             name: Upload packages to pypi
             steps:
                   - uses: actions/download-artifact@v4.1.7
                     with:
-                          name: packages
+                          name: packages-source
                           path: dist
                   - uses: pypa/gh-action-pypi-publish@master
                     with:
