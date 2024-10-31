@@ -113,18 +113,18 @@ c
       smult(1) = 1.0
       smult(2) = 1.0
       smult(3) = 1.0
-      smult(4) = 1.0 / sqrt(2.0)
-      smult(5) = 1.0 / sqrt(2.0)
-      smult(6) = 1.0 / sqrt(2.0)
+      smult(4) = sqrt(2.0)
+      smult(5) = sqrt(2.0)
+      smult(6) = sqrt(2.0)
 c
 c           Strain
 c
       emult(1) = 1.0
       emult(2) = 1.0
       emult(3) = 1.0
-      emult(4) = sqrt(2.0)
-      emult(5) = sqrt(2.0)
-      emult(6) = sqrt(2.0)
+      emult(4) = sqrt(2.0) / 2.0
+      emult(5) = sqrt(2.0) / 2.0
+      emult(6) = sqrt(2.0) / 2.0
 c
 c           Load the model
 c
