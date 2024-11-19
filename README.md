@@ -17,7 +17,7 @@ For example, a model might piece together a temperature-dependent elasticity
 model, a yield surface, a flow rule, and several hardening rules.
 Each of these submodels is independent of the other objects
 so that, for example, switching from conventional J2 plasticity
-to a J2 theory requires only a one line change in an input file,
+to a non-J2 theory requires only a one line change in an input file,
 if the model is already implemented, or a relatively small amount of coding
 to add the new yield surface if it has not been implemented.
 All of these objects are interchangeable.
