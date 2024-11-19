@@ -32,9 +32,9 @@ copyright = u'2024, UChicago Argonne, LLC'
 author = u'Argonne National Laboratory'
 
 # The short X.Y version
-version = u'1.5.3'
+version = u'1.5.4'
 # The full version, including alpha/beta/rc tags
-release = u'1.5.3'
+release = u'1.5.4'
 
 
 # -- General configuration ---------------------------------------------------
