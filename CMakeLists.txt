@@ -103,6 +103,9 @@ endif()
 ### PYTHON BINDINGS ###
 # Do some tricky things for the python package
 option(PYTHON_PACKAGE "Generate a build for a python package, should be OFF except in setupy.py" OFF)
+if (PYTHON_PACKAGE)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+endif()
 
 option(WRAP_PYTHON "Generate a pybind11 wrapper" OFF)
 if (WRAP_PYTHON)
