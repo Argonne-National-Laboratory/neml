@@ -78,7 +78,7 @@ setup (
     # Name of the project
     name = 'neml',
     # Version
-    version = '1.5.2',
+    version = '1.5.3',
     # One line-description
     description = "Nuclear Engineering Material model Library",
     # README
@@ -99,7 +99,7 @@ setup (
       'Operating System :: OS Independent'
       ],
     # Which version of python is needed
-    python_requires='>=3.6',
+    python_requires='>=3.8',
     # Keywords to help find
     keywords='materials structures modeling',
     # Definitely not zip safe
