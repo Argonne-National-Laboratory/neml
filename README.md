@@ -1,6 +1,6 @@
 # NEML: the Nuclear Engineering material Model Library
 
-[![Documentation Status](https://readthedocs.org/projects/neml/badge/?version=dev)](https://neml.readthedocs.io/en/dev/) ![Test Status](https://github.com/Argonne-National-Laboratory/neml/workflows/tests/badge.svg?branch=dev)
+[![Documentation Status](https://readthedocs.org/projects/neml/badge/?version=main)](https://neml.readthedocs.io/en/dev/) ![Test Status](https://github.com/Argonne-National-Laboratory/neml/workflows/tests/badge.svg?branch=main)
 
 NEML (the Nuclear Engineering Material model Library) is a tool for creating
 and running structural material models.
