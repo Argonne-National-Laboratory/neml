@@ -58,6 +58,22 @@ class TestInterpolatedIsotropicHardening(unittest.TestCase, CommonHardening):
     self.assertTrue(np.isclose(self.model.q(self.hist_trial, self.T)[0],
       -self.ifn(self.hist_trial[0])))
 
+class TestTemperatureDependentInterpolatedIsotropicHardening(unittest.TestCase, CommonHardening):
+  def setUp(self):
+    self.temperatures = [100.0,200.0]
+    self.points = [0.0, 0.01, 0.02, 0.05]
+    self.values = [[100.0, 110.0, 130.0, 135.0], [200.0, 220.0, 260.0, 270.0]]
+    self.ifns = [interpolate.PiecewiseLinearInterpolate(self.points, v) for v in self.values]
+    self.hist0 = np.array([0.0])
+    self.hist_trial = np.array([0.03])
+    self.T = 150.0
+
+    self.model = hardening.TemperatureDependentInterpolatedIsotropicHardeningRule(self.temperatures, self.ifns)
+
+  def test_relation(self):
+    self.assertTrue(np.isclose(self.model.q(self.hist_trial, self.T)[0],
+      -(self.ifns[0](self.hist_trial[0])+self.ifns[1](self.hist_trial[0]))/2.0))
+
 
 class TestVoceIsotropicHardening(unittest.TestCase, CommonHardening):
   def setUp(self):
