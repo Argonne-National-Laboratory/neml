@@ -126,6 +126,99 @@ void InterpolatedIsotropicHardeningRule::dq_da(const double * const alpha,
   dqv[0] = -flow_->derivative(alpha[0]);
 }
 
+
+
+TemperatureDependentInterpolatedIsotropicHardeningRule::TemperatureDependentInterpolatedIsotropicHardeningRule(ParameterSet & params) :
+    IsotropicHardeningRule(params),
+    temperatures_(params.get_parameter<std::vector<double>>("temperatures")),
+    flow_curves_(params.get_object_parameter_vector<Interpolate>("flow_curves"))
+{
+  if (temperatures_.size() != flow_curves_.size()) {
+    throw std::runtime_error("TemperatureDependentInterpolatedIsotropicHardeningRule: number of temperatures must match number of flow curves");
+  }
+  if (!std::is_sorted(temperatures_.begin(), temperatures_.end())) {
+    throw std::runtime_error("TemperatureDependentInterpolatedIsotropicHardeningRule: temperatures must be sorted");
+  }
+}
+
+std::string TemperatureDependentInterpolatedIsotropicHardeningRule::type()
+{
+  return "TemperatureDependentInterpolatedIsotropicHardeningRule";
+}
+
+ParameterSet TemperatureDependentInterpolatedIsotropicHardeningRule::parameters()
+{
+  ParameterSet pset(TemperatureDependentInterpolatedIsotropicHardeningRule::type());
+
+  pset.add_parameter<std::vector<double>>("temperatures");
+  pset.add_parameter<std::vector<NEMLObject>>("flow_curves");
+
+  return pset;
+}
+
+std::unique_ptr<NEMLObject> TemperatureDependentInterpolatedIsotropicHardeningRule::initialize(ParameterSet & params)
+{
+  return neml::make_unique<TemperatureDependentInterpolatedIsotropicHardeningRule>(
+      params
+      ); 
+}
+
+void TemperatureDependentInterpolatedIsotropicHardeningRule::q(const double * const alpha,
+                                          double T, double * const qv) const
+{
+  size_t ind = find_index_(T);
+  if (ind == temperatures_.size() + 1) {
+    qv[0] = -flow_curves_.front()->value(alpha[0]);
+  }
+  else if (ind == temperatures_.size()) {
+    qv[0] = -flow_curves_.back()->value(alpha[0]);
+  }
+  else {
+    double f1 = flow_curves_[ind-1]->value(alpha[0]);
+    double f2 = flow_curves_[ind]->value(alpha[0]);
+    double T1 = temperatures_[ind-1];
+    double T2 = temperatures_[ind];
+    qv[0] = -(f1 + (f2 - f1) / (T2 - T1) * (T - T1));
+  }
+}
+
+void TemperatureDependentInterpolatedIsotropicHardeningRule::dq_da(const double * const alpha,
+                                              double T,
+                                              double * const dqv) const
+{
+  size_t ind = find_index_(T);
+  if (ind == temperatures_.size() + 1)
+  {
+    dqv[0] = -flow_curves_.front()->derivative(alpha[0]);
+  }
+  else if (ind == temperatures_.size())
+  {
+    dqv[0] = -flow_curves_.back()->derivative(alpha[0]);
+  }
+  else {
+    double f1 = flow_curves_[ind-1]->derivative(alpha[0]);
+    double f2 = flow_curves_[ind]->derivative(alpha[0]);
+    double T1 = temperatures_[ind-1];
+    double T2 = temperatures_[ind];
+    dqv[0] = -(f1 + (f2 - f1) / (T2 - T1) * (T - T1)); 
+  }
+}
+
+size_t TemperatureDependentInterpolatedIsotropicHardeningRule::find_index_(double T) const
+{
+  auto it = std::upper_bound(temperatures_.begin(), temperatures_.end(), T);
+  if (it == temperatures_.begin()) {
+    return temperatures_.size() + 1;
+  }
+  else if (it == temperatures_.end()) {
+    return temperatures_.size();
+  }
+  else {
+    return std::distance(temperatures_.begin(), it);
+  }
+}
+
+
 // Implementation of voce hardening
 VoceIsotropicHardeningRule::VoceIsotropicHardeningRule(
     ParameterSet & params) :

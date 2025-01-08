@@ -59,6 +59,16 @@ PYBIND11_MODULE(hardening, m) {
         }))
       ;
 
+  py::class_<TemperatureDependentInterpolatedIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<TemperatureDependentInterpolatedIsotropicHardeningRule>>(m, "TemperatureDependentInterpolatedIsotropicHardeningRule")
+      .def(py::init([](py::args args, py::kwargs kwargs)
+        {
+          return
+          create_object_python<TemperatureDependentInterpolatedIsotropicHardeningRule>(args,
+                                                                   kwargs,
+                                                                   {"temperatures", "flow_curves"});
+        }))
+      ;
+
   py::class_<VoceIsotropicHardeningRule, IsotropicHardeningRule, std::shared_ptr<VoceIsotropicHardeningRule>>(m, "VoceIsotropicHardeningRule")
       .def(py::init([](py::args args, py::kwargs kwargs)
                     {

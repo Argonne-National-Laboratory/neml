@@ -98,6 +98,42 @@ class NEML_EXPORT InterpolatedIsotropicHardeningRule: public IsotropicHardeningR
 static Register<InterpolatedIsotropicHardeningRule>
   regInterpolatedIsotropicHardeningRule;
 
+/// Isotropic hardening with flow stress from some interpolation function, with temperature dependence
+//    The convention will be to provide a flow curve as
+//    (plastic strain, flow stress) tuples, with the value of the curve at
+//    0 being the initial yield stress
+//
+//    This version allows for the flow curve to depend on temperature, the user provides a list of temperatures
+//    and a list of interpolation functions, the model first interpoltes the plastic strain and then interpolates the
+//    flow stress at the given temperature between the two nearest temperatures
+class NEML_EXPORT TemperatureDependentInterpolatedIsotropicHardeningRule: public IsotropicHardeningRule {
+ public:
+  /// Parameter is the interpolate to use
+  TemperatureDependentInterpolatedIsotropicHardeningRule(ParameterSet & params);
+
+  /// String type for the object system
+  static std::string type();
+  /// Initialize from a parameter set
+  static std::unique_ptr<NEMLObject> initialize(ParameterSet & params);
+  /// Default parameters
+  static ParameterSet parameters();
+
+  /// q = -interpolate(T)
+  virtual void q(const double * const alpha, double T, double * const qv) const;
+  /// Derivative of the map
+  virtual void dq_da(const double * const alpha, double T, double * const dqv) const;
+
+ private:
+  size_t find_index_(double T) const;
+
+ private:
+  const std::vector<double> temperatures_;
+  const std::vector<std::shared_ptr<Interpolate>> flow_curves_;
+};
+
+static Register<TemperatureDependentInterpolatedIsotropicHardeningRule>
+  regTemperatureDependentInterpolatedIsotropicHardeningRule;
+
 /// Voce isotropic hardening
 class NEML_EXPORT VoceIsotropicHardeningRule: public IsotropicHardeningRule {
  public:
