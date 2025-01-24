@@ -35,7 +35,7 @@ def run_single(P, T, rs, ns, mats, ncycles, delay = 1.0, T0 = 0, Tdot = 1.0,
       nhalf, 0, ncycles, delay = delay, ndelay = nhalf)
   dts = np.diff(times)
 
-  problem = axisym.BreeProblem(rs, mats, ns, Tfn, Pfn)
+  problem = axisym.BreeProblem(rs, mats, ns, Tfn, Pfn, specify_hoop_stress = True)
 
   for t in times[1:]:
     problem.step(t)
@@ -159,7 +159,7 @@ if __name__ == "__main__":
   nu = 0.25
   sY = 100.0
   alpha = 1.0e-5
-  n = 20
+  n = 12
   
   points, conditions, dx, dy, nx, ny = grid_classical(
       E, nu, sY, alpha, max_x = 0.9999, max_y = 5.0, nx = 15, ny = 75,

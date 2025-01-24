@@ -283,7 +283,7 @@ class BreeProblem(VesselSectionProblem):
     pressure.
   """
   def __init__(self, rs, mats, ns, T, p, rtol = 1.0e-6, atol = 1.0e-8,
-      itype = "gauss", p_ext = lambda t: 0.0):
+      itype = "gauss", p_ext = lambda t: 0.0, specify_hoop_stress = False):
     """
       Parameters:
         rs      radii deliminating each region
@@ -298,9 +298,12 @@ class BreeProblem(VesselSectionProblem):
         bias    bias the mesh towards the interfaces
         itype   "rectangle" or "gauss", defaults to "gauss"
         p_ext   external pressure as a function of t
+        specify_hoop_stress if True, directly specify a hoop stress rather than calculate it
     """
     super(BreeProblem, self).__init__(rs, mats, ns, T, p,
         rtol = rtol, atol = atol, p_ext = p_ext)
+
+    self.specify_hoop_stress = specify_hoop_stress
     
     self.regions = np.diff(self.rs)
     self.dlength = [r for r,n in zip(self.regions, self.ns) for i in range(n)]
@@ -320,7 +323,10 @@ class BreeProblem(VesselSectionProblem):
 
     self.npoints = len(self.ipoints)
     
-    self.P = lambda t: (p(t) * self.r_inner - p_ext(t) * self.r_outer) / self.t
+    if self.specify_hoop_stress:
+        self.P = p
+    else:
+        self.P = lambda t: (p(t) * self.r_inner - p_ext(t) * self.r_outer) / self.t
 
     # Setup the n bar model
     self.barmodel = arbbar.BarModel()
@@ -360,7 +366,10 @@ class BreeProblem(VesselSectionProblem):
     """
       Impose new loading functions
     """
-    self.P = lambda t: (new_p(t) * self.r_inner - new_p_ext(t) * self.r_outer) / self.t
+    if self.specify_hoop_stress:
+        self.P = new_p
+    else:
+        self.P = lambda t: (new_p(t) * self.r_inner - new_p_ext(t) * self.r_outer) / self.t
     self.barmodel.nodes[2]['force bc'] = lambda t: self.P(t) * np.sum(self.weights)
 
     self.T = new_T
