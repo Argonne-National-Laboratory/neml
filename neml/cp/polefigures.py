@@ -408,7 +408,7 @@ def ipf_color(pts, v0 = np.array([0,0,1.0]),
 
 def ipf_color_chart(v0 = np.array([0,0,1.0]), 
     v1 = np.array([1.0,0,1]), v2 = np.array([1.0,1,1]), 
-    axis_labels = None, ngrid = 50, nline = 100):
+    axis_labels = None, ngrid = 50, nline = 100, type='Default'):
   """
     Make a color chart for the IPF coloring used here
 
@@ -419,6 +419,7 @@ def ipf_color_chart(v0 = np.array([0,0,1.0]),
       axis_labels:   labels to draw on triangle
       ngrid:         number of grid points to use
       nline:         number of line points to use
+      type:          Default or TSL
   """
   vs = [v0,v1,v2]
 
@@ -433,9 +434,9 @@ def ipf_color_chart(v0 = np.array([0,0,1.0]),
   ax = plt.subplot(111)
   ax.axis('off')
   if axis_labels:
-    plt.text(0.12,0.11,axis_labels[0], transform = plt.gcf().transFigure)
-    plt.text(0.86,0.11,axis_labels[1], transform = plt.gcf().transFigure)
-    plt.text(0.74,0.90,axis_labels[2], transform = plt.gcf().transFigure)
+    plt.text(0.1,0.07,axis_labels[0], transform = plt.gcf().transFigure)
+    plt.text(0.75,0.07,axis_labels[1], transform = plt.gcf().transFigure)
+    plt.text(0.74,0.87,axis_labels[2], transform = plt.gcf().transFigure)
 
   pts = np.array([pop(v0/la.norm(v0)), pop(v1/la.norm(v1)), pop(v2/la.norm(v2))])
   xrang = np.linspace(np.min(pts[:,0]), np.max(pts[:,0]), ngrid)
@@ -443,8 +444,14 @@ def ipf_color_chart(v0 = np.array([0,0,1.0]),
 
   X, Y = np.meshgrid(xrang,yrang)
   colors = np.zeros(X.shape+(3,))
-  for ind in np.ndindex(X.shape):
-    colors[ind] = ipf_color([ipop([X[ind],Y[ind]])], v0 = v0, v1 = v1, v2 = v2)[0]
+  if type=='Default':
+    for ind in np.ndindex(X.shape):
+      colors[ind] = ipf_color([ipop([X[ind],Y[ind]])], v0 = v0, v1 = v1, v2 = v2)[0]
+  elif type=='TSL':
+    for ind in np.ndindex(X.shape):
+      colors[ind] = ipf_color_TSL([ipop([X[ind],Y[ind]])], v0 = v0, v1 = v1, v2 = v2)[0]
+  else:
+    raise ValueError("Incorrect IPF color chart type!")
   
   im = plt.imshow(colors, extent = [xrang[0], xrang[-1], yrang[0], yrang[-1]], 
       origin = 'lower')
@@ -461,3 +468,20 @@ def ipf_color_chart(v0 = np.array([0,0,1.0]),
   pat = Polygon(net_pts, closed = True, edgecolor='k', fc = None, fill = False) 
   ax.add_artist(pat)
   im.set_clip_path(pat)
+
+def ipf_color_TSL(pts,v0 = np.array([0,0,1.0]), 
+    v1 = np.array([1.0,0,1]), v2 = np.array([1.0,1,1])):
+
+  v0 /= la.norm(v0)
+  v1 /= la.norm(v1)
+  v2 /= la.norm(v2)
+
+  triangleVertex = np.vstack((v0, v1, v2)).T
+  colorSpace = np.linalg.inv(triangleVertex)
+  pt = np.array(pts)
+  rgb = np.dot(colorSpace, pt.T)
+
+  # normalize so the white is at center point
+  rgb = np.abs(rgb / np.max(rgb,axis=0)) 
+  rgb = rgb.reshape(pt.shape)
+  return rgb
