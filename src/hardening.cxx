@@ -899,14 +899,17 @@ void Chaboche::h_temp(const double * const s, const double * const alpha, double
               double * const hv) const
 {
   std::fill(hv, hv+nhist(), 0.0);
+  
+  if (noniso_) 
+  {
+    std::vector<double> c = eval_vector(c_, T);
+    std::vector<double> dc = eval_deriv_vector(c_, T);
 
-  std::vector<double> c = eval_vector(c_, T);
-  std::vector<double> dc = eval_deriv_vector(c_, T);
-
-  for (size_t i=0; i<n_; i++) {
-    if (c[i] == 0.0) continue;
-    for (size_t j=0; j<6; j++) {
-      hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
+    for (size_t i=0; i<n_; i++) {
+      if (c[i] == 0.0) continue;
+      for (size_t j=0; j<6; j++) {
+        hv[1+i*6+j] = -sqrt(2.0/3.0) * dc[i] / c[i] * alpha[1+i*6+j];
+      }
     }
   }
 }
@@ -921,18 +924,20 @@ void Chaboche::dh_da_temp(const double * const s, const double * const alpha, do
               double * const dhv) const
 {
   std::fill(dhv, dhv+nhist()*nhist(), 0.0);
+  
+  if (noniso_)
+  {
+    std::vector<double> c = eval_vector(c_, T);
+    std::vector<double> dc = eval_deriv_vector(c_, T);
 
-  std::vector<double> c = eval_vector(c_, T);
-  std::vector<double> dc = eval_deriv_vector(c_, T);
-
-  for (size_t i=0; i<n_; i++) {
-    if (c[i] == 0.0) continue;
-    for (size_t j=0; j<6; j++) {
-      int ci = 1 + i*6 + j;
-      dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
+    for (size_t i=0; i<n_; i++) {
+      if (c[i] == 0.0) continue;
+      for (size_t j=0; j<6; j++) {
+        int ci = 1 + i*6 + j;
+        dhv[CINDEX(ci,ci,nhist())] = - sqrt(2.0/3.0) * dc[i] / c[i];
+      }
     }
   }
-
 }
 
 int Chaboche::n() const
