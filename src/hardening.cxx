@@ -625,7 +625,7 @@ ParameterSet Chaboche::parameters()
   pset.add_parameter<std::vector<NEMLObject>>("A");
   pset.add_parameter<std::vector<NEMLObject>>("a");
 
-  pset.add_optional_parameter<bool>("noniso", true);
+  pset.add_optional_parameter<bool>("noniso", false);
 
   return pset;
 }
