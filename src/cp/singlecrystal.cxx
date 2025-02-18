@@ -231,9 +231,14 @@ void SingleCrystalModel::attempt_update_ld_inc_(
   // Use S_np1 and H_np1 to iterate
   S_np1.copy_data(S_n.data());
   H_np1.copy_data(H_n.rawptr());
+
+  double float_progress = 0.0;
+  int success = 0;
   
   while (progress < target) {
     double step = 1.0 / pow(2, subdiv);
+    if ((float_progress + step) > 1.0)
+      step = 1.0 - float_progress;
 
     // Decouple the updates
     History fixed = kinematics_->decouple(S_np1, D, W, Q_n, H_np1, 
@@ -284,14 +289,23 @@ void SingleCrystalModel::attempt_update_ld_inc_(
       continue;
     }
     progress += cur_int_inc;
+    float_progress += step;
+    success += 1;
     if (verbose_) {
       std::cout << "Adaptive substep succeeded" << std::endl;
       std::cout << "Current progress " << progress << " out of " << target <<
           std::endl;
     }
+
+    if (success == 4)
+    {
+      cur_int_inc *= 2;
+      subdiv -= 1;
+      success = 0;
+    }
     
     // Calc tangent if we're going to be done
-    if (progress == target) {
+    if (progress >= target) {
       // Tangent
       calc_tangents_(S_np1, H_np1, &trial, A_np1, B_np1);
 
