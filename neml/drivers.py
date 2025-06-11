@@ -357,7 +357,7 @@ class Driver_sd(Driver):
 
     self.strain_step(e_np1, t_np1, T_np1)
 
-def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
+def uniaxial_test(model, erate, T = 300.0, T_ramp = None, emax = 0.05, nsteps = 250,
     sdir = np.array([1,0,0,0,0,0]), verbose = False,
     offset = 0.2/100.0, history = None, tdir = np.array([0,1,0,0,0,0]),
     check_dmg = False, dtol = 0.75, rtol = 1e-6, atol = 1e-10, miter = 25,
@@ -371,6 +371,7 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
 
     Keyword Args:
       T:                temperature, default 300.0
+      T_ramp:           max temperature to ramp to during the test, default is no ramp
       emax:             maximum strain, default 5%
       nsteps:           number of steps to use, default 250
       sdir:             stress direction, default tension in x    # [xx,yy,zz,yz,xz,xy] stress tensor
@@ -403,14 +404,21 @@ def uniaxial_test(model, erate, T = 300.0, emax = 0.05, nsteps = 250,
   if history is not None:
     driver.stored_int[0] = history
 
+  if T_ramp is not None:
+    Tmax = T_ramp
+  else:
+    Tmax = T
+
+  temperature_history = np.linspace(T, Tmax, nsteps)
+
   strain = [0.0]
   stress = [0.0]
   for i in range(nsteps):
     try:
       if i == 0:
-        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T)
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, temperature_history[i])
       else:
-        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, T,
+        einc, ainc = driver.erate_einc_step(sdir, erate, e_inc, temperature_history[i],
             einc_guess = einc, ainc_guess = ainc)
     except:
       break

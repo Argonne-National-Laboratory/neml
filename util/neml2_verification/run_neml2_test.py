@@ -44,6 +44,7 @@ if __name__ == "__main__":
     parser.add_argument("test_file")
     parser.add_argument("--temperature", type = float,
             required = False)
+    parser.add_argument("--vary-temperature-max", type = float, required = False)
     parser.add_argument("--rtol", type = float, 
             default = 1e-5)
     parser.add_argument("--atol", type = float,
@@ -57,6 +58,10 @@ if __name__ == "__main__":
     
     if args.temperature is not None:
         T = args.temperature
+        if args.vary_temperature_max is not None:
+            T_ramp = args.vary_temperature_max
+        else:
+            T_ramp = None
         use_T = True
         T_option = "with_temperature"
     else:
@@ -65,7 +70,7 @@ if __name__ == "__main__":
         T_option = "no_temperature"
     
     if len(args.max_strain) == 1:
-        res = drivers.uniaxial_test(model, args.strain_rate, T = T,
+        res = drivers.uniaxial_test(model, args.strain_rate, T = T, T_ramp = T_ramp,
                 emax = args.max_strain[0], nsteps = args.nsteps, 
                 full_results = True)
         time = np.array(res['time'])
