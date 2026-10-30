@@ -419,7 +419,7 @@ def ipf_color_chart(v0 = np.array([0,0,1.0]),
       axis_labels:   labels to draw on triangle
       ngrid:         number of grid points to use
       nline:         number of line points to use
-      type:          Default or TSL
+      type:          Default or TSL, which color key to use
   """
   vs = [v0,v1,v2]
 
@@ -469,19 +469,46 @@ def ipf_color_chart(v0 = np.array([0,0,1.0]),
   ax.add_artist(pat)
   im.set_clip_path(pat)
 
-def ipf_color_TSL(pts,v0 = np.array([0,0,1.0]), 
+def ipf_color_TSL(pts, v0 = np.array([0,0,1.0]),
     v1 = np.array([1.0,0,1]), v2 = np.array([1.0,1,1])):
+  """
+    Color ipf points with the TSL/OIM key (red, green, blue corners,
+    white near the center)
+
+    Assumes the points already fall inside the appropriate triangle
+
+    Writes p = r*v0 + g*v1 + b*v2 and scales so max(r,g,b) = 1.  Each
+    channel is 1 at its corner and 0 on the opposite edge, and white is
+    at p ~ v0+v1+v2.
+
+    Parameters:
+      pts:       list of points
+
+    Keyword Args:
+      v0:        point on triangle, colored red
+      v1:        point on triangle, colored green
+      v2:        point on triangle, colored blue
+  """
+  v0 = np.array(v0, dtype = float)
+  v1 = np.array(v1, dtype = float)
+  v2 = np.array(v2, dtype = float)
 
   v0 /= la.norm(v0)
   v1 /= la.norm(v1)
   v2 /= la.norm(v2)
 
   triangleVertex = np.vstack((v0, v1, v2)).T
-  colorSpace = np.linalg.inv(triangleVertex)
-  pt = np.array(pts)
+  colorSpace = la.inv(triangleVertex)
+
+  pt = np.array(pts, dtype = float)
+  single = (pt.ndim == 1)
+  pt = np.atleast_2d(pt)
   rgb = np.dot(colorSpace, pt.T)
 
-  # normalize so the white is at center point
-  rgb = np.abs(rgb / np.max(rgb,axis=0)) 
-  rgb = rgb.reshape(pt.shape)
-  return rgb
+  # Largest channel is 1, so white lands at the center
+  rgb = rgb / np.max(rgb, axis = 0)
+
+  # Clip roundoff on the triangle edges
+  rgb = np.clip(rgb.T, 0.0, 1.0)
+
+  return rgb[0] if single else rgb
