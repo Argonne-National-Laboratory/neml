@@ -126,8 +126,8 @@ double SlipMultiStrengthSlipRule::slip(size_t g, size_t i, const Symmetric & str
   double tau = L.shear(g, i, Q, stress);
   std::vector<double> strengths(nstrength());
 
-  for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
+  for (size_t k = 0; k < nstrength(); k++) {
+    strengths[k] = strengths_[k]->hist_to_tau(g, i, history, L, T, fixed);
   }
 
   if ((L.slip_type(g,i) == Lattice::SlipType::Twin) && (tau < 0)) 
@@ -144,8 +144,8 @@ Symmetric SlipMultiStrengthSlipRule::d_slip_d_s(size_t g, size_t i, const Symmet
   Symmetric dtau = L.d_shear(g, i, Q, stress);
 
   std::vector<double> strengths(nstrength());
-  for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
+  for (size_t k = 0; k < nstrength(); k++) {
+    strengths[k] = strengths_[k]->hist_to_tau(g, i, history, L, T, fixed);
   }
 
   if ((L.slip_type(g,i) == Lattice::SlipType::Twin) && (tau < 0)) 
@@ -162,16 +162,16 @@ History SlipMultiStrengthSlipRule::d_slip_d_h(size_t g, size_t i, const Symmetri
   Symmetric dtau = L.d_shear(g, i, Q, stress);
 
   std::vector<double> strengths(nstrength());
-  for (size_t i = 0; i < nstrength(); i++) {
-    strengths[i] = strengths_[i]->hist_to_tau(g, i, history, L, T, fixed);
+  for (size_t k = 0; k < nstrength(); k++) {
+    strengths[k] = strengths_[k]->hist_to_tau(g, i, history, L, T, fixed);
   }
 
   std::vector<double> dtb = d_sslip_dstrength(g, i, tau, strengths, T);
 
   History dhist;
-  for (size_t i = 0; i < nstrength(); i++) {
-    History deriv = strengths_[i]->d_hist_to_tau(g, i, history, L, T, fixed);
-    deriv.scalar_multiply(dtb[i]);
+  for (size_t k = 0; k < nstrength(); k++) {
+    History deriv = strengths_[k]->d_hist_to_tau(g, i, history, L, T, fixed);
+    deriv.scalar_multiply(dtb[k]);
     dhist.add_union(deriv); 
   }
 
