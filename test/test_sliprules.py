@@ -326,3 +326,40 @@ class TestBiVoceSlip(unittest.TestCase, CommonSlipStrengthSlipRule, CommonSlipRu
     self.tau = 33.0
 
     self.fixed = history.History()
+
+
+class TestSlipUsesOwnStrength(unittest.TestCase):
+  def setUp(self):
+    self.L = crystallography.CubicLattice(1.0)
+    self.L.add_slip_system([1,1,0],[1,1,1])
+    self.Q = rotations.Orientation(35.0,17.0,14.0, angle_type = "degrees")
+    self.S = tensors.Symmetric(np.array([
+      [100.0,-25.0,10.0],
+      [-25.0,-17.0,15.0],
+      [10.0,  15.0,35.0]]))
+    self.T = 300.0
+    self.g0 = 1.0e-4
+    self.n = 5.0
+
+    nt = self.L.ntotal
+    M = matrix.SquareMatrix(nt, type = "dense", data = [0.0] * (nt * nt))
+    # A different initial strength on every slip system
+    self.strength = slipharden.GeneralLinearHardening(M,
+        list(np.linspace(50.0, 100.0, nt)), absval = False)
+    self.model = sliprules.PowerLawSlipRule(self.strength, self.g0, self.n)
+
+    self.H = history.History()
+    self.model.populate_hist(self.H)
+    self.model.init_hist(self.H)
+    self.fixed = history.History()
+
+  def test_slip_uses_own_strength(self):
+    for g in range(self.L.ngroup):
+      for i in range(self.L.nslip(g)):
+        tau = self.L.shear(g, i, self.Q, self.S)
+        s = self.strength.hist_to_tau(g, i, self.H, self.L, self.T, self.fixed)
+        expected = self.g0 * tau / s * np.abs(tau / s)**(self.n - 1.0)
+        self.assertTrue(np.isclose(
+          self.model.slip(g, i, self.S, self.Q, self.H, self.L, self.T, self.fixed),
+          expected))
+
